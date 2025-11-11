@@ -2,10 +2,11 @@
 
 [Full report](https://htmlpreview.github.io/?https://github.com/MartinPdeS/RosettaX/blob/python-coverage-comment-action-data/htmlcov/index.html)
 
-| Name              |    Stmts |     Miss |    Cover |   Missing |
-|------------------ | -------: | -------: | -------: | --------: |
-| RosettaX/utils.py |        0 |        0 |     100% |           |
-|         **TOTAL** |    **0** |    **0** | **100%** |           |
+| Name      |    Stmts |     Miss |       Cover |   Missing |
+|---------- | -------: | -------: | ----------: | --------: |
+| **TOTAL** |    **0** |    **0** | **100.00%** |           |
+
+1 file skipped due to complete coverage.
 
 
 ## Setup coverage badge
