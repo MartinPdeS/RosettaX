@@ -1,6 +1,9 @@
 import pytest
+from RosettaX.reader import read_fcs_file
 
 def test_dummy():
+    data = read_fcs_file("tests/data/sample.fcs")
+    print(data)
     assert True
 
 

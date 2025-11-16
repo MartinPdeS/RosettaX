@@ -4,22 +4,18 @@
 from pathlib import Path
 import RosettaX
 
-__all__ = ["root_path", "doc_path", "logo_path", "doc_css_path"]
+root = Path(RosettaX.__path__[0])
 
-root_path = Path(RosettaX.__path__[0])
+project = root.parents[0]
 
-project_path = root_path.parents[0]
+documentation = root.parents[0].joinpath("docs")
 
-doc_path = root_path.parents[0].joinpath("docs")
+logo = documentation.joinpath("images/logo.png")
 
-logo_path = doc_path.joinpath("images/logo.png")
+css = documentation.joinpath("source/_static/default.css")
 
-doc_css_path = doc_path.joinpath("source/_static/default.css")
+data = root / "data"
 
-if __name__ == "__main__":
-    for path_name in __all__:
-        path = locals()[path_name]
-        print(path)
-        assert path.exists(), f"Path {path_name} do not exists"
+fcs_data = data / "fcs"
 
-# -
+calibration_data = data / "calibration"
