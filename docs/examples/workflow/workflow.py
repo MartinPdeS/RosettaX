@@ -16,5 +16,6 @@ print(file_dir)
 data = FCSFile(fcs_data / "sample.fcs")
 
 data.read_all_data()
+
 print(data.data)
 
