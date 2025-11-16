@@ -2,11 +2,12 @@
 
 [Full report](https://htmlpreview.github.io/?https://github.com/MartinPdeS/RosettaX/blob/python-coverage-comment-action-data/htmlcov/index.html)
 
-| Name      |    Stmts |     Miss |       Cover |   Missing |
-|---------- | -------: | -------: | ----------: | --------: |
-| **TOTAL** |    **0** |    **0** | **100.00%** |           |
+| Name               |    Stmts |     Miss |   Branch |   BrPart |      Cover |   Missing |
+|------------------- | -------: | -------: | -------: | -------: | ---------: | --------: |
+| RosettaX/reader.py |      146 |       37 |       32 |        9 |     74.16% |96-98, 104-105, 114-116, 153-154, 164-166, 171-172, 182-183, 224-226, 288-290, 299-304, 309-310, 316-317, 331-332, 350-351 |
+|          **TOTAL** |  **146** |   **37** |   **32** |    **9** | **74.16%** |           |
 
-1 file skipped due to complete coverage.
+2 files skipped due to complete coverage.
 
 
 ## Setup coverage badge
