@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Workflow &#8212; Rosetta  documentation</title>
+    <title>Workflow &#8212; RosettaX  documentation</title>
   
   
   
@@ -48,8 +48,17 @@
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'gallery/workflow/index';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/MartinPdeS/RosettaX/documentation_page/version_switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'v0.0.3';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Workflow example" href="workflow.html" />
+    <link rel="prev" title="Examples" href="../index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.0.3" />
@@ -104,10 +113,10 @@
       <div class="navbar-item">
 
   
-     
+    
   
 
-<a class="navbar-brand logo" href="https://martinpdes.github.io/RosettaX/docs/latest/">
+<a class="navbar-brand logo" href="../../index.html">
   
   
   
@@ -138,6 +147,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../../code.html">
     Source code
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    Examples
   </a>
 </li>
 
@@ -210,7 +226,7 @@
           
           
           
-          <a href="https://pypi.org/project/rosettax/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-box fa-lg" aria-hidden="true"></i>
+          <a href="https://pypi.org/project/RosettaX/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-box fa-lg" aria-hidden="true"></i>
             <span class="sr-only">PyPI</span></a>
         </li>
         <li class="nav-item">
@@ -222,7 +238,7 @@
           
           
           
-          <a href="https://anaconda.org/MartinPdeS/rosettax" title="Anaconda" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i>
+          <a href="https://anaconda.org/MartinPdeS/RosettaX" title="Anaconda" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i>
             <span class="sr-only">Anaconda</span></a>
         </li>
 </ul></div>
@@ -257,10 +273,8 @@
       
       
       
-        
-      
       <dialog id="pst-primary-sidebar-modal"></dialog>
-      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
 
   
@@ -285,6 +299,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../../code.html">
     Source code
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    Examples
   </a>
 </li>
 
@@ -348,7 +369,7 @@
           
           
           
-          <a href="https://pypi.org/project/rosettax/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-box fa-lg" aria-hidden="true"></i>
+          <a href="https://pypi.org/project/RosettaX/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-box fa-lg" aria-hidden="true"></i>
             <span class="sr-only">PyPI</span></a>
         </li>
         <li class="nav-item">
@@ -360,7 +381,7 @@
           
           
           
-          <a href="https://anaconda.org/MartinPdeS/rosettax" title="Anaconda" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i>
+          <a href="https://anaconda.org/MartinPdeS/RosettaX" title="Anaconda" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i>
             <span class="sr-only">Anaconda</span></a>
         </li>
 </ul></div>
@@ -368,6 +389,21 @@
       </div>
     
   </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="current reference internal" href="#">Workflow</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="workflow.html">Workflow example</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
   
   
   <div class="sidebar-primary-items__end sidebar-primary__section">
@@ -404,6 +440,9 @@
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Examples</a></li>
+    
     <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Workflow</span></li>
   </ul>
 </nav>
@@ -422,13 +461,12 @@
                 <article class="bd-article">
                   
   <section id="workflow">
-<span id="examples-workflow-gallery"></span><h1>Workflow<a class="headerlink" href="#workflow" title="Link to this heading">#</a></h1>
+<span id="examples-workflow-gallery"></span><span id="sphx-glr-gallery-workflow"></span><h1>Workflow<a class="headerlink" href="#workflow" title="Link to this heading">#</a></h1>
 <div class="sphx-glr-thumbnails"><div class="sphx-glr-thumbcontainer" tooltip="Just a dummy example to illustrate the workflow examples gallery."><img alt="" src="../../_images/sphx_glr_workflow_thumb.png" />
 <p><a class="reference internal" href="workflow.html#sphx-glr-gallery-workflow-workflow-py"><span class="std std-ref">Workflow example</span></a></p>
   <div class="sphx-glr-thumbnail-title">Workflow example</div>
 </div></div><div class="toctree-wrapper compound">
 </div>
-<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
 </section>
 
 
@@ -480,7 +518,7 @@
 
   <p class="copyright">
     
-      © Copyright 2023, Martin Poinsinet de Sivry-Houle.
+      © Copyright 2024, Martin Poinsinet de Sivry-Houle.
       <br/>
     
   </p>

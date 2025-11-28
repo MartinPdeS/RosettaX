@@ -23,16 +23,23 @@ Workflow example
 
 Just a dummy example to illustrate the workflow examples gallery.
 
-.. GENERATED FROM PYTHON SOURCE LINES 8-9
+.. GENERATED FROM PYTHON SOURCE LINES 8-26
 
 
+
+.. image-sg:: /gallery/workflow/images/sphx_glr_workflow_001.png
+   :alt: workflow
+   :srcset: /gallery/workflow/images/sphx_glr_workflow_001.png
+   :class: sphx-glr-single-img
 
 
 .. rst-class:: sphx-glr-script-out
 
  .. code-block:: none
 
-    Hello, World!
+    /opt/hostedtoolcache/Python/3.13.9/x64/lib/python3.13/site-packages/RosettaX/data/fcs/sample.fcs
+    /opt/hostedtoolcache/Python/3.13.9/x64/lib/python3.13/site-packages/matplotlib/cbook.py:1355: RuntimeWarning: invalid value encountered in cast
+      return np.asarray(x, float)
 
 
 
@@ -43,12 +50,29 @@ Just a dummy example to illustrate the workflow examples gallery.
 
 .. code-block:: Python
 
+    from RosettaX.reader import FCSFile
+    from RosettaX.directories import fcs_data
+    import matplotlib.pyplot as plt
 
-    print("Hello, World!")
+    file_dir = fcs_data / "sample.fcs"
+
+    print(file_dir)
+
+    data = FCSFile(fcs_data / "sample.fcs")
+
+    data.read_all_data()
+
+    figure, ax = plt.subplots()
+    ax.plot(data.data["FSC-A"], data.data["SSC-A"], ".")
+    ax.set_xlabel("FSC-A")
+    ax.set_ylabel("SSC-A")
+    plt.show()
+
+
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 0.006 seconds)
+   **Total running time of the script:** (0 minutes 0.514 seconds)
 
 
 .. _sphx_glr_download_gallery_workflow_workflow.py:
