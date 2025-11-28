@@ -25,6 +25,7 @@ requirements:
     - martinpdes::mpsplots
   run:
     - numpy
+    - pandas
     - pydantic
     - martinpdes::mpsplots
 
