@@ -30,7 +30,7 @@ As of 2025, the project is still under development. If you want to collaborate, 
 
 RosettaX was written by `Martin Poinsinet de Sivry-Houle <https://github.com/MartinPdS>`_  .
 
-Email:`martin.poinsinet.de.sivry@gmail.ca <mailto:martin.poinsinet.de.sivry@gmail.ca?subject=RosettaX>`_ .
+Email:`martin.poinsinet.de.sivry@gmail.ca <mailto:martin.poinsinet.de.sivry@gmail.ca?subject=RosettaX>`_ . 
 
 
 .. |python| image:: https://img.shields.io/pypi/pyversions/rosettax.svg
