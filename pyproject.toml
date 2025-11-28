@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "RosettaX"
 dynamic = ["version"]
 description = "A package for Flow-cytometer calibration."
-license = {file = "LICENSE"}
+license = "MIT"
 readme = "README.rst"
 requires-python = ">=3.10"
 authors = [{ name="Martin  / Victor / Edwin", email="martin.poinsinet.de.sivry@gmail.com"}]
@@ -17,7 +17,6 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: CPython",
     "Development Status :: 3 - Alpha",
     "Topic :: Scientific/Engineering :: Physics",
-    "License :: OSI Approved :: MIT License",
     "Intended Audience :: Science/Research"
 ]
 
