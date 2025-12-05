@@ -24,7 +24,7 @@ Workflow
   .. image:: /gallery/workflow/images/thumb/sphx_glr_workflow_thumb.png
     :alt:
 
-  :ref:`sphx_glr_gallery_workflow_workflow.py`
+  :doc:`/gallery/workflow/workflow`
 
 .. raw:: html
 
