@@ -1,9 +1,11 @@
 
 # Ignore all
-# /*
+/*
 
 # Except ...
 !.github
+!.gitmodules
+!extern
 !RosettaX
 !development
 !docs
@@ -29,3 +31,8 @@ docs/source/gallery/
 *.DS_Store*
 *.so*
 *.a*
+*.cmake
+*CMakeFiles*
+*Makefile*
+
+# Package specifics
