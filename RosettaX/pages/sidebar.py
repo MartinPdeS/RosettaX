@@ -5,7 +5,6 @@ from utils import generate_file_list_for_sidebar
 
 def sidebar():
     list_of_files = generate_file_list_for_sidebar()
-    print(dash.page_registry.values())
     return [
         html.H2("Rosetta X", className="display-4"),
         html.Hr(),
