@@ -5,6 +5,7 @@ import os
 from dash import ALL
 from pages.styling import CONTENT_STYLE, SIDEBAR_STYLE
 from pages.sidebar import sidebar as sbar
+import json
 
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP], use_pages=True)
 sidebar = html.Div(sbar(), id="sidebar", style=SIDEBAR_STYLE())
@@ -22,23 +23,27 @@ def toggle_collapse(n, is_open):
         return not is_open
     return is_open
 
-# @app.callback(
-#     Output("apply-calibration-store", "data"),
-#     Input({"type": "apply-calibration", "index": ALL}, "n_clicks"),
-#     prevent_initial_call=True,
-# )
-# def apply_calibration(n_clicks_list):
-#     ctx = dash.callback_context
-#     if not ctx.triggered:
-#         raise dash.exceptions.PreventUpdate
-#     # triggered e.g. '{"type":"apply-calibration","index":"folder/file"}.n_clicks'
-#     triggered_id = ctx.triggered[0]["prop_id"].split(".")[0]
-#     id_dict = json.loads(triggered_id)
-#     index = id_dict["index"]
-#     print(n_clicks_list)
-#     index = None
-#     print("Calibration started for:", index)
-#     return {"index": index, "n_clicks": n_clicks_list}
+@app.callback(
+    Output("apply-calibration-store", "data"),
+    Input({"type": "apply-calibration", "index": ALL}, "n_clicks"),
+    prevent_initial_call=True,
+)
+def apply_calibration(n_clicks_list):
+    print(n_clicks_list)
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        return dash.no_update
+
+    # ctx.triggered[0]['prop_id'] looks like '{"type":"apply-calibration","index":1}.n_clicks'
+    prop_id = ctx.triggered[0]["prop_id"].split(".")[0]
+
+    try:
+        button_id = json.loads(prop_id)
+    except Exception:
+        button_id = prop_id
+
+    print(button_id)  # prints the id dict of the button clicked
+    return {"last_clicked": button_id}
 
 if __name__ == "__main__":
     app.run(debug=True)
