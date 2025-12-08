@@ -1,109 +1,71 @@
-from dash import Dash, dcc, html, Input, Output, State
-import pandas as pd
-import numpy as np
-import base64
+import dash
+import dash_bootstrap_components as dbc
+from dash import Input, Output, dcc, html, State, MATCH
+import os
+from dash import ALL
+from HTMLFrontend.styling import CONTENT_STYLE, SIDEBAR_STYLE
+from HTMLFrontend.sidebar import sidebar as sbar
+from HTMLFrontend.flourescent_calibration_layout import fluorescent_calibration_layout
+from HTMLFrontend.other_calibration_layout import other_calibration_layout
 
-#!/usr/bin/env python3
-# main.py - simple Dash + Plotly dashboard
+app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-import plotly.graph_objects as go
-import plotly.express as px
-from reader import FCSFile
+# the style arguments for the sidebar. We use position:fixed and a fixed width
 
-# sample time series data
-np.random.seed(1)
-file_path = ""
+# the styles for the main content position it to the right of the sidebar and
+# add some padding.
 
-app = Dash(__name__)
-app.layout = html.Div(
-    style={"fontFamily": "Arial", "margin": "20px"},
-    children=[
-        html.H2("Simple Dash Plotly Dashboard"),
-        html.Div(
-            style={"display": "flex", "gap": "12px", "alignItems": "center"},
-            children=[
-                html.Button(
-                    dcc.Upload(
-                        "Upload Data",
-                        id="upload-data-button",
-                        style={"marginLeft": "8px"},
-                    ),
-                ),
-                html.Button(
-                    "Save Image",
-                    id="save-image-button",
-                    n_clicks=0,
-                    style={"marginLeft": "8px"},
-                ),
-                html.Button(
-                    "Save Analysis",
-                    id="save-analysis-button",
-                    n_clicks=0,
-                    style={"marginLeft": "8px"},
-                ),
-                html.Button(
-                    "Run Analysis",
-                    id="run-analysis-button",
-                    n_clicks=0,
-                    style={"marginLeft": "8px"},
-                ),
-            ],
-        ),
-
-
-            # Second graph
-            dcc.Graph(
-                figure=go.Figure(go.Scatter(x=[1, 2, 3, 4], y=[10, 20, 30, 40])),
-                style={
-                    'display': 'inline-block',
-                    'vertical-align': 'top',
-                    'width': '33%',
-                },
-            ),
-
-            # Third graph
-            dcc.Graph(
-                style={
-                    'display': 'inline-block',
-                    'vertical-align': 'top',
-                    'width': '33%',
-                },
-                figure=px.scatter_3d(
-                    x=[1, 2, 3, 4],
-                    y=[10, 20, 30, 40],
-                    z=[5, 15, 25, 35],
-                ),
-            ),
-            dcc.Graph(
-                style={
-                    'display': 'inline-block',
-                    'vertical-align': 'top',
-                    'width': '33%',
-                },
-                figure=px.scatter_3d(
-                    x=[1, 2, 3, 4],
-                    y=[10, 20, 30, 40],
-                    z=[5, 15, 25, 35],
-                ),
-            ),
-        html.Div(id="footer", children="Data: synthetic", style={"marginTop": "8px", "color": "#666"}),
-    ],
+sidebar = html.Div(
+    sbar(),
+    style=SIDEBAR_STYLE(),
 )
+
+content = html.Div(id="page-content", style=CONTENT_STYLE())
+
+app.layout = html.Div([dcc.Location(id="url"), dcc.Store(id="start-calibration-store"), sidebar, content])
+
+
+@app.callback(Output("page-content", "children"), [Input("url", "pathname")])
+def render_page_content(pathname):
+    if pathname == "/":
+        return html.P("This is the content of the home page!")
+    elif pathname == "/page-1":
+        return fluorescent_calibration_layout()
+    elif pathname == "/page-2":
+        return other_calibration_layout()
+    # If the user tries to reach a different page, return a 404 message
+    else:
+        return html.P("This is the content of the calibration start page.")
 
 @app.callback(
-    Output("footer", "children"),
-    Input("upload-data-button", "filename"),
-    State("upload-data-button", "contents"),
-    State("upload-data-button", "last_modified"),
-    prevent_initial_call=True
+    Output("collapse-card", "is_open"),
+    [Input("collapse-button", "n_clicks")],
+    [State("collapse-card", "is_open")],
+    prevent_initial_call=True,
 )
-def upload_file(file_path, contents, last_modified):
-    print(file_path, contents, last_modified)
-    print("sfed")
-    filedata, contents = contents.split(",")
-    decoded = base64.b64decode(contents)
-    print(decoded)
-    data = FCSFile(file_path).read_all_data()
+def toggle_collapse(n, is_open):
+    if n:
+        print(f"Toggle collapse to {not is_open}")
+        return not is_open
+    return is_open
+
+@app.callback(
+    Output("start-calibration-store", "data"),
+    Input({"type": "start-calibration", "index": ALL}, "n_clicks"),
+    prevent_initial_call=True,
+)
+def start_calibration(n_clicks_list):
+    # ctx = dash.callback_context
+    # if not ctx.triggered:
+    #     raise dash.exceptions.PreventUpdate
+    # # triggered e.g. '{"type":"start-calibration","index":"folder/file"}.n_clicks'
+    # triggered_id = ctx.triggered[0]["prop_id"].split(".")[0]
+    # id_dict = json.loads(triggered_id)
+    # index = id_dict["index"]
+    print(n_clicks_list)
+    index = None
+    print("Calibration started for:", index)
+    return {"index": index, "n_clicks": n_clicks_list}
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(port=8888)
