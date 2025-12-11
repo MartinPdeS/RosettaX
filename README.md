@@ -2,10 +2,12 @@
 
 [Full report](https://htmlpreview.github.io/?https://github.com/MartinPdeS/RosettaX/blob/python-coverage-comment-action-data/htmlcov/index.html)
 
-| Name               |    Stmts |     Miss |   Branch |   BrPart |      Cover |   Missing |
-|------------------- | -------: | -------: | -------: | -------: | ---------: | --------: |
-| RosettaX/reader.py |      146 |       37 |       32 |        9 |     74.16% |96-98, 104-105, 114-116, 153-154, 164-166, 171-172, 182-183, 224-226, 288-290, 299-304, 309-310, 316-317, 331-332, 350-351 |
-|          **TOTAL** |  **146** |   **37** |   **32** |    **9** | **74.16%** |           |
+| Name                    |    Stmts |     Miss |   Branch |   BrPart |      Cover |   Missing |
+|------------------------ | -------: | -------: | -------: | -------: | ---------: | --------: |
+| RosettaX/clusterings.py |      156 |      156 |       50 |        0 |      0.00% |     1-319 |
+| RosettaX/plottings.py   |       55 |       55 |       16 |        0 |      0.00% |     1-251 |
+| RosettaX/reader.py      |      204 |       89 |       36 |        9 |     57.50% |101-103, 109-110, 119-121, 158-159, 169-171, 176-177, 187-188, 229-231, 293-295, 304-309, 314-315, 321-322, 336-337, 355-356, 422-532 |
+|               **TOTAL** |  **415** |  **300** |  **102** |    **9** | **26.69%** |           |
 
 2 files skipped due to complete coverage.
 
