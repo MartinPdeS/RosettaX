@@ -13,7 +13,7 @@ def sidebar():
             html.Div([
                 html.Div(
                     dcc.Link(f"{page['name']}", href=page["relative_path"])
-                ) for page in dash.page_registry.values()
+                ) for page in dash.page_registry.values() if page["name"] != "Apply Calibration"
             ]),
             dbc.Button(
                 "Show / Hide Saved Configurations",
