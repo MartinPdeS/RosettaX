@@ -30,8 +30,8 @@ def sidebar():
                                 html.H5(folder),
                                 html.Ul([
                                     html.Li(
-                                        html.A(file, id={"type": "apply-calibration", "index": f"{folder}/{file}"}, href="/apply-calibration", n_clicks=0)
-                                    ) for file in files]
+                                        html.A(file, id={"type": "apply-calibration", "index": f"{folder}/{file}"}, href=f"/apply-calibration/{folder}/{file}", n_clicks=0)
+                                    ) for file in files if file.endswith('.txt')]
                                 )]
                             ) for folder, files in list_of_files.items()]
                         ),
