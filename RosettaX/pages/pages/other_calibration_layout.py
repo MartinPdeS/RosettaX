@@ -5,6 +5,8 @@ dash.register_page(__name__, path='/other_calibration', name='Other Calibration'
 
 layout = html.Div([
     html.H1('Create and Save A New Other Calibration'),
+    html.H3("Please select a rosetta beads calibration file to proceed."),
+    
     html.Div([
         "Select a city: ",
         dcc.RadioItems(
