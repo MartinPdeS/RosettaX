@@ -5,6 +5,11 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 from typing import Any, Dict, Tuple
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.gridspec import GridSpec
+
+from MPSPlots import helper
 
 import numpy as np
 import pandas as pd
@@ -356,3 +361,172 @@ class FCSFile:
         data = array.reshape((num_events, num_parameters))
         self.data = pd.DataFrame(data, columns=column_headings)
         return self.data
+
+    @helper.post_mpl_plot
+    def plot(self, x, y, *, gridsize=200, bins_1d=200, log_hexbin=False, log_hist=False, cmap="viridis", hist_color="gray"):
+        """
+        Plot a fast hexbin 2D density plot with marginal 1D histograms.
+
+        Parameters
+        ----------
+        x : array_like
+            Data for the horizontal axis.
+        y : array_like
+            Data for the vertical axis.
+
+        gridsize : int, optional (default: 200)
+            Resolution of the hexagonal grid for the 2D histogram.
+
+        bins_1d : int, optional (default: 200)
+            Number of bins used for the marginal histograms.
+
+        log_hexbin : bool, optional (default: False)
+            If True, color-scale of the hexbin is logarithmic.
+
+        log_hist : bool, optional (default: False)
+            If True, marginal histograms are plotted with log-scaled counts.
+
+        cmap : str, optional (default: "viridis")
+            Colormap used for the hexbin.
+
+        figsize : tuple, optional (default: (8, 8))
+            Overall figure size.
+
+        x_label : str or None
+            Label for the x-axis (falls back to no label if None).
+
+        y_label : str or None
+            Label for the y-axis (falls back to no label if None).
+
+        title : str or None
+            Optional title for the full figure.
+
+        hist_color : str, optional (default: "gray")
+            Color used for the marginal histograms.
+
+        Returns
+        -------
+        fig : matplotlib.figure.Figure
+            The created figure object.
+
+        ax_hex : matplotlib.axes.Axes
+            Main hexbin plot axis.
+
+        ax_xhist : matplotlib.axes.Axes
+            Top marginal histogram axis.
+
+        ax_yhist : matplotlib.axes.Axes
+            Right marginal histogram axis.
+        """
+        # Extract data
+        x = self.data[x].values
+        y = self.data[y].values
+
+        fig = plt.figure()
+        gs = GridSpec(4, 4, figure=fig, wspace=0.05, hspace=0.05)
+
+        # Main plot
+        ax_hex = fig.add_subplot(gs[1:, 0:3])
+
+        # Marginal plots
+        ax_xhist = fig.add_subplot(gs[0, 0:3], sharex=ax_hex)
+        ax_yhist = fig.add_subplot(gs[1:, 3], sharey=ax_hex)
+
+        # Initial hexbin
+        hb = ax_hex.hexbin(
+            x, y,
+            gridsize=gridsize,
+            mincnt=1,
+            bins="log" if log_hexbin else None,
+            cmap=cmap,
+        )
+
+        # Initial marginal histograms
+        ax_xhist.hist(x, bins=bins_1d, color=hist_color, log=log_hist)
+        ax_yhist.hist(y, bins=bins_1d, orientation="horizontal", color=hist_color, log=log_hist)
+
+        # Aesthetic cleanup
+        plt.setp(ax_xhist.get_xticklabels(), visible=False)
+        plt.setp(ax_yhist.get_yticklabels(), visible=False)
+        ax_xhist.tick_params(axis="x", bottom=False)
+        ax_yhist.tick_params(axis="y", left=False)
+
+        # Remove scientific notation everywhere
+        ax_hex.ticklabel_format(useOffset=False, style='plain', scilimits=[0, 0])
+        ax_xhist.ticklabel_format(useOffset=False, style='plain', scilimits=[0, 0])
+        ax_yhist.ticklabel_format(useOffset=False, style='plain', scilimits=[0, 0])
+
+        # --------------------------
+        # Dynamic update functionality (with recursion guard)
+        # --------------------------
+
+        is_updating = False
+
+        def update_plot(event=None):
+            nonlocal is_updating, hb
+
+            # Avoid recursive calls
+            if is_updating:
+                return
+            is_updating = True
+
+            # Current visible window
+            xmin, xmax = ax_hex.get_xlim()
+            ymin, ymax = ax_hex.get_ylim()
+
+            # Mask visible data
+            mask = (x >= xmin) & (x <= xmax) & (y >= ymin) & (y <= ymax)
+            xv = x[mask]
+            yv = y[mask]
+
+            # ----------------------
+            # Update hexbin colors
+            # ----------------------
+            # Remove old hexbin collections
+            for col in list(ax_hex.collections):
+                try:
+                    col.remove()
+                except Exception:
+                    pass
+
+            hb = ax_hex.hexbin(
+                xv, yv,
+                gridsize=gridsize,
+                mincnt=1,
+                bins="log" if log_hexbin else None,
+                cmap=cmap,
+            )
+
+            # ----------------------
+            # Update marginal histograms
+            # ----------------------
+            ax_xhist.cla()
+            ax_yhist.cla()
+
+            ax_xhist.hist(xv, bins=bins_1d, color=hist_color, log=log_hist)
+            ax_yhist.hist(yv, bins=bins_1d, orientation="horizontal", color=hist_color, log=log_hist)
+
+            plt.setp(ax_xhist.get_xticklabels(), visible=False)
+            plt.setp(ax_yhist.get_yticklabels(), visible=False)
+            ax_xhist.tick_params(axis="x", bottom=False)
+            ax_yhist.tick_params(axis="y", left=False)
+
+            ax_xhist.set_xlim(xmin, xmax)
+            ax_yhist.set_ylim(ymin, ymax)
+
+            # Remove scientific notation again after replot
+            ax_hex.ticklabel_format(useOffset=False, style='plain', scilimits=[0, 0])
+            ax_xhist.ticklabel_format(useOffset=False, style='plain', scilimits=[0, 0])
+            ax_yhist.ticklabel_format(useOffset=False, style='plain', scilimits=[0, 0])
+
+            fig.canvas.draw_idle()
+            is_updating = False
+
+        # Connect callbacks
+        ax_hex.callbacks.connect("xlim_changed", update_plot)
+        ax_hex.callbacks.connect("ylim_changed", update_plot)
+
+        # Initial computation
+        update_plot()
+
+        return fig
