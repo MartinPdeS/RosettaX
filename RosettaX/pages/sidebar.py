@@ -21,6 +21,7 @@ def sidebar():
                 className="mb-3",
                 color="primary",
                 n_clicks=0,
+                style={"width": "100%"}
             ),  
             dbc.Collapse(
                 dbc.Card(
@@ -31,7 +32,7 @@ def sidebar():
                                 html.Ul([
                                     html.Li(
                                         html.A(file, id={"type": "apply-calibration", "index": f"{folder}/{file}"}, href=f"/apply-calibration/{folder}/{file}", n_clicks=0)
-                                    ) for file in files if file.endswith('.txt')]
+                                    ) for file in files]
                                 )]
                             ) for folder, files in list_of_files.items()]
                         ),
@@ -40,6 +41,7 @@ def sidebar():
                 ),
                 id="collapse-card",
                 is_open=True,
+                style={"width": "100%"}
             )
         ],
         vertical=True,
