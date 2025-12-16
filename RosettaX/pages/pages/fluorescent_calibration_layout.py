@@ -262,12 +262,12 @@ def calibrate_fluorescence(n_clicks, table_data, fl_detector):
     return f'{slope:.3f}', f'{intercept:.3f}', fl_detector, fig1
 
 @callback(
+    Output('calibration-result-output-fluorescent_calibration', 'children'),
     Input('save-calibration-button-fluorescent_calibration', 'n_clicks'),
     State('file-name-fluorescent_calibration', 'value')
 )
 def save_calibration(n_clicks, file_name):
     if n_clicks and n_clicks > 0:
-        downloads_dir = os.path.join(os.path.expanduser("~"), "Downloads")
         downloads_dir = os.path.join(ROOT_DIR, 'SavedCalibrations', 'FluorescentCalibrations')
         os.makedirs(downloads_dir, exist_ok=True)
         filename = (file_name or "fluorescent_calibration.csv").strip()
@@ -277,3 +277,5 @@ def save_calibration(n_clicks, file_name):
             f.write("Calibration saved\n")
             f.write(f"Timestamp,{datetime.datetime.now().isoformat()}\n")
         print(f"Calibration saved to {path}")
+        return f'Calibration saved to {path}'
+    return dash.no_update
