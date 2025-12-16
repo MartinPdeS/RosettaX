@@ -5,6 +5,7 @@ import numpy as np
 import os
 import datetime
 import plotly.graph_objs as go
+from root import ROOT_DIR
 
 dash.register_page(__name__, path='/fluorescent_calibration', name='Fluorescent Calibration')
 
@@ -265,8 +266,9 @@ def calibrate_fluorescence(n_clicks, table_data, fl_detector):
 def save_calibration(n_clicks, file_name):
     if n_clicks and n_clicks > 0:
         downloads_dir = os.path.join(os.path.expanduser("~"), "Downloads")
+        downloads_dir = os.path.join(ROOT_DIR, 'SavedCalibrations', 'FluorescentCalibrations')
         os.makedirs(downloads_dir, exist_ok=True)
-        filename = file_name if file_name else "fluorescent_calibration.csv"
+        filename = (file_name or "fluorescent_calibration.csv").strip()
         path = os.path.join(downloads_dir, filename)
 
         with open(path, "w", encoding="utf-8") as f:
