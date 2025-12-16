@@ -1,6 +1,10 @@
 import dash
 from dash import html, dcc, callback, Input, Output, State, dash_table
 import dash_bootstrap_components as dbc
+import numpy as np
+import os
+import datetime
+import plotly.graph_objs as go
 
 dash.register_page(__name__, path='/fluorescent_calibration', name='Fluorescent Calibration')
 
@@ -11,8 +15,8 @@ layout = html.Div([
     dbc.Collapse(
         dbc.Card([
             dbc.CardHeader('1. Upload Bead File'),
-            dbc.CardBody(
-                dcc.Upload( id='upload-data',
+            dbc.CardBody([
+                dcc.Upload(id='upload-data',
                     children=html.Div([
                         'Drag and Drop or ',
                         html.A('Select FluorescentFile')
@@ -30,8 +34,8 @@ layout = html.Div([
                     # Allow multiple files to be uploaded
                     multiple=False,
                 ),
-                style={"maxHeight": "60vh", "overflowY": "auto"}
-            )
+                html.Div(id='upload-file-name')
+            ], style={"maxHeight": "60vh", "overflowY": "auto"}, )
         ]),
         id="collapse-card-2",
         is_open=True,
@@ -44,7 +48,7 @@ layout = html.Div([
                 html.Div([
                     html.Div([
                         html.Div(["Light Scattering Detector:"]),
-                        dcc.Dropdown(id='fluorescence-detector-dropdown', value=None), 
+                        dcc.Dropdown(id='light-scattering-detector-dropdown', value=None), 
                     ]),
                     html.Br(),
                     html.Div([
@@ -110,7 +114,7 @@ layout = html.Div([
                             html.Div("", id='light-scattering-detector-output-intercept')
                         ], style={"display": "flex", "alignItems": "center", "gap": "5px"}),
                         html.Label('Calibrated MESF Channel Name:'),
-                        dcc.Input(id='channel-name-fluorescent_calibration', type='text', value='Calibration_1.csv'),
+                        dcc.Input(id='channel-name-fluorescent_calibration', type='text', value='', readOnly=True),
                     ]),
                 ]),
                 style={"maxHeight": "60vh", "overflowY": "auto"}
@@ -125,8 +129,8 @@ layout = html.Div([
             dbc.CardHeader('5. Graph Output'),
             dbc.CardBody(
                 html.Div([
-                    html.Div(dcc.Graph(), style={'display': 'inline-block'}),
-                    html.Div(dcc.Graph(), style={'display': 'inline-block'})
+                    html.Div(dcc.Graph(id='graph-1-fluorescent_calibration'), style={'display': 'inline-block'}),
+                    html.Div(dcc.Graph(id='graph-2-fluorescent_calibration'), style={'display': 'inline-block'})
                 ], style={'width': '100%', 'display': 'inline-block'}),
                 style={"maxHeight": "60vh", "overflowY": "auto"}
             )
@@ -140,9 +144,9 @@ layout = html.Div([
         dbc.Collapse(
             dbc.CardBody([
                 html.Label('Save Calibration Setup As:'),
-                dcc.Input(id='file-name-fluorescent_calibration', type='text', value='Calibration_1.csv'),
+                dcc.Input(id='file-name-fluorescent_calibration', type='text', value=''),
                 html.Br(),
-                html.Button('Save Fluorescent Calibration', id='run-calibration-button-fluorescent_calibration', n_clicks=0),
+                html.Button('Save Fluorescent Calibration', id='save-calibration-button-fluorescent_calibration', n_clicks=0),
                 html.Div(id='calibration-result-output-fluorescent_calibration'),
                 # style={"maxHeight": "60vh", "overflowY": "auto"}
             ]), 
@@ -152,15 +156,48 @@ layout = html.Div([
 ])
 
 @callback(
-    Output('calibration-result-output-fluorescent_calibration', 'children'),
-    [Input('run-calibration-button-fluorescent_calibration', 'n_clicks'), 
-    Input('file-name-fluorescent_calibration', 'value')]  # Assuming there's an input for file name
+    Output('light-scattering-detector-dropdown', 'options'),
+    Output('fluorescence-detector-dropdown', 'options'),
+    Output('light-scattering-detector-dropdown', 'value'),
+    Output('fluorescence-detector-dropdown', 'value'),
+    Output('upload-file-name', 'children'),
+    Input('upload-data', 'contents'),
+    State('upload-data', 'filename'), 
+    prevent_initial_call=True,
 )
-def run_fluorescent_calibration(n_clicks, file_name):
-    if n_clicks > 0:
-        # Placeholder for actual calibration logic
-        return f'Fluorescent Calibration run {n_clicks} times with file name {file_name}.'
-    return ''
+def update_detector_dropdown(contents, filename):
+    if contents is not None:
+        # Placeholder for actual logic to extract detector names from the uploaded file
+        detectors = ['Detector 1', 'Detector 2', 'Detector 3']
+        detectors2 = ['Detector 4', 'Detector 5', 'Detector 6']
+        return [{'label': det, 'value': det} for det in detectors], [{'label': det, 'value': det} for det in detectors2], detectors[0], detectors2[0], f'Selected file: {filename}'
+    return [], [], None, None
+
+@callback(
+    Output('graph-1-fluorescent_calibration', 'figure'),
+    Output('bead-spec-table', 'data', allow_duplicate=True),
+    Input('find-peak-button-fluorescent_calibration', 'n_clicks'),
+    State('light-scattering-detector-dropdown', 'value'),
+    State('fluorescence-detector-dropdown', 'value'),
+    prevent_initial_call=True,
+)
+def find_peaks(n_clicks, ls_detector, fl_detector):
+    if n_clicks is None or n_clicks == 0:
+        return dash.no_update
+
+    # create simple example bead-specs (MESF vs a.u.)
+    mesf_vals = [1e3, 1e4, 1e5, 1e6, 1e7]
+    au_vals = [10, 50, 200, 800, 3000]
+    table_data = [{"col1": str(int(m)), "col2": str(a)} for m, a in zip(mesf_vals, au_vals)]
+
+    # create simple Plotly figures and store them in a module-level variable so other callbacks can use them
+    fig1 = go.Figure(go.Scatter(x=au_vals, y=mesf_vals, mode='lines'))
+    fig1.update_layout(title='MESF vs Intensity (a.u.)', xaxis_title='Intensity (a.u.)', yaxis_title='Fluorescence Intensity (a.u.)')
+    fig1.update_yaxes(type='log')
+
+    table_data = [{"col1": str(int(m)), "col2": str(a)} for m, a in zip(mesf_vals, au_vals)]
+
+    return fig1, table_data
 
 @callback(
     Output('bead-spec-table', 'data'),
@@ -172,3 +209,67 @@ def add_row(n_clicks, rows, columns):
     if n_clicks > 0:
         rows.append({c['id']: '' for c in columns})
     return rows
+
+@callback(
+    Output('light-scattering-detector-output-slope', 'children'),
+    Output('light-scattering-detector-output-intercept', 'children'),
+    Output('channel-name-fluorescent_calibration', 'value', allow_duplicate=True),
+    Output('graph-2-fluorescent_calibration', 'figure'),
+    Input('calibrate-button-fluorescent_calibration', 'n_clicks'),
+    State('bead-spec-table', 'data'),
+    State('fluorescence-detector-dropdown', 'value'),
+    prevent_initial_call=True,
+)
+def calibrate_fluorescence(n_clicks, table_data, fl_detector):
+    if n_clicks is None or n_clicks == 0:
+        return dash.no_update
+
+    # create simple example bead-specs (MESF vs a.u.)
+    mesf_vals = [1e3, 1e4, 1e5, 1e6, 1e7]
+    au_vals = [10, 40, 250, 850, 2500]
+    table_data = [{"col1": str(int(m)), "col2": str(a)} for m, a in zip(mesf_vals, au_vals)]
+
+    # create simple Plotly figures and store them in a module-level variable so other callbacks can use them
+    fig1 = go.Figure(go.Scatter(x=au_vals, y=mesf_vals, mode='markers'))
+    x = np.array(au_vals, dtype=float)
+    y = np.array(mesf_vals, dtype=float)
+    mask = (x > 0) & (y > 0)
+
+    if mask.sum() >= 2:
+        logx = np.log10(x[mask])
+        logy = np.log10(y[mask])
+        p = np.polyfit(logx, logy, 1)
+        slope, intercept = p[0], p[1]
+        x_fit = np.logspace(np.log10(x[mask].min()), np.log10(x[mask].max()), 200)
+        y_fit = 10 ** (slope * np.log10(x_fit) + intercept)
+    else:
+        # keep previous slope/intercept if not enough points
+        x_fit = x
+        y_fit = y
+
+    fig1 = go.Figure()
+    fig1.add_trace(go.Scatter(x=au_vals, y=mesf_vals, mode='markers', name='beads'))
+    fig1.add_trace(go.Scatter(x=x_fit, y=y_fit, mode='lines', name='log-log fit'))
+    fig1.update_layout(title='MESF vs Intensity (a.u.)', xaxis_title='Intensity (a.u.)', yaxis_title='Fluorescence Intensity (a.u.)')
+    fig1.update_yaxes(type='log')
+    fig1.update_xaxes(type='log')
+
+    table_data = [{"col1": str(int(m)), "col2": str(a)} for m, a in zip(mesf_vals, au_vals)]
+
+    return f'{slope:.3f}', f'{intercept:.3f}', fl_detector, fig1
+
+@callback(
+    Input('save-calibration-button-fluorescent_calibration', 'n_clicks'),
+    State('file-name-fluorescent_calibration', 'value')
+)
+def save_calibration(n_clicks, file_name):
+    if n_clicks and n_clicks > 0:
+        downloads_dir = os.path.join(os.path.expanduser("~"), "Downloads")
+        os.makedirs(downloads_dir, exist_ok=True)
+        filename = file_name if file_name else "fluorescent_calibration.csv"
+        path = os.path.join(downloads_dir, filename)
+
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("Calibration saved\n")
+            f.write(f"Timestamp,{datetime.datetime.now().isoformat()}\n")
+        print(f"Calibration saved to {path}")
