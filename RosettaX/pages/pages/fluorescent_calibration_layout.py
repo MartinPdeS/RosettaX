@@ -247,6 +247,8 @@ def calibrate_fluorescence(n_clicks, table_data, fl_detector):
         # keep previous slope/intercept if not enough points
         x_fit = x
         y_fit = y
+        slope = 0
+        intercept = 0
 
     fig1 = go.Figure()
     fig1.add_trace(go.Scatter(x=au_vals, y=mesf_vals, mode='markers', name='beads'))
