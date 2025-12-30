@@ -131,7 +131,17 @@ layout = html.Div([
             dbc.CardBody(
                 html.Div([
                     html.Div(dcc.Graph(id='graph-1-fluorescent_calibration'), style={'display': 'inline-block'}),
-                    html.Div(dcc.Graph(id='graph-2-fluorescent_calibration'), style={'display': 'inline-block'})
+                    html.Div(dcc.Graph(id='graph-2-fluorescent_calibration'), style={'display': 'inline-block'}),
+                    html.Div([
+                        html.Div([
+                            html.Div(["Calculated Slope:"]),
+                            html.Div("", id='light-scattering-detector-output-slope')
+                        ], style={"display": "flex", "alignItems": "center", "gap": "5px"}),
+                        html.Div([
+                            html.Div(["Calculated Intercept:"]),
+                            html.Div("", id='light-scattering-detector-output-intercept')
+                        ], style={"display": "flex", "alignItems": "center", "gap": "5px"}),
+                    ]),
                 ], style={'width': '100%', 'display': 'inline-block'}),
                 style={"maxHeight": "60vh", "overflowY": "auto"}
             )
@@ -144,6 +154,9 @@ layout = html.Div([
         dbc.CardHeader('6. Save/Export Calibration'),
         dbc.Collapse(
             dbc.CardBody([
+                html.Label('Calibrated MESF Channel Name:'),
+                dcc.Input(id='channel-name-fluorescent_calibration', type='text', value=''),
+                html.Br(),
                 html.Label('Save Calibration Setup As:'),
                 dcc.Input(id='file-name-fluorescent_calibration', type='text', value=''),
                 html.Br(),
