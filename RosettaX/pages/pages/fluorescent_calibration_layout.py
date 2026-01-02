@@ -276,19 +276,25 @@ def calibrate_fluorescence(n_clicks, table_data, fl_detector):
 
 @callback(
     Output('calibration-result-output-fluorescent_calibration', 'children'),
+    Output('apply-calibration-store', 'data'),
     Input('save-calibration-button-fluorescent_calibration', 'n_clicks'),
-    State('file-name-fluorescent_calibration', 'value')
+    State('file-name-fluorescent_calibration', 'value'),
+    State('apply-calibration-store', 'data')
 )
-def save_calibration(n_clicks, file_name):
+def save_calibration(n_clicks, file_name, sidebar_data):
     if n_clicks and n_clicks > 0:
-        downloads_dir = os.path.join(ROOT_DIR, 'SavedCalibrations', 'FluorescentCalibrations')
-        os.makedirs(downloads_dir, exist_ok=True)
-        filename = (file_name or "fluorescent_calibration.csv").strip()
-        path = os.path.join(downloads_dir, filename)
+        # downloads_dir = os.path.join(ROOT_DIR, 'SavedCalibrations', 'FluorescentCalibrations')
+        # os.makedirs(downloads_dir, exist_ok=True)
+        # filename = (file_name or "fluorescent_calibration.csv").strip()
+        # path = os.path.join(downloads_dir, filename)
 
-        with open(path, "w", encoding="utf-8") as f:
-            f.write("Calibration saved\n")
-            f.write(f"Timestamp,{datetime.datetime.now().isoformat()}\n")
-        print(f"Calibration saved to {path}")
-        return f'Calibration saved to {path}'
+        # with open(path, "w", encoding="utf-8") as f:
+        #     f.write("Calibration saved\n")
+        #     f.write(f"Timestamp,{datetime.datetime.now().isoformat()}\n")
+        # print(f"Calibration saved to {path}")
+        # return f'Calibration saved to {path}'
+        print(sidebar_data)
+        sidebar_data['Fluorescent'].append(file_name)
+        print(sidebar_data)
+        return f'Calibration "{file_name}" saved successfully.', sidebar_data
     return dash.no_update
