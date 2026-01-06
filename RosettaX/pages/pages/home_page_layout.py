@@ -9,10 +9,10 @@ layout = html.Div([
     html.Br(),
     html.P("Have you never used this tool before and saved a calibration before? If so, you can start a new calibration."),
     html.Div("Go to the Fluorescent Calibration page to start a new calibration on fluorescent."),
-    dcc.Link('Fluorescent Calibration', href='/fluorescent-calibration'),
+    dcc.Link('Fluorescent Calibration', href='/fluorescent_calibration'),
     html.Br(),html.Br(),
     html.Div("Go to the Scatter Calibration page to start a new calibration on scatter."),
-    dcc.Link('Scatter Calibration', href='/scatter-calibration'),
+    dcc.Link('Scatter Calibration', href='/scatter_calibration'),
 
     html.Div("Have you already created a calibration? If so, you can select it from the sidebar."),
 ])
