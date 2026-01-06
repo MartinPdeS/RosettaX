@@ -124,6 +124,31 @@ layout = html.Div([
             is_open=True
         ),
     ]),
+    html.Br(), 
+    dbc.Collapse(
+        dbc.Card([
+            dbc.CardHeader('4. Graph Output'),
+            dbc.CardBody(
+                html.Div([
+                    html.Div(dcc.Graph(id='graph-1-scatter_calibration'), style={'display': 'inline-block', 'height': '90%', 'width': '20%'}),
+                    html.Div(dcc.Graph(id='graph-2-scatter_calibration'), style={'display': 'inline-block', 'height': '90%', 'width': '80%'}),
+                    html.Div([
+                        html.Div([
+                            html.Div(["Calculated Slope:"]),
+                            html.Div("", id='light-scattering-detector-output-slope')
+                        ], style={"display": "flex", "alignItems": "center", "gap": "5px"}),
+                        html.Div([
+                            html.Div(["Calculated Intercept:"]),
+                            html.Div("", id='light-scattering-detector-output-intercept')
+                        ], style={"display": "flex", "alignItems": "center", "gap": "5px"}),
+                    ]),
+                ], style={'width': '100%', 'height':'100%', 'display': 'inline-block'}),
+                style={"height": "100%", "overflowY": "auto"}
+            )
+        ], style={"height": "70vh", "overflowY": "auto"}),
+        id="collapse-card-2",
+        is_open=True,
+    )
 ])
 
 @callback(

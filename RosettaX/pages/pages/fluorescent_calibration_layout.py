@@ -104,8 +104,8 @@ layout = html.Div([
             dbc.CardHeader('4. Graph Output'),
             dbc.CardBody(
                 html.Div([
-                    html.Div(dcc.Graph(id='graph-1-fluorescent_calibration'), style={'display': 'inline-block', 'height': '100%', 'width': '20%'}),
-                    html.Div(dcc.Graph(id='graph-2-fluorescent_calibration'), style={'display': 'inline-block', 'height': '100%', 'width': '80%'}),
+                    html.Div(dcc.Graph(id='graph-1-fluorescent_calibration'), style={'display': 'inline-block', 'height': '90%', 'width': '20%'}),
+                    html.Div(dcc.Graph(id='graph-2-fluorescent_calibration'), style={'display': 'inline-block', 'height': '90%', 'width': '80%'}),
                     html.Div([
                         html.Div([
                             html.Div(["Calculated Slope:"]),
