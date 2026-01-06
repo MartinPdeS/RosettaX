@@ -2,10 +2,9 @@ import dash
 from dash import html, dcc, callback, Input, Output, State, dash_table
 import dash_bootstrap_components as dbc
 import numpy as np
-import os
-import datetime
 import plotly.graph_objs as go
 from root import ROOT_DIR
+from pages.sidebar import sidebar_html
 
 dash.register_page(__name__, path='/fluorescent_calibration', name='Fluorescent Calibration')
 
@@ -98,40 +97,15 @@ layout = html.Div([
         )
     ]),
     html.Br(),
-    dbc.Collapse(
-        dbc.Card([
-            dbc.CardHeader('4. Calibration Parameters'),
-            dbc.CardBody(
-                html.Div([
-                    html.Div("Add the bead specifications (Intensity in MESF and corresponding Intensity in a.u.) from the bottle/specification in the table below:"),
-                    html.Br(),
-                    html.Div([
-                        html.Div([
-                            html.Div(["Calculated Slope:"]),
-                            html.Div("", id='light-scattering-detector-output-slope')
-                        ], style={"display": "flex", "alignItems": "center", "gap": "5px"}),
-                        html.Div([
-                            html.Div(["Calculated Intercept:"]),
-                            html.Div("", id='light-scattering-detector-output-intercept')
-                        ], style={"display": "flex", "alignItems": "center", "gap": "5px"}),
-                        html.Label('Calibrated MESF Channel Name:'),
-                        dcc.Input(id='channel-name-fluorescent_calibration', type='text', value='', readOnly=True),
-                    ]),
-                ]),
-                style={"maxHeight": "60vh", "overflowY": "auto"}
-            )
-        ]),
-        id="collapse-card-2",
-        is_open=True,
-    ),
+    
     html.Br(), 
     dbc.Collapse(
         dbc.Card([
-            dbc.CardHeader('5. Graph Output'),
+            dbc.CardHeader('4. Graph Output'),
             dbc.CardBody(
                 html.Div([
-                    html.Div(dcc.Graph(id='graph-1-fluorescent_calibration'), style={'display': 'inline-block'}),
-                    html.Div(dcc.Graph(id='graph-2-fluorescent_calibration'), style={'display': 'inline-block'}),
+                    html.Div(dcc.Graph(id='graph-1-fluorescent_calibration'), style={'display': 'inline-block', 'height': '100%', 'width': '20%'}),
+                    html.Div(dcc.Graph(id='graph-2-fluorescent_calibration'), style={'display': 'inline-block', 'height': '100%', 'width': '80%'}),
                     html.Div([
                         html.Div([
                             html.Div(["Calculated Slope:"]),
@@ -142,16 +116,16 @@ layout = html.Div([
                             html.Div("", id='light-scattering-detector-output-intercept')
                         ], style={"display": "flex", "alignItems": "center", "gap": "5px"}),
                     ]),
-                ], style={'width': '100%', 'display': 'inline-block'}),
-                style={"maxHeight": "60vh", "overflowY": "auto"}
+                ], style={'width': '100%', 'height':'100%', 'display': 'inline-block'}),
+                style={"height": "100%", "overflowY": "auto"}
             )
-        ]),
+        ], style={"height": "70vh", "overflowY": "auto"}),
         id="collapse-card-2",
         is_open=True,
     ),
     html.Br(),
     dbc.Card([
-        dbc.CardHeader('6. Save/Export Calibration'),
+        dbc.CardHeader('5. Save/Export Calibration'),
         dbc.Collapse(
             dbc.CardBody([
                 html.Label('Calibrated MESF Channel Name:'),
@@ -239,14 +213,19 @@ def calibrate_fluorescence(n_clicks, table_data, fl_detector):
         return dash.no_update
 
     # create simple example bead-specs (MESF vs a.u.)
-    mesf_vals = [1e3, 1e4, 1e5, 1e6, 1e7]
-    au_vals = [10, 40, 250, 850, 2500]
-    table_data = [{"col1": str(int(m)), "col2": str(a)} for m, a in zip(mesf_vals, au_vals)]
+    print(table_data)
+    mesf_vals = []
+    au_vals = []
+    for row in table_data:
+        mesf = float(row['col1'])
+        au = float(row['col2'])
+        mesf_vals.append(mesf)
+        au_vals.append(au)
 
     # create simple Plotly figures and store them in a module-level variable so other callbacks can use them
-    fig1 = go.Figure(go.Scatter(x=au_vals, y=mesf_vals, mode='markers'))
-    x = np.array(au_vals, dtype=float)
-    y = np.array(mesf_vals, dtype=float)
+    fig1 = go.Figure(go.Scatter(x=mesf_vals, y=au_vals, mode='markers'))
+    x = np.array(mesf_vals, dtype=float)
+    y = np.array(au_vals, dtype=float)
     mask = (x > 0) & (y > 0)
 
     if mask.sum() >= 2:
@@ -264,22 +243,22 @@ def calibrate_fluorescence(n_clicks, table_data, fl_detector):
         intercept = 0
 
     fig1 = go.Figure()
-    fig1.add_trace(go.Scatter(x=au_vals, y=mesf_vals, mode='markers', name='beads'))
+    fig1.add_trace(go.Scatter(x=mesf_vals, y=au_vals, mode='markers', name='beads'))
     fig1.add_trace(go.Scatter(x=x_fit, y=y_fit, mode='lines', name='log-log fit'))
     fig1.update_layout(title='MESF vs Intensity (a.u.)', xaxis_title='Intensity (a.u.)', yaxis_title='Fluorescence Intensity (a.u.)')
     fig1.update_yaxes(type='log')
     fig1.update_xaxes(type='log')
-
-    table_data = [{"col1": str(int(m)), "col2": str(a)} for m, a in zip(mesf_vals, au_vals)]
 
     return f'{slope:.3f}', f'{intercept:.3f}', fl_detector, fig1
 
 @callback(
     Output('calibration-result-output-fluorescent_calibration', 'children'),
     Output('apply-calibration-store', 'data'),
+    Output('sidebar-content', 'children'),
     Input('save-calibration-button-fluorescent_calibration', 'n_clicks'),
     State('file-name-fluorescent_calibration', 'value'),
-    State('apply-calibration-store', 'data')
+    State('apply-calibration-store', 'data'),
+    prevent_initial_call=True
 )
 def save_calibration(n_clicks, file_name, sidebar_data):
     if n_clicks and n_clicks > 0:
@@ -296,5 +275,5 @@ def save_calibration(n_clicks, file_name, sidebar_data):
         print(sidebar_data)
         sidebar_data['Fluorescent'].append(file_name)
         print(sidebar_data)
-        return f'Calibration "{file_name}" saved successfully.', sidebar_data
+        return f'Calibration "{file_name}" saved successfully.', sidebar_data, sidebar_html(sidebar_data)
     return dash.no_update
