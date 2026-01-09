@@ -2,14 +2,19 @@
 
 [Full report](https://htmlpreview.github.io/?https://github.com/MartinPdeS/RosettaX/blob/python-coverage-comment-action-data/htmlcov/index.html)
 
-| Name                    |    Stmts |     Miss |   Branch |   BrPart |      Cover |   Missing |
-|------------------------ | -------: | -------: | -------: | -------: | ---------: | --------: |
-| RosettaX/clusterings.py |      156 |      156 |       50 |        0 |      0.00% |     1-319 |
-| RosettaX/plottings.py   |       55 |       55 |       16 |        0 |      0.00% |     1-251 |
-| RosettaX/reader.py      |      204 |       89 |       36 |        9 |     57.50% |101-103, 109-110, 119-121, 158-159, 169-171, 176-177, 187-188, 229-231, 293-295, 304-309, 314-315, 321-322, 336-337, 355-356, 422-532 |
-|               **TOTAL** |  **415** |  **300** |  **102** |    **9** | **26.69%** |           |
+| Name                      |    Stmts |     Miss |   Branch |   BrPart |      Cover |   Missing |
+|-------------------------- | -------: | -------: | -------: | -------: | ---------: | --------: |
+| RosettaX/clusterings.py   |      156 |      156 |       50 |        0 |      0.00% |     1-319 |
+| RosettaX/main.py          |       17 |       17 |        2 |        0 |      0.00% |      1-41 |
+| RosettaX/pages/sidebar.py |        5 |        5 |        0 |        0 |      0.00% |       1-6 |
+| RosettaX/pages/styling.py |        4 |        4 |        0 |        0 |      0.00% |       1-9 |
+| RosettaX/plottings.py     |       55 |       55 |       16 |        0 |      0.00% |     1-251 |
+| RosettaX/reader.py        |      204 |       89 |       36 |        9 |     57.50% |101-103, 109-110, 119-121, 158-159, 169-171, 176-177, 187-188, 229-231, 293-295, 304-309, 314-315, 321-322, 336-337, 355-356, 422-532 |
+| RosettaX/root.py          |        2 |        2 |        0 |        0 |      0.00% |       1-2 |
+| RosettaX/utils.py         |       15 |       15 |        6 |        0 |      0.00% |      1-17 |
+| **TOTAL**                 |  **458** |  **343** |  **110** |    **9** | **24.30%** |           |
 
-2 files skipped due to complete coverage.
+1 file skipped due to complete coverage.
 
 
 ## Setup coverage badge
