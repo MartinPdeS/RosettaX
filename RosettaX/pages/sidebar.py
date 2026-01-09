@@ -29,7 +29,7 @@ def sidebar_html(sidebar):
                         ]),
                         html.Hr(),
                         dbc.Button(
-                            "Apply Saved Calibration",
+                            "Apply Saved Calibrations",
                             id="collapse-button",
                             className="mb-3",
                             color="primary",

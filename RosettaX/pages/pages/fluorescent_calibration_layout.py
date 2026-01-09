@@ -184,7 +184,6 @@ def find_peaks(n_clicks, ls_detector, fl_detector):
     fig1.update_yaxes(type='log')
 
     table_data = [{"col1": str(int(m)), "col2": str(a)} for m, a in zip(mesf_vals, au_vals)]
-
     return fig1, table_data
 
 @callback(
@@ -213,7 +212,6 @@ def calibrate_fluorescence(n_clicks, table_data, fl_detector):
         return dash.no_update
 
     # create simple example bead-specs (MESF vs a.u.)
-    print(table_data)
     mesf_vals = []
     au_vals = []
     for row in table_data:
