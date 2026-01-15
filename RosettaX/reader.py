@@ -65,6 +65,7 @@ class FCSFile:
         self.header = self._read_header()
         self.text, self.delimiter = self._read_text()
 
+
     def _validate_file(self) -> None:
         """Verify that the file exists and is large enough to contain a header."""
         if not os.path.isfile(self.file_path):
@@ -360,10 +361,18 @@ class FCSFile:
 
         data = array.reshape((num_events, num_parameters))
         self.data = pd.DataFrame(data, columns=column_headings)
+
+        units = {}
+
+        for column in self.data.columns:
+            units[column] = 'A.U.'
+
+        self.data.attrs['units'] = units
+
         return self.data
 
     @helper.post_mpl_plot
-    def plot(self, x, y, *, gridsize=200, bins_1d=200, log_hexbin=False, log_hist=False, cmap="viridis", hist_color="gray"):
+    def plot(self, x, y, *, gridsize=200, bins_1d=20, log_hexbin=False, log_hist=False, cmap="viridis", hist_color="gray"):
         """
         Plot a fast hexbin 2D density plot with marginal 1D histograms.
 
@@ -419,8 +428,8 @@ class FCSFile:
             Right marginal histogram axis.
         """
         # Extract data
-        x = self.data[x].values
-        y = self.data[y].values
+        x_values = self.data[x].values
+        y_values = self.data[y].values
 
         fig = plt.figure()
         gs = GridSpec(4, 4, figure=fig, wspace=0.05, hspace=0.05)
@@ -434,7 +443,7 @@ class FCSFile:
 
         # Initial hexbin
         hb = ax_hex.hexbin(
-            x, y,
+            x_values, y_values,
             gridsize=gridsize,
             mincnt=1,
             bins="log" if log_hexbin else None,
@@ -442,8 +451,8 @@ class FCSFile:
         )
 
         # Initial marginal histograms
-        ax_xhist.hist(x, bins=bins_1d, color=hist_color, log=log_hist)
-        ax_yhist.hist(y, bins=bins_1d, orientation="horizontal", color=hist_color, log=log_hist)
+        ax_xhist.hist(x_values, bins=bins_1d, color=hist_color, log=log_hist)
+        ax_yhist.hist(y_values, bins=bins_1d, orientation="horizontal", color=hist_color, log=log_hist)
 
         # Aesthetic cleanup
         plt.setp(ax_xhist.get_xticklabels(), visible=False)
@@ -475,9 +484,9 @@ class FCSFile:
             ymin, ymax = ax_hex.get_ylim()
 
             # Mask visible data
-            mask = (x >= xmin) & (x <= xmax) & (y >= ymin) & (y <= ymax)
-            xv = x[mask]
-            yv = y[mask]
+            mask = (x_values >= xmin) & (x_values <= xmax) & (y_values >= ymin) & (y_values <= ymax)
+            xv = x_values[mask]
+            yv = y_values[mask]
 
             # ----------------------
             # Update hexbin colors
@@ -525,6 +534,12 @@ class FCSFile:
         # Connect callbacks
         ax_hex.callbacks.connect("xlim_changed", update_plot)
         ax_hex.callbacks.connect("ylim_changed", update_plot)
+
+        x_units = self.data.attrs['units'].get(x, '')
+        y_units = self.data.attrs['units'].get(y, '')
+
+        ax_hex.set_xlabel(f"{x} [{x_units}]" if x_units else x)
+        ax_hex.set_ylabel(f"{y} [{y_units}]" if y_units else y)
 
         # Initial computation
         update_plot()
