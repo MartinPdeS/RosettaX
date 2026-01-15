@@ -5,6 +5,9 @@ import numpy as np
 import plotly.graph_objs as go
 from root import ROOT_DIR
 from pages.sidebar import sidebar_html
+from os import listdir
+from os.path import isfile, join, isdir
+from reader import FCSFile
 
 dash.register_page(__name__, path='/fluorescent_calibration', name='Fluorescent Calibration')
 
@@ -132,6 +135,32 @@ layout = html.Div([
         )
     ]),
 ])
+
+@callback(
+    Output('bead-file-location-dropdown', 'options'),
+    Output('bead-file-location-dropdown', 'disabled'),
+    Output('load-file-button', 'disabled'),
+    Input('bead-file-location-input', 'value'),
+    prevent_initial_call=True,
+)
+def update_file_location_dropdown(input_value):
+    # If no input provided, return empty options
+    if not input_value or input_value.strip() == '':
+        return dash.no_update
+    path = input_value.strip()
+
+    # Ensure the path is a valid directory
+    if not isdir(path):
+        return dash.no_update
+
+    try:
+        onlyfiles = [f for f in listdir(path) if isfile(join(path, f))]
+    except OSError:
+        return dash.no_update
+    options = {}
+    for f in onlyfiles:
+        options[f] = f
+    return options, False, False
 
 @callback(
     Output('light-scattering-detector-dropdown', 'options'),
