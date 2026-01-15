@@ -16,28 +16,18 @@ layout = html.Div([
         dbc.Card([
             dbc.CardHeader('1. Upload Bead File'),
             dbc.CardBody([
-                dcc.Upload(id='upload-data',
-                    children=html.Div([
-                        'Drag and Drop or ',
-                        html.A('Select FluorescentFile')
-                    ]),
-                    style={
-                        'width': '100%',
-                        'height': '60px',
-                        'lineHeight': '60px',
-                        'borderWidth': '1px',
-                        'borderStyle': 'dashed',
-                        'borderRadius': '5px',
-                        'textAlign': 'center',
-                        'margin': '10px'
-                    },
-                    # Allow multiple files to be uploaded
-                    multiple=False,
+                html.Div("Enter the folder location of the Rosetta bead files below:"),
+                dcc.Input(style={'marginRight': '10px', 'width':'100%'}, id='bead-file-location-input', type='text', placeholder='Location of Rosetta Bead Files:'),
+                html.Div("Select the bead file you want to calibrate from the dropdown below:"),
+                dcc.Dropdown(
+                    id='bead-file-location-dropdown',
+                    options=[],
+                    disabled=True,
                 ),
-                html.Div(id='upload-file-name')
-            ], style={"maxHeight": "60vh", "overflowY": "auto"}, )
+                html.Button('Load File', id='load-file-button', n_clicks=0, disabled=True),
+            ], style={"height": "20vh", "overflowY": "auto"}, )
         ]),
-        id="collapse-card-2",
+        id="collapse-card-1",
         is_open=True,
     ),
     html.Br(), 

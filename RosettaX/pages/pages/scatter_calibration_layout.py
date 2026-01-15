@@ -12,21 +12,10 @@ layout = html.Div([
         dbc.Collapse(
             dbc.CardBody(
                 html.Div([
-                    dcc.Upload(
-                        id='upload-data',
-                        children=html.Div(['Drag and Drop or ', html.A('Select File')]),
-                        style={
-                            'width': '100%',
-                            'height': '60px',
-                            'lineHeight': '60px',
-                            'borderWidth': '1px',
-                            'borderStyle': 'dashed',
-                            'borderRadius': '5px',
-                            'textAlign': 'center',
-                            'margin': '10px'
-                        },
-                        multiple=False,
-                    ),
+                    html.Div([
+                    dcc.Input(style={'marginRight': '10px', 'width':'100%'}, id='bead-file-location-input', type='text', placeholder='Location of Rosetta Bead Files:'),
+                ]),
+                html.Div(id='bead-file-location-output'),
                     # Use flex layout so each label+control is inline and wraps if needed
                     html.Div([
                         html.Div(["Flow Cytometry Name: "], style={'minWidth': '160px'}),
@@ -152,10 +141,10 @@ layout = html.Div([
 ])
 
 @callback(
-    Output('calibration-result-output', 'children'),
+    Output('graph-1-scatter_calibration', 'figure'),
     [Input('run-calibration-button', 'n_clicks'), 
     Input('file-name', 'value')], 
-    allow_duplicate=True
+    prevent_initial_call=True
 )
 def run_scatter_calibration(n_clicks, file_name):
     if n_clicks > 0:
