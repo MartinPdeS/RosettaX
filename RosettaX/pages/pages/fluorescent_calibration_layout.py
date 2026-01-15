@@ -167,18 +167,24 @@ def update_file_location_dropdown(input_value):
     Output('fluorescence-detector-dropdown', 'options'),
     Output('light-scattering-detector-dropdown', 'value'),
     Output('fluorescence-detector-dropdown', 'value'),
-    Output('upload-file-name', 'children'),
-    Input('upload-data', 'contents'),
-    State('upload-data', 'filename'), 
+    Input('load-file-button', 'n_clicks'),
+    State('bead-file-location-dropdown', 'value'),
+    State('bead-file-location-input', 'value'),
     prevent_initial_call=True,
 )
-def update_detector_dropdown(contents, filename):
-    if contents is not None:
-        # Placeholder for actual logic to extract detector names from the uploaded file
-        detectors = ['Detector 1', 'Detector 2', 'Detector 3']
-        detectors2 = ['Detector 4', 'Detector 5', 'Detector 6']
-        return [{'label': det, 'value': det} for det in detectors], [{'label': det, 'value': det} for det in detectors2], detectors[0], detectors2[0], f'Selected file: {filename}'
-    return [], [], None, None
+def update_detector_dropdown(n_clicks, filename, path_to_folder):
+    new_fcs_file = FCSFile(join(path_to_folder, filename))
+    text, _ = new_fcs_file._read_text()
+    light_list = []
+    fluorescence_list = []
+    detector_dict = text['Detectors']
+    for d, detector in detector_dict.items():
+        if 'N' in detector:
+            if "peak" in detector['N'].lower():
+                fluorescence_list.append(detector['N'])
+            elif "area" in detector['N'].lower():
+                light_list.append(detector['N'])
+    return [{'label': det, 'value': det} for det in light_list], [{'label': det, 'value': det} for det in fluorescence_list], light_list[0], fluorescence_list[0]
 
 @callback(
     Output('graph-1-fluorescent_calibration', 'figure'),
@@ -279,16 +285,6 @@ def calibrate_fluorescence(n_clicks, table_data, fl_detector):
 )
 def save_calibration(n_clicks, file_name, sidebar_data):
     if n_clicks and n_clicks > 0:
-        # downloads_dir = os.path.join(ROOT_DIR, 'SavedCalibrations', 'FluorescentCalibrations')
-        # os.makedirs(downloads_dir, exist_ok=True)
-        # filename = (file_name or "fluorescent_calibration.csv").strip()
-        # path = os.path.join(downloads_dir, filename)
-
-        # with open(path, "w", encoding="utf-8") as f:
-        #     f.write("Calibration saved\n")
-        #     f.write(f"Timestamp,{datetime.datetime.now().isoformat()}\n")
-        # print(f"Calibration saved to {path}")
-        # return f'Calibration saved to {path}'
         print(sidebar_data)
         sidebar_data['Fluorescent'].append(file_name)
         print(sidebar_data)
