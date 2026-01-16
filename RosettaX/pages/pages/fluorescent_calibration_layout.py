@@ -19,16 +19,19 @@ layout = html.Div([
         dbc.Card([
             dbc.CardHeader('1. Upload Bead File'),
             dbc.CardBody([
-                html.Div("Enter the folder location of the Rosetta bead files below:"),
-                dcc.Input(style={'marginRight': '10px', 'width':'100%'}, id='bead-file-location-input', type='text', placeholder='Location of Rosetta Bead Files:'),
-                html.Div("Select the bead file you want to calibrate from the dropdown below:"),
-                dcc.Dropdown(
-                    id='bead-file-location-dropdown',
-                    options=[],
-                    disabled=True,
-                ),
-                html.Button('Load File', id='load-file-button', n_clicks=0, disabled=True),
-            ], style={"height": "20vh", "overflowY": "auto"}, )
+                html.Div([
+                    html.Div("Enter the folder location of the Rosetta bead files below:"),
+                    dcc.Input(style={'marginRight': '10px', 'width':'100%'}, id='bead-file-location-input', type='text', placeholder='Location of Rosetta Bead Files:'),
+                    html.Div("Select the bead file you want to calibrate from the dropdown below:"),
+                    dcc.Dropdown(
+                        id='bead-file-location-dropdown',
+                        options=[],
+                        disabled=True,
+                    ),
+                    html.Br(),
+                    html.Button('Load File', id='load-file-button', n_clicks=0, disabled=True),
+                ])
+            ])
         ]),
         id="collapse-card-1",
         is_open=True,
@@ -50,8 +53,7 @@ layout = html.Div([
                     ]),
                     html.Br(),
                     html.Button('Find Peaks', id='find-peak-button-fluorescent_calibration', n_clicks=0),
-                ]),
-                style={"maxHeight": "60vh", "overflowY": "auto"}
+                ])
             )
         ]),
         id="collapse-card-2",
