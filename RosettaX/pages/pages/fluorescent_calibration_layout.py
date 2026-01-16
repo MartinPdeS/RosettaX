@@ -277,7 +277,7 @@ def calibrate_fluorescence(n_clicks, table_data, fl_detector):
     fig1.update_yaxes(type='log')
     fig1.update_xaxes(type='log')
 
-    return f'{slope:.3f}', f'{intercept:.3f}', fl_detector, fig1
+    return f'{slope:.3f}', f'{intercept:.3f}', fl_detector + '_calibrated', fig1
 
 @callback(
     Output('calibration-result-output-fluorescent_calibration', 'children'),
