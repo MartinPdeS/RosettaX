@@ -103,13 +103,13 @@ layout = html.Div([
                     html.Div(dcc.Graph(id='graph-2-fluorescent_calibration'), style={'display': 'inline-block', 'height': '90%', 'width': '80%'}),
                     html.Div([
                         html.Div([
-                            html.Div(["Calculated Slope:"]),
-                            html.Div("", id='light-scattering-detector-output-slope')
-                        ], style={"display": "flex", "alignItems": "center", "gap": "5px"}),
+                            html.Div("Calculated Slope:"),
+                            dcc.Input(id='light-fluorescent-detector-output-slope', type='text', value='', style={"width":"90%"}, disabled=True),
+                        ], style={"display": "flex", "alignItems": "center", "gap": "5px", "width": "100%"}),
                         html.Div([
-                            html.Div(["Calculated Intercept:"]),
-                            html.Div("", id='light-scattering-detector-output-intercept')
-                        ], style={"display": "flex", "alignItems": "center", "gap": "5px"}),
+                            html.Div("Calculated Intercept:"),
+                            dcc.Input(id='light-fluorescent-detector-output-intercept', type='text', value='', style={'width':'90%'}, disabled=True),
+                        ], style={"display": "flex", "alignItems": "center", "gap": "5px", "width": "100%"}),
                     ]),
                 ], style={'width': '100%', 'height':'100%', 'display': 'inline-block'}),
                 style={"height": "100%", "overflowY": "auto"}
@@ -123,11 +123,14 @@ layout = html.Div([
         dbc.CardHeader('5. Save/Export Calibration'),
         dbc.Collapse(
             dbc.CardBody([
-                html.Label('Calibrated MESF Channel Name:'),
-                dcc.Input(id='channel-name-fluorescent_calibration', type='text', value=''),
+                html.Label('Calibrated MESF Channel Name: '),
                 html.Br(),
-                html.Label('Save Calibration Setup As:'),
-                dcc.Input(id='file-name-fluorescent_calibration', type='text', value=''),
+                dcc.Input(id='channel-name-fluorescent_calibration', type='text', value='', style={'width':'100%'}),
+                html.Br(),
+                html.Label('Save Calibration Setup As: '),
+                html.Br(),
+                dcc.Input(id='file-name-fluorescent_calibration', type='text', value='', style={'width':'100%'}),
+                html.Br(),
                 html.Br(),
                 html.Button('Save Fluorescent Calibration', id='save-calibration-button-fluorescent_calibration', n_clicks=0),
                 html.Div(id='calibration-result-output-fluorescent_calibration'),
@@ -225,8 +228,8 @@ def add_row(n_clicks, rows, columns):
     return rows
 
 @callback(
-    Output('light-scattering-detector-output-slope', 'children'),
-    Output('light-scattering-detector-output-intercept', 'children'),
+    Output('light-fluorescent-detector-output-slope', 'value'),
+    Output('light-fluorescent-detector-output-intercept', 'value'),
     Output('channel-name-fluorescent_calibration', 'value', allow_duplicate=True),
     Output('graph-2-fluorescent_calibration', 'figure'),
     Input('calibrate-button-fluorescent_calibration', 'n_clicks'),
