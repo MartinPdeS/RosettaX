@@ -13,5 +13,3 @@ def generate_file_list_for_sidebar():
             paths_of_files[name[0]].append("/".join(name[1:]))
     paths_of_files = dict(sorted(paths_of_files.items()))
     return paths_of_files
-
-generate_file_list_for_sidebar()
