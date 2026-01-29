@@ -3,6 +3,7 @@ import dash_bootstrap_components as dbc
 from dash import Input, Output, dcc, html, State, MATCH
 from pages.styling import CONTENT_STYLE, SIDEBAR_STYLE
 from pages.sidebar import sidebar_html
+import json
 
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP], use_pages=True)
 
@@ -16,6 +17,21 @@ app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP], use_pages=True)
 #     if n:
 #         return not is_open
 #     return is_open
+
+def create_table_from_dict():
+    # {"col1": "", "col2": ""}
+    try:
+        with open('RosettaX/data/settings/saved_mesf_values.json', 'r') as file:
+            data = json.load(file)
+            table_data = []
+            for key, value in data.items():
+                if value.get('default', True):
+                    mesf_values = value['mesf_values'].split(',')
+                    for mesf in mesf_values:
+                        table_data.append({"col1": mesf, "col2": ""})
+    except Exception as e:
+        table_data = [{"col1": "", "col2": ""}]
+    return table_data
 
 @app.callback(
     Output("page-content", "children"),
@@ -35,7 +51,13 @@ def update_sidebar(url, sidebar):
 
 main_content = html.Div(dash.page_container, id="page-content", style=CONTENT_STYLE())
 sidebar_content = html.Div(id="sidebar-content", style=SIDEBAR_STYLE())
-app.layout = html.Div([dcc.Location(id="url"), dcc.Store(data={'Fluorescent':[], 'Scatter':[]}, id="apply-calibration-store", storage_type='session'), sidebar_content, main_content])
+app.layout = html.Div([
+    dcc.Location(id="url"), 
+    dcc.Store(data={'Fluorescent':[], 'Scatter':[]}, id="apply-calibration-store", storage_type='session'), 
+    dcc.Store(data=create_table_from_dict(), id="MESF-default_table-store", storage_type='session'), 
+    sidebar_content, 
+    main_content
+])
 
 if __name__ == "__main__":
     app.run(debug=True)

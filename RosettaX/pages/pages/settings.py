@@ -73,6 +73,7 @@ def layout(**kwargs):
 )
 def save_mesf_values(n_clicks, mesf_values):
     filename = 'RosettaX/data/settings/saved_mesf_values.json'
+    print(filename)
     try:
         with open(filename, 'r') as file:
             data = json.load(file)

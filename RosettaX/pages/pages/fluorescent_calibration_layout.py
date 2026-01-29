@@ -8,13 +8,40 @@ from pages.sidebar import sidebar_html
 from os import listdir
 from os.path import isfile, join, isdir
 from reader import FCSFile
+import pprint
+import json
+
+def check_scatter_or_fluorescence(detector_name):
+    scatter_keywords = ['scatter', 'fsc', 'ssc', 'sals', 'lals', 'mals', '405ls', '488ls', '638ls','fs-a','fs-h','ss-a','ss-h']
+    non_fluorescence_keywords = ['time', 'width','diameter','cross section']
+    name_lower = detector_name.lower()
+    if any(keyword in name_lower for keyword in scatter_keywords):
+        return 'scatter'
+    else:
+        if any(keyword in name_lower for keyword in non_fluorescence_keywords):
+            return 'unknown'
+        else:
+            return 'fluorescence'
+
+def create_list_from_saved_default_mesf_values():
+    try:
+        with open('RosettaX/data/settings/saved_mesf_values.json', 'r') as file:
+            data = json.load(file)
+            table_data = []
+            for key, value in data.items():
+                if value.get('default', True):
+                    mesf_values = value['mesf_values'].split(',')
+                    for mesf in mesf_values:
+                        table_data.append(mesf)
+    except Exception as e:
+        table_data = []
+    return table_data
 
 dash.register_page(__name__, path='/fluorescent_calibration', name='Fluorescent Calibration')
 
 layout = html.Div([
     html.H1('Create and Save A New Fluorescent Calibration'),
     html.H3('Please select a rosetta beads calibration file to proceed. Select detectors and click "Find peak" to find the fluorescent peaks.'),
-
     dbc.Collapse(
         dbc.Card([
             dbc.CardHeader('1. Upload Bead File'),
@@ -71,10 +98,10 @@ layout = html.Div([
                         dash_table.DataTable(
                             id='bead-spec-table',
                             columns=[
-                                {"name": "Intensity (MESF)", "id": "col1", "editable": True},
-                                {"name": "Intensity (a.u.)", "id": "col2", "editable": True},
+                                {"name": "Intensity (MESF), user filled", "id": "col1", "editable": True},
+                                {"name": "Intensity (a.u.), auto calculated", "id": "col2", "editable": True},
                             ],
-                            data=[{"col1": "", "col2": ""}, {"col1": "", "col2": ""}, {"col1": "", "col2": ""}],  # initial single empty row
+                            data=[{"col1": "", "col2": ""}], # Initial empty row
                             editable=True,
                             row_deletable=True,
                             style_table={"overflowX": "auto"},
@@ -139,6 +166,7 @@ layout = html.Div([
             id="collapse-card-2", is_open=True,
         )
     ]),
+    html.Div(id='trigger-initial-load', style={'display': 'none'}),
 ])
 
 @callback(
@@ -157,9 +185,9 @@ def update_file_location_dropdown(input_value):
     # Ensure the path is a valid directory
     if not isdir(path):
         return dash.no_update
-
+    # TODO: check for .fcs file, maybe .LMD, and maybe .001, .002, .003, ... files
     try:
-        onlyfiles = [f for f in listdir(path) if isfile(join(path, f))]
+        onlyfiles = [f for f in listdir(path) if (isfile(join(path, f)) and f.lower().endswith('.fcs'))]
     except OSError:
         return dash.no_update
     options = {}
@@ -180,16 +208,17 @@ def update_file_location_dropdown(input_value):
 def update_detector_dropdown(n_clicks, filename, path_to_folder):
     new_fcs_file = FCSFile(join(path_to_folder, filename))
     text, _ = new_fcs_file._read_text()
-    light_list = []
+    dataframe = new_fcs_file.read_all_data()
+    scatter_list = []
     fluorescence_list = []
     detector_dict = text['Detectors']
     for d, detector in detector_dict.items():
         if 'N' in detector:
-            if "peak" in detector['N'].lower():
+            if check_scatter_or_fluorescence(detector['N']) == 'scatter':
+                scatter_list.append(detector['N'])
+            elif check_scatter_or_fluorescence(detector['N']) == 'fluorescence':
                 fluorescence_list.append(detector['N'])
-            elif "area" in detector['N'].lower():
-                light_list.append(detector['N'])
-    return [{'label': det, 'value': det} for det in light_list], [{'label': det, 'value': det} for det in fluorescence_list], light_list[0], fluorescence_list[0]
+    return [{'label': det, 'value': det} for det in scatter_list], [{'label': det, 'value': det} for det in fluorescence_list], scatter_list[0], fluorescence_list[0]
 
 @callback(
     Output('graph-1-fluorescent_calibration', 'figure'),
@@ -197,30 +226,34 @@ def update_detector_dropdown(n_clicks, filename, path_to_folder):
     Input('find-peak-button-fluorescent_calibration', 'n_clicks'),
     State('light-scattering-detector-dropdown', 'value'),
     State('fluorescence-detector-dropdown', 'value'),
+    State('MESF-default_table-store', 'data'),
     prevent_initial_call=True,
 )
-def find_peaks(n_clicks, ls_detector, fl_detector):
+def find_peaks(n_clicks, ls_detector, fl_detector, mesf_table_data):
     if n_clicks is None or n_clicks == 0:
         return dash.no_update
 
     # create simple example bead-specs (MESF vs a.u.)
-    mesf_vals = [1e3, 1e4, 1e5, 1e6, 1e7]
-    au_vals = [10, 50, 200, 800, 3000]
+    mesf_vals = create_list_from_saved_default_mesf_values()
+    au_vals = [1] * len(mesf_vals)
+    # au_vals = [10, 50, 200, 800, 3000]
     table_data = [{"col1": str(int(m)), "col2": str(a)} for m, a in zip(mesf_vals, au_vals)]
+    # table_data = create_table_from_dict() # mesf_table_data # [{"col1": str(int(m)), "col2": str(a)} for m, a in zip(mesf_vals, au_vals)]
+    print('MESF values:', mesf_vals, au_vals, table_data)
 
     # create simple Plotly figures and store them in a module-level variable so other callbacks can use them
     fig1 = go.Figure(go.Scatter(x=au_vals, y=mesf_vals, mode='lines'))
     fig1.update_layout(title='MESF vs Intensity (a.u.)', xaxis_title='Intensity (a.u.)', yaxis_title='Fluorescence Intensity (a.u.)')
     fig1.update_yaxes(type='log')
 
-    table_data = [{"col1": str(int(m)), "col2": str(a)} for m, a in zip(mesf_vals, au_vals)]
     return fig1, table_data
 
 @callback(
-    Output('bead-spec-table', 'data'),
+    Output('bead-spec-table', 'data', allow_duplicate=True),
     Input('add-row-button-fluorescent_calibration', 'n_clicks'),
     State('bead-spec-table', 'data'),
-    State('bead-spec-table', 'columns')
+    State('bead-spec-table', 'columns'), 
+    prevent_initial_call=True,
 )
 def add_row(n_clicks, rows, columns):
     if n_clicks > 0:
@@ -290,8 +323,18 @@ def calibrate_fluorescence(n_clicks, table_data, fl_detector):
 )
 def save_calibration(n_clicks, file_name, sidebar_data):
     if n_clicks and n_clicks > 0:
-        print(sidebar_data)
         sidebar_data['Fluorescent'].append(file_name)
-        print(sidebar_data)
         return f'Calibration "{file_name}" saved successfully.', sidebar_data, sidebar_html(sidebar_data)
     return dash.no_update
+
+# @callback(
+#     Output('bead-spec-table', 'data'),
+#     Input('trigger-initial-load', 'children'),
+#     State('MESF-default_table-store', 'data'), # This triggers once on startup
+#     # allow_duplicate=True,
+#     # prevent_initial_call='initial_duplicate'
+
+# )
+# def update_table_from_store(fes, data):
+#     print("Updating table from store:", fes, data)
+#     return data
