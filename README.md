@@ -2,18 +2,22 @@
 
 [Full report](https://htmlpreview.github.io/?https://github.com/MartinPdeS/RosettaX/blob/python-coverage-comment-action-data/htmlcov/index.html)
 
-| Name                      |    Stmts |     Miss |   Branch |   BrPart |      Cover |   Missing |
-|-------------------------- | -------: | -------: | -------: | -------: | ---------: | --------: |
-| RosettaX/calibration.py   |       16 |       16 |        0 |        0 |      0.00% |      1-40 |
-| RosettaX/clusterings.py   |      174 |      174 |       48 |        0 |      0.00% |     1-392 |
-| RosettaX/main.py          |       17 |       17 |        2 |        0 |      0.00% |      1-41 |
-| RosettaX/pages/sidebar.py |        5 |        5 |        0 |        0 |      0.00% |       1-6 |
-| RosettaX/pages/styling.py |        4 |        4 |        0 |        0 |      0.00% |       1-9 |
-| RosettaX/plottings.py     |       55 |       55 |       16 |        0 |      0.00% |     1-251 |
-| RosettaX/reader.py        |      212 |       93 |       38 |        9 |     57.60% |102-104, 110-111, 120-122, 159-160, 170-172, 177-178, 188-189, 230-232, 294-296, 305-310, 315-316, 322-323, 337-338, 356-357, 431-547 |
-| RosettaX/root.py          |        2 |        2 |        0 |        0 |      0.00% |       1-2 |
-| RosettaX/utils.py         |       15 |       15 |        6 |        0 |      0.00% |      1-17 |
-| **TOTAL**                 |  **500** |  **381** |  **110** |    **9** | **23.61%** |           |
+| Name                          |    Stmts |     Miss |   Branch |   BrPart |      Cover |   Missing |
+|------------------------------ | -------: | -------: | -------: | -------: | ---------: | --------: |
+| RosettaX/backend.py           |      249 |      249 |      114 |        0 |      0.00% |     1-412 |
+| RosettaX/calibration.py       |       27 |       27 |        2 |        0 |      0.00% |      1-64 |
+| RosettaX/clusterings.py       |      174 |      174 |       48 |        0 |      0.00% |     1-392 |
+| RosettaX/pages/fluorescent.py |      288 |      288 |       68 |        0 |      0.00% |     1-757 |
+| RosettaX/pages/help.py        |        5 |        5 |        0 |        0 |      0.00% |       1-7 |
+| RosettaX/pages/home.py        |        8 |        8 |        0 |        0 |      0.00% |      1-16 |
+| RosettaX/pages/scattering.py  |       63 |       63 |        4 |        0 |      0.00% |     1-472 |
+| RosettaX/pages/sidebar.py     |       12 |       12 |        2 |        0 |      0.00% |      1-53 |
+| RosettaX/pages/styling.py     |        4 |        4 |        0 |        0 |      0.00% |       1-9 |
+| RosettaX/plottings.py         |       55 |       55 |       16 |        0 |      0.00% |     1-251 |
+| RosettaX/reader.py            |      212 |       93 |       38 |        9 |     57.60% |102-104, 110-111, 120-122, 159-160, 170-172, 177-178, 188-189, 230-232, 294-296, 305-310, 315-316, 322-323, 337-338, 356-357, 431-547 |
+| RosettaX/root.py              |        2 |        2 |        0 |        0 |      0.00% |       1-2 |
+| RosettaX/utils.py             |       15 |       15 |        6 |        0 |      0.00% |      1-17 |
+| **TOTAL**                     | **1114** |  **995** |  **298** |    **9** | **10.20%** |           |
 
 1 file skipped due to complete coverage.
 
