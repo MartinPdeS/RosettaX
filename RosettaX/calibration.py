@@ -1,41 +1,64 @@
 import numpy as np
-
+import pandas as pd
 
 
 class FluorescenceCalibration:
-    def __init__(self, MESF: np.ndarray, intensity: np.ndarray):
-        self.MESF = np.asarray(MESF).squeeze()
-        self.intensity = np.asarray(intensity).squeeze()
+    """
+    Linear calibration mapping intensity (a.u.) to MESF.
 
-        self.MESF = np.sort(self.MESF)
-        self.intensity = np.sort(self.intensity)
+    Model
+    -----
+    MESF = slope * intensity + intercept
+    """
+
+    def __init__(self, MESF: np.ndarray, intensity: np.ndarray):
+        """
+        Parameters
+        ----------
+        MESF
+            Molecules of Equivalent Soluble Fluorochrome.
+        intensity
+            Fluorescence intensity (a.u.).
+        """
+        x = np.asarray(intensity, dtype=float).reshape(-1)
+        y = np.asarray(MESF, dtype=float).reshape(-1)
+
+        mask = np.isfinite(x) & np.isfinite(y)
+        x = x[mask]
+        y = y[mask]
+
+        if x.size < 2:
+            raise ValueError("Need at least two valid points to fit calibration.")
+
+        self.intensity = x
+        self.MESF = y
         self.slope, self.intercept = np.polyfit(self.intensity, self.MESF, 1)
 
     def calibrate(self, intensity: np.ndarray) -> np.ndarray:
         """
-        Calibrate fluorescence intensity values to molecule counts.
-
-        Parameters
-        ----------
-        intensity : np.ndarray
-            Array of fluorescence intensity values.
-
-        Returns
-        -------
-        np.ndarray
-            Array of calibrated molecule counts.
+        Convert intensity values (a.u.) into MESF using the fitted linear model.
         """
-        return (intensity - self.intercept) / self.slope
+        x = np.asarray(intensity, dtype=float)
+        return self.slope * x + self.intercept
 
-    def add_calibration_to_dataframe(self, data: object, column: str) -> object:
+    def to_dict(self) -> dict:
+        """
+        Serialize calibration parameters for storage in Dash (dcc.Store).
+        """
+        return {"slope": float(self.slope), "intercept": float(self.intercept)}
 
-        uncalibrated = data.data[column]
+    @classmethod
+    def from_dict(cls, payload: dict) -> "FluorescenceCalibration":
+        """
+        Reconstruct a calibration from stored parameters.
 
-        calibrated = self.calibrate(uncalibrated)
-
-        data.data[column + " [calibrated - MESF]"] = calibrated
-
-        data.data.attrs['units'][column + " [calibrated - MESF]"] = "MESF"
-
-        return data
-
+        Notes
+        -----
+        This builds an instance without refitting. It is useful when you want the same API.
+        """
+        obj = cls.__new__(cls)
+        obj.slope = float(payload["slope"])
+        obj.intercept = float(payload["intercept"])
+        obj.intensity = np.array([], dtype=float)
+        obj.MESF = np.array([], dtype=float)
+        return obj
