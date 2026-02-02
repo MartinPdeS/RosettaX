@@ -1,6 +1,10 @@
 import dash
 import dash_bootstrap_components as dbc
 from dash import Input, Output, dcc, html, State
+import webbrowser
+from threading import Timer
+
+
 from RosettaX.pages.styling import CONTENT_STYLE, SIDEBAR_STYLE
 from RosettaX.pages.sidebar import sidebar_html
 
@@ -44,5 +48,10 @@ app.layout = html.Div(
     ]
 )
 
+def open_browser():
+	webbrowser.open_new("http://localhost:{}".format(8050))
+
 if __name__ == "__main__":
-    app.run(debug=True, port=8050, )
+    Timer(1, open_browser).start()
+
+    app.run(debug=True, port=8050)

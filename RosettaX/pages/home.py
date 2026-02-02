@@ -19,7 +19,7 @@ layout = dbc.Container(
             [
                 html.H1("RosettaX", style={"marginBottom": "6px"}),
                 html.P(
-                    "Build detector calibrations from bead files and apply them to your datasets.",
+                    "Flow-cytometry calibration tool.",
                     style={"opacity": 0.85, "marginBottom": "0px"},
                 ),
             ],
