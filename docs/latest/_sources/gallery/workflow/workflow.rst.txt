@@ -23,23 +23,34 @@ Workflow example
 
 Just a dummy example to illustrate the workflow examples gallery.
 
-.. GENERATED FROM PYTHON SOURCE LINES 8-26
+.. GENERATED FROM PYTHON SOURCE LINES 8-41
 
 
 
-.. image-sg:: /gallery/workflow/images/sphx_glr_workflow_001.png
-   :alt: workflow
-   :srcset: /gallery/workflow/images/sphx_glr_workflow_001.png
-   :class: sphx-glr-single-img
+.. rst-class:: sphx-glr-horizontal
+
+
+    *
+
+      .. image-sg:: /gallery/workflow/images/sphx_glr_workflow_001.png
+         :alt: workflow
+         :srcset: /gallery/workflow/images/sphx_glr_workflow_001.png
+         :class: sphx-glr-multi-img
+
+    *
+
+      .. image-sg:: /gallery/workflow/images/sphx_glr_workflow_002.png
+         :alt: 1D sigma thresholding, HDBSCAN clustering (1D)
+         :srcset: /gallery/workflow/images/sphx_glr_workflow_002.png
+         :class: sphx-glr-multi-img
 
 
 .. rst-class:: sphx-glr-script-out
 
  .. code-block:: none
 
-    /opt/hostedtoolcache/Python/3.13.11/x64/lib/python3.13/site-packages/RosettaX/data/fcs/sample.fcs
-    /opt/hostedtoolcache/Python/3.13.11/x64/lib/python3.13/site-packages/matplotlib/cbook.py:1355: RuntimeWarning: invalid value encountered in cast
-      return np.asarray(x, float)
+    /opt/hostedtoolcache/Python/3.13.11/x64/lib/python3.13/site-packages/RosettaX/reader.py:531: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+      fig.canvas.draw_idle()
 
 
 
@@ -52,27 +63,42 @@ Just a dummy example to illustrate the workflow examples gallery.
 
     from RosettaX.reader import FCSFile
     from RosettaX.directories import fcs_data
-    import matplotlib.pyplot as plt
+    from RosettaX.clusterings import SigmaThresholdHDBSCAN
 
     file_dir = fcs_data / "sample.fcs"
 
-    print(file_dir)
-
-    data = FCSFile(fcs_data / "sample.fcs")
+    data = FCSFile(fcs_data / "sample_0.fcs")
 
     data.read_all_data()
 
-    figure, ax = plt.subplots()
-    ax.plot(data.data["FSC-A"], data.data["SSC-A"], ".")
-    ax.set_xlabel("FSC-A")
-    ax.set_ylabel("SSC-A")
-    plt.show()
+    x = "488Org(Peak)"
+    y = "405LALS(Peak)"
 
+    figure = data.plot(
+        figure_size=(6, 6),
+        x=x,
+        y=y,
+        log_hist=False,
+        ylim=(0.4e6, None),
+        xlim=(1000, 100000),
+        tight_layout=False
+    )
+
+
+    model = SigmaThresholdHDBSCAN()
+
+    labels, means, modes, clean_data, mask = model.fit(
+        x=data.data[x][:40_000],
+        n_clusters=3,          # ask for two merged clusters
+        threshold_x=4000,      # tweak according to data
+        min_cluster_size=100,  # you can tweak; start not too high
+        debug=True,
+    )
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** (0 minutes 0.635 seconds)
+   **Total running time of the script:** (0 minutes 4.174 seconds)
 
 
 .. _sphx_glr_download_gallery_workflow_workflow.py:

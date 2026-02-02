@@ -32,6 +32,23 @@ Workflow
     </div>
 
 
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Just a dummy example to illustrate the workflow examples gallery.">
+
+.. only:: html
+
+  .. image:: /gallery/workflow/images/thumb/sphx_glr_workflow_backend_thumb.png
+    :alt:
+
+  :doc:`/gallery/workflow/workflow_backend`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Workflow example</div>
+    </div>
+
+
 .. thumbnail-parent-div-close
 
 .. raw:: html
@@ -43,4 +60,5 @@ Workflow
    :hidden:
 
    /gallery/workflow/workflow
+   /gallery/workflow/workflow_backend
 

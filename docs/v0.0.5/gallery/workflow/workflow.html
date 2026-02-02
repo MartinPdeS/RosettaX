@@ -45,8 +45,8 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
-    <script src="../../_static/doctools.js?v=9bcbadda"></script>
-    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'gallery/workflow/workflow';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
@@ -57,7 +57,7 @@
         </script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="References" href="../../references.html" />
+    <link rel="next" title="Workflow example" href="workflow_backend.html" />
     <link rel="prev" title="Workflow" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -398,6 +398,7 @@
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Workflow</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Workflow example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflow_backend.html">Workflow example</a></li>
 </ul>
 </details></li>
 </ul>
@@ -471,9 +472,12 @@ to download the full example code.</p>
 <section class="sphx-glr-example-title" id="workflow-example">
 <span id="sphx-glr-gallery-workflow-workflow-py"></span><h1>Workflow example<a class="headerlink" href="#workflow-example" title="Link to this heading">#</a></h1>
 <p>Just a dummy example to illustrate the workflow examples gallery.</p>
-<img src="../../_images/sphx_glr_workflow_001.png" srcset="../../_images/sphx_glr_workflow_001.png" alt="workflow" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>/opt/hostedtoolcache/Python/3.13.11/x64/lib/python3.13/site-packages/RosettaX/data/fcs/sample.fcs
-/opt/hostedtoolcache/Python/3.13.11/x64/lib/python3.13/site-packages/matplotlib/cbook.py:1355: RuntimeWarning: invalid value encountered in cast
-  return np.asarray(x, float)
+<ul class="sphx-glr-horizontal">
+<li><img src="../../_images/sphx_glr_workflow_001.png" srcset="../../_images/sphx_glr_workflow_001.png" alt="workflow" class = "sphx-glr-multi-img"/></li>
+<li><img src="../../_images/sphx_glr_workflow_002.png" srcset="../../_images/sphx_glr_workflow_002.png" alt="1D sigma thresholding, HDBSCAN clustering (1D)" class = "sphx-glr-multi-img"/></li>
+</ul>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>/opt/hostedtoolcache/Python/3.13.11/x64/lib/python3.13/site-packages/RosettaX/reader.py:531: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
+  fig.canvas.draw_idle()
 </pre></div>
 </div>
 <div class="line-block">
@@ -481,24 +485,40 @@ to download the full example code.</p>
 </div>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">FCSFile</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.directories</span><span class="w"> </span><span class="kn">import</span> <span class="n">fcs_data</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.clusterings</span><span class="w"> </span><span class="kn">import</span> <span class="n">SigmaThresholdHDBSCAN</span>
 
 <span class="n">file_dir</span> <span class="o">=</span> <span class="n">fcs_data</span> <span class="o">/</span> <span class="s2">&quot;sample.fcs&quot;</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="n">file_dir</span><span class="p">)</span>
-
-<span class="n">data</span> <span class="o">=</span> <span class="n">FCSFile</span><span class="p">(</span><span class="n">fcs_data</span> <span class="o">/</span> <span class="s2">&quot;sample.fcs&quot;</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">FCSFile</span><span class="p">(</span><span class="n">fcs_data</span> <span class="o">/</span> <span class="s2">&quot;sample_0.fcs&quot;</span><span class="p">)</span>
 
 <span class="n">data</span><span class="o">.</span><span class="n">read_all_data</span><span class="p">()</span>
 
-<span class="n">figure</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;FSC-A&quot;</span><span class="p">],</span> <span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;SSC-A&quot;</span><span class="p">],</span> <span class="s2">&quot;.&quot;</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;FSC-A&quot;</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;SSC-A&quot;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="n">x</span> <span class="o">=</span> <span class="s2">&quot;488Org(Peak)&quot;</span>
+<span class="n">y</span> <span class="o">=</span> <span class="s2">&quot;405LALS(Peak)&quot;</span>
+
+<span class="n">figure</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">figure_size</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span>
+    <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+    <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>
+    <span class="n">log_hist</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">ylim</span><span class="o">=</span><span class="p">(</span><span class="mf">0.4e6</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+    <span class="n">xlim</span><span class="o">=</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">100000</span><span class="p">),</span>
+    <span class="n">tight_layout</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span>
+
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">SigmaThresholdHDBSCAN</span><span class="p">()</span>
+
+<span class="n">labels</span><span class="p">,</span> <span class="n">means</span><span class="p">,</span> <span class="n">modes</span><span class="p">,</span> <span class="n">clean_data</span><span class="p">,</span> <span class="n">mask</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+    <span class="n">x</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">x</span><span class="p">][:</span><span class="mi">40_000</span><span class="p">],</span>
+    <span class="n">n_clusters</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>          <span class="c1"># ask for two merged clusters</span>
+    <span class="n">threshold_x</span><span class="o">=</span><span class="mi">4000</span><span class="p">,</span>      <span class="c1"># tweak according to data</span>
+    <span class="n">min_cluster_size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>  <span class="c1"># you can tweak; start not too high</span>
+    <span class="n">debug</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 0.635 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 4.174 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-gallery-workflow-workflow-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/6a0ef608c65870bfaba7aeaedad0b489/workflow.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">workflow.ipynb</span></code></a></p>
@@ -577,7 +597,7 @@ to download the full example code.</p>
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
     <br/>
   </p>
 </div>
