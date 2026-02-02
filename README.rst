@@ -30,7 +30,7 @@ As of 2025, the project is still under development. If you want to collaborate, 
 
 RosettaX was written by `Martin Poinsinet de Sivry-Houle <https://github.com/MartinPdS>`_  .
 
-Email:`martin.poinsinet.de.sivry@gmail.ca <mailto:martin.poinsinet.de.sivry@gmail.ca?subject=RosettaX>`_ . 
+Email:`martin.poinsinet.de.sivry@gmail.ca <mailto:martin.poinsinet.de.sivry@gmail.ca?subject=RosettaX>`_ .
 
 
 .. |python| image:: https://img.shields.io/pypi/pyversions/rosettax.svg
@@ -66,3 +66,7 @@ Email:`martin.poinsinet.de.sivry@gmail.ca <mailto:martin.poinsinet.de.sivry@gmai
 .. |anaconda| image:: https://anaconda.org/martinpdes/rosettax/badges/version.svg
    :alt: Anaconda version
    :target: https://anaconda.org/martinpdes/rosettax
+
+.. |coverage| image:: https://raw.githubusercontent.com/MartinPdeS/RosettaX/python-coverage-comment-action-data/badge.svg
+    :alt: Unittest coverage
+    :target: https://htmlpreview.github.io/?https://github.com/MartinPdeS/RosettaX/blob/python-coverage-comment-action-data/htmlcov/index.html
