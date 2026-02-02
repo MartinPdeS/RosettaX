@@ -32,7 +32,7 @@ dependencies = [
     "plotly",
     "scipy",
     "web-browser",
-
+    "hdbscan"
 ]
 
 [project.urls]
