@@ -36,3 +36,7 @@ docs/source/gallery/
 *Makefile*
 
 # Package specifics
+
+
+# Specific files to ignore
+RosettaX/data/settings/saved_mesf_values.json
