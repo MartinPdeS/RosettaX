@@ -1,22 +1,11 @@
 import dash
 import dash_bootstrap_components as dbc
-from dash import Input, Output, dcc, html, State, MATCH
-from pages.styling import CONTENT_STYLE, SIDEBAR_STYLE
-from pages.sidebar import sidebar_html
+from dash import Input, Output, dcc, html, State
+import webbrowser
+from threading import Timer
 import json
-
-app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP], use_pages=True)
-
-# @app.callback(
-#     Output("collapse-card", "is_open"),
-#     [Input("collapse-button", "n_clicks")],
-#     [State("collapse-card", "is_open")],
-#     prevent_initial_call=True,
-# )
-# def toggle_collapse(n, is_open):
-#     if n:
-#         return not is_open
-#     return is_open
+from RosettaX.pages.styling import CONTENT_STYLE, SIDEBAR_STYLE
+from RosettaX.pages.sidebar import sidebar_html
 
 def create_table_from_dict():
     # {"col1": "", "col2": ""}
@@ -33,6 +22,11 @@ def create_table_from_dict():
         table_data = [{"col1": "", "col2": ""}]
     return table_data
 
+app = dash.Dash(
+    external_stylesheets=[dbc.themes.BOOTSTRAP],
+    use_pages=True
+)
+
 @app.callback(
     Output("page-content", "children"),
     Input("url", "pathname")
@@ -44,20 +38,35 @@ def display_page(pathname):
     Output("sidebar-content", "children", allow_duplicate=True),
     Input("url", "pathname"),
     State("apply-calibration-store", "data"),
-    prevent_initial_call=True, 
+    prevent_initial_call=True,
 )
 def update_sidebar(url, sidebar):
     return sidebar_html(sidebar)
 
-main_content = html.Div(dash.page_container, id="page-content", style=CONTENT_STYLE())
-sidebar_content = html.Div(id="sidebar-content", style=SIDEBAR_STYLE())
-app.layout = html.Div([
-    dcc.Location(id="url"), 
-    dcc.Store(data={'Fluorescent':[], 'Scatter':[]}, id="apply-calibration-store", storage_type='session'), 
-    dcc.Store(data=create_table_from_dict(), id="MESF-default_table-store", storage_type='session'), 
-    sidebar_content, 
-    main_content
-])
+main_content = html.Div(
+    dash.page_container,
+    id="page-content",
+    style=CONTENT_STYLE()
+)
+sidebar_content = html.Div(
+    id="sidebar-content",
+    style=SIDEBAR_STYLE()
+)
+
+app.layout = html.Div(
+    [
+        dcc.Location(id="url"),
+        dcc.Store(data={'Fluorescent':[], 'Scatter':[]}, id="apply-calibration-store", storage_type='session'),
+        dcc.Store(data=create_table_from_dict(), id="MESF-default_table-store", storage_type='session'), 
+        sidebar_content,
+        main_content
+    ]
+)
+
+def open_browser():
+	webbrowser.open_new("http://localhost:{}".format(8050))
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    Timer(1, open_browser).start()
+
+    app.run(debug=True, port=8050)
