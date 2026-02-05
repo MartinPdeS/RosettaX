@@ -67,7 +67,7 @@ class FluorescentCalibrationPage:
             {"name": "Intensity (MESF)", "id": "col1", "editable": True},
             {"name": "Intensity (a.u.)", "id": "col2", "editable": True},
         ]
-        self.default_bead_rows = [{"col1": "", "col2": ""} for _ in range(5)]
+        self.default_bead_rows = [{"col1": "", "col2": ""} for _ in range(3)]
 
         self.upload_style = {
             "width": "100%",
@@ -182,9 +182,9 @@ class FluorescentCalibrationPage:
                             dcc.Input(
                                 id=ids.fluorescence_peak_count_input,
                                 type="number",
-                                min=1,
+                                min=2, # minimum 2 peaks needed otherwise cant fit a line
                                 step=1,
-                                value=5,
+                                value=3,
                                 style={"width": "160px"},
                             ),
                         ],
@@ -462,7 +462,8 @@ class FluorescentCalibrationPage:
                 threshold_value = 0.0
 
             nbins = self._as_int(fluorescence_nbins, default=200, min_value=10, max_value=5000)
-            max_peaks = self._as_int(peak_count, default=5, min_value=1, max_value=100)
+            max_peaks = self._as_int(peak_count, default=3, min_value=2, max_value=100)
+            #TODO: discuss with martin minimum 2 peaks needed otherwise cant fit a line, but maybe user just wants to visualize the histogram and not fit a line, so maybe can allow 1 peak but then just dont fit a line in that case.
 
             backend = BackEnd(fcs_path)
 
