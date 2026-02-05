@@ -109,6 +109,8 @@ class BackEnd:
             payload["slope"] = float(getattr(calibration, "slope"))
         if "intercept" not in payload:
             payload["intercept"] = float(getattr(calibration, "intercept"))
+        if "R_squared" not in payload:
+            payload["R_squared"] = float(getattr(calibration, "R_squared"))
 
         payload["n_points"] = int(mesf_values.size)
         return payload
