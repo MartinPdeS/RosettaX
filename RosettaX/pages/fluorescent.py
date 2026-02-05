@@ -19,6 +19,7 @@ class FluorescentCalibrationIds:
 
     upload = f"{page_name}-upload-data"
     upload_filename = f"{page_name}-upload-file-name"
+    upload_saved_as = f"{page_name}-upload-saved-as"
 
     uploaded_fcs_path_store = f"{page_name}-uploaded-fcs-path-store"
     calibration_store = f"{page_name}-calibration-store"
@@ -82,6 +83,8 @@ class FluorescentCalibrationPage:
 
         self.card_body_scroll = {"maxHeight": "60vh", "overflowY": "auto"}
         self.graph_style = {"width": "100%", "height": "45vh"}
+        self.scatter_keywords = ['scatter', 'fsc', 'ssc', 'sals', 'lals', 'mals', '405ls', '488ls', '638ls','fs-a','fs-h','ss-a','ss-h']
+        self.non_valid_keywords = ['time', 'width','diameter','cross section']
 
     def register(self) -> None:
         """Register the page in Dash pages and set up callbacks."""
@@ -281,6 +284,7 @@ class FluorescentCalibrationPage:
                             multiple=False,
                         ),
                         html.Div(id=ids.upload_filename),
+                        html.Div(id=ids.upload_saved_as)
                     ],
                 ),
                 html.Br(),
@@ -333,6 +337,7 @@ class FluorescentCalibrationPage:
         @callback(
             Output(ids.uploaded_fcs_path_store, "data"),
             Output(ids.upload_filename, "children"),
+            Output(ids.upload_saved_as, "children"),
             Output(ids.scattering_detector_dropdown, "options"),
             Output(ids.fluorescence_detector_dropdown, "options"),
             Output(ids.scattering_detector_dropdown, "value"),
@@ -343,25 +348,25 @@ class FluorescentCalibrationPage:
         )
         def on_upload_bead_file(contents: Optional[str], filename: Optional[str]):
             if not contents:
-                return dash.no_update, "", [], [], None, None
+                return dash.no_update, "", "", [], [], None, None
 
             try:
                 temp_path = self._write_upload_to_tempfile(contents=contents, filename=filename or "uploaded_file")
             except Exception as exc:
-                return dash.no_update, f"Upload failed: {exc}", [], [], None, None
+                return dash.no_update, f"Upload failed: {exc}", "", [], [], None, None
 
             try:
                 backend = BackEnd(temp_path)
                 columns = list(getattr(backend.fcs_file, "data").columns)
             except Exception as exc:
-                msg = f"Saved upload to {temp_path} but BackEnd could not read it: {exc}"
-                return temp_path, msg, [], [], None, None
-
-            options = [{"label": c, "value": c} for c in columns]
-            default_value = columns[0] if columns else None
-            msg = f"Selected file: {filename}  Saved as: {temp_path}"
-            return temp_path, msg, options, options, default_value, default_value
-
+                msg = f"Saved upload to {temp_path} but backend could not read it: {exc}"
+                return temp_path, msg, "", [], [], None, None
+            options_scatter, options_fluorescent = self.find_keywords_in_list(columns)
+            default_value_scatter = options_scatter[0]['label'] if options_scatter else None
+            default_value_fluorescent = options_fluorescent[0]['label'] if options_fluorescent else None
+            msg_selected_file = f"Selected file: {filename}"
+            msg_saved_as = f"Saved as: {temp_path}"
+            return temp_path, msg_selected_file, msg_saved_as, options_scatter, options_fluorescent, default_value_scatter, default_value_fluorescent
         @callback(
             Output(ids.graph_scattering_hist, "figure"),
             Output(ids.scattering_threshold_store, "data"),
@@ -755,6 +760,21 @@ class FluorescentCalibrationPage:
             separators=".,",
         )
         return fig
+    
+    def find_keywords_in_list(self, columns):
+        options_scatter = []
+        options_fluorescent = []
+        keywords = self.scatter_keywords
+
+        non_valid_keywords = self.non_valid_keywords
+        for c in columns:
+            lower = c.strip().lower()
+            if any(k in lower for k in keywords):
+                options_scatter.append({"label": c, "value": c})
+            elif not any(k in lower for k in non_valid_keywords):
+                options_fluorescent.append({"label": c, "value": c})
+        return options_scatter, options_fluorescent
+                
 
 
 _page = FluorescentCalibrationPage()
