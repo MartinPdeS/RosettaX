@@ -43,6 +43,7 @@ class FluorescentCalibrationIds:
     graph_calibration = f"{page_name}-graph-calibration"
     slope_out = f"{page_name}-slope-out"
     intercept_out = f"{page_name}-intercept-out"
+    r_squared_out = f"{page_name}-r-squared-out"
 
     apply_btn = f"{page_name}-apply-btn"
     preview_div = f"{page_name}-preview-div"
@@ -234,6 +235,7 @@ class FluorescentCalibrationPage:
                         [
                             html.Div([html.Div("Slope:"), html.Div("", id=ids.slope_out)], style={"display": "flex", "gap": "8px"}),
                             html.Div([html.Div("Intercept:"), html.Div("", id=ids.intercept_out)], style={"display": "flex", "gap": "8px"}),
+                            html.Div([html.Div("R²:"), html.Div("", id=ids.r_squared_out)], style={"display": "flex", "gap": "8px"}),
                         ]
                     ),
                     html.Br(),
@@ -504,6 +506,7 @@ class FluorescentCalibrationPage:
             Output(ids.calibration_store, "data"),
             Output(ids.slope_out, "children"),
             Output(ids.intercept_out, "children"),
+            Output(ids.r_squared_out, "children"),
             Input(ids.calibrate_btn, "n_clicks"),
             State(ids.uploaded_fcs_path_store, "data"),
             State(ids.bead_table, "data"),
@@ -528,6 +531,7 @@ class FluorescentCalibrationPage:
 
             slope_value = float(calib_payload.get("slope"))
             intercept_value = float(calib_payload.get("intercept"))
+            R_squared = float(calib_payload.get("R_squared"))
 
             x_fit = np.linspace(float(np.min(intensity_array)), float(np.max(intensity_array)), 200)
             y_fit = slope_value * x_fit + intercept_value
@@ -542,7 +546,7 @@ class FluorescentCalibrationPage:
                 separators=".,",
             )
 
-            return fig, calib_payload, f"{slope_value:.6g}", f"{intercept_value:.6g}"
+            return fig, calib_payload, f"{slope_value:.6g}", f"{intercept_value:.6g}", f"{R_squared:.6g}"
 
         @callback(
             Output(ids.bead_table, "data"),
