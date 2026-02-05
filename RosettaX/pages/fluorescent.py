@@ -434,7 +434,7 @@ class FluorescentCalibrationPage:
             return fig, next_store, f"{float(thr):.6g}"
 
         @callback(
-                #TODO: discuss if we want this to auto run or only run when user clicks the button, because if auto runs then it will run even when user just wants to visualize the histogram without fitting a line, but on the other hand if only runs when user clicks the button then it might be less intuitive for users that just want to find the peaks and fit a line. maybe can have a separate button for "update histogram" and then "find peaks and fit line" or something like that.
+            #TODO: discuss if we want this to auto run or only run when user clicks the button, because if auto runs then it will run even when user just wants to visualize the histogram without fitting a line, but on the other hand if only runs when user clicks the button then it might be less intuitive for users that just want to find the peaks and fit a line. maybe can have a separate button for "update histogram" and then "find peaks and fit line" or something like that.
             Output(ids.graph_fluorescence_hist, "figure"),
             Output(ids.bead_table, "data", allow_duplicate=True),
             Input(ids.fluorescence_find_peaks_btn, "n_clicks"),
