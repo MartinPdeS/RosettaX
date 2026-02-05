@@ -400,20 +400,22 @@ class FluorescentCalibrationPage:
             stored_thr = self._as_float((stored_threshold_payload or {}).get("threshold"))
             input_thr = self._as_float(threshold_input_value)
 
-            if triggered == ids.scattering_find_threshold_btn:
-                response = backend.process_scattering(
-                    {
-                        "operation": "estimate_scattering_threshold",
-                        "column": str(scattering_channel),
-                        "nbins": int(nbins),
-                        "number_of_points": 200_000,
-                    }
-                )
-                thr = self._as_float(response.get("threshold"))
-                if thr is None:
-                    thr = 0.0
-            else:
-                thr = input_thr if input_thr is not None else (stored_thr if stored_thr is not None else 0.0)
+            # TODO: check with Martin if commenting out this section and the below else: is ok
+            # if triggered == ids.scattering_find_threshold_btn:
+            # auto estimate threshold using backend 
+            response = backend.process_scattering(
+                {
+                    "operation": "estimate_scattering_threshold",
+                    "column": str(scattering_channel),
+                    "nbins": int(nbins),
+                    "number_of_points": 200_000,
+                }
+            )
+            thr = self._as_float(response.get("threshold"))
+            if thr is None:
+                thr = 0.0
+            # else: TODO: other part of if statement
+            #     thr = input_thr if input_thr is not None else (stored_thr if stored_thr is not None else 0.0)
 
             fig = self._make_histogram_with_lines(
                 values=values,
@@ -432,26 +434,27 @@ class FluorescentCalibrationPage:
             return fig, next_store, f"{float(thr):.6g}"
 
         @callback(
+                #TODO: discuss if we want this to auto run or only run when user clicks the button, because if auto runs then it will run even when user just wants to visualize the histogram without fitting a line, but on the other hand if only runs when user clicks the button then it might be less intuitive for users that just want to find the peaks and fit a line. maybe can have a separate button for "update histogram" and then "find peaks and fit line" or something like that.
             Output(ids.graph_fluorescence_hist, "figure"),
             Output(ids.bead_table, "data", allow_duplicate=True),
             Input(ids.fluorescence_find_peaks_btn, "n_clicks"),
+            Input(ids.fluorescence_peak_count_input, "value"),
+            Input(ids.scattering_detector_dropdown, "value"),
+            Input(ids.fluorescence_detector_dropdown, "value"),
+            Input(ids.fluorescence_nbins_input, "value"),
             State(ids.uploaded_fcs_path_store, "data"),
-            State(ids.scattering_detector_dropdown, "value"),
             State(ids.scattering_threshold_store, "data"),
-            State(ids.fluorescence_detector_dropdown, "value"),
-            State(ids.fluorescence_nbins_input, "value"),
-            State(ids.fluorescence_peak_count_input, "value"),
             State(ids.bead_table, "data"),
             prevent_initial_call=True,
         )
         def fluorescence_section(
             n_clicks: int,
-            fcs_path: Optional[str],
+            peak_count: Any,
             scattering_channel: Optional[str],
-            threshold_payload: Optional[dict],
             fluorescence_channel: Optional[str],
             fluorescence_nbins: Any,
-            peak_count: Any,
+            fcs_path: Optional[str],
+            threshold_payload: Optional[dict],
             table_data: Optional[list[dict]],
         ):
             if not fcs_path or not scattering_channel or not fluorescence_channel:
@@ -700,6 +703,7 @@ class FluorescentCalibrationPage:
 
     @staticmethod
     def _inject_peak_modes_into_table(table_data: Optional[list[dict]], peak_positions: List[float]) -> list[dict]:
+        # TODO: this can be improved, for example when there are more peaks than rows, and then user edits some rows and then reduced the number of peaks. 
         rows = [dict(r) for r in (table_data or [])]
 
         modes: List[float] = []
