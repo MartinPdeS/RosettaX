@@ -499,7 +499,6 @@ class FluorescentCalibrationPage:
                 line_positions=[float(p) for p in peak_positions if self._as_float(p) is not None],
                 line_labels=[f"{float(p):.3g}" for p in peak_positions if self._as_float(p) is not None],
             )
-
             updated_table = self._inject_peak_modes_into_table(
                 table_data=table_data,
                 peak_positions=peak_positions,
@@ -758,7 +757,10 @@ class FluorescentCalibrationPage:
             bargap=0.02,
             showlegend=False,
             separators=".,",
+            hovermode="x unified",
+            xaxis={'showspikes': True}
         )
+        
         return fig
     
     def find_keywords_in_list(self, columns):
