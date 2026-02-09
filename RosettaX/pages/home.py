@@ -25,6 +25,7 @@ layout = dbc.Container(
             ],
             style={"paddingTop": "24px"},
         ),
+
         html.Hr(),
 
         dbc.Row(

@@ -1,9 +1,7 @@
-from dataclasses import dataclass
-
 import dash
 from dash import Input, Output, callback, dcc, html
 import dash_bootstrap_components as dbc
-
+from RosettaX.pages import styling
 
 class ScatterCalibrationIds:
     """
@@ -149,16 +147,6 @@ class ScatterCalibrationPage:
         """
         self.ids = ScatterCalibrationIds()
 
-        self.upload_style = {
-            "width": "100%",
-            "height": "60px",
-            "lineHeight": "60px",
-            "borderWidth": "1px",
-            "borderStyle": "dashed",
-            "borderRadius": "5px",
-            "textAlign": "center",
-            "margin": "10px",
-        }
         self.scroll_style = {"maxHeight": "60vh", "overflowY": "auto"}
         self.row_style = {"display": "flex", "alignItems": "center", "gap": "10px", "marginTop": "8px"}
         self.label_style = {"minWidth": "160px"}
@@ -194,7 +182,7 @@ class ScatterCalibrationPage:
                                         dcc.Upload(
                                             id=ids.upload,
                                             children=html.Div(["Drag and Drop or ", html.A("Select File")]),
-                                            style=self.upload_style,
+                                            style=styling.UPLOAD,
                                             multiple=False,
                                         ),
                                         self._inline_row(

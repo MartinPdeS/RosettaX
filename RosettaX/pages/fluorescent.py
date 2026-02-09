@@ -12,6 +12,7 @@ import plotly.graph_objs as go
 
 from RosettaX.backend import BackEnd
 from RosettaX.pages.sidebar import sidebar_html
+from RosettaX.pages import styling
 
 
 class FluorescentCalibrationIds:
@@ -56,6 +57,12 @@ class FluorescentCalibrationIds:
     sidebar_store = "apply-calibration-store"
     sidebar_content = "sidebar-content"
 
+    fluorescence_yscale_switch = f"{page_name}-fluorescence-yscale-switch"
+    scattering_yscale_switch = f"{page_name}-scattering-yscale-switch"
+
+
+
+
 
 class FluorescentCalibrationPage:
     def __init__(self) -> None:
@@ -67,18 +74,6 @@ class FluorescentCalibrationPage:
             {"name": "Intensity (a.u.)", "id": "col2", "editable": True},
         ]
         self.default_bead_rows = [{"col1": "", "col2": ""} for _ in range(5)]
-
-        self.upload_style = {
-            "width": "100%",
-            "height": "60px",
-            "lineHeight": "60px",
-            "borderWidth": "1px",
-            "borderStyle": "dashed",
-            "borderRadius": "5px",
-            "textAlign": "center",
-            "margin": "10px",
-        }
-
         self.card_body_scroll = {"maxHeight": "60vh", "overflowY": "auto"}
         self.graph_style = {"width": "100%", "height": "45vh"}
 
@@ -108,7 +103,7 @@ class FluorescentCalibrationPage:
                             html.Div("Scattering detector:"),
                             dcc.Dropdown(id=ids.scattering_detector_dropdown, style={"width": "500px"}),
                         ],
-                        style={"display": "flex", "gap": "12px", "alignItems": "center"},
+                        style=styling.CARD,
                     ),
                     html.Br(),
                     html.Div(
@@ -123,7 +118,7 @@ class FluorescentCalibrationPage:
                                 style={"width": "160px"},
                             ),
                         ],
-                        style={"display": "flex", "gap": "12px", "alignItems": "center"},
+                        style=styling.CARD,
                     ),
                     html.Br(),
                     html.Button("Estimate threshold", id=ids.scattering_find_threshold_btn, n_clicks=0),
@@ -139,10 +134,19 @@ class FluorescentCalibrationPage:
                                 style={"width": "220px"},
                             ),
                         ],
-                        style={"display": "flex", "gap": "12px", "alignItems": "center"},
+                        style=styling.CARD,
                     ),
                     html.Br(),
-                    dcc.Graph(id=ids.graph_scattering_hist, style=self.graph_style),
+                    dbc.Checklist(
+                        id=ids.scattering_yscale_switch,
+                        options=[{"label": "Log scale (counts)", "value": "log"}],
+                        value=["log"],
+                        switch=True,
+                    ),
+                    dcc.Loading(
+                        dcc.Graph(id=ids.graph_scattering_hist, style=self.graph_style),
+                        type="default",
+                    ),
                 ]
             ),
         ]
@@ -157,7 +161,7 @@ class FluorescentCalibrationPage:
                             html.Div("Fluorescence detector:"),
                             dcc.Dropdown(id=ids.fluorescence_detector_dropdown, style={"width": "500px"}),
                         ],
-                        style={"display": "flex", "gap": "12px", "alignItems": "center"},
+                        style=styling.CARD,
                     ),
                     html.Br(),
                     html.Div(
@@ -172,7 +176,7 @@ class FluorescentCalibrationPage:
                                 style={"width": "160px"},
                             ),
                         ],
-                        style={"display": "flex", "gap": "12px", "alignItems": "center"},
+                        style=styling.CARD,
                     ),
                     html.Br(),
                     html.Div(
@@ -187,13 +191,19 @@ class FluorescentCalibrationPage:
                                 style={"width": "160px"},
                             ),
                         ],
-                        style={"display": "flex", "gap": "12px", "alignItems": "center"},
+                        style=styling.CARD,
                     ),
                     html.Br(),
                     html.Button("Find peaks", id=ids.fluorescence_find_peaks_btn, n_clicks=0),
                     html.Br(),
                     html.Br(),
-                    dcc.Graph(id=ids.graph_fluorescence_hist, style=self.graph_style),
+                    dbc.Checklist(
+                        id=ids.fluorescence_yscale_switch,
+                        options=[{"label": "Log scale (counts)", "value": "log"}],
+                        value=["log"],
+                        switch=True,
+                    ),
+                    dcc.Loading(dcc.Graph(id=ids.graph_fluorescence_hist, style=self.graph_style), type="default")
                 ]
             ),
         ]
@@ -228,7 +238,10 @@ class FluorescentCalibrationPage:
             dbc.CardHeader("5. Calibration output"),
             dbc.CardBody(
                 [
-                    dcc.Graph(id=ids.graph_calibration, style=self.graph_style),
+                    dcc.Loading(
+                        dcc.Graph(id=ids.graph_calibration, style=self.graph_style),
+                        type="default",
+                    ),
                     html.Br(),
                     html.Div(
                         [
@@ -275,7 +288,7 @@ class FluorescentCalibrationPage:
                         dcc.Upload(
                             id=ids.upload,
                             children=html.Div(["Drag and Drop or ", html.A("Select Bead File")]),
-                            style=self.upload_style,
+                            style=styling.UPLOAD,
                             multiple=False,
                         ),
                         html.Div(id=ids.upload_filename),
@@ -369,6 +382,7 @@ class FluorescentCalibrationPage:
             Input(ids.scattering_detector_dropdown, "value"),
             Input(ids.scattering_nbins_input, "value"),
             Input(ids.scattering_threshold_input, "value"),
+            Input(ids.scattering_yscale_switch, "value"),
             State(ids.scattering_threshold_store, "data"),
             prevent_initial_call=True,
         )
@@ -378,6 +392,7 @@ class FluorescentCalibrationPage:
             scattering_channel: Optional[str],
             scattering_nbins: Any,
             threshold_input_value: Any,
+            yscale_selection: Optional[list[str]],
             stored_threshold_payload: Optional[dict],
         ):
             if not fcs_path or not scattering_channel:
@@ -408,13 +423,17 @@ class FluorescentCalibrationPage:
             else:
                 thr = input_thr if input_thr is not None else (stored_thr if stored_thr is not None else 0.0)
 
+            use_log = isinstance(yscale_selection, list) and "log" in yscale_selection
+
             fig = self._make_histogram_with_lines(
                 values=values,
                 nbins=nbins,
                 xaxis_title="Scattering (a.u.)",
                 line_positions=[float(thr)],
-                line_labels=[f"thr={float(thr):.3g}"],
+                line_labels=[f"{thr:.3g}"],
             )
+
+            fig.update_yaxes(type="log" if use_log else "linear")
 
             next_store = {
                 "scattering_channel": str(scattering_channel),
@@ -430,6 +449,7 @@ class FluorescentCalibrationPage:
             Input(ids.fluorescence_find_peaks_btn, "n_clicks"),
             State(ids.uploaded_fcs_path_store, "data"),
             State(ids.scattering_detector_dropdown, "value"),
+            State(ids.fluorescence_yscale_switch, "value"),
             State(ids.scattering_threshold_store, "data"),
             State(ids.fluorescence_detector_dropdown, "value"),
             State(ids.fluorescence_nbins_input, "value"),
@@ -441,6 +461,7 @@ class FluorescentCalibrationPage:
             n_clicks: int,
             fcs_path: Optional[str],
             scattering_channel: Optional[str],
+            yscale_selection: Optional[list[str]],
             threshold_payload: Optional[dict],
             fluorescence_channel: Optional[str],
             fluorescence_nbins: Any,
@@ -478,24 +499,35 @@ class FluorescentCalibrationPage:
             fluorescence_values = self._get_column_values(backend=backend, column=str(fluorescence_channel))
             scattering_values = self._get_column_values(backend=backend, column=str(scattering_channel))
 
+            use_log = isinstance(yscale_selection, list) and "log" in yscale_selection
+
             gated = self._apply_gate(
                 fluorescence_values=fluorescence_values,
                 scattering_values=scattering_values,
                 threshold=float(threshold_value),
             )
 
+            # total_n = int(np.asarray(fluorescence_values).size)
+            # kept_n = int(np.asarray(gated).size)
+
             fig = self._make_histogram_with_lines(
-                values=gated,
+                values=fluorescence_values,
+                overlay_values=gated,
                 nbins=nbins,
                 xaxis_title="Fluorescence (a.u.)",
                 line_positions=[float(p) for p in peak_positions if self._as_float(p) is not None],
                 line_labels=[f"{float(p):.3g}" for p in peak_positions if self._as_float(p) is not None],
+                base_name="all events",
+                overlay_name="gated events",
+                # title=f"Fluorescence histogram (gated: {kept_n} / {total_n}, threshold={float(threshold_value):.6g})",
             )
 
             updated_table = self._inject_peak_modes_into_table(
                 table_data=table_data,
                 peak_positions=peak_positions,
             )
+
+            fig.update_yaxes(type="log" if use_log else "linear")
 
             return fig, updated_table
 
@@ -724,32 +756,93 @@ class FluorescentCalibrationPage:
         xaxis_title: str,
         line_positions: List[float],
         line_labels: List[str],
+        *,
+        overlay_values: Optional[np.ndarray] = None,
+        base_name: str = "all events",
+        overlay_name: str = "gated events",
+        title: Optional[str] = None,
     ) -> go.Figure:
         values = np.asarray(values, dtype=float)
         values = values[np.isfinite(values)]
 
+        overlay = None
+        if overlay_values is not None:
+            overlay = np.asarray(overlay_values, dtype=float)
+            overlay = overlay[np.isfinite(overlay)]
+
         fig = go.Figure()
-        fig.add_trace(go.Histogram(x=values, nbinsx=int(nbins), name="hist"))
+
+        fig.add_trace(go.Histogram(
+            x=values,
+            nbinsx=int(nbins),
+            name=str(base_name),
+            opacity=0.55 if overlay is not None else 1.0,
+            bingroup="fluor",
+        ))
+
+        if overlay is not None:
+            fig.add_trace(go.Histogram(
+                x=overlay,
+                nbinsx=int(nbins),
+                name=str(overlay_name),
+                opacity=0.85,
+                bingroup="fluor",
+        ))
 
         for x, label in zip(line_positions, line_labels):
-            if not np.isfinite(float(x)):
+            try:
+                xv = float(x)
+            except Exception:
                 continue
-            fig.add_vline(
-                x=float(x),
-                line_width=2,
-                line_dash="dash",
-                annotation_text=str(label),
-                annotation_position="top",
+            if not np.isfinite(xv):
+                continue
+
+            # fig.add_vline(
+            #     x=xv,
+            #     line_width=2,
+            #     line_dash="dash",
+            #     annotation_text=str(label),
+            #     annotation_position="top",
+            # )
+
+            fig.add_shape(
+                type="line",
+                x0=xv,
+                x1=xv,
+                y0=0,
+                y1=1,
+                xref="x",
+                yref="paper",
+                line={"width": 2, "dash": "dash"},
+            )
+
+
+            fig.add_annotation(
+                x=xv,
+                y=1.02,                  # slightly above plot
+                xref="x",
+                yref="paper",
+                text=str(label),
+                showarrow=False,
+                textangle=-45,             # ← THIS is what you want
+                xanchor="left",
+                yanchor="bottom",
+                align="left",
+                bgcolor="rgba(255,255,255,0.6)",
             )
 
         fig.update_layout(
+            title="" if title is None else str(title),
             xaxis_title=xaxis_title,
             yaxis_title="Count",
             bargap=0.02,
-            showlegend=False,
+            showlegend=(overlay is not None),
             separators=".,",
+            barmode="overlay"
         )
+
         return fig
+
 
 
 _page = FluorescentCalibrationPage()

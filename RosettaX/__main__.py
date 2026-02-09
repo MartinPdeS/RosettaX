@@ -5,7 +5,7 @@ import webbrowser
 from threading import Timer
 
 
-from RosettaX.pages.styling import CONTENT_STYLE, SIDEBAR_STYLE
+from RosettaX.pages import styling
 from RosettaX.pages.sidebar import sidebar_html
 
 app = dash.Dash(
@@ -32,11 +32,11 @@ def update_sidebar(url, sidebar):
 main_content = html.Div(
     dash.page_container,
     id="page-content",
-    style=CONTENT_STYLE()
+    style=styling.CONTENT
 )
 sidebar_content = html.Div(
     id="sidebar-content",
-    style=SIDEBAR_STYLE()
+    style=styling.SIDEBAR
 )
 
 app.layout = html.Div(
