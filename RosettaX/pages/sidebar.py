@@ -51,7 +51,13 @@ def sidebar_html(sidebar: dict[str, list[str]]):
         )
 
     return [
-        html.H2("Rosetta X", className="display-4"),
+        dbc.Col(
+            html.Img(
+                src="/assets/logo.png",
+                style={"height": "156px", "width": "auto"},
+            ),
+            width="auto",
+        ),
         html.Hr(),
         html.P("Navigation bar", className="lead"),
         dbc.Nav(page_links, vertical=True, pills=True),

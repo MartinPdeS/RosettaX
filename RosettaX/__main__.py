@@ -4,11 +4,11 @@ from dash import Input, Output, dcc, html, State
 import webbrowser
 from threading import Timer
 import json
-from RosettaX.pages.styling import CONTENT_STYLE, SIDEBAR_STYLE
+
+from RosettaX.pages import styling
 from RosettaX.pages.sidebar import sidebar_html
 
 def create_table_from_dict():
-    # {"col1": "", "col2": ""}
     try:
         with open('RosettaX/data/settings/saved_mesf_values.json', 'r') as file:
             data = json.load(file)
@@ -46,18 +46,18 @@ def update_sidebar(url, sidebar):
 main_content = html.Div(
     dash.page_container,
     id="page-content",
-    style=CONTENT_STYLE()
+    style=styling.CONTENT
 )
 sidebar_content = html.Div(
     id="sidebar-content",
-    style=SIDEBAR_STYLE()
+    style=styling.SIDEBAR
 )
 
 app.layout = html.Div(
     [
         dcc.Location(id="url"),
         dcc.Store(data={'Fluorescent':[], 'Scatter':[]}, id="apply-calibration-store", storage_type='session'),
-        dcc.Store(data=create_table_from_dict(), id="MESF-default_table-store", storage_type='session'), 
+        dcc.Store(data=create_table_from_dict(), id="MESF-default_table-store", storage_type='session'),
         sidebar_content,
         main_content
     ]
