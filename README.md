@@ -7,8 +7,8 @@
 | RosettaX/backend.py                   |      323 |      323 |      154 |        0 |     0.00% |     1-553 |
 | RosettaX/calibration.py               |       37 |       37 |        4 |        0 |     0.00% |      1-79 |
 | RosettaX/clusterings.py               |      174 |      174 |       48 |        0 |     0.00% |     1-392 |
-| RosettaX/pages/fluorescent.py         |      371 |      371 |       96 |        0 |     0.00% |    1-1146 |
-| RosettaX/pages/fluorescent\_helper.py |       52 |       52 |       16 |        0 |     0.00% |      1-82 |
+| RosettaX/pages/fluorescent.py         |      303 |      303 |       96 |        0 |     0.00% |    1-1214 |
+| RosettaX/pages/fluorescent\_helper.py |      148 |      148 |       26 |        0 |     0.00% |     1-285 |
 | RosettaX/pages/help.py                |        5 |        5 |        0 |        0 |     0.00% |       1-7 |
 | RosettaX/pages/home.py                |       11 |       11 |        0 |        0 |     0.00% |     1-183 |
 | RosettaX/pages/scattering.py          |       62 |       62 |        4 |        0 |     0.00% |     1-460 |
@@ -18,7 +18,7 @@
 | RosettaX/reader.py                    |      325 |      200 |       80 |        9 |    37.04% |102-104, 110-111, 120-122, 159-160, 170-172, 177-178, 188-189, 230-232, 294-296, 305-310, 315-316, 322-323, 337-338, 356-357, 431-547, 550-620, 623, 626-660, 663-699, 702-713, 716-724 |
 | RosettaX/root.py                      |        2 |        2 |        0 |        0 |     0.00% |       1-2 |
 | RosettaX/utils.py                     |       14 |       14 |        6 |        0 |     0.00% |      1-15 |
-| **TOTAL**                             | **1447** | **1322** |  **426** |    **9** | **8.01%** |           |
+| **TOTAL**                             | **1475** | **1350** |  **436** |    **9** | **7.85%** |           |
 
 1 file skipped due to complete coverage.
 
