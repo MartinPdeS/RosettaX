@@ -4,20 +4,20 @@
 
 | Name                          |    Stmts |     Miss |   Branch |   BrPart |     Cover |   Missing |
 |------------------------------ | -------: | -------: | -------: | -------: | --------: | --------: |
-| RosettaX/backend.py           |      251 |      251 |      116 |        0 |     0.00% |     1-414 |
+| RosettaX/backend.py           |      323 |      323 |      154 |        0 |     0.00% |     1-553 |
 | RosettaX/calibration.py       |       37 |       37 |        4 |        0 |     0.00% |      1-79 |
 | RosettaX/clusterings.py       |      174 |      174 |       48 |        0 |     0.00% |     1-392 |
-| RosettaX/pages/fluorescent.py |      357 |      357 |       88 |        0 |     0.00% |    1-1003 |
+| RosettaX/pages/fluorescent.py |      371 |      371 |       96 |        0 |     0.00% |    1-1146 |
 | RosettaX/pages/help.py        |        5 |        5 |        0 |        0 |     0.00% |       1-7 |
-| RosettaX/pages/home.py        |        8 |        8 |        0 |        0 |     0.00% |      1-16 |
+| RosettaX/pages/home.py        |       11 |       11 |        0 |        0 |     0.00% |     1-183 |
 | RosettaX/pages/scattering.py  |       62 |       62 |        4 |        0 |     0.00% |     1-460 |
 | RosettaX/pages/sidebar.py     |       12 |       12 |        2 |        0 |     0.00% |      1-53 |
 | RosettaX/pages/styling.py     |        4 |        4 |        0 |        0 |     0.00% |      1-28 |
 | RosettaX/plottings.py         |       55 |       55 |       16 |        0 |     0.00% |     1-251 |
-| RosettaX/reader.py            |      212 |       93 |       38 |        9 |    57.60% |102-104, 110-111, 120-122, 159-160, 170-172, 177-178, 188-189, 230-232, 294-296, 305-310, 315-316, 322-323, 337-338, 356-357, 431-547 |
+| RosettaX/reader.py            |      325 |      200 |       80 |        9 |    37.04% |102-104, 110-111, 120-122, 159-160, 170-172, 177-178, 188-189, 230-232, 294-296, 305-310, 315-316, 322-323, 337-338, 356-357, 431-547, 550-620, 623, 626-660, 663-699, 702-713, 716-724 |
 | RosettaX/root.py              |        2 |        2 |        0 |        0 |     0.00% |       1-2 |
 | RosettaX/utils.py             |       14 |       14 |        6 |        0 |     0.00% |      1-15 |
-| **TOTAL**                     | **1193** | **1074** |  **322** |    **9** | **9.50%** |           |
+| **TOTAL**                     | **1395** | **1270** |  **410** |    **9** | **8.31%** |           |
 
 1 file skipped due to complete coverage.
 
