@@ -12,8 +12,10 @@ import plotly.graph_objs as go
 
 from RosettaX.backend import BackEnd
 from RosettaX.pages.sidebar import sidebar_html
+from RosettaX.pages.fluorescent_helper import CalibrationSetupStore  # add at top with imports
 from RosettaX.pages import styling
-
+from RosettaX.pages import styling
+from RosettaX.pages.fluorescent_helper import FileStateRefresher, CalibrationSetupStore
 
 class FluorescentCalibrationIds:
     page_name = "fluorescent_calibration"
@@ -59,6 +61,9 @@ class FluorescentCalibrationIds:
     save_btn = f"{page_name}-save-btn"
     save_out = f"{page_name}-save-out"
 
+    export_mode = f"{page_name}-export-mode"
+    export_filename = f"{page_name}-export-filename"
+
     sidebar_store = "apply-calibration-store"
     sidebar_content = "sidebar-content"
 
@@ -92,6 +97,11 @@ class FluorescentCalibrationPage:
             "ss-h",
         ]
         self.non_valid_keywords = ["time", "width", "diameter", "cross section"]
+
+        self.file_state = FileStateRefresher(
+            scatter_keywords=self.scatter_keywords,
+            non_valid_keywords=self.non_valid_keywords,
+        )
 
     def register(self) -> None:
         dash.register_page(__name__, path="/fluorescent_calibration", name="Fluorescent Calibration")
@@ -286,19 +296,41 @@ class FluorescentCalibrationPage:
             ]
         )
 
+        # Add these IDs to FluorescentCalibrationIds first (see section B)
         section_save = dbc.Card(
             [
-                dbc.CardHeader("6. Save export calibration"),
+                dbc.CardHeader("6. Save + export calibration"),
                 dbc.Collapse(
                     dbc.CardBody(
                         [
-                            html.Label("Calibrated MESF Channel Name:"),
-                            dcc.Input(id=ids.channel_name, type="text", value=""),
+                            html.Label("Calibrated MESF Channel Name (new column):"),
+                            dcc.Input(id=ids.channel_name, type="text", value="MESF"),
                             html.Br(),
+                            html.Br(),
+
                             html.Label("Save Calibration Setup As:"),
                             dcc.Input(id=ids.file_name, type="text", value=""),
                             html.Br(),
-                            html.Button("Save Fluorescent Calibration", id=ids.save_btn, n_clicks=0),
+                            html.Br(),
+
+                            html.Label("Data export mode:"),
+                            dcc.RadioItems(
+                                id=ids.export_mode,
+                                options=[
+                                    {"label": "Update current file", "value": "update_temp"},
+                                    {"label": "Save as new file", "value": "save_new"},
+                                ],
+                                value="update_temp",
+                                inline=False,
+                            ),
+                            html.Br(),
+
+                            html.Label("Output file name (only used for Save as new file):"),
+                            dcc.Input(id=ids.export_filename, type="text", value="beads_calibrated.fcs"),
+                            html.Br(),
+                            html.Br(),
+
+                            html.Button("Save calibration + export", id=ids.save_btn, n_clicks=0),
                             html.Div(id=ids.save_out),
                         ]
                     ),
@@ -706,49 +738,160 @@ class FluorescentCalibrationPage:
         @callback(
             Output(ids.save_out, "children"),
             Output(ids.sidebar_store, "data"),
-            Output(ids.sidebar_content, "children"),
+            Output(ids.uploaded_fcs_path_store, "data", allow_duplicate=True),
+            Output(ids.scattering_detector_dropdown, "options", allow_duplicate=True),
+            Output(ids.fluorescence_detector_dropdown, "options", allow_duplicate=True),
+            Output(ids.scattering_detector_dropdown, "value", allow_duplicate=True),
+            Output(ids.fluorescence_detector_dropdown, "value", allow_duplicate=True),
             Input(ids.save_btn, "n_clicks"),
             State(ids.file_name, "value"),
+            State(ids.channel_name, "value"),
+            State(ids.export_mode, "value"),
+            State(ids.export_filename, "value"),
             State(ids.sidebar_store, "data"),
             State(ids.calibration_store, "data"),
+            State(ids.uploaded_fcs_path_store, "data"),
+            State(ids.scattering_detector_dropdown, "value"),
+            State(ids.fluorescence_detector_dropdown, "value"),
             prevent_initial_call=True,
         )
-        def save_calibration(n_clicks: int, file_name: str, sidebar_data: Optional[dict], calib_payload: Optional[dict]):
+        def save_calibration(
+            n_clicks: int,
+            file_name: str,
+            calibrated_channel_name: str,
+            export_mode: str,
+            export_filename: str,
+            sidebar_data: Optional[dict],
+            calib_payload: Optional[dict],
+            bead_file_path: Optional[str],
+            current_scatter: Optional[str],
+            current_fluorescence: Optional[str],
+        ):
             if not n_clicks:
-                return dash.no_update, dash.no_update, dash.no_update
+                return (
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                )
 
-            if not file_name or not str(file_name).strip():
-                return "Please provide a file name.", dash.no_update, dash.no_update
+            name = str(file_name or "").strip()
+            if not name:
+                return (
+                    "Please provide a calibration setup name.",
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                )
 
-            if not calib_payload:
-                return "No calibration payload to save. Run Calibrate first.", dash.no_update, dash.no_update
+            if not isinstance(calib_payload, dict) or not calib_payload:
+                return (
+                    "No calibration payload to save. Run Calibrate first.",
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                )
 
-            next_sidebar = dict(sidebar_data or {})
-            next_sidebar.setdefault("Fluorescent", [])
-            next_sidebar["Fluorescent"] = list(next_sidebar["Fluorescent"])
-            next_sidebar["Fluorescent"].append(file_name)
+            bead_file_path = str(bead_file_path or "").strip()
+            if not bead_file_path:
+                return (
+                    "No bead file uploaded yet.",
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                )
 
-            next_sidebar.setdefault("payloads", {})
-            next_sidebar["payloads"][f"Fluorescent/{file_name}"] = calib_payload
+            current_fluorescence = str(current_fluorescence or "").strip()
+            if not current_fluorescence:
+                return (
+                    "Select a fluorescence detector first.",
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                )
 
-            return f'Calibration "{file_name}" saved successfully.', next_sidebar, sidebar_html(next_sidebar)
+            calibrated_channel_name = str(calibrated_channel_name or "").strip()
+            if not calibrated_channel_name:
+                return (
+                    "Please provide a calibrated MESF channel name (new column).",
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                )
 
-        @callback(
-            Output(ids.graph_fluorescence_hist, "figure", allow_duplicate=True),
-            Input(ids.fluorescence_yscale_switch, "value"),
-            State(ids.fluorescence_hist_store, "data"),
-            prevent_initial_call=True,
-        )
-        def update_fluorescence_yscale(yscale_selection: Optional[list[str]], stored_fig: Optional[dict]):
-            if not stored_fig:
-                return dash.no_update
+            export_mode = str(export_mode or "update_temp").strip()
+            if export_mode not in {"update_temp", "save_new"}:
+                export_mode = "update_temp"
 
-            use_log = isinstance(yscale_selection, list) and ("log" in yscale_selection)
+            export_filename = str(export_filename or "").strip()
+            if export_mode == "save_new" and not export_filename:
+                return (
+                    "Please provide an output file name for Save as new file.",
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                )
 
-            fig = go.Figure(stored_fig)
-            fig.update_yaxes(type="log" if use_log else "linear")
-            return fig
+            backend = BackEnd(bead_file_path)
 
+            export_response = backend.export_fluorescence_calibration(
+                {
+                    "calibration": calib_payload,
+                    "source_path": bead_file_path,
+                    "source_column": current_fluorescence,
+                    "new_column": calibrated_channel_name,
+                    "mode": export_mode,
+                    "export_filename": export_filename,
+                }
+            )
+
+            exported_path = str(export_response.get("exported_path") or bead_file_path)
+
+            next_sidebar = CalibrationSetupStore.save_fluorescent_setup(
+                sidebar_data,
+                name=name,
+                payload=calib_payload,
+            )
+
+            # Refresh dropdowns from the file that now contains the new column
+            channels = self.file_state.options_from_file(
+                exported_path,
+                preferred_scatter=current_scatter,
+                preferred_fluorescence=calibrated_channel_name,  # prefer the new column
+            )
+
+            msg = f'Calibration "{name}" saved successfully. Exported to: {exported_path}'
+
+            return (
+                msg,
+                next_sidebar,
+                exported_path,
+                channels.scatter_options,
+                channels.fluorescence_options,
+                channels.scatter_value,
+                channels.fluorescence_value,
+            )
 
     @staticmethod
     def _write_upload_to_tempfile(contents: str, filename: str) -> str:

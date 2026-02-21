@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Optional, Any
+import shutil
 
 import numpy as np
 
@@ -149,7 +150,9 @@ class BackEnd:
         calibrated = calibration.calibrate(uncalibrated)
 
         if output_column is not None:
-            self.fcs_file.data[output_column] = calibrated
+            if not hasattr(self.fcs_file, "add_column"):
+                raise NotImplementedError("FCSFile must implement add_column(name, values) to keep metadata consistent.")
+            self.fcs_file.add_column(name=output_column, values=calibrated)
 
         return {
             "n_points": int(calibrated.size),
@@ -412,3 +415,143 @@ class BackEnd:
         sigma_estimate = 1.4826 * mad
         threshold = median_value + float(k) * sigma_estimate
         return float(threshold) if np.isfinite(threshold) else None
+
+
+    def export_fluorescence_calibration(self, data: dict[str, Any]) -> dict[str, Any]:
+        """
+        Export calibrated fluorescence as a new column, either by updating the current file
+        or by saving a new permanent file.
+
+        Required keys
+        - calibration: dict
+        - source_path: str | Path  (may be same as currently loaded file)
+        - source_column: str
+        - new_column: str
+        - mode: str  ("update_temp" or "save_new")
+
+        Optional keys
+        - export_filename: str (used when mode == "save_new")
+        - export_dir: str | Path (used when mode == "save_new"; default cwd/rosettax_exports)
+        - overwrite: bool (default False; relevant for save_new)
+        """
+        self._require_fcs_loaded()
+
+        calibration_payload = data.get("calibration")
+        if not isinstance(calibration_payload, dict):
+            raise ValueError('Expected key "calibration" to be a dict.')
+
+        source_path = Path(data.get("source_path") or self.file_path)
+        if source_path is None:
+            raise ValueError('Missing required key "source_path".')
+
+        source_column = data.get("source_column")
+        if not source_column:
+            raise ValueError('Missing required key "source_column".')
+        source_column = str(source_column)
+
+        new_column = data.get("new_column")
+        if not new_column:
+            raise ValueError('Missing required key "new_column".')
+        new_column = str(new_column).strip()
+        if not new_column:
+            raise ValueError('Key "new_column" must be a non empty string.')
+
+        mode = str(data.get("mode", "save_new")).strip()
+        if mode not in {"update_temp", "save_new"}:
+            raise ValueError('Key "mode" must be either "update_temp" or "save_new".')
+
+        # Make sure we are operating on the requested file
+        if self.file_path is None or self.fcs_file is None or Path(self.file_path) != source_path:
+            self.set_file(source_path)
+
+        if source_column not in self.fcs_file.data:
+            raise ValueError(f'Column "{source_column}" not found in FCS data.')
+
+        if not hasattr(FluorescenceCalibration, "from_dict"):
+            raise ValueError("FluorescenceCalibration must implement from_dict().")
+        calibration = FluorescenceCalibration.from_dict(calibration_payload)
+
+        uncalibrated = self.fcs_file.data[source_column].to_numpy(dtype=float)
+        calibrated = calibration.calibrate(uncalibrated)
+
+        if not hasattr(self.fcs_file, "add_column"):
+            raise NotImplementedError("FCSFile must implement add_column(name, values).")
+        self.fcs_file.add_column(name=new_column, values=calibrated)
+
+        overwrite = bool(data.get("overwrite", False))
+
+        if mode == "update_temp":
+            tmp_target = source_path.with_suffix(source_path.suffix + ".tmp")
+            self.fcs_file.write(str(tmp_target))
+            tmp_target.replace(source_path)
+            return {
+                "exported_path": str(source_path),
+                "mode": mode,
+                "source_column": source_column,
+                "new_column": new_column,
+                "n_points": int(np.asarray(calibrated).size),
+            }
+
+        export_filename = data.get("export_filename")
+        if not export_filename:
+            raise ValueError('Missing required key "export_filename" when mode is "save_new".')
+        export_filename = str(export_filename).strip()
+        if not export_filename:
+            raise ValueError('Key "export_filename" must be a non empty string.')
+
+        export_dir = Path(data.get("export_dir") or (Path.cwd() / "rosettax_exports"))
+        export_dir.mkdir(parents=True, exist_ok=True)
+
+        target_path = export_dir / export_filename
+        if target_path.suffix.lower() != ".fcs":
+            target_path = target_path.with_suffix(".fcs")
+
+        if target_path.exists() and not overwrite:
+            raise FileExistsError(f"Export target already exists: {target_path}")
+
+        self.fcs_file.write(str(target_path))
+
+        return {
+            "exported_path": str(target_path),
+            "mode": mode,
+            "source_column": source_column,
+            "new_column": new_column,
+            "n_points": int(np.asarray(calibrated).size),
+        }
+
+    @staticmethod
+    def _ensure_suffix(path: Path, suffix: str) -> Path:
+        if path.suffix.lower() != suffix.lower():
+            return path.with_suffix(suffix)
+        return path
+
+    def _write_fcs_file(self, target_path: Path) -> None:
+        """
+        Attempt to persist self.fcs_file to disk.
+
+        This depends on your RosettaX.reader.FCSFile implementation.
+        We try a few common method names. If none exist, raise a clear error.
+        """
+        self._require_fcs_loaded()
+
+        # Keep file_path consistent with where we write
+        self.file_path = Path(target_path)
+
+        writer_candidates = [
+            ("write", (target_path,)),
+            ("save", (target_path,)),
+            ("to_file", (target_path,)),
+            ("write_fcs", (target_path,)),
+        ]
+
+        for method_name, args in writer_candidates:
+            method = getattr(self.fcs_file, method_name, None)
+            if callable(method):
+                method(*args)
+                return
+
+        raise NotImplementedError(
+            "FCSFile does not expose a writable API. "
+            "Implement one of: FCSFile.write(path), FCSFile.save(path), FCSFile.to_file(path), FCSFile.write_fcs(path). "
+            "Once FCSFile can write, export_fluorescence_calibration will persist calibrated columns as requested."
+        )

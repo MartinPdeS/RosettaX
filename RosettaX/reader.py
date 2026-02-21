@@ -545,3 +545,180 @@ class FCSFile:
         update_plot()
 
         return fig
+
+    def write(self, path: str) -> None:
+        if self.data is None:
+            raise RuntimeError("No data loaded. Call read_all_data() first.")
+
+        target = str(path)
+
+        version = self.header.get("FCS version", "FCS3.0")
+        if version not in {"FCS2.0", "FCS3.0", "FCS3.1"}:
+            version = "FCS3.0"
+
+        delimiter = self.delimiter or "|"
+        text_bytes = self._build_text_segment(delimiter=delimiter)
+
+        # Data bytes
+        keywords = self.text["Keywords"]
+        byte_order = self._get_byte_order()
+        np_dtype = self._get_numpy_dtype()
+
+        # Ensure $TOT matches data
+        keywords["$TOT"] = int(self.data.shape[0])
+        keywords["$PAR"] = int(self.data.shape[1])
+
+        # Ensure detector list covers all columns
+        # If detectors are fewer than columns, create missing minimal detectors.
+        detectors = self.text["Detectors"]
+        for idx, col in enumerate(list(self.data.columns), start=1):
+            if idx not in detectors:
+                detectors[idx] = {"N": str(col), "B": 32, "R": 1}
+
+        # Build data matrix in correct column order
+        matrix = self.data.to_numpy()
+
+        # Coerce dtype and endianness
+        arr = np.asarray(matrix)
+        if np_dtype.kind in {"f", "i", "u"}:
+            arr = arr.astype(np_dtype, copy=False)
+        else:
+            raise ValueError(f"Unsupported dtype kind for writing: {np_dtype}")
+
+        if byte_order == "little":
+            arr = arr.astype(arr.dtype.newbyteorder("<"), copy=False)
+        else:
+            arr = arr.astype(arr.dtype.newbyteorder(">"), copy=False)
+
+        data_bytes = arr.tobytes(order="C")
+
+        # Layout segments: header(256) + text + data
+        text_start = 256
+        text_end = text_start + len(text_bytes) - 1
+        data_start = text_end + 1
+        data_end = data_start + len(data_bytes) - 1
+
+        header = bytearray(b" " * 256)
+        header[:6] = version.encode("ascii")
+
+        def _put_int(start: int, end: int, value: int) -> None:
+            # FCS header fields are fixed width ASCII right aligned
+            field_width = end - start
+            s = str(int(value)).rjust(field_width)
+            header[start:end] = s.encode("ascii")
+
+        # positions per your current reader slicing:
+        # [10:18]=Text start, [18:26]=Text end, [26:34]=Data start, [34:42]=Data end
+        _put_int(10, 18, text_start)
+        _put_int(18, 26, text_end)
+        _put_int(26, 34, data_start)
+        _put_int(34, 42, data_end)
+
+        with open(target, "wb") as handle:
+            handle.write(header)
+            handle.write(text_bytes)
+            handle.write(data_bytes)
+
+    def save(self, path: str) -> None:
+        self.write(path)
+
+    def _build_text_segment(self, delimiter: str = "|") -> bytes:
+        keywords = dict(self.text["Keywords"])
+        detectors = self.text["Detectors"]
+
+        # Ensure required keywords
+        if "$PAR" not in keywords:
+            keywords["$PAR"] = len(detectors)
+
+        # Flatten detectors into keywords $PnX
+        flat = dict(keywords)
+        par = int(flat["$PAR"])
+        for i in range(1, par + 1):
+            det = detectors.get(i, {})
+            for suffix, value in det.items():
+                key = f"$P{i}{suffix}"
+                flat[key] = value
+
+        # Build key/value list in a stable order
+        # Keep required keys early for readability, but order is not semantically critical.
+        preferred = ["$TOT", "$PAR", "$DATATYPE", "$BYTEORD", "$MODE"]
+        ordered_keys = []
+        for k in preferred:
+            if k in flat:
+                ordered_keys.append(k)
+        for k in sorted(flat.keys()):
+            if k not in ordered_keys:
+                ordered_keys.append(k)
+
+        parts = []
+        for k in ordered_keys:
+            v = flat[k]
+            parts.append(str(k))
+            parts.append(str(v))
+
+        text = delimiter + delimiter.join(parts) + delimiter
+        return text.encode("ascii", errors="strict")
+
+    def add_column(self, name: str, values: np.ndarray, *, range_hint: float | None = None) -> None:
+        if self.data is None:
+            raise RuntimeError("Call read_all_data() before adding columns.")
+
+        name = str(name).strip()
+        if not name:
+            raise ValueError("Column name must be non empty.")
+
+        self.data[name] = np.asarray(values)
+
+        keywords = self.text["Keywords"]
+        detectors = self.text["Detectors"]
+
+        par = int(keywords.get("$PAR", len(detectors)))
+        new_index = par + 1
+
+        # Update $PAR
+        keywords["$PAR"] = new_index
+
+        # Add detector metadata for the new parameter
+        # Only a minimal set is required for many tools.
+        det = {}
+        det["N"] = name
+        det["B"] = 32 if str(keywords.get("$DATATYPE")) in {"I", "L"} else (32 if str(keywords.get("$DATATYPE")) == "F" else 64)
+
+        # Range: for float data, some tools still expect a reasonable $PnR.
+        if range_hint is None:
+            finite_vals = np.asarray(values, dtype=float)
+            finite_vals = finite_vals[np.isfinite(finite_vals)]
+            if finite_vals.size:
+                vmax = float(np.nanmax(finite_vals))
+                range_hint = max(1.0, vmax)
+            else:
+                range_hint = 1.0
+
+        det["R"] = float(range_hint)
+
+        detectors[new_index] = det
+
+    def _get_numpy_dtype(self) -> np.dtype:
+        keywords = self.text["Keywords"]
+        datatype_code = str(keywords.get("$DATATYPE", "")).strip()
+
+        dtype_mapping = {
+            "F": np.dtype("<f4"),
+            "D": np.dtype("<f8"),
+            "I": np.dtype("<i4"),
+            "L": np.dtype("<u4"),
+        }
+        if datatype_code not in dtype_mapping:
+            raise ValueError(f'Unsupported $DATATYPE "{datatype_code}" for writing.')
+        return dtype_mapping[datatype_code]
+
+    def _get_byte_order(self) -> str:
+        keywords = self.text["Keywords"]
+        byteord = str(keywords.get("$BYTEORD", "1,2,3,4")).strip()
+        # Common values: "1,2,3,4" little endian, "4,3,2,1" big endian
+        if byteord == "1,2,3,4":
+            return "little"
+        if byteord == "4,3,2,1":
+            return "big"
+        # fall back to little if unknown, but better to raise
+        raise ValueError(f'Unsupported $BYTEORD "{byteord}".')

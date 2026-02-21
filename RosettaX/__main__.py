@@ -35,13 +35,12 @@ def display_page(pathname):
     return dash.page_container
 
 @app.callback(
-    Output("sidebar-content", "children", allow_duplicate=True),
+    Output("sidebar-content", "children"),
     Input("url", "pathname"),
-    State("apply-calibration-store", "data"),
-    prevent_initial_call=True,
+    Input("apply-calibration-store", "data"),
 )
-def update_sidebar(url, sidebar):
-    return sidebar_html(sidebar)
+def update_sidebar(_url, sidebar_data):
+    return sidebar_html(sidebar_data)
 
 main_content = html.Div(
     dash.page_container,
