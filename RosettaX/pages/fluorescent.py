@@ -1,7 +1,4 @@
-from pathlib import Path
 from typing import Any, List, Optional, Tuple
-import base64
-import tempfile
 
 import dash
 from dash import Input, Output, State, callback, dash_table, dcc, html
@@ -11,61 +8,14 @@ import numpy as np
 import plotly.graph_objs as go
 
 from RosettaX.backend import BackEnd
-from RosettaX.pages.sidebar import sidebar_html
-from RosettaX.pages.fluorescent_helper import CalibrationSetupStore  # add at top with imports
 from RosettaX.pages import styling
-from RosettaX.pages import styling
-from RosettaX.pages.fluorescent_helper import FileStateRefresher, CalibrationSetupStore
-
-class FluorescentCalibrationIds:
-    page_name = "fluorescent_calibration"
-
-    upload = f"{page_name}-upload-data"
-    upload_filename = f"{page_name}-upload-file-name"
-    upload_saved_as = f"{page_name}-upload-saved-as"
-
-    uploaded_fcs_path_store = f"{page_name}-uploaded-fcs-path-store"
-    calibration_store = f"{page_name}-calibration-store"
-    scattering_threshold_store = f"{page_name}-scattering-threshold-store"
-
-    scattering_detector_dropdown = f"{page_name}-scattering-detector-dropdown"
-    scattering_nbins_input = f"{page_name}-scattering-nbins"
-    scattering_find_threshold_btn = f"{page_name}-find-scattering-threshold-btn"
-    scattering_threshold_input = f"{page_name}-scattering-threshold-input"
-    scattering_yscale_switch = f"{page_name}-scattering-yscale-switch"
-    graph_scattering_hist = f"{page_name}-graph-scattering-hist"
-
-    fluorescence_detector_dropdown = f"{page_name}-fluorescence-detector-dropdown"
-    fluorescence_nbins_input = f"{page_name}-fluorescence-nbins"
-    fluorescence_peak_count_input = f"{page_name}-fluorescence-peak-count"
-    fluorescence_find_peaks_btn = f"{page_name}-find-fluorescence-peaks-btn"
-    fluorescence_yscale_switch = f"{page_name}-fluorescence-yscale-switch"
-    graph_fluorescence_hist = f"{page_name}-graph-fluorescence-hist"
-    fluorescence_hist_store = f"{page_name}-fluorescence-hist-store"
-
-    bead_table = f"{page_name}-bead-spec-table"
-    add_row_btn = f"{page_name}-add-row-btn"
-    calibrate_btn = f"{page_name}-calibrate-btn"
-
-    graph_calibration = f"{page_name}-graph-calibration"
-    slope_out = f"{page_name}-slope-out"
-    intercept_out = f"{page_name}-intercept-out"
-    r_squared_out = f"{page_name}-r-squared-out"
-
-    apply_btn = f"{page_name}-apply-btn"
-    preview_div = f"{page_name}-preview-div"
-
-    channel_name = f"{page_name}-channel-name"
-    file_name = f"{page_name}-file-name"
-
-    save_btn = f"{page_name}-save-btn"
-    save_out = f"{page_name}-save-out"
-
-    export_mode = f"{page_name}-export-mode"
-    export_filename = f"{page_name}-export-filename"
-
-    sidebar_store = "apply-calibration-store"
-    sidebar_content = "sidebar-content"
+from RosettaX.pages.fluorescent_helper import (
+    CalibrationSetupStore,
+    FileStateRefresher,
+    FluorescentCalibrationIds,
+    FluorescentCalibrationService,
+    write_upload_to_tempfile,
+)
 
 
 class FluorescentCalibrationPage:
@@ -102,6 +52,7 @@ class FluorescentCalibrationPage:
             scatter_keywords=self.scatter_keywords,
             non_valid_keywords=self.non_valid_keywords,
         )
+        self.service = FluorescentCalibrationService(file_state=self.file_state)
 
     def register(self) -> None:
         dash.register_page(__name__, path="/fluorescent_calibration", name="Fluorescent Calibration")
@@ -343,6 +294,7 @@ class FluorescentCalibrationPage:
         return html.Div(
             [
                 dcc.Store(id=ids.uploaded_fcs_path_store, storage_type="session"),
+                # dcc.Store(id=ids.upload_cache_store, storage_type="session"),
                 dcc.Store(id=ids.calibration_store, storage_type="session"),
                 dcc.Store(id=ids.scattering_threshold_store, storage_type="session"),
                 dcc.Store(id=ids.fluorescence_hist_store, storage_type="memory"),
@@ -358,6 +310,25 @@ class FluorescentCalibrationPage:
                         ),
                         html.Div(id=ids.upload_filename),
                         html.Div(id=ids.upload_saved_as),
+
+                        html.Br(),
+                        html.Div(
+                            [
+                                html.Div("Max events used for plots and peak finding:"),
+                                dcc.Input(
+                                    id=ids.max_events_for_plots_input,
+                                    type="number",
+                                    min=10_000,
+                                    step=10_000,
+                                    value=200_000,
+                                    style={"width": "220px"},
+                                ),
+                            ],
+                            style=styling.CARD,
+                        ),
+
+                        html.Br(),
+                        html.Button("Load", id=ids.load_file_btn, n_clicks=0),
                     ],
                 ),
                 html.Br(),
@@ -387,49 +358,190 @@ class FluorescentCalibrationPage:
         ids = self.ids
 
         @callback(
-            Output(ids.uploaded_fcs_path_store, "data"),
             Output(ids.upload_filename, "children"),
+            Input(ids.upload, "filename"),
+            prevent_initial_call=True,
+        )
+        def show_selected_filename(filename: Optional[str]):
+            if not filename:
+                return ""
+            return f"Selected file: {filename}"
+
+        # @callback(
+        #     Output(ids.upload_cache_store, "data"),
+        #     Output(ids.upload_filename, "children"),
+        #     Input(ids.upload, "contents"),
+        #     State(ids.upload, "filename"),
+        #     prevent_initial_call=True,
+        # )
+        # def cache_upload(contents: Optional[str], filename: Optional[str]):
+        #     if not contents:
+        #         return dash.no_update, ""
+
+        #     safe_name = str(filename or "uploaded_file")
+        #     payload = {"contents": contents, "filename": safe_name}
+
+        #     return payload, f"Selected file: {safe_name}"
+
+        # @callback(
+        #     Output(ids.uploaded_fcs_path_store, "data"),
+        #     Output(ids.upload_saved_as, "children"),
+        #     Output(ids.scattering_detector_dropdown, "options"),
+        #     Output(ids.fluorescence_detector_dropdown, "options"),
+        #     Output(ids.scattering_detector_dropdown, "value"),
+        #     Output(ids.fluorescence_detector_dropdown, "value"),
+        #     Output(ids.fluorescence_hist_store, "data", allow_duplicate=True),
+        #     Input(ids.load_file_btn, "n_clicks"),
+        #     State(ids.upload_cache_store, "data"),
+        #     prevent_initial_call=True,
+        # )
+        # def load_uploaded_file(n_clicks: int, upload_cache: Optional[dict]):
+        #     if not n_clicks:
+        #         return (
+        #             dash.no_update,
+        #             dash.no_update,
+        #             dash.no_update,
+        #             dash.no_update,
+        #             dash.no_update,
+        #             dash.no_update,
+        #             dash.no_update,
+        #         )
+
+        #     if not isinstance(upload_cache, dict):
+        #         return (
+        #             dash.no_update,
+        #             "No file uploaded yet.",
+        #             [],
+        #             [],
+        #             None,
+        #             None,
+        #             dash.no_update,
+        #             dash.no_update,
+        #         )
+
+        #     contents = upload_cache.get("contents")
+        #     filename = upload_cache.get("filename")
+
+        #     if not contents or not filename:
+        #         return (
+        #             dash.no_update,
+        #             "Upload payload is incomplete.",
+        #             [],
+        #             [],
+        #             None,
+        #             None,
+        #             dash.no_update,
+        #             dash.no_update,
+        #         )
+
+        #     try:
+        #         temp_path = write_upload_to_tempfile(contents=contents, filename=str(filename))
+        #     except Exception as exc:
+        #         return (
+        #             dash.no_update,
+        #             f"Failed to write temp file: {exc}",
+        #             [],
+        #             [],
+        #             None,
+        #             None,
+        #             dash.no_update,
+        #             dash.no_update,
+        #         )
+
+        #     try:
+        #         channels = self.service.channels_from_file(temp_path)
+        #     except Exception as exc:
+        #         return (
+        #             temp_path,
+        #             f"Saved as: {temp_path} but could not read it: {exc}",
+        #             [],
+        #             [],
+        #             None,
+        #             None,
+        #             dash.no_update,
+        #             dash.no_update,
+        #         )
+
+        #     return (
+        #         temp_path,
+        #         f"Saved as: {temp_path}",
+        #         channels.scatter_options,
+        #         channels.fluorescence_options,
+        #         channels.scatter_value,
+        #         channels.fluorescence_value,
+        #         None,  # reset fluorescence_hist_store only
+        #     )
+
+        @callback(
+            Output(ids.uploaded_fcs_path_store, "data"),
             Output(ids.upload_saved_as, "children"),
             Output(ids.scattering_detector_dropdown, "options"),
             Output(ids.fluorescence_detector_dropdown, "options"),
             Output(ids.scattering_detector_dropdown, "value"),
             Output(ids.fluorescence_detector_dropdown, "value"),
-            Input(ids.upload, "contents"),
+            Output(ids.fluorescence_hist_store, "data", allow_duplicate=True),
+            Input(ids.load_file_btn, "n_clicks"),
+            State(ids.upload, "contents"),
             State(ids.upload, "filename"),
             prevent_initial_call=True,
         )
-        def on_upload_bead_file(contents: Optional[str], filename: Optional[str]):
-            if not contents:
-                return dash.no_update, "", "", [], [], None, None
+        def load_uploaded_file(n_clicks: int, contents: Optional[str], filename: Optional[str]):
+            if not n_clicks:
+                return (
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                )
+
+            if not contents or not filename:
+                return (
+                    dash.no_update,
+                    "No file uploaded yet.",
+                    [],
+                    [],
+                    None,
+                    None,
+                    dash.no_update,
+                )
 
             try:
-                temp_path = self._write_upload_to_tempfile(contents=contents, filename=filename or "uploaded_file")
+                temp_path = write_upload_to_tempfile(contents=contents, filename=str(filename))
             except Exception as exc:
-                return dash.no_update, f"Upload failed: {exc}", "", [], [], None, None
+                return (
+                    dash.no_update,
+                    f"Failed to write temp file: {exc}",
+                    [],
+                    [],
+                    None,
+                    None,
+                    dash.no_update,
+                )
 
             try:
-                backend = BackEnd(temp_path)
-                columns = list(getattr(backend.fcs_file, "data").columns)
+                channels = self.service.channels_from_file(temp_path)
             except Exception as exc:
-                msg = f"Saved upload to {temp_path} but backend could not read it: {exc}"
-                return temp_path, msg, "", [], [], None, None
-
-            options_scatter, options_fluorescent = self._find_keywords_in_list(columns)
-
-            default_scatter = options_scatter[0]["value"] if options_scatter else None
-            default_fluorescent = options_fluorescent[0]["value"] if options_fluorescent else None
-
-            msg_selected_file = f"Selected file: {filename}"
-            msg_saved_as = f"Saved as: {temp_path}"
+                return (
+                    temp_path,
+                    f"Saved as: {temp_path} but could not read it: {exc}",
+                    [],
+                    [],
+                    None,
+                    None,
+                    dash.no_update,
+                )
 
             return (
                 temp_path,
-                msg_selected_file,
-                msg_saved_as,
-                options_scatter,
-                options_fluorescent,
-                default_scatter,
-                default_fluorescent,
+                f"Saved as: {temp_path}",
+                channels.scatter_options,
+                channels.fluorescence_options,
+                channels.scatter_value,
+                channels.fluorescence_value,
+                None,
             )
 
         @callback(
@@ -442,6 +554,7 @@ class FluorescentCalibrationPage:
             Input(ids.scattering_nbins_input, "value"),
             Input(ids.scattering_threshold_input, "value"),
             Input(ids.scattering_yscale_switch, "value"),
+            State(ids.max_events_for_plots_input, "value"),
             State(ids.scattering_threshold_store, "data"),
             prevent_initial_call=True,
         )
@@ -452,6 +565,7 @@ class FluorescentCalibrationPage:
             scattering_nbins: Any,
             threshold_input_value: Any,
             yscale_selection: Optional[list[str]],
+            max_events_for_plots: Any,
             stored_threshold_payload: Optional[dict],
         ):
             if not fcs_path or not scattering_channel:
@@ -466,7 +580,13 @@ class FluorescentCalibrationPage:
             )
 
             backend = BackEnd(fcs_path)
-            values = self._get_column_values(backend=backend, column=str(scattering_channel))
+
+            max_events = self._as_int(max_events_for_plots, default=200_000, min_value=10_000, max_value=5_000_000)
+            values = self.service.get_column_values(
+                backend=backend,
+                column=str(scattering_channel),
+                max_points=max_events,
+            )
 
             stored_thr = self._as_float((stored_threshold_payload or {}).get("threshold"))
             typed_thr = self._as_float(threshold_input_value)
@@ -477,7 +597,7 @@ class FluorescentCalibrationPage:
                         "operation": "estimate_scattering_threshold",
                         "column": str(scattering_channel),
                         "nbins": int(nbins),
-                        "number_of_points": 200_000,
+                        "number_of_points": int(max_events),
                     }
                 )
                 thr = self._as_float(response.get("threshold"))
@@ -488,14 +608,14 @@ class FluorescentCalibrationPage:
 
             use_log = isinstance(yscale_selection, list) and "log" in yscale_selection
 
-            fig = self._make_histogram_with_lines(
+            fig = self.service.make_histogram_with_lines(
                 values=values,
                 nbins=nbins,
                 xaxis_title="Scattering (a.u.)",
                 line_positions=[float(thr)],
                 line_labels=[f"{float(thr):.3g}"],
-                # title=f"Scattering histogram (threshold={float(thr):.6g})",
             )
+
             fig.update_yaxes(type="log" if use_log else "linear")
 
             next_store = {
@@ -506,13 +626,26 @@ class FluorescentCalibrationPage:
 
             return fig, next_store, f"{float(thr):.6g}"
 
-
-
-
-
-
         @callback(
             Output(ids.graph_fluorescence_hist, "figure"),
+            Input(ids.fluorescence_yscale_switch, "value"),
+            Input(ids.fluorescence_hist_store, "data"),
+        )
+        def update_fluorescence_yscale(
+            yscale_selection: Optional[list[str]],
+            stored_figure: Optional[dict],
+        ):
+            if not stored_figure:
+                return dash.no_update
+
+            fig = go.Figure(stored_figure)
+
+            use_log = isinstance(yscale_selection, list) and ("log" in yscale_selection)
+            fig.update_yaxes(type="log" if use_log else "linear")
+
+            return fig
+
+        @callback(
             Output(ids.bead_table, "data", allow_duplicate=True),
             Output(ids.fluorescence_hist_store, "data"),
             Input(ids.fluorescence_find_peaks_btn, "n_clicks"),
@@ -521,7 +654,7 @@ class FluorescentCalibrationPage:
             State(ids.fluorescence_detector_dropdown, "value"),
             State(ids.fluorescence_nbins_input, "value"),
             State(ids.fluorescence_peak_count_input, "value"),
-            State(ids.fluorescence_yscale_switch, "value"),
+            State(ids.max_events_for_plots_input, "value"),
             State(ids.scattering_threshold_store, "data"),
             State(ids.bead_table, "data"),
             prevent_initial_call=True,
@@ -533,18 +666,17 @@ class FluorescentCalibrationPage:
             fluorescence_channel: Optional[str],
             fluorescence_nbins: Any,
             peak_count: Any,
-            yscale_selection: Optional[list[str]],
+            max_events_for_plots: Any,
             threshold_payload: Optional[dict],
             table_data: Optional[list[dict]],
         ):
             empty = self._empty_fig()
 
             if not fcs_path or not scattering_channel or not fluorescence_channel:
-                return empty, dash.no_update, dash.no_update
+                return dash.no_update, dash.no_update
 
             if not isinstance(threshold_payload, dict):
-                empty.update_layout(title="Set the scattering threshold first.")
-                return empty, dash.no_update, dash.no_update
+                return dash.no_update, dash.no_update
 
             threshold_value = self._as_float(threshold_payload.get("threshold"))
             if threshold_value is None:
@@ -552,6 +684,8 @@ class FluorescentCalibrationPage:
 
             nbins = self._as_int(fluorescence_nbins, default=200, min_value=10, max_value=5000)
             max_peaks = self._as_int(peak_count, default=3, min_value=1, max_value=100)
+
+            max_events = self._as_int(max_events_for_plots, default=200_000, min_value=10_000, max_value=5_000_000)
 
             backend = BackEnd(fcs_path)
 
@@ -561,33 +695,31 @@ class FluorescentCalibrationPage:
                     "max_peaks": int(max_peaks),
                     "gating_column": str(scattering_channel),
                     "gating_threshold": float(threshold_value),
-                    "number_of_points": 200_000,
+                    "number_of_points": int(max_events),
                 }
             )
             peak_positions = peaks_payload.get("peak_positions", [])
 
-            max_points_for_plot = 200_000
-            fluorescence_values = self._get_column_values(
+
+            fluorescence_values = self.service.get_column_values(
                 backend=backend,
                 column=str(fluorescence_channel),
-                max_points=max_points_for_plot,
-            )
-            scattering_values = self._get_column_values(
-                backend=backend,
-                column=str(scattering_channel),
-                max_points=max_points_for_plot,
+                max_points=max_events,
             )
 
-            gated = self._apply_gate(
+            scattering_values = self.service.get_column_values(
+                backend=backend,
+                column=str(scattering_channel),
+                max_points=max_events,
+            )
+
+            gated = self.service.apply_gate(
                 fluorescence_values=fluorescence_values,
                 scattering_values=scattering_values,
                 threshold=float(threshold_value),
             )
 
-            total_n = int(np.asarray(fluorescence_values).size)
-            kept_n = int(np.asarray(gated).size)
-
-            fig = self._make_histogram_with_lines(
+            fig = self.service.make_histogram_with_lines(
                 values=fluorescence_values,
                 overlay_values=gated,
                 nbins=nbins,
@@ -598,35 +730,12 @@ class FluorescentCalibrationPage:
                 overlay_name="gated events",
             )
 
-            use_log = isinstance(yscale_selection, list) and ("log" in yscale_selection)
-            fig.update_yaxes(type="log" if use_log else "linear")
-
             updated_table = self._inject_peak_modes_into_table(
                 table_data=table_data,
                 peak_positions=peak_positions,
             )
 
-            # critical: store the figure so the switch can update instantly
-            return fig, updated_table, fig.to_dict()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            return updated_table, fig.to_dict()
 
         @callback(
             Output(ids.graph_calibration, "figure"),
@@ -875,7 +984,7 @@ class FluorescentCalibrationPage:
             )
 
             # Refresh dropdowns from the file that now contains the new column
-            channels = self.file_state.options_from_file(
+            channels = self.service.channels_from_file(
                 exported_path,
                 preferred_scatter=current_scatter,
                 preferred_fluorescence=calibrated_channel_name,  # prefer the new column
@@ -892,19 +1001,6 @@ class FluorescentCalibrationPage:
                 channels.scatter_value,
                 channels.fluorescence_value,
             )
-
-    @staticmethod
-    def _write_upload_to_tempfile(contents: str, filename: str) -> str:
-        header, b64data = contents.split(",", 1)
-        raw = base64.b64decode(b64data)
-
-        suffix = Path(filename).suffix or ".bin"
-        tmp_dir = Path(tempfile.gettempdir()) / "rosettax_uploads"
-        tmp_dir.mkdir(parents=True, exist_ok=True)
-
-        out_path = tmp_dir / f"{next(tempfile._get_candidate_names())}{suffix}"
-        out_path.write_bytes(raw)
-        return str(out_path)
 
     @staticmethod
     def _empty_fig() -> go.Figure:
@@ -974,16 +1070,6 @@ class FluorescentCalibrationPage:
             au_vals.append(au)
 
         return np.asarray(mesf_vals, dtype=float), np.asarray(au_vals, dtype=float)
-
-    @staticmethod
-    def _apply_gate(fluorescence_values: np.ndarray, scattering_values: np.ndarray, threshold: float) -> np.ndarray:
-        fluorescence_values = np.asarray(fluorescence_values, dtype=float)
-        scattering_values = np.asarray(scattering_values, dtype=float)
-
-        mask = np.isfinite(fluorescence_values) & np.isfinite(scattering_values)
-        mask = mask & (scattering_values >= float(threshold))
-
-        return fluorescence_values[mask]
 
     @staticmethod
     def _inject_peak_modes_into_table(table_data: Optional[list[dict]], peak_positions: List[float]) -> list[dict]:
@@ -1122,24 +1208,6 @@ class FluorescentCalibrationPage:
             return float("nan")
 
         return 1.0 - ss_res / ss_tot
-
-    def _find_keywords_in_list(self, columns: list[str]) -> tuple[list[dict], list[dict]]:
-        options_scatter: list[dict] = []
-        options_fluorescent: list[dict] = []
-
-        for column in columns:
-            lower = str(column).strip().lower()
-
-            is_scatter = any(keyword in lower for keyword in self.scatter_keywords)
-            is_invalid = any(keyword in lower for keyword in self.non_valid_keywords)
-
-            if is_scatter:
-                options_scatter.append({"label": column, "value": column})
-            elif not is_invalid:
-                options_fluorescent.append({"label": column, "value": column})
-
-        return options_scatter, options_fluorescent
-
 
 _page = FluorescentCalibrationPage()
 _page.register()
