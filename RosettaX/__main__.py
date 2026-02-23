@@ -10,10 +10,7 @@ from dash import Input, Output, dcc, html
 
 from RosettaX.pages import styling
 from RosettaX.pages.sidebar import sidebar_html
-from RosettaX.pages.runtime_config import get_runtime_config
-
-
-from RosettaX.pages.runtime_config import get_runtime_config
+from RosettaX.pages.runtime_config import get_ui_flags
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -61,33 +58,30 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def apply_cli_to_runtime_config(args: argparse.Namespace) -> None:
-    config = get_runtime_config()
+def apply_cli_to_ui_flags(args: argparse.Namespace) -> None:
+    ui_flags = get_ui_flags()
 
-    # debug
     if args.debug is not None:
-        config.debug = bool(args.debug)
-        config.mark_explicit("debug")
+        ui_flags.debug = bool(args.debug)
+        ui_flags.mark_explicit("debug")
 
-    # helper to set fluorescence fields when provided
     def _set(field_name: str, value: object | None) -> None:
         if value is None:
             return
-        setattr(config.fluorescence, field_name, bool(value))
-        config.mark_explicit(f"fluorescence.{field_name}")
+        setattr(ui_flags, field_name, bool(value))
+        ui_flags.mark_explicit(field_name)
 
-    _set("show_scattering_controls", args.show_scattering_controls)
-    _set("show_threshold_controls", args.show_threshold_controls)
-    _set("show_fluorescence", args.show_fluorescence)
-    _set("show_beads", args.show_beads)
-    _set("show_output", args.show_output)
-    _set("show_save", args.show_save)
+    _set("fluorescence_show_scattering_controls", args.show_scattering_controls)
+    _set("fluorescence_show_threshold_controls", args.show_threshold_controls)
+    _set("fluorescence_show_fluorescence_controls", args.show_fluorescence)
+    _set("fluorescence_show_beads_controls", args.show_beads)
+    _set("fluorescence_show_output_controls", args.show_output)
+    _set("fluorescence_show_save_controls", args.show_save)
 
-    _set("debug_scattering", args.debug_scattering)
-    _set("debug_fluorescence", args.debug_fluorescence)
+    _set("fluorescence_debug_scattering", args.debug_scattering)
+    _set("fluorescence_debug_fluorescence", args.debug_fluorescence)
 
-    # Apply global rules after overrides are registered, but policy will not override explicit
-    config.apply_policy()
+    ui_flags.apply_policy()
 
 
 class RosettaXApplication:
@@ -200,7 +194,7 @@ class RosettaXApplication:
 
 def main(argv: Optional[list[str]] = None) -> None:
     args = _parse_args(argv)
-    apply_cli_to_runtime_config(args)
+    apply_cli_to_ui_flags(args)(args)
 
     app = RosettaXApplication(
         host=str(args.host),

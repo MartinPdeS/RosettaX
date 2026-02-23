@@ -11,8 +11,7 @@ from dash import Input, Output, State, callback, callback_context, dcc, html
 from RosettaX.backend import BackEnd
 from RosettaX.pages import styling
 from RosettaX.pages.fluorescence import BaseSection, SectionContext
-from RosettaX.pages.runtime_config import get_runtime_config
-
+from RosettaX.pages.runtime_config import get_ui_flags
 
 class ScatteringSection(BaseSection):
     """
@@ -40,12 +39,11 @@ class ScatteringSection(BaseSection):
         )
 
     def _build_body_children(self) -> list:
-        runtime_config = get_runtime_config()
+        ui_flags = get_ui_flags()
 
-        show_scattering_controls = bool(runtime_config.fluorescence.show_scattering_controls)
-        show_threshold_controls = bool(runtime_config.fluorescence.show_threshold_controls)
-        debug_mode = bool(runtime_config.debug)
-
+        show_scattering_controls = ui_flags.fluorescence_show_scattering_controls
+        show_threshold_controls = ui_flags.fluorescence_show_threshold_controls
+        debug_mode = ui_flags.debug
         children: list = [html.Br(), self._detector_row()]
 
         # Scattering controls (bins, button, scale, histogram) are opt in via config
@@ -186,11 +184,11 @@ class ScatteringSection(BaseSection):
             max_events_for_plots: Any,
             stored_threshold_payload: Optional[dict],
         ):
-            runtime_config = get_runtime_config()
+            ui_flags = get_ui_flags()
 
-            show_scattering_controls = bool(runtime_config.fluorescence.show_scattering_controls)
-            show_threshold_controls = bool(runtime_config.fluorescence.show_threshold_controls)
-            debug_mode = bool(runtime_config.debug)
+            show_scattering_controls = ui_flags.fluorescence_show_scattering_controls
+            show_threshold_controls = ui_flags.fluorescence_show_threshold_controls
+            debug_mode = ui_flags.debug
 
             if not fcs_path or not scattering_channel:
                 return self._empty_fig(), dash.no_update, dash.no_update, ""

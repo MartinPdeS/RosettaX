@@ -9,7 +9,7 @@ import plotly.graph_objs as go
 from RosettaX.backend import BackEnd
 from RosettaX.pages import styling
 from RosettaX.pages.fluorescence import BaseSection, SectionContext
-from RosettaX.pages.runtime_config import get_runtime_config
+from RosettaX.pages.runtime_config import get_ui_flags
 
 
 class FluorescenceSection(BaseSection):
@@ -24,7 +24,7 @@ class FluorescenceSection(BaseSection):
 
     def layout(self) -> dbc.Card:
         ids = self.context.ids
-        debug_container_style = {"display": "block"} if get_runtime_config().debug else {"display": "none"}
+        debug_container_style = {"display": "block"} if get_ui_flags().debug else {"display": "none"}
 
         return dbc.Card(
             [
@@ -379,7 +379,7 @@ class FluorescenceSection(BaseSection):
             debug_fig = self._empty_fig()
             debug_text = ""
 
-            if get_runtime_config().debug:
+            if get_ui_flags().debug:
                 debug_fig = go.Figure()
                 preview_count = int(min(fluorescence_values.size, 25_000))
 

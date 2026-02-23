@@ -6,7 +6,7 @@ import dash_bootstrap_components as dbc
 
 from RosettaX.pages import styling
 from RosettaX.pages.fluorescence import BaseSection, SectionContext, helper
-from RosettaX.pages.runtime_config import get_runtime_config
+from RosettaX.pages.runtime_config import get_ui_flags
 
 class LoadSection(BaseSection):
     def __init__(self, *, context: SectionContext) -> None:
@@ -16,7 +16,7 @@ class LoadSection(BaseSection):
     def layout(self) -> dbc.Card:
         ids = self.context.ids
 
-        debug_container_style = {"display": "block"} if get_runtime_config().debug else {"display": "none"}
+        debug_container_style = {"display": "block"} if get_ui_flags().debug else {"display": "none"}
 
         return dbc.Card(
             [
@@ -49,7 +49,7 @@ class LoadSection(BaseSection):
                                     style=styling.CARD,
                                 )
                             ]
-                            if get_runtime_config().debug
+                            if get_ui_flags().debug
                             else []
                         ),
                         html.Br(),
@@ -123,7 +123,7 @@ class LoadSection(BaseSection):
                     None,
                     None,
                     dash.no_update,
-                    debug_text if get_runtime_config().debug else "",
+                    debug_text if get_ui_flags().debug else "",
                 )
 
             try:
@@ -138,7 +138,7 @@ class LoadSection(BaseSection):
                     None,
                     None,
                     dash.no_update,
-                    debug_text if get_runtime_config().debug else "",
+                    debug_text if get_ui_flags().debug else "",
                 )
 
             try:
@@ -153,7 +153,7 @@ class LoadSection(BaseSection):
                     None,
                     None,
                     dash.no_update,
-                    debug_text if get_runtime_config().debug else "",
+                    debug_text if get_ui_flags().debug else "",
                 )
 
             debug_text = (
@@ -170,5 +170,5 @@ class LoadSection(BaseSection):
                 channels.scatter_value,
                 channels.fluorescence_value,
                 None,
-                debug_text if get_runtime_config().debug else "",
+                debug_text if get_ui_flags().debug else "",
             )
