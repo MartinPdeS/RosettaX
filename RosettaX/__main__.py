@@ -1,71 +1,215 @@
-import dash
-import dash_bootstrap_components as dbc
-from dash import Input, Output, dcc, html, State
+import argparse
+import json
 import webbrowser
 from threading import Timer
-import json
+from typing import Any, Optional
+
+import dash
+import dash_bootstrap_components as dbc
+from dash import Input, Output, dcc, html
 
 from RosettaX.pages import styling
 from RosettaX.pages.sidebar import sidebar_html
+from RosettaX.pages.runtime_config import get_runtime_config
 
-def create_table_from_dict():
-    try:
-        with open('RosettaX/data/settings/saved_mesf_values.json', 'r') as file:
-            data = json.load(file)
-            table_data = []
-            for key, value in data.items():
-                if value.get('default', True):
-                    mesf_values = value['mesf_values'].split(',')
+
+from RosettaX.pages.runtime_config import get_runtime_config
+
+
+def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(prog="RosettaX")
+
+    parser.add_argument("--host", type=str, default="127.0.0.1")
+    parser.add_argument("--port", type=int, default=8050)
+
+    parser.add_argument(
+        "--no-browser",
+        action="store_true",
+        help="Do not open a browser tab on startup.",
+    )
+
+    parser.add_argument("--debug", action="store_true")
+    parser.add_argument("--no-debug", dest="debug", action="store_false")
+    parser.set_defaults(debug=None)
+
+    # Visibility toggles
+    parser.add_argument("--show_scattering_controls", action="store_true", default=None)
+    parser.add_argument("--hide_scattering_controls", dest="show_scattering_controls", action="store_false")
+
+    parser.add_argument("--show_threshold_controls", action="store_true", default=None)
+    parser.add_argument("--hide_threshold_controls", dest="show_threshold_controls", action="store_false")
+
+    parser.add_argument("--show_fluorescence", action="store_true", default=None)
+    parser.add_argument("--hide_fluorescence", dest="show_fluorescence", action="store_false")
+
+    parser.add_argument("--show_beads", action="store_true", default=None)
+    parser.add_argument("--hide_beads", dest="show_beads", action="store_false")
+
+    parser.add_argument("--show_output", action="store_true", default=None)
+    parser.add_argument("--hide_output", dest="show_output", action="store_false")
+
+    parser.add_argument("--show_save", action="store_true", default=None)
+    parser.add_argument("--hide_save", dest="show_save", action="store_false")
+
+    # Per section debug
+    parser.add_argument("--debug_scattering", action="store_true", default=None)
+    parser.add_argument("--no_debug_scattering", dest="debug_scattering", action="store_false")
+
+    parser.add_argument("--debug_fluorescence", action="store_true", default=None)
+    parser.add_argument("--no_debug_fluorescence", dest="debug_fluorescence", action="store_false")
+
+    return parser.parse_args(argv)
+
+
+def apply_cli_to_runtime_config(args: argparse.Namespace) -> None:
+    config = get_runtime_config()
+
+    # debug
+    if args.debug is not None:
+        config.debug = bool(args.debug)
+        config.mark_explicit("debug")
+
+    # helper to set fluorescence fields when provided
+    def _set(field_name: str, value: object | None) -> None:
+        if value is None:
+            return
+        setattr(config.fluorescence, field_name, bool(value))
+        config.mark_explicit(f"fluorescence.{field_name}")
+
+    _set("show_scattering_controls", args.show_scattering_controls)
+    _set("show_threshold_controls", args.show_threshold_controls)
+    _set("show_fluorescence", args.show_fluorescence)
+    _set("show_beads", args.show_beads)
+    _set("show_output", args.show_output)
+    _set("show_save", args.show_save)
+
+    _set("debug_scattering", args.debug_scattering)
+    _set("debug_fluorescence", args.debug_fluorescence)
+
+    # Apply global rules after overrides are registered, but policy will not override explicit
+    config.apply_policy()
+
+
+class RosettaXApplication:
+    def __init__(
+        self,
+        *,
+        host: str,
+        port: int,
+        open_browser: bool,
+    ) -> None:
+        self.host = str(host)
+        self.port = int(port)
+        self.open_browser = bool(open_browser)
+
+        self.app = dash.Dash(
+            __name__,
+            external_stylesheets=[dbc.themes.BOOTSTRAP],
+            use_pages=True,
+        )
+
+        self._register_callbacks()
+        self._set_layout()
+
+    @staticmethod
+    def create_table_from_dict(*, json_path: str) -> list[dict[str, str]]:
+        try:
+            with open(json_path, "r", encoding="utf-8") as file:
+                data = json.load(file)
+
+            table_data: list[dict[str, str]] = []
+            for _key, value in (data or {}).items():
+                if not isinstance(value, dict):
+                    continue
+                if value.get("default", True):
+                    mesf_values = str(value.get("mesf_values", "")).split(",")
                     for mesf in mesf_values:
-                        table_data.append({"col1": mesf, "col2": ""})
-    except Exception as e:
-        table_data = [{"col1": "", "col2": ""}]
-    return table_data
+                        mesf_clean = str(mesf).strip()
+                        if mesf_clean:
+                            table_data.append({"col1": mesf_clean, "col2": ""})
 
-app = dash.Dash(
-    external_stylesheets=[dbc.themes.BOOTSTRAP],
-    use_pages=True
-)
+            if not table_data:
+                table_data = [{"col1": "", "col2": ""}]
 
-@app.callback(
-    Output("page-content", "children"),
-    Input("url", "pathname")
-)
-def display_page(pathname):
-    return dash.page_container
+            return table_data
+        except Exception:
+            return [{"col1": "", "col2": ""}]
 
-@app.callback(
-    Output("sidebar-content", "children"),
-    Input("url", "pathname"),
-    Input("apply-calibration-store", "data"),
-)
-def update_sidebar(_url, sidebar_data):
-    return sidebar_html(sidebar_data)
+    def _register_callbacks(self) -> None:
+        @self.app.callback(
+            Output("page-content", "children"),
+            Input("url", "pathname"),
+        )
+        def display_page(_pathname: Optional[str]):
+            return dash.page_container
 
-main_content = html.Div(
-    dash.page_container,
-    id="page-content",
-    style=styling.CONTENT
-)
-sidebar_content = html.Div(
-    id="sidebar-content",
-    style=styling.SIDEBAR
-)
+        @self.app.callback(
+            Output("sidebar-content", "children"),
+            Input("url", "pathname"),
+            Input("apply-calibration-store", "data"),
+        )
+        def update_sidebar(_url: Optional[str], sidebar_data: Any):
+            return sidebar_html(sidebar_data)
 
-app.layout = html.Div(
-    [
-        dcc.Location(id="url"),
-        dcc.Store(data={'Fluorescent':[], 'Scatter':[]}, id="apply-calibration-store", storage_type='session'),
-        dcc.Store(data=create_table_from_dict(), id="MESF-default_table-store", storage_type='session'),
-        sidebar_content,
-        main_content
-    ]
-)
+    def _set_layout(self) -> None:
+        main_content = html.Div(
+            dash.page_container,
+            id="page-content",
+            style=styling.CONTENT,
+        )
 
-def open_browser():
-	webbrowser.open_new("http://localhost:{}".format(8050))
+        sidebar_content = html.Div(
+            id="sidebar-content",
+            style=styling.SIDEBAR,
+        )
+
+        mesf_default_table = self.create_table_from_dict(
+            json_path="RosettaX/data/settings/saved_mesf_values.json"
+        )
+
+        self.app.layout = html.Div(
+            [
+                dcc.Location(id="url"),
+                dcc.Store(
+                    data={"Fluorescent": [], "Scatter": []},
+                    id="apply-calibration-store",
+                    storage_type="session",
+                ),
+                dcc.Store(
+                    data=mesf_default_table,
+                    id="MESF-default_table-store",
+                    storage_type="session",
+                ),
+                sidebar_content,
+                main_content,
+            ]
+        )
+
+    def run(self) -> None:
+        if self.open_browser:
+            Timer(1, self._open_browser).start()
+
+        self.app.run(
+            host=self.host,
+            port=self.port,
+        )
+
+    def _open_browser(self) -> None:
+        webbrowser.open_new(f"http://{self.host}:{self.port}")
+
+
+def main(argv: Optional[list[str]] = None) -> None:
+    args = _parse_args(argv)
+    apply_cli_to_runtime_config(args)
+
+    app = RosettaXApplication(
+        host=str(args.host),
+        port=int(args.port),
+        open_browser=not bool(args.no_browser),
+    )
+
+    app.run()
+
 
 if __name__ == "__main__":
-    Timer(1, open_browser).start()
-
-    app.run(debug=True, port=8050)
+    main()
