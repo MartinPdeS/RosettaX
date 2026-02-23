@@ -1,10 +1,10 @@
 from typing import Any, List, Optional
 
 import dash
-from dash import Input, Output, State, callback, dcc, html
 import dash_bootstrap_components as dbc
 import numpy as np
 import plotly.graph_objs as go
+from dash import Input, Output, State, callback, dcc, html
 
 from RosettaX.backend import BackEnd
 from RosettaX.pages import styling
@@ -18,13 +18,15 @@ class FluorescenceSection(BaseSection):
         self.debug_graph_id = f"{self.context.ids.page_name}-fluorescence-debug-graph"
         self.debug_text_id = f"{self.context.ids.page_name}-fluorescence-debug-out"
 
-        self.default_scattering_nbins_for_threshold_estimate = 400
-        self.default_fluorescence_nbins = 200
+        self.default_fluorescence_nbins = 400
         self.default_peak_count = 3
 
     def layout(self) -> dbc.Card:
         ids = self.context.ids
-        debug_container_style = {"display": "block"} if get_ui_flags().debug else {"display": "none"}
+        ui_flags = get_ui_flags()
+
+        debug_container_style = {"display": "block"} if ui_flags.debug else {"display": "none"}
+        must_show_fluorescence_histogram = bool(ui_flags.fluorescence_show_fluorescence_controls)
 
         return dbc.Card(
             [
@@ -35,9 +37,55 @@ class FluorescenceSection(BaseSection):
                         html.Div(
                             [
                                 html.Div("Fluorescence detector:"),
-                                dcc.Dropdown(id=ids.fluorescence_detector_dropdown, style={"width": "500px"}),
+                                dcc.Dropdown(
+                                    id=ids.fluorescence_detector_dropdown,
+                                    style={"width": "500px"},
+                                ),
                             ],
                             style=styling.CARD,
+                        ),
+                        html.Br(),
+                        html.Div(
+                            [
+                                html.Div(
+                                    [
+                                        html.Div("Number of peaks to look for:", style={"marginRight": "8px"}),
+                                        dcc.Input(
+                                            id=ids.fluorescence_peak_count_input,
+                                            type="number",
+                                            min=1,
+                                            step=1,
+                                            value=self.default_peak_count,
+                                            style={"width": "120px"},
+                                        ),
+                                    ],
+                                    style={"display": "flex", "alignItems": "center"},
+                                ),
+                                html.Button(
+                                    "Find peaks",
+                                    id=ids.fluorescence_find_peaks_btn,
+                                    n_clicks=0,
+                                    style={"marginLeft": "16px"},
+                                ),
+                            ],
+                            style={"display": "flex", "alignItems": "center"},
+                        ),
+                        html.Br(),
+                        html.Br(),
+                        dcc.Loading(
+                            dcc.Graph(
+                                id=ids.graph_fluorescence_hist,
+                                style={"display": "none"} if (not must_show_fluorescence_histogram) else self.context.graph_style,
+                            ),
+                            type="default",
+                        ),
+                        html.Br(),
+                        dbc.Checklist(
+                            id=ids.fluorescence_yscale_switch,
+                            options=[{"label": "Log scale (counts)", "value": "log"}],
+                            value=["log"],
+                            switch=True,
+                            style={"display": "none"} if (not must_show_fluorescence_histogram) else {"display": "block"},
                         ),
                         html.Br(),
                         html.Div(
@@ -53,35 +101,7 @@ class FluorescenceSection(BaseSection):
                                 ),
                             ],
                             style=styling.CARD,
-                        ),
-                        html.Br(),
-                        html.Div(
-                            [
-                                html.Div("Number of peaks to look for:"),
-                                dcc.Input(
-                                    id=ids.fluorescence_peak_count_input,
-                                    type="number",
-                                    min=1,
-                                    step=1,
-                                    value=self.default_peak_count,
-                                    style={"width": "160px"},
-                                ),
-                            ],
-                            style=styling.CARD,
-                        ),
-                        html.Br(),
-                        html.Button("Find peaks", id=ids.fluorescence_find_peaks_btn, n_clicks=0),
-                        html.Br(),
-                        html.Br(),
-                        dbc.Checklist(
-                            id=ids.fluorescence_yscale_switch,
-                            options=[{"label": "Log scale (counts)", "value": "log"}],
-                            value=["log"],
-                            switch=True,
-                        ),
-                        dcc.Loading(
-                            dcc.Graph(id=ids.graph_fluorescence_hist, style=self.context.graph_style),
-                            type="default",
+                            hidden=not must_show_fluorescence_histogram,
                         ),
                         html.Div(
                             [
@@ -154,7 +174,7 @@ class FluorescenceSection(BaseSection):
                     {
                         "operation": "estimate_scattering_threshold",
                         "column": str(scattering_channel),
-                        "nbins": int(self.default_scattering_nbins_for_threshold_estimate),
+                        "nbins": int(self.default_fluorescence_nbins),
                         "number_of_points": int(max_events),
                     }
                 )
@@ -185,6 +205,12 @@ class FluorescenceSection(BaseSection):
             threshold_input_value: Any,
             max_events_for_plots: Any,
         ):
+            ui_flags = get_ui_flags()
+            must_show_fluorescence_histogram = bool(ui_flags.fluorescence_show_fluorescence_controls)
+
+            if not must_show_fluorescence_histogram:
+                return dash.no_update
+
             if not fcs_path or not scattering_channel or not fluorescence_channel:
                 return dash.no_update
 
@@ -255,6 +281,12 @@ class FluorescenceSection(BaseSection):
             yscale_selection: Optional[list[str]],
             stored_figure: Optional[dict],
         ):
+            ui_flags = get_ui_flags()
+            must_show_fluorescence_histogram = bool(ui_flags.fluorescence_show_fluorescence_controls)
+
+            if not must_show_fluorescence_histogram:
+                return self._empty_fig()
+
             if not stored_figure:
                 fig = go.Figure()
                 fig.update_layout(title="Select file + channels first.", separators=".,")
@@ -270,7 +302,6 @@ class FluorescenceSection(BaseSection):
             Output(ids.fluorescence_hist_store, "data", allow_duplicate=True),
             Output(self.debug_graph_id, "figure"),
             Output(self.debug_text_id, "children"),
-            Input(ids.fluorescence_find_peaks_btn, "n_clicks"),
             Input(ids.fluorescence_find_peaks_btn, "n_clicks"),
             State(ids.uploaded_fcs_path_store, "data"),
             State(ids.scattering_detector_dropdown, "value"),
@@ -295,6 +326,12 @@ class FluorescenceSection(BaseSection):
             threshold_input_value: Any,
             table_data: Optional[list[dict]],
         ):
+            ui_flags = get_ui_flags()
+            must_show_fluorescence_histogram = bool(ui_flags.fluorescence_show_fluorescence_controls)
+
+            if not must_show_fluorescence_histogram:
+                return dash.no_update, dash.no_update, self._empty_fig(), ""
+
             if not fcs_path or not scattering_channel or not fluorescence_channel:
                 return dash.no_update, dash.no_update, self._empty_fig(), ""
 
@@ -322,6 +359,7 @@ class FluorescenceSection(BaseSection):
                 min_value=10,
                 max_value=5000,
             )
+
             max_peaks = self._as_int(
                 peak_count,
                 default=self.default_peak_count,
@@ -379,7 +417,7 @@ class FluorescenceSection(BaseSection):
             debug_fig = self._empty_fig()
             debug_text = ""
 
-            if get_ui_flags().debug:
+            if ui_flags.debug:
                 debug_fig = go.Figure()
                 preview_count = int(min(fluorescence_values.size, 25_000))
 

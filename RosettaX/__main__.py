@@ -194,7 +194,7 @@ class RosettaXApplication:
 
 def main(argv: Optional[list[str]] = None) -> None:
     args = _parse_args(argv)
-    apply_cli_to_ui_flags(args)(args)
+    apply_cli_to_ui_flags(args)
 
     app = RosettaXApplication(
         host=str(args.host),

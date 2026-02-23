@@ -1,11 +1,7 @@
-from __future__ import annotations
-
 from typing import Any, Optional
 
 import dash
 import dash_bootstrap_components as dbc
-import numpy as np
-import plotly.graph_objs as go
 from dash import Input, Output, State, callback, callback_context, dcc, html
 
 from RosettaX.backend import BackEnd
@@ -13,21 +9,24 @@ from RosettaX.pages import styling
 from RosettaX.pages.fluorescence import BaseSection, SectionContext
 from RosettaX.pages.runtime_config import get_ui_flags
 
+
 class ScatteringSection(BaseSection):
     """
     Scattering section for the fluorescence calibration workflow.
 
-    Key goals
-    ----------
-    1. Always compute and store a scattering threshold once a file and detector are available.
-    2. Show or hide UI controls based on RuntimeConfig toggles.
-    3. If scattering plot controls are visible, return a real histogram figure.
-       Otherwise, keep the graph component alive but visually hidden.
+    Layout rules
+    ------------
+    1. If threshold controls are shown, show the estimate button above the graph and the threshold input to its right.
+    2. If the histogram is shown, show the graph.
+    3. The log scale switch is below the graph and shown whenever the histogram is shown.
+    4. The nbins input is below the log scale switch and shown whenever the histogram is shown.
+    5. Default max events for plotting stays 200_000 unless UI provides a value.
     """
 
     def __init__(self, *, context: SectionContext) -> None:
         super().__init__(context=context)
         self.default_scattering_nbins = 400
+        self.default_max_events_for_plots = 200_000
         self.debug_text_id = f"{self.context.ids.page_name}-scattering-debug-out"
 
     def layout(self) -> dbc.Card:
@@ -41,36 +40,27 @@ class ScatteringSection(BaseSection):
     def _build_body_children(self) -> list:
         ui_flags = get_ui_flags()
 
-        show_scattering_controls = ui_flags.fluorescence_show_scattering_controls
-        show_threshold_controls = ui_flags.fluorescence_show_threshold_controls
-        debug_mode = ui_flags.debug
+        show_scattering_controls = bool(ui_flags.fluorescence_show_scattering_controls)
+        show_threshold_controls = bool(ui_flags.fluorescence_show_threshold_controls)
+        debug_mode = bool(ui_flags.debug)
+
+        must_show_histogram = bool(show_scattering_controls or show_threshold_controls)
+
         children: list = [html.Br(), self._detector_row()]
 
-        # Scattering controls (bins, button, scale, histogram) are opt in via config
-        if show_scattering_controls:
-            children.extend(
-                [
-                    html.Br(),
-                    self._nbins_row(hidden=not debug_mode),
-                    html.Br(),
-                    self._estimate_button(hidden=not debug_mode),
-                    html.Br(),
-                    self._yscale_switch(hidden=not debug_mode),
-                    self._histogram_graph(hidden=not debug_mode),
-                ]
-            )
-        else:
-            # Keep graph component alive for callback output, but never show it.
-            children.extend([self._histogram_graph(hidden=True)])
+        children.extend(
+            [
+                html.Br(),
+                self._estimate_and_threshold_row(hidden=not show_threshold_controls),
+                html.Br(),
+                self._histogram_graph(hidden=not must_show_histogram),
+                html.Br(),
+                self._yscale_switch(hidden=not must_show_histogram),
+                html.Br(),
+                self._nbins_row(hidden=not must_show_histogram),
+            ]
+        )
 
-        # Threshold controls are separately toggled
-        if show_threshold_controls:
-            children.extend([html.Br(), html.Br(), self._threshold_row(hidden=not debug_mode)])
-        else:
-            # Keep input alive for callback output, but never show it.
-            children.extend([self._threshold_row(hidden=True)])
-
-        # Debug output
         children.append(self._debug_container(hidden=not debug_mode))
 
         return children
@@ -104,26 +94,41 @@ class ScatteringSection(BaseSection):
             hidden=hidden,
         )
 
-    def _estimate_button(self, *, hidden: bool) -> html.Button:
+    def _estimate_button(self) -> html.Button:
         return html.Button(
             "Estimate threshold",
             id=self.context.ids.scattering_find_threshold_btn,
             n_clicks=0,
-            style={"display": "none"} if hidden else {"display": "inline-block"},
+            style={"display": "inline-block"},
         )
 
-    def _threshold_row(self, *, hidden: bool) -> html.Div:
+    def _threshold_input(self) -> dcc.Input:
+        return dcc.Input(
+            id=self.context.ids.scattering_threshold_input,
+            type="text",
+            value="",
+            disabled=False,
+            style={"width": "220px"},
+        )
+
+    def _estimate_and_threshold_row(self, *, hidden: bool) -> html.Div:
         return html.Div(
             [
-                html.Div("Threshold:"),
-                dcc.Input(
-                    id=self.context.ids.scattering_threshold_input,
-                    type="text",
-                    value="",
-                    style={"width": "220px"},
+                html.Div(
+                    [
+                        self._estimate_button(),
+                    ],
+                    style={"display": "flex", "alignItems": "center"},
+                ),
+                html.Div(
+                    [
+                        html.Div("Threshold:", style={"marginRight": "8px"}),
+                        self._threshold_input(),
+                    ],
+                    style={"display": "flex", "alignItems": "center", "marginLeft": "16px"},
                 ),
             ],
-            style=styling.CARD,
+            style={"display": "flex", "alignItems": "center"},
             hidden=hidden,
         )
 
@@ -186,9 +191,11 @@ class ScatteringSection(BaseSection):
         ):
             ui_flags = get_ui_flags()
 
-            show_scattering_controls = ui_flags.fluorescence_show_scattering_controls
-            show_threshold_controls = ui_flags.fluorescence_show_threshold_controls
-            debug_mode = ui_flags.debug
+            show_scattering_controls = bool(ui_flags.fluorescence_show_scattering_controls)
+            show_threshold_controls = bool(ui_flags.fluorescence_show_threshold_controls)
+            debug_mode = bool(ui_flags.debug)
+
+            must_show_histogram = bool(show_scattering_controls or show_threshold_controls)
 
             if not fcs_path or not scattering_channel:
                 return self._empty_fig(), dash.no_update, dash.no_update, ""
@@ -196,21 +203,18 @@ class ScatteringSection(BaseSection):
             backend = BackEnd(fcs_path)
 
             max_events = self._as_int(
-                max_events_for_plots if max_events_for_plots is not None else 200_000,
-                default=200_000,
+                max_events_for_plots if max_events_for_plots is not None else self.default_max_events_for_plots,
+                default=self.default_max_events_for_plots,
                 min_value=10_000,
                 max_value=5_000_000,
             )
 
-            # One default for nbins. Only user editable in debug mode.
-            nbins = self.default_scattering_nbins
-            if debug_mode:
-                nbins = self._as_int(
-                    scattering_nbins,
-                    default=self.default_scattering_nbins,
-                    min_value=10,
-                    max_value=5000,
-                )
+            nbins = self._as_int(
+                scattering_nbins,
+                default=self.default_scattering_nbins,
+                min_value=10,
+                max_value=5000,
+            )
 
             triggered = (
                 callback_context.triggered[0]["prop_id"].split(".")[0]
@@ -218,9 +222,8 @@ class ScatteringSection(BaseSection):
                 else ""
             )
 
-            # Load values only if we might plot or need debug info.
             values = None
-            if show_scattering_controls or debug_mode:
+            if must_show_histogram or debug_mode:
                 values = service.get_column_values(
                     backend=backend,
                     column=str(scattering_channel),
@@ -230,13 +233,8 @@ class ScatteringSection(BaseSection):
             stored_thr = self._as_float((stored_threshold_payload or {}).get("threshold"))
             typed_thr = self._as_float(threshold_input_value)
 
-            # Threshold behavior:
-            # - If threshold controls are off, always estimate.
-            # - If debug is off, always estimate (user cannot type/trigger).
-            # - If debug is on, estimate on button click or if nothing exists yet.
             must_estimate = (
                 (not show_threshold_controls)
-                or (not debug_mode)
                 or (triggered == ids.scattering_find_threshold_btn)
                 or (stored_thr is None and typed_thr is None)
             )
@@ -262,12 +260,7 @@ class ScatteringSection(BaseSection):
                 "nbins": int(nbins),
             }
 
-            # Figure:
-            # - If scattering controls are off, keep empty.
-            # - If debug is on and controls are on, show histogram.
-            # - If debug is off but controls are on, you can still compute histogram if you later decide to show it.
-            #   Right now: only show the plot in debug mode.
-            if show_scattering_controls and debug_mode:
+            if must_show_histogram and (values is not None):
                 use_log = isinstance(yscale_selection, list) and ("log" in yscale_selection)
 
                 fig = service.make_histogram_with_lines(
@@ -296,7 +289,7 @@ class ScatteringSection(BaseSection):
                     f"values.size: {values_size}\n"
                     f"show_scattering_controls: {show_scattering_controls}\n"
                     f"show_threshold_controls: {show_threshold_controls}\n"
+                    f"must_show_histogram: {must_show_histogram}\n"
                 )
 
-            # If threshold controls are hidden, still keep the input updated but the user will not see it.
             return fig, next_store, f"{float(thr):.6g}", debug_text

@@ -10,17 +10,12 @@ class UiFlags:
     fluorescence_show_scattering_controls: bool = True
     fluorescence_show_threshold_controls: bool = True
     fluorescence_show_fluorescence_controls: bool = True
-    fluorescence_show_beads_controls: bool = True
-    fluorescence_show_output_controls: bool = True
-    fluorescence_show_save_controls: bool = True
+
 
     # Fluorescence calibration page, debug outputs
     fluorescence_debug_scattering: bool = False
     fluorescence_debug_fluorescence: bool = False
     fluorescence_debug_load: bool = False
-    fluorescence_debug_beads: bool = False
-    fluorescence_debug_output: bool = False
-    fluorescence_debug_save: bool = False
 
     _explicit: set[str] = field(default_factory=set, init=False, repr=False)
 
