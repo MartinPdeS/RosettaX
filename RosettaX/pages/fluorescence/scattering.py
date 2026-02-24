@@ -1,84 +1,61 @@
 from typing import Any, Optional
 
-import dash
 import dash_bootstrap_components as dbc
-from dash import Input, Output, State, callback, callback_context, dcc, html
+from dash import Input, Output, State, callback, dcc, html
+import plotly.graph_objs as go
 
-from RosettaX.pages.fluorescence.backend import BackEnd
 from RosettaX.pages import styling
-from RosettaX.pages.fluorescence import BaseSection, SectionContext
 from RosettaX.pages.runtime_config import get_ui_flags
+from RosettaX.reader import FCSFile
 
 
-class ScatteringSection(BaseSection):
-    """
-    Scattering section for the fluorescence calibration workflow.
+class ScatteringSection():
 
-    Layout rules
-    ------------
-    1. If threshold controls are shown, show the estimate button above the graph and the threshold input to its right.
-    2. If the histogram is shown, show the graph.
-    3. The log scale switch is below the graph and shown whenever the histogram is shown.
-    4. The nbins input is below the log scale switch and shown whenever the histogram is shown.
-    5. Default max events for plotting stays 200_000 unless UI provides a value.
-    """
-
-    def __init__(self, *, context: SectionContext) -> None:
-        super().__init__(context=context)
-
-    def layout(self) -> dbc.Card:
+    def _scattering_get_layout(self) -> dbc.Card:
         return dbc.Card(
             [
                 dbc.CardHeader("2. Scattering channel"),
-                dbc.CardBody(self._build_body_children()),
+                dbc.CardBody(self._scattering_build_body_children()),
             ]
         )
 
-    def _build_body_children(self) -> list:
+    def _scattering_build_body_children(self) -> list:
         ui_flags = get_ui_flags()
 
-        show_scattering_controls = bool(ui_flags.fluorescence_show_scattering_controls)
-        show_threshold_controls = bool(ui_flags.fluorescence_show_threshold_controls)
-
-        must_show_histogram = bool(show_scattering_controls or show_threshold_controls)
-
-        children: list = [html.Br(), self._detector_row()]
-
-        children.extend(
-            [
-                html.Br(),
-                self._estimate_and_threshold_row(hidden=not show_threshold_controls),
-                html.Br(),
-                self._histogram_graph(hidden=not must_show_histogram),
-                html.Br(),
-                self._yscale_switch(hidden=not must_show_histogram),
-                html.Br(),
-                self._nbins_row(hidden=not must_show_histogram),
-            ]
-        )
+        children = [
+            html.Br(),
+            self._scattering_detector_row(),
+            html.Br(),
+            self._scattering_estimate_and_threshold_row(hidden=not ui_flags.fluorescence_show_scattering_controls),
+            html.Br(),
+            self._scattering_histogram_graph(hidden=not ui_flags.fluorescence_show_scattering_controls),
+            html.Br(),
+            self._scattering_yscale_switch(hidden=not ui_flags.fluorescence_show_scattering_controls),
+            html.Br(),
+            self._scattering_nbins_row(hidden=not ui_flags.fluorescence_show_scattering_controls),
+        ]
 
         return children
 
-    def _detector_row(self) -> html.Div:
+    def _scattering_detector_row(self) -> html.Div:
         return html.Div(
             [
                 html.Div("Scattering detector:"),
                 dcc.Dropdown(
-                    id=self.context.ids.scattering_detector_dropdown,
+                    id=self.ids.scattering_detector_dropdown,
                     style={"width": "500px"},
                 ),
             ],
             style=styling.CARD,
         )
 
-    def _nbins_row(self, *, hidden: bool) -> html.Div:
+    def _scattering_nbins_row(self, *, hidden: bool) -> html.Div:
         ui_flags = get_ui_flags()
-
         return html.Div(
             [
                 html.Div("number of bins:"),
                 dcc.Input(
-                    id=self.context.ids.scattering_nbins_input,
+                    id=self.ids.scattering_nbins_input,
                     type="number",
                     min=10,
                     step=10,
@@ -90,36 +67,34 @@ class ScatteringSection(BaseSection):
             hidden=hidden,
         )
 
-    def _estimate_button(self) -> html.Button:
+    def _scattering_estimate_button(self) -> html.Button:
         return html.Button(
             "Estimate threshold",
-            id=self.context.ids.scattering_find_threshold_btn,
+            id=self.ids.scattering_find_threshold_btn,
             n_clicks=0,
             style={"display": "inline-block"},
         )
 
-    def _threshold_input(self) -> dcc.Input:
+    def _scattering_threshold_input(self) -> dcc.Input:
         return dcc.Input(
-            id=self.context.ids.scattering_threshold_input,
+            id=self.ids.scattering_threshold_input,
             type="text",
             value="",
             disabled=False,
             style={"width": "220px"},
         )
 
-    def _estimate_and_threshold_row(self, *, hidden: bool) -> html.Div:
+    def _scattering_estimate_and_threshold_row(self, *, hidden: bool) -> html.Div:
         return html.Div(
             [
                 html.Div(
-                    [
-                        self._estimate_button(),
-                    ],
+                    [self._scattering_estimate_button()],
                     style={"display": "flex", "alignItems": "center"},
                 ),
                 html.Div(
                     [
                         html.Div("Threshold:", style={"marginRight": "8px"}),
-                        self._threshold_input(),
+                        self._scattering_threshold_input(),
                     ],
                     style={"display": "flex", "alignItems": "center", "marginLeft": "16px"},
                 ),
@@ -128,63 +103,44 @@ class ScatteringSection(BaseSection):
             hidden=hidden,
         )
 
-    def _yscale_switch(self, *, hidden: bool) -> dbc.Checklist:
+    def _scattering_yscale_switch(self, *, hidden: bool) -> dbc.Checklist:
         return dbc.Checklist(
-            id=self.context.ids.scattering_yscale_switch,
+            id=self.ids.scattering_yscale_switch,
             options=[{"label": "Log scale (counts)", "value": "log"}],
             value=["log"],
             switch=True,
             style={"display": "none"} if hidden else {"display": "block"},
         )
 
-    def _histogram_graph(self, *, hidden: bool) -> dcc.Loading:
+    def _scattering_histogram_graph(self, *, hidden: bool) -> dcc.Loading:
         return dcc.Loading(
             dcc.Graph(
-                id=self.context.ids.graph_scattering_hist,
-                style={"display": "none"} if hidden else self.context.graph_style,
+                id=self.ids.graph_scattering_hist,
+                style={"display": "none"} if hidden else self.graph_style,
             ),
             type="default",
         )
 
-    def register_callbacks(self) -> None:
-        ids = self.context.ids
-        service = self.context.service
-
+    def _scattering_register_callbacks(self) -> None:
         @callback(
-            Output(ids.graph_scattering_hist, "figure"),
-            Output(ids.scattering_threshold_store, "data"),
-            Output(ids.scattering_threshold_input, "value"),
-            Input(ids.scattering_find_threshold_btn, "n_clicks"),
-            Input(ids.uploaded_fcs_path_store, "data"),
-            Input(ids.scattering_detector_dropdown, "value"),
-            Input(ids.scattering_nbins_input, "value"),
-            Input(ids.scattering_threshold_input, "value"),
-            Input(ids.scattering_yscale_switch, "value"),
-            State(ids.max_events_for_plots_input, "value", allow_optional=True),
-            State(ids.scattering_threshold_store, "data"),
+            Output(self.ids.graph_scattering_hist, "figure"),
+            Output(self.ids.scattering_threshold_store, "data"),
+            Output(self.ids.scattering_threshold_input, "value"),
+            Input(self.ids.scattering_find_threshold_btn, "n_clicks"),
+            Input(self.ids.scattering_detector_dropdown, "value"),
+            Input(self.ids.scattering_nbins_input, "value"),
+            Input(self.ids.scattering_yscale_switch, "value"),
+            State(self.ids.max_events_for_plots_input, "value", allow_optional=True),
             prevent_initial_call=True,
         )
         def scattering_section(
-            n_clicks_estimate: int,
-            fcs_path: Optional[str],
-            scattering_channel: Optional[str],
-            scattering_nbins: Any,
-            threshold_input_value: Any,
-            yscale_selection: Optional[list[str]],
-            max_events_for_plots: Any,
-            stored_threshold_payload: Optional[dict],
+            n_clicks_estimate,
+            scattering_channel,
+            scattering_nbins,
+            yscale_selection,
+            max_events_for_plots,
         ):
             ui_flags = get_ui_flags()
-
-            show_scattering_controls = bool(ui_flags.fluorescence_show_scattering_controls)
-            show_threshold_controls = bool(ui_flags.fluorescence_show_threshold_controls)
-
-            must_show_histogram = bool(show_scattering_controls or show_threshold_controls)
-
-            if not fcs_path or not scattering_channel:
-                return self._empty_fig(), dash.no_update, dash.no_update
-
-            backend = BackEnd(fcs_path)
 
             max_events = self._as_int(
                 max_events_for_plots if max_events_for_plots is not None else ui_flags.max_events_for_analysis,
@@ -200,43 +156,19 @@ class ScatteringSection(BaseSection):
                 max_value=5000,
             )
 
-            triggered = (
-                callback_context.triggered[0]["prop_id"].split(".")[0]
-                if callback_context.triggered
-                else ""
+            column_names = None
+            if ui_flags.fluorescence_show_scattering_controls:
+                column_names = self.context.backend.get_column_names()
+
+            response = self.context.backend.process_scattering(
+                {
+                    "operation": "estimate_scattering_threshold",
+                    "column": str(scattering_channel),
+                    "nbins": int(nbins),
+                    "number_of_points": int(max_events),
+                }
             )
-
-            values = None
-            if must_show_histogram or ui_flags.debug:
-                values = service.get_column_values(
-                    backend=backend,
-                    column=str(scattering_channel),
-                    max_points=max_events,
-                )
-
-            stored_thr = self._as_float((stored_threshold_payload or {}).get("threshold"))
-            typed_thr = self._as_float(threshold_input_value)
-
-            must_estimate = (
-                (not show_threshold_controls)
-                or (triggered == ids.scattering_find_threshold_btn)
-                or (stored_thr is None and typed_thr is None)
-            )
-
-            if must_estimate:
-                response = backend.process_scattering(
-                    {
-                        "operation": "estimate_scattering_threshold",
-                        "column": str(scattering_channel),
-                        "nbins": int(nbins),
-                        "number_of_points": int(max_events),
-                    }
-                )
-                thr = self._as_float(response.get("threshold"))
-                if thr is None:
-                    thr = 0.0
-            else:
-                thr = typed_thr if typed_thr is not None else float(stored_thr)
+            thr = self._as_float(response.get("threshold")) or 0.0
 
             next_store = {
                 "scattering_channel": str(scattering_channel),
@@ -244,19 +176,64 @@ class ScatteringSection(BaseSection):
                 "nbins": int(nbins),
             }
 
-            if must_show_histogram and (values is not None):
+            if ui_flags.fluorescence_show_scattering_controls and column_names is not None:
                 use_log = isinstance(yscale_selection, list) and ("log" in yscale_selection)
 
-                fig = service.make_histogram_with_lines(
+                with FCSFile(self.context.backend.file_path, writable=False) as fcs:
+                    values = fcs.column_copy(scattering_channel, dtype=float, n=max_events_for_plots)
+
+                fig = self.service.make_histogram_with_lines(
                     values=values,
                     nbins=nbins,
                     xaxis_title="Scattering (a.u.)",
-                    line_positions=[float(thr)] if show_threshold_controls else [],
-                    line_labels=[f"{float(thr):.3g}"] if show_threshold_controls else [],
+                    line_positions=[float(thr)] if ui_flags.fluorescence_show_scattering_controls else [],
+                    line_labels=[f"{float(thr):.3g}"] if ui_flags.fluorescence_show_scattering_controls else [],
                 )
                 fig.update_yaxes(type="log" if use_log else "linear")
             else:
                 fig = self._empty_fig()
-                use_log = False
 
             return fig, next_store, f"{float(thr):.6g}"
+
+        @staticmethod
+        def _empty_fig() -> go.Figure:
+            fig = go.Figure()
+            fig.update_layout(separators=".,")
+            return fig
+
+
+        @staticmethod
+        def _as_float(value: Any) -> Optional[float]:
+            if value is None:
+                return None
+
+            if isinstance(value, (int, float)):
+                v = float(value)
+                return v if np.isfinite(v) else None
+
+            if isinstance(value, str):
+                s = value.strip()
+                if not s:
+                    return None
+                s = s.replace(",", ".")
+                try:
+                    v = float(s)
+                except ValueError:
+                    return None
+                return v if np.isfinite(v) else None
+
+            return None
+
+        @staticmethod
+        def _as_int(value: Any, default: int, min_value: int, max_value: int) -> int:
+            try:
+                v = int(value)
+            except Exception:
+                v = default
+
+            if v < min_value:
+                v = min_value
+            if v > max_value:
+                v = max_value
+
+            return v

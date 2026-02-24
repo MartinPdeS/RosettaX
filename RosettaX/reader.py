@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-
 import mmap
 import os
 import re
 import weakref
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Dict, Optional, Tuple, List
 
 import numpy as np
@@ -14,19 +14,19 @@ import pandas as pd
 @dataclass
 class FCSFile:
     """
-    FCS reader exposing DATA as either:
-      - dataframe_view: zero copy DataFrame backed by an mmap buffer (borrowed view)
-      - dataframe_copy(): independent DataFrame (owned copy)
+    Safe FCS reader.
 
-    Lifetime rule (strict):
-      If you access dataframe_view (or any Series / NumPy view derived from it),
-      you must ensure those objects are gone before close() or leaving a `with` block.
+    Design choice:
+    This reader never exposes zero copy pandas or NumPy views backed by the mmap buffer.
+    All public data accessors return owned copies so the file can always be closed safely.
 
-    This class therefore enforces close correctness: if exported buffers still exist,
-    close raises RuntimeError with instructions.
+    Recommended usage:
+        with FCSFile(path) as fcs:
+            names = fcs.get_column_names()
+            x = fcs.column_copy("FSC-A", dtype=float, n=200_000)
     """
 
-    file_path: str
+    file_path: str | Path
     writable: bool = False
 
     header: Dict[str, Any] = field(init=False)
@@ -36,7 +36,6 @@ class FCSFile:
     _file_handle: Any = field(init=False, default=None, repr=False)
     _mmap: Optional[mmap.mmap] = field(init=False, default=None, repr=False)
     _records: Optional[np.ndarray] = field(init=False, default=None, repr=False)
-    _dataframe_view: Optional[pd.DataFrame] = field(init=False, default=None, repr=False)
     _finalizer: Any = field(init=False, default=None, repr=False)
 
     def __post_init__(self) -> None:
@@ -46,100 +45,133 @@ class FCSFile:
         self.text, self.delimiter = self._read_text()
         self._open_mmap()
 
-        # Safety net: do not rely on __del__, but try to prevent FD leaks if user forgets.
+        # Best effort safety net.
         self._finalizer = weakref.finalize(self, type(self)._best_effort_close, self)
 
-    def __enter__(self) -> "FCSDataFrameFile":
+    def __enter__(self) -> "FCSFile":
         return self
 
     def __exit__(self, exc_type, exc, tb) -> None:
-        # Enforce correctness. If caller leaked view objects, raise.
         self.close()
 
     # ----------------------------
     # Public API
     # ----------------------------
 
-    @property
-    def dataframe_view(self) -> pd.DataFrame:
-        """
-        Zero copy DataFrame backed by mmap. Borrowed view.
-        Only valid while the file is open and must not outlive the instance.
-        """
-        if self._dataframe_view is not None:
-            return self._dataframe_view
+    def get_column_names(self) -> list[str]:
+        return self._column_names()
 
+    def column_copy(
+        self,
+        column_name: str,
+        *,
+        dtype: Any = float,
+        n: int | None = None,
+        start: int = 0,
+    ) -> np.ndarray:
+        """
+        Return an owned NumPy array for one column.
+
+        This always copies, so it is safe to use after the file closes.
+        """
         self._ensure_records_loaded()
 
         if self._records is None:
             raise RuntimeError("Internal error: records not loaded.")
 
-        column_names = self._column_names()
-        num_parameters = int(self.text["Keywords"]["$PAR"])
+        column_name = str(column_name)
+        column_index = self._column_index_from_name(column_name)
 
-        columns: Dict[str, np.ndarray] = {}
-        for parameter_index in range(1, num_parameters + 1):
-            columns[column_names[parameter_index - 1]] = self._records[f"parameter_{parameter_index}"]
+        raw = self._records[f"parameter_{column_index}"]
 
-        dataframe = pd.DataFrame(columns, copy=False)
+        # Create an owned array, optionally with dtype conversion.
+        if dtype is None:
+            owned = np.asarray(raw).copy()
+        else:
+            owned = np.asarray(raw, dtype=dtype).copy()
+
+        if start:
+            owned = owned[int(start) :]
+
+        if n is not None:
+            owned = owned[: int(n)]
+
+        return owned
+
+    def columns_copy(
+        self,
+        column_names: list[str],
+        *,
+        dtype: Any = float,
+        n: int | None = None,
+        start: int = 0,
+    ) -> dict[str, np.ndarray]:
+        """
+        Return owned NumPy arrays for multiple columns.
+        """
+        result: dict[str, np.ndarray] = {}
+        for name in list(column_names):
+            result[str(name)] = self.column_copy(str(name), dtype=dtype, n=n, start=start)
+        return result
+
+    def dataframe_copy(
+        self,
+        *,
+        columns: list[str] | None = None,
+        dtype: Any = float,
+        n: int | None = None,
+        start: int = 0,
+        deep: bool = True,
+    ) -> pd.DataFrame:
+        """
+        Return an owned DataFrame that can outlive the file.
+
+        deep is kept for API compatibility, but this method always returns owned data.
+        """
+        if columns is None:
+            columns = self._column_names()
+
+        arrays = self.columns_copy(list(columns), dtype=dtype, n=n, start=start)
+        dataframe = pd.DataFrame(arrays, copy=False)
 
         dataframe.attrs["fcs_header"] = dict(self.header)
         dataframe.attrs["fcs_keywords"] = dict(self.text["Keywords"])
         dataframe.attrs["fcs_detectors"] = {k: dict(v) for k, v in self.text["Detectors"].items()}
         dataframe.attrs["fcs_delimiter"] = self.delimiter
 
-        self._dataframe_view = dataframe
-        return dataframe
-
-    def dataframe_copy(self, *, deep: bool = True) -> pd.DataFrame:
-        """
-        Independent DataFrame that can outlive the file.
-        This necessarily copies the DATA segment.
-        """
-        view = self.dataframe_view
+        # Already owned, but keep the knob.
         if deep:
-            return view.copy(deep=True)
-        return view.copy()
+            return dataframe.copy(deep=True)
+
+        return dataframe
 
     def close(self) -> None:
         """
         Close mmap and file handle.
-
-        Raises
-        ------
-        RuntimeError
-            If there are still exported buffers referencing the mmap.
+        Always safe because we never export mmap backed views.
         """
-        # Drop internal references first. This helps when only internal objects keep the export alive.
-        self._dataframe_view = None
-        self._records = None
-
         mmap_obj = self._mmap
         file_handle = self._file_handle
 
+        self._records = None
         self._mmap = None
         self._file_handle = None
 
         if mmap_obj is not None:
             try:
                 mmap_obj.close()
-            except BufferError as exc:
-                # Put back, because close failed. This prevents half-closed state.
-                self._mmap = mmap_obj
-                self._file_handle = file_handle
-                raise RuntimeError(
-                    "Cannot close FCSDataFrameFile: there are still live NumPy or pandas views "
-                    "referencing the underlying mmap buffer. "
-                    "Delete the DataFrame returned by dataframe_view and any derived Series or arrays "
-                    "(for example `del df_view`, `del series`, `del array`), then call close() again. "
-                    "If you need data after closing, use dataframe_copy()."
-                ) from exc
+            except Exception:
+                # Best effort close, do not block app shutdown.
+                pass
 
         if file_handle is not None:
-            file_handle.close()
+            try:
+                file_handle.close()
+            except Exception:
+                pass
 
     # ----------------------------
-    # Parsing helpers (kept inside class, not ad hoc globals)
+    # Parsing helpers
     # ----------------------------
 
     def _validate_file(self) -> None:
@@ -186,10 +218,6 @@ class FCSFile:
 
     @staticmethod
     def _split_text_payload(payload: str, delimiter: str) -> List[str]:
-        """
-        Split TEXT payload (without leading delimiter), respecting FCS escaping:
-        delimiter inside a token is escaped by doubling it.
-        """
         tokens: List[str] = []
         token_chars: List[str] = []
 
@@ -246,7 +274,6 @@ class FCSFile:
 
         items = self._split_text_payload(payload, delimiter)
 
-        # Trailing delimiter => trailing empty token(s). Drop them to keep alignment.
         while items and items[-1] == "":
             items.pop()
 
@@ -379,10 +406,15 @@ class FCSFile:
             names.append(str(detectors.get(parameter_index, {}).get("N", f"P{parameter_index}")))
         return names
 
+    def _column_index_from_name(self, column_name: str) -> int:
+        column_names = self._column_names()
+        try:
+            index_zero_based = column_names.index(column_name)
+        except ValueError as exc:
+            raise KeyError(f'Column "{column_name}" not found.') from exc
+        return index_zero_based + 1
+
     def _resolve_data_bounds(self, expected_bytes: int) -> Tuple[int, int]:
-        """
-        Choose between header offsets and TEXT offsets using expected size validation.
-        """
         keywords = self.text["Keywords"]
         file_size = os.path.getsize(self.file_path)
 
@@ -438,25 +470,18 @@ class FCSFile:
         bytes_per_event = event_dtype.itemsize
         expected_bytes = num_events * bytes_per_event
 
-        data_start, data_end = self._resolve_data_bounds(expected_bytes=expected_bytes)
+        data_start, _data_end = self._resolve_data_bounds(expected_bytes=expected_bytes)
 
-        # Use exactly expected_bytes (ignore any extra trailing bytes in DATA segment)
         mv = memoryview(self._mmap)[data_start : data_start + expected_bytes]
         self._records = np.frombuffer(mv, dtype=event_dtype, count=num_events)
 
     @staticmethod
-    def _best_effort_close(instance: "FCSDataFrameFile") -> None:
-        """
-        Finalizer fallback: do not raise. Try to close if possible.
-        """
+    def _best_effort_close(instance: "FCSFile") -> None:
         try:
-            instance._dataframe_view = None
-            instance._records = None
             if instance._mmap is not None:
                 try:
                     instance._mmap.close()
-                except BufferError:
-                    # Cannot safely close, leave it to OS at process exit.
+                except Exception:
                     pass
                 instance._mmap = None
             if instance._file_handle is not None:
@@ -465,6 +490,7 @@ class FCSFile:
                 except Exception:
                     pass
                 instance._file_handle = None
+            instance._records = None
         except Exception:
             pass
 
@@ -477,7 +503,7 @@ class FCSFile:
         cls,
         dataframe: pd.DataFrame,
         *,
-        template: Optional["FCSDataFrameFile"] = None,
+        template: Optional["FCSFile"] = None,
         force_float32: bool = True,
     ) -> "FCSBuilder":
         if template is not None:
@@ -592,12 +618,8 @@ class FCSBuilder:
 
     def _escape_token(self, token: Any) -> str:
         token_str = str(token)
-
-        # Empty tokens create "//" in TEXT which is ambiguous with the escape sequence for a literal delimiter.
-        # Encode empties as a single space. The reader strips values, so it round trips back to "".
         if token_str == "":
             token_str = " "
-
         return token_str.replace(self.delimiter, self.delimiter + self.delimiter)
 
     def _build_text_segment(self) -> bytes:
@@ -609,7 +631,6 @@ class FCSBuilder:
             for suffix, value in detector.items():
                 flat[f"$P{parameter_index}{suffix}"] = value
 
-        # Stable, readable ordering; semantics do not depend on order.
         preferred = ["$TOT", "$PAR", "$DATATYPE", "$BYTEORD", "$MODE", "$BEGINDATA", "$ENDDATA"]
         ordered: List[str] = []
         for key in preferred:
@@ -650,7 +671,6 @@ class FCSBuilder:
 
         data_bytes = self._build_data_bytes()
 
-        # First pass TEXT without begin/end, then compute offsets, then final TEXT.
         text_bytes = self._build_text_segment()
 
         text_start = 256
@@ -688,7 +708,7 @@ class FCSBuilder:
 
         return bytes(header) + text_bytes + data_bytes
 
-    def write(self, path: str) -> None:
+    def write(self, path: str | Path) -> None:
         payload = self.build_bytes()
         with open(str(path), "wb") as handle:
             handle.write(payload)

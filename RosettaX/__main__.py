@@ -100,6 +100,7 @@ class RosettaXApplication:
             __name__,
             external_stylesheets=[dbc.themes.FLATLY],
             use_pages=True,
+            suppress_callback_exceptions=True
         )
 
         self._register_callbacks()

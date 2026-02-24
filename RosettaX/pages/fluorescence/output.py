@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Any
 
 import dash
 from dash import Input, Output, State, callback, dcc, html
@@ -6,14 +6,10 @@ import dash_bootstrap_components as dbc
 import numpy as np
 import plotly.graph_objs as go
 
-from RosettaX.pages.fluorescence.backend import BackEnd
-from RosettaX.pages.fluorescence import BaseSection, SectionContext
+from RosettaX.reader import FCSFile
 
-class OutputSection(BaseSection):
-    def __init__(self, *, context: SectionContext) -> None:
-        super().__init__(context=context)
-
-    def layout(self) -> dbc.Card:
+class OutputSection():
+    def _output_get_layout(self) -> dbc.Card:
         ids = self.context.ids
 
         return dbc.Card(
@@ -50,14 +46,14 @@ class OutputSection(BaseSection):
             ]
         )
 
-    @staticmethod
-    def _extract_xy_from_table(table_data: List[dict]) -> Tuple[np.ndarray, np.ndarray]:
+
+    def _output_extract_xy_from_table(self, table_data: List[dict]) -> Tuple[np.ndarray, np.ndarray]:
         mesf_vals: List[float] = []
         au_vals: List[float] = []
 
         for row in table_data or []:
-            mesf = BaseSection._as_float(row.get("col1"))
-            au = BaseSection._as_float(row.get("col2"))
+            mesf = self._as_float(row.get("col1"))
+            au = self._as_float(row.get("col2"))
             if mesf is None or au is None:
                 continue
             mesf_vals.append(mesf)
@@ -66,7 +62,7 @@ class OutputSection(BaseSection):
         return np.asarray(mesf_vals, dtype=float), np.asarray(au_vals, dtype=float)
 
     @staticmethod
-    def _compute_r_squared(*, y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    def _output_compute_r_squared(*, y_true: np.ndarray, y_pred: np.ndarray) -> float:
         y_true = np.asarray(y_true, dtype=float)
         y_pred = np.asarray(y_pred, dtype=float)
 
@@ -84,7 +80,7 @@ class OutputSection(BaseSection):
 
         return 1.0 - ss_res / ss_tot
 
-    def register_callbacks(self) -> None:
+    def _output_register_callbacks(self) -> None:
         ids = self.context.ids
 
         @callback(
@@ -105,31 +101,37 @@ class OutputSection(BaseSection):
                 fig.update_layout(title="Upload a bead file first.")
                 return fig, dash.no_update, "", "", ""
 
-            mesf_array, intensity_array = self._extract_xy_from_table(table_data or [])
-            if mesf_array.size < 2:
+            mesf, intensity = self._output_extract_xy_from_table(table_data or [])
+            if mesf.size < 2:
                 fig.update_layout(title="Need at least 2 points to calibrate.")
                 return fig, dash.no_update, "", "", ""
 
-            backend = BackEnd(fcs_path)
-            calib_payload = backend.fit_fluorescence_calibration(
-                {"MESF": mesf_array.tolist(), "intensity": intensity_array.tolist()}
-            )
+            # Fit MESF = slope * intensity + intercept
+            x = np.asarray(intensity, dtype=float)
+            y = np.asarray(mesf, dtype=float)
 
-            slope_value = float(calib_payload.get("slope"))
-            intercept_value = float(calib_payload.get("intercept"))
+            mask = np.isfinite(x) & np.isfinite(y)
+            x = x[mask]
+            y = y[mask]
+            if x.size < 2:
+                fig.update_layout(title="Need at least 2 finite points.")
+                return fig, dash.no_update, "", "", ""
 
-            predicted = slope_value * intensity_array + intercept_value
-            r_squared_value = self._compute_r_squared(y_true=mesf_array, y_pred=predicted)
+            slope, intercept = np.polyfit(x, y, 1)
+            y_pred = slope * x + intercept
+            r2 = self._output_compute_r_squared(y_true=y, y_pred=y_pred)
 
-            if isinstance(calib_payload, dict) and "R_squared" not in calib_payload:
-                calib_payload = dict(calib_payload)
-                calib_payload["R_squared"] = float(r_squared_value)
+            calib_payload = {
+                "slope": float(slope),
+                "intercept": float(intercept),
+                "R_squared": float(r2),
+            }
 
-            x_fit = np.linspace(float(np.min(intensity_array)), float(np.max(intensity_array)), 200)
-            y_fit = slope_value * x_fit + intercept_value
+            x_fit = np.linspace(float(np.min(x)), float(np.max(x)), 200)
+            y_fit = slope * x_fit + intercept
 
             fig = go.Figure()
-            fig.add_trace(go.Scatter(x=intensity_array, y=mesf_array, mode="markers", name="beads"))
+            fig.add_trace(go.Scatter(x=x, y=y, mode="markers", name="beads"))
             fig.add_trace(go.Scatter(x=x_fit, y=y_fit, mode="lines", name="fit"))
             fig.update_layout(
                 title="MESF calibration",
@@ -142,9 +144,9 @@ class OutputSection(BaseSection):
             return (
                 fig,
                 calib_payload,
-                f"{slope_value:.6g}",
-                f"{intercept_value:.6g}",
-                f"{float(r_squared_value):.6g}",
+                f"{float(slope):.6g}",
+                f"{float(intercept):.6g}",
+                f"{float(r2):.6g}",
             )
 
         @callback(
@@ -155,29 +157,66 @@ class OutputSection(BaseSection):
             State(ids.fluorescence_detector_dropdown, "value"),
             prevent_initial_call=True,
         )
-        def apply_calibration(
-            n_clicks: int,
-            calib_payload: Optional[dict],
-            bead_file_path: Optional[str],
-            detector_column: Optional[str],
-        ):
+        def apply_calibration(n_clicks, calib_payload, bead_file_path, detector_column):
             if not n_clicks:
                 return dash.no_update
 
-            if not calib_payload:
+            if not isinstance(calib_payload, dict):
                 return "No calibration yet. Run Calibrate first."
             if not bead_file_path:
                 return "No bead file uploaded yet."
             if not detector_column:
                 return "Select a fluorescence detector first."
 
-            backend = BackEnd(bead_file_path)
-            response = backend.apply_fluorescence_calibration(
-                {"calibration": calib_payload, "column": str(detector_column), "preview_n": 10}
-            )
+            slope = calib_payload.get("slope")
+            intercept = calib_payload.get("intercept")
+            if slope is None or intercept is None:
+                return "Calibration payload missing slope/intercept."
 
-            preview = response.get("preview")
-            if preview is None:
-                return "BackEnd did not return preview."
+            slope = float(slope)
+            intercept = float(intercept)
 
-            return html.Pre(str(preview))
+            with FCSFile(str(bead_file_path), writable=False) as fcs:
+                raw = fcs.column_copy(str(detector_column), dtype=float, n=10)
+
+            raw = np.asarray(raw, dtype=float)
+            raw = raw[np.isfinite(raw)]
+            calibrated = slope * raw + intercept
+
+            return html.Pre(str(calibrated.tolist()))
+
+    @staticmethod
+    def _as_float(value: Any) -> Optional[float]:
+        if value is None:
+            return None
+
+        if isinstance(value, (int, float)):
+            v = float(value)
+            return v if np.isfinite(v) else None
+
+        if isinstance(value, str):
+            s = value.strip()
+            if not s:
+                return None
+            s = s.replace(",", ".")
+            try:
+                v = float(s)
+            except ValueError:
+                return None
+            return v if np.isfinite(v) else None
+
+        return None
+
+    @staticmethod
+    def _as_int(value: Any, default: int, min_value: int, max_value: int) -> int:
+        try:
+            v = int(value)
+        except Exception:
+            v = default
+
+        if v < min_value:
+            v = min_value
+        if v > max_value:
+            v = max_value
+
+        return v

@@ -19,6 +19,7 @@ class UiFlags:
 
     max_events_for_analysis: Optional[int] = 200_000
     n_bins_for_plots: Optional[int] = 400
+    default_peak_count: Optional[int] = 3
 
     _explicit: set[str] = field(default_factory=set, init=False, repr=False)
 

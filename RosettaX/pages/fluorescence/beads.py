@@ -1,16 +1,12 @@
-from typing import List
+from typing import List, Optional
+import numpy as np
 
 from dash import Input, Output, State, callback, dash_table, html
 import dash_bootstrap_components as dbc
 
-from RosettaX.pages.fluorescence import BaseSection, SectionContext
 
-
-class BeadsSection(BaseSection):
-    def __init__(self, *, context: SectionContext) -> None:
-        super().__init__(context=context)
-
-    def layout(self) -> dbc.Card:
+class BeadsSection():
+    def _bead_get_layout(self) -> dbc.Card:
         ids = self.context.ids
 
         return dbc.Card(
@@ -43,14 +39,12 @@ class BeadsSection(BaseSection):
             ]
         )
 
-    def register_callbacks(self) -> None:
-        ids = self.context.ids
-
+    def _bead_register_callbacks(self) -> None:
         @callback(
-            Output(ids.bead_table, "data"),
-            Input(ids.add_row_btn, "n_clicks"),
-            State(ids.bead_table, "data"),
-            State(ids.bead_table, "columns"),
+            Output(self.ids.bead_table, "data", allow_duplicate=True),
+            Input(self.ids.add_row_btn, "n_clicks"),
+            State(self.ids.bead_table, "data"),
+            State(self.ids.bead_table, "columns"),
             prevent_initial_call=True,
         )
         def add_row(n_clicks: int, rows: List[dict], columns: List[dict]) -> List[dict]:

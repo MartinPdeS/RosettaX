@@ -1,174 +1,151 @@
-from typing import Optional
-
 import dash
 import dash_bootstrap_components as dbc
 from dash import Input, Output, State, callback, dcc, html
 
+import base64
+import tempfile
+from pathlib import Path
+
 from RosettaX.pages import styling
-from RosettaX.pages.fluorescence import BaseSection, SectionContext, helper
-from RosettaX.pages.runtime_config import get_ui_flags
+from RosettaX.pages.fluorescence.backend import BackEnd
 
 
-class LoadSection(BaseSection):
-    def __init__(self, *, context: SectionContext) -> None:
-        super().__init__(context=context)
-        self.debug_text_id = f"{self.context.ids.page_name}-load-debug-out"
+class LoadSection():
+    """Section 1: Upload bead file (no debug mode)."""
+    def _load_get_layout(self):
+        widget = dcc.Upload(
+            id=self.ids.upload,
+            children=html.Div(["Drag and Drop or ", html.A("Select Bead File")]),
+            style=styling.UPLOAD,
+            multiple=False,
+            accept=".fcs",
+        )
 
-    def layout(self) -> dbc.Card:
         return dbc.Card(
             [
                 dbc.CardHeader("1. Upload Bead File"),
                 dbc.CardBody(
                     [
-                        self._upload_component(),
-                        self._filename_outputs(),
-                        html.Br(),
-                        *self._max_events_input_if_debug(),
-                        self._debug_output_container(),
+                        widget,
+                        html.Div(id=self.ids.upload_filename),
+                        html.Div(id=self.ids.upload_saved_as),
                     ],
                     style=self.context.card_body_scroll,
                 ),
             ]
         )
 
-    def _upload_component(self) -> html.Div:
-        ids = self.context.ids
-        return dcc.Upload(
-            id=ids.upload,
-            children=html.Div(["Drag and Drop or ", html.A("Select Bead File")]),
-            style=styling.UPLOAD,
-            multiple=False,
-        )
 
-    def _filename_outputs(self) -> html.Div:
-        ids = self.context.ids
-        return html.Div(
-            [
-                html.Div(id=ids.upload_filename),
-                html.Div(id=ids.upload_saved_as),
-            ]
-        )
+    @staticmethod
+    def write_upload_to_tempfile(*, contents: str, filename: str) -> str:
+        header, b64data = contents.split(",", 1)
+        raw = base64.b64decode(b64data)
 
-    def _max_events_input_if_debug(self) -> list:
-        if not get_ui_flags().debug:
-            return []
+        suffix = Path(filename).suffix or ".bin"
+        tmp_dir = Path(tempfile.gettempdir()) / "rosettax_uploads"
+        tmp_dir.mkdir(parents=True, exist_ok=True)
 
-        ids = self.context.ids
-        return [
-            html.Div(
-                [
-                    html.Div("Max events used for plots and peak finding:"),
-                    dcc.Input(
-                        id=ids.max_events_for_plots_input,
-                        type="number",
-                        min=10_000,
-                        step=10_000,
-                        value=200_000,
-                        style={"width": "220px"},
-                    ),
-                ],
-                style=styling.CARD,
-            )
-        ]
+        out_path = tmp_dir / f"{next(tempfile._get_candidate_names())}{suffix}"
+        out_path.write_bytes(raw)
+        return str(out_path)
 
-    def _debug_output_container(self) -> html.Div:
-        debug_style = {"display": "block"} if get_ui_flags().debug else {"display": "none"}
-        return html.Div(
-            [
-                html.Hr(),
-                dbc.Alert("Debug outputs (LoadSection)", color="secondary", is_open=True),
-                html.Pre(id=self.debug_text_id, style={"whiteSpace": "pre-wrap"}),
-            ],
-            style=debug_style,
-        )
 
-    def register_callbacks(self) -> None:
-        ids = self.context.ids
-        service = self.context.service
-
+    def _load_register_callbacks(self):
         @callback(
-            Output(ids.upload_filename, "children"),
-            Input(ids.upload, "filename"),
+            Output(self.ids.upload_filename, "children"),
+            Input(self.ids.upload, "filename"),
             prevent_initial_call=True,
         )
-        def show_selected_filename(filename: Optional[str]):
-            if not filename:
-                return ""
-            return f"Selected file: {filename}"
+        def show_filename(name):
+            return f"Selected file: {name}" if name else ""
 
+        # Handle upload
         @callback(
-            Output(ids.uploaded_fcs_path_store, "data"),
-            Output(ids.upload_saved_as, "children"),
-            Output(ids.scattering_detector_dropdown, "options"),
-            Output(ids.fluorescence_detector_dropdown, "options"),
-            Output(ids.scattering_detector_dropdown, "value"),
-            Output(ids.fluorescence_detector_dropdown, "value"),
-            Output(ids.fluorescence_hist_store, "data", allow_duplicate=True),
-            Output(self.debug_text_id, "children"),
-            Input(ids.upload, "contents"),
-            State(ids.upload, "filename"),
+            Output(self.ids.uploaded_fcs_path_store, "data"),
+            Output(self.ids.upload_saved_as, "children"),
+            Output(self.ids.scattering_detector_dropdown, "options"),
+            Output(self.ids.scattering_detector_dropdown, "value"),
+            Output(self.ids.fluorescence_detector_dropdown, "options"),
+            Output(self.ids.fluorescence_detector_dropdown, "value"),
+            Input(self.ids.upload, "contents"),
+            State(self.ids.upload, "filename"),
             prevent_initial_call=True,
         )
-        def load_uploaded_file(contents: Optional[str], filename: Optional[str]):
-            return self._handle_file_upload(contents, filename, service)
+        def handle_upload(contents, filename):
+            if not contents or not filename:
+                msg = "No file uploaded."
+                # return (dash.no_update, msg, [], [], None, None, dash.no_update)
+                return (dash.no_update, msg, [], None)
 
-    def _handle_file_upload(self, contents, filename, service):
-        if not contents or not filename:
-            debug_text = "No file uploaded yet."
-            return (
-                dash.no_update,
-                "No file uploaded yet.",
-                [],
-                [],
-                None,
-                None,
-                dash.no_update,
-                debug_text if get_ui_flags().debug else "",
-            )
+            try:
+                temp_path = self.write_upload_to_tempfile(contents=contents, filename=filename)
+                self.context.backend = BackEnd(temp_path)
+            except Exception as exc:
+                msg = f"Failed to save file: {exc}"
+                return (dash.no_update, msg, [], None)
 
-        try:
-            temp_path = helper.write_upload_to_tempfile(contents=contents, filename=str(filename))
-        except Exception as exc:
-            debug_text = f"Failed to write temp file: {exc}"
-            return (
-                dash.no_update,
-                debug_text,
-                [],
-                [],
-                None,
-                None,
-                dash.no_update,
-                debug_text if get_ui_flags().debug else "",
-            )
+            try:
+                channels = self.context.service.channels_from_file(temp_path)
+            except Exception as exc:
+                msg = f"Saved as {temp_path}, but could not read: {exc}"
+                return (temp_path, msg, [], None)
 
-        try:
-            channels = service.channels_from_file(temp_path)
-        except Exception as exc:
-            debug_text = f"Saved as: {temp_path} but could not read it: {exc}"
             return (
                 temp_path,
-                debug_text,
-                [],
-                [],
-                None,
-                None,
-                dash.no_update,
-                debug_text if get_ui_flags().debug else "",
+                f"Saved as: {temp_path}",
+                channels.scatter_options,
+                channels.scatter_value,
+                channels.fluorescence_options,
+                channels.fluorescence_value
             )
 
-        debug_text = (
-            f"temp_path: {temp_path}\n"
-            f"scatter_options: {len(channels.scatter_options)}\n"
-            f"fluorescence_options: {len(channels.fluorescence_options)}\n"
-        )
 
-        return (
-            temp_path,
-            f"Saved as: {temp_path}",
-            channels.scatter_options,
-            channels.fluorescence_options,
-            channels.scatter_value,
-            channels.fluorescence_value,
-            None,
-            debug_text if get_ui_flags().debug else "",
-        )
+        # # Handle upload
+        # @callback(
+        #     Output(ids.uploaded_fcs_path_store, "data"),
+        #     Output(ids.upload_saved_as, "children"),
+        #     Output(ids.scattering_detector_dropdown, "options"),
+        #     Output(ids.fluorescence_detector_dropdown, "options"),
+        #     Output(ids.scattering_detector_dropdown, "value"),
+        #     # Output(ids.fluorescence_detector_dropdown, "value"),
+        #     # Output(ids.fluorescence_hist_store, "data", allow_duplicate=True),
+        #     Input(ids.upload, "contents"),
+        #     State(ids.upload, "filename"),
+        #     prevent_initial_call=True,
+        # )
+        # def handle_upload(contents, filename):
+        #     print("DEBUG handle_upload: contents is None?", contents is None, "filename =", filename)
+
+        #     if not contents or not filename:
+        #         msg = "No file uploaded."
+        #         print("DEBUG handle_upload: early return, no contents or filename")
+        #         # return (dash.no_update, msg, [], [], None, None, dash.no_update)
+        #         return (dash.no_update, msg, [], [], None)
+
+        #     try:
+        #         temp_path = helper.write_upload_to_tempfile(contents, filename)
+        #         self.context.backend = BackEnd(temp_path)
+        #         print("---: ", self.context.backend.fcs_file.get_column_names())
+        #         print("DEBUG handle_upload: backend set, columns =", self.context.backend.fcs_file.get_column_names())
+        #     except Exception as exc:
+        #         msg = f"Failed to save file: {exc}"
+        #         print("DEBUG handle_upload: exception while saving file:", exc)
+        #         return (dash.no_update, msg, [], [], None,)
+
+        #     try:
+        #         channels = service.channels_from_file(temp_path)
+        #         print("DEBUG handle_upload: channels.scatter_options =", channels.scatter_options)
+        #     except Exception as exc:
+        #         msg = f"Saved as {temp_path}, but could not read: {exc}"
+        #         print("DEBUG handle_upload: exception while reading channels:", exc)
+        #         return (temp_path, msg, [], [], None, None, dash.no_update)
+
+        #     return (
+        #         temp_path,
+        #         f"Saved as: {temp_path}",
+        #         channels.scatter_options,
+        #         channels.fluorescence_options,
+        #         channels.scatter_value,
+        #         channels.fluorescence_value,
+        #         None,
+        #     )

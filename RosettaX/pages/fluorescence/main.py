@@ -1,10 +1,17 @@
 import dash
 from dash import dcc, html
 
-from RosettaX.pages.fluorescence import Sections, helper
+from RosettaX.pages.fluorescence import Sections, service
 from RosettaX.pages.fluorescence.ids import Ids
+from RosettaX.pages.fluorescence.base import BaseSection
+from RosettaX.pages.fluorescence.load import LoadSection
+from RosettaX.pages.fluorescence.scattering import ScatteringSection
+from RosettaX.pages.fluorescence.fluorescence import FluorescenceSection
+from RosettaX.pages.fluorescence.beads import BeadsSection
+from RosettaX.pages.fluorescence.output import OutputSection
+from RosettaX.pages.fluorescence.save import SaveSection
 
-class FluorescentCalibrationPage:
+class FluorescentCalibrationPage(BaseSection, OutputSection, LoadSection, ScatteringSection, FluorescenceSection, BeadsSection, SaveSection):
     def __init__(self) -> None:
         self.ids = Ids()
 
@@ -35,11 +42,11 @@ class FluorescentCalibrationPage:
 
         self.non_valid_keywords = ["time", "width", "diameter", "cross section"]
 
-        self.file_state = helper.FileStateRefresher(
+        self.file_state = service.FileStateRefresher(
             scatter_keywords=self.scatter_keywords,
             non_valid_keywords=self.non_valid_keywords,
         )
-        self.service = helper.FluorescentCalibrationService(file_state=self.file_state)
+        self.service = service.FluorescentCalibrationService(file_state=self.file_state)
         self.context = Sections.SectionContext(
             ids=self.ids,
             service=self.service,
@@ -50,19 +57,16 @@ class FluorescentCalibrationPage:
             graph_style=self.graph_style,
         )
 
-        self.sections: list[Sections.BaseSection] = [
-            Sections.LoadSection(context=self.context),
-            Sections.ScatteringSection(context=self.context),
-            Sections.FluorescenceSection(context=self.context),
-            Sections.BeadsSection(context=self.context),
-            Sections.OutputSection(context=self.context),
-            Sections.SaveSection(context=self.context),
-        ]
+        self.context.backend = None
 
     def register(self) -> None:
         dash.register_page(__name__, path="/fluorescent_calibration", name="Fluorescent Calibration")
-        self._register_callbacks()
-
+        self._load_register_callbacks()
+        self._scattering_register_callbacks()
+        self._fluorescence_register_callbacks()
+        self._bead_register_callbacks()
+        self._output_register_callbacks()
+        self._save_register_callbacks()
         return self
 
     def layout(self) -> html.Div:
@@ -75,22 +79,20 @@ class FluorescentCalibrationPage:
                 dcc.Store(id=ids.scattering_threshold_store, storage_type="session"),
                 dcc.Store(id=ids.fluorescence_hist_store, storage_type="memory"),
                 dcc.Store(id=ids.fluorescence_source_channel_store, storage_type="memory"),
+                dcc.Store(id=self.ids.fluorescence_peak_lines_store, storage_type="data"),
                 html.H1("Create and Save A New Fluorescent Calibration"),
                 html.Br(),
-                *(section.layout() for section in self.sections),
+                self._load_get_layout(),
+                self._scattering_get_layout(),
+                self._fluorescence_get_layout(),
+                self._bead_get_layout(),
+                self._output_get_layout(),
+                self._save_get_layout(),
+
+                # *(section.layout() for section in self.sections),
             ]
         )
 
         return self
 
-    def _register_callbacks(self) -> None:
-        for section in self.sections:
-            section.register_callbacks()
-
-
-
-# layout = FluorescentCalibrationPage().register().layout()
-_page = FluorescentCalibrationPage().register()
-
-def layout():
-    return _page.layout()
+layout = FluorescentCalibrationPage().register().layout()
