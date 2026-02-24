@@ -2,11 +2,11 @@ import dash
 from dash import dcc, html
 
 from RosettaX.pages.fluorescence import Sections, helper
-
+from RosettaX.pages.fluorescence.ids import Ids
 
 class FluorescentCalibrationPage:
     def __init__(self) -> None:
-        self.ids = helper.FluorescentCalibrationIds()
+        self.ids = Ids()
 
         self.bead_table_columns = [
             {"name": "Intensity (MESF)", "id": "col1", "editable": True},
@@ -74,6 +74,7 @@ class FluorescentCalibrationPage:
                 dcc.Store(id=ids.calibration_store, storage_type="session"),
                 dcc.Store(id=ids.scattering_threshold_store, storage_type="session"),
                 dcc.Store(id=ids.fluorescence_hist_store, storage_type="memory"),
+                dcc.Store(id=ids.fluorescence_source_channel_store, storage_type="memory"),
                 html.H1("Create and Save A New Fluorescent Calibration"),
                 html.Br(),
                 *(section.layout() for section in self.sections),
@@ -85,6 +86,8 @@ class FluorescentCalibrationPage:
     def _register_callbacks(self) -> None:
         for section in self.sections:
             section.register_callbacks()
+
+
 
 # layout = FluorescentCalibrationPage().register().layout()
 _page = FluorescentCalibrationPage().register()

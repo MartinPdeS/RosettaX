@@ -98,7 +98,7 @@ class RosettaXApplication:
 
         self.app = dash.Dash(
             __name__,
-            external_stylesheets=[dbc.themes.BOOTSTRAP],
+            external_stylesheets=[dbc.themes.FLATLY],
             use_pages=True,
         )
 

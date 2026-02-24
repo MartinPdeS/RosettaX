@@ -1,4 +1,5 @@
-from .base import BaseSection, SectionContext
+from .base import BaseSection
+from .section_context import SectionContext
 from .load import LoadSection
 from .beads import BeadsSection
 from .scattering import ScatteringSection

@@ -17,6 +17,9 @@ class UiFlags:
     fluorescence_debug_fluorescence: bool = False
     fluorescence_debug_load: bool = False
 
+    max_events_for_analysis: Optional[int] = 200_000
+    n_bins_for_plots: Optional[int] = 400
+
     _explicit: set[str] = field(default_factory=set, init=False, repr=False)
 
     def mark_explicit(self, field_name: str) -> None:

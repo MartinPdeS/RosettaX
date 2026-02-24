@@ -6,7 +6,7 @@ import dash_bootstrap_components as dbc
 import numpy as np
 import plotly.graph_objs as go
 
-from RosettaX.backend import BackEnd
+from RosettaX.pages.fluorescence.backend import BackEnd
 from RosettaX.pages.fluorescence import BaseSection, SectionContext
 
 class OutputSection(BaseSection):

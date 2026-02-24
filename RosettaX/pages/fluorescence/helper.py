@@ -6,7 +6,8 @@ from dataclasses import dataclass
 import numpy as np
 import plotly.graph_objs as go
 
-from RosettaX.backend import BackEnd
+from RosettaX.reader import FCSFile
+
 
 @dataclass(frozen=True)
 class ChannelOptions:
@@ -28,8 +29,14 @@ class FileStateRefresher:
         preferred_scatter: Optional[str] = None,
         preferred_fluorescence: Optional[str] = None,
     ) -> ChannelOptions:
-        backend = BackEnd(file_path)
-        columns = list(getattr(backend.fcs_file, "data").columns)
+        with FCSFile(str(file_path), writable=False) as fcs_file:
+            detectors = fcs_file.text["Detectors"]
+            num_parameters = int(fcs_file.text["Keywords"]["$PAR"])
+
+            columns = [
+                str(detectors[index].get("N", f"P{index}"))
+                for index in range(1, num_parameters + 1)
+            ]
 
         scatter_options: list[dict[str, str]] = []
         fluorescence_options: list[dict[str, str]] = []
@@ -68,20 +75,41 @@ class FileStateRefresher:
         )
 
 
-class CalibrationSetupStore:
+class FluorescentCalibrationService:
+    def __init__(self, *, file_state: FileStateRefresher) -> None:
+        self.file_state = file_state
+
+    def channels_from_file(
+        self,
+        file_path: str,
+        *,
+        preferred_scatter: Optional[str] = None,
+        preferred_fluorescence: Optional[str] = None,
+    ) -> ChannelOptions:
+        return self.file_state.options_from_file(
+            file_path,
+            preferred_scatter=preferred_scatter,
+            preferred_fluorescence=preferred_fluorescence,
+        )
+
     @staticmethod
-    def save_fluorescent_setup(sidebar_data: Optional[dict[str, Any]], *, name: str, payload: dict[str, Any]) -> dict[str, Any]:
-        next_sidebar = dict(sidebar_data or {})
-        next_sidebar.setdefault("Fluorescent", [])
-        next_sidebar.setdefault("Scatter", [])
-        next_sidebar.setdefault("payloads", {})
+    def get_column_values(file_path: str, column: str, *, max_points: Optional[int] = None) -> np.ndarray:
+        with FCSFile(str(file_path), writable=False) as fcs_file:
+            dataframe_view = fcs_file.dataframe_view
 
-        next_sidebar["Fluorescent"] = list(next_sidebar["Fluorescent"])
-        if name not in next_sidebar["Fluorescent"]:
-            next_sidebar["Fluorescent"].append(name)
+            column = str(column)
+            if column not in dataframe_view.columns:
+                raise ValueError(f'Column "{column}" not found in FCS data.')
 
-        next_sidebar["payloads"][f"Fluorescent/{name}"] = dict(payload)
-        return next_sidebar
+            values = dataframe_view[column].to_numpy(copy=False)
+
+        values = np.asarray(values, dtype=float)
+        values = values[np.isfinite(values)]
+
+        if max_points is not None and values.size > int(max_points):
+            values = values[: int(max_points)]
+
+        return values
 
 class FluorescentCalibrationIds:
     page_name = "fluorescent_calibration"
@@ -113,6 +141,7 @@ class FluorescentCalibrationIds:
     fluorescence_peak_count_input = f"{page_name}-fluorescence-peak-count"
     fluorescence_find_peaks_btn = f"{page_name}-find-fluorescence-peaks-btn"
     fluorescence_yscale_switch = f"{page_name}-fluorescence-yscale-switch"
+    fluorescence_source_channel_store = f"{page_name}-fluorescence-source-channel-store"
     graph_fluorescence_hist = f"{page_name}-graph-fluorescence-hist"
     fluorescence_hist_store = f"{page_name}-fluorescence-hist-store"
 
@@ -140,8 +169,11 @@ class FluorescentCalibrationIds:
     sidebar_store = "apply-calibration-store"
     sidebar_content = "sidebar-content"
 
+    add_mesf_btn = f"{page_name}-add-mesf-btn"
+    save_calibration_btn = f"{page_name}-save-calibration-btn"
+    export_file_btn = f"{page_name}-export-file-btn"
 
-
+    export_download = f"{page_name}-export-download"
 
 def write_upload_to_tempfile(*, contents: str, filename: str) -> str:
     header, b64data = contents.split(",", 1)
@@ -154,132 +186,3 @@ def write_upload_to_tempfile(*, contents: str, filename: str) -> str:
     out_path = tmp_dir / f"{next(tempfile._get_candidate_names())}{suffix}"
     out_path.write_bytes(raw)
     return str(out_path)
-
-class FluorescentCalibrationService:
-    def __init__(self, *, file_state: FileStateRefresher) -> None:
-        self.file_state = file_state
-
-    def channels_from_file(
-        self,
-        file_path: str,
-        *,
-        preferred_scatter: Optional[str] = None,
-        preferred_fluorescence: Optional[str] = None,
-    ) -> ChannelOptions:
-        return self.file_state.options_from_file(
-            file_path,
-            preferred_scatter=preferred_scatter,
-            preferred_fluorescence=preferred_fluorescence,
-        )
-
-    @staticmethod
-    def get_column_values(backend: BackEnd, column: str, *, max_points: Optional[int] = None) -> np.ndarray:
-        values = backend.fcs_file.data[str(column)].to_numpy(dtype=float)
-        values = np.asarray(values, dtype=float)
-        values = values[np.isfinite(values)]
-
-        if max_points is not None and values.size > int(max_points):
-            values = values[: int(max_points)]
-
-        return values
-
-    @staticmethod
-    def apply_gate(*, fluorescence_values: np.ndarray, scattering_values: np.ndarray, threshold: float) -> np.ndarray:
-        fluorescence_values = np.asarray(fluorescence_values, dtype=float)
-        scattering_values = np.asarray(scattering_values, dtype=float)
-
-        mask = np.isfinite(fluorescence_values) & np.isfinite(scattering_values)
-        mask = mask & (scattering_values >= float(threshold))
-
-        return fluorescence_values[mask]
-
-    @staticmethod
-    def make_histogram_with_lines(
-        *,
-        values: np.ndarray,
-        nbins: int,
-        xaxis_title: str,
-        line_positions: list[float],
-        line_labels: list[str],
-        overlay_values: Optional[np.ndarray] = None,
-        base_name: str = "all events",
-        overlay_name: str = "gated events",
-        title: Optional[str] = None,
-    ) -> go.Figure:
-        values = np.asarray(values, dtype=float)
-        values = values[np.isfinite(values)]
-
-        overlay = None
-        if overlay_values is not None:
-            overlay = np.asarray(overlay_values, dtype=float)
-            overlay = overlay[np.isfinite(overlay)]
-
-        fig = go.Figure()
-
-        fig.add_trace(
-            go.Histogram(
-                x=values,
-                nbinsx=int(nbins),
-                name=str(base_name),
-                opacity=0.55 if overlay is not None else 1.0,
-                bingroup="hist",
-            )
-        )
-
-        if overlay is not None:
-            fig.add_trace(
-                go.Histogram(
-                    x=overlay,
-                    nbinsx=int(nbins),
-                    name=str(overlay_name),
-                    opacity=0.85,
-                    bingroup="hist",
-                )
-            )
-
-        for x, label in zip(line_positions, line_labels):
-            try:
-                xv = float(x)
-            except Exception:
-                continue
-            if not np.isfinite(xv):
-                continue
-
-            fig.add_shape(
-                type="line",
-                x0=xv,
-                x1=xv,
-                y0=0,
-                y1=1,
-                xref="x",
-                yref="paper",
-                line={"width": 2, "dash": "dash"},
-            )
-
-            fig.add_annotation(
-                x=xv,
-                y=1.02,
-                xref="x",
-                yref="paper",
-                text=str(label),
-                showarrow=False,
-                textangle=-45,
-                xanchor="left",
-                yanchor="bottom",
-                align="left",
-                bgcolor="rgba(255,255,255,0.6)",
-            )
-
-        fig.update_layout(
-            title="" if title is None else str(title),
-            xaxis_title=xaxis_title,
-            yaxis_title="Count",
-            bargap=0.02,
-            showlegend=(overlay is not None),
-            separators=".,",
-            barmode="overlay",
-            hovermode="x unified",
-            xaxis={"showspikes": True, "spikemode": "across", "spikesnap": "cursor"},
-        )
-
-        return fig

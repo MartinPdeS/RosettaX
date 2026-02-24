@@ -6,7 +6,7 @@ import numpy as np
 import plotly.graph_objs as go
 from dash import Input, Output, State, callback, dcc, html
 
-from RosettaX.backend import BackEnd
+from RosettaX.pages.fluorescence.backend import BackEnd
 from RosettaX.pages import styling
 from RosettaX.pages.fluorescence import BaseSection, SectionContext
 from RosettaX.pages.runtime_config import get_ui_flags
@@ -184,6 +184,29 @@ class FluorescenceSection(BaseSection):
                 threshold_value = 0.0
 
             return float(threshold_value)
+
+        @callback(
+            Output(ids.fluorescence_source_channel_store, "data", allow_duplicate=True),
+            Input(ids.fluorescence_detector_dropdown, "value"),
+            State(ids.fluorescence_source_channel_store, "data"),
+            prevent_initial_call=True,
+        )
+        def lock_fluorescence_source_channel(
+            fluorescence_channel: Optional[str],
+            current_locked: Optional[str],
+        ) -> Optional[str]:
+            if not fluorescence_channel:
+                return dash.no_update
+
+            chosen = str(fluorescence_channel).strip()
+            if not chosen:
+                return dash.no_update
+
+            # If already locked, keep it (do not auto-switch to MESF or other injected columns)
+            if isinstance(current_locked, str) and current_locked.strip():
+                return dash.no_update
+
+            return chosen
 
         @callback(
             Output(ids.fluorescence_hist_store, "data", allow_duplicate=True),

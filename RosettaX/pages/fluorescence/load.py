@@ -15,57 +15,71 @@ class LoadSection(BaseSection):
         self.debug_text_id = f"{self.context.ids.page_name}-load-debug-out"
 
     def layout(self) -> dbc.Card:
-        ids = self.context.ids
-        ui_flags = get_ui_flags()
-
-        debug_container_style = {"display": "block"} if ui_flags.debug else {"display": "none"}
-
         return dbc.Card(
             [
                 dbc.CardHeader("1. Upload Bead File"),
                 dbc.CardBody(
                     [
-                        dcc.Upload(
-                            id=ids.upload,
-                            children=html.Div(["Drag and Drop or ", html.A("Select Bead File")]),
-                            style=styling.UPLOAD,
-                            multiple=False,
-                        ),
-                        html.Div(id=ids.upload_filename),
-                        html.Div(id=ids.upload_saved_as),
+                        self._upload_component(),
+                        self._filename_outputs(),
                         html.Br(),
-                        *(
-                            [
-                                html.Div(
-                                    [
-                                        html.Div("Max events used for plots and peak finding:"),
-                                        dcc.Input(
-                                            id=ids.max_events_for_plots_input,
-                                            type="number",
-                                            min=10_000,
-                                            step=10_000,
-                                            value=200_000,
-                                            style={"width": "220px"},
-                                        ),
-                                    ],
-                                    style=styling.CARD,
-                                )
-                            ]
-                            if ui_flags.debug
-                            else []
-                        ),
-                        html.Div(
-                            [
-                                html.Hr(),
-                                dbc.Alert("Debug outputs (LoadSection)", color="secondary", is_open=True),
-                                html.Pre(id=self.debug_text_id, style={"whiteSpace": "pre-wrap"}),
-                            ],
-                            style=debug_container_style,
-                        ),
+                        *self._max_events_input_if_debug(),
+                        self._debug_output_container(),
                     ],
                     style=self.context.card_body_scroll,
                 ),
             ]
+        )
+
+    def _upload_component(self) -> html.Div:
+        ids = self.context.ids
+        return dcc.Upload(
+            id=ids.upload,
+            children=html.Div(["Drag and Drop or ", html.A("Select Bead File")]),
+            style=styling.UPLOAD,
+            multiple=False,
+        )
+
+    def _filename_outputs(self) -> html.Div:
+        ids = self.context.ids
+        return html.Div(
+            [
+                html.Div(id=ids.upload_filename),
+                html.Div(id=ids.upload_saved_as),
+            ]
+        )
+
+    def _max_events_input_if_debug(self) -> list:
+        if not get_ui_flags().debug:
+            return []
+
+        ids = self.context.ids
+        return [
+            html.Div(
+                [
+                    html.Div("Max events used for plots and peak finding:"),
+                    dcc.Input(
+                        id=ids.max_events_for_plots_input,
+                        type="number",
+                        min=10_000,
+                        step=10_000,
+                        value=200_000,
+                        style={"width": "220px"},
+                    ),
+                ],
+                style=styling.CARD,
+            )
+        ]
+
+    def _debug_output_container(self) -> html.Div:
+        debug_style = {"display": "block"} if get_ui_flags().debug else {"display": "none"}
+        return html.Div(
+            [
+                html.Hr(),
+                dbc.Alert("Debug outputs (LoadSection)", color="secondary", is_open=True),
+                html.Pre(id=self.debug_text_id, style={"whiteSpace": "pre-wrap"}),
+            ],
+            style=debug_style,
         )
 
     def register_callbacks(self) -> None:
@@ -95,66 +109,66 @@ class LoadSection(BaseSection):
             State(ids.upload, "filename"),
             prevent_initial_call=True,
         )
-        def load_uploaded_file(
-            contents: Optional[str],
-            filename: Optional[str],
-        ):
-            if not contents or not filename:
-                debug_text = "No file uploaded yet."
-                return (
-                    dash.no_update,
-                    "No file uploaded yet.",
-                    [],
-                    [],
-                    None,
-                    None,
-                    dash.no_update,
-                    debug_text if get_ui_flags().debug else "",
-                )
+        def load_uploaded_file(contents: Optional[str], filename: Optional[str]):
+            return self._handle_file_upload(contents, filename, service)
 
-            try:
-                temp_path = helper.write_upload_to_tempfile(contents=contents, filename=str(filename))
-            except Exception as exc:
-                debug_text = f"Failed to write temp file: {exc}"
-                return (
-                    dash.no_update,
-                    f"Failed to write temp file: {exc}",
-                    [],
-                    [],
-                    None,
-                    None,
-                    dash.no_update,
-                    debug_text if get_ui_flags().debug else "",
-                )
-
-            try:
-                channels = service.channels_from_file(temp_path)
-            except Exception as exc:
-                debug_text = f"Saved as: {temp_path} but could not read it: {exc}"
-                return (
-                    temp_path,
-                    f"Saved as: {temp_path} but could not read it: {exc}",
-                    [],
-                    [],
-                    None,
-                    None,
-                    dash.no_update,
-                    debug_text if get_ui_flags().debug else "",
-                )
-
-            debug_text = (
-                f"temp_path: {temp_path}\n"
-                f"scatter_options: {len(channels.scatter_options)}\n"
-                f"fluorescence_options: {len(channels.fluorescence_options)}\n"
-            )
-
+    def _handle_file_upload(self, contents, filename, service):
+        if not contents or not filename:
+            debug_text = "No file uploaded yet."
             return (
-                temp_path,
-                f"Saved as: {temp_path}",
-                channels.scatter_options,
-                channels.fluorescence_options,
-                channels.scatter_value,
-                channels.fluorescence_value,
+                dash.no_update,
+                "No file uploaded yet.",
+                [],
+                [],
                 None,
+                None,
+                dash.no_update,
                 debug_text if get_ui_flags().debug else "",
             )
+
+        try:
+            temp_path = helper.write_upload_to_tempfile(contents=contents, filename=str(filename))
+        except Exception as exc:
+            debug_text = f"Failed to write temp file: {exc}"
+            return (
+                dash.no_update,
+                debug_text,
+                [],
+                [],
+                None,
+                None,
+                dash.no_update,
+                debug_text if get_ui_flags().debug else "",
+            )
+
+        try:
+            channels = service.channels_from_file(temp_path)
+        except Exception as exc:
+            debug_text = f"Saved as: {temp_path} but could not read it: {exc}"
+            return (
+                temp_path,
+                debug_text,
+                [],
+                [],
+                None,
+                None,
+                dash.no_update,
+                debug_text if get_ui_flags().debug else "",
+            )
+
+        debug_text = (
+            f"temp_path: {temp_path}\n"
+            f"scatter_options: {len(channels.scatter_options)}\n"
+            f"fluorescence_options: {len(channels.fluorescence_options)}\n"
+        )
+
+        return (
+            temp_path,
+            f"Saved as: {temp_path}",
+            channels.scatter_options,
+            channels.fluorescence_options,
+            channels.scatter_value,
+            channels.fluorescence_value,
+            None,
+            debug_text if get_ui_flags().debug else "",
+        )

@@ -1,126 +1,179 @@
-# # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-from __future__ import annotations
-
+import mmap
 import os
+import re
+import weakref
 from dataclasses import dataclass, field
-from typing import Any, Dict, Tuple
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.gridspec import GridSpec
-
-from MPSPlots import helper
+from typing import Any, Dict, Optional, Tuple, List
 
 import numpy as np
 import pandas as pd
 
 
-def _is_integer(value: str) -> bool:
-    """Return True if the given string can be converted to an integer."""
-    try:
-        int(value)
-        return True
-    except (ValueError, TypeError):
-        return False
-
-
 @dataclass
 class FCSFile:
     """
-    Reader for a single FCS file.
+    FCS reader exposing DATA as either:
+      - dataframe_view: zero copy DataFrame backed by an mmap buffer (borrowed view)
+      - dataframe_copy(): independent DataFrame (owned copy)
 
-    This class parses the header and text segments on construction.
-    Event data is read on demand with `read_all_data`.
+    Lifetime rule (strict):
+      If you access dataframe_view (or any Series / NumPy view derived from it),
+      you must ensure those objects are gone before close() or leaving a `with` block.
 
-    Attributes
-    ----------
-    file_path:
-        Path to the FCS file on disk.
-    header:
-        Parsed header information, such as version and segment positions.
-    text:
-        Parsed text segment, containing general keywords and detector metadata.
-        Keys:
-            "Keywords" -> dict with all FCS keywords.
-            "Detectors" -> dict mapping detector index to parameter metadata.
-    delimiter:
-        Character used as delimiter in the text segment.
-    data:
-        Event data as a pandas DataFrame, populated by `read_all_data`.
+    This class therefore enforces close correctness: if exported buffers still exist,
+    close raises RuntimeError with instructions.
     """
 
     file_path: str
+    writable: bool = False
+
     header: Dict[str, Any] = field(init=False)
     text: Dict[str, Any] = field(init=False)
-    delimiter: str | None = field(init=False, default=None)
-    data: pd.DataFrame | None = field(init=False, default=None)
+    delimiter: str = field(init=False)
 
-    # ------------------------------------------------------------------
-    # Construction and segment parsing
-    # ------------------------------------------------------------------
+    _file_handle: Any = field(init=False, default=None, repr=False)
+    _mmap: Optional[mmap.mmap] = field(init=False, default=None, repr=False)
+    _records: Optional[np.ndarray] = field(init=False, default=None, repr=False)
+    _dataframe_view: Optional[pd.DataFrame] = field(init=False, default=None, repr=False)
+    _finalizer: Any = field(init=False, default=None, repr=False)
 
     def __post_init__(self) -> None:
-        """Parse the FCS header and text segments."""
+        self.file_path = str(self.file_path)
         self._validate_file()
         self.header = self._read_header()
         self.text, self.delimiter = self._read_text()
+        self._open_mmap()
 
+        # Safety net: do not rely on __del__, but try to prevent FD leaks if user forgets.
+        self._finalizer = weakref.finalize(self, type(self)._best_effort_close, self)
 
-    def _validate_file(self) -> None:
-        """Verify that the file exists and is large enough to contain a header."""
-        if not os.path.isfile(self.file_path):
-            name = os.path.basename(self.file_path)
-            raise FileNotFoundError(f'"{name}" does not exist.')
+    def __enter__(self) -> "FCSDataFrameFile":
+        return self
 
-        # Original code used 257 as minimal size
-        if os.path.getsize(self.file_path) < 257:
-            name = os.path.basename(self.file_path)
-            raise FileNotFoundError(
-                f'"{name}" is not a valid FCS file because the file is smaller than allowed.'
-            )
+    def __exit__(self, exc_type, exc, tb) -> None:
+        # Enforce correctness. If caller leaked view objects, raise.
+        self.close()
 
-    def _read_header(self) -> Dict[str, Any]:
+    # ----------------------------
+    # Public API
+    # ----------------------------
+
+    @property
+    def dataframe_view(self) -> pd.DataFrame:
         """
-        Read and parse the fixed size header segment of the FCS file.
+        Zero copy DataFrame backed by mmap. Borrowed view.
+        Only valid while the file is open and must not outlive the instance.
+        """
+        if self._dataframe_view is not None:
+            return self._dataframe_view
 
-        Returns
-        -------
-        dict
-            Dictionary with keys:
-            "FCS version", "Text start", "Text end", "Data start", "Data end".
+        self._ensure_records_loaded()
+
+        if self._records is None:
+            raise RuntimeError("Internal error: records not loaded.")
+
+        column_names = self._column_names()
+        num_parameters = int(self.text["Keywords"]["$PAR"])
+
+        columns: Dict[str, np.ndarray] = {}
+        for parameter_index in range(1, num_parameters + 1):
+            columns[column_names[parameter_index - 1]] = self._records[f"parameter_{parameter_index}"]
+
+        dataframe = pd.DataFrame(columns, copy=False)
+
+        dataframe.attrs["fcs_header"] = dict(self.header)
+        dataframe.attrs["fcs_keywords"] = dict(self.text["Keywords"])
+        dataframe.attrs["fcs_detectors"] = {k: dict(v) for k, v in self.text["Detectors"].items()}
+        dataframe.attrs["fcs_delimiter"] = self.delimiter
+
+        self._dataframe_view = dataframe
+        return dataframe
+
+    def dataframe_copy(self, *, deep: bool = True) -> pd.DataFrame:
+        """
+        Independent DataFrame that can outlive the file.
+        This necessarily copies the DATA segment.
+        """
+        view = self.dataframe_view
+        if deep:
+            return view.copy(deep=True)
+        return view.copy()
+
+    def close(self) -> None:
+        """
+        Close mmap and file handle.
 
         Raises
         ------
-        FileNotFoundError
-            If the FCS version or header fields are invalid.
+        RuntimeError
+            If there are still exported buffers referencing the mmap.
         """
+        # Drop internal references first. This helps when only internal objects keep the export alive.
+        self._dataframe_view = None
+        self._records = None
+
+        mmap_obj = self._mmap
+        file_handle = self._file_handle
+
+        self._mmap = None
+        self._file_handle = None
+
+        if mmap_obj is not None:
+            try:
+                mmap_obj.close()
+            except BufferError as exc:
+                # Put back, because close failed. This prevents half-closed state.
+                self._mmap = mmap_obj
+                self._file_handle = file_handle
+                raise RuntimeError(
+                    "Cannot close FCSDataFrameFile: there are still live NumPy or pandas views "
+                    "referencing the underlying mmap buffer. "
+                    "Delete the DataFrame returned by dataframe_view and any derived Series or arrays "
+                    "(for example `del df_view`, `del series`, `del array`), then call close() again. "
+                    "If you need data after closing, use dataframe_copy()."
+                ) from exc
+
+        if file_handle is not None:
+            file_handle.close()
+
+    # ----------------------------
+    # Parsing helpers (kept inside class, not ad hoc globals)
+    # ----------------------------
+
+    def _validate_file(self) -> None:
+        if not os.path.isfile(self.file_path):
+            raise FileNotFoundError(f'"{os.path.basename(self.file_path)}" does not exist.')
+        if os.path.getsize(self.file_path) < 257:
+            raise FileNotFoundError(
+                f'"{os.path.basename(self.file_path)}" is not a valid FCS file because it is too small.'
+            )
+
+    def _read_header(self) -> Dict[str, Any]:
         with open(self.file_path, "rb") as handle:
             header_bytes = handle.read(256)
 
         try:
             fcs_version = header_bytes[:6].decode("ascii")
         except UnicodeDecodeError as exc:
-            name = os.path.basename(self.file_path)
             raise FileNotFoundError(
-                f'"{name}" is not a valid FCS file because the FCS version cannot be decoded.'
+                f'"{os.path.basename(self.file_path)}" is not a valid FCS file because the version cannot be decoded.'
             ) from exc
 
-        allowed_versions = {"FCS2.0", "FCS3.0", "FCS3.1"}
-        if fcs_version not in allowed_versions:
-            name = os.path.basename(self.file_path)
+        if fcs_version not in {"FCS2.0", "FCS3.0", "FCS3.1"}:
             raise FileNotFoundError(
-                f'"{name}" is not a valid FCS file because the FCS version is undefined.'
+                f'"{os.path.basename(self.file_path)}" is not a valid FCS file because the version is invalid.'
             )
 
         try:
-            text_start = int(header_bytes[10:18].strip())
-            text_end = int(header_bytes[18:26].strip())
-            data_start = int(header_bytes[26:34].strip())
-            data_end = int(header_bytes[34:42].strip())
+            text_start = int(header_bytes[10:18].strip() or b"0")
+            text_end = int(header_bytes[18:26].strip() or b"0")
+            data_start = int(header_bytes[26:34].strip() or b"0")
+            data_end = int(header_bytes[34:42].strip() or b"0")
         except ValueError as exc:
-            name = os.path.basename(self.file_path)
             raise FileNotFoundError(
-                f'"{name}" is not a valid FCS file because the file segments are undefined.'
+                f'"{os.path.basename(self.file_path)}" is not a valid FCS file because header offsets are invalid.'
             ) from exc
 
         return {
@@ -131,469 +184,492 @@ class FCSFile:
             "Data end": data_end,
         }
 
+    @staticmethod
+    def _split_text_payload(payload: str, delimiter: str) -> List[str]:
+        """
+        Split TEXT payload (without leading delimiter), respecting FCS escaping:
+        delimiter inside a token is escaped by doubling it.
+        """
+        tokens: List[str] = []
+        token_chars: List[str] = []
+
+        index = 0
+        while index < len(payload):
+            ch = payload[index]
+            if ch == delimiter:
+                if index + 1 < len(payload) and payload[index + 1] == delimiter:
+                    token_chars.append(delimiter)
+                    index += 2
+                    continue
+
+                tokens.append("".join(token_chars))
+                token_chars = []
+                index += 1
+                continue
+
+            token_chars.append(ch)
+            index += 1
+
+        if token_chars:
+            tokens.append("".join(token_chars))
+
+        return tokens
+
     def _read_text(self) -> Tuple[Dict[str, Any], str]:
-        """
-        Read and parse the text segment of the FCS file.
+        text_start = int(self.header["Text start"])
+        text_end = int(self.header["Text end"])
 
-        The text segment contains keyword and detector metadata. Keywords are
-        stored in `result["Keywords"]`, while per detector information is
-        grouped into `result["Detectors"]`.
-
-        Returns
-        -------
-        dict
-            Dictionary with "Keywords" and "Detectors".
-        str
-            Delimiter character used in the text segment.
-
-        Raises
-        ------
-        FileNotFoundError
-            If the text segment cannot be decoded or parsed.
-        """
-        text_start = self.header["Text start"]
-        text_end = self.header["Text end"]
-
-        length = text_end - text_start + 1
-        if length <= 0:
-            name = os.path.basename(self.file_path)
+        if text_end <= text_start:
             raise FileNotFoundError(
-                f'"{name}" is not a valid FCS file because the text segment has invalid bounds.'
+                f'"{os.path.basename(self.file_path)}" is not a valid FCS file because TEXT bounds are invalid.'
             )
 
+        length = text_end - text_start + 1
         with open(self.file_path, "rb") as handle:
             handle.seek(text_start)
             raw = handle.read(length)
 
         try:
-            text_section = raw.decode("ascii")
+            text_section = raw.decode("ascii", errors="strict")
         except UnicodeDecodeError as exc:
-            name = os.path.basename(self.file_path)
             raise FileNotFoundError(
-                f'"{name}" is not a valid FCS file because the text segment cannot be decoded.'
+                f'"{os.path.basename(self.file_path)}" is not a valid FCS file because TEXT cannot be decoded.'
             ) from exc
 
         if not text_section:
-            name = os.path.basename(self.file_path)
             raise FileNotFoundError(
-                f'"{name}" is not a valid FCS file because the text segment is empty.'
+                f'"{os.path.basename(self.file_path)}" is not a valid FCS file because TEXT is empty.'
             )
 
         delimiter = text_section[0]
-        text_payload = text_section[1:]  # drop leading delimiter
+        payload = text_section[1:]
 
-        # Split into items and parse key value pairs
-        items = text_payload.strip().split(delimiter)
+        items = self._split_text_payload(payload, delimiter)
+
+        # Trailing delimiter => trailing empty token(s). Drop them to keep alignment.
+        while items and items[-1] == "":
+            items.pop()
+
         if len(items) < 2:
-            name = os.path.basename(self.file_path)
             raise FileNotFoundError(
-                f'"{name}" is not a valid FCS file because the text segment contains no key value pairs.'
+                f'"{os.path.basename(self.file_path)}" is not a valid FCS file because TEXT is malformed.'
             )
 
-        parsed: Dict[str, Any] = {"Keywords": {}, "Detectors": {}}
-        keywords = parsed["Keywords"]
+        if len(items) % 2 == 1:
+            items = items[:-1]
 
-        for index in range(0, len(items) - 1, 2):
+        keywords: Dict[str, Any] = {}
+        for index in range(0, len(items), 2):
             key = items[index].strip()
             value = items[index + 1].strip()
 
-            if _is_integer(value):
-                value = int(value)
+            if value.lstrip("-").isdigit():
+                keywords[key] = int(value)
+            else:
+                keywords[key] = value
 
-            keywords[key] = value
-
-        # Group detector parameters by channel index
+        parsed: Dict[str, Any] = {"Keywords": keywords, "Detectors": {}}
         self._group_detectors(parsed)
 
         return parsed, delimiter
 
     def _group_detectors(self, parsed_text: Dict[str, Any]) -> None:
-        """
-        Group per detector keywords into `parsed_text["Detectors"]`.
-
-        Parameters
-        ----------
-        parsed_text:
-            Text dictionary as created by `_read_text`. It is modified in place.
-
-        Notes
-        -----
-        Detector keywords have names of the form `$P{index}{suffix}`.
-        These are collected under `parsed_text["Detectors"][index][suffix]`
-        and removed from the `Keywords` dictionary.
-        """
         keywords = parsed_text["Keywords"]
         detectors: Dict[int, Dict[str, Any]] = {}
 
-        try:
-            num_parameters = int(keywords["$PAR"])
-        except KeyError as exc:
-            name = os.path.basename(self.file_path)
+        if "$PAR" not in keywords:
             raise FileNotFoundError(
-                f'"{name}" is not a valid FCS file because `$PAR` is missing in the text segment.'
-            ) from exc
+                f'"{os.path.basename(self.file_path)}" is not a valid FCS file because $PAR is missing.'
+            )
 
-        # Use a stable list, not a set, to keep iteration order deterministic
-        detector_suffixes = [
-            "B",
-            "E",
-            "N",
-            "R",
-            "D",
-            "F",
-            "G",
-            "L",
-            "O",
-            "P",
-            "S",
-            "T",
-            "V",
-            "TYPE",
-        ]
+        num_parameters = int(keywords["$PAR"])
+        parameter_pattern = re.compile(r"^\$P(\d+)([A-Z]+)$")
 
-        for det_index in range(1, num_parameters + 1):
-            det_info: Dict[str, Any] = {}
+        keys_to_remove: List[str] = []
+        for key, value in keywords.items():
+            match = parameter_pattern.match(str(key))
+            if match is None:
+                continue
+            parameter_index = int(match.group(1))
+            suffix = match.group(2)
+            detectors.setdefault(parameter_index, {})[suffix] = value
+            keys_to_remove.append(key)
 
-            for suffix in detector_suffixes:
-                key = f"$P{det_index}{suffix}"
-                if key in keywords:
-                    det_info[suffix] = keywords.pop(key)
+        for key in keys_to_remove:
+            keywords.pop(key, None)
 
-            detectors[det_index] = det_info
+        for parameter_index in range(1, num_parameters + 1):
+            detectors.setdefault(parameter_index, {})
 
         parsed_text["Detectors"] = detectors
 
-    # ------------------------------------------------------------------
-    # Data reading
-    # ------------------------------------------------------------------
+    def _open_mmap(self) -> None:
+        mode = "r+b" if self.writable else "rb"
+        self._file_handle = open(self.file_path, mode)
+        access = mmap.ACCESS_WRITE if self.writable else mmap.ACCESS_READ
+        self._mmap = mmap.mmap(self._file_handle.fileno(), 0, access=access)
 
-    def read_all_data(self) -> pd.DataFrame:
-        """
-        Read the event data segment into a pandas DataFrame.
+    @staticmethod
+    def _endian_prefix(byteord: str) -> str:
+        byteord = str(byteord).strip()
+        if byteord == "1,2,3,4":
+            return "<"
+        if byteord == "4,3,2,1":
+            return ">"
+        raise ValueError(f'Unsupported $BYTEORD "{byteord}".')
 
-        The column names are taken from the detector keyword `$PnN` for each
-        parameter, so the channel names correspond to the instrument settings.
+    @staticmethod
+    def _dtype_for_parameter(datatype: str, bits: int, endian_prefix: str) -> np.dtype:
+        datatype = str(datatype).strip().upper()
+        bits = int(bits)
 
-        Returns
-        -------
-        pandas.DataFrame
-            Event data with shape `(num_events, num_parameters)`.
+        if bits % 8 != 0:
+            raise ValueError(f"$PnB must be byte aligned, got {bits} bits.")
 
-        Raises
-        ------
-        FileNotFoundError
-            If the data segment cannot be read or `$DATATYPE` is unsupported.
-        """
+        nbytes = bits // 8
+
+        if datatype == "I":
+            if nbytes == 1:
+                return np.dtype(endian_prefix + "u1")
+            if nbytes == 2:
+                return np.dtype(endian_prefix + "u2")
+            if nbytes == 4:
+                return np.dtype(endian_prefix + "u4")
+            if nbytes == 8:
+                return np.dtype(endian_prefix + "u8")
+            raise ValueError(f"Unsupported integer width: {bits} bits")
+
+        if datatype == "F":
+            if bits != 32:
+                raise ValueError("For $DATATYPE=F, expected $PnB=32.")
+            return np.dtype(endian_prefix + "f4")
+
+        if datatype == "D":
+            if bits != 64:
+                raise ValueError("For $DATATYPE=D, expected $PnB=64.")
+            return np.dtype(endian_prefix + "f8")
+
+        raise ValueError(f'Unsupported $DATATYPE "{datatype}".')
+
+    def _event_dtype(self) -> np.dtype:
         keywords = self.text["Keywords"]
         detectors = self.text["Detectors"]
 
-        try:
-            num_events = int(keywords["$TOT"])
-            num_parameters = int(keywords["$PAR"])
-            datatype_code = keywords["$DATATYPE"]
-        except KeyError as exc:
-            name = os.path.basename(self.file_path)
-            raise FileNotFoundError(
-                f'"{name}" is not a valid FCS file because required data keywords are missing.'
-            ) from exc
+        if str(keywords.get("$MODE", "L")).strip().upper() != "L":
+            raise ValueError('Only $MODE="L" is supported.')
 
-        data_start = self.header["Data start"]
-        data_end = self.header["Data end"]
+        num_parameters = int(keywords["$PAR"])
+        datatype = str(keywords["$DATATYPE"]).strip().upper()
+        endian_prefix = self._endian_prefix(str(keywords.get("$BYTEORD", "1,2,3,4")))
 
-        # If data end is zero, FCS uses $BEGINDATA and $ENDDATA in text
-        if data_end == 0:
-            try:
-                data_start = int(keywords["$BEGINDATA"])
-                data_end = int(keywords["$ENDDATA"])
-            except KeyError as exc:
-                name = os.path.basename(self.file_path)
-                raise FileNotFoundError(
-                    f'"{name}" is not a valid FCS file because data positions are undefined.'
-                ) from exc
+        fields: List[Tuple[str, np.dtype]] = []
+        for parameter_index in range(1, num_parameters + 1):
+            detector = detectors.get(parameter_index, {})
+            bits = int(detector.get("B", keywords.get(f"$P{parameter_index}B", 32)))
+            dt = self._dtype_for_parameter(datatype, bits, endian_prefix)
+            fields.append((f"parameter_{parameter_index}", dt))
 
-        if data_end <= data_start:
-            name = os.path.basename(self.file_path)
-            raise FileNotFoundError(
-                f'"{name}" is not a valid FCS file because the data segment has invalid bounds.'
-            )
+        return np.dtype(fields)
 
+    def _column_names(self) -> List[str]:
+        detectors = self.text["Detectors"]
+        num_parameters = int(self.text["Keywords"]["$PAR"])
+        names: List[str] = []
+        for parameter_index in range(1, num_parameters + 1):
+            names.append(str(detectors.get(parameter_index, {}).get("N", f"P{parameter_index}")))
+        return names
+
+    def _resolve_data_bounds(self, expected_bytes: int) -> Tuple[int, int]:
+        """
+        Choose between header offsets and TEXT offsets using expected size validation.
+        """
+        keywords = self.text["Keywords"]
         file_size = os.path.getsize(self.file_path)
-        if file_size < data_end:
-            name = os.path.basename(self.file_path)
-            raise FileNotFoundError(
-                f'"{name}" is not a valid FCS file because the data segment extends beyond the file size.'
-            )
 
-        # Map FCS $DATATYPE to NumPy dtypes
-        dtype_mapping = {
-            "F": np.float32,  # floating point
-            "D": np.float64,  # double precision
-            "I": np.int32,    # signed integer
-            "L": np.uint32,   # unsigned integer
-        }
+        candidates: List[Tuple[int, int, str]] = []
 
-        np_dtype = dtype_mapping.get(datatype_code)
-        if np_dtype is None:
-            name = os.path.basename(self.file_path)
-            raise FileNotFoundError(
-                f'"{name}" uses unsupported $DATATYPE "{datatype_code}".'
-            )
+        header_start = int(self.header.get("Data start", 0))
+        header_end = int(self.header.get("Data end", 0))
+        if header_start > 0 and header_end > 0:
+            candidates.append((header_start, header_end, "header"))
 
-        total_elements = num_events * num_parameters
-        data_length = data_end - data_start + 1
+        if "$BEGINDATA" in keywords and "$ENDDATA" in keywords:
+            candidates.append((int(keywords["$BEGINDATA"]), int(keywords["$ENDDATA"]), "text"))
 
-        # Build column headings using detector names `$PnN`
-        column_headings = [
-            detectors[index].get("N", f"P{index}") for index in range(1, num_parameters + 1)
-        ]
+        def normalize(start: int, end: int) -> Tuple[int, int]:
+            start = int(start)
+            end = int(end)
+            if end == file_size:
+                end = file_size - 1
+            return start, end
 
-        with open(self.file_path, "rb") as handle:
-            handle.seek(data_start)
-            raw = handle.read(data_length)
+        def is_valid(start: int, end: int) -> bool:
+            if start < 0 or end < 0:
+                return False
+            if start >= file_size:
+                return False
+            if end >= file_size:
+                return False
+            if end < start:
+                return False
+            segment_bytes = end - start + 1
+            return segment_bytes >= expected_bytes
 
-        array = np.frombuffer(raw, dtype=np_dtype, count=total_elements)
-        if array.size != total_elements:
-            name = os.path.basename(self.file_path)
-            raise FileNotFoundError(
-                f'"{name}" could not be fully read into a data array. '
-                f"Expected {total_elements} elements, got {array.size}."
-            )
+        for start, end, _src in candidates:
+            ns, ne = normalize(start, end)
+            if is_valid(ns, ne):
+                return ns, ne
 
-        data = array.reshape((num_events, num_parameters))
-        self.data = pd.DataFrame(data, columns=column_headings)
-
-        units = {}
-
-        for column in self.data.columns:
-            units[column] = 'A.U.'
-
-        self.data.attrs['units'] = units
-
-        return self.data
-
-    @helper.post_mpl_plot
-    def plot(self, x, y, *, gridsize=200, bins_1d=20, log_hexbin=False, log_hist=False, cmap="viridis", hist_color="gray"):
-        """
-        Plot a fast hexbin 2D density plot with marginal 1D histograms.
-
-        Parameters
-        ----------
-        x : array_like
-            Data for the horizontal axis.
-        y : array_like
-            Data for the vertical axis.
-
-        gridsize : int, optional (default: 200)
-            Resolution of the hexagonal grid for the 2D histogram.
-
-        bins_1d : int, optional (default: 200)
-            Number of bins used for the marginal histograms.
-
-        log_hexbin : bool, optional (default: False)
-            If True, color-scale of the hexbin is logarithmic.
-
-        log_hist : bool, optional (default: False)
-            If True, marginal histograms are plotted with log-scaled counts.
-
-        cmap : str, optional (default: "viridis")
-            Colormap used for the hexbin.
-
-        figsize : tuple, optional (default: (8, 8))
-            Overall figure size.
-
-        x_label : str or None
-            Label for the x-axis (falls back to no label if None).
-
-        y_label : str or None
-            Label for the y-axis (falls back to no label if None).
-
-        title : str or None
-            Optional title for the full figure.
-
-        hist_color : str, optional (default: "gray")
-            Color used for the marginal histograms.
-
-        Returns
-        -------
-        fig : matplotlib.figure.Figure
-            The created figure object.
-
-        ax_hex : matplotlib.axes.Axes
-            Main hexbin plot axis.
-
-        ax_xhist : matplotlib.axes.Axes
-            Top marginal histogram axis.
-
-        ax_yhist : matplotlib.axes.Axes
-            Right marginal histogram axis.
-        """
-        # Extract data
-        x_values = self.data[x].values
-        y_values = self.data[y].values
-
-        fig = plt.figure()
-        gs = GridSpec(4, 4, figure=fig, wspace=0.05, hspace=0.05)
-
-        # Main plot
-        ax_hex = fig.add_subplot(gs[1:, 0:3])
-
-        # Marginal plots
-        ax_xhist = fig.add_subplot(gs[0, 0:3], sharex=ax_hex)
-        ax_yhist = fig.add_subplot(gs[1:, 3], sharey=ax_hex)
-
-        # Initial hexbin
-        hb = ax_hex.hexbin(
-            x_values, y_values,
-            gridsize=gridsize,
-            mincnt=1,
-            bins="log" if log_hexbin else None,
-            cmap=cmap,
+        name = os.path.basename(self.file_path)
+        raise FileNotFoundError(
+            f'"{name}" is not a valid FCS file because DATA bounds are invalid or too small for expected payload.'
         )
 
-        # Initial marginal histograms
-        ax_xhist.hist(x_values, bins=bins_1d, color=hist_color, log=log_hist)
-        ax_yhist.hist(y_values, bins=bins_1d, orientation="horizontal", color=hist_color, log=log_hist)
+    def _ensure_records_loaded(self) -> None:
+        if self._records is not None:
+            return
+        if self._mmap is None:
+            raise RuntimeError("File is closed.")
 
-        # Aesthetic cleanup
-        plt.setp(ax_xhist.get_xticklabels(), visible=False)
-        plt.setp(ax_yhist.get_yticklabels(), visible=False)
-        ax_xhist.tick_params(axis="x", bottom=False)
-        ax_yhist.tick_params(axis="y", left=False)
+        keywords = self.text["Keywords"]
+        num_events = int(keywords["$TOT"])
 
-        # Remove scientific notation everywhere
-        ax_hex.ticklabel_format(useOffset=False, style='plain', scilimits=[0, 0])
-        ax_xhist.ticklabel_format(useOffset=False, style='plain', scilimits=[0, 0])
-        ax_yhist.ticklabel_format(useOffset=False, style='plain', scilimits=[0, 0])
+        event_dtype = self._event_dtype()
+        bytes_per_event = event_dtype.itemsize
+        expected_bytes = num_events * bytes_per_event
 
-        # --------------------------
-        # Dynamic update functionality (with recursion guard)
-        # --------------------------
+        data_start, data_end = self._resolve_data_bounds(expected_bytes=expected_bytes)
 
-        is_updating = False
+        # Use exactly expected_bytes (ignore any extra trailing bytes in DATA segment)
+        mv = memoryview(self._mmap)[data_start : data_start + expected_bytes]
+        self._records = np.frombuffer(mv, dtype=event_dtype, count=num_events)
 
-        def update_plot(event=None):
-            nonlocal is_updating, hb
-
-            # Avoid recursive calls
-            if is_updating:
-                return
-            is_updating = True
-
-            # Current visible window
-            xmin, xmax = ax_hex.get_xlim()
-            ymin, ymax = ax_hex.get_ylim()
-
-            # Mask visible data
-            mask = (x_values >= xmin) & (x_values <= xmax) & (y_values >= ymin) & (y_values <= ymax)
-            xv = x_values[mask]
-            yv = y_values[mask]
-
-            # ----------------------
-            # Update hexbin colors
-            # ----------------------
-            # Remove old hexbin collections
-            for col in list(ax_hex.collections):
+    @staticmethod
+    def _best_effort_close(instance: "FCSDataFrameFile") -> None:
+        """
+        Finalizer fallback: do not raise. Try to close if possible.
+        """
+        try:
+            instance._dataframe_view = None
+            instance._records = None
+            if instance._mmap is not None:
                 try:
-                    col.remove()
+                    instance._mmap.close()
+                except BufferError:
+                    # Cannot safely close, leave it to OS at process exit.
+                    pass
+                instance._mmap = None
+            if instance._file_handle is not None:
+                try:
+                    instance._file_handle.close()
                 except Exception:
                     pass
+                instance._file_handle = None
+        except Exception:
+            pass
 
-            hb = ax_hex.hexbin(
-                xv, yv,
-                gridsize=gridsize,
-                mincnt=1,
-                bins="log" if log_hexbin else None,
-                cmap=cmap,
+    # ----------------------------
+    # Writing support (round trip)
+    # ----------------------------
+
+    @classmethod
+    def builder_from_dataframe(
+        cls,
+        dataframe: pd.DataFrame,
+        *,
+        template: Optional["FCSDataFrameFile"] = None,
+        force_float32: bool = True,
+    ) -> "FCSBuilder":
+        if template is not None:
+            keywords = dict(template.text["Keywords"])
+            detectors = {k: dict(v) for k, v in template.text["Detectors"].items()}
+            delimiter = template.delimiter
+            version = str(template.header.get("FCS version", "FCS3.1"))
+        else:
+            keywords = {"$MODE": "L", "$BYTEORD": "1,2,3,4", "$DATATYPE": "F"}
+            detectors = {}
+            delimiter = "|"
+            version = "FCS3.1"
+
+        keywords["$MODE"] = "L"
+        keywords["$TOT"] = int(dataframe.shape[0])
+        keywords["$PAR"] = int(dataframe.shape[1])
+
+        if force_float32:
+            keywords["$DATATYPE"] = "F"
+
+        rebuilt_detectors: Dict[int, Dict[str, Any]] = {}
+        for parameter_index, column_name in enumerate(list(dataframe.columns), start=1):
+            detector = dict(detectors.get(parameter_index, {}))
+            detector["N"] = str(column_name)
+
+            if force_float32:
+                detector["B"] = 32
+
+            if "R" not in detector:
+                values = dataframe[column_name].to_numpy(copy=False)
+                if np.issubdtype(values.dtype, np.floating):
+                    finite = values[np.isfinite(values)]
+                    detector["R"] = float(max(1.0, float(np.max(finite)))) if finite.size else 1.0
+                else:
+                    detector["R"] = float(max(1, int(np.max(values)))) if values.size else 1.0
+
+            rebuilt_detectors[parameter_index] = detector
+
+        return FCSBuilder(
+            dataframe=dataframe,
+            keywords=keywords,
+            detectors=rebuilt_detectors,
+            delimiter=delimiter,
+            fcs_version=version,
+        )
+
+
+@dataclass
+class FCSBuilder:
+    dataframe: pd.DataFrame
+    keywords: Dict[str, Any]
+    detectors: Dict[int, Dict[str, Any]]
+    delimiter: str = "|"
+    fcs_version: str = "FCS3.1"
+
+    def _endian_prefix(self) -> str:
+        byteord = str(self.keywords.get("$BYTEORD", "1,2,3,4")).strip()
+        if byteord == "1,2,3,4":
+            return "<"
+        if byteord == "4,3,2,1":
+            return ">"
+        raise ValueError(f'Unsupported $BYTEORD "{byteord}".')
+
+    def _dtype_for_parameter(self, datatype: str, bits: int, endian_prefix: str) -> np.dtype:
+        datatype = str(datatype).strip().upper()
+        bits = int(bits)
+
+        if bits % 8 != 0:
+            raise ValueError(f"$PnB must be byte aligned, got {bits} bits.")
+
+        nbytes = bits // 8
+
+        if datatype == "I":
+            if nbytes == 1:
+                return np.dtype(endian_prefix + "u1")
+            if nbytes == 2:
+                return np.dtype(endian_prefix + "u2")
+            if nbytes == 4:
+                return np.dtype(endian_prefix + "u4")
+            if nbytes == 8:
+                return np.dtype(endian_prefix + "u8")
+            raise ValueError(f"Unsupported integer width: {bits} bits")
+
+        if datatype == "F":
+            if bits != 32:
+                raise ValueError("For $DATATYPE=F, expected $PnB=32.")
+            return np.dtype(endian_prefix + "f4")
+
+        if datatype == "D":
+            if bits != 64:
+                raise ValueError("For $DATATYPE=D, expected $PnB=64.")
+            return np.dtype(endian_prefix + "f8")
+
+        raise ValueError(f'Unsupported $DATATYPE "{datatype}".')
+
+    def _event_dtype_and_names(self) -> Tuple[np.dtype, List[str]]:
+        datatype = str(self.keywords.get("$DATATYPE", "F")).strip().upper()
+        endian_prefix = self._endian_prefix()
+        num_parameters = int(self.keywords["$PAR"])
+
+        fields: List[Tuple[str, np.dtype]] = []
+        names: List[str] = []
+        for parameter_index in range(1, num_parameters + 1):
+            detector = self.detectors[parameter_index]
+            name = str(detector.get("N", f"P{parameter_index}"))
+            bits = int(detector.get("B", 32))
+            dt = self._dtype_for_parameter(datatype, bits, endian_prefix)
+            fields.append((f"parameter_{parameter_index}", dt))
+            names.append(name)
+
+        return np.dtype(fields), names
+
+    def _escape_token(self, token: Any) -> str:
+        token_str = str(token)
+
+        # Empty tokens create "//" in TEXT which is ambiguous with the escape sequence for a literal delimiter.
+        # Encode empties as a single space. The reader strips values, so it round trips back to "".
+        if token_str == "":
+            token_str = " "
+
+        return token_str.replace(self.delimiter, self.delimiter + self.delimiter)
+
+    def _build_text_segment(self) -> bytes:
+        flat: Dict[str, Any] = dict(self.keywords)
+        num_parameters = int(flat["$PAR"])
+
+        for parameter_index in range(1, num_parameters + 1):
+            detector = self.detectors[parameter_index]
+            for suffix, value in detector.items():
+                flat[f"$P{parameter_index}{suffix}"] = value
+
+        # Stable, readable ordering; semantics do not depend on order.
+        preferred = ["$TOT", "$PAR", "$DATATYPE", "$BYTEORD", "$MODE", "$BEGINDATA", "$ENDDATA"]
+        ordered: List[str] = []
+        for key in preferred:
+            if key in flat and key not in ordered:
+                ordered.append(key)
+        for key in sorted(flat.keys()):
+            if key not in ordered:
+                ordered.append(key)
+
+        parts: List[str] = []
+        for key in ordered:
+            parts.append(self._escape_token(key))
+            parts.append(self._escape_token(flat[key]))
+
+        text = self.delimiter + self.delimiter.join(parts) + self.delimiter
+        return text.encode("ascii", errors="strict")
+
+    def _build_data_bytes(self) -> bytes:
+        event_dtype, column_names = self._event_dtype_and_names()
+
+        expected_events = int(self.keywords["$TOT"])
+        expected_parameters = int(self.keywords["$PAR"])
+
+        if self.dataframe.shape[0] != expected_events or self.dataframe.shape[1] != expected_parameters:
+            raise ValueError("DataFrame shape does not match $TOT and $PAR.")
+
+        records = np.empty(expected_events, dtype=event_dtype)
+        for parameter_index, column_name in enumerate(column_names, start=1):
+            column_values = self.dataframe[column_name].to_numpy(copy=False)
+            records[f"parameter_{parameter_index}"] = column_values.astype(
+                event_dtype[f"parameter_{parameter_index}"], copy=False
             )
 
-            # ----------------------
-            # Update marginal histograms
-            # ----------------------
-            ax_xhist.cla()
-            ax_yhist.cla()
+        return records.tobytes(order="C")
 
-            ax_xhist.hist(xv, bins=bins_1d, color=hist_color, log=log_hist)
-            ax_yhist.hist(yv, bins=bins_1d, orientation="horizontal", color=hist_color, log=log_hist)
+    def build_bytes(self) -> bytes:
+        version = self.fcs_version if self.fcs_version in {"FCS2.0", "FCS3.0", "FCS3.1"} else "FCS3.1"
 
-            plt.setp(ax_xhist.get_xticklabels(), visible=False)
-            plt.setp(ax_yhist.get_yticklabels(), visible=False)
-            ax_xhist.tick_params(axis="x", bottom=False)
-            ax_yhist.tick_params(axis="y", left=False)
+        data_bytes = self._build_data_bytes()
 
-            ax_xhist.set_xlim(xmin, xmax)
-            ax_yhist.set_ylim(ymin, ymax)
+        # First pass TEXT without begin/end, then compute offsets, then final TEXT.
+        text_bytes = self._build_text_segment()
 
-            # Remove scientific notation again after replot
-            ax_hex.ticklabel_format(useOffset=False, style='plain', scilimits=[0, 0])
-            ax_xhist.ticklabel_format(useOffset=False, style='plain', scilimits=[0, 0])
-            ax_yhist.ticklabel_format(useOffset=False, style='plain', scilimits=[0, 0])
-
-            fig.canvas.draw_idle()
-            is_updating = False
-
-        # Connect callbacks
-        ax_hex.callbacks.connect("xlim_changed", update_plot)
-        ax_hex.callbacks.connect("ylim_changed", update_plot)
-
-        x_units = self.data.attrs['units'].get(x, '')
-        y_units = self.data.attrs['units'].get(y, '')
-
-        ax_hex.set_xlabel(f"{x} [{x_units}]" if x_units else x)
-        ax_hex.set_ylabel(f"{y} [{y_units}]" if y_units else y)
-
-        # Initial computation
-        update_plot()
-
-        return fig
-
-    def write(self, path: str) -> None:
-        if self.data is None:
-            raise RuntimeError("No data loaded. Call read_all_data() first.")
-
-        target = str(path)
-
-        version = self.header.get("FCS version", "FCS3.0")
-        if version not in {"FCS2.0", "FCS3.0", "FCS3.1"}:
-            version = "FCS3.0"
-
-        delimiter = self.delimiter or "|"
-        text_bytes = self._build_text_segment(delimiter=delimiter)
-
-        # Data bytes
-        keywords = self.text["Keywords"]
-        byte_order = self._get_byte_order()
-        np_dtype = self._get_numpy_dtype()
-
-        # Ensure $TOT matches data
-        keywords["$TOT"] = int(self.data.shape[0])
-        keywords["$PAR"] = int(self.data.shape[1])
-
-        # Ensure detector list covers all columns
-        # If detectors are fewer than columns, create missing minimal detectors.
-        detectors = self.text["Detectors"]
-        for idx, col in enumerate(list(self.data.columns), start=1):
-            if idx not in detectors:
-                detectors[idx] = {"N": str(col), "B": 32, "R": 1}
-
-        # Build data matrix in correct column order
-        matrix = self.data.to_numpy()
-
-        # Coerce dtype and endianness
-        arr = np.asarray(matrix)
-        if np_dtype.kind in {"f", "i", "u"}:
-            arr = arr.astype(np_dtype, copy=False)
-        else:
-            raise ValueError(f"Unsupported dtype kind for writing: {np_dtype}")
-
-        if byte_order == "little":
-            arr = arr.astype(arr.dtype.newbyteorder("<"), copy=False)
-        else:
-            arr = arr.astype(arr.dtype.newbyteorder(">"), copy=False)
-
-        data_bytes = arr.tobytes(order="C")
-
-        # Layout segments: header(256) + text + data
         text_start = 256
+        text_end = text_start + len(text_bytes) - 1
+        data_start = text_end + 1
+        data_end = data_start + len(data_bytes) - 1
+
+        self.keywords["$BEGINDATA"] = int(data_start)
+        self.keywords["$ENDDATA"] = int(data_end)
+
+        text_bytes = self._build_text_segment()
+        text_end = text_start + len(text_bytes) - 1
+        data_start = text_end + 1
+        data_end = data_start + len(data_bytes) - 1
+
+        self.keywords["$BEGINDATA"] = int(data_start)
+        self.keywords["$ENDDATA"] = int(data_end)
+
+        text_bytes = self._build_text_segment()
         text_end = text_start + len(text_bytes) - 1
         data_start = text_end + 1
         data_end = data_start + len(data_bytes) - 1
@@ -601,124 +677,18 @@ class FCSFile:
         header = bytearray(b" " * 256)
         header[:6] = version.encode("ascii")
 
-        def _put_int(start: int, end: int, value: int) -> None:
-            # FCS header fields are fixed width ASCII right aligned
-            field_width = end - start
-            s = str(int(value)).rjust(field_width)
-            header[start:end] = s.encode("ascii")
+        def put_int(start: int, end: int, value: int) -> None:
+            width = end - start
+            header[start:end] = str(int(value)).rjust(width).encode("ascii")
 
-        # positions per your current reader slicing:
-        # [10:18]=Text start, [18:26]=Text end, [26:34]=Data start, [34:42]=Data end
-        _put_int(10, 18, text_start)
-        _put_int(18, 26, text_end)
-        _put_int(26, 34, data_start)
-        _put_int(34, 42, data_end)
+        put_int(10, 18, text_start)
+        put_int(18, 26, text_end)
+        put_int(26, 34, data_start)
+        put_int(34, 42, data_end)
 
-        with open(target, "wb") as handle:
-            handle.write(header)
-            handle.write(text_bytes)
-            handle.write(data_bytes)
+        return bytes(header) + text_bytes + data_bytes
 
-    def save(self, path: str) -> None:
-        self.write(path)
-
-    def _build_text_segment(self, delimiter: str = "|") -> bytes:
-        keywords = dict(self.text["Keywords"])
-        detectors = self.text["Detectors"]
-
-        # Ensure required keywords
-        if "$PAR" not in keywords:
-            keywords["$PAR"] = len(detectors)
-
-        # Flatten detectors into keywords $PnX
-        flat = dict(keywords)
-        par = int(flat["$PAR"])
-        for i in range(1, par + 1):
-            det = detectors.get(i, {})
-            for suffix, value in det.items():
-                key = f"$P{i}{suffix}"
-                flat[key] = value
-
-        # Build key/value list in a stable order
-        # Keep required keys early for readability, but order is not semantically critical.
-        preferred = ["$TOT", "$PAR", "$DATATYPE", "$BYTEORD", "$MODE"]
-        ordered_keys = []
-        for k in preferred:
-            if k in flat:
-                ordered_keys.append(k)
-        for k in sorted(flat.keys()):
-            if k not in ordered_keys:
-                ordered_keys.append(k)
-
-        parts = []
-        for k in ordered_keys:
-            v = flat[k]
-            parts.append(str(k))
-            parts.append(str(v))
-
-        text = delimiter + delimiter.join(parts) + delimiter
-        return text.encode("ascii", errors="strict")
-
-    def add_column(self, name: str, values: np.ndarray, *, range_hint: float | None = None) -> None:
-        if self.data is None:
-            raise RuntimeError("Call read_all_data() before adding columns.")
-
-        name = str(name).strip()
-        if not name:
-            raise ValueError("Column name must be non empty.")
-
-        self.data[name] = np.asarray(values)
-
-        keywords = self.text["Keywords"]
-        detectors = self.text["Detectors"]
-
-        par = int(keywords.get("$PAR", len(detectors)))
-        new_index = par + 1
-
-        # Update $PAR
-        keywords["$PAR"] = new_index
-
-        # Add detector metadata for the new parameter
-        # Only a minimal set is required for many tools.
-        det = {}
-        det["N"] = name
-        det["B"] = 32 if str(keywords.get("$DATATYPE")) in {"I", "L"} else (32 if str(keywords.get("$DATATYPE")) == "F" else 64)
-
-        # Range: for float data, some tools still expect a reasonable $PnR.
-        if range_hint is None:
-            finite_vals = np.asarray(values, dtype=float)
-            finite_vals = finite_vals[np.isfinite(finite_vals)]
-            if finite_vals.size:
-                vmax = float(np.nanmax(finite_vals))
-                range_hint = max(1.0, vmax)
-            else:
-                range_hint = 1.0
-
-        det["R"] = float(range_hint)
-
-        detectors[new_index] = det
-
-    def _get_numpy_dtype(self) -> np.dtype:
-        keywords = self.text["Keywords"]
-        datatype_code = str(keywords.get("$DATATYPE", "")).strip()
-
-        dtype_mapping = {
-            "F": np.dtype("<f4"),
-            "D": np.dtype("<f8"),
-            "I": np.dtype("<i4"),
-            "L": np.dtype("<u4"),
-        }
-        if datatype_code not in dtype_mapping:
-            raise ValueError(f'Unsupported $DATATYPE "{datatype_code}" for writing.')
-        return dtype_mapping[datatype_code]
-
-    def _get_byte_order(self) -> str:
-        keywords = self.text["Keywords"]
-        byteord = str(keywords.get("$BYTEORD", "1,2,3,4")).strip()
-        # Common values: "1,2,3,4" little endian, "4,3,2,1" big endian
-        if byteord == "1,2,3,4":
-            return "little"
-        if byteord == "4,3,2,1":
-            return "big"
-        # fall back to little if unknown, but better to raise
-        raise ValueError(f'Unsupported $BYTEORD "{byteord}".')
+    def write(self, path: str) -> None:
+        payload = self.build_bytes()
+        with open(str(path), "wb") as handle:
+            handle.write(payload)

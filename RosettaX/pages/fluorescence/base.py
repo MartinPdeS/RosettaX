@@ -4,35 +4,9 @@ import dash_bootstrap_components as dbc
 import numpy as np
 import plotly.graph_objs as go
 
-from RosettaX.pages.fluorescence.helper import (
-    FileStateRefresher,
-    FluorescentCalibrationIds,
-    FluorescentCalibrationService,
-)
-
-class SectionContext:
-    def __init__(
-        self,
-        *,
-        ids: FluorescentCalibrationIds,
-        service: FluorescentCalibrationService,
-        file_state: FileStateRefresher,
-        bead_table_columns: list[dict[str, Any]],
-        default_bead_rows: list[dict[str, Any]],
-        card_body_scroll: dict[str, Any],
-        graph_style: dict[str, Any],
-    ) -> None:
-        self.ids = ids
-        self.service = service
-        self.file_state = file_state
-        self.bead_table_columns = bead_table_columns
-        self.default_bead_rows = default_bead_rows
-        self.card_body_scroll = card_body_scroll
-        self.graph_style = graph_style
-
 
 class BaseSection:
-    def __init__(self, *, context: SectionContext) -> None:
+    def __init__(self, *, context: object) -> None:
         self.context = context
 
     def layout(self) -> dbc.Card:

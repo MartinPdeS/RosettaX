@@ -1,104 +1,159 @@
-"""
-Tests for RosettaX.reader.FCSFile.
-
-These tests assume that RosettaX.directories.fcs_data / "sample.fcs"
-is a valid FCS file that can be parsed successfully.
-"""
-
+import gc
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import pytest
 
-from RosettaX.reader import FCSFile
 from RosettaX.directories import fcs_data
+from RosettaX.reader import FCSDataFrameFile
 
 
-def test_fcsfile_parses_header_and_text() -> None:
-    """FCSFile loads header and text metadata from a valid sample file."""
-    sample_path = fcs_data / "sample.fcs"
-    reader = FCSFile(sample_path)
-
-    # Header basic checks
-    assert isinstance(reader.header, dict)
-    assert reader.header["FCS version"] in {"FCS2.0", "FCS3.0", "FCS3.1"}
-    assert "Text start" in reader.header
-    assert "Text end" in reader.header
-    assert "Data start" in reader.header
-    assert "Data end" in reader.header
-
-    # Text structure checks
-    assert isinstance(reader.text, dict)
-    assert "Keywords" in reader.text
-    assert "Detectors" in reader.text
-
-    keywords = reader.text["Keywords"]
-    detectors = reader.text["Detectors"]
-
-    assert "$PAR" in keywords
-    assert "$TOT" in keywords
-
-    # Detector metadata must match number of parameters
-    num_parameters = keywords["$PAR"]
-    assert len(detectors) == num_parameters
-
-    # Each detector should have at least a name "N"
-    for detector_index, detector_info in detectors.items():
-        assert isinstance(detector_index, int)
-        assert "N" in detector_info
-        assert isinstance(detector_info["N"], str)
+file_test = fcs_data / "sample_0.fcs"
 
 
-def test_read_all_data_shape_and_columns() -> None:
-    """read_all_data returns a DataFrame that matches metadata and detector names."""
-    sample_path = fcs_data / "sample.fcs"
-    reader = FCSFile(sample_path)
-    data_frame = reader.read_all_data()
+def test_sample_0_can_be_parsed() -> None:
+    with FCSDataFrameFile(file_test, writable=False) as fcs_file:
+        df_view = fcs_file.dataframe_view
 
-    assert isinstance(data_frame, pd.DataFrame)
+        assert isinstance(df_view, pd.DataFrame)
+        assert df_view.shape[0] > 0
+        assert df_view.shape[1] > 0
 
-    keywords = reader.text["Keywords"]
-    detectors = reader.text["Detectors"]
+        keywords = fcs_file.text["Keywords"]
+        assert int(keywords["$TOT"]) == df_view.shape[0]
+        assert int(keywords["$PAR"]) == df_view.shape[1]
 
-    num_events = keywords["$TOT"]
-    num_parameters = keywords["$PAR"]
-
-    # Shape must match header metadata
-    assert data_frame.shape == (num_events, num_parameters)
-
-    # Column names must match detector names $PnN
-    expected_columns = [
-        detectors[index]["N"] for index in range(1, num_parameters + 1)
-    ]
-    assert list(data_frame.columns) == expected_columns
+        del df_view
+        gc.collect()
 
 
-def test_FCSFile_alias() -> None:
-    """The legacy FCSFile alias should behave like FCSFile."""
-    sample_path = fcs_data / "sample.fcs"
-    reader = FCSFile(sample_path)  # alias
+def test_sample_0_zero_copy_dataframe_view_shares_memory() -> None:
+    with FCSDataFrameFile(file_test, writable=False) as fcs_file:
+        df_view = fcs_file.dataframe_view
 
-    assert isinstance(reader, FCSFile)
-    data_frame = reader.read_all_data()
-    assert isinstance(data_frame, pd.DataFrame)
+        fcs_file._ensure_records_loaded()
+        assert fcs_file._records is not None
 
+        first_column = df_view.columns[0]
+        arr = df_view[first_column].to_numpy(copy=False)
 
-def test_missing_file_raises(tmp_path: Path) -> None:
-    """Construction with a missing file should raise FileNotFoundError."""
-    missing_path = tmp_path / "does_not_exist.fcs"
-    with pytest.raises(FileNotFoundError):
-        FCSFile(missing_path)
+        assert np.shares_memory(arr, fcs_file._records)
 
-
-def test_too_small_file_raises(tmp_path: Path) -> None:
-    """Files that are smaller than the minimal header size are rejected."""
-    tiny_file = tmp_path / "tiny.fcs"
-    tiny_file.write_bytes(b"123")  # clearly shorter than 257 bytes
-
-    with pytest.raises(FileNotFoundError):
-        FCSFile(tiny_file)
+        del arr
+        del df_view
+        gc.collect()
 
 
+def test_sample_0_roundtrip_via_template(tmp_path: Path) -> None:
+    # Use dataframe_copy so the template file can close cleanly.
+    with FCSDataFrameFile(file_test, writable=False) as template_file:
+        df_copy = template_file.dataframe_copy(deep=True)
+
+        builder = FCSDataFrameFile.builder_from_dataframe(
+            df_copy,
+            template=template_file,
+            force_float32=True,
+        )
+
+        out_path = tmp_path / "sample_0_roundtrip.fcs"
+        builder.write(str(out_path))
+
+        del df_copy
+        gc.collect()
+
+    with FCSDataFrameFile(str(out_path), writable=False) as reread_file:
+        reread_view = reread_file.dataframe_view
+        reread_copy = reread_file.dataframe_copy(deep=True)
+
+        assert reread_view.shape == reread_copy.shape
+        assert reread_copy.shape[0] > 0
+        assert reread_copy.shape[1] > 0
+
+        del reread_view
+        del reread_copy
+        gc.collect()
+
+
+def test_sample_0_roundtrip_with_added_column(tmp_path: Path) -> None:
+    with FCSDataFrameFile(file_test, writable=False) as template_file:
+        df_copy = template_file.dataframe_copy(deep=True)
+
+        added = np.zeros(df_copy.shape[0], dtype=np.float32)
+        df_copy["calibrated_signal"] = added
+
+        builder = FCSDataFrameFile.builder_from_dataframe(
+            df_copy,
+            template=template_file,
+            force_float32=True,
+        )
+
+        out_path = tmp_path / "sample_0_with_added_column.fcs"
+        builder.write(str(out_path))
+
+        del df_copy
+        gc.collect()
+
+    with FCSDataFrameFile(str(out_path), writable=False) as reread_file:
+        reread_copy = reread_file.dataframe_copy(deep=True)
+
+        assert "calibrated_signal" in reread_copy.columns
+        np.testing.assert_allclose(reread_copy["calibrated_signal"].to_numpy(), added)
+
+        del reread_copy
+        gc.collect()
+
+
+def test_text_delimiter_escaping_roundtrip(tmp_path: Path) -> None:
+    with FCSDataFrameFile(file_test, writable=False) as template_file:
+        df_copy = template_file.dataframe_copy(deep=True)
+
+        builder = FCSDataFrameFile.builder_from_dataframe(
+            df_copy,
+            template=template_file,
+            force_float32=True,
+        )
+
+        # Include the delimiter in the value. The file's delimiter can be '/' in your sample.
+        # Writer escapes delimiter by doubling it; parser unescapes it.
+        delimiter = template_file.delimiter
+        builder.keywords["$TEST"] = f"A{delimiter}B"
+
+        out_path = tmp_path / "escaped_keyword.fcs"
+        builder.write(str(out_path))
+
+        del df_copy
+        gc.collect()
+
+    with FCSDataFrameFile(str(out_path), writable=False) as reread_file:
+        delimiter = reread_file.delimiter
+        assert reread_file.text["Keywords"].get("$TEST") == f"A{delimiter}B"
+
+        gc.collect()
+
+
+def test_reject_non_list_mode(tmp_path: Path) -> None:
+    with FCSDataFrameFile(file_test, writable=False) as template_file:
+        df_copy = template_file.dataframe_copy(deep=True)
+
+        builder = FCSDataFrameFile.builder_from_dataframe(
+            df_copy,
+            template=template_file,
+            force_float32=True,
+        )
+        builder.keywords["$MODE"] = "C"
+
+        out_path = tmp_path / "non_list_mode.fcs"
+        builder.write(str(out_path))
+
+        del df_copy
+        gc.collect()
+
+    with FCSDataFrameFile(str(out_path), writable=False) as fcs_file:
+        with pytest.raises(ValueError, match=r'Only \$MODE="L" is supported'):
+            _ = fcs_file.dataframe_view
+
+        gc.collect()
 
 if __name__ == "__main__":
-    pytest.main(["-W error", __file__])
+    pytest.main(["-W", "error", __file__])

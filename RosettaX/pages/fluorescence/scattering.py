@@ -4,7 +4,7 @@ import dash
 import dash_bootstrap_components as dbc
 from dash import Input, Output, State, callback, callback_context, dcc, html
 
-from RosettaX.backend import BackEnd
+from RosettaX.pages.fluorescence.backend import BackEnd
 from RosettaX.pages import styling
 from RosettaX.pages.fluorescence import BaseSection, SectionContext
 from RosettaX.pages.runtime_config import get_ui_flags
@@ -25,9 +25,6 @@ class ScatteringSection(BaseSection):
 
     def __init__(self, *, context: SectionContext) -> None:
         super().__init__(context=context)
-        self.default_scattering_nbins = 400
-        self.default_max_events_for_plots = 200_000
-        self.debug_text_id = f"{self.context.ids.page_name}-scattering-debug-out"
 
     def layout(self) -> dbc.Card:
         return dbc.Card(
@@ -42,7 +39,6 @@ class ScatteringSection(BaseSection):
 
         show_scattering_controls = bool(ui_flags.fluorescence_show_scattering_controls)
         show_threshold_controls = bool(ui_flags.fluorescence_show_threshold_controls)
-        debug_mode = bool(ui_flags.debug)
 
         must_show_histogram = bool(show_scattering_controls or show_threshold_controls)
 
@@ -61,8 +57,6 @@ class ScatteringSection(BaseSection):
             ]
         )
 
-        children.append(self._debug_container(hidden=not debug_mode))
-
         return children
 
     def _detector_row(self) -> html.Div:
@@ -78,6 +72,8 @@ class ScatteringSection(BaseSection):
         )
 
     def _nbins_row(self, *, hidden: bool) -> html.Div:
+        ui_flags = get_ui_flags()
+
         return html.Div(
             [
                 html.Div("number of bins:"),
@@ -86,7 +82,7 @@ class ScatteringSection(BaseSection):
                     type="number",
                     min=10,
                     step=10,
-                    value=self.default_scattering_nbins,
+                    value=ui_flags.n_bins_for_plots,
                     style={"width": "160px"},
                 ),
             ],
@@ -150,16 +146,6 @@ class ScatteringSection(BaseSection):
             type="default",
         )
 
-    def _debug_container(self, *, hidden: bool) -> html.Div:
-        return html.Div(
-            [
-                html.Hr(),
-                dbc.Alert("Debug outputs (ScatteringSection)", color="secondary", is_open=True),
-                html.Pre(id=self.debug_text_id, style={"whiteSpace": "pre-wrap"}),
-            ],
-            style={"display": "none"} if hidden else {"display": "block"},
-        )
-
     def register_callbacks(self) -> None:
         ids = self.context.ids
         service = self.context.service
@@ -168,7 +154,6 @@ class ScatteringSection(BaseSection):
             Output(ids.graph_scattering_hist, "figure"),
             Output(ids.scattering_threshold_store, "data"),
             Output(ids.scattering_threshold_input, "value"),
-            Output(self.debug_text_id, "children"),
             Input(ids.scattering_find_threshold_btn, "n_clicks"),
             Input(ids.uploaded_fcs_path_store, "data"),
             Input(ids.scattering_detector_dropdown, "value"),
@@ -193,25 +178,24 @@ class ScatteringSection(BaseSection):
 
             show_scattering_controls = bool(ui_flags.fluorescence_show_scattering_controls)
             show_threshold_controls = bool(ui_flags.fluorescence_show_threshold_controls)
-            debug_mode = bool(ui_flags.debug)
 
             must_show_histogram = bool(show_scattering_controls or show_threshold_controls)
 
             if not fcs_path or not scattering_channel:
-                return self._empty_fig(), dash.no_update, dash.no_update, ""
+                return self._empty_fig(), dash.no_update, dash.no_update
 
             backend = BackEnd(fcs_path)
 
             max_events = self._as_int(
-                max_events_for_plots if max_events_for_plots is not None else self.default_max_events_for_plots,
-                default=self.default_max_events_for_plots,
+                max_events_for_plots if max_events_for_plots is not None else ui_flags.max_events_for_analysis,
+                default=ui_flags.max_events_for_analysis,
                 min_value=10_000,
                 max_value=5_000_000,
             )
 
             nbins = self._as_int(
                 scattering_nbins,
-                default=self.default_scattering_nbins,
+                default=ui_flags.n_bins_for_plots,
                 min_value=10,
                 max_value=5000,
             )
@@ -223,7 +207,7 @@ class ScatteringSection(BaseSection):
             )
 
             values = None
-            if must_show_histogram or debug_mode:
+            if must_show_histogram or ui_flags.debug:
                 values = service.get_column_values(
                     backend=backend,
                     column=str(scattering_channel),
@@ -275,21 +259,4 @@ class ScatteringSection(BaseSection):
                 fig = self._empty_fig()
                 use_log = False
 
-            debug_text = ""
-            if debug_mode:
-                values_size = int(values.size) if values is not None else 0
-                debug_text = (
-                    f"triggered: {triggered}\n"
-                    f"fcs_path: {fcs_path}\n"
-                    f"scattering_channel: {scattering_channel}\n"
-                    f"nbins: {nbins}\n"
-                    f"max_events: {max_events}\n"
-                    f"threshold: {float(thr):.6g}\n"
-                    f"use_log: {use_log}\n"
-                    f"values.size: {values_size}\n"
-                    f"show_scattering_controls: {show_scattering_controls}\n"
-                    f"show_threshold_controls: {show_threshold_controls}\n"
-                    f"must_show_histogram: {must_show_histogram}\n"
-                )
-
-            return fig, next_store, f"{float(thr):.6g}", debug_text
+            return fig, next_store, f"{float(thr):.6g}"
