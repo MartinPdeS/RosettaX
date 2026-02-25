@@ -54,9 +54,9 @@
             </div>
         </aside>
         <h2>
-            <span class="text">107 statements &nbsp;</span>
+            <span class="text">108 statements &nbsp;</span>
             <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">0<span class="text"> run</span></button>
-            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">107<span class="text"> missing</span></button>
+            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">108<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
         <p class="text">
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_3884f93a8d8b474c_service_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.1">coverage.py v7.13.1</a>,
-            created at 2026-02-25 11:09 +0000
+            created at 2026-02-25 13:45 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -91,7 +91,7 @@
     <p class="mis show_mis"><span class="n"><a id="t9" href="#t9">9</a></span><span class="t"><span class="key">from</span> <span class="nam">RosettaX</span><span class="op">.</span><span class="nam">pages</span> <span class="key">import</span> <span class="nam">styling</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t10" href="#t10">10</a></span><span class="t"><span class="key">from</span> <span class="nam">RosettaX</span><span class="op">.</span><span class="nam">pages</span><span class="op">.</span><span class="nam">runtime_config</span> <span class="key">import</span> <span class="nam">get_runtime_config</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t11" href="#t11">11</a></span><span class="t"><span class="key">from</span> <span class="nam">RosettaX</span><span class="op">.</span><span class="nam">reader</span> <span class="key">import</span> <span class="nam">FCSFile</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t12" href="#t12">12</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t12" href="#t12">12</a></span><span class="t"><span class="key">from</span> <span class="nam">RosettaX</span><span class="op">.</span><span class="nam">pages</span><span class="op">.</span><span class="nam">fluorescence</span><span class="op">.</span><span class="nam">utils</span> <span class="key">import</span> <span class="nam">make_histogram_with_lines</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t13" href="#t13">13</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t14" href="#t14">14</a></span><span class="t"><span class="op">@</span><span class="nam">dataclass</span><span class="op">(</span><span class="nam">frozen</span><span class="op">=</span><span class="key">True</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t15" href="#t15">15</a></span><span class="t"><span class="key">class</span> <span class="nam">ScatteringResult</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -506,7 +506,7 @@
     <p class="mis show_mis"><span class="n"><a id="t424" href="#t424">424</a></span><span class="t">        <span class="key">with</span> <span class="nam">FCSFile</span><span class="op">(</span><span class="nam">self</span><span class="op">.</span><span class="nam">backend</span><span class="op">.</span><span class="nam">file_path</span><span class="op">,</span> <span class="nam">writable</span><span class="op">=</span><span class="key">False</span><span class="op">)</span> <span class="key">as</span> <span class="nam">fcs</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t425" href="#t425">425</a></span><span class="t">            <span class="nam">values</span> <span class="op">=</span> <span class="nam">fcs</span><span class="op">.</span><span class="nam">column_copy</span><span class="op">(</span><span class="nam">str</span><span class="op">(</span><span class="nam">scattering_channel</span><span class="op">)</span><span class="op">,</span> <span class="nam">dtype</span><span class="op">=</span><span class="nam">float</span><span class="op">,</span> <span class="nam">n</span><span class="op">=</span><span class="nam">max_events</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t426" href="#t426">426</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t427" href="#t427">427</a></span><span class="t">        <span class="nam">fig</span> <span class="op">=</span> <span class="nam">self</span><span class="op">.</span><span class="nam">service</span><span class="op">.</span><span class="nam">make_histogram_with_lines</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t427" href="#t427">427</a></span><span class="t">        <span class="nam">fig</span> <span class="op">=</span> <span class="nam">make_histogram_with_lines</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t428" href="#t428">428</a></span><span class="t">            <span class="nam">values</span><span class="op">=</span><span class="nam">values</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t429" href="#t429">429</a></span><span class="t">            <span class="nam">nbins</span><span class="op">=</span><span class="nam">nbins</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t430" href="#t430">430</a></span><span class="t">            <span class="nam">xaxis_title</span><span class="op">=</span><span class="str">"Scattering (a.u.)"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -592,7 +592,7 @@
             <a class="nav" href="z_3884f93a8d8b474c_service_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.1">coverage.py v7.13.1</a>,
-            created at 2026-02-25 11:09 +0000
+            created at 2026-02-25 13:45 +0000
         </p>
     </div>
 </footer>

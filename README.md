@@ -2,36 +2,40 @@
 
 [Full report](https://htmlpreview.github.io/?https://github.com/MartinPdeS/RosettaX/blob/python-coverage-comment-action-data/htmlcov/index.html)
 
-| Name                                             |    Stmts |     Miss |     Cover |   Missing |
-|------------------------------------------------- | -------: | -------: | --------: | --------: |
-| RosettaX/calibration.py                          |       37 |       37 |     0.00% |      1-79 |
-| RosettaX/clusterings.py                          |      174 |      174 |     0.00% |     1-392 |
-| RosettaX/pages/fluorescence/backend.py           |      313 |      313 |     0.00% |     3-562 |
-| RosettaX/pages/fluorescence/calibration.py       |      105 |      105 |     0.00% |     1-351 |
-| RosettaX/pages/fluorescence/ids.py               |       50 |       50 |     0.00% |      1-67 |
-| RosettaX/pages/fluorescence/load.py              |       43 |       43 |     0.00% |      1-93 |
-| RosettaX/pages/fluorescence/main.py              |       33 |       33 |     0.00% |      1-82 |
-| RosettaX/pages/fluorescence/peaks.py             |      195 |      195 |     0.00% |     1-819 |
-| RosettaX/pages/fluorescence/save.py              |      107 |      107 |     0.00% |     1-475 |
-| RosettaX/pages/fluorescence/scattering.py        |      107 |      107 |     0.00% |     1-503 |
-| RosettaX/pages/fluorescence/service.py           |      105 |      105 |     0.00% |     1-270 |
-| RosettaX/pages/help/main.py                      |       15 |       15 |     0.00% |     1-179 |
-| RosettaX/pages/home/main.py                      |       41 |       41 |     0.00% |     1-194 |
-| RosettaX/pages/runtime\_config.py                |       43 |       43 |     0.00% |      1-66 |
-| RosettaX/pages/scattering/base.py                |       23 |       23 |     0.00% |      1-40 |
-| RosettaX/pages/scattering/example\_parameters.py |       21 |       21 |     0.00% |     1-141 |
-| RosettaX/pages/scattering/export.py              |       24 |       24 |     0.00% |     1-101 |
-| RosettaX/pages/scattering/flow\_data.py          |       23 |       23 |     0.00% |     1-123 |
-| RosettaX/pages/scattering/graph.py               |        7 |        7 |     0.00% |      1-10 |
-| RosettaX/pages/scattering/helper.py              |       32 |       32 |     0.00% |      1-48 |
-| RosettaX/pages/scattering/main.py                |       22 |       22 |     0.00% |      1-50 |
-| RosettaX/pages/sidebar/main.py                   |       40 |       40 |     0.00% |     1-134 |
-| RosettaX/pages/styling.py                        |        4 |        4 |     0.00% |      1-27 |
-| RosettaX/plottings.py                            |       55 |       55 |     0.00% |     1-251 |
-| RosettaX/reader.py                               |      461 |      461 |     0.00% |     2-714 |
-| RosettaX/root.py                                 |        2 |        2 |     0.00% |       1-2 |
-| RosettaX/utils.py                                |       14 |       14 |     0.00% |      1-15 |
-| **TOTAL**                                        | **2096** | **2096** | **0.00%** |           |
+| Name                                       |    Stmts |     Miss |     Cover |   Missing |
+|------------------------------------------- | -------: | -------: | --------: | --------: |
+| RosettaX/calibration.py                    |       37 |       37 |     0.00% |      1-79 |
+| RosettaX/clusterings.py                    |      174 |      174 |     0.00% |     1-392 |
+| RosettaX/pages/fluorescence/backend.py     |      312 |      312 |     0.00% |    23-900 |
+| RosettaX/pages/fluorescence/calibration.py |      105 |      105 |     0.00% |     1-351 |
+| RosettaX/pages/fluorescence/ids.py         |       50 |       50 |     0.00% |      1-67 |
+| RosettaX/pages/fluorescence/load.py        |       43 |       43 |     0.00% |      1-93 |
+| RosettaX/pages/fluorescence/main.py        |       32 |       32 |     0.00% |      1-96 |
+| RosettaX/pages/fluorescence/peaks.py       |      204 |      204 |     0.00% |     1-827 |
+| RosettaX/pages/fluorescence/save.py        |      107 |      107 |     0.00% |     1-475 |
+| RosettaX/pages/fluorescence/scattering.py  |      108 |      108 |     0.00% |     1-503 |
+| RosettaX/pages/fluorescence/service.py     |       42 |       42 |     0.00% |      1-76 |
+| RosettaX/pages/fluorescence/utils.py       |       42 |       42 |     0.00% |     1-198 |
+| RosettaX/pages/help/main.py                |       15 |       15 |     0.00% |     1-179 |
+| RosettaX/pages/home/main.py                |       41 |       41 |     0.00% |     1-194 |
+| RosettaX/pages/runtime\_config.py          |       50 |       50 |     0.00% |      1-79 |
+| RosettaX/pages/scattering/backend.py       |      312 |      312 |     0.00% |    23-900 |
+| RosettaX/pages/scattering/base.py          |       23 |       23 |     0.00% |      1-40 |
+| RosettaX/pages/scattering/export.py        |       12 |       12 |     0.00% |      2-76 |
+| RosettaX/pages/scattering/flow\_data.py    |       23 |       23 |     0.00% |     1-123 |
+| RosettaX/pages/scattering/graph.py         |        7 |        7 |     0.00% |      1-10 |
+| RosettaX/pages/scattering/helper.py        |       32 |       32 |     0.00% |      1-48 |
+| RosettaX/pages/scattering/ids.py           |       27 |       27 |     0.00% |      1-38 |
+| RosettaX/pages/scattering/load.py          |       43 |       43 |     0.00% |      1-93 |
+| RosettaX/pages/scattering/main.py          |       22 |       22 |     0.00% |      1-53 |
+| RosettaX/pages/scattering/parameters.py    |       27 |       27 |     0.00% |     1-280 |
+| RosettaX/pages/sidebar/main.py             |       40 |       40 |     0.00% |     1-134 |
+| RosettaX/pages/styling.py                  |        4 |        4 |     0.00% |      1-27 |
+| RosettaX/plottings.py                      |       55 |       55 |     0.00% |     1-251 |
+| RosettaX/reader.py                         |      461 |      461 |     0.00% |     2-714 |
+| RosettaX/root.py                           |        2 |        2 |     0.00% |       1-2 |
+| RosettaX/utils.py                          |       14 |       14 |     0.00% |      1-15 |
+| **TOTAL**                                  | **2466** | **2466** | **0.00%** |           |
 
 
 ## Setup coverage badge

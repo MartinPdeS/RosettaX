@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for RosettaX/pages/fluorescence/load.py: 0.00%</title>
+    <title>Coverage for RosettaX/pages/scattering/load.py: 0.00%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_c827f16f.png">
     <link rel="stylesheet" href="style_cb_9ff733b0.css" type="text/css">
     <script src="coverage_html_cb_dd2e7eb5.js" defer></script>
@@ -11,7 +11,7 @@
 <header>
     <div class="content">
         <h1>
-            <span class="text">Coverage for </span><b>RosettaX&#8201;/&#8201;pages&#8201;/&#8201;fluorescence&#8201;/&#8201;load.py</b>:
+            <span class="text">Coverage for </span><b>RosettaX&#8201;/&#8201;pages&#8201;/&#8201;scattering&#8201;/&#8201;load.py</b>:
             <span class="pc_cov">0.00%</span>
         </h1>
         <aside id="help_panel_wrapper">
@@ -60,9 +60,9 @@
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
         <p class="text">
-            <a id="prevFileLink" class="nav" href="z_3884f93a8d8b474c_ids_py.html">&#xab; prev</a> &nbsp; &nbsp;
+            <a id="prevFileLink" class="nav" href="z_e8e6609ce7409a15_ids_py.html">&#xab; prev</a> &nbsp; &nbsp;
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
-            <a id="nextFileLink" class="nav" href="z_3884f93a8d8b474c_main_py.html">&#xbb; next</a>
+            <a id="nextFileLink" class="nav" href="z_e8e6609ce7409a15_main_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.1">coverage.py v7.13.1</a>,
             created at 2026-02-25 13:45 +0000
@@ -167,7 +167,7 @@
     <p class="mis show_mis"><span class="n"><a id="t85" href="#t85">85</a></span><span class="t">                <span class="key">return</span> <span class="op">(</span><span class="nam">dash</span><span class="op">.</span><span class="nam">no_update</span><span class="op">,</span> <span class="nam">msg</span><span class="op">,</span> <span class="op">[</span><span class="op">]</span><span class="op">,</span> <span class="key">None</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t86" href="#t86">86</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t87" href="#t87">87</a></span><span class="t">            <span class="key">try</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t88" href="#t88">88</a></span><span class="t">                <span class="nam">channels</span> <span class="op">=</span> <span class="nam">self</span><span class="op">.</span><span class="nam">service</span><span class="op">.</span><span class="nam">file_state</span><span class="op">.</span><span class="nam">options_from_file</span><span class="op">(</span><span class="nam">temp_path</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t88" href="#t88">88</a></span><span class="t">                <span class="nam">channels</span> <span class="op">=</span> <span class="nam">self</span><span class="op">.</span><span class="nam">service</span><span class="op">.</span><span class="nam">channels_from_file</span><span class="op">(</span><span class="nam">temp_path</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t89" href="#t89">89</a></span><span class="t">            <span class="key">except</span> <span class="nam">Exception</span> <span class="key">as</span> <span class="nam">exc</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t90" href="#t90">90</a></span><span class="t">                <span class="nam">msg</span> <span class="op">=</span> <span class="fst">f"</span><span class="fst">Saved as </span><span class="op">{</span><span class="nam">temp_path</span><span class="op">}</span><span class="fst">, but could not read: </span><span class="op">{</span><span class="nam">exc</span><span class="op">}</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t91" href="#t91">91</a></span><span class="t">                <span class="key">return</span> <span class="op">(</span><span class="nam">temp_path</span><span class="op">,</span> <span class="nam">msg</span><span class="op">,</span> <span class="op">[</span><span class="op">]</span><span class="op">,</span> <span class="key">None</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -184,9 +184,9 @@
 <footer>
     <div class="content">
         <p>
-            <a class="nav" href="z_3884f93a8d8b474c_ids_py.html">&#xab; prev</a> &nbsp; &nbsp;
+            <a class="nav" href="z_e8e6609ce7409a15_ids_py.html">&#xab; prev</a> &nbsp; &nbsp;
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
-            <a class="nav" href="z_3884f93a8d8b474c_main_py.html">&#xbb; next</a>
+            <a class="nav" href="z_e8e6609ce7409a15_main_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.1">coverage.py v7.13.1</a>,
             created at 2026-02-25 13:45 +0000
