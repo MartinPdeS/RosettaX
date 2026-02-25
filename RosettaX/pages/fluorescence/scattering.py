@@ -97,6 +97,9 @@ class ScatteringSection:
                 dash.dcc.Dropdown(
                     id=self.ids.scattering_detector_dropdown,
                     style={"width": "500px"},
+                    optionHeight=50,
+                    maxHeight=500,
+                    searchable=True,
                 ),
             ],
             style=styling.CARD,

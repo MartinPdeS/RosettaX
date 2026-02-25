@@ -9,7 +9,7 @@ import dash_bootstrap_components as dbc
 from dash import Input, Output, dcc, html
 
 from RosettaX.pages import styling
-from RosettaX.pages.sidebar import sidebar_html
+from RosettaX.pages.sidebar.main import sidebar_html
 from RosettaX.pages.runtime_config import get_runtime_config
 
 
