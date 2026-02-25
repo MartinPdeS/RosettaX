@@ -1,12 +1,13 @@
-from dataclasses import dataclass
+# -*- coding: utf-8 -*-
 from typing import Any, List, Optional, Tuple
+from dataclasses import dataclass
 
 import dash
 import dash_bootstrap_components as dbc
 import numpy as np
 import plotly.graph_objs as go
 
-from RosettaX.reader import FCSFile
+from RosettaX.utils.reader import FCSFile
 
 
 @dataclass(frozen=True)
@@ -63,7 +64,7 @@ class CalibrationSection:
                         [
                             dash.html.H5("Bead specifications"),
                             dash.dash_table.DataTable(
-                                id=self.ids.bead_table,
+                                id=self.ids.Calibration.bead_table,
                                 columns=self.bead_table_columns,
                                 data=self.default_bead_rows,
                                 editable=True,
@@ -71,35 +72,35 @@ class CalibrationSection:
                                 style_table={"overflowX": "auto"},
                             ),
                             dash.html.Div(
-                                [dash.html.Button("Add Row", id=self.ids.add_row_btn, n_clicks=0)],
+                                [dash.html.Button("Add Row", id=self.ids.Calibration.add_row_btn, n_clicks=0)],
                                 style={"marginTop": "10px"},
                             ),
                             dash.html.Br(),
-                            dash.html.Button("Calibrate (fit + apply)", id=self.ids.calibrate_btn, n_clicks=0),
+                            dash.html.Button("Calibrate (fit + apply)", id=self.ids.Calibration.calibrate_btn, n_clicks=0),
                             dash.html.Hr(),
                             dash.dcc.Loading(
-                                dash.dcc.Graph(id=self.ids.graph_calibration, style=self.graph_style),
+                                dash.dcc.Graph(id=self.ids.Calibration.graph_calibration, style=self.graph_style),
                                 type="default",
                             ),
                             dash.html.Br(),
                             dash.html.Div(
                                 [
                                     dash.html.Div(
-                                        [dash.html.Div("Slope:"), dash.html.Div("", id=self.ids.slope_out)],
+                                        [dash.html.Div("Slope:"), dash.html.Div("", id=self.ids.Calibration.slope_out)],
                                         style={"display": "flex", "gap": "8px"},
                                     ),
                                     dash.html.Div(
-                                        [dash.html.Div("Intercept:"), dash.html.Div("", id=self.ids.intercept_out)],
+                                        [dash.html.Div("Intercept:"), dash.html.Div("", id=self.ids.Calibration.intercept_out)],
                                         style={"display": "flex", "gap": "8px"},
                                     ),
                                     dash.html.Div(
-                                        [dash.html.Div("R²:"), dash.html.Div("", id=self.ids.r_squared_out)],
+                                        [dash.html.Div("R²:"), dash.html.Div("", id=self.ids.Calibration.r_squared_out)],
                                         style={"display": "flex", "gap": "8px"},
                                     ),
                                 ]
                             ),
                             dash.html.Br(),
-                            dash.html.Div(id=self.ids.apply_status, style={"marginTop": "8px"}),
+                            dash.html.Div(id=self.ids.Calibration.apply_status, style={"marginTop": "8px"}),
                         ],
                     ),
                     id=f"collapse-{self.ids.page_name}-calibration",
@@ -213,10 +214,10 @@ class CalibrationSection:
         - Fitting a linear calibration from bead points and optionally applying it to the selected detector.
         """
         @dash.callback(
-            dash.Output(self.ids.bead_table, "data", allow_duplicate=True),
-            dash.Input(self.ids.add_row_btn, "n_clicks"),
-            dash.State(self.ids.bead_table, "data"),
-            dash.State(self.ids.bead_table, "columns"),
+            dash.Output(self.ids.Calibration.bead_table, "data", allow_duplicate=True),
+            dash.Input(self.ids.Calibration.add_row_btn, "n_clicks"),
+            dash.State(self.ids.Calibration.bead_table, "data"),
+            dash.State(self.ids.Calibration.bead_table, "columns"),
             prevent_initial_call=True,
         )
         def add_row(n_clicks: int, rows: List[dict], columns: List[dict]) -> List[dict]:
@@ -242,16 +243,16 @@ class CalibrationSection:
             return next_rows
 
         @dash.callback(
-            dash.Output(self.ids.graph_calibration, "figure"),
-            dash.Output(self.ids.calibration_store, "data"),
-            dash.Output(self.ids.slope_out, "children"),
-            dash.Output(self.ids.intercept_out, "children"),
-            dash.Output(self.ids.r_squared_out, "children"),
-            dash.Output(self.ids.apply_status, "children"),
-            dash.Input(self.ids.calibrate_btn, "n_clicks"),
-            dash.State(self.ids.uploaded_fcs_path_store, "data"),
-            dash.State(self.ids.bead_table, "data"),
-            dash.State(self.ids.fluorescence_detector_dropdown, "value"),
+            dash.Output(self.ids.Calibration.graph_calibration, "figure"),
+            dash.Output(self.ids.Calibration.calibration_store, "data"),
+            dash.Output(self.ids.Calibration.slope_out, "children"),
+            dash.Output(self.ids.Calibration.intercept_out, "children"),
+            dash.Output(self.ids.Calibration.r_squared_out, "children"),
+            dash.Output(self.ids.Calibration.apply_status, "children"),
+            dash.Input(self.ids.Calibration.calibrate_btn, "n_clicks"),
+            dash.State(self.ids.Load.uploaded_fcs_path_store, "data"),
+            dash.State(self.ids.Calibration.bead_table, "data"),
+            dash.State(self.ids.Fluorescence.detector_dropdown, "value"),
             prevent_initial_call=True,
         )
         def calibrate_and_apply(

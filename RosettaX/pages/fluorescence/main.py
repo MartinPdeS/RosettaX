@@ -75,12 +75,12 @@ class FluorescentCalibrationPage(LoadSection, ScatteringSection, PeaksSection, S
         """
         return html.Div(
             [
-                dcc.Store(id=self.ids.uploaded_fcs_path_store, storage_type="session"),
-                dcc.Store(id=self.ids.calibration_store, storage_type="session"),
-                dcc.Store(id=self.ids.scattering_threshold_store, storage_type="session"),
-                dcc.Store(id=self.ids.fluorescence_hist_store, storage_type="memory"),
-                dcc.Store(id=self.ids.fluorescence_source_channel_store, storage_type="memory"),
-                dcc.Store(id=self.ids.fluorescence_peak_lines_store, storage_type="data"),
+                dcc.Store(id=self.ids.Load.uploaded_fcs_path_store, storage_type="session"),
+                dcc.Store(id=self.ids.Calibration.calibration_store, storage_type="session"),
+                dcc.Store(id=self.ids.Scattering.threshold_store, storage_type="session"),
+                dcc.Store(id=self.ids.Fluorescence.hist_store, storage_type="memory"),
+                dcc.Store(id=self.ids.Fluorescence.source_channel_store, storage_type="memory"),
+                dcc.Store(id=self.ids.Fluorescence.peak_lines_store, storage_type="data"),
                 html.H1("Create and Save A New Fluorescent Calibration"),
                 html.Br(),
                 self._load_get_layout(),

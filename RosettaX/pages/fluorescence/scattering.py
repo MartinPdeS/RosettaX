@@ -8,7 +8,7 @@ import plotly.graph_objs as go
 
 from RosettaX.pages import styling
 from RosettaX.pages.runtime_config import get_runtime_config
-from RosettaX.reader import FCSFile
+from RosettaX.utils.reader import FCSFile
 from RosettaX.pages.fluorescence.utils import make_histogram_with_lines
 
 @dataclass(frozen=True)
@@ -91,16 +91,26 @@ class ScatteringSection:
         dash.html.Div
             Row containing a label and dropdown.
         """
+        runtime_config = get_runtime_config()
+
         return dash.html.Div(
             [
                 dash.html.Div("Scattering detector:"),
                 dash.dcc.Dropdown(
-                    id=self.ids.scattering_detector_dropdown,
+                    id=self.ids.Scattering.detector_dropdown,
                     style={"width": "500px"},
                     optionHeight=50,
                     maxHeight=500,
                     searchable=True,
                 ),
+                # dash.dcc.Dropdown(
+                #     id=self.ids.Scattering.detector_dropdown,
+                #     style={"width": "500px"},
+                #     optionHeight=50,
+                #     maxHeight=500,
+                #     searchable=True,
+                #     value=runtime_config.fluorescence_page_scattering_detector,
+                # ),
             ],
             style=styling.CARD,
         )
@@ -119,7 +129,7 @@ class ScatteringSection:
             [
                 dash.html.Div("number of bins:"),
                 dash.dcc.Input(
-                    id=self.ids.scattering_nbins_input,
+                    id=self.ids.Scattering.nbins_input,
                     type="number",
                     min=10,
                     step=10,
@@ -128,7 +138,7 @@ class ScatteringSection:
                 ),
             ],
             style=styling.CARD,
-            hidden=runtime_config.fluorescence_show_scattering_controls is False,
+            hidden=runtime_config.debug is False,
         )
 
     def _scattering_estimate_and_threshold_row(self) -> dash.html.Div:
@@ -148,7 +158,7 @@ class ScatteringSection:
                     [
                         dash.html.Button(
                             "Estimate threshold",
-                            id=self.ids.scattering_find_threshold_btn,
+                            id=self.ids.Scattering.find_threshold_btn,
                             n_clicks=0,
                             style={"display": "inline-block"},
                         )
@@ -159,7 +169,7 @@ class ScatteringSection:
                     [
                         dash.html.Div("Threshold:", style={"marginRight": "8px"}),
                         dash.dcc.Input(
-                            id=self.ids.scattering_threshold_input,
+                            id=self.ids.Scattering.threshold_input,
                             type="text",
                             debounce=True,
                             value="",
@@ -171,7 +181,7 @@ class ScatteringSection:
                 ),
             ],
             style={"display": "flex", "alignItems": "center"},
-            hidden=runtime_config.fluorescence_show_scattering_controls is False,
+            hidden=runtime_config.debug is False,
         )
 
     def _scattering_yscale_switch(self) -> dbc.Checklist:
@@ -186,11 +196,11 @@ class ScatteringSection:
         runtime_config = get_runtime_config()
 
         return dbc.Checklist(
-            id=self.ids.scattering_yscale_switch,
+            id=self.ids.Scattering.yscale_switch,
             options=[{"label": "Log scale (counts)", "value": "log"}],
             value=["log"],
             switch=True,
-            style={"display": "none"} if runtime_config.fluorescence_show_scattering_controls is False else {"display": "block"},
+            style={"display": "none"} if runtime_config.debug is False else {"display": "block"},
         )
 
     def _scattering_histogram_graph(self) -> dash.dcc.Loading:
@@ -205,8 +215,8 @@ class ScatteringSection:
         runtime_config = get_runtime_config()
         return dash.dcc.Loading(
             dash.dcc.Graph(
-                id=self.ids.graph_scattering_hist,
-                style={"display": "none"} if runtime_config.fluorescence_show_scattering_controls is False else self.graph_style,
+                id=self.ids.Scattering.graph_hist,
+                style={"display": "none"} if runtime_config.debug is False else self.graph_style,
             ),
             type="default",
         )
@@ -221,16 +231,16 @@ class ScatteringSection:
         - Rebuilds the histogram and vertical line using the resolved threshold.
         """
         @dash.callback(
-            dash.Output(self.ids.graph_scattering_hist, "figure"),
-            dash.Output(self.ids.scattering_threshold_store, "data"),
-            dash.Output(self.ids.scattering_threshold_input, "value"),
-            dash.Input(self.ids.scattering_find_threshold_btn, "n_clicks"),
-            dash.Input(self.ids.scattering_threshold_input, "value"),
-            dash.Input(self.ids.scattering_detector_dropdown, "value"),
-            dash.Input(self.ids.scattering_nbins_input, "value"),
-            dash.Input(self.ids.scattering_yscale_switch, "value"),
-            dash.State(self.ids.scattering_threshold_store, "data", allow_optional=True),
-            dash.State(self.ids.max_events_for_plots_input, "value", allow_optional=True),
+            dash.Output(self.ids.Scattering.graph_hist, "figure"),
+            dash.Output(self.ids.Scattering.threshold_store, "data"),
+            dash.Output(self.ids.Scattering.threshold_input, "value"),
+            dash.Input(self.ids.Scattering.find_threshold_btn, "n_clicks"),
+            dash.Input(self.ids.Scattering.threshold_input, "value"),
+            dash.Input(self.ids.Scattering.detector_dropdown, "value"),
+            dash.Input(self.ids.Scattering.nbins_input, "value"),
+            dash.Input(self.ids.Scattering.yscale_switch, "value"),
+            dash.State(self.ids.Scattering.threshold_store, "data", allow_optional=True),
+            dash.State(self.ids.Load.max_events_for_plots_input, "value", allow_optional=True),
             prevent_initial_call=True,
         )
         def scattering_section(
@@ -257,9 +267,9 @@ class ScatteringSection:
             manual_thr = self._as_float(threshold_input_value)
 
             must_estimate = triggered_id in {
-                self.ids.scattering_find_threshold_btn,
-                self.ids.scattering_detector_dropdown,
-                self.ids.scattering_nbins_input,
+                self.ids.Scattering.find_threshold_btn,
+                self.ids.Scattering.detector_dropdown,
+                self.ids.Scattering.nbins_input,
             }
 
             thr, threshold_out = self._resolve_threshold(
@@ -414,7 +424,7 @@ class ScatteringSection:
         go.Figure
             Plotly figure for the scattering histogram.
         """
-        if not runtime_config.fluorescence_show_scattering_controls:
+        if runtime_config.debug is False:
             fig = go.Figure()
             fig.update_layout(separators=".,")
             return fig

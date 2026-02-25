@@ -22,6 +22,10 @@ class RuntimeConfig:
     n_bins_for_plots: Optional[int] = 400
     default_peak_count: Optional[int] = 3
 
+    # Fluorescence calibration page defaults
+    fcs_file_path: Optional[str] = None
+    fluorescence_page_scattering_detector: Optional[str] = None
+    fluorescence_page_fluorescence_detector: Optional[str] = None
 
     # Optical properties for Mie theory calculations
     default_particle_diameter_nm = 100

@@ -1,35 +1,14 @@
 # -*- coding: utf-8 -*-
-"""
-Backend utilities for fluorescence calibration, scattering threshold estimation, and peak finding.
-
-This module provides a thin orchestration layer between UI callbacks and lower level
-data access and algorithms.
-
-Design constraints
-------------------
-1) File safety
-   This backend never keeps an FCS file handle open beyond a single method call.
-   It validates that an FCS can be opened, then closes it immediately.
-
-2) Memory safety
-   This backend returns owned NumPy arrays and plain Python objects.
-   It avoids returning dataframe views that could outlive the file context manager.
-
-3) Statelessness
-   The only persistent state is `self.file_path`.
-   No UI state is stored here, and there is no caching.
-"""
+from typing import Optional, Any
 
 from pathlib import Path
-from typing import Optional, Any
+import numpy as np
 import time
 import uuid
 
-import numpy as np
-
-from RosettaX.reader import FCSFile
-from RosettaX.clusterings import SigmaThresholdHDBSCAN
-from RosettaX.calibration import FluorescenceCalibration
+from RosettaX.utils.reader import FCSFile
+from RosettaX.utils.clusterings import SigmaThresholdHDBSCAN
+from RosettaX.pages.fluorescence.utils import FluorescenceCalibration
 
 
 class BackEnd:

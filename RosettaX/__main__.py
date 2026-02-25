@@ -1,4 +1,3 @@
-import argparse
 import json
 import webbrowser
 from threading import Timer
@@ -10,78 +9,7 @@ from dash import Input, Output, dcc, html
 
 from RosettaX.pages import styling
 from RosettaX.pages.sidebar.main import sidebar_html
-from RosettaX.pages.runtime_config import get_runtime_config
-
-
-def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(prog="RosettaX")
-
-    parser.add_argument("--host", type=str, default="127.0.0.1")
-    parser.add_argument("--port", type=int, default=8050)
-
-    parser.add_argument(
-        "--no-browser",
-        action="store_true",
-        help="Do not open a browser tab on startup.",
-    )
-
-    parser.add_argument("--debug", action="store_true")
-    parser.add_argument("--no-debug", dest="debug", action="store_false")
-    parser.set_defaults(debug=None)
-
-    # Visibility toggles
-    parser.add_argument("--show_scattering_controls", action="store_true", default=None)
-    parser.add_argument("--hide_scattering_controls", dest="show_scattering_controls", action="store_false")
-
-    parser.add_argument("--show_threshold_controls", action="store_true", default=None)
-    parser.add_argument("--hide_threshold_controls", dest="show_threshold_controls", action="store_false")
-
-    parser.add_argument("--show_fluorescence", action="store_true", default=None)
-    parser.add_argument("--hide_fluorescence", dest="show_fluorescence", action="store_false")
-
-    parser.add_argument("--show_beads", action="store_true", default=None)
-    parser.add_argument("--hide_beads", dest="show_beads", action="store_false")
-
-    parser.add_argument("--show_output", action="store_true", default=None)
-    parser.add_argument("--hide_output", dest="show_output", action="store_false")
-
-    parser.add_argument("--show_save", action="store_true", default=None)
-    parser.add_argument("--hide_save", dest="show_save", action="store_false")
-
-    # Per section debug
-    parser.add_argument("--debug_scattering", action="store_true", default=None)
-    parser.add_argument("--no_debug_scattering", dest="debug_scattering", action="store_false")
-
-    parser.add_argument("--debug_fluorescence", action="store_true", default=None)
-    parser.add_argument("--no_debug_fluorescence", dest="debug_fluorescence", action="store_false")
-
-    return parser.parse_args(argv)
-
-
-def apply_cli_to_runtime_config(args: argparse.Namespace) -> None:
-    runtime_config = get_runtime_config()
-
-    if args.debug is not None:
-        runtime_config.debug = bool(args.debug)
-        runtime_config.mark_explicit("debug")
-
-    def _set(field_name: str, value: object | None) -> None:
-        if value is None:
-            return
-        setattr(runtime_config, field_name, bool(value))
-        runtime_config.mark_explicit(field_name)
-
-    _set("fluorescence_show_scattering_controls", args.show_scattering_controls)
-    _set("fluorescence_show_threshold_controls", args.show_threshold_controls)
-    _set("fluorescence_show_fluorescence_controls", args.show_fluorescence)
-    _set("fluorescence_show_beads_controls", args.show_beads)
-    _set("fluorescence_show_output_controls", args.show_output)
-    _set("fluorescence_show_save_controls", args.show_save)
-
-    _set("fluorescence_debug_scattering", args.debug_scattering)
-    _set("fluorescence_debug_fluorescence", args.debug_fluorescence)
-
-    runtime_config.apply_policy()
+from RosettaX.parser import _parse_args, apply_cli_to_runtime_config
 
 
 class RosettaXApplication:

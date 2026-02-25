@@ -1,7 +1,7 @@
 from typing import Optional
 from dataclasses import dataclass
 
-from RosettaX.reader import FCSFile
+from RosettaX.utils.reader import FCSFile
 
 @dataclass(frozen=True)
 class ChannelOptions:

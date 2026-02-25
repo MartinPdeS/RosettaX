@@ -80,9 +80,9 @@ class SaveSection():
                             self._save_row_save_calibration(),
                             dash.html.Br(),
                             self._save_row_export_file(),
-                            dash.dcc.Download(id=self.ids.export_download),
+                            dash.dcc.Download(id=self.ids.Save.export_download),
                             dash.html.Hr(),
-                            dash.html.Div(id=self.ids.save_out),
+                            dash.html.Div(id=self.ids.Save.save_out),
                         ]
                     ),
                     id=f"collapse-{self.ids.page_name}-save",
@@ -104,12 +104,12 @@ class SaveSection():
             [
                 dbc.Button(
                     "Add calibrated MESF to file",
-                    id=self.ids.add_mesf_btn,
+                    id=self.ids.Save.add_mesf_btn,
                     n_clicks=0,
                     color="primary",
                 ),
                 dash.dcc.Input(
-                    id=self.ids.channel_name,
+                    id=self.ids.Save.channel_name,
                     type="text",
                     value="MESF",
                     placeholder="column name",
@@ -132,12 +132,12 @@ class SaveSection():
             [
                 dbc.Button(
                     "Save calibration",
-                    id=self.ids.save_calibration_btn,
+                    id=self.ids.Save.save_calibration_btn,
                     n_clicks=0,
                     color="secondary",
                 ),
                 dash.dcc.Input(
-                    id=self.ids.file_name,
+                    id=self.ids.Save.file_name,
                     type="text",
                     value="",
                     placeholder="calibration name",
@@ -160,12 +160,12 @@ class SaveSection():
             [
                 dbc.Button(
                     "Export file",
-                    id=self.ids.export_file_btn,
+                    id=self.ids.Save.export_file_btn,
                     n_clicks=0,
                     color="success",
                 ),
                 dash.dcc.Input(
-                    id=self.ids.export_filename,
+                    id=self.ids.Save.export_filename,
                     type="text",
                     value="beads_calibrated.fcs",
                     placeholder="output filename",
@@ -184,9 +184,9 @@ class SaveSection():
         None
         """
         @dash.callback(
-            dash.Output(self.ids.scattering_detector_dropdown, "options", allow_duplicate=True),
-            dash.Output(self.ids.fluorescence_detector_dropdown, "options", allow_duplicate=True),
-            dash.Input(self.ids.uploaded_fcs_path_store, "data"),
+            dash.Output(self.ids.Scattering.detector_dropdown, "options", allow_duplicate=True),
+            dash.Output(self.ids.Fluorescence.detector_dropdown, "options", allow_duplicate=True),
+            dash.Input(self.ids.Load.uploaded_fcs_path_store, "data"),
             prevent_initial_call=True,
         )
         def refresh_detector_options(fcs_path: Optional[str]):
@@ -199,27 +199,27 @@ class SaveSection():
             return opts, opts
 
         @dash.callback(
-            dash.Output(self.ids.save_out, "children"),
-            dash.Output(self.ids.sidebar_store, "data"),
-            dash.Output(self.ids.uploaded_fcs_path_store, "data", allow_duplicate=True),
-            dash.Output(self.ids.scattering_detector_dropdown, "options", allow_duplicate=True),
-            dash.Output(self.ids.fluorescence_detector_dropdown, "options", allow_duplicate=True),
-            dash.Output(self.ids.scattering_detector_dropdown, "value", allow_duplicate=True),
-            dash.Output(self.ids.fluorescence_detector_dropdown, "value", allow_duplicate=True),
-            dash.Output(self.ids.export_download, "data"),
-            dash.Input(self.ids.add_mesf_btn, "n_clicks"),
-            dash.Input(self.ids.save_calibration_btn, "n_clicks"),
-            dash.Input(self.ids.export_file_btn, "n_clicks"),
-            dash.State(self.ids.file_name, "value"),
-            dash.State(self.ids.channel_name, "value"),
-            dash.State(self.ids.export_filename, "value"),
-            dash.State(self.ids.sidebar_store, "data"),
-            dash.State(self.ids.calibration_store, "data"),
-            dash.State(self.ids.uploaded_fcs_path_store, "data"),
-            dash.State(self.ids.scattering_detector_dropdown, "options"),
-            dash.State(self.ids.fluorescence_detector_dropdown, "options"),
-            dash.State(self.ids.scattering_detector_dropdown, "value"),
-            dash.State(self.ids.fluorescence_detector_dropdown, "value"),
+            dash.Output(self.ids.Save.save_out, "children"),
+            dash.Output(self.ids.Sidebar.sidebar_store, "data"),
+            dash.Output(self.ids.Load.uploaded_fcs_path_store, "data", allow_duplicate=True),
+            dash.Output(self.ids.Scattering.detector_dropdown, "options", allow_duplicate=True),
+            dash.Output(self.ids.Fluorescence.detector_dropdown, "options", allow_duplicate=True),
+            dash.Output(self.ids.Scattering.detector_dropdown, "value", allow_duplicate=True),
+            dash.Output(self.ids.Fluorescence.detector_dropdown, "value", allow_duplicate=True),
+            dash.Output(self.ids.Save.export_download, "data"),
+            dash.Input(self.ids.Save.add_mesf_btn, "n_clicks"),
+            dash.Input(self.ids.Save.save_calibration_btn, "n_clicks"),
+            dash.Input(self.ids.Save.export_file_btn, "n_clicks"),
+            dash.State(self.ids.Save.file_name, "value"),
+            dash.State(self.ids.Save.channel_name, "value"),
+            dash.State(self.ids.Save.export_filename, "value"),
+            dash.State(self.ids.Sidebar.sidebar_store, "data"),
+            dash.State(self.ids.Calibration.calibration_store, "data"),
+            dash.State(self.ids.Load.uploaded_fcs_path_store, "data"),
+            dash.State(self.ids.Scattering.detector_dropdown, "options"),
+            dash.State(self.ids.Fluorescence.detector_dropdown, "options"),
+            dash.State(self.ids.Scattering.detector_dropdown, "value"),
+            dash.State(self.ids.Fluorescence.detector_dropdown, "value"),
             prevent_initial_call=True,
         )
         def save_section_actions(
@@ -256,13 +256,13 @@ class SaveSection():
 
             backend = BackEnd(parsed.bead_file_path)
 
-            if triggered == self.ids.save_calibration_btn:
+            if triggered == self.ids.Save.save_calibration_btn:
                 return self._save_action_save_calibration(inputs=parsed).to_tuple()
 
-            if triggered == self.ids.add_mesf_btn:
+            if triggered == self.ids.Save.add_mesf_btn:
                 return self._save_action_add_mesf_to_current_file(inputs=parsed, backend=backend).to_tuple()
 
-            if triggered == self.ids.export_file_btn:
+            if triggered == self.ids.Save.export_file_btn:
                 return self._save_action_export_download(inputs=parsed, backend=backend).to_tuple()
 
             return SaveResult().to_tuple()
