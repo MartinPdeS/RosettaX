@@ -10,6 +10,7 @@ from RosettaX.pages.fluorescence.backend import BackEnd
 from RosettaX.pages import styling
 from RosettaX.pages.runtime_config import get_runtime_config
 from RosettaX.reader import FCSFile
+from RosettaX.pages.fluorescence.utils import make_histogram_with_lines, add_vertical_lines
 
 
 class PeaksSection:
@@ -28,10 +29,6 @@ class PeaksSection:
     This class assumes these attributes exist on `self`:
 
     - self.ids: namespace containing component IDs
-    - self.service: object providing plotting and gating helpers:
-        - apply_gate(...)
-        - make_histogram_with_lines(...)
-        - add_vertical_lines(...)
     - self.graph_style: style dict for plotly graphs
     - self.default_fluorescence_nbins: int, used when estimating threshold as a fallback
     - self._as_float(...), self._as_int(...): parsing helpers (implemented below for completeness)
@@ -328,6 +325,7 @@ class PeaksSection:
             float
                 Threshold value used for gating.
             """
+            runtime_config = get_runtime_config()
             threshold_value: Optional[float] = None
 
             if isinstance(threshold_payload, dict):
@@ -342,7 +340,7 @@ class PeaksSection:
                     {
                         "operation": "estimate_scattering_threshold",
                         "column": str(scattering_channel),
-                        "nbins": int(self.default_fluorescence_nbins),
+                        "nbins": int(runtime_config.n_bins_for_plots),
                         "number_of_points": int(max_events),
                     }
                 )
@@ -505,13 +503,13 @@ class PeaksSection:
                 except KeyError:
                     return dash.no_update
 
-            gated = self.service.apply_gate(
+            gated = self.apply_gate(
                 fluorescence_values=fluorescence_values,
                 scattering_values=scattering_values,
                 threshold=float(threshold_value),
             )
 
-            fig = self.service.make_histogram_with_lines(
+            fig = make_histogram_with_lines(
                 values=fluorescence_values,
                 overlay_values=gated,
                 nbins=nbins,
@@ -572,7 +570,7 @@ class PeaksSection:
                 positions = peak_lines.get("positions") or []
                 labels = peak_lines.get("labels") or []
 
-            fig = self.service.add_vertical_lines(
+            fig = add_vertical_lines(
                 fig=fig,
                 line_positions=positions,
                 line_labels=labels,
@@ -702,7 +700,7 @@ class PeaksSection:
                     n=int(max_events),
                 )
 
-            gated = self.service.apply_gate(
+            gated = self.apply_gate(
                 fluorescence_values=fluorescence_values,
                 scattering_values=scattering_values,
                 threshold=float(threshold_value),
@@ -717,7 +715,7 @@ class PeaksSection:
 
             peak_labels = [f"{float(p):.3g}" for p in peak_positions]
 
-            _ = self.service.make_histogram_with_lines(
+            _ = make_histogram_with_lines(
                 values=fluorescence_values,
                 overlay_values=gated,
                 nbins=nbins,
@@ -817,3 +815,13 @@ class PeaksSection:
             v = max_value
 
         return v
+
+    @staticmethod
+    def apply_gate(*, fluorescence_values: np.ndarray, scattering_values: np.ndarray, threshold: float) -> np.ndarray:
+        fluorescence_values = np.asarray(fluorescence_values, dtype=float)
+        scattering_values = np.asarray(scattering_values, dtype=float)
+
+        mask = np.isfinite(fluorescence_values) & np.isfinite(scattering_values)
+        mask = mask & (scattering_values >= float(threshold))
+
+        return fluorescence_values[mask]

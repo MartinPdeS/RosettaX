@@ -48,6 +48,14 @@ class FluorescentCalibrationPage(LoadSection, ScatteringSection, PeaksSection, S
         self.backend = None
 
     def register(self) -> None:
+        """
+        Register the page with Dash and all callbacks. The page must be registered before the layout can be accessed.
+
+        Returns
+        -------
+        FluorescentCalibrationPage
+            The page instance, returned for chaining purposes.
+        """
         dash.register_page(__name__, path="/fluorescent_calibration", name="Fluorescent Calibration")
         self._load_register_callbacks()
         self._scattering_register_callbacks()
@@ -57,8 +65,14 @@ class FluorescentCalibrationPage(LoadSection, ScatteringSection, PeaksSection, S
         return self
 
     def layout(self) -> html.Div:
-        ids = self.ids
+        """
+        The layout is defined here in the main page file since it composes sections that are defined across multiple files.
 
+        Returns
+        -------
+        html.Div
+            The layout of the fluorescent calibration page, composed of multiple sections.
+        """
         return html.Div(
             [
                 dcc.Store(id=self.ids.uploaded_fcs_path_store, storage_type="session"),

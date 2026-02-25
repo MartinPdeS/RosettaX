@@ -17,9 +17,22 @@ class RuntimeConfig:
     fluorescence_debug_fluorescence: bool = False
     fluorescence_debug_load: bool = False
 
+    # General analysis parameters
     max_events_for_analysis: Optional[int] = 200_000
     n_bins_for_plots: Optional[int] = 400
     default_peak_count: Optional[int] = 3
+
+
+    # Optical properties for Mie theory calculations
+    default_particle_diameter_nm = 100
+    default_particle_index = 1.59
+    default_medium_index = 1.33
+
+    default_core_index = 1.59
+    default_shell_index = 1.40
+    default_shell_thickness_nm = 20
+    default_core_diameter_nm = 100
+
 
     _explicit: set[str] = field(default_factory=set, init=False, repr=False)
 

@@ -9,7 +9,7 @@ import plotly.graph_objs as go
 from RosettaX.pages import styling
 from RosettaX.pages.runtime_config import get_runtime_config
 from RosettaX.reader import FCSFile
-
+from RosettaX.pages.fluorescence.utils import make_histogram_with_lines
 
 @dataclass(frozen=True)
 class ScatteringResult:
@@ -424,7 +424,7 @@ class ScatteringSection:
         with FCSFile(self.backend.file_path, writable=False) as fcs:
             values = fcs.column_copy(str(scattering_channel), dtype=float, n=max_events)
 
-        fig = self.service.make_histogram_with_lines(
+        fig = make_histogram_with_lines(
             values=values,
             nbins=nbins,
             xaxis_title="Scattering (a.u.)",
