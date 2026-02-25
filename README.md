@@ -10,11 +10,11 @@
 | RosettaX/pages/fluorescence/calibration.py |      105 |      105 |     0.00% |     1-351 |
 | RosettaX/pages/fluorescence/ids.py         |       50 |       50 |     0.00% |      1-67 |
 | RosettaX/pages/fluorescence/load.py        |       43 |       43 |     0.00% |      1-93 |
-| RosettaX/pages/fluorescence/main.py        |       32 |       32 |     0.00% |      1-96 |
+| RosettaX/pages/fluorescence/main.py        |       31 |       31 |     0.00% |      1-96 |
 | RosettaX/pages/fluorescence/peaks.py       |      204 |      204 |     0.00% |     1-827 |
 | RosettaX/pages/fluorescence/save.py        |      107 |      107 |     0.00% |     1-475 |
 | RosettaX/pages/fluorescence/scattering.py  |      108 |      108 |     0.00% |     1-503 |
-| RosettaX/pages/fluorescence/service.py     |       42 |       42 |     0.00% |      1-76 |
+| RosettaX/pages/fluorescence/service.py     |       37 |       37 |     0.00% |      1-64 |
 | RosettaX/pages/fluorescence/utils.py       |       42 |       42 |     0.00% |     1-198 |
 | RosettaX/pages/help/main.py                |       15 |       15 |     0.00% |     1-179 |
 | RosettaX/pages/home/main.py                |       41 |       41 |     0.00% |     1-194 |
@@ -35,7 +35,7 @@
 | RosettaX/reader.py                         |      461 |      461 |     0.00% |     2-714 |
 | RosettaX/root.py                           |        2 |        2 |     0.00% |       1-2 |
 | RosettaX/utils.py                          |       14 |       14 |     0.00% |      1-15 |
-| **TOTAL**                                  | **2466** | **2466** | **0.00%** |           |
+| **TOTAL**                                  | **2460** | **2460** | **0.00%** |           |
 
 
 ## Setup coverage badge
