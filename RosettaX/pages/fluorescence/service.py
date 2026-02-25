@@ -1,9 +1,7 @@
 from typing import Optional
 from dataclasses import dataclass
-import numpy as np
 
 from RosettaX.reader import FCSFile
-import plotly.graph_objs as go
 
 @dataclass(frozen=True)
 class ChannelOptions:
@@ -69,8 +67,3 @@ class FileStateRefresher:
             scatter_value=scatter_value,
             fluorescence_value=fluorescence_value,
         )
-
-
-class FluorescentCalibrationService:
-    def __init__(self, *, file_state: FileStateRefresher) -> None:
-        self.file_state = file_state

@@ -44,7 +44,7 @@ class FluorescentCalibrationPage(LoadSection, ScatteringSection, PeaksSection, S
             scatter_keywords=self.scatter_keywords,
             non_valid_keywords=self.non_valid_keywords,
         )
-        self.service = service.FluorescentCalibrationService(file_state=self.file_state)
+
         self.backend = None
 
     def register(self) -> None:

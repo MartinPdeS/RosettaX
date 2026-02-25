@@ -85,7 +85,7 @@ class LoadSection():
                 return (dash.no_update, msg, [], None)
 
             try:
-                channels = self.service.file_state.options_from_file(temp_path)
+                channels = self.file_state.options_from_file(temp_path)
             except Exception as exc:
                 msg = f"Saved as {temp_path}, but could not read: {exc}"
                 return (temp_path, msg, [], None)
