@@ -4,12 +4,18 @@
 
 | Name                                             |    Stmts |     Miss |     Cover |   Missing |
 |------------------------------------------------- | -------: | -------: | --------: | --------: |
+| RosettaX/\_\_reader.py                           |      325 |      325 |     0.00% |     3-724 |
 | RosettaX/calibration.py                          |       37 |       37 |     0.00% |      1-79 |
 | RosettaX/clusterings.py                          |      174 |      174 |     0.00% |     1-392 |
+| RosettaX/pages/fluorescence/backend.py           |      313 |      313 |     0.00% |     3-562 |
+| RosettaX/pages/fluorescence/calibration.py       |      105 |      105 |     0.00% |     1-351 |
+| RosettaX/pages/fluorescence/ids.py               |       50 |       50 |     0.00% |      1-67 |
 | RosettaX/pages/fluorescence/load.py              |       43 |       43 |     0.00% |      1-93 |
 | RosettaX/pages/fluorescence/main.py              |       33 |       33 |     0.00% |      1-82 |
+| RosettaX/pages/fluorescence/peaks.py             |      171 |      171 |     0.00% |     1-509 |
 | RosettaX/pages/fluorescence/save.py              |      107 |      107 |     0.00% |     1-475 |
 | RosettaX/pages/fluorescence/scattering.py        |      107 |      107 |     0.00% |     1-500 |
+| RosettaX/pages/fluorescence/service.py           |      105 |      105 |     0.00% |     1-270 |
 | RosettaX/pages/help.py                           |       15 |       15 |     0.00% |     1-179 |
 | RosettaX/pages/home.py                           |       41 |       41 |     0.00% |     1-194 |
 | RosettaX/pages/runtime\_config.py                |       43 |       43 |     0.00% |      1-66 |
@@ -26,7 +32,7 @@
 | RosettaX/reader.py                               |      461 |      461 |     0.00% |     2-714 |
 | RosettaX/root.py                                 |        2 |        2 |     0.00% |       1-2 |
 | RosettaX/utils.py                                |       14 |       14 |     0.00% |      1-15 |
-| **TOTAL**                                        | **1328** | **1328** | **0.00%** |           |
+| **TOTAL**                                        | **2397** | **2397** | **0.00%** |           |
 
 1 file skipped due to complete coverage.
 
