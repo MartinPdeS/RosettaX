@@ -10,7 +10,7 @@ from dash import Input, Output, dcc, html
 
 from RosettaX.pages import styling
 from RosettaX.pages.sidebar import sidebar_html
-from RosettaX.pages.runtime_config import get_ui_flags
+from RosettaX.pages.runtime_config import get_runtime_config
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -58,18 +58,18 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def apply_cli_to_ui_flags(args: argparse.Namespace) -> None:
-    ui_flags = get_ui_flags()
+def apply_cli_to_runtime_config(args: argparse.Namespace) -> None:
+    runtime_config = get_runtime_config()
 
     if args.debug is not None:
-        ui_flags.debug = bool(args.debug)
-        ui_flags.mark_explicit("debug")
+        runtime_config.debug = bool(args.debug)
+        runtime_config.mark_explicit("debug")
 
     def _set(field_name: str, value: object | None) -> None:
         if value is None:
             return
-        setattr(ui_flags, field_name, bool(value))
-        ui_flags.mark_explicit(field_name)
+        setattr(runtime_config, field_name, bool(value))
+        runtime_config.mark_explicit(field_name)
 
     _set("fluorescence_show_scattering_controls", args.show_scattering_controls)
     _set("fluorescence_show_threshold_controls", args.show_threshold_controls)
@@ -81,7 +81,7 @@ def apply_cli_to_ui_flags(args: argparse.Namespace) -> None:
     _set("fluorescence_debug_scattering", args.debug_scattering)
     _set("fluorescence_debug_fluorescence", args.debug_fluorescence)
 
-    ui_flags.apply_policy()
+    runtime_config.apply_policy()
 
 
 class RosettaXApplication:
@@ -195,7 +195,7 @@ class RosettaXApplication:
 
 def main(argv: Optional[list[str]] = None) -> None:
     args = _parse_args(argv)
-    apply_cli_to_ui_flags(args)
+    apply_cli_to_runtime_config(args)
 
     app = RosettaXApplication(
         host=str(args.host),

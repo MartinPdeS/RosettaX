@@ -3,7 +3,7 @@ from typing import Optional
 
 
 @dataclass
-class UiFlags:
+class RuntimeConfig:
     debug: bool = False
 
     # Fluorescence calibration page, visibility
@@ -55,12 +55,12 @@ class UiFlags:
                 self.fluorescence_debug_fluorescence = False
 
 
-_ui_flags: Optional[UiFlags] = None
+_runtime_config: Optional[RuntimeConfig] = None
 
 
-def get_ui_flags() -> UiFlags:
-    global _ui_flags
-    if _ui_flags is None:
-        _ui_flags = UiFlags()
-        _ui_flags.apply_policy()
-    return _ui_flags
+def get_runtime_config() -> RuntimeConfig:
+    global _runtime_config
+    if _runtime_config is None:
+        _runtime_config = RuntimeConfig()
+        _runtime_config.apply_policy()
+    return _runtime_config

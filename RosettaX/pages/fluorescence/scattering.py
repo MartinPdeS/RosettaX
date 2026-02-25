@@ -1,16 +1,16 @@
 from typing import Any, Optional
 
+import numpy as np
 import dash_bootstrap_components as dbc
 from dash import Input, Output, State, callback, dcc, html
 import plotly.graph_objs as go
 
 from RosettaX.pages import styling
-from RosettaX.pages.runtime_config import get_ui_flags
+from RosettaX.pages.runtime_config import get_runtime_config
 from RosettaX.reader import FCSFile
 
 
 class ScatteringSection():
-
     def _scattering_get_layout(self) -> dbc.Card:
         return dbc.Card(
             [
@@ -20,19 +20,19 @@ class ScatteringSection():
         )
 
     def _scattering_build_body_children(self) -> list:
-        ui_flags = get_ui_flags()
+        runtime_config = get_runtime_config()
 
         children = [
             html.Br(),
             self._scattering_detector_row(),
             html.Br(),
-            self._scattering_estimate_and_threshold_row(hidden=not ui_flags.fluorescence_show_scattering_controls),
+            self._scattering_estimate_and_threshold_row(hidden=not runtime_config.fluorescence_show_scattering_controls),
             html.Br(),
-            self._scattering_histogram_graph(hidden=not ui_flags.fluorescence_show_scattering_controls),
+            self._scattering_histogram_graph(hidden=not runtime_config.fluorescence_show_scattering_controls),
             html.Br(),
-            self._scattering_yscale_switch(hidden=not ui_flags.fluorescence_show_scattering_controls),
+            self._scattering_yscale_switch(hidden=not runtime_config.fluorescence_show_scattering_controls),
             html.Br(),
-            self._scattering_nbins_row(hidden=not ui_flags.fluorescence_show_scattering_controls),
+            self._scattering_nbins_row(hidden=not runtime_config.fluorescence_show_scattering_controls),
         ]
 
         return children
@@ -50,7 +50,7 @@ class ScatteringSection():
         )
 
     def _scattering_nbins_row(self, *, hidden: bool) -> html.Div:
-        ui_flags = get_ui_flags()
+        runtime_config = get_runtime_config()
         return html.Div(
             [
                 html.Div("number of bins:"),
@@ -59,7 +59,7 @@ class ScatteringSection():
                     type="number",
                     min=10,
                     step=10,
-                    value=ui_flags.n_bins_for_plots,
+                    value=runtime_config.n_bins_for_plots,
                     style={"width": "160px"},
                 ),
             ],
@@ -140,27 +140,27 @@ class ScatteringSection():
             yscale_selection,
             max_events_for_plots,
         ):
-            ui_flags = get_ui_flags()
+            runtime_config = get_runtime_config()
 
             max_events = self._as_int(
-                max_events_for_plots if max_events_for_plots is not None else ui_flags.max_events_for_analysis,
-                default=ui_flags.max_events_for_analysis,
+                max_events_for_plots if max_events_for_plots is not None else runtime_config.max_events_for_analysis,
+                default=runtime_config.max_events_for_analysis,
                 min_value=10_000,
                 max_value=5_000_000,
             )
 
             nbins = self._as_int(
                 scattering_nbins,
-                default=ui_flags.n_bins_for_plots,
+                default=runtime_config.n_bins_for_plots,
                 min_value=10,
                 max_value=5000,
             )
 
             column_names = None
-            if ui_flags.fluorescence_show_scattering_controls:
-                column_names = self.context.backend.get_column_names()
+            if runtime_config.fluorescence_show_scattering_controls:
+                column_names = self.backend.get_column_names()
 
-            response = self.context.backend.process_scattering(
+            response = self.backend.process_scattering(
                 {
                     "operation": "estimate_scattering_threshold",
                     "column": str(scattering_channel),
@@ -176,64 +176,58 @@ class ScatteringSection():
                 "nbins": int(nbins),
             }
 
-            if ui_flags.fluorescence_show_scattering_controls and column_names is not None:
+            if runtime_config.fluorescence_show_scattering_controls and column_names is not None:
                 use_log = isinstance(yscale_selection, list) and ("log" in yscale_selection)
 
-                with FCSFile(self.context.backend.file_path, writable=False) as fcs:
+                with FCSFile(self.backend.file_path, writable=False) as fcs:
                     values = fcs.column_copy(scattering_channel, dtype=float, n=max_events_for_plots)
 
                 fig = self.service.make_histogram_with_lines(
                     values=values,
                     nbins=nbins,
                     xaxis_title="Scattering (a.u.)",
-                    line_positions=[float(thr)] if ui_flags.fluorescence_show_scattering_controls else [],
-                    line_labels=[f"{float(thr):.3g}"] if ui_flags.fluorescence_show_scattering_controls else [],
+                    line_positions=[float(thr)] if runtime_config.fluorescence_show_scattering_controls else [],
+                    line_labels=[f"{float(thr):.3g}"] if runtime_config.fluorescence_show_scattering_controls else [],
                 )
                 fig.update_yaxes(type="log" if use_log else "linear")
             else:
-                fig = self._empty_fig()
+                fig = fig = go.Figure()
+                fig.update_layout(separators=".,")
 
             return fig, next_store, f"{float(thr):.6g}"
 
-        @staticmethod
-        def _empty_fig() -> go.Figure:
-            fig = go.Figure()
-            fig.update_layout(separators=".,")
-            return fig
-
-
-        @staticmethod
-        def _as_float(value: Any) -> Optional[float]:
-            if value is None:
-                return None
-
-            if isinstance(value, (int, float)):
-                v = float(value)
-                return v if np.isfinite(v) else None
-
-            if isinstance(value, str):
-                s = value.strip()
-                if not s:
-                    return None
-                s = s.replace(",", ".")
-                try:
-                    v = float(s)
-                except ValueError:
-                    return None
-                return v if np.isfinite(v) else None
-
+    @staticmethod
+    def _as_float(value: Any) -> Optional[float]:
+        if value is None:
             return None
 
-        @staticmethod
-        def _as_int(value: Any, default: int, min_value: int, max_value: int) -> int:
+        if isinstance(value, (int, float)):
+            v = float(value)
+            return v if np.isfinite(v) else None
+
+        if isinstance(value, str):
+            s = value.strip()
+            if not s:
+                return None
+            s = s.replace(",", ".")
             try:
-                v = int(value)
-            except Exception:
-                v = default
+                v = float(s)
+            except ValueError:
+                return None
+            return v if np.isfinite(v) else None
 
-            if v < min_value:
-                v = min_value
-            if v > max_value:
-                v = max_value
+        return None
 
-            return v
+    @staticmethod
+    def _as_int(value: Any, default: int, min_value: int, max_value: int) -> int:
+        try:
+            v = int(value)
+        except Exception:
+            v = default
+
+        if v < min_value:
+            v = min_value
+        if v > max_value:
+            v = max_value
+
+        return v

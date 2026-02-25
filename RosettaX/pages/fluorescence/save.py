@@ -7,6 +7,7 @@ import dash
 import dash_bootstrap_components as dbc
 from dash import Input, Output, State, callback, callback_context, dcc, html
 
+from RosettaX.reader import FCSFile
 from RosettaX.pages.fluorescence.backend import BackEnd
 from RosettaX.pages.fluorescence import service
 
@@ -23,7 +24,6 @@ class SaveInputs:
     current_fluorescence: str
     scatter_options: Optional[list[dict]]
     fluorescence_options: Optional[list[dict]]
-    locked_fluorescence_source_channel: str
 
 
 class SaveSection():
@@ -37,7 +37,7 @@ class SaveSection():
     """
 
     def _save_get_layout(self) -> dbc.Card:
-        ids = self.context.ids
+        ids = self.ids
 
         return dbc.Card(
             [
@@ -126,7 +126,20 @@ class SaveSection():
         )
 
     def _save_register_callbacks(self) -> None:
-        service = self.context.service
+        @callback(
+            Output(self.ids.scattering_detector_dropdown, "options", allow_duplicate=True),
+            Output(self.ids.fluorescence_detector_dropdown, "options", allow_duplicate=True),
+            Input(self.ids.uploaded_fcs_path_store, "data"),
+            prevent_initial_call=True,
+        )
+        def refresh_detector_options(fcs_path: Optional[str]):
+            if not fcs_path:
+                return dash.no_update, dash.no_update
+
+            backend = BackEnd(str(fcs_path))
+            names = backend.get_column_names()
+            opts = [{"label": n, "value": n} for n in names]
+            return opts, opts
 
         @callback(
             Output(self.ids.save_out, "children"),
@@ -150,7 +163,6 @@ class SaveSection():
             State(self.ids.fluorescence_detector_dropdown, "options"),
             State(self.ids.scattering_detector_dropdown, "value"),
             State(self.ids.fluorescence_detector_dropdown, "value"),
-            State(self.ids.fluorescence_source_channel_store, "data"),
             prevent_initial_call=True,
         )
         def save_section_actions(
@@ -167,7 +179,6 @@ class SaveSection():
             fluorescence_options: Optional[list[dict]],
             current_scatter: Optional[str],
             current_fluorescence: Optional[str],
-            locked_fluorescence_source_channel: Optional[str],
         ):
             triggered = self._save_triggered_id()
 
@@ -182,7 +193,6 @@ class SaveSection():
                 current_fluorescence=current_fluorescence,
                 scatter_options=scatter_options,
                 fluorescence_options=fluorescence_options,
-                locked_fluorescence_source_channel=locked_fluorescence_source_channel,
             )
             if isinstance(parsed, tuple):
                 return (*parsed, dash.no_update)
@@ -229,6 +239,7 @@ class SaveSection():
             dash.no_update,
             dash.no_update,
             dash.no_update,
+            dash.no_update,
         )
 
     def _save_parse_and_validate_common(
@@ -244,7 +255,6 @@ class SaveSection():
         current_fluorescence: Optional[str],
         scatter_options: Optional[list[dict]],
         fluorescence_options: Optional[list[dict]],
-        locked_fluorescence_source_channel: Optional[str],
     ) -> SaveInputs | tuple:
         if not isinstance(calib_payload, dict) or not calib_payload:
             return self._save_ret_error("No calibration payload available. Run Calibrate first.")
@@ -261,10 +271,6 @@ class SaveSection():
         if not calibrated_channel_name_clean:
             return self._save_ret_error("Please provide a calibrated MESF column name.")
 
-        locked_clean = str(locked_fluorescence_source_channel or "").strip()
-        if not locked_clean:
-            locked_clean = current_fluorescence_clean
-
         return SaveInputs(
             file_name=str(file_name or "").strip(),
             calibrated_channel_name=calibrated_channel_name_clean,
@@ -276,7 +282,6 @@ class SaveSection():
             current_fluorescence=current_fluorescence_clean,
             scatter_options=scatter_options,
             fluorescence_options=fluorescence_options,
-            locked_fluorescence_source_channel=locked_clean,
         )
 
     @staticmethod
@@ -313,7 +318,7 @@ class SaveSection():
             {
                 "calibration": inputs.calib_payload,
                 "source_path": inputs.bead_file_path,
-                "source_column": inputs.locked_fluorescence_source_channel,
+                "source_column": inputs.current_fluorescence,
                 "new_column": inputs.calibrated_channel_name,
                 "mode": "update_temp",
                 "export_filename": "",
@@ -331,11 +336,11 @@ class SaveSection():
         return (
             msg,
             dash.no_update,
-            exported_path,
+            exported_path,                      # store updated
             inputs.scatter_options or [],
-            next_fluorescence_options,
+            next_fluorescence_options,          # options updated
             inputs.current_scatter,
-            inputs.calibrated_channel_name,
+            dash.no_update,                     # <-- do NOT set value to MESF here
         )
 
     def _save_action_export_download(self, *, inputs: SaveInputs, backend: BackEnd) -> tuple:
@@ -353,7 +358,7 @@ class SaveSection():
             {
                 "calibration": inputs.calib_payload,
                 "source_path": inputs.bead_file_path,
-                "source_column": inputs.locked_fluorescence_source_channel,
+                "source_column": inputs.current_fluorescence,
                 "new_column": inputs.calibrated_channel_name,
                 "mode": "save_new",
                 "export_filename": filename,
