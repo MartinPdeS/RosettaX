@@ -10,7 +10,7 @@
 | RosettaX/pages/fluorescence/load.py        |       82 |       82 |     0.00% |     1-273 |
 | RosettaX/pages/fluorescence/main.py        |       31 |       31 |     0.00% |      1-96 |
 | RosettaX/pages/fluorescence/peaks.py       |      196 |      196 |     0.00% |     1-815 |
-| RosettaX/pages/fluorescence/save.py        |      107 |      107 |     0.00% |     1-475 |
+| RosettaX/pages/fluorescence/save.py        |      108 |      108 |     0.00% |     1-475 |
 | RosettaX/pages/fluorescence/scattering.py  |      109 |      109 |     0.00% |     1-513 |
 | RosettaX/pages/fluorescence/service.py     |       37 |       37 |     0.00% |      1-64 |
 | RosettaX/pages/fluorescence/utils.py       |       77 |       77 |     0.00% |     2-310 |
@@ -23,14 +23,14 @@
 | RosettaX/pages/scattering/flow\_data.py    |       23 |       23 |     0.00% |     1-123 |
 | RosettaX/pages/scattering/graph.py         |        7 |        7 |     0.00% |      1-10 |
 | RosettaX/pages/scattering/helper.py        |       32 |       32 |     0.00% |      1-48 |
-| RosettaX/pages/scattering/ids.py           |       27 |       27 |     0.00% |      1-38 |
+| RosettaX/pages/scattering/ids.py           |       40 |       40 |     0.00% |      1-55 |
 | RosettaX/pages/scattering/load.py          |       43 |       43 |     0.00% |      1-93 |
-| RosettaX/pages/scattering/main.py          |       22 |       22 |     0.00% |      1-53 |
-| RosettaX/pages/scattering/parameters.py    |       27 |       27 |     0.00% |     1-280 |
+| RosettaX/pages/scattering/main.py          |       22 |       22 |     0.00% |      1-47 |
+| RosettaX/pages/scattering/parameters.py    |       80 |       80 |     0.00% |     1-521 |
 | RosettaX/pages/sidebar/main.py             |       40 |       40 |     0.00% |     1-134 |
 | RosettaX/pages/styling.py                  |        4 |        4 |     0.00% |      1-27 |
 | RosettaX/parser.py                         |       68 |       68 |     0.00% |     1-267 |
-| **TOTAL**                                  | **1856** | **1856** | **0.00%** |           |
+| **TOTAL**                                  | **1923** | **1923** | **0.00%** |           |
 
 
 ## Setup coverage badge

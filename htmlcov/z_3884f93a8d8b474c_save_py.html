@@ -54,9 +54,9 @@
             </div>
         </aside>
         <h2>
-            <span class="text">107 statements &nbsp;</span>
+            <span class="text">108 statements &nbsp;</span>
             <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">0<span class="text"> run</span></button>
-            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">107<span class="text"> missing</span></button>
+            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">108<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
         <p class="text">
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_3884f93a8d8b474c_scattering_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.1">coverage.py v7.13.1</a>,
-            created at 2026-02-25 23:42 +0000
+            created at 2026-02-27 00:13 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -477,16 +477,16 @@
     <p class="pln"><span class="n"><a id="t395" href="#t395">395</a></span><span class="t"><span class="str">            A SaveResult object containing the user feedback message, updated sidebar store, updated file path, updated scatter options, updated fluorescence options, current scatter value, and current fluorescence value.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t396" href="#t396">396</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t397" href="#t397">397</a></span><span class="t"><span class="str">        """</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t398" href="#t398">398</a></span><span class="t">        <span class="nam">export_response</span> <span class="op">=</span> <span class="nam">backend</span><span class="op">.</span><span class="nam">export_fluorescence_calibration</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t399" href="#t399">399</a></span><span class="t">            <span class="op">{</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t400" href="#t400">400</a></span><span class="t">                <span class="str">"calibration"</span><span class="op">:</span> <span class="nam">inputs</span><span class="op">.</span><span class="nam">calib_payload</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t401" href="#t401">401</a></span><span class="t">                <span class="str">"source_path"</span><span class="op">:</span> <span class="nam">inputs</span><span class="op">.</span><span class="nam">bead_file_path</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t402" href="#t402">402</a></span><span class="t">                <span class="str">"source_column"</span><span class="op">:</span> <span class="nam">inputs</span><span class="op">.</span><span class="nam">current_fluorescence</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t403" href="#t403">403</a></span><span class="t">                <span class="str">"new_column"</span><span class="op">:</span> <span class="nam">inputs</span><span class="op">.</span><span class="nam">calibrated_channel_name</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t404" href="#t404">404</a></span><span class="t">                <span class="str">"mode"</span><span class="op">:</span> <span class="str">"update_temp"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t405" href="#t405">405</a></span><span class="t">                <span class="str">"export_filename"</span><span class="op">:</span> <span class="str">""</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t406" href="#t406">406</a></span><span class="t">            <span class="op">}</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t407" href="#t407">407</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t398" href="#t398">398</a></span><span class="t">        <span class="nam">kwargs</span> <span class="op">=</span> <span class="op">{</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t399" href="#t399">399</a></span><span class="t">            <span class="str">"calibration"</span><span class="op">:</span> <span class="nam">inputs</span><span class="op">.</span><span class="nam">calib_payload</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t400" href="#t400">400</a></span><span class="t">            <span class="str">"source_path"</span><span class="op">:</span> <span class="nam">inputs</span><span class="op">.</span><span class="nam">bead_file_path</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t401" href="#t401">401</a></span><span class="t">            <span class="str">"source_column"</span><span class="op">:</span> <span class="nam">inputs</span><span class="op">.</span><span class="nam">current_fluorescence</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t402" href="#t402">402</a></span><span class="t">            <span class="str">"new_column"</span><span class="op">:</span> <span class="nam">inputs</span><span class="op">.</span><span class="nam">calibrated_channel_name</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t403" href="#t403">403</a></span><span class="t">            <span class="str">"mode"</span><span class="op">:</span> <span class="str">"update_temp"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t404" href="#t404">404</a></span><span class="t">            <span class="str">"export_filename"</span><span class="op">:</span> <span class="str">""</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t405" href="#t405">405</a></span><span class="t">        <span class="op">}</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t406" href="#t406">406</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t407" href="#t407">407</a></span><span class="t">        <span class="nam">export_response</span> <span class="op">=</span> <span class="nam">backend</span><span class="op">.</span><span class="nam">export_fluorescence_calibration</span><span class="op">(</span><span class="nam">kwargs</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t408" href="#t408">408</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t409" href="#t409">409</a></span><span class="t">        <span class="nam">exported_path</span> <span class="op">=</span> <span class="nam">str</span><span class="op">(</span><span class="nam">export_response</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">"exported_path"</span><span class="op">)</span> <span class="key">or</span> <span class="nam">inputs</span><span class="op">.</span><span class="nam">bead_file_path</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t410" href="#t410">410</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -535,7 +535,7 @@
     <p class="mis mis2 show_mis"><span class="n"><a id="t453" href="#t453">453</a></span><span class="t">            <span class="str">"source_path"</span><span class="op">:</span> <span class="nam">inputs</span><span class="op">.</span><span class="nam">bead_file_path</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t454" href="#t454">454</a></span><span class="t">            <span class="str">"source_column"</span><span class="op">:</span> <span class="nam">inputs</span><span class="op">.</span><span class="nam">current_fluorescence</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t455" href="#t455">455</a></span><span class="t">            <span class="str">"new_column"</span><span class="op">:</span> <span class="nam">inputs</span><span class="op">.</span><span class="nam">calibrated_channel_name</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t456" href="#t456">456</a></span><span class="t">            <span class="str">"mode"</span><span class="op">:</span> <span class="str">"export"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t456" href="#t456">456</a></span><span class="t">            <span class="str">"mode"</span><span class="op">:</span> <span class="str">"save_new"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t457" href="#t457">457</a></span><span class="t">            <span class="str">"export_filename"</span><span class="op">:</span> <span class="nam">filename</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t458" href="#t458">458</a></span><span class="t">        <span class="op">}</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t459" href="#t459">459</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -571,7 +571,7 @@
             <a class="nav" href="z_3884f93a8d8b474c_scattering_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.1">coverage.py v7.13.1</a>,
-            created at 2026-02-25 23:42 +0000
+            created at 2026-02-27 00:13 +0000
         </p>
     </div>
 </footer>
