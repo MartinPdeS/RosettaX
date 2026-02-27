@@ -31,7 +31,7 @@
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
-    <link rel="stylesheet" type="text/css" href="/opt/hostedtoolcache/Python/3.13.11/x64/lib/python3.13/site-packages/docs/source/_static/default.css" />
+    <link rel="stylesheet" type="text/css" href="/opt/hostedtoolcache/Python/3.13.12/x64/lib/python3.13/site-packages/docs/source/_static/default.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
@@ -476,41 +476,33 @@ to download the full example code.</p>
 <li><img src="../../_images/sphx_glr_workflow_001.png" srcset="../../_images/sphx_glr_workflow_001.png" alt="workflow" class = "sphx-glr-multi-img"/></li>
 <li><img src="../../_images/sphx_glr_workflow_002.png" srcset="../../_images/sphx_glr_workflow_002.png" alt="1D sigma thresholding, HDBSCAN clustering (1D)" class = "sphx-glr-multi-img"/></li>
 </ul>
-<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>/opt/hostedtoolcache/Python/3.13.11/x64/lib/python3.13/site-packages/RosettaX/reader.py:531: UserWarning: This figure includes Axes that are not compatible with tight_layout, so results might be incorrect.
-  fig.canvas.draw_idle()
-</pre></div>
-</div>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">FCSFile</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.utils.reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">FCSFile</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.directories</span><span class="w"> </span><span class="kn">import</span> <span class="n">fcs_data</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.clusterings</span><span class="w"> </span><span class="kn">import</span> <span class="n">SigmaThresholdHDBSCAN</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.utils.clusterings</span><span class="w"> </span><span class="kn">import</span> <span class="n">SigmaThresholdHDBSCAN</span>
 
-<span class="n">file_dir</span> <span class="o">=</span> <span class="n">fcs_data</span> <span class="o">/</span> <span class="s2">&quot;sample.fcs&quot;</span>
-
-<span class="n">data</span> <span class="o">=</span> <span class="n">FCSFile</span><span class="p">(</span><span class="n">fcs_data</span> <span class="o">/</span> <span class="s2">&quot;sample_0.fcs&quot;</span><span class="p">)</span>
-
-<span class="n">data</span><span class="o">.</span><span class="n">read_all_data</span><span class="p">()</span>
+<span class="n">file_dir</span> <span class="o">=</span> <span class="n">fcs_data</span> <span class="o">/</span> <span class="s2">&quot;sample_0.fcs&quot;</span>
 
 <span class="n">x</span> <span class="o">=</span> <span class="s2">&quot;488Org(Peak)&quot;</span>
 <span class="n">y</span> <span class="o">=</span> <span class="s2">&quot;405LALS(Peak)&quot;</span>
 
-<span class="n">figure</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
-    <span class="n">figure_size</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span>
-    <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
-    <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>
-    <span class="n">log_hist</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">ylim</span><span class="o">=</span><span class="p">(</span><span class="mf">0.4e6</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
-    <span class="n">xlim</span><span class="o">=</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">100000</span><span class="p">),</span>
-    <span class="n">tight_layout</span><span class="o">=</span><span class="kc">False</span>
-<span class="p">)</span>
+
+<span class="k">with</span> <span class="n">FCSFile</span><span class="p">(</span><span class="n">file_dir</span><span class="p">,</span> <span class="n">writable</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">as</span> <span class="n">fcs_file</span><span class="p">:</span>
+    <span class="n">x_values</span> <span class="o">=</span> <span class="n">fcs_file</span><span class="o">.</span><span class="n">column_copy</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">100_000</span><span class="p">)</span>
+    <span class="n">y_values</span> <span class="o">=</span> <span class="n">fcs_file</span><span class="o">.</span><span class="n">column_copy</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">100_000</span><span class="p">)</span>
+
+<span class="n">figure</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x_values</span><span class="p">,</span> <span class="n">y_values</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
 
 <span class="n">model</span> <span class="o">=</span> <span class="n">SigmaThresholdHDBSCAN</span><span class="p">()</span>
 
 <span class="n">labels</span><span class="p">,</span> <span class="n">means</span><span class="p">,</span> <span class="n">modes</span><span class="p">,</span> <span class="n">clean_data</span><span class="p">,</span> <span class="n">mask</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
-    <span class="n">x</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">x</span><span class="p">][:</span><span class="mi">40_000</span><span class="p">],</span>
+    <span class="n">x</span><span class="o">=</span><span class="n">x_values</span><span class="p">,</span>
     <span class="n">n_clusters</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>          <span class="c1"># ask for two merged clusters</span>
     <span class="n">threshold_x</span><span class="o">=</span><span class="mi">4000</span><span class="p">,</span>      <span class="c1"># tweak according to data</span>
     <span class="n">min_cluster_size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>  <span class="c1"># you can tweak; start not too high</span>
@@ -518,7 +510,7 @@ to download the full example code.</p>
 <span class="p">)</span>
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 4.456 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 3.500 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-gallery-workflow-workflow-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/6a0ef608c65870bfaba7aeaedad0b489/workflow.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">workflow.ipynb</span></code></a></p>

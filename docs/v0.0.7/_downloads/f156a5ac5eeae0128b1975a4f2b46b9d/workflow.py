@@ -5,34 +5,33 @@ Workflow example
 Just a dummy example to illustrate the workflow examples gallery.
 
 """
-from RosettaX.reader import FCSFile
+import matplotlib.pyplot as plt
+from RosettaX.utils.reader import FCSFile
 from RosettaX.directories import fcs_data
-from RosettaX.clusterings import SigmaThresholdHDBSCAN
+from RosettaX.utils.clusterings import SigmaThresholdHDBSCAN
 
-file_dir = fcs_data / "sample.fcs"
-
-data = FCSFile(fcs_data / "sample_0.fcs")
-
-data.read_all_data()
+file_dir = fcs_data / "sample_0.fcs"
 
 x = "488Org(Peak)"
 y = "405LALS(Peak)"
 
-figure = data.plot(
-    figure_size=(6, 6),
-    x=x,
-    y=y,
-    log_hist=False,
-    ylim=(0.4e6, None),
-    xlim=(1000, 100000),
-    tight_layout=False
-)
+
+with FCSFile(file_dir, writable=False) as fcs_file:
+    x_values = fcs_file.column_copy(x, dtype=float, n=100_000)
+    y_values = fcs_file.column_copy(y, dtype=float, n=100_000)
+
+figure, ax = plt.subplots(figsize=(6, 6))
+ax.scatter(x_values, y_values)
+ax.set_xlabel(x)
+ax.set_ylabel(y)
+plt.tight_layout()
+plt.show()
 
 
 model = SigmaThresholdHDBSCAN()
 
 labels, means, modes, clean_data, mask = model.fit(
-    x=data.data[x][:40_000],
+    x=x_values,
     n_clusters=3,          # ask for two merged clusters
     threshold_x=4000,      # tweak according to data
     min_cluster_size=100,  # you can tweak; start not too high

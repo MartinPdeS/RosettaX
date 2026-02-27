@@ -5,7 +5,7 @@ Workflow example
 Just a dummy example to illustrate the workflow examples gallery.
 
 """
-from RosettaX.backend import BackEnd
+from RosettaX.pages.fluorescence.backend import BackEnd
 from RosettaX.directories import fcs_data
 file_path = fcs_data / "sample_0.fcs"
 
