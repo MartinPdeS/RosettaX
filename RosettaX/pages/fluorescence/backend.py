@@ -592,7 +592,7 @@ class BackEnd:
 
         mode = str(data.get("mode", "save_new")).strip()
         if mode not in {"update_temp", "save_new"}:
-            raise ValueError('"mode" must be "update_temp" or "save_new".')
+            raise ValueError(f'"mode" must be "update_temp" or "save_new". Got "{mode}".')
 
         calibration = FluorescenceCalibration.from_dict(cal_payload)
 

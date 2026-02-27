@@ -16,15 +16,9 @@ class ScatterCalibrationPage(LoadSection, ParametersSection, ExportSection):
 
         self.card_body_scroll = {"maxHeight": "60vh", "overflowY": "auto"}
         self.graph_style = {"width": "100%", "height": "45vh"}
-        # self.sections: list[Sections.BaseSection] = [
-        #     Sections.FlowDataSection(context=self.context, debug_mode=debug_mode),
-        #     Sections.ExampleParametersSection(context=self.context, debug_mode=debug_mode),
-        #     Sections.ExportSection(context=self.context, debug_mode=debug_mode),
-        #     Sections.GraphSection(context=self.context, debug_mode=debug_mode),
-        # ]
 
     def register(self) -> "ScatterCalibrationPage":
-        dash.register_page(__name__, path="/scatter_calibration", name="Scatter Calibration")
+        dash.register_page(__name__, path="/scatter_calibration", name="Scattering")
         self._load_register_callbacks()
         self._parameters_register_callbacks()
         # self._export_register_callbacks()
@@ -41,7 +35,7 @@ class ScatterCalibrationPage(LoadSection, ParametersSection, ExportSection):
         """
         return html.Div(
             [
-                html.H1("Create and Save A New Scatter Calibration"),
+                html.H1("Scattering Calibration"),
                 html.Br(),
                 self._load_get_layout(),
                 self._parameters_get_layout(),

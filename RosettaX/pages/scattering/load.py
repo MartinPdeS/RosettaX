@@ -14,7 +14,7 @@ class LoadSection():
     """Section 1: Upload bead file (no debug mode)."""
     def _load_get_layout(self):
         widget = dcc.Upload(
-            id=self.ids.upload,
+            id=self.ids.Upload.upload,
             children=html.Div(["Drag and Drop or ", html.A("Select Bead File")]),
             style=styling.UPLOAD,
             multiple=False,
@@ -27,8 +27,8 @@ class LoadSection():
                 dbc.CardBody(
                     [
                         widget,
-                        html.Div(id=self.ids.upload_filename),
-                        html.Div(id=self.ids.upload_saved_as),
+                        html.Div(id=self.ids.Upload.filename),
+                        html.Div(id=self.ids.Upload.saved_as),
                     ],
                     style=self.card_body_scroll,
                 ),
@@ -52,8 +52,8 @@ class LoadSection():
 
     def _load_register_callbacks(self):
         @callback(
-            Output(self.ids.upload_filename, "children"),
-            Input(self.ids.upload, "filename"),
+            Output(self.ids.Upload.filename, "children"),
+            Input(self.ids.Upload.upload, "filename"),
             prevent_initial_call=True,
         )
         def show_filename(name):
@@ -61,14 +61,14 @@ class LoadSection():
 
         # Handle upload
         @callback(
-            Output(self.ids.uploaded_fcs_path_store, "data"),
-            Output(self.ids.upload_saved_as, "children"),
+            Output(self.ids.Upload.fcs_path_store, "data"),
+            Output(self.ids.Upload.saved_as, "children"),
             Output(self.ids.scattering_detector_dropdown, "options"),
             Output(self.ids.scattering_detector_dropdown, "value"),
             Output(self.ids.fluorescence_detector_dropdown, "options"),
             Output(self.ids.fluorescence_detector_dropdown, "value"),
-            Input(self.ids.upload, "contents"),
-            State(self.ids.upload, "filename"),
+            Input(self.ids.Upload.upload, "contents"),
+            State(self.ids.Upload.upload, "filename"),
             prevent_initial_call=True,
         )
         def handle_upload(contents, filename):

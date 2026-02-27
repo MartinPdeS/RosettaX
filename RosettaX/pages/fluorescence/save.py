@@ -395,16 +395,16 @@ class SaveSection():
             A SaveResult object containing the user feedback message, updated sidebar store, updated file path, updated scatter options, updated fluorescence options, current scatter value, and current fluorescence value.
 
         """
-        export_response = backend.export_fluorescence_calibration(
-            {
-                "calibration": inputs.calib_payload,
-                "source_path": inputs.bead_file_path,
-                "source_column": inputs.current_fluorescence,
-                "new_column": inputs.calibrated_channel_name,
-                "mode": "update_temp",
-                "export_filename": "",
-            }
-        )
+        kwargs = {
+            "calibration": inputs.calib_payload,
+            "source_path": inputs.bead_file_path,
+            "source_column": inputs.current_fluorescence,
+            "new_column": inputs.calibrated_channel_name,
+            "mode": "update_temp",
+            "export_filename": "",
+        }
+
+        export_response = backend.export_fluorescence_calibration(kwargs)
 
         exported_path = str(export_response.get("exported_path") or inputs.bead_file_path)
 
@@ -453,7 +453,7 @@ class SaveSection():
             "source_path": inputs.bead_file_path,
             "source_column": inputs.current_fluorescence,
             "new_column": inputs.calibrated_channel_name,
-            "mode": "export",
+            "mode": "save_new",
             "export_filename": filename,
         }
 

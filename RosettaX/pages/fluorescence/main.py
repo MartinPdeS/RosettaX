@@ -56,7 +56,7 @@ class FluorescentCalibrationPage(LoadSection, ScatteringSection, PeaksSection, S
         FluorescentCalibrationPage
             The page instance, returned for chaining purposes.
         """
-        dash.register_page(__name__, path="/fluorescent_calibration", name="Fluorescent Calibration")
+        dash.register_page(__name__, path="/fluorescent_calibration", name="Fluorescence")
         self._load_register_callbacks()
         self._scattering_register_callbacks()
         self._fluorescence_register_callbacks()
@@ -81,7 +81,7 @@ class FluorescentCalibrationPage(LoadSection, ScatteringSection, PeaksSection, S
                 dcc.Store(id=self.ids.Fluorescence.hist_store, storage_type="memory"),
                 dcc.Store(id=self.ids.Fluorescence.source_channel_store, storage_type="memory"),
                 dcc.Store(id=self.ids.Fluorescence.peak_lines_store, storage_type="data"),
-                html.H1("Create and Save A New Fluorescent Calibration"),
+                html.H1("Fluorescent Calibration"),
                 html.Br(),
                 self._load_get_layout(),
                 self._scattering_get_layout(),

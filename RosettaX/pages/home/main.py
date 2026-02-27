@@ -26,7 +26,7 @@ class HomePage:
                 self._intro_cards_row(),
                 self._create_calibration_row(),
                 html.Hr(),
-                self._quick_navigation_row(),
+                # self._quick_navigation_row(),
             ],
             fluid=True,
             style=self.container_style,
