@@ -13,12 +13,6 @@ class FluorescentCalibrationPage(LoadSection, ScatteringSection, PeaksSection, S
     def __init__(self) -> None:
         self.ids = Ids()
 
-        self.bead_table_columns = [
-            {"name": "Intensity (MESF)", "id": "col1", "editable": True},
-            {"name": "Intensity (a.u.)", "id": "col2", "editable": True},
-        ]
-        self.default_bead_rows = [{"col1": "", "col2": ""} for _ in range(3)]
-
         self.card_body_scroll = {"maxHeight": "60vh", "overflowY": "auto"}
         self.graph_style = {"width": "100%", "height": "45vh"}
 
@@ -56,7 +50,7 @@ class FluorescentCalibrationPage(LoadSection, ScatteringSection, PeaksSection, S
         FluorescentCalibrationPage
             The page instance, returned for chaining purposes.
         """
-        dash.register_page(__name__, path="/fluorescent_calibration", name="Fluorescence")
+        dash.register_page(__name__, path="/fluorescent_calibration", name="Fluorescence", order=1)
         self._load_register_callbacks()
         self._scattering_register_callbacks()
         self._fluorescence_register_callbacks()

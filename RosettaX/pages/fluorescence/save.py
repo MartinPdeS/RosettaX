@@ -1,7 +1,9 @@
+# -*- coding: utf-8 -*-
+
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Optional, Any
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Optional
 
 import dash
 import dash_bootstrap_components as dbc
@@ -12,6 +14,33 @@ from RosettaX.pages.fluorescence import service
 
 @dataclass(frozen=True)
 class SaveInputs:
+    """
+    Parsed and validated inputs for SaveSection actions.
+
+    Attributes
+    ----------
+    file_name : str
+        Name used when saving a calibration file.
+    calibrated_channel_name : str
+        Name of the calibrated output column to add into the current file.
+    export_filename : str
+        Desired export filename for download.
+    sidebar_data : Optional[dict]
+        Current sidebar store content. May be ignored if sidebar is rebuilt from disk.
+    calib_payload : Optional[dict]
+        Calibration payload produced by the calibration step.
+    bead_file_path : str
+        Path to the currently loaded bead file on disk.
+    current_scatter : Optional[str]
+        Currently selected scatter detector.
+    current_fluorescence : str
+        Currently selected fluorescence detector.
+    scatter_options : Optional[list[dict]]
+        Current scatter dropdown options.
+    fluorescence_options : Optional[list[dict]]
+        Current fluorescence dropdown options.
+    """
+
     file_name: str
     calibrated_channel_name: str
     export_filename: str
@@ -26,6 +55,13 @@ class SaveInputs:
 
 @dataclass(frozen=True)
 class SaveResult:
+    """
+    Container for all Dash outputs of the SaveSection callback.
+
+    This keeps the callback code readable by returning a single object that
+    maps to the Dash Outputs order via to_tuple().
+    """
+
     save_out: Any = dash.no_update
     sidebar_store: Any = dash.no_update
     uploaded_fcs_path_store: Any = dash.no_update
@@ -35,8 +71,15 @@ class SaveResult:
     fluorescence_value: Any = dash.no_update
     export_download: Any = dash.no_update
 
-
     def to_tuple(self) -> tuple:
+        """
+        Convert this object into the tuple expected by Dash multi output callbacks.
+
+        Returns
+        -------
+        tuple
+            Outputs in the exact order declared in the Dash callback.
+        """
         return (
             self.save_out,
             self.sidebar_store,
@@ -49,28 +92,28 @@ class SaveResult:
         )
 
 
-class SaveSection():
+class SaveSection:
     """
-    Save + export section.
+    Save and export section.
 
-    This section:
-    - Add calibrated MESF to file: writes a new temp file server side and injects the new column into the dropdown.
-    - Save calibration: stores the calibration payload in the sidebar store.
-    - Export file: returns bytes via dash.dcc.Download, browser decides download directory.
+    This section handles:
+    - Add calibrated channel to the current file: writes a temp file server side and updates dropdowns.
+    - Save calibration: writes a small JSON file to disk and refreshes the sidebar store listing.
+    - Export file: returns bytes via dash.dcc.Download (browser decides download directory).
     """
 
     def _save_get_layout(self) -> dbc.Card:
         """
-        Creates the layout for the save + export section.
+        Create the layout for the save and export section.
 
         Returns
         -------
         dbc.Card
-            A Dash Bootstrap Card containing the save + export section layout.
+            A Dash Bootstrap Card containing the save and export section layout.
         """
         return dbc.Card(
             [
-                dbc.CardHeader("6. Save + export calibration"),
+                dbc.CardHeader("6. Save and export calibration"),
                 dbc.Collapse(
                     dbc.CardBody(
                         [
@@ -93,12 +136,12 @@ class SaveSection():
 
     def _save_row_add_mesf(self) -> dash.html.Div:
         """
-        Creates the layout for the add MESF row.
+        Create the add calibrated column row.
 
         Returns
         -------
         dash.html.Div
-            A Dash HTML Div containing the add MESF button and channel name input, styled to be on the same row.
+            Row containing the add calibrated column button and column name input.
         """
         return dash.html.Div(
             [
@@ -121,12 +164,12 @@ class SaveSection():
 
     def _save_row_save_calibration(self) -> dash.html.Div:
         """
-        Creates the layout for the save calibration row.
+        Create the save calibration row.
 
         Returns
         -------
         dash.html.Div
-            A Dash HTML Div containing the save calibration button and filename input, styled to be on the same row.
+            Row containing the save calibration button and calibration name input.
         """
         return dash.html.Div(
             [
@@ -149,12 +192,12 @@ class SaveSection():
 
     def _save_row_export_file(self) -> dash.html.Div:
         """
-        Creates the layout for the export file row.
+        Create the export file row.
 
         Returns
         -------
         dash.html.Div
-            A Dash HTML Div containing the export file button and filename input, styled to be on the
+            Row containing the export button and output filename input.
         """
         return dash.html.Div(
             [
@@ -177,12 +220,13 @@ class SaveSection():
 
     def _save_register_callbacks(self) -> None:
         """
-        Registers the callbacks for the save + export section. This includes handling the actions for adding MESF to the current file, saving the calibration, and exporting the file.
+        Register callbacks for the save and export section.
 
         Returns
         -------
         None
         """
+
         @dash.callback(
             dash.Output(self.ids.Scattering.detector_dropdown, "options", allow_duplicate=True),
             dash.Output(self.ids.Fluorescence.detector_dropdown, "options", allow_duplicate=True),
@@ -190,6 +234,19 @@ class SaveSection():
             prevent_initial_call=True,
         )
         def refresh_detector_options(fcs_path: Optional[str]):
+            """
+            Refresh detector dropdown options when a new file is set.
+
+            Parameters
+            ----------
+            fcs_path : Optional[str]
+                Current path from uploaded file store.
+
+            Returns
+            -------
+            tuple
+                (scatter_options, fluorescence_options)
+            """
             if not fcs_path:
                 return dash.no_update, dash.no_update
 
@@ -237,6 +294,43 @@ class SaveSection():
             current_scatter: Optional[str],
             current_fluorescence: Optional[str],
         ):
+            """
+            Main SaveSection callback dispatcher.
+
+            Parameters
+            ----------
+            n_clicks_add_mesf : int
+                Click count for add calibrated column.
+            n_clicks_save_calibration : int
+                Click count for save calibration.
+            n_clicks_export_file : int
+                Click count for export file.
+            file_name : str
+                Calibration name.
+            calibrated_channel_name : str
+                New column name for calibrated values.
+            export_filename : str
+                Output filename for download.
+            sidebar_data : Optional[dict]
+                Sidebar store data.
+            calib_payload : Optional[dict]
+                Calibration payload.
+            bead_file_path : Optional[str]
+                Current FCS path from store.
+            scatter_options : Optional[list[dict]]
+                Scatter dropdown options.
+            fluorescence_options : Optional[list[dict]]
+                Fluorescence dropdown options.
+            current_scatter : Optional[str]
+                Current selected scatter channel.
+            current_fluorescence : Optional[str]
+                Current selected fluorescence channel.
+
+            Returns
+            -------
+            tuple
+                Dash outputs in the declared Output order.
+            """
             triggered = self._save_triggered_id()
 
             parsed = self._save_parse_and_validate_common(
@@ -270,12 +364,12 @@ class SaveSection():
     @staticmethod
     def _save_triggered_id() -> str:
         """
-        Utility function to get the ID of the triggered input in a Dash callback.
+        Get the ID of the triggered input in a Dash callback.
 
         Returns
         -------
         str
-            The ID of the triggered input, or an empty string if no input was triggered.
+            Triggered component ID or empty string if none.
         """
         if not dash.callback_context.triggered:
             return ""
@@ -296,35 +390,12 @@ class SaveSection():
         fluorescence_options: Optional[list[dict]],
     ) -> SaveInputs | SaveResult:
         """
-        Parses and validates the common inputs for the save section actions. This includes checking that required fields are provided and returning a SaveInputs dataclass if validation passes, or an error message tuple if validation fails.
-
-        Parameters
-        ----------
-        file_name : str
-            The name of the calibration to save.
-        calibrated_channel_name : str
-            The name of the calibrated channel/column.
-        export_filename : str
-            The desired filename for export.
-        sidebar_data : Optional[dict]
-            The current data in the sidebar store, used for saving calibration setups.
-        calib_payload : Optional[dict]
-            The current calibration payload, required for saving and exporting.
-        bead_file_path : Optional[str]
-            The file path of the uploaded bead file, required for adding MESF to current file and exporting.
-        current_scatter : Optional[str]
-            The currently selected scatter channel, used for re-populating dropdown after adding MESF.
-        current_fluorescence : Optional[str]
-            The currently selected fluorescence channel, required for adding MESF to current file and exporting.
-        scatter_options : Optional[list[dict]]
-            The current options for the scatter dropdown, used for re-populating dropdown after adding MESF.
-        fluorescence_options : Optional[list[dict]]
-            The current options for the fluorescence dropdown, used for re-populating dropdown after adding MESF and ensuring the new calibrated channel is included.
+        Parse and validate inputs shared by all actions.
 
         Returns
         -------
-        SaveInputs | tuple
-            A SaveInputs dataclass containing the parsed and validated inputs if validation passes, or a tuple with an error message and dash.no_update for other outputs if validation fails.
+        SaveInputs | SaveResult
+            SaveInputs when validation passes, otherwise SaveResult containing an error message.
         """
         if not isinstance(calib_payload, dict) or not calib_payload:
             return SaveResult(save_out="No calibration payload available. Run Calibrate first.")
@@ -356,6 +427,21 @@ class SaveSection():
 
     @staticmethod
     def _save_ensure_option(options: Optional[list[dict]], *, value: str) -> list[dict]:
+        """
+        Ensure an option exists in a dropdown option list.
+
+        Parameters
+        ----------
+        options : Optional[list[dict]]
+            Existing options.
+        value : str
+            Value to ensure.
+
+        Returns
+        -------
+        list[dict]
+            Updated options list containing value.
+        """
         safe = [dict(o) for o in (options or []) if isinstance(o, dict)]
         if any(str(o.get("value")) == value for o in safe):
             return safe
@@ -363,37 +449,43 @@ class SaveSection():
         return safe
 
     def _save_action_save_calibration(self, *, inputs: SaveInputs) -> SaveResult:
-        """"
-        Saves the current calibration setup.
+        """
+        Save the current calibration payload as a file on disk.
+
+        This uses service.CalibrationFileStore, which should write a simple JSON file and provide
+        a listing suitable for the sidebar.
 
         Returns
         -------
         SaveResult
-            A SaveResult object containing the user feedback message, updated sidebar store, and placeholders for other Dash components.
+            Updated sidebar store and a user feedback message.
         """
         if not inputs.file_name:
             return SaveResult(save_out="Please provide a calibration name.")
 
-        next_sidebar = service.CalibrationSetupStore.save_fluorescent_setup(
-            inputs.sidebar_data,
+        saved = service.CalibrationFileStore.save_fluorescent_setup_to_file(
             name=inputs.file_name,
-            payload=inputs.calib_payload,
+            payload=dict(inputs.calib_payload or {}),
         )
 
+        next_sidebar = service.CalibrationFileStore.list_saved_calibrations()
+
         return SaveResult(
-            save_out=f'Calibration "{inputs.file_name}" saved.',
+            save_out=f'Saved calibration "{inputs.file_name}" as {saved.folder}/{saved.filename}',
             sidebar_store=next_sidebar,
         )
 
     def _save_action_add_mesf_to_current_file(self, *, inputs: SaveInputs, backend: BackEnd) -> SaveResult:
         """
-        Adds a new column to the current file with the calibrated MESF values. This is done by writing a new temp file server side and updating the fluorescence dropdown options to include the new column.
+        Add a new column with calibrated values to the current file.
+
+        This writes a new temp file server side and updates the file path store
+        so downstream steps operate on the updated file.
 
         Returns
         -------
         SaveResult
-            A SaveResult object containing the user feedback message, updated sidebar store, updated file path, updated scatter options, updated fluorescence options, current scatter value, and current fluorescence value.
-
+            Updated file path store and updated dropdown options.
         """
         kwargs = {
             "calibration": inputs.calib_payload,
@@ -405,7 +497,6 @@ class SaveSection():
         }
 
         export_response = backend.export_fluorescence_calibration(kwargs)
-
         exported_path = str(export_response.get("exported_path") or inputs.bead_file_path)
 
         next_fluorescence_options = self._save_ensure_option(
@@ -424,19 +515,12 @@ class SaveSection():
 
     def _save_action_export_download(self, *, inputs: SaveInputs, backend: BackEnd) -> SaveResult:
         """
-        Saves a new file with the calibrated MESF values and returns a download link. This is done by writing a new file server side and sending the bytes to the client for download.
-
-        Parameters
-        ----------
-        inputs : SaveInputs
-            The parsed and validated inputs required for exporting the file, including calibration payload, file paths, and current dropdown options.
-        backend : BackEnd
-            The backend instance used to perform the export operation.
+        Export a new file with the calibrated values and return a download response.
 
         Returns
         -------
         SaveResult
-            A SaveResult object containing the user feedback message, placeholders for updated sidebar store and file path, updated scatter options, updated fluorescence options, current scatter value, current fluorescence value, and the data for dash
+            Contains dash.dcc.send_bytes data for the download component.
         """
         filename = str(inputs.export_filename or "").strip()
         if not filename:

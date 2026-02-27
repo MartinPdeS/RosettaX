@@ -1,5 +1,5 @@
 CONTENT = {
-        "margin-left": "18rem",
+        "margin-left": "28rem",
         "margin-right": "2rem",
         "padding": "2rem 1rem",
 }
@@ -9,7 +9,8 @@ SIDEBAR = {
     "top": 0,
     "left": 0,
     "bottom": 0,
-    "width": "16rem",
+    "width": "380px",
+    "minWidth": "380px",
     "padding": "2rem 1rem",
 }
 

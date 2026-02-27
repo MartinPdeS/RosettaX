@@ -22,7 +22,6 @@ class RosettaXApplication:
     - Session stores used across pages
     - Dark mode switch (default is dark) that toggles the Bootstrap theme
     """
-
     _theme_light = dbc.themes.FLATLY
     _theme_dark = dbc.themes.SLATE
 
@@ -39,7 +38,7 @@ class RosettaXApplication:
 
         self.app = dash.Dash(
             __name__,
-            external_stylesheets=[self._theme_dark],
+            external_stylesheets=[self._theme_light],
             use_pages=True,
             suppress_callback_exceptions=True,
         )
@@ -160,7 +159,7 @@ class RosettaXApplication:
                         html.Span("Dark mode", style={"marginRight": "10px"}),
                         dbc.Switch(
                             id="theme-switch",
-                            value=True,
+                            value=False,
                             persistence=True,
                             persistence_type="session",
                         ),
@@ -183,7 +182,7 @@ class RosettaXApplication:
                 dcc.Location(id="url"),
                 dcc.Store(
                     id="theme-store",
-                    data={"theme": "dark"},
+                    data={"theme": "light"},
                     storage_type="session",
                 ),
                 dcc.Store(
@@ -196,7 +195,7 @@ class RosettaXApplication:
                     id="MESF-default_table-store",
                     storage_type="session",
                 ),
-                html.Link(id="theme-link", rel="stylesheet", href=self._theme_dark),
+                html.Link(id="theme-link", rel="stylesheet", href=self._theme_light),
                 theme_header,
                 sidebar_content,
                 main_content,

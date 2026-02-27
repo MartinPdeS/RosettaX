@@ -18,7 +18,7 @@ class ScatterCalibrationPage(LoadSection, ParametersSection, ExportSection):
         self.graph_style = {"width": "100%", "height": "45vh"}
 
     def register(self) -> "ScatterCalibrationPage":
-        dash.register_page(__name__, path="/scatter_calibration", name="Scattering")
+        dash.register_page(__name__, path="/scatter_calibration", name="Scattering", order=2)
         self._load_register_callbacks()
         self._parameters_register_callbacks()
         # self._export_register_callbacks()

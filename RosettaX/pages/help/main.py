@@ -12,7 +12,7 @@ class HelpPage:
         self.container_style = {"paddingTop": "24px", "paddingBottom": "48px"}
 
     def register(self) -> "HelpPage":
-        dash.register_page(__name__, path=self.path, name=self.name)
+        dash.register_page(__name__, path=self.path, name=self.name, order=4)
         return self
 
     def layout(self) -> dbc.Container:

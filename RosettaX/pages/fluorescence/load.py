@@ -123,13 +123,17 @@ class LoadSection:
         - showing filename
         - loading from upload or CLI path
         """
-
         @callback(
             Output(self.ids.Load.upload_filename, "children"),
             Input(self.ids.Load.upload, "filename"),
             prevent_initial_call=True,
         )
         def show_filename(name: Any) -> str:
+            runtime_config = get_runtime_config()
+
+            if not runtime_config.debug:
+                return ""
+
             return f"Selected file: {name}" if name else ""
 
         @callback(
@@ -176,14 +180,13 @@ class LoadSection:
                         fluorescence_detector_value=None,
                     ).to_tuple()
 
-            # CLI path mode
             elif isinstance(initial_fcs_path, str) and initial_fcs_path.strip():
                 selected_path = initial_fcs_path.strip()
                 status_message = f"Loaded from CLI path: {selected_path}"
 
             else:
                 return LoadResult(
-                    upload_saved_as="No file loaded.",
+                    upload_saved_as="No file loaded." if runtime_config.debug else "",
                     scattering_detector_options=[],
                     scattering_detector_value=None,
                     fluorescence_detector_options=[],
@@ -244,7 +247,7 @@ class LoadSection:
 
             return LoadResult(
                 uploaded_fcs_path_store=selected_path,
-                upload_saved_as=status_message,
+                upload_saved_as=status_message if runtime_config.debug else "",
                 scattering_detector_options=scatter_options,
                 scattering_detector_value=scatter_value,
                 fluorescence_detector_options=fluorescence_options,

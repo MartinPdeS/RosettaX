@@ -15,7 +15,7 @@ class HomePage:
         return f"{self.page_name}-{name}"
 
     def register(self) -> "HomePage":
-        dash.register_page(__name__, path=self.path, name=self.name)
+        dash.register_page(__name__, path=self.path, name=self.name, order=0)
         return self
 
     def layout(self) -> dbc.Container:

@@ -8,7 +8,7 @@ import numpy as np
 import plotly.graph_objs as go
 
 from RosettaX.utils.reader import FCSFile
-
+from RosettaX.pages.runtime_config import get_runtime_config
 
 @dataclass(frozen=True)
 class CalibrationResult:
@@ -47,6 +47,12 @@ class CalibrationResult:
 
 
 class CalibrationSection:
+    bead_table_columns = [
+        {"name": "Intensity [calibrated units]", "id": "col1", "editable": True},
+        {"name": "Intensity [a.u.]", "id": "col2", "editable": True},
+    ]
+    default_bead_rows = [{"col1": "", "col2": ""} for _ in range(3)]
+
     def _calibration_get_layout(self) -> dbc.Card:
         """
         Build the Dash layout for the calibration section.
@@ -76,7 +82,7 @@ class CalibrationSection:
                                 style={"marginTop": "10px"},
                             ),
                             dash.html.Br(),
-                            dash.html.Button("Calibrate (fit + apply)", id=self.ids.Calibration.calibrate_btn, n_clicks=0),
+                            dash.html.Button("Create Calibration", id=self.ids.Calibration.calibrate_btn, n_clicks=0),
                             dash.html.Hr(),
                             dash.dcc.Loading(
                                 dash.dcc.Graph(id=self.ids.Calibration.graph_calibration, style=self.graph_style),
@@ -111,30 +117,36 @@ class CalibrationSection:
 
     def _extract_xy_from_table(self, table_data: List[dict]) -> Tuple[np.ndarray, np.ndarray]:
         """
-        Extract MESF and intensity values from the bead DataTable.
+        Extract calibration points from the bead DataTable.
 
         Parameters
         ----------
         table_data : List[dict]
-            Rows from the Dash DataTable. Expected keys are "col1" for MESF and "col2" for intensity.
+            Rows from the Dash DataTable.
+            Expected keys are:
+            - "col1": Intensity [calibrated units]
+            - "col2": Intensity [a.u.]
 
         Returns
         -------
         Tuple[np.ndarray, np.ndarray]
-            (mesf, intensity) as float arrays, excluding rows that cannot be parsed.
+            (intensity_calibrated_units, intensity_au) as float arrays, excluding rows that cannot be parsed.
         """
-        mesf_vals: List[float] = []
-        au_vals: List[float] = []
+        intensity_calibrated_units_values: List[float] = []
+        intensity_au_values: List[float] = []
 
         for row in table_data or []:
-            mesf = self._as_float(row.get("col1"))
-            au = self._as_float(row.get("col2"))
-            if mesf is None or au is None:
+            intensity_calibrated_units = self._as_float(row.get("col1"))
+            intensity_au = self._as_float(row.get("col2"))
+            if intensity_calibrated_units is None or intensity_au is None:
                 continue
-            mesf_vals.append(mesf)
-            au_vals.append(au)
+            intensity_calibrated_units_values.append(intensity_calibrated_units)
+            intensity_au_values.append(intensity_au)
 
-        return np.asarray(mesf_vals, dtype=float), np.asarray(au_vals, dtype=float)
+        return (
+            np.asarray(intensity_calibrated_units_values, dtype=float),
+            np.asarray(intensity_au_values, dtype=float),
+        )
 
     @staticmethod
     def _compute_r_squared(*, y_true: np.ndarray, y_pred: np.ndarray) -> float:
@@ -211,8 +223,32 @@ class CalibrationSection:
 
         This includes:
         - Adding a new editable row in the bead DataTable.
-        - Fitting a linear calibration from bead points and optionally applying it to the selected detector.
+        - Fitting a calibration curve from bead points and optionally applying it to the selected detector.
+
+        Regression model
+        ---------------
+        The regression is performed in log10 space:
+
+            log10(y) = slope * log10(x) + intercept
+
+        where:
+            x = Intensity [a.u.]
+            y = Intensity [calibrated units]
+
+        Plot behavior
+        -------------
+        The plot uses linear Plotly axes, but it displays log10 transformed data. This makes the
+        regression appear as a straight line without using Plotly log axis types.
+
+        Applying calibration
+        -------------------
+        When applying to event data, the mapping is evaluated in linear space:
+
+            y = 10**intercept * x**slope
+
+        This guarantees positive calibrated values for positive x.
         """
+        runtime_config = get_runtime_config()
         @dash.callback(
             dash.Output(self.ids.Calibration.bead_table, "data", allow_duplicate=True),
             dash.Input(self.ids.Calibration.add_row_btn, "n_clicks"),
@@ -262,18 +298,14 @@ class CalibrationSection:
             detector_column: Optional[str],
         ) -> tuple:
             """
-            Fit a linear calibration (MESF versus intensity) from bead table points and optionally apply it.
+            Fit a log10 space regression from bead table points and optionally apply it.
 
-            Parameters
-            ----------
-            n_clicks : int
-                Click count from the Calibrate button.
-            bead_file_path : Optional[str]
-                Uploaded bead FCS file path from store.
-            table_data : Optional[list[dict]]
-                Bead table rows.
-            detector_column : Optional[str]
-                Selected fluorescence detector column to apply calibration to.
+            Bead table columns:
+            - col1: Intensity [calibrated units]
+            - col2: Intensity [a.u.]
+
+            The fit is done on log10 transformed data and the plot shows log10 transformed axes
+            values on standard linear Plotly axes.
 
             Returns
             -------
@@ -282,78 +314,116 @@ class CalibrationSection:
             """
             fig = go.Figure()
 
-            if not bead_file_path:
-                fig.update_layout(title="Upload a bead file first.")
+            try:
+                if not bead_file_path:
+                    fig.update_layout(title="Upload a bead file first.")
+                    return CalibrationResult(
+                        figure=fig,
+                        calibration_store=dash.no_update,
+                        slope_out="",
+                        intercept_out="",
+                        r_squared_out="",
+                        apply_status="Missing bead file.",
+                    ).to_tuple()
+
+                intensity_calibrated_units, intensity_au = self._extract_xy_from_table(table_data or [])
+                if intensity_calibrated_units.size < 2:
+                    fig.update_layout(title="Need at least 2 bead points to calibrate.")
+                    return CalibrationResult(
+                        figure=fig,
+                        calibration_store=dash.no_update,
+                        slope_out="",
+                        intercept_out="",
+                        r_squared_out="",
+                        apply_status="Need at least 2 valid bead rows.",
+                    ).to_tuple()
+
+                y = np.asarray(intensity_calibrated_units, dtype=float)
+                x = np.asarray(intensity_au, dtype=float)
+
+                finite_mask = np.isfinite(x) & np.isfinite(y)
+                x = x[finite_mask]
+                y = y[finite_mask]
+
+                positive_mask = (x > 0.0) & (y > 0.0)
+                x = x[positive_mask]
+                y = y[positive_mask]
+
+                if x.size < 2:
+                    fig.update_layout(title="Need at least 2 positive finite points for log10 fit.")
+                    return CalibrationResult(
+                        figure=fig,
+                        calibration_store=dash.no_update,
+                        slope_out="",
+                        intercept_out="",
+                        r_squared_out="",
+                        apply_status="Need at least 2 positive finite bead points for log10 fit.",
+                    ).to_tuple()
+
+                x_log10 = np.log10(x)
+                y_log10 = np.log10(y)
+
+                slope, intercept = np.polyfit(x_log10, y_log10, 1)
+
+                y_log10_pred = slope * x_log10 + intercept
+                r2 = self._compute_r_squared(y_true=y_log10, y_pred=y_log10_pred)
+
+                prefactor = 10.0 ** float(intercept)
+
+                calib_payload = {
+                    "slope": float(slope),
+                    "intercept": float(intercept),
+                    "prefactor": float(prefactor),
+                    "R_squared": float(r2),
+                    "model": "log10(y)=slope*log10(x)+intercept; y=(10**intercept) * x**slope",
+                    "x_definition": "Intensity [a.u.]",
+                    "y_definition": "Intensity [calibrated units]",
+                }
+
+                x_log10_fit = np.linspace(float(np.min(x_log10)), float(np.max(x_log10)), 200)
+                y_log10_fit = slope * x_log10_fit + intercept
+
+                fig.add_trace(go.Scatter(x=x_log10, y=y_log10, mode="markers", name="beads"))
+                fig.add_trace(go.Scatter(x=x_log10_fit, y=y_log10_fit, mode="lines", name="fit"))
+                fig.update_layout(
+                    xaxis_title="log10(Intensity [a.u.])",
+                    yaxis_title="log10(Intensity [calibrated units])",
+                    separators=".,",
+                    hovermode="closest",
+                )
+
+                if not detector_column:
+                    apply_msg = "Calibration fit OK. Select a fluorescence detector to apply."
+                else:
+                    with FCSFile(str(bead_file_path), writable=False) as fcs:
+                        raw_intensity_au = fcs.column_copy(str(detector_column), dtype=float)
+
+                    raw_intensity_au = np.asarray(raw_intensity_au, dtype=float)
+                    raw_intensity_au = raw_intensity_au[np.isfinite(raw_intensity_au)]
+                    raw_intensity_au = raw_intensity_au[raw_intensity_au > 0.0]
+
+                    calibrated_intensity_units = prefactor * (raw_intensity_au ** float(slope))
+                    calibrated_intensity_units = calibrated_intensity_units[np.isfinite(calibrated_intensity_units)]
+                    calibrated_intensity_units = calibrated_intensity_units[calibrated_intensity_units > 0.0]
+
+                    apply_msg = f"Applied to {calibrated_intensity_units.size} events using detector '{detector_column}'." if runtime_config.debug else ""
+
+                return CalibrationResult(
+                    figure=fig,
+                    calibration_store=calib_payload,
+                    slope_out=f"{float(slope):.6g}",
+                    intercept_out=f"{float(intercept):.6g} (A={float(prefactor):.6g})",
+                    r_squared_out=f"{float(r2):.6g}",
+                    apply_status=apply_msg,
+                ).to_tuple()
+
+            except Exception as exc:
+                fig.update_layout(title="Calibration failed due to an exception.")
                 return CalibrationResult(
                     figure=fig,
                     calibration_store=dash.no_update,
                     slope_out="",
                     intercept_out="",
                     r_squared_out="",
-                    apply_status="Missing bead file.",
+                    apply_status=f"{type(exc).__name__}: {exc}",
                 ).to_tuple()
-
-            mesf, intensity = self._extract_xy_from_table(table_data or [])
-            if mesf.size < 2:
-                fig.update_layout(title="Need at least 2 bead points to calibrate.")
-                return CalibrationResult(
-                    figure=fig,
-                    calibration_store=dash.no_update,
-                    apply_status="Need ≥ 2 valid bead rows.",
-                ).to_tuple()
-
-            x = np.asarray(intensity, dtype=float)
-            y = np.asarray(mesf, dtype=float)
-
-            mask = np.isfinite(x) & np.isfinite(y)
-            x = x[mask]
-            y = y[mask]
-            if x.size < 2:
-                fig.update_layout(title="Need at least 2 finite points.")
-                return CalibrationResult(
-                    figure=fig,
-                    calibration_store=dash.no_update,
-                    apply_status="Need ≥ 2 finite bead points.",
-                ).to_tuple()
-
-            slope, intercept = np.polyfit(x, y, 1)
-            y_pred = slope * x + intercept
-            r2 = self._compute_r_squared(y_true=y, y_pred=y_pred)
-
-            calib_payload = {
-                "slope": float(slope),
-                "intercept": float(intercept),
-                "R_squared": float(r2),
-            }
-
-            x_fit = np.linspace(float(np.min(x)), float(np.max(x)), 200)
-            y_fit = slope * x_fit + intercept
-
-            fig.add_trace(go.Scatter(x=x, y=y, mode="markers", name="beads"))
-            fig.add_trace(go.Scatter(x=x_fit, y=y_fit, mode="lines", name="fit"))
-            fig.update_layout(
-                xaxis_title="Intensity (a.u.)",
-                yaxis_title="MESF",
-                separators=".,",
-                hovermode="x unified",
-            )
-
-            if not detector_column:
-                apply_msg = "Calibration fit OK. Select a fluorescence detector to apply."
-            else:
-                with FCSFile(str(bead_file_path), writable=False) as fcs:
-                    raw = fcs.column_copy(str(detector_column), dtype=float)
-
-                raw = np.asarray(raw, dtype=float)
-                raw = raw[np.isfinite(raw)]
-                calibrated = slope * raw + intercept
-                apply_msg = f"Applied to {calibrated.size} events using detector '{detector_column}'."
-
-            return CalibrationResult(
-                figure=fig,
-                calibration_store=calib_payload,
-                slope_out=f"{float(slope):.6g}",
-                intercept_out=f"{float(intercept):.6g}",
-                r_squared_out=f"{float(r2):.6g}",
-                apply_status=apply_msg,
-            ).to_tuple()
