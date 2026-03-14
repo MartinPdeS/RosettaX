@@ -226,70 +226,38 @@ class DefaultSettingValues():
         """
         Register callbacks for:
         """
-        @callback(
-            Input(Ids.Default.save_changes_button, "n_clicks"),
-            State(Ids.NewProfile.new_profile_name_input, "value"),
-            State(Ids.Default.default_fluorescence_page_scattering_detector, "value"),
-            State(Ids.Default.default_fluorescence_page_fluorescence_detector, "value"),
-            State(Ids.Default.default_medium_index_input, "value"),
-            State(Ids.Default.default_core_index_input, "value"),
-            State(Ids.Default.default_shell_index_input, "value"),
-            State(Ids.Default.default_shell_thickness_input, "value"),
-            State(Ids.Default.default_core_diameter_input, "value"),
-            State(Ids.Default.default_particle_diameter_input, "value"),
-            State(Ids.Default.default_particle_index_input, "value"),
-            State(Ids.Default.default_max_events_for_analysis_input, "value"),
-            State(Ids.Default.default_n_bins_for_plots_input, "value"),
-            State(Ids.Default.default_peak_count_input, "value"),
-            State(Ids.Default.default_mesf_values_input, "value"),
-            prevent_initial_call=True,
-        )
-        def edit_settings(name: Any, *args) -> str:
-            with open(f"RosettaX/data/settings/{name}.json", "r") as f:
-                settings = json.load(f)
-                keys = [
-                    Ids.Default.default_fluorescence_page_scattering_detector,
-                    Ids.Default.default_fluorescence_page_fluorescence_detector,
-                    Ids.Default.default_medium_index_input,
-                    Ids.Default.default_core_index_input,
-                    Ids.Default.default_shell_index_input,
-                    Ids.Default.default_shell_thickness_input,
-                    Ids.Default.default_core_diameter_input,
-                    Ids.Default.default_particle_diameter_input,
-                    Ids.Default.default_particle_index_input,
-                    Ids.Default.default_max_events_for_analysis_input,
-                    Ids.Default.default_n_bins_for_plots_input,
-                    Ids.Default.default_peak_count_input,
-                    Ids.Default.default_mesf_values_input
-                ]
-                for key, value in zip(keys, args):
-                    settings[key] = value
-            with open(f"RosettaX/data/settings/{name}.json", "w") as f:
-                json.dump(settings, f, indent=4)
-            return f"Profile '{name}' updated with new default values."
+
         @callback(
             Output(Ids.Default.default_fluorescence_page_scattering_detector, "value"),
             Output(Ids.Default.default_fluorescence_page_fluorescence_detector, "value"),
-            Output(Ids.Default.default_medium_index_input, "value"),
-            Output(Ids.Default.default_core_index_input, "value"),
-            Output(Ids.Default.default_shell_index_input, "value"),
-            Output(Ids.Default.default_shell_thickness_input, "value"),
-            Output(Ids.Default.default_core_diameter_input, "value"),
-            Output(Ids.Default.default_particle_diameter_input, "value"),
-            Output(Ids.Default.default_particle_index_input, "value"),
-            Output(Ids.Default.default_max_events_for_analysis_input, "value"),
-            Output(Ids.Default.default_n_bins_for_plots_input, "value"),
-            Output(Ids.Default.default_peak_count_input, "value"),
-            Output(Ids.Default.default_mesf_values_input, "value"),
+            Output(Ids.Default.default_medium_index, "value"),
+            Output(Ids.Default.default_core_index, "value"),
+            Output(Ids.Default.default_shell_index, "value"),
+            Output(Ids.Default.default_shell_thickness_nm, "value"),
+            Output(Ids.Default.default_core_diameter_nm, "value"),
+            Output(Ids.Default.default_particle_diameter_nm, "value"),
+            Output(Ids.Default.default_particle_index, "value"),
+            Output(Ids.Default.default_max_events_for_analysis, "value"),
+            Output(Ids.Default.default_n_bins_for_plots, "value"),
+            Output(Ids.Default.default_peak_count, "value"),
+            Output(Ids.Default.default_mesf_values, "value"),
+            Output(Ids.Default.default_fcs_file_path, "value"),
+            Output(Ids.Default.default_debug, "value"),
+            Output(Ids.Default.default_fluorescence_show_scattering_controls, "value"),
+            Output(Ids.Default.default_fluorescence_show_threshold_controls, "value"),
+            Output(Ids.Default.default_fluorescence_show_fluorescence_controls, "value"),
+            Output(Ids.Default.default_fluorescence_debug_scattering, "value"),
+            Output(Ids.Default.default_fluorescence_debug_fluorescence, "value"),
+            Output(Ids.Default.default_fluorescence_debug_load, "value"),
+
             Input(Ids.Default.default_values_profile_dropdown, "value"),
             prevent_initial_call=True,
         )
         def load_profile_defaults(dropdown_value: str) -> str:
-            profile = get_saved_profiles(filename=dropdown_value)[0]
-            settings = profile["settings"]
+            settings = get_saved_profile(dropdown_value)
             return (
-                settings.get("fluorescence_page_scattering_detector", ""),
-                settings.get("fluorescence_page_fluorescence_detector", ""),
+                settings.get("default_fluorescence_page_scattering_detector", ""),
+                settings.get("default_fluorescence_page_fluorescence_detector", ""),
                 settings.get("default_medium_index", ""),
                 settings.get("default_core_index", ""),
                 settings.get("default_shell_index", ""),
@@ -297,8 +265,77 @@ class DefaultSettingValues():
                 settings.get("default_core_diameter_nm", ""),
                 settings.get("default_particle_diameter_nm", ""),
                 settings.get("default_particle_index", ""),
-                settings.get("max_events_for_analysis", ""),
-                settings.get("n_bins_for_plots", ""),
+                settings.get("default_max_events_for_analysis", ""),
+                settings.get("default_n_bins_for_plots", ""),
                 settings.get("default_peak_count", ""),
                 settings.get("default_mesf_values", ""),
+                settings.get("default_fcs_file_path", ""),
+                settings.get("default_debug", ""),
+                settings.get("default_fluorescence_show_scattering_controls", ""),
+                settings.get("default_fluorescence_show_threshold_controls", ""),
+                settings.get("default_fluorescence_show_fluorescence_controls", ""),
+                settings.get("default_fluorescence_debug_scattering", ""),
+                settings.get("default_fluorescence_debug_fluorescence", ""),
+                settings.get("default_fluorescence_debug_load", ""),
             )
+
+        
+        @callback(
+            Input(Ids.Default.default_save_changes_button, "n_clicks"),
+            State(Ids.Default.default_values_profile_dropdown, "value"),
+
+            State(Ids.Default.default_fluorescence_page_scattering_detector, "value"),
+            State(Ids.Default.default_fluorescence_page_fluorescence_detector, "value"),
+            State(Ids.Default.default_medium_index, "value"),
+            State(Ids.Default.default_core_index, "value"),
+            State(Ids.Default.default_shell_index, "value"),
+            State(Ids.Default.default_shell_thickness_nm, "value"),
+            State(Ids.Default.default_core_diameter_nm, "value"),
+            State(Ids.Default.default_particle_diameter_nm, "value"),
+            State(Ids.Default.default_particle_index, "value"),
+            State(Ids.Default.default_max_events_for_analysis, "value"),
+            State(Ids.Default.default_n_bins_for_plots, "value"),
+            State(Ids.Default.default_peak_count, "value"),
+            State(Ids.Default.default_mesf_values, "value"),
+            State(Ids.Default.default_fcs_file_path, "value"),
+            State(Ids.Default.default_debug, "value"),
+            State(Ids.Default.default_fluorescence_show_scattering_controls, "value"),
+            State(Ids.Default.default_fluorescence_show_threshold_controls, "value"),
+            State(Ids.Default.default_fluorescence_show_fluorescence_controls, "value"),
+            State(Ids.Default.default_fluorescence_debug_scattering, "value"),
+            State(Ids.Default.default_fluorescence_debug_fluorescence, "value"),
+            State(Ids.Default.default_fluorescence_debug_load, "value"),
+            prevent_initial_call=True,
+        )
+        def edit_settings(name: Any, profile_target: str, *args) -> str:
+            print(name, profile_target, args)
+            new_dict = {}
+            keys = [
+                Ids.Default.default_fluorescence_page_scattering_detector,
+                Ids.Default.default_fluorescence_page_fluorescence_detector,
+                Ids.Default.default_medium_index,
+                Ids.Default.default_core_index,
+                Ids.Default.default_shell_index,
+                Ids.Default.default_shell_thickness_nm,
+                Ids.Default.default_core_diameter_nm,
+                Ids.Default.default_particle_diameter_nm,
+                Ids.Default.default_particle_index,
+                Ids.Default.default_max_events_for_analysis,
+                Ids.Default.default_n_bins_for_plots,
+                Ids.Default.default_peak_count,
+                Ids.Default.default_mesf_values,
+                Ids.Default.default_fcs_file_path,
+                Ids.Default.default_debug,
+                Ids.Default.default_fluorescence_show_scattering_controls,
+                Ids.Default.default_fluorescence_show_threshold_controls,
+                Ids.Default.default_fluorescence_show_fluorescence_controls,
+                Ids.Default.default_fluorescence_debug_scattering,
+                Ids.Default.default_fluorescence_debug_fluorescence,
+                Ids.Default.default_fluorescence_debug_load,
+            ]
+            for key, value in zip(keys, args):
+                new_dict[key] = value
+            
+            new_dict[Ids.Default.default_mesf_values] = re.sub(r'[^\d,\s]', '', new_dict[Ids.Default.default_mesf_values])
+
+            save_profile(profile_target, new_dict)
