@@ -125,6 +125,17 @@ def list_setting_files():
                 list_of_filenames.append({"filename": file.name, "path": str(file)})
     return list_of_filenames
 
+def get_saved_profile(jsonfilename: str):
+    """
+    Gets a saved profile from the settings directory. Each profile is a json file that contains a set of default values for the fluorescence calibration page. This function returns a dictionary containing the filename and path of the profile.
+    """
+    profiles_dir = Path("RosettaX/data/settings")
+    if profiles_dir.exists() and profiles_dir.is_dir():
+        profile_path = profiles_dir / jsonfilename
+        if profile_path.exists() and profile_path.is_file():
+            with profile_path.open("r", encoding="utf-8") as f:
+                return json.load(f)
+        return None
 
 
 _runtime_config: Optional[RuntimeConfig] = None
