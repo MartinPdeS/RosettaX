@@ -9,6 +9,7 @@ import plotly.graph_objs as go
 
 from RosettaX.utils.reader import FCSFile
 from RosettaX.pages.runtime_config import get_runtime_config
+from RosettaX.pages.fluorescence.utils import mesf_string_to_table
 
 @dataclass(frozen=True)
 class CalibrationResult:
@@ -49,10 +50,11 @@ class CalibrationResult:
 class CalibrationSection:
     runtime_config = get_runtime_config()
     bead_table_columns = [
-        {"name": "Intensity [calibrated units]", "id": "col1", "editable": True},
+        {"name": "Intensity [calibrated units] (MESF Values)", "id": "col1", "editable": True},
         {"name": "Intensity [a.u.]", "id": "col2", "editable": True},
     ]
-    default_bead_rows = [{"col1": "", "col2": ""} for _ in range(3)]
+    default_bead_rows: List[dict] = [{"col1": "", "col2": ""} for _ in range(3)]
+    default_bead_rows = mesf_string_to_table(runtime_config.default_mesf_values)
 
     def _calibration_get_layout(self) -> dbc.Card:
         """

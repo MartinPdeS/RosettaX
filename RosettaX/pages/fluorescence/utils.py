@@ -3,6 +3,7 @@ from typing import Optional
 
 import numpy as np
 import plotly.graph_objs as go
+from RosettaX.pages.runtime_config import get_runtime_config
 
 
 class FluorescenceCalibration:
@@ -308,3 +309,28 @@ def add_vertical_lines(
             )
 
     return fig
+
+def mesf_string_to_table(mesf_string: str) -> list[tuple[float, float]]:
+    """
+    Convert a MESF string (e.g. "1, 2, 3, 4") into a list of (intensity, MESF) tuples to display in the table. The input string should contain a list of numbers separated by a comma. 
+
+    Parameters
+    ----------
+    mesf_string : str
+        String containing intensity: MESF pairs separated by commas.
+
+    Returns
+    -------
+    list[tuple[float, float]]
+        List of (intensity, MESF) tuples parsed from the input string.
+    """
+    runtime_config = get_runtime_config()
+
+    if not mesf_string:
+        return [{"col1": "", "col2": ""} for _ in range(runtime_config.default_peak_count)]
+    mesf_values = mesf_string.strip().split(",")
+    result = []
+    for mesf_value in mesf_values:
+        {"col1": "", "col2": ""}
+        result.append({"col1": float(mesf_value.strip()), "col2": ""})
+    return result
