@@ -47,6 +47,7 @@ class CalibrationResult:
 
 
 class CalibrationSection:
+    runtime_config = get_runtime_config()
     bead_table_columns = [
         {"name": "Intensity [calibrated units]", "id": "col1", "editable": True},
         {"name": "Intensity [a.u.]", "id": "col2", "editable": True},
