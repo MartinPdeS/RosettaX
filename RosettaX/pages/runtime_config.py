@@ -35,39 +35,50 @@ class LoadSettings():
 
 @dataclass
 class RuntimeConfig:
-    debug: bool = False
+    def __init__(self, json_file: Optional[str] = None):
+        base_dir = Path(__file__).resolve().parents[1]
+        if json_file is not None:
+            self.json_file = str(base_dir / "data" / "settings" / json_file)
+        else:
+            self.json_file = str(base_dir / "data" / "settings" / "settings.json")
+        self._explicit = set()
+
+    settings = LoadSettings(json_file=None)
+    default_debug: bool = settings.type_cast(Ids.Default.default_debug, bool)
 
     # Fluorescence calibration page, visibility
-    fluorescence_show_scattering_controls: bool = True
-    fluorescence_show_threshold_controls: bool = True
-    fluorescence_show_fluorescence_controls: bool = True
+    fluorescence_show_scattering_controls: bool = settings.type_cast(Ids.Default.default_fluorescence_show_scattering_controls, bool)
+    default_fluorescence_show_threshold_controls: bool = settings.type_cast(Ids.Default.default_fluorescence_show_threshold_controls, bool)
+    default_fluorescence_show_fluorescence_controls: bool = settings.type_cast(Ids.Default.default_fluorescence_show_fluorescence_controls, bool)
 
 
     # Fluorescence calibration page, debug outputs
-    fluorescence_debug_scattering: bool = False
-    fluorescence_debug_fluorescence: bool = False
-    fluorescence_debug_load: bool = False
+    default_fluorescence_debug_scattering: bool = settings.type_cast(Ids.Default.default_fluorescence_debug_scattering, bool)
+    default_fluorescence_debug_fluorescence: bool = settings.type_cast(Ids.Default.default_fluorescence_debug_fluorescence, bool)
+    default_fluorescence_debug_load: bool = settings.type_cast(Ids.Default.default_fluorescence_debug_load, bool)
 
     # General analysis parameters
-    max_events_for_analysis: Optional[int] = 200_000
-    n_bins_for_plots: Optional[int] = 400
-    default_peak_count: Optional[int] = 3
+    default_max_events_for_analysis: Optional[int] = settings.type_cast(Ids.Default.default_max_events_for_analysis, int)
+    default_n_bins_for_plots: Optional[int] = settings.type_cast(Ids.Default.default_n_bins_for_plots, int)
+    default_peak_count: Optional[int] = settings.type_cast(Ids.Default.default_peak_count, int)
 
     # Fluorescence calibration page defaults
-    fcs_file_path: Optional[str] = None
-    fluorescence_page_scattering_detector: Optional[str] = None
-    fluorescence_page_fluorescence_detector: Optional[str] = None
+    default_fcs_file_path: Optional[str] = settings.type_cast(Ids.Default.default_fcs_file_path, str)
+    default_fluorescence_page_scattering_detector: Optional[str] = settings.type_cast(Ids.Default.default_fluorescence_page_scattering_detector, None)
+    default_fluorescence_page_fluorescence_detector: Optional[str] = settings.type_cast(Ids.Default.default_fluorescence_page_fluorescence_detector, None)
 
     # Optical properties for Mie theory calculations
-    default_particle_diameter_nm = 100
-    default_particle_index = 1.59
-    default_medium_index = 1.33
+    default_particle_diameter_nm = settings.type_cast(Ids.Default.default_particle_diameter_nm, int)
+    default_particle_index = settings.type_cast(Ids.Default.default_particle_index, float)
+    default_medium_index = settings.type_cast(Ids.Default.default_medium_index, float)
 
-    default_core_index = 1.59
-    default_shell_index = 1.40
-    default_shell_thickness_nm = 20
-    default_core_diameter_nm = 100
+    default_core_index = settings.type_cast(Ids.Default.default_core_index, float)
+    default_shell_index = settings.type_cast(Ids.Default.default_shell_index, float)
+    default_shell_thickness_nm = settings.type_cast(Ids.Default.default_shell_thickness_nm, int)
+    default_core_diameter_nm = settings.type_cast(Ids.Default.default_core_diameter_nm, int)
 
+    # default MESF Bead Table Value
+    default_mesf_values = settings.type_cast(Ids.Default.default_mesf_values, str)
 
     _explicit: set[str] = field(default_factory=set, init=False, repr=False)
 
@@ -81,26 +92,27 @@ class RuntimeConfig:
         """
         Apply global policy based on `debug`, without overriding values explicitly set by CLI.
         """
-        if self.debug:
-            if not self.is_explicit("fluorescence_show_scattering_controls"):
-                self.fluorescence_show_scattering_controls = True
-            if not self.is_explicit("fluorescence_show_threshold_controls"):
-                self.fluorescence_show_threshold_controls = True
+        if self.default_debug:
+            if not self.is_explicit("default_fluorescence_show_scattering_controls"):
+                self.default_fluorescence_show_scattering_controls = True
+            if not self.is_explicit("default_fluorescence_show_threshold_controls"):
+                self.default_fluorescence_show_threshold_controls = True
 
-            if not self.is_explicit("fluorescence_debug_scattering"):
-                self.fluorescence_debug_scattering = True
-            if not self.is_explicit("fluorescence_debug_fluorescence"):
-                self.fluorescence_debug_fluorescence = True
+            if not self.is_explicit("default_fluorescence_debug_scattering"):
+                self.default_fluorescence_debug_scattering = True
+            if not self.is_explicit("default_fluorescence_debug_fluorescence"):
+                self.default_fluorescence_debug_fluorescence = True
         else:
-            if not self.is_explicit("fluorescence_show_scattering_controls"):
-                self.fluorescence_show_scattering_controls = False
-            if not self.is_explicit("fluorescence_show_threshold_controls"):
-                self.fluorescence_show_threshold_controls = False
+            if not self.is_explicit("default_fluorescence_show_scattering_controls"):
+                self.default_fluorescence_show_scattering_controls = False
+            if not self.is_explicit("default_fluorescence_show_threshold_controls"):
+                self.default_fluorescence_show_threshold_controls = False
 
-            if not self.is_explicit("fluorescence_debug_scattering"):
-                self.fluorescence_debug_scattering = False
-            if not self.is_explicit("fluorescence_debug_fluorescence"):
-                self.fluorescence_debug_fluorescence = False
+            if not self.is_explicit("default_fluorescence_debug_scattering"):
+                self.default_fluorescence_debug_scattering = False
+            if not self.is_explicit("default_fluorescence_debug_fluorescence"):
+                self.default_fluorescence_debug_fluorescence = False
+    
 
 
 _runtime_config: Optional[RuntimeConfig] = None
