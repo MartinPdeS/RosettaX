@@ -113,6 +113,18 @@ class RuntimeConfig:
             if not self.is_explicit("default_fluorescence_debug_fluorescence"):
                 self.default_fluorescence_debug_fluorescence = False
     
+def list_setting_files():
+    """
+    Gets list of saved profiles from the settings directory. Each profile is a json file that contains a set of default values for the fluorescence calibration page. This function returns a list of dictionaries, each containing the filename and path of a profile.
+    """
+    list_of_filenames = []
+    profiles_dir = Path("RosettaX/data/settings")
+    if profiles_dir.exists() and profiles_dir.is_dir():
+        for file in profiles_dir.iterdir():
+            if file.is_file() and file.suffix == ".json":
+                list_of_filenames.append({"filename": file.name, "path": str(file)})
+    return list_of_filenames
+
 
 
 _runtime_config: Optional[RuntimeConfig] = None
