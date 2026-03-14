@@ -102,13 +102,13 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--max_events_for_analysis",
         type=int,
         default=argparse.SUPPRESS,
-        help=f"Max events used in analysis (default: {defaults.max_events_for_analysis})",
+        help=f"Max events used in analysis (default: {defaults.default_max_events_for_analysis})",
     )
     parser.add_argument(
         "--n_bins_for_plots",
         type=int,
         default=argparse.SUPPRESS,
-        help=f"Histogram bin count (default: {defaults.n_bins_for_plots})",
+        help=f"Histogram bin count (default: {defaults.default_n_bins_for_plots})",
     )
     parser.add_argument(
         "--default_peak_count",
