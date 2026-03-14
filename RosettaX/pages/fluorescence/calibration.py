@@ -409,7 +409,7 @@ class CalibrationSection:
                     calibrated_intensity_units = calibrated_intensity_units[np.isfinite(calibrated_intensity_units)]
                     calibrated_intensity_units = calibrated_intensity_units[calibrated_intensity_units > 0.0]
 
-                    apply_msg = f"Applied to {calibrated_intensity_units.size} events using detector '{detector_column}'." if runtime_config.debug else ""
+                    apply_msg = f"Applied to {calibrated_intensity_units.size} events using detector '{detector_column}'." if runtime_config.default_debug else ""
 
                 return CalibrationResult(
                     figure=fig,

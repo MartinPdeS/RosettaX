@@ -89,7 +89,7 @@ class LoadSection:
                     [
                         dcc.Store(
                             id=self.ids.Load.fcs_path_store,
-                            data=runtime_config.fcs_file_path,
+                            data=runtime_config.default_fcs_file_path,
                             storage_type="memory",
                         ),
                         widget,
@@ -131,7 +131,7 @@ class LoadSection:
         def show_filename(name: Any) -> str:
             runtime_config = get_runtime_config()
 
-            if not runtime_config.debug:
+            if not runtime_config.default_debug:
                 return ""
 
             return f"Selected file: {name}" if name else ""
@@ -186,7 +186,7 @@ class LoadSection:
 
             else:
                 return LoadResult(
-                    upload_saved_as="No file loaded." if runtime_config.debug else "",
+                    upload_saved_as="No file loaded." if runtime_config.default_debug else "",
                     scattering_detector_options=[],
                     scattering_detector_value=None,
                     fluorescence_detector_options=[],
@@ -247,7 +247,7 @@ class LoadSection:
 
             return LoadResult(
                 uploaded_fcs_path_store=selected_path,
-                upload_saved_as=status_message if runtime_config.debug else "",
+                upload_saved_as=status_message if runtime_config.default_debug else "",
                 scattering_detector_options=scatter_options,
                 scattering_detector_value=scatter_value,
                 fluorescence_detector_options=fluorescence_options,

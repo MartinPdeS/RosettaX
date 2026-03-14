@@ -208,7 +208,7 @@ class PeaksSection:
                     type="number",
                     min=10,
                     step=10,
-                    value=runtime_config.n_bins_for_plots,
+                    value=runtime_config.default_n_bins_for_plots,
                     style={"width": "160px"},
                 ),
             ],

@@ -133,12 +133,12 @@ class ScatteringSection:
                     type="number",
                     min=10,
                     step=10,
-                    value=runtime_config.n_bins_for_plots,
+                    value=runtime_config.default_n_bins_for_plots,
                     style={"width": "160px"},
                 ),
             ],
             style=styling.CARD,
-            hidden=runtime_config.debug is False,
+            hidden=runtime_config.default_debug is False,
         )
 
     def _scattering_estimate_and_threshold_row(self) -> dash.html.Div:
@@ -181,7 +181,7 @@ class ScatteringSection:
                 ),
             ],
             style={"display": "flex", "alignItems": "center"},
-            hidden=runtime_config.debug is False,
+            hidden=runtime_config.default_debug is False,
         )
 
     def _scattering_yscale_switch(self) -> dbc.Checklist:
@@ -200,7 +200,7 @@ class ScatteringSection:
             options=[{"label": "Log scale (counts)", "value": "log"}],
             value=["log"],
             switch=True,
-            style={"display": "none"} if runtime_config.debug is False else {"display": "block"},
+            style={"display": "none"} if runtime_config.default_debug is False else {"display": "block"},
         )
 
     def _scattering_histogram_graph(self) -> dash.dcc.Loading:
@@ -216,7 +216,7 @@ class ScatteringSection:
         return dash.dcc.Loading(
             dash.dcc.Graph(
                 id=self.ids.Scattering.graph_hist,
-                style={"display": "none"} if runtime_config.debug is False else self.graph_style,
+                style={"display": "none"} if runtime_config.default_debug is False else self.graph_style,
             ),
             type="default",
         )
@@ -424,7 +424,7 @@ class ScatteringSection:
         go.Figure
             Plotly figure for the scattering histogram.
         """
-        if runtime_config.debug is False:
+        if runtime_config.default_debug is False:
             fig = go.Figure()
             fig.update_layout(separators=".,")
             return fig

@@ -44,7 +44,7 @@ class NewProfilePage():
                         html.Div(
                             [
                                 dcc.Input(
-                                    id=Ids.NewProfile.new_profile_name_input,
+                                    id=Ids.NewProfile.new_profile_name,
                                     placeholder="Enter profile name",
                                     type="text",
                                     style={"marginRight": "10px"},
@@ -69,7 +69,7 @@ class NewProfilePage():
         @callback(
             Output(Ids.NewProfile.new_profile_status, "children"),
             Input(Ids.NewProfile.save_new_profile_button, "n_clicks"),
-            State(Ids.NewProfile.new_profile_name_input, "value"),
+            State(Ids.NewProfile.new_profile_name, "value"),
             prevent_initial_call=True,
         )
         def create_new_profile(n_clicks: Any, name: Any) -> str:
