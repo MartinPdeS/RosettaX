@@ -1,0 +1,29 @@
+{
+    "debug": "False",
+    "fluorescence_show_scattering_controls": "True",
+    "fluorescence_show_threshold_controls": "True",
+    "fluorescence_show_fluorescence_controls": "True",
+
+    "fluorescence_debug_scattering": "False",
+    "fluorescence_debug_fluorescence": "False",
+    "fluorescence_debug_load": "False",
+
+    "max_events_for_analysis": 777777,
+    "n_bins_for_plots": 400,
+    "default_peak_count": 3,
+
+    "fcs_file_path": "",
+    "fluorescence_page_scattering_detector": "",
+    "fluorescence_page_fluorescence_detector": "",
+
+    "default_particle_diameter_nm": 100,
+    "default_particle_index": 1.59,
+    "default_medium_index": 1.33,
+
+    "default_core_index": 1.59,
+    "default_shell_index": 1.40,
+    "default_shell_thickness_nm": 20,
+    "default_core_diameter_nm": 100,
+
+    "default_mesf_values": ""
+}
