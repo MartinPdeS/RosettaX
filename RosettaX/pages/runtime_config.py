@@ -1,5 +1,36 @@
 from dataclasses import dataclass, field
 from typing import Optional
+import json
+from pathlib import Path
+from RosettaX.pages.settings.ids import Ids
+
+class LoadSettings():
+    def __init__(self, json_file: str = "settings.json"):
+        self.json_file = json_file
+        base_dir = Path(__file__).resolve().parents[1]
+        settings_path = Path(self.json_file) if self.json_file else (base_dir / "data" / "settings" / "settings.json")
+
+        with settings_path.open("r", encoding="utf-8") as f:
+            self.settings = json.load(f)
+
+    def type_cast(self, value, target_type):
+        if target_type == bool:
+            if self.settings[value]:
+                return True
+            else:
+                return False
+        elif target_type == int:
+            return int(self.settings[value])
+        elif target_type == float:
+            return float(self.settings[value])
+        elif target_type == None:
+            if self.settings[value].lower() == "none" or self.settings[value] == "":
+                return None
+            else:
+                return self.settings[value]
+        elif target_type == str:
+            return str(self.settings[value])
+        return self.settings[value]
 
 
 @dataclass
