@@ -29,8 +29,8 @@ class DefaultSettingValues():
                     [
                         html.P("Dropdown of saved profiles with option to load profile values into the inputs below."),
                         dcc.Dropdown(
-                            options=[{"label": profile["filename"], "value": profile["filename"]} for profile in get_saved_profiles()],
-                            value=None,
+                            options=[{"label": profile["filename"], "value": profile["filename"]} for profile in list_setting_files()],
+                            value=list_setting_files()[0]["filename"] if list_setting_files() else None,
                             placeholder="Select Profile",
                             id=Ids.Default.default_values_profile_dropdown,
                         ),
@@ -42,86 +42,110 @@ class DefaultSettingValues():
                         html.Div("Default fluorescence page scattering detector:"),
                         dcc.Input(
                             id=Ids.Default.default_fluorescence_page_scattering_detector,
-                            value=runtime_config.fluorescence_page_scattering_detector,
+                            value=runtime_config.default_fluorescence_page_scattering_detector,
                         ),
                         html.Div("Default fluorescence page fluorescence detector:"),
                         dcc.Input(
                             id=Ids.Default.default_fluorescence_page_fluorescence_detector,
-                            value=runtime_config.fluorescence_page_fluorescence_detector,
+                            value=runtime_config.default_fluorescence_page_fluorescence_detector,
                         ),
 
                         html.Div("Default Medium Refractive Index:"),
                         dcc.Input(
-                            id=Ids.Default.default_medium_index_input,
+                            id=Ids.Default.default_medium_index,
                             type="number",
                             value=runtime_config.default_medium_index,
                             step=0.001,
+                            min=0.001,
+                            max=2.5
                         ),
                         html.Div("Default Core Refractive Index:"),
                         dcc.Input(
-                            id=Ids.Default.default_core_index_input,
+                            id=Ids.Default.default_core_index,
                             type="number",
                             value=runtime_config.default_core_index,
                             step=0.001,
+                            min=0.001,
+                            max=2.5
                         ),
                         html.Div("Default Shell Refractive Index:"),
                         dcc.Input(
-                            id=Ids.Default.default_shell_index_input,
+                            id=Ids.Default.default_shell_index,
                             type="number",
                             value=runtime_config.default_shell_index,
                             step=0.001,
+                            min=0.001,
+                            max=2.5
                         ),
                         html.Div("Default Shell Thickness (nm):"),
                         dcc.Input(
-                            id=Ids.Default.default_shell_thickness_input,
+                            id=Ids.Default.default_shell_thickness_nm,
                             type="number",
                             value=runtime_config.default_shell_thickness_nm,
-                            step=1,
+                            step=0.01,
+                            min=0.01, 
+                            max=1000
                         ),
                         html.Div("Default Core Diameter (nm):"),
                         dcc.Input(
-                            id=Ids.Default.default_core_diameter_input,
+                            id=Ids.Default.default_core_diameter_nm,
                             type="number",
                             value=runtime_config.default_core_diameter_nm,
-                            step=1,
+                            step=0.01,
+                            min=0.01,
+                            max=1000
                         ),
 
-                        html.Div("Default default particle diameter nm:"),
+                        html.Div("Default particle diameter nm:"),
                         dcc.Input(
-                            id=Ids.Default.default_particle_diameter_input,
+                            id=Ids.Default.default_particle_diameter_nm,
                             type="number",
                             value=runtime_config.default_particle_diameter_nm,
                             step=1,
+                            min=1,
+                            max=1000
                         ),
-                        html.Div("Default default particle index:"),
+                        html.Div("Default particle index:"),
                         dcc.Input(
-                            id=Ids.Default.default_particle_index_input,
+                            id=Ids.Default.default_particle_index,
                             type="number",
                             value=runtime_config.default_particle_index,
                             step=0.001,
+                            min=0.001,
+                            max=2.5
                         ),
 
                         html.Div("Default max events for analysis:"),
                         dcc.Input(
-                            id=Ids.Default.default_max_events_for_analysis_input,
-                            value=runtime_config.max_events_for_analysis,
+                            id=Ids.Default.default_max_events_for_analysis,
+                            value=runtime_config.default_max_events_for_analysis,
+                            type="number",
+                            step=1,
+                            min=1,
                         ),
 
                         html.Div("Default n bins for lots:"),
                         dcc.Input(
-                            id=Ids.Default.default_n_bins_for_plots_input,
-                            value=runtime_config.n_bins_for_plots,
+                            id=Ids.Default.default_n_bins_for_plots,
+                            value=runtime_config.default_n_bins_for_plots,
+                            type="number",
+                            step=10,
+                            min=10,
                         ),
 
                         html.Div("Default peak count:"),
                         dcc.Input(
-                            id=Ids.Default.default_peak_count_input,
+                            id=Ids.Default.default_peak_count,
                             value=runtime_config.default_peak_count,
+                            type="number", 
+                            step=1,
+                            min=1, 
+                            max=10
                         ),
 
                         html.Div("Default MESF Values:"),
                         dcc.Input(
-                            id=Ids.Default.default_mesf_values_input,
+                            id=Ids.Default.default_mesf_values,
                             value=runtime_config.default_mesf_values,
                         ),
                         dbc.Button("Save Changes", id=Ids.Default.save_changes_button, color="primary", style={"marginTop": "10px"}),
