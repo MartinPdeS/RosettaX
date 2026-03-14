@@ -8,7 +8,8 @@ from dash import Input, Output, State, callback, dcc, html
 from RosettaX.pages.settings.ids import Ids
 import dash
 
-from RosettaX.pages.runtime_config import get_runtime_config, get_saved_profiles
+from RosettaX.pages.runtime_config import get_runtime_config, list_setting_files, get_saved_profile, save_profile
+import re
 
 
 class DefaultSettingValues():
@@ -148,13 +149,78 @@ class DefaultSettingValues():
                             id=Ids.Default.default_mesf_values,
                             value=runtime_config.default_mesf_values,
                         ),
-                        dbc.Button("Save Changes", id=Ids.Default.save_changes_button, color="primary", style={"marginTop": "10px"}),
+                        html.Br(),
+                        html.Br(),
+                        dbc.CardHeader("Advanced Settings"),
+                        dbc.CardBody(
+                            [
+                                html.Div("Default FCS File Path:"),
+                                dcc.Input(
+                                    id=Ids.Default.default_fcs_file_path,
+                                    value=runtime_config.default_fcs_file_path,
+                                ),
+
+                                html.Div("Debug Mode:"),
+                                dcc.Dropdown(
+                                    id=Ids.Default.default_debug,
+                                    value=runtime_config.default_debug,
+                                    options=[
+                                        {"label": "True", "value": True},
+                                        {"label": "False", "value": False}
+                                    ]
+                                ),
+
+                                html.Div("default_fluorescence_show_scattering_controls"),
+                                dcc.Dropdown(
+                                    id=Ids.Default.default_fluorescence_show_scattering_controls,
+                                    value=runtime_config.default_fluorescence_show_scattering_controls,
+                                    options=[{"label": "True", "value": True}, {"label": "False", "value": False}]
+                                ),
+
+                                html.Div("default_fluorescence_show_threshold_controls:"),
+                                dcc.Dropdown(
+                                    id=Ids.Default.default_fluorescence_show_threshold_controls,
+                                    value=runtime_config.default_fluorescence_show_threshold_controls,
+                                    options=[{"label": "True", "value": True}, {"label": "False", "value": False}]
+                                ),
+
+                                html.Div("default_fluorescence_show_fluorescence_controls:"),
+                                dcc.Dropdown(
+                                    id=Ids.Default.default_fluorescence_show_fluorescence_controls,
+                                    value=runtime_config.default_fluorescence_show_fluorescence_controls,
+                                    options=[{"label": "True", "value": True}, {"label": "False", "value": False}]
+                                ),
+
+                                html.Div("default_fluorescence_debug_scattering:"),
+                                dcc.Dropdown(
+                                    id=Ids.Default.default_fluorescence_debug_scattering,
+                                    value=runtime_config.default_fluorescence_debug_scattering,
+                                    options=[{"label": "True", "value": True}, {"label": "False", "value": False}]
+                                ),
+
+                                html.Div("default_fluorescence_debug_fluorescence:"),
+                                dcc.Dropdown(
+                                    id=Ids.Default.default_fluorescence_debug_fluorescence,
+                                    value=runtime_config.default_fluorescence_debug_fluorescence,
+                                    options=[{"label": "True", "value": True}, {"label": "False", "value": False}]
+                                ),
+
+                                html.Div("default_fluorescence_debug_load:"),
+                                dcc.Dropdown(
+                                    id=Ids.Default.default_fluorescence_debug_load,
+                                    value=runtime_config.default_fluorescence_debug_load,
+                                    options=[{"label": "True", "value": True}, {"label": "False", "value": False}]
+                                ),
+                            ],
+                            style={"backgroundColor": "#f8f9fa", "padding": "10px", "borderRadius": "5px"},
+                        ),
+
+                        dbc.Button("Save Changes", id=Ids.Default.default_save_changes_button, color="primary", style={"marginTop": "10px"}),
                     ],
                     style=self.card_body_scroll,
                 ),
             ]
         )
-    print(Ids.Default.save_changes_button)
         
     def _edit_settings_register_callbacks(self) -> None:
         """
