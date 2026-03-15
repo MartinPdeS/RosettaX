@@ -40,6 +40,8 @@ class Ids:
 
         default_debug = "default_debug"
 
+        default_save_confirmation = "default_save_confirmation"
+
     class NewProfile:
         profile_name = "new_profile_name"
         save_new_profile_button = "save_new_profile_button"

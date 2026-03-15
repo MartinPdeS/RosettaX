@@ -216,6 +216,7 @@ class DefaultSettingValues():
                         ),
 
                         dbc.Button("Save Changes", id=Ids.Default.default_save_changes_button, color="primary", style={"marginTop": "10px"}),
+                        html.Div(id=Ids.Default.default_save_confirmation, style={"marginTop": "10px", "color": "green"}),
                     ],
                     style=self.card_body_scroll,
                 ),
