@@ -47,3 +47,8 @@ class Ids:
         save_new_profile_button = "save_new_profile_button"
         new_profile_status = "new_profile_status"
         new_profile_name = "new_profile_name"
+
+    class DeleteProfile:
+        delete_profile_name = "delete_profile_name"
+        delete_profile_button = "delete_profile_button"
+        delete_profile_status = "delete_profile_status"
