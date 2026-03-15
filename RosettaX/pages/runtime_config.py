@@ -24,7 +24,7 @@ class LoadSettings():
         elif target_type == float:
             return float(self.settings[value])
         elif target_type == None:
-            if self.settings[value].lower() == "none" or self.settings[value] == "":
+            if self.settings[value] == "none" or self.settings[value] == "":
                 return None
             else:
                 return self.settings[value]
@@ -137,13 +137,26 @@ def get_saved_profile(jsonfilename: str):
                 return json.load(f)
         return None
 
+def save_profile(jsonfilename: str, profile_data: dict):
+    """
+    Saves a profile to the settings directory. Each profile is a json file that contains a set of default values for the fluorescence calibration page. This function takes a dictionary containing the filename and path of the profile, as well as the profile data to be saved.
+    """
+    try:
+        profiles_dir = Path("RosettaX/data/settings")
+        if profiles_dir.exists() and profiles_dir.is_dir():
+            profile_path = profiles_dir / jsonfilename
+            with profile_path.open("w", encoding="utf-8") as f:
+                json.dump(profile_data, f, indent=4)
+    except Exception as e:
+        return f"Error saving profile: {e}"
+    
+    return "Profile saved successfully."
 
 _runtime_config: Optional[RuntimeConfig] = None
 
-
-def get_runtime_config() -> RuntimeConfig:
+def get_runtime_config(default="settings.json") -> RuntimeConfig:
     global _runtime_config
     if _runtime_config is None:
-        _runtime_config = RuntimeConfig()
+        _runtime_config = RuntimeConfig(default)
         _runtime_config.apply_policy()
     return _runtime_config
