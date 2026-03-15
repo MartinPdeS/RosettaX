@@ -10,6 +10,7 @@ from dash import Input, Output, dcc, html
 from RosettaX.pages import styling
 from RosettaX.pages.sidebar.main import sidebar_html
 from RosettaX.parser import _parse_args, apply_cli_to_runtime_config
+from RosettaX.pages.runtime_config import get_saved_profile
 
 
 class RosettaXApplication:
@@ -95,6 +96,24 @@ class RosettaXApplication:
         )
         def _display_page(_pathname: Optional[str]):
             return dash.page_container
+        
+        @self.app.callback(
+            Output('current-profile-store', 'data'),
+            Output('current-profile-data-store', 'data'),
+            Input('current-profile-store', 'data'),
+            Input('current-profile-data-store', 'data'),
+        )
+        def set_initial_json_cookie(_pathname: Optional[str], current_profile_data_store: Optional[dict[str, Any]]):
+            print(_pathname, current_profile_data_store)
+            if _pathname is None:
+                json_name = "default_profile.json"
+            else:
+                json_name = _pathname
+            if current_profile_data_store is None:
+                profile_data = get_saved_profile(json_name)
+            else:
+                profile_data = current_profile_data_store
+            return json_name, profile_data
 
         @self.app.callback(
             Output("sidebar-content", "children"),
@@ -148,10 +167,6 @@ class RosettaXApplication:
             style=styling.SIDEBAR,
         )
 
-        mesf_default_table = self.create_table_from_dict(
-            json_path="RosettaX/data/settings/saved_mesf_values.json"
-        )
-
         theme_header = html.Div(
             [
                 html.Div(
@@ -190,11 +205,8 @@ class RosettaXApplication:
                     id="apply-calibration-store",
                     storage_type="session",
                 ),
-                dcc.Store(
-                    data=mesf_default_table,
-                    id="MESF-default_table-store",
-                    storage_type="session",
-                ),
+                dcc.Store(id="current-profile-store", storage_type="local"),
+                dcc.Store(id="current-profile-data-store", storage_type="local"),
                 html.Link(id="theme-link", rel="stylesheet", href=self._theme_light),
                 theme_header,
                 sidebar_content,

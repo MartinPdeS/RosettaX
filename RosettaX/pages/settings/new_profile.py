@@ -1,16 +1,9 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
-import os 
-
-import dash
+from typing import Any
 import dash_bootstrap_components as dbc
 from dash import Input, Output, State, callback, dcc, html
 
-from RosettaX.pages import styling
-from RosettaX.pages.calibrate import ids
-from RosettaX.pages.fluorescence.backend import BackEnd
-from RosettaX.pages.runtime_config import get_runtime_config
 from RosettaX.pages.settings.ids import Ids
 
 class NewProfilePage():
@@ -32,7 +25,6 @@ class NewProfilePage():
         """
         Build the layout for the load section and inject an initial file path store.
         """
-        runtime_config = get_runtime_config()
         return dbc.Card(
             [
                 dbc.CardHeader("Create New Settings Profile"),
@@ -76,7 +68,7 @@ class NewProfilePage():
             if n_clicks is None:
                 return ""
             if name:
-                src = Path("RosettaX/data/settings/settings.json")
+                src = Path("RosettaX/data/settings/default_profile.json")
                 dst = Path(f"RosettaX/data/settings/{name}.json")
                 if not dst.exists():
                     with open(src, "r") as f_src, open(dst, "w") as f_dst:

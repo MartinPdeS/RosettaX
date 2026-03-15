@@ -30,8 +30,8 @@ class DefaultSettingValues():
                     [
                         html.P("Dropdown of saved profiles with option to load profile values into the inputs below."),
                         dcc.Dropdown(
-                            options=[{"label": profile["filename"], "value": profile["filename"]} for profile in list_setting_files()],
-                            value=list_setting_files()[0]["filename"] if list_setting_files() else None,
+                            options=[{"label": profile, "value": profile+'.json'} for profile in list_setting_files()],
+                            value="default_profile.json" if list_setting_files() else None,
                             placeholder="Select Profile",
                             id=Ids.Default.default_values_profile_dropdown,
                         ),
@@ -251,12 +251,15 @@ class DefaultSettingValues():
             Output(Ids.Default.default_fluorescence_debug_fluorescence, "value"),
             Output(Ids.Default.default_fluorescence_debug_load, "value"),
 
+            Output('current-profile-store', 'data'),
+            Output('current-profile-data-store', 'data'),
+
             Input(Ids.Default.default_values_profile_dropdown, "value"),
             prevent_initial_call=True,
         )
         def load_profile_defaults(dropdown_value: str) -> str:
             settings = get_saved_profile(dropdown_value)
-            return (
+            data = (
                 settings.get("default_fluorescence_page_scattering_detector", ""),
                 settings.get("default_fluorescence_page_fluorescence_detector", ""),
                 settings.get("default_medium_index", ""),
@@ -279,9 +282,15 @@ class DefaultSettingValues():
                 settings.get("default_fluorescence_debug_fluorescence", ""),
                 settings.get("default_fluorescence_debug_load", ""),
             )
+            return data, dropdown_value, settings
 
         
         @callback(
+            Output(Ids.Default.default_save_confirmation, "children"),
+            Output('current-profile-store', 'data'),
+            Output('current-profile-data-store', 'data'),
+
+
             Input(Ids.Default.default_save_changes_button, "n_clicks"),
             State(Ids.Default.default_values_profile_dropdown, "value"),
 
@@ -309,7 +318,6 @@ class DefaultSettingValues():
             prevent_initial_call=True,
         )
         def edit_settings(name: Any, profile_target: str, *args) -> str:
-            print(name, profile_target, args)
             new_dict = {}
             keys = [
                 Ids.Default.default_fluorescence_page_scattering_detector,
@@ -340,3 +348,4 @@ class DefaultSettingValues():
             new_dict[Ids.Default.default_mesf_values] = re.sub(r'[^\d,\s]', '', new_dict[Ids.Default.default_mesf_values])
 
             save_profile(profile_target, new_dict)
+            return "Changes saved!", profile_target, new_dict

@@ -3,12 +3,14 @@ from typing import Optional
 import json
 from pathlib import Path
 from RosettaX.pages.settings.ids import Ids
+from dash import callback_context
+from flask import request
 
 class LoadSettings():
-    def __init__(self, json_file: str = "settings.json"):
+    def __init__(self, json_file: str = "default_profile.json"):
         self.json_file = json_file
         base_dir = Path(__file__).resolve().parents[1]
-        settings_path = Path(self.json_file) if self.json_file else (base_dir / "data" / "settings" / "settings.json")
+        settings_path = Path(self.json_file) if self.json_file else (base_dir / "data" / "settings" / "default_profile.json")
 
         with settings_path.open("r", encoding="utf-8") as f:
             self.settings = json.load(f)
@@ -40,7 +42,7 @@ class RuntimeConfig:
         if json_file is not None:
             self.json_file = str(base_dir / "data" / "settings" / json_file)
         else:
-            self.json_file = str(base_dir / "data" / "settings" / "settings.json")
+            self.json_file = str(base_dir / "data" / "settings" / "default_profile.json")
         self._explicit = set()
 
     settings = LoadSettings(json_file=None)
@@ -115,14 +117,14 @@ class RuntimeConfig:
     
 def list_setting_files():
     """
-    Gets list of saved profiles from the settings directory. Each profile is a json file that contains a set of default values for the fluorescence calibration page. This function returns a list of dictionaries, each containing the filename and path of a profile.
+    Gets list of saved profiles from the settings directory. Each profile is a json file that contains a set of default values for the fluorescence calibration page. This function returns a list of filenames.
     """
     list_of_filenames = []
     profiles_dir = Path("RosettaX/data/settings")
     if profiles_dir.exists() and profiles_dir.is_dir():
         for file in profiles_dir.iterdir():
             if file.is_file() and file.suffix == ".json":
-                list_of_filenames.append({"filename": file.name, "path": str(file)})
+                list_of_filenames.append(file.name.replace(".json", ""))
     return list_of_filenames
 
 def get_saved_profile(jsonfilename: str):
@@ -154,7 +156,7 @@ def save_profile(jsonfilename: str, profile_data: dict):
 
 _runtime_config: Optional[RuntimeConfig] = None
 
-def get_runtime_config(default="settings.json") -> RuntimeConfig:
+def get_runtime_config(default="default_profile.json") -> RuntimeConfig:
     global _runtime_config
     if _runtime_config is None:
         _runtime_config = RuntimeConfig(default)

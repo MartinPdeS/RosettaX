@@ -30,7 +30,7 @@ class DeleteProfilePage():
         Build the layout for the delete section and inject an initial file path store.
         """
         runtime_config = get_runtime_config()
-        print(list_setting_files())
+
         return dbc.Card(
             [
                 dbc.CardHeader("Delete Settings Profile"),
@@ -42,7 +42,7 @@ class DeleteProfilePage():
                         html.Div(
                             [   
                                 dcc.Dropdown(
-                                    options=[{"label": profile["filename"], "value": profile["filename"]} for profile in list_setting_files()],
+                                    options=[{"label": profile, "value": profile+'.json'} for profile in list_setting_files()],
                                     placeholder="Select Profile",
                                     id=Ids.DeleteProfile.delete_profile_name,
                                 ),
@@ -74,12 +74,10 @@ class DeleteProfilePage():
                 return ""
             if name is None:
                 return "Please select a profile to delete."
-            print(name)
             dst = Path("RosettaX/data/settings") / name
-            print(dst)
             if dst.exists() and dst.is_file():
-                if name == 'settings.json':
-                    return f"Cannot delete default profile 'settings.json'. Please choose a different profile to delete."
+                if name == 'default_profile.json':
+                    return f"Cannot delete default profile 'default_profile'. Please choose a different profile to delete."
                 try:
                     os.remove(dst)
                     return f"Profile '{name}' deleted."
