@@ -3,8 +3,6 @@ from typing import Optional
 import json
 from pathlib import Path
 from RosettaX.pages.settings.ids import Ids
-from dash import callback_context
-from flask import request
 
 class LoadSettings():
     def __init__(self, json_file: str = "default_profile.json"):
