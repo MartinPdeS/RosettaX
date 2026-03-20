@@ -251,8 +251,8 @@ class DefaultSettingValues():
             Output(Ids.Default.default_fluorescence_debug_fluorescence, "value"),
             Output(Ids.Default.default_fluorescence_debug_load, "value"),
 
-            Output('current-profile-store', 'data'),
-            Output('current-profile-data-store', 'data'),
+            # Output('current-profile-store', 'data'),
+            # Output('current-profile-data-store', 'data'),
 
             Input(Ids.Default.default_values_profile_dropdown, "value"),
             prevent_initial_call=True,
@@ -282,13 +282,15 @@ class DefaultSettingValues():
                 settings.get("default_fluorescence_debug_fluorescence", ""),
                 settings.get("default_fluorescence_debug_load", ""),
             )
-            return data, dropdown_value, settings
+            runtime_config = get_runtime_config()
+            runtime_config.load_json(dropdown_value)
+            return data #, dropdown_value, settings
 
         
         @callback(
             Output(Ids.Default.default_save_confirmation, "children"),
-            Output('current-profile-store', 'data'),
-            Output('current-profile-data-store', 'data'),
+            # Output('current-profile-store', 'data'),
+            # Output('current-profile-data-store', 'data'),
 
 
             Input(Ids.Default.default_save_changes_button, "n_clicks"),
@@ -348,4 +350,4 @@ class DefaultSettingValues():
             new_dict[Ids.Default.default_mesf_values] = re.sub(r'[^\d,\s]', '', new_dict[Ids.Default.default_mesf_values])
 
             save_profile(profile_target, new_dict)
-            return "Changes saved!", profile_target, new_dict
+            return "Changes saved!" # , profile_target, new_dict
