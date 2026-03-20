@@ -234,7 +234,7 @@ class LoadSection:
 
             # Fluorescence selection (CLI preferred)
             fluorescence_value = self._pick_dropdown_value(
-                preferred_value=runtime_config.fluorescence_page_fluorescence_detector,
+                preferred_value=runtime_config.default_fluorescence_page_fluorescence_detector,
                 current_value=str(current_fluorescence_value) if current_fluorescence_value else None,
                 options=fluorescence_options,
             )

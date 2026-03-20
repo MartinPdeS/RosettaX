@@ -339,7 +339,7 @@ class PeaksSection:
                     {
                         "operation": "estimate_scattering_threshold",
                         "column": str(scattering_channel),
-                        "nbins": int(runtime_config.n_bins_for_plots),
+                        "nbins": int(runtime_config.default_n_bins_for_plots),
                         "number_of_points": int(max_events),
                     }
                 )
@@ -461,7 +461,7 @@ class PeaksSection:
 
             max_events_for_plots_int = self._as_int(
                 max_events_for_plots,
-                default=runtime_config.max_events_for_analysis,
+                default=runtime_config.default_max_events_for_analysis,
                 min_value=10_000,
                 max_value=5_000_000,
             )
@@ -476,7 +476,7 @@ class PeaksSection:
 
             nbins = self._as_int(
                 fluorescence_nbins,
-                default=runtime_config.n_bins_for_plots,
+                default=runtime_config.default_n_bins_for_plots,
                 min_value=10,
                 max_value=5000,
             )
@@ -636,7 +636,7 @@ class PeaksSection:
 
             max_events = self._as_int(
                 max_events_for_plots,
-                default=runtime_config.max_events_for_analysis,
+                default=runtime_config.default_max_events_for_analysis,
                 min_value=10_000,
                 max_value=5_000_000,
             )
@@ -651,7 +651,7 @@ class PeaksSection:
 
             nbins = self._as_int(
                 fluorescence_nbins,
-                default=runtime_config.n_bins_for_plots,
+                default=runtime_config.default_n_bins_for_plots,
                 min_value=10,
                 max_value=5000,
             )

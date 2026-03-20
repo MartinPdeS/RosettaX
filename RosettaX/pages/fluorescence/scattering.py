@@ -321,15 +321,15 @@ class ScatteringSection:
         runtime_config = get_runtime_config()
 
         max_events = self._as_int(
-            max_events_for_plots if max_events_for_plots is not None else runtime_config.max_events_for_analysis,
-            default=runtime_config.max_events_for_analysis,
+            max_events_for_plots if max_events_for_plots is not None else runtime_config.default_max_events_for_analysis,
+            default=runtime_config.default_max_events_for_analysis,
             min_value=10_000,
             max_value=5_000_000,
         )
 
         nbins = self._as_int(
             scattering_nbins,
-            default=runtime_config.n_bins_for_plots,
+            default=runtime_config.default_n_bins_for_plots,
             min_value=10,
             max_value=5000,
         )
