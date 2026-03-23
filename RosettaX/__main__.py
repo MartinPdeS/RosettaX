@@ -10,7 +10,7 @@ from dash import Input, Output, dcc, html
 from RosettaX.pages import styling
 from RosettaX.pages.sidebar.main import sidebar_html
 from RosettaX.parser import _parse_args, apply_cli_to_runtime_config
-from RosettaX.pages.runtime_config import get_saved_profile
+from RosettaX.pages.runtime_config import get_runtime_config, get_saved_profile
 
 
 class RosettaXApplication:
@@ -97,23 +97,23 @@ class RosettaXApplication:
         def _display_page(_pathname: Optional[str]):
             return dash.page_container
         
-        @self.app.callback(
-            Output('current-profile-store', 'data'),
-            Output('current-profile-data-store', 'data'),
-            Input('current-profile-store', 'data'),
-            Input('current-profile-data-store', 'data'),
-        )
-        def set_initial_json_cookie(_pathname: Optional[str], current_profile_data_store: Optional[dict[str, Any]]):
-            print(_pathname, current_profile_data_store)
-            if _pathname is None:
-                json_name = "default_profile.json"
-            else:
-                json_name = _pathname
-            if current_profile_data_store is None:
-                profile_data = get_saved_profile(json_name)
-            else:
-                profile_data = current_profile_data_store
-            return json_name, profile_data
+        # @self.app.callback(
+        #     Output('current-profile-store', 'data'),
+        #     Output('current-profile-data-store', 'data'),
+        #     Input('current-profile-store', 'data'),
+        #     Input('current-profile-data-store', 'data'),
+        # )
+        # def set_initial_json_cookie(_pathname: Optional[str], current_profile_data_store: Optional[dict[str, Any]]):
+        #     print(_pathname, current_profile_data_store)
+        #     if _pathname is None:
+        #         json_name = "default_profile.json"
+        #     else:
+        #         json_name = _pathname
+        #     if current_profile_data_store is None:
+        #         profile_data = get_saved_profile(json_name)
+        #     else:
+        #         profile_data = current_profile_data_store
+        #     return json_name, profile_data
 
         @self.app.callback(
             Output("sidebar-content", "children"),
@@ -237,13 +237,14 @@ def main(argv: Optional[list[str]] = None) -> None:
     """
     CLI entrypoint.
     """
-    args = _parse_args(argv)
-    apply_cli_to_runtime_config(args)
 
+    # args = _parse_args(argv)
+    # apply_cli_to_runtime_config(args)
+    runtime_config = get_runtime_config().load_json("default_profile.json")
     app = RosettaXApplication(
-        host=str(args.host),
-        port=int(args.port),
-        open_browser=not bool(args.no_browser),
+        host="127.0.0.1", # str(args.host),
+        port=8050, # int(args.port),
+        open_browser= True # not bool(args.no_browser),
     )
 
     app.run()

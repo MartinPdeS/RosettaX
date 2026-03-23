@@ -35,50 +35,51 @@ class LoadSettings():
 
 @dataclass
 class RuntimeConfig:
-    def __init__(self, json_file: Optional[str] = None):
-        base_dir = Path(__file__).resolve().parents[1]
-        if json_file is not None:
-            self.json_file = str(base_dir / "data" / "settings" / json_file)
-        else:
-            self.json_file = str(base_dir / "data" / "settings" / "default_profile.json")
-        self._explicit = set()
+    def load_json(self, json_filename: str) -> dict:
+        try:
+            with open("RosettaX\\data\\settings\\" + json_filename, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                for key, value in data.items():
+                    setattr(self, key, value)
+        except Exception as e:
+            print(f"Error loading JSON config: {e}")
 
-    settings = LoadSettings(json_file=None)
-    default_debug: bool = settings.type_cast(Ids.Default.default_debug, bool)
+    # load_settings = LoadSettings(json_file=None)
+    # default_debug: bool = load_settings.type_cast(Ids.Default.default_debug, bool)
 
-    # Fluorescence calibration page, visibility
-    fluorescence_show_scattering_controls: bool = settings.type_cast(Ids.Default.default_fluorescence_show_scattering_controls, bool)
-    default_fluorescence_show_threshold_controls: bool = settings.type_cast(Ids.Default.default_fluorescence_show_threshold_controls, bool)
-    default_fluorescence_show_fluorescence_controls: bool = settings.type_cast(Ids.Default.default_fluorescence_show_fluorescence_controls, bool)
+    # # Fluorescence calibration page, visibility
+    # fluorescence_show_scattering_controls: bool = load_settings.type_cast(Ids.Default.default_fluorescence_show_scattering_controls, bool)
+    # default_fluorescence_show_threshold_controls: bool = load_settings.type_cast(Ids.Default.default_fluorescence_show_threshold_controls, bool)
+    # default_fluorescence_show_fluorescence_controls: bool = load_settings.type_cast(Ids.Default.default_fluorescence_show_fluorescence_controls, bool)
 
 
-    # Fluorescence calibration page, debug outputs
-    default_fluorescence_debug_scattering: bool = settings.type_cast(Ids.Default.default_fluorescence_debug_scattering, bool)
-    default_fluorescence_debug_fluorescence: bool = settings.type_cast(Ids.Default.default_fluorescence_debug_fluorescence, bool)
-    default_fluorescence_debug_load: bool = settings.type_cast(Ids.Default.default_fluorescence_debug_load, bool)
+    # # Fluorescence calibration page, debug outputs
+    # default_fluorescence_debug_scattering: bool = load_settings.type_cast(Ids.Default.default_fluorescence_debug_scattering, bool)
+    # default_fluorescence_debug_fluorescence: bool = load_settings.type_cast(Ids.Default.default_fluorescence_debug_fluorescence, bool)
+    # default_fluorescence_debug_load: bool = load_settings.type_cast(Ids.Default.default_fluorescence_debug_load, bool)
 
-    # General analysis parameters
-    default_max_events_for_analysis: Optional[int] = settings.type_cast(Ids.Default.default_max_events_for_analysis, int)
-    default_n_bins_for_plots: Optional[int] = settings.type_cast(Ids.Default.default_n_bins_for_plots, int)
-    default_peak_count: Optional[int] = settings.type_cast(Ids.Default.default_peak_count, int)
+    # # General analysis parameters
+    # default_max_events_for_analysis: Optional[int] = load_settings.type_cast(Ids.Default.default_max_events_for_analysis, int)
+    # default_n_bins_for_plots: Optional[int] = load_settings.type_cast(Ids.Default.default_n_bins_for_plots, int)
+    # default_peak_count: Optional[int] = load_settings.type_cast(Ids.Default.default_peak_count, int)
 
-    # Fluorescence calibration page defaults
-    default_fcs_file_path: Optional[str] = settings.type_cast(Ids.Default.default_fcs_file_path, str)
-    default_fluorescence_page_scattering_detector: Optional[str] = settings.type_cast(Ids.Default.default_fluorescence_page_scattering_detector, None)
-    default_fluorescence_page_fluorescence_detector: Optional[str] = settings.type_cast(Ids.Default.default_fluorescence_page_fluorescence_detector, None)
+    # # Fluorescence calibration page defaults
+    # default_fcs_file_path: Optional[str] = load_settings.type_cast(Ids.Default.default_fcs_file_path, str)
+    # default_fluorescence_page_scattering_detector: Optional[str] = load_settings.type_cast(Ids.Default.default_fluorescence_page_scattering_detector, None)
+    # default_fluorescence_page_fluorescence_detector: Optional[str] = load_settings.type_cast(Ids.Default.default_fluorescence_page_fluorescence_detector, None)
 
-    # Optical properties for Mie theory calculations
-    default_particle_diameter_nm = settings.type_cast(Ids.Default.default_particle_diameter_nm, int)
-    default_particle_index = settings.type_cast(Ids.Default.default_particle_index, float)
-    default_medium_index = settings.type_cast(Ids.Default.default_medium_index, float)
+    # # Optical properties for Mie theory calculations
+    # default_particle_diameter_nm = load_settings.type_cast(Ids.Default.default_particle_diameter_nm, int)
+    # default_particle_index = load_settings.type_cast(Ids.Default.default_particle_index, float)
+    # default_medium_index = load_settings.type_cast(Ids.Default.default_medium_index, float)
 
-    default_core_index = settings.type_cast(Ids.Default.default_core_index, float)
-    default_shell_index = settings.type_cast(Ids.Default.default_shell_index, float)
-    default_shell_thickness_nm = settings.type_cast(Ids.Default.default_shell_thickness_nm, int)
-    default_core_diameter_nm = settings.type_cast(Ids.Default.default_core_diameter_nm, int)
+    # default_core_index = load_settings.type_cast(Ids.Default.default_core_index, float)
+    # default_shell_index = load_settings.type_cast(Ids.Default.default_shell_index, float)
+    # default_shell_thickness_nm = load_settings.type_cast(Ids.Default.default_shell_thickness_nm, int)
+    # default_core_diameter_nm = load_settings.type_cast(Ids.Default.default_core_diameter_nm, int)
 
     # default MESF Bead Table Value
-    default_mesf_values = settings.type_cast(Ids.Default.default_mesf_values, str)
+    # default_mesf_values = load_settings.type_cast(Ids.Default.default_mesf_values, str)
 
     _explicit: set[str] = field(default_factory=set, init=False, repr=False)
 
@@ -153,10 +154,34 @@ def save_profile(jsonfilename: str, profile_data: dict):
     return "Profile saved successfully."
 
 _runtime_config: Optional[RuntimeConfig] = None
+_loaded_already: bool = False
 
-def get_runtime_config(default="default_profile.json") -> RuntimeConfig:
+def get_runtime_config() -> RuntimeConfig:
     global _runtime_config
+    global _loaded_already
     if _runtime_config is None:
-        _runtime_config = RuntimeConfig(default)
-        _runtime_config.apply_policy()
+        _runtime_config = RuntimeConfig()
+        if not _loaded_already:
+            _runtime_config.load_json("default_profile.json")
+            _loaded_already = True
+        # _runtime_config.apply_policy()
+    print(f"Runtime config is: {vars(_runtime_config)}")
     return _runtime_config
+
+def update_runtime_config(**kwargs) -> None:
+    """
+    Update the runtime configuration with new values. This function takes keyword arguments corresponding to the fields of the RuntimeConfig dataclass. Only fields that are explicitly provided will be updated; others will remain unchanged.
+    """
+    global _runtime_config
+    global _loaded_already
+    if _runtime_config is None:
+        _runtime_config = RuntimeConfig()
+        if not _loaded_already:
+            _runtime_config.load_json("default_profile.json")
+            _loaded_already = True
+    
+    for key, value in kwargs.items():
+        setattr(_runtime_config, key, value)
+        _runtime_config.mark_explicit(key)
+    
+    _runtime_config.apply_policy()

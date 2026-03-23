@@ -8,7 +8,7 @@ from dash import Input, Output, State, callback, dcc, html
 from RosettaX.pages.settings.ids import Ids
 import dash
 
-from RosettaX.pages.runtime_config import get_runtime_config, list_setting_files, get_saved_profile, save_profile
+from RosettaX.pages.runtime_config import get_runtime_config, list_setting_files, get_saved_profile, save_profile, update_runtime_config
 import re
 
 
@@ -350,4 +350,5 @@ class DefaultSettingValues():
             new_dict[Ids.Default.default_mesf_values] = re.sub(r'[^\d,\s]', '', new_dict[Ids.Default.default_mesf_values])
 
             save_profile(profile_target, new_dict)
+            update_runtime_config(**new_dict)
             return "Changes saved!" # , profile_target, new_dict
