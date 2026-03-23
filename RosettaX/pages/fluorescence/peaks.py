@@ -131,7 +131,7 @@ class PeaksSection:
             type="number",
             min=1,
             step=1,
-            value=runtime_config.default_peak_count,
+            # value=runtime_config.default_peak_count,
             style={"width": "120px"},
         )
 

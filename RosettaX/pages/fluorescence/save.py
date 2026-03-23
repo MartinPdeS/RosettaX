@@ -10,6 +10,8 @@ import dash_bootstrap_components as dbc
 
 from RosettaX.pages.fluorescence.backend import BackEnd
 from RosettaX.pages.fluorescence import service
+from RosettaX.pages.fluorescence.utils import mesf_string_to_table
+from RosettaX.pages.runtime_config import get_runtime_config
 
 
 @dataclass(frozen=True)
@@ -360,6 +362,31 @@ class SaveSection:
                 return self._save_action_export_download(inputs=parsed, backend=backend).to_tuple()
 
             return SaveResult().to_tuple()
+        
+        @dash.callback(
+            dash.Output(self.ids.Scattering.nbins_input, "value", allow_duplicate=True),
+            dash.Output(self.ids.Scattering.nbins_input, "value", allow_duplicate=True),
+            dash.Output(self.ids.Fluorescence.peak_count_input, "value", allow_duplicate=True),
+            dash.Output(self.ids.Fluorescence.nbins_input, "value", allow_duplicate=True),
+            dash.Output(self.ids.Calibration.bead_table, "data", allow_duplicate=True),
+            # dash.Input(self.ids.Load.uploaded_fcs_path_store, "data"),
+            prevent_initial_call='initial_duplicate',
+        )
+        def refresh_detector_options(fcs_path: Optional[str]):
+            """
+            Update default values based on selected profile when file is set.
+
+            Parameters
+            ----------
+
+            Returns
+            -------
+
+            """
+            runtime_config = get_runtime_config()
+            data_table = mesf_string_to_table(runtime_config.default_mesf_values)
+            return runtime_config.default_scatter_nbins, runtime_config.default_n_bins_for_plots, runtime_config.default_peak_count, runtime_config.default_n_bins_for_plots, data_table
+
 
     @staticmethod
     def _save_triggered_id() -> str:

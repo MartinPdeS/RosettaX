@@ -53,8 +53,8 @@ class CalibrationSection:
         {"name": "Intensity [calibrated units] (MESF Values)", "id": "col1", "editable": True},
         {"name": "Intensity [a.u.]", "id": "col2", "editable": True},
     ]
-    default_bead_rows: List[dict] = [{"col1": "", "col2": ""} for _ in range(3)]
-    default_bead_rows = mesf_string_to_table(runtime_config.default_mesf_values)
+    # default_bead_rows: List[dict] = [{"col1": "", "col2": ""} for _ in range(3)]
+    # default_bead_rows = mesf_string_to_table(runtime_config.default_mesf_values)
 
     def _calibration_get_layout(self) -> dbc.Card:
         """
@@ -75,7 +75,7 @@ class CalibrationSection:
                             dash.dash_table.DataTable(
                                 id=self.ids.Calibration.bead_table,
                                 columns=self.bead_table_columns,
-                                data=self.default_bead_rows,
+                                # data=self.default_bead_rows,
                                 editable=True,
                                 row_deletable=True,
                                 style_table={"overflowX": "auto"},
