@@ -1,0 +1,66 @@
+[build-system]
+requires = ["setuptools>=40.8.0", "wheel", "setuptools_scm[toml]>=8.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "RosettaX"
+dynamic = ["version"]
+description = "A package for Flow-cytometer calibration."
+license = "MIT"
+readme = "README.rst"
+requires-python = ">=3.10"
+authors = [{ name="Martin  / Victor / Edwin", email="martin.poinsinet.de.sivry@gmail.com"}]
+classifiers = [
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Development Status :: 3 - Alpha",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Intended Audience :: Science/Research"
+]
+
+keywords = ["flow-cytometre", "calibration", "physics", "data-analysis"]
+
+dependencies = [
+    "PyMieSim",
+    "pydantic",
+    "numpy",
+    "MPSPlots",
+    "Dash >=2.0",
+    "dash-bootstrap-components",
+    "plotly",
+    "scipy",
+    "web-browser",
+    "hdbscan"
+]
+
+[project.urls]
+Homepage = "https://github.com/MartinPdeS/RosettaX"
+Documentation = "https://martinpdes.github.io/RosettaX/"
+Repository = "https://github.com/MartinPdeS/RosettaX.git"
+
+[tool.setuptools_scm]
+write_to = "RosettaX/_version.py"
+version_scheme = "only-version"
+local_scheme = "no-local-version"
+
+[project.optional-dependencies]
+testing = [
+    "pytest >=7.4,<9.0",
+    "pytest-cov >=2,<8",
+    "pytest-json-report ~=1.5",
+    "coverage ~=7.6"
+]
+
+documentation = [
+    "numpydoc ~=1.8",
+    "sphinx >=6",
+    "sphinx-gallery ~=0.17",
+    "sphinx-rtd-theme ~=3.0",
+    "pydata-sphinx-theme ~=0.15"
+]
+
+dev = [
+    "flake8 ==7.3.0",
+]
