@@ -9,6 +9,6 @@
     "max_events_for_analysis": 10000,
     "n_bins_for_plots": 1000,
     "peak_count": 3,
-    "mesf_values": "",
+    "mesf_values": "1, 11, 100",
     "fcs_file_path": ""
 }

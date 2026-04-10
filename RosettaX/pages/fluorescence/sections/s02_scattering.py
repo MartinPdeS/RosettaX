@@ -281,6 +281,21 @@ class ScatteringSection:
             debug_enabled = isinstance(debug_switch_value, list) and ("enabled" in debug_switch_value)
             return {"display": "block"} if debug_enabled else {"display": "none"}
 
+        @dash.callback(
+            dash.Output(self.page.ids.Scattering.nbins_input, "value"),
+            dash.Input("runtime-config-store", "data"),
+            prevent_initial_call=False,
+        )
+        def sync_scattering_nbins_from_runtime_store(runtime_config_data):
+            runtime_config = RuntimeConfig()
+
+            if not isinstance(runtime_config_data, dict):
+                return runtime_config.n_bins_for_plots
+
+            return runtime_config_data.get(
+                "n_bins_for_plots",
+                runtime_config.n_bins_for_plots,
+            )
 
         @dash.callback(
             dash.Output(self.page.ids.Scattering.graph_hist, "figure"),

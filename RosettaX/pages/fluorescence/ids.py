@@ -11,6 +11,7 @@ class Ids:
         upload_saved_as = f"{PAGE_NAME}-upload-saved-as"
         uploaded_fcs_path_store = f"{PAGE_NAME}-uploaded-fcs-path-store"
         max_events_for_plots_input = f"{PAGE_NAME}-max-events-for-plots"
+        upload_filename_store = f"{PAGE_NAME}-upload-filename-store"
 
     class Scattering:
         detector_dropdown = f"{PAGE_NAME}-scattering-detector-dropdown"

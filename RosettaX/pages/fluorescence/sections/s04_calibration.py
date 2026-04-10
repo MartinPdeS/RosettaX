@@ -162,10 +162,12 @@ class CalibrationSection:
         dash.dash_table.DataTable
             Editable bead table.
         """
+        runtime_config = RuntimeConfig()
+
         return dash.dash_table.DataTable(
             id=self.page.ids.Calibration.bead_table,
             columns=self.bead_table_columns,
-            data=self.default_bead_rows,
+            data=self._build_bead_rows_from_mesf_values(runtime_config.mesf_values),
             editable=True,
             row_deletable=True,
             style_table={"overflowX": "auto"},
@@ -469,6 +471,20 @@ class CalibrationSection:
         runtime_config = RuntimeConfig()
 
         @dash.callback(
+            dash.Output(self.page.ids.Calibration.bead_table, "data"),
+            dash.Input("runtime-config-store", "data"),
+            prevent_initial_call=False,
+        )
+        def sync_bead_table_from_runtime_store(runtime_config_data: Any) -> list[dict]:
+            runtime_config = RuntimeConfig()
+
+            if not isinstance(runtime_config_data, dict):
+                return self._build_bead_rows_from_mesf_values(runtime_config.mesf_values)
+
+            mesf_values = runtime_config_data.get("mesf_values", runtime_config.mesf_values)
+            return self._build_bead_rows_from_mesf_values(mesf_values)
+
+        @dash.callback(
             dash.Output(self.page.ids.Calibration.graph_toggle_container, "style"),
             dash.Input(self.page.ids.Calibration.graph_toggle_switch, "value"),
             prevent_initial_call=False,
@@ -633,8 +649,6 @@ class CalibrationSection:
 
                     apply_status = (
                         f"Applied to {calibrated_intensity_units.size} events using detector '{detector_column}'."
-                        if runtime_config.debug
-                        else ""
                     )
 
                 return CalibrationResult(
@@ -656,3 +670,29 @@ class CalibrationSection:
                     r_squared_out="",
                     apply_status=f"{type(exc).__name__}: {exc}",
                 ).to_tuple()
+
+    @classmethod
+    def _build_bead_rows_from_mesf_values(cls, mesf_values: Any) -> list[dict]:
+        if mesf_values is None:
+            return [{"col1": "", "col2": ""} for _ in range(3)]
+
+        if isinstance(mesf_values, str):
+            raw_parts = [part.strip() for part in mesf_values.split(",")]
+        elif isinstance(mesf_values, (list, tuple)):
+            raw_parts = [str(part).strip() for part in mesf_values]
+        else:
+            raw_parts = [str(mesf_values).strip()]
+
+        parsed_values: list[str] = []
+        for raw_part in raw_parts:
+            if not raw_part:
+                continue
+            parsed_value = _as_float(raw_part)
+            if parsed_value is None:
+                continue
+            parsed_values.append(f"{float(parsed_value):.6g}")
+
+        if not parsed_values:
+            return [{"col1": "", "col2": ""} for _ in range(3)]
+
+        return [{"col1": value, "col2": ""} for value in parsed_values]
