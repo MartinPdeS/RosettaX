@@ -41,7 +41,7 @@ class DefaultSection:
                             self._persistent_input(
                                 id=self.page.ids.Default.medium_refractive_index,
                                 type="number",
-                                value=runtime_config.medium_refractive_index,
+                                value=runtime_config.Default.medium_refractive_index,
                                 step=0.001,
                                 min=0.001,
                                 max=2.5,
@@ -53,7 +53,7 @@ class DefaultSection:
                             self._persistent_input(
                                 id=self.page.ids.Default.core_refractive_index,
                                 type="number",
-                                value=runtime_config.core_refractive_index,
+                                value=runtime_config.Default.core_refractive_index,
                                 step=0.001,
                                 min=0.001,
                                 max=2.5,
@@ -65,7 +65,7 @@ class DefaultSection:
                             self._persistent_input(
                                 id=self.page.ids.Default.shell_refractive_index,
                                 type="number",
-                                value=runtime_config.shell_refractive_index,
+                                value=runtime_config.Default.shell_refractive_index,
                                 step=0.001,
                                 min=0.001,
                                 max=2.5,
@@ -77,7 +77,7 @@ class DefaultSection:
                             self._persistent_input(
                                 id=self.page.ids.Default.shell_thickness_nm,
                                 type="number",
-                                value=runtime_config.shell_thickness_nm,
+                                value=runtime_config.Default.shell_thickness,
                                 step=0.01,
                                 min=0.01,
                                 max=1000,
@@ -89,7 +89,7 @@ class DefaultSection:
                             self._persistent_input(
                                 id=self.page.ids.Default.core_diameter_nm,
                                 type="number",
-                                value=runtime_config.core_diameter_nm,
+                                value=runtime_config.Default.core_diameter,
                                 step=0.01,
                                 min=0.01,
                                 max=1000,
@@ -101,7 +101,7 @@ class DefaultSection:
                             self._persistent_input(
                                 id=self.page.ids.Default.particle_diameter_nm,
                                 type="number",
-                                value=runtime_config.particle_diameter_nm,
+                                value=runtime_config.Default.particle_diameter,
                                 step=1,
                                 min=1,
                                 max=1000,
@@ -113,7 +113,7 @@ class DefaultSection:
                             self._persistent_input(
                                 id=self.page.ids.Default.particle_refractive_index,
                                 type="number",
-                                value=runtime_config.particle_refractive_index,
+                                value=runtime_config.Default.particle_refractive_index,
                                 step=0.001,
                                 min=0.001,
                                 max=2.5,
@@ -124,7 +124,7 @@ class DefaultSection:
                             "Max events for analysis:",
                             self._persistent_input(
                                 id=self.page.ids.Default.max_events_for_analysis,
-                                value=runtime_config.max_events_for_analysis,
+                                value=runtime_config.Default.max_events_for_analysis,
                                 type="number",
                                 step=1,
                                 min=1,
@@ -135,7 +135,7 @@ class DefaultSection:
                             "Number of bins for plots:",
                             self._persistent_input(
                                 id=self.page.ids.Default.n_bins_for_plots,
-                                value=runtime_config.n_bins_for_plots,
+                                value=runtime_config.Default.n_bins_for_plots,
                                 type="number",
                                 step=10,
                                 min=10,
@@ -146,7 +146,7 @@ class DefaultSection:
                             "Peak count:",
                             self._persistent_input(
                                 id=self.page.ids.Default.peak_count,
-                                value=runtime_config.peak_count,
+                                value=runtime_config.Default.peak_count,
                                 type="number",
                                 step=1,
                                 min=1,
@@ -158,7 +158,7 @@ class DefaultSection:
                             "MESF Values:",
                             self._persistent_input(
                                 id=self.page.ids.Default.mesf_values,
-                                value=runtime_config.mesf_values,
+                                value=runtime_config.Default.mesf_values,
                                 style={"width": "100%"},
                             ),
                         ),
@@ -166,7 +166,7 @@ class DefaultSection:
                             "FCS File Path:",
                             self._persistent_input(
                                 id=self.page.ids.Default.fcs_file_path,
-                                value=runtime_config.fcs_file_path,
+                                value=runtime_config.Default.fcs_file_path,
                                 style={"width": "100%"},
                             ),
                         ),
@@ -298,18 +298,18 @@ class DefaultSection:
             runtime_config.update(**new_dict)
 
             runtime_config_data = {
-                "medium_refractive_index": runtime_config.medium_refractive_index,
-                "core_refractive_index": runtime_config.core_refractive_index,
-                "shell_refractive_index": runtime_config.shell_refractive_index,
-                "shell_thickness_nm": runtime_config.shell_thickness_nm,
-                "core_diameter_nm": runtime_config.core_diameter_nm,
-                "particle_diameter_nm": runtime_config.particle_diameter_nm,
-                "particle_refractive_index": runtime_config.particle_refractive_index,
-                "max_events_for_analysis": runtime_config.max_events_for_analysis,
-                "n_bins_for_plots": runtime_config.n_bins_for_plots,
-                "peak_count": runtime_config.peak_count,
-                "mesf_values": runtime_config.mesf_values,
-                "fcs_file_path": runtime_config.fcs_file_path,
+                "medium_refractive_index": runtime_config.Default.medium_refractive_index,
+                "core_refractive_index": runtime_config.Default.core_refractive_index,
+                "shell_refractive_index": runtime_config.Default.shell_refractive_index,
+                "shell_thickness_nm": runtime_config.Default.shell_thickness,
+                "core_diameter_nm": runtime_config.Default.core_diameter,
+                "particle_diameter_nm": runtime_config.Default.particle_diameter,
+                "particle_refractive_index": runtime_config.Default.particle_refractive_index,
+                "max_events_for_analysis": runtime_config.Default.max_events_for_analysis,
+                "n_bins_for_plots": runtime_config.Default.n_bins_for_plots,
+                "peak_count": runtime_config.Default.peak_count,
+                "mesf_values": runtime_config.Default.mesf_values,
+                "fcs_file_path": runtime_config.Default.fcs_file_path,
             }
 
             return "Changes saved!", runtime_config_data

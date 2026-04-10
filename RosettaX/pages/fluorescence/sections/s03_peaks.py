@@ -1,58 +1,24 @@
-from typing import Any, List, Optional
-
-import numpy as np
+from typing import Any, Optional
+import logging
 
 import dash
 import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
 
-from RosettaX.pages.fluorescence.backend import BackEnd
 from RosettaX.pages import styling
+from RosettaX.pages.fluorescence.service import FluorescenceService
 from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.utils.reader import FCSFile
-from RosettaX.utils.plottings import make_histogram_with_lines, add_vertical_lines, _make_info_figure
-from RosettaX.utils.casting import _as_float, _as_int
+from RosettaX.utils.plottings import add_vertical_lines, _make_info_figure
+
+
+logger = logging.getLogger(__name__)
 
 
 class PeaksSection:
-    """
-    Fluorescence histogram section after scattering threshold gating, with peak detection.
-
-    Responsibilities
-    ----------------
-    - Let the user select a fluorescence detector column.
-    - Build a fluorescence histogram and an overlay histogram for gated events.
-    - Allow peak finding on the gated distribution and display peak lines on the histogram.
-    - Optionally inject found peak positions into an existing DataTable (bead table).
-
-    Expected external attributes
-    ----------------------------
-    This class assumes these attributes exist on `self`:
-
-    - self.page.ids: namespace containing component IDs
-    - self.graph_style: style dict for plotly graphs
-    - self.default_fluorescence_nbins: int, used when estimating threshold as a fallback
-    - _as_float(...), _as_float(...): parsing helpers (implemented below for completeness)
-    - self._empty_fig(): helper returning an empty plotly figure (implemented below)
-
-    Notes
-    -----
-    This module reads FCS columns directly using `FCSFile` with the file path stored in the UI store,
-    rather than using a long lived backend instance, to avoid stale paths and file handle issues.
-    """
-
     def __init__(self, page) -> None:
         self.page = page
 
     def get_layout(self) -> dbc.Card:
-        """
-        Build the Dash layout for the fluorescence after thresholding section.
-
-        Returns
-        -------
-        dbc.Card
-            Card containing detector selection, peak controls, histogram, y scale switch and nbins input.
-        """
         return dbc.Card(
             [
                 self.build_header(),
@@ -61,25 +27,9 @@ class PeaksSection:
         )
 
     def build_header(self) -> dbc.CardHeader:
-        """
-        Build the card header.
-
-        Returns
-        -------
-        dbc.CardHeader
-            Header for this section.
-        """
         return dbc.CardHeader("3. Fluorescence channel after thresholding")
 
     def build_body(self) -> dbc.CardBody:
-        """
-        Build the card body.
-
-        Returns
-        -------
-        dbc.CardBody
-            Body containing dropdowns and controls for histogram + peak finding.
-        """
         return dbc.CardBody(
             [
                 dash.html.Br(),
@@ -94,9 +44,6 @@ class PeaksSection:
         )
 
     def _build_graph_toggle_switch(self) -> dash.html.Div:
-        """
-        Build the local switch controlling whether the histogram graph is shown.
-        """
         return dash.html.Div(
             [
                 dbc.Checklist(
@@ -109,11 +56,7 @@ class PeaksSection:
             style=styling.CARD,
         )
 
-
     def _build_graph_controls_container(self) -> dash.html.Div:
-        """
-        Build the container holding graph and graph related controls.
-        """
         return dash.html.Div(
             [
                 dash.html.Br(),
@@ -128,14 +71,6 @@ class PeaksSection:
         )
 
     def _build_detector_dropdown(self) -> dash.html.Div:
-        """
-        Build the fluorescence detector dropdown row.
-
-        Returns
-        -------
-        dash.html.Div
-            A row containing a label and a Dropdown listing detector columns.
-        """
         return dash.html.Div(
             [
                 dash.html.Div("Fluorescence detector:"),
@@ -151,14 +86,6 @@ class PeaksSection:
         )
 
     def _build_peak_controls(self) -> dash.html.Div:
-        """
-        Build controls for peak finding.
-
-        Returns
-        -------
-        dash.html.Div
-            Row with peak count input and a button that triggers peak finding.
-        """
         runtime_config = RuntimeConfig()
 
         peak_count_input = dash.dcc.Input(
@@ -166,7 +93,7 @@ class PeaksSection:
             type="number",
             min=1,
             step=1,
-            value=runtime_config.peak_count,
+            value=runtime_config.Default.peak_count,
             style={"width": "120px"},
         )
 
@@ -191,14 +118,6 @@ class PeaksSection:
         )
 
     def _build_histogram_graph(self) -> dash.dcc.Loading:
-        """
-        Build the histogram graph wrapper.
-
-        Returns
-        -------
-        dash.dcc.Loading
-            Loading wrapper containing the fluorescence histogram graph.
-        """
         return dash.dcc.Loading(
             dash.dcc.Graph(
                 id=self.page.ids.Fluorescence.graph_hist,
@@ -208,14 +127,6 @@ class PeaksSection:
         )
 
     def _build_yscale_switch(self) -> dbc.Checklist:
-        """
-        Build the y scale switch (log or linear counts).
-
-        Returns
-        -------
-        dbc.Checklist
-            Switch used to toggle log counts on the histogram.
-        """
         return dbc.Checklist(
             id=self.page.ids.Fluorescence.yscale_switch,
             options=[{"label": "Log scale (counts)", "value": "log"}],
@@ -225,14 +136,6 @@ class PeaksSection:
         )
 
     def _build_nbins_input(self) -> dash.html.Div:
-        """
-        Build the histogram bin count input.
-
-        Returns
-        -------
-        dash.html.Div
-            Row containing a label and a numeric input for histogram bins.
-        """
         runtime_config = RuntimeConfig()
 
         return dash.html.Div(
@@ -243,167 +146,55 @@ class PeaksSection:
                     type="number",
                     min=10,
                     step=10,
-                    value=runtime_config.n_bins_for_plots,
+                    value=runtime_config.Default.n_bins_for_plots,
                     style={"width": "160px"},
                 ),
             ],
             style=styling.CARD,
         )
 
-    @staticmethod
-    def _inject_peak_modes_into_table(table_data: Optional[list[dict]], peak_positions: List[float]) -> list[dict]:
-        """
-        Inject peak positions into the bead table rows.
-
-        Behavior
-        --------
-        - Ensures there are at least as many rows as peak positions.
-        - For each peak i, if row i "col2" is empty, sets it to the peak position.
-        - Does not overwrite non empty existing values.
-
-        Parameters
-        ----------
-        table_data : Optional[list[dict]]
-            Existing table rows, typically from a Dash DataTable.
-        peak_positions : List[float]
-            Peak x positions in fluorescence units (a.u.).
-
-        Returns
-        -------
-        list[dict]
-            Updated table rows.
-        """
-        rows = [dict(r) for r in (table_data or [])]
-
-        modes: List[float] = []
-        for p in peak_positions or []:
-            try:
-                v = float(p)
-            except Exception:
-                continue
-            if np.isfinite(v):
-                modes.append(v)
-
-        if not modes:
-            return rows
-
-        while len(rows) < len(modes):
-            rows.append({"col1": "", "col2": ""})
-
-        for i, v in enumerate(modes):
-            current = rows[i].get("col2", "")
-            if current is None:
-                current = ""
-            if str(current).strip() == "":
-                rows[i]["col2"] = f"{v:.6g}"
-
-        return rows
-
     def _register_callbacks(self) -> None:
-        """
-        Register callbacks for fluorescence histogram generation and peak finding.
-
-        Registered callbacks
-        --------------------
-        - lock_fluorescence_source_channel:
-          Stores the initially selected fluorescence channel in a store to prevent auto switching
-          when new columns are injected (MESF, calibrated columns, etc).
-
-        - refresh_fluorescence_hist_store:
-          Computes a histogram figure (base and gated overlay) and stores it as a dict in a store.
-          This callback reacts to file path, channel selection, nbins changes, and threshold changes.
-
-        - update_fluorescence_yscale:
-          Builds the displayed figure from the stored histogram dict, applies vertical peak lines,
-          and toggles y axis between linear and log.
-
-        - find_peaks_and_update_table:
-          Runs peak detection on gated events and updates both:
-            (a) the bead table data with peak positions injected
-            (b) the peak lines store, which the display callback uses to draw vertical lines
-        """
-
-        def resolve_threshold_value(
-            *,
-            fcs_path: str,
-            scattering_channel: str,
-            threshold_payload: Optional[dict],
-            threshold_input_value: Any,
-            max_events: int,
-        ) -> float:
-            """
-            Resolve the scattering threshold value used for gating.
-
-            Resolution order
-            ----------------
-            1) Stored threshold payload (if present and valid)
-            2) Threshold input value (if present and valid)
-            3) Backend estimation (fallback)
-            4) 0.0 as last resort
-
-            Parameters
-            ----------
-            fcs_path : str
-                Path to the current FCS file.
-            scattering_channel : str
-                Scattering channel used for threshold gating.
-            threshold_payload : Optional[dict]
-                Store payload containing a threshold value under key "threshold".
-            threshold_input_value : Any
-                Free text threshold value from UI input.
-            max_events : int
-                Number of points used for estimation.
-
-            Returns
-            -------
-            float
-                Threshold value used for gating.
-            """
-            runtime_config = RuntimeConfig()
-            threshold_value: Optional[float] = None
-
-            if isinstance(threshold_payload, dict):
-                threshold_value = _as_float(threshold_payload.get("threshold"))
-
-            if threshold_value is None:
-                threshold_value = _as_float(threshold_input_value)
-
-            if threshold_value is None:
-                backend = BackEnd(fcs_path)
-                response = backend.process_scattering(
-                    {
-                        "operation": "estimate_scattering_threshold",
-                        "column": str(scattering_channel),
-                        "nbins": int(runtime_config.n_bins_for_plots),
-                        "number_of_points": int(max_events),
-                    }
-                )
-                threshold_value = _as_float(response.get("threshold"))
-
-            if threshold_value is None:
-                threshold_value = 0.0
-
-            return float(threshold_value)
-
         @dash.callback(
             dash.Output(self.page.ids.Fluorescence.peak_count_input, "value"),
             dash.Output(self.page.ids.Fluorescence.nbins_input, "value"),
             dash.Input("runtime-config-store", "data"),
             prevent_initial_call=False,
         )
-        def sync_controls_from_runtime_store(runtime_config_data):
+        def sync_controls_from_runtime_store(runtime_config_data: Any) -> tuple[Any, Any]:
             runtime_config = RuntimeConfig()
 
+            logger.debug(
+                "sync_controls_from_runtime_store called with runtime_config_data=%r",
+                runtime_config_data,
+            )
+
             if not isinstance(runtime_config_data, dict):
+                logger.debug(
+                    "Runtime config store is not a dict. Using defaults peak_count=%r nbins=%r",
+                    runtime_config.Default.peak_count,
+                    runtime_config.Default.n_bins_for_plots,
+                )
                 return (
-                    runtime_config.peak_count,
-                    runtime_config.n_bins_for_plots,
+                    runtime_config.Default.peak_count,
+                    runtime_config.Default.n_bins_for_plots,
                 )
 
-            return (
-                runtime_config_data.get("peak_count", runtime_config.peak_count),
-                runtime_config_data.get("n_bins_for_plots", runtime_config.n_bins_for_plots),
+            peak_count_value = runtime_config_data.get(
+                "peak_count",
+                runtime_config.Default.peak_count,
             )
+            fluorescence_nbins_value = runtime_config_data.get(
+                "n_bins_for_plots",
+                runtime_config.Default.n_bins_for_plots,
+            )
+
+            logger.debug(
+                "Runtime config resolved to peak_count=%r fluorescence_nbins=%r",
+                peak_count_value,
+                fluorescence_nbins_value,
+            )
+
+            return peak_count_value, fluorescence_nbins_value
 
         @dash.callback(
             dash.Output(self.page.ids.Fluorescence.graph_toggle_container, "style"),
@@ -411,9 +202,15 @@ class PeaksSection:
             prevent_initial_call=False,
         )
         def toggle_fluorescence_graph_container(graph_toggle_value: Any) -> dict:
-            enabled = isinstance(graph_toggle_value, list) and ("enabled" in graph_toggle_value)
-            return {"display": "block"} if enabled else {"display": "none"}
+            graph_enabled = self._is_enabled(graph_toggle_value)
 
+            logger.debug(
+                "toggle_fluorescence_graph_container called with graph_toggle_value=%r resolved graph_enabled=%r",
+                graph_toggle_value,
+                graph_enabled,
+            )
+
+            return {"display": "block"} if graph_enabled else {"display": "none"}
 
         @dash.callback(
             dash.Output(self.page.ids.Fluorescence.peak_lines_store, "data", allow_duplicate=True),
@@ -422,24 +219,19 @@ class PeaksSection:
             dash.Input(self.page.ids.Scattering.detector_dropdown, "value"),
             prevent_initial_call=True,
         )
-        def clear_peak_lines_on_context_change(fluorescence_channel, fcs_path, scattering_channel):
-            return {"positions": [], "labels": []}
-
-        @dash.callback(
-            dash.Output(self.page.ids.Fluorescence.peak_lines_store, "data", allow_duplicate=True),
-            dash.Input(self.page.ids.Fluorescence.detector_dropdown, "value"),
-            prevent_initial_call=True,
-        )
-        def clear_peak_lines_on_detector_change(fluorescence_channel: Optional[str]):
-            if fluorescence_channel is None:
-                return dash.no_update
-
-            chosen = str(fluorescence_channel).strip()
-            if not chosen:
-                return dash.no_update
+        def clear_peak_lines_on_context_change(
+            fluorescence_channel: Any,
+            fcs_path: Any,
+            scattering_channel: Any,
+        ) -> dict:
+            logger.debug(
+                "clear_peak_lines_on_context_change called with fluorescence_channel=%r fcs_path=%r scattering_channel=%r",
+                fluorescence_channel,
+                fcs_path,
+                scattering_channel,
+            )
 
             return {"positions": [], "labels": []}
-
 
         @dash.callback(
             dash.Output(self.page.ids.Fluorescence.source_channel_store, "data", allow_duplicate=True),
@@ -451,35 +243,32 @@ class PeaksSection:
             fluorescence_channel: Optional[str],
             current_locked: Optional[str],
         ) -> Optional[str]:
-            """
-            Lock the fluorescence source channel at first selection.
+            fluorescence_channel_clean = self._clean_optional_string(fluorescence_channel)
 
-            This prevents automatically switching the "source" column to a newly injected column
-            (for example MESF) if dropdown options get refreshed later.
+            logger.debug(
+                "lock_fluorescence_source_channel called with fluorescence_channel=%r cleaned=%r current_locked=%r",
+                fluorescence_channel,
+                fluorescence_channel_clean,
+                current_locked,
+            )
 
-            Parameters
-            ----------
-            fluorescence_channel : Optional[str]
-                Newly selected fluorescence dropdown value.
-            current_locked : Optional[str]
-                Currently locked source channel (if any).
-
-            Returns
-            -------
-            Optional[str]
-                The chosen channel when not already locked, otherwise dash.no_update.
-            """
-            if not fluorescence_channel:
-                return dash.no_update
-
-            chosen = str(fluorescence_channel).strip()
-            if not chosen:
+            if not fluorescence_channel_clean:
+                logger.debug("No valid fluorescence channel selected. Returning dash.no_update.")
                 return dash.no_update
 
             if isinstance(current_locked, str) and current_locked.strip():
+                logger.debug(
+                    "Source channel already locked to %r. Returning dash.no_update.",
+                    current_locked,
+                )
                 return dash.no_update
 
-            return chosen
+            logger.debug(
+                "Locking fluorescence source channel to %r.",
+                fluorescence_channel_clean,
+            )
+
+            return fluorescence_channel_clean
 
         @dash.callback(
             dash.Output(self.page.ids.Fluorescence.hist_store, "data", allow_duplicate=True),
@@ -503,92 +292,76 @@ class PeaksSection:
             threshold_input_value: Any,
             max_events_for_plots: Any,
         ) -> Any:
-            """
-            Refresh the stored fluorescence histogram figure.
+            graph_enabled = self._is_enabled(graph_toggle_value)
+            fcs_path_clean = self._clean_optional_string(fcs_path)
+            scattering_channel_clean = self._clean_optional_string(scattering_channel)
+            fluorescence_channel_clean = self._clean_optional_string(fluorescence_channel)
 
-            This callback:
-            - Loads fluorescence and scattering columns from the current FCS file.
-            - Applies gating based on scattering threshold.
-            - Builds a histogram figure with base and gated overlay.
-            - Stores the plotly figure dict in a `dcc.Store` for display and further decoration.
-
-            Returns
-            -------
-            Any
-                Plotly figure as dict if successful, otherwise dash.no_update.
-            """
-            graph_enabled = isinstance(graph_toggle_value, list) and ("enabled" in graph_toggle_value)
-            if not graph_enabled:
-                return dash.no_update
-
-            runtime_config = RuntimeConfig()
-
-            fcs_path_clean = str(fcs_path or "").strip()
-            scattering_clean = str(scattering_channel or "").strip()
-            fluorescence_clean = str(fluorescence_channel or "").strip()
-
-            if not fcs_path_clean or not scattering_clean or not fluorescence_clean:
-                return dash.no_update
-
-            max_events_for_plots_int = _as_int(
-                max_events_for_plots,
-                default=runtime_config.max_events_for_analysis,
-                min_value=10_000,
-                max_value=5_000_000,
-            )
-
-            threshold_value = resolve_threshold_value(
-                fcs_path=fcs_path_clean,
-                scattering_channel=scattering_clean,
-                threshold_payload=threshold_payload,
-                threshold_input_value=threshold_input_value,
-                max_events=max_events_for_plots_int,
-            )
-
-            nbins = _as_int(
+            logger.debug(
+                "refresh_fluorescence_hist_store called with graph_enabled=%r fcs_path=%r scattering_channel=%r fluorescence_channel=%r fluorescence_nbins=%r threshold_payload=%r threshold_input_value=%r max_events_for_plots=%r",
+                graph_enabled,
+                fcs_path_clean,
+                scattering_channel_clean,
+                fluorescence_channel_clean,
                 fluorescence_nbins,
-                default=runtime_config.n_bins_for_plots,
-                min_value=10,
-                max_value=5000,
+                threshold_payload,
+                threshold_input_value,
+                max_events_for_plots,
             )
 
-            with FCSFile(fcs_path_clean, writable=False) as fcs:
-                cols = [str(c).strip() for c in fcs.get_column_names()]
-                if fluorescence_clean not in cols or scattering_clean not in cols:
-                    return dash.no_update
+            if not graph_enabled:
+                logger.debug("Histogram graph is disabled. Returning dash.no_update.")
+                return dash.no_update
 
-                try:
-                    fluorescence_values = fcs.column_copy(
-                        fluorescence_clean,
-                        dtype=float,
-                        n=max_events_for_plots_int,
-                    )
-                    scattering_values = fcs.column_copy(
-                        scattering_clean,
-                        dtype=float,
-                        n=max_events_for_plots_int,
-                    )
-                except KeyError:
-                    return dash.no_update
+            if not fcs_path_clean or not scattering_channel_clean or not fluorescence_channel_clean:
+                logger.debug(
+                    "Missing required input for fluorescence histogram build. "
+                    "fcs_path_clean=%r scattering_channel_clean=%r fluorescence_channel_clean=%r. "
+                    "Returning dash.no_update.",
+                    fcs_path_clean,
+                    scattering_channel_clean,
+                    fluorescence_channel_clean,
+                )
+                return dash.no_update
 
-            gated = self.apply_gate(
-                fluorescence_values=fluorescence_values,
-                scattering_values=scattering_values,
-                threshold=float(threshold_value),
-            )
+            try:
+                figure_dict = FluorescenceService.build_fluorescence_histogram_figure_dict(
+                    fcs_path=fcs_path_clean,
+                    scattering_channel=scattering_channel_clean,
+                    fluorescence_channel=fluorescence_channel_clean,
+                    fluorescence_nbins=fluorescence_nbins,
+                    threshold_payload=threshold_payload,
+                    threshold_input_value=threshold_input_value,
+                    max_events_for_plots=max_events_for_plots,
+                )
+            except Exception:
+                logger.exception(
+                    "Failed to build fluorescence histogram figure dict for "
+                    "fcs_path=%r scattering_channel=%r fluorescence_channel=%r "
+                    "fluorescence_nbins=%r threshold_payload=%r threshold_input_value=%r "
+                    "max_events_for_plots=%r",
+                    fcs_path_clean,
+                    scattering_channel_clean,
+                    fluorescence_channel_clean,
+                    fluorescence_nbins,
+                    threshold_payload,
+                    threshold_input_value,
+                    max_events_for_plots,
+                )
+                raise
 
-            fig = make_histogram_with_lines(
-                values=fluorescence_values,
-                overlay_values=gated,
-                nbins=nbins,
-                xaxis_title="Fluorescence (a.u.)",
-                line_positions=[],
-                line_labels=[],
-                base_name="all events",
-                overlay_name="gated events",
-            )
+            if isinstance(figure_dict, dict):
+                logger.debug(
+                    "Fluorescence histogram figure dict built successfully with top level keys=%r",
+                    list(figure_dict.keys()),
+                )
+            else:
+                logger.debug(
+                    "Fluorescence histogram figure built successfully with non-dict type=%s",
+                    type(figure_dict).__name__,
+                )
 
-            return fig.to_dict()
+            return figure_dict
 
         @dash.callback(
             dash.Output(self.page.ids.Fluorescence.graph_hist, "figure"),
@@ -603,35 +376,63 @@ class PeaksSection:
             stored_figure: Any,
             peak_lines: Any,
         ) -> go.Figure:
-            """
-            Update the displayed fluorescence histogram figure.
-            """
-            graph_enabled = isinstance(graph_toggle_value, list) and ("enabled" in graph_toggle_value)
+            graph_enabled = self._is_enabled(graph_toggle_value)
+
+            logger.debug(
+                "update_fluorescence_yscale called with graph_enabled=%r yscale_selection=%r stored_figure_type=%s peak_lines=%r",
+                graph_enabled,
+                yscale_selection,
+                type(stored_figure).__name__,
+                peak_lines,
+            )
 
             if not graph_enabled:
+                logger.debug("Histogram graph is hidden. Returning info figure.")
                 return _make_info_figure("Histogram is hidden.")
 
             if not stored_figure:
+                logger.debug("No stored figure available. Returning info figure.")
                 return _make_info_figure("Select file and channels first.")
 
-            fig = go.Figure(stored_figure)
+            try:
+                figure = go.Figure(stored_figure)
+            except Exception:
+                logger.exception(
+                    "Failed to reconstruct Plotly figure from stored_figure with type=%s value=%r",
+                    type(stored_figure).__name__,
+                    stored_figure,
+                )
+                raise
 
-            positions: list = []
-            labels: list = []
+            line_positions: list = []
+            line_labels: list = []
+
             if isinstance(peak_lines, dict):
-                positions = peak_lines.get("positions") or []
-                labels = peak_lines.get("labels") or []
+                line_positions = peak_lines.get("positions") or []
+                line_labels = peak_lines.get("labels") or []
 
-            fig = add_vertical_lines(
-                fig=fig,
-                line_positions=positions,
-                line_labels=labels,
+            logger.debug(
+                "Applying peak lines to fluorescence figure with line_positions=%r line_labels=%r",
+                line_positions,
+                line_labels,
             )
 
-            use_log = isinstance(yscale_selection, list) and ("log" in yscale_selection)
-            fig.update_yaxes(type="log" if use_log else "linear")
-            fig.update_layout(separators=".,")
-            return fig
+            figure = add_vertical_lines(
+                fig=figure,
+                line_positions=line_positions,
+                line_labels=line_labels,
+            )
+
+            use_log_scale = isinstance(yscale_selection, list) and ("log" in yscale_selection)
+            figure.update_yaxes(type="log" if use_log_scale else "linear")
+            figure.update_layout(separators=".,")
+
+            logger.debug(
+                "Updated fluorescence figure y axis to %r scale.",
+                "log" if use_log_scale else "linear",
+            )
+
+            return figure
 
         @dash.callback(
             dash.Output(self.page.ids.Calibration.bead_table, "data", allow_duplicate=True),
@@ -640,7 +441,6 @@ class PeaksSection:
             dash.State(self.page.ids.Load.uploaded_fcs_path_store, "data"),
             dash.State(self.page.ids.Scattering.detector_dropdown, "value"),
             dash.State(self.page.ids.Fluorescence.detector_dropdown, "value"),
-            dash.State(self.page.ids.Fluorescence.nbins_input, "value"),
             dash.State(self.page.ids.Fluorescence.peak_count_input, "value"),
             dash.State(self.page.ids.Load.max_events_for_plots_input, "value", allow_optional=True),
             dash.State(self.page.ids.Scattering.threshold_store, "data"),
@@ -653,159 +453,117 @@ class PeaksSection:
             fcs_path: Optional[str],
             scattering_channel: Optional[str],
             fluorescence_channel: Optional[str],
-            fluorescence_nbins: Any,
             fluorescence_peak_count: Any,
             max_events_for_plots: Any,
             scattering_threshold_payload: Optional[dict],
             scattering_threshold_input_value: Any,
             table_data: Optional[list[dict]],
-        ) -> tuple:
-            """
-            Find fluorescence peaks on gated events and update both the bead table and peak line store.
+        ) -> tuple[Any, Any]:
+            logger.debug(
+                "find_peaks_and_update_table called with n_clicks=%r fcs_path=%r scattering_channel=%r fluorescence_channel=%r fluorescence_peak_count=%r max_events_for_plots=%r scattering_threshold_payload=%r scattering_threshold_input_value=%r table_rows=%r",
+                n_clicks,
+                fcs_path,
+                scattering_channel,
+                fluorescence_channel,
+                fluorescence_peak_count,
+                max_events_for_plots,
+                scattering_threshold_payload,
+                scattering_threshold_input_value,
+                None if table_data is None else len(table_data),
+            )
 
-            Parameters
-            ----------
-            n_clicks : int
-                Click count from "Find peaks" button.
-            fcs_path : Optional[str]
-                Current FCS file path.
-            scattering_channel : Optional[str]
-                Current scattering channel.
-            fluorescence_channel : Optional[str]
-                Current fluorescence channel.
-            fluorescence_nbins : Any
-                Histogram bins used for plotting (not required for peak finding, but used for consistent display).
-            fluorescence_peak_count : Any
-                Maximum number of peaks to return.
-            max_events_for_plots : Any
-                Maximum number of events to load from the file.
-            scattering_threshold_payload : Optional[dict]
-                Stored threshold data.
-            scattering_threshold_input_value : Any
-                Manual threshold input value.
-            table_data : Optional[list[dict]]
-                Current bead table rows to inject peaks into.
-
-            Returns
-            -------
-            tuple
-                (updated_table_rows, peak_lines_payload) or (dash.no_update, dash.no_update) when not applicable.
-            """
-            runtime_config = RuntimeConfig()
-
-            if not fcs_path or not scattering_channel or not fluorescence_channel:
+            if not n_clicks:
+                logger.debug("Find peaks button has not been clicked. Returning dash.no_update.")
                 return dash.no_update, dash.no_update
 
-            max_events = _as_int(
-                max_events_for_plots,
-                default=runtime_config.max_events_for_analysis,
-                min_value=10_000,
-                max_value=5_000_000,
-            )
+            fcs_path_clean = self._clean_optional_string(fcs_path)
+            scattering_channel_clean = self._clean_optional_string(scattering_channel)
+            fluorescence_channel_clean = self._clean_optional_string(fluorescence_channel)
 
-            threshold_value = resolve_threshold_value(
-                fcs_path=str(fcs_path),
-                scattering_channel=str(scattering_channel),
-                threshold_payload=scattering_threshold_payload,
-                threshold_input_value=scattering_threshold_input_value,
-                max_events=int(max_events),
-            )
-
-            nbins = _as_int(
-                fluorescence_nbins,
-                default=runtime_config.n_bins_for_plots,
-                min_value=10,
-                max_value=5000,
-            )
-
-            max_peaks = _as_int(
-                fluorescence_peak_count,
-                default=runtime_config.peak_count,
-                min_value=1,
-                max_value=100,
-            )
-
-            backend = BackEnd(str(fcs_path))
-
-            peaks_payload = backend.find_fluorescence_peaks(
-                column=str(fluorescence_channel),
-                max_peaks=int(max_peaks),
-                gating_column=str(scattering_channel),
-                gating_threshold=float(threshold_value),
-                number_of_points=int(max_events),
-                debug=False
-            )
-
-            peak_positions_raw = peaks_payload.get("peak_positions", []) or []
-
-            with FCSFile(str(fcs_path), writable=False) as fcs:
-                fluorescence_values = fcs.column_copy(
-                    str(fluorescence_channel),
-                    dtype=float,
-                    n=int(max_events),
+            if not fcs_path_clean or not scattering_channel_clean or not fluorescence_channel_clean:
+                logger.debug(
+                    "Missing required input for peak finding. "
+                    "fcs_path_clean=%r scattering_channel_clean=%r fluorescence_channel_clean=%r. "
+                    "Returning dash.no_update.",
+                    fcs_path_clean,
+                    scattering_channel_clean,
+                    fluorescence_channel_clean,
                 )
-                scattering_values = fcs.column_copy(
-                    str(scattering_channel),
-                    dtype=float,
-                    n=int(max_events),
+                return dash.no_update, dash.no_update
+
+            try:
+                result = FluorescenceService.find_fluorescence_peaks_and_prepare_outputs(
+                    fcs_path=fcs_path_clean,
+                    scattering_channel=scattering_channel_clean,
+                    fluorescence_channel=fluorescence_channel_clean,
+                    fluorescence_peak_count=fluorescence_peak_count,
+                    max_events_for_plots=max_events_for_plots,
+                    scattering_threshold_payload=scattering_threshold_payload,
+                    scattering_threshold_input_value=scattering_threshold_input_value,
+                    table_data=table_data,
                 )
+            except Exception:
+                logger.exception(
+                    "Failed to find fluorescence peaks for "
+                    "fcs_path=%r scattering_channel=%r fluorescence_channel=%r "
+                    "fluorescence_peak_count=%r max_events_for_plots=%r "
+                    "scattering_threshold_payload=%r scattering_threshold_input_value=%r "
+                    "table_data_length=%r",
+                    fcs_path_clean,
+                    scattering_channel_clean,
+                    fluorescence_channel_clean,
+                    fluorescence_peak_count,
+                    max_events_for_plots,
+                    scattering_threshold_payload,
+                    scattering_threshold_input_value,
+                    None if table_data is None else len(table_data),
+                )
+                raise
 
-            gated = self.apply_gate(
-                fluorescence_values=fluorescence_values,
-                scattering_values=scattering_values,
-                threshold=float(threshold_value),
+            logger.debug(
+                "Peak finding succeeded. Updated table rows=%r peak_lines_payload=%r",
+                None if result.updated_table_data is None else len(result.updated_table_data),
+                result.peak_lines_payload,
             )
 
-            peak_positions: List[float] = []
-            for p in peak_positions_raw:
-                v = _as_float(p)
-                if v is None:
-                    continue
-                peak_positions.append(float(v))
+            return result.updated_table_data, result.peak_lines_payload
 
-            peak_labels = [f"{float(p):.3g}" for p in peak_positions]
 
-            print(f"Found peaks at positions: {peak_positions}")
-
-            _ = make_histogram_with_lines(
-                values=fluorescence_values,
-                overlay_values=gated,
-                nbins=nbins,
-                xaxis_title="Fluorescence (a.u.)",
-                line_positions=peak_positions,
-                line_labels=peak_labels,
-                base_name="all events",
-                overlay_name="gated events",
-            )
-
-            updated_table = self._inject_peak_modes_into_table(
-                table_data=table_data,
-                peak_positions=peak_positions,
-            )
-
-            peak_lines_payload = {"positions": peak_positions, "labels": peak_labels}
-
-            return updated_table, peak_lines_payload
-
-    def _empty_fig(self) -> go.Figure:
+    def _is_enabled(self, value: Any) -> bool:
         """
-        Create a minimal empty figure.
+        Return whether a checklist switch style value is enabled.
+
+        Parameters
+        ----------
+        value : Any
+            Dash checklist value.
 
         Returns
         -------
-        go.Figure
-            Figure with consistent separators and no data.
+        bool
+            True when "enabled" is present.
         """
-        fig = go.Figure()
-        fig.update_layout(separators=".,")
-        return fig
+        return isinstance(value, list) and ("enabled" in value)
 
-    @staticmethod
-    def apply_gate(*, fluorescence_values: np.ndarray, scattering_values: np.ndarray, threshold: float) -> np.ndarray:
-        fluorescence_values = np.asarray(fluorescence_values, dtype=float)
-        scattering_values = np.asarray(scattering_values, dtype=float)
+    def _clean_optional_string(self, value: Any) -> str:
+        """
+        Normalize an optional string like value from Dash inputs.
 
-        mask = np.isfinite(fluorescence_values) & np.isfinite(scattering_values)
-        mask = mask & (scattering_values >= float(threshold))
+        Parameters
+        ----------
+        value : Any
+            Raw value.
 
-        return fluorescence_values[mask]
+        Returns
+        -------
+        str
+            Cleaned string or empty string.
+        """
+        if value is None:
+            return ""
+
+        cleaned_value = str(value).strip()
+        if cleaned_value.lower() == "none":
+            return ""
+
+        return cleaned_value

@@ -1,6 +1,9 @@
+# -*- coding: utf-8 -*-
+
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
+import logging
 
 import base64
 import tempfile
@@ -13,6 +16,9 @@ from RosettaX.pages import styling
 from RosettaX.pages.fluorescence import service
 from RosettaX.pages.fluorescence.backend import BackEnd
 from RosettaX.utils.runtime_config import RuntimeConfig
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -58,6 +64,7 @@ class LoadSection:
     def __init__(self, page) -> None:
         self.page = page
         self.file_state = service.FileStateRefresher()
+        logger.debug("Initialized LoadSection with page=%r", page)
 
     @property
     def uploaded_fcs_filename_store_id(self) -> str:
@@ -67,7 +74,9 @@ class LoadSection:
         This avoids having to modify the page ids class just to keep one extra
         piece of session state.
         """
-        return f"{self.page.ids.Load.uploaded_fcs_path_store}-filename"
+        store_id = f"{self.page.ids.Load.uploaded_fcs_path_store}-filename"
+        logger.debug("Resolved uploaded_fcs_filename_store_id=%r", store_id)
+        return store_id
 
     def get_layout(self) -> dbc.Card:
         """
@@ -75,8 +84,14 @@ class LoadSection:
         """
         runtime_config = RuntimeConfig()
 
-        initial_fcs_path = runtime_config.fcs_file_path
+        initial_fcs_path = runtime_config.Default.fcs_file_path
         initial_filename = Path(initial_fcs_path).name if initial_fcs_path else ""
+
+        logger.debug(
+            "Building load section layout with initial_fcs_path=%r initial_filename=%r",
+            initial_fcs_path,
+            initial_filename,
+        )
 
         upload_widget = dcc.Upload(
             id=self.page.ids.Load.upload,
@@ -114,7 +129,15 @@ class LoadSection:
         """
         Decode a Dash upload payload and persist it to a temporary file.
         """
-        _header, b64data = contents.split(",", 1)
+        logger.debug(
+            "write_upload_to_tempfile called with filename=%r contents_prefix=%r",
+            filename,
+            contents[:64] if isinstance(contents, str) else contents,
+        )
+
+        header, b64data = contents.split(",", 1)
+        logger.debug("Parsed upload header=%r", header)
+
         raw = base64.b64decode(b64data)
 
         suffix = Path(filename).suffix or ".bin"
@@ -123,6 +146,12 @@ class LoadSection:
 
         output_path = temporary_directory / f"{next(tempfile._get_candidate_names())}{suffix}"
         output_path.write_bytes(raw)
+
+        logger.debug(
+            "Upload written successfully to output_path=%r byte_count=%r",
+            str(output_path),
+            len(raw),
+        )
         return str(output_path)
 
     @staticmethod
@@ -138,21 +167,46 @@ class LoadSection:
             if "value" in option
         }
 
+        logger.debug(
+            "_pick_dropdown_value called with preferred_value=%r current_value=%r allowed_values=%r",
+            preferred_value,
+            current_value,
+            allowed_values,
+        )
+
         if preferred_value is not None and str(preferred_value) in allowed_values:
-            return str(preferred_value)
+            resolved = str(preferred_value)
+            logger.debug("_pick_dropdown_value selected preferred_value=%r", resolved)
+            return resolved
 
         if current_value is not None and str(current_value) in allowed_values:
-            return str(current_value)
+            resolved = str(current_value)
+            logger.debug("_pick_dropdown_value selected current_value=%r", resolved)
+            return resolved
 
         if options:
-            return str(options[0].get("value"))
+            resolved = str(options[0].get("value"))
+            logger.debug("_pick_dropdown_value fell back to first option value=%r", resolved)
+            return resolved
 
+        logger.debug("_pick_dropdown_value found no valid options and returned None")
         return None
 
     @staticmethod
     def _build_loaded_filename_label(display_filename: Optional[str]) -> str:
         if isinstance(display_filename, str) and display_filename.strip():
-            return f"Loaded file: {display_filename.strip()}"
+            label = f"Loaded file: {display_filename.strip()}"
+            logger.debug(
+                "_build_loaded_filename_label built label=%r from display_filename=%r",
+                label,
+                display_filename,
+            )
+            return label
+
+        logger.debug(
+            "_build_loaded_filename_label received empty display_filename=%r and returned empty label",
+            display_filename,
+        )
         return ""
 
     def _register_callbacks(self) -> None:
@@ -162,6 +216,7 @@ class LoadSection:
         - preserving the loaded filename for the whole session
         - initializing detector dropdowns
         """
+        logger.debug("Registering load section callbacks.")
 
         @callback(
             Output(self.page.ids.Load.uploaded_fcs_path_store, "data"),
@@ -187,10 +242,22 @@ class LoadSection:
             current_scatter_value: Any,
             current_fluorescence_value: Any,
         ) -> tuple:
+            logger.debug(
+                "load_file called with contents_type=%s stored_fcs_path=%r uploaded_filename=%r "
+                "stored_filename=%r current_scatter_value=%r current_fluorescence_value=%r",
+                type(contents).__name__,
+                stored_fcs_path,
+                uploaded_filename,
+                stored_filename,
+                current_scatter_value,
+                current_fluorescence_value,
+            )
+
             selected_path: Optional[str] = None
             display_filename: str = ""
 
             if contents and uploaded_filename:
+                logger.debug("load_file entered upload mode.")
                 try:
                     selected_path = self.write_upload_to_tempfile(
                         contents=str(contents),
@@ -198,11 +265,17 @@ class LoadSection:
                     )
                     display_filename = str(uploaded_filename)
 
-                    print(f"Selected file: {uploaded_filename}")
-                    print(f"Saved as: {selected_path}")
+                    logger.debug(
+                        "Upload mode succeeded with uploaded_filename=%r selected_path=%r",
+                        uploaded_filename,
+                        selected_path,
+                    )
 
-                except Exception as error:
-                    print(f"Failed to save file: {error}")
+                except Exception:
+                    logger.exception(
+                        "Failed to save uploaded file with uploaded_filename=%r",
+                        uploaded_filename,
+                    )
                     return LoadResult(
                         uploaded_fcs_path_store=None,
                         uploaded_fcs_filename_store="",
@@ -214,6 +287,7 @@ class LoadSection:
                     ).to_tuple()
 
             elif isinstance(stored_fcs_path, str) and stored_fcs_path.strip():
+                logger.debug("load_file entered session restore or runtime config mode.")
                 selected_path = stored_fcs_path.strip()
 
                 if isinstance(stored_filename, str) and stored_filename.strip():
@@ -221,9 +295,14 @@ class LoadSection:
                 else:
                     display_filename = Path(selected_path).name
 
-                print(f"Loaded from session or runtime config path: {selected_path}")
+                logger.debug(
+                    "Restored selected_path=%r display_filename=%r from store/runtime config",
+                    selected_path,
+                    display_filename,
+                )
 
             else:
+                logger.debug("load_file found no upload contents and no stored path. Returning empty LoadResult.")
                 return LoadResult(
                     uploaded_fcs_path_store=None,
                     uploaded_fcs_filename_store="",
@@ -236,9 +315,13 @@ class LoadSection:
 
             try:
                 self.page.backend = BackEnd(selected_path)
+                logger.debug("BackEnd initialized successfully for selected_path=%r", selected_path)
 
-            except Exception as error:
-                print(f"Failed to initialize backend: {error}")
+            except Exception:
+                logger.exception(
+                    "Failed to initialize BackEnd for selected_path=%r",
+                    selected_path,
+                )
                 return LoadResult(
                     uploaded_fcs_path_store=selected_path,
                     uploaded_fcs_filename_store=display_filename,
@@ -251,9 +334,13 @@ class LoadSection:
 
             try:
                 channels = self.file_state.options_from_file(selected_path)
+                logger.debug("Channel extraction succeeded for selected_path=%r channels=%r", selected_path, channels)
 
-            except Exception as error:
-                print(f"Loaded file but could not read channels: {error}")
+            except Exception:
+                logger.exception(
+                    "Loaded file but failed to extract channels from selected_path=%r",
+                    selected_path,
+                )
                 return LoadResult(
                     uploaded_fcs_path_store=selected_path,
                     uploaded_fcs_filename_store=display_filename,
@@ -266,12 +353,19 @@ class LoadSection:
 
             runtime_config = RuntimeConfig()
             runtime_config.update(fcs_file_path=selected_path)
+            logger.debug("Updated runtime config with fcs_file_path=%r", selected_path)
 
             scatter_options = list(channels.scatter_options or [])
             fluorescence_options = list(channels.fluorescence_options or [])
 
+            logger.debug(
+                "Resolved scatter_options_count=%r fluorescence_options_count=%r",
+                len(scatter_options),
+                len(fluorescence_options),
+            )
+
             scatter_value = self._pick_dropdown_value(
-                preferred_value=runtime_config.fluorescence_page_scattering_detector,
+                preferred_value=runtime_config.Default.fluorescence_page_scattering_detector,
                 current_value=str(current_scatter_value) if current_scatter_value else None,
                 options=scatter_options,
             )
@@ -283,7 +377,7 @@ class LoadSection:
                 )
 
             fluorescence_value = self._pick_dropdown_value(
-                preferred_value=runtime_config.fluorescence_page_fluorescence_detector,
+                preferred_value=runtime_config.Default.fluorescence_page_fluorescence_detector,
                 current_value=str(current_fluorescence_value) if current_fluorescence_value else None,
                 options=fluorescence_options,
             )
@@ -294,7 +388,13 @@ class LoadSection:
                     options=fluorescence_options,
                 )
 
-            return LoadResult(
+            logger.debug(
+                "Final dropdown resolution selected scatter_value=%r fluorescence_value=%r",
+                scatter_value,
+                fluorescence_value,
+            )
+
+            result = LoadResult(
                 uploaded_fcs_path_store=selected_path,
                 uploaded_fcs_filename_store=display_filename,
                 upload_filename_children=self._build_loaded_filename_label(display_filename),
@@ -302,4 +402,7 @@ class LoadSection:
                 scattering_detector_value=scatter_value,
                 fluorescence_detector_options=fluorescence_options,
                 fluorescence_detector_value=fluorescence_value,
-            ).to_tuple()
+            )
+
+            logger.debug("load_file returning LoadResult=%r", result)
+            return result.to_tuple()

@@ -51,9 +51,9 @@ class FluorescencePage():
                 dash.dcc.Store(id=self.ids.Load.uploaded_fcs_path_store, storage_type="session"),
                 dash.dcc.Store(id=self.ids.Calibration.calibration_store, storage_type="session"),
                 dash.dcc.Store(id=self.ids.Scattering.threshold_store, storage_type="session"),
-                dash.dcc.Store(id=self.ids.Fluorescence.hist_store, storage_type="memory"),
-                dash.dcc.Store(id=self.ids.Fluorescence.source_channel_store, storage_type="memory"),
-                dash.dcc.Store(id=self.ids.Fluorescence.peak_lines_store, storage_type="memory"),
+                dash.dcc.Store(id=self.ids.Fluorescence.hist_store, storage_type="session"),
+                dash.dcc.Store(id=self.ids.Fluorescence.source_channel_store, storage_type="session"),
+                dash.dcc.Store(id=self.ids.Fluorescence.peak_lines_store, storage_type="session"),
                 dash.html.H1("Fluorescent Calibration"),
                 dash.html.Br(),
                 *[section.get_layout() for section in self.sections]

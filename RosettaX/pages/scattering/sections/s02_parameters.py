@@ -285,7 +285,7 @@ class ParametersSection:
             label="Particle Diameter (nm):",
             component_id=self.page.ids.Parameters.particle_diameter,
             placeholder="Particle Diameter (nm)",
-            value=runtime_config.particle_diameter_nm,
+            value=runtime_config.Default.particle_diameter,
             min_value=1,
             step=1,
             width_px=220,
@@ -295,7 +295,7 @@ class ParametersSection:
             label="Particle Refractive Index:",
             preset_id=self.page.ids.Parameters.particle_refractive_index_source,
             value_id=self.page.ids.Parameters.particle_refractive_index_custom,
-            default_value=runtime_config.particle_refractive_index,
+            default_value=runtime_config.Default.particle_refractive_index,
             preset_options=self._get_particle_refractive_index_presets(),
         )
 
@@ -320,7 +320,7 @@ class ParametersSection:
             label="Particle Core Refractive Index:",
             preset_id=self.page.ids.Parameters.core_refractive_index_source,
             value_id=self.page.ids.Parameters.core_refractive_index_custom,
-            default_value=runtime_config.core_refractive_index,
+            default_value=runtime_config.Default.core_refractive_index,
             preset_options=self._get_core_refractive_index_presets(),
         )
 
@@ -328,7 +328,7 @@ class ParametersSection:
             label="Particle Shell Refractive Index:",
             preset_id=self.page.ids.Parameters.shell_refractive_index_source,
             value_id=self.page.ids.Parameters.shell_refractive_index_custom,
-            default_value=runtime_config.shell_refractive_index,
+            default_value=runtime_config.Default.shell_refractive_index,
             preset_options=self._get_shell_refractive_index_presets(),
         )
 
@@ -336,7 +336,7 @@ class ParametersSection:
             label="Particle Core Diameter (nm):",
             component_id=self.page.ids.Parameters.core_diameter,
             placeholder="Particle Core Diameter (nm)",
-            value=runtime_config.core_diameter_nm,
+            value=runtime_config.Default.core_diameter,
             min_value=1,
             step=1,
             width_px=220,
@@ -346,7 +346,7 @@ class ParametersSection:
             label="Particle Shell Thickness (nm):",
             component_id=self.page.ids.Parameters.shell_thickness,
             placeholder="Particle Shell Thickness (nm)",
-            value=runtime_config.shell_thickness_nm,
+            value=runtime_config.Default.shell_thickness,
             min_value=0,
             step=1,
             width_px=220,

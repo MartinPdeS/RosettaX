@@ -1,12 +1,12 @@
 from typing import Any, Optional
 from dataclasses import dataclass
-import json
-import re
-from datetime import datetime
-from pathlib import Path
+import numpy as np
 
+from RosettaX.pages.fluorescence.backend import BackEnd
 from RosettaX.utils.reader import FCSFile
-from RosettaX.utils.directories import fluorescence_calibration_directory, scattering_calibration_directory
+from RosettaX.utils.plottings import make_histogram_with_lines
+from RosettaX.utils.casting import _as_float, _as_int
+from RosettaX.utils.runtime_config import RuntimeConfig
 
 
 @dataclass(frozen=True)
@@ -15,6 +15,17 @@ class ChannelOptions:
     fluorescence_options: list[dict[str, str]]
     scatter_value: Optional[str]
     fluorescence_value: Optional[str]
+
+
+@dataclass(frozen=True)
+class FluorescenceHistogramPayload:
+    figure_dict: dict[str, Any]
+
+
+@dataclass(frozen=True)
+class FluorescencePeakResult:
+    updated_table_data: list[dict[str, Any]]
+    peak_lines_payload: dict[str, list[Any]]
 
 
 class FileStateRefresher:
@@ -96,141 +107,239 @@ class FileStateRefresher:
         )
 
 
-@dataclass(frozen=True)
-class SavedCalibrationInfo:
-    folder: str
-    filename: str
-    path: Path
+class FluorescenceService:
+    @staticmethod
+    def resolve_scattering_threshold(
+        *,
+        fcs_path: str,
+        scattering_channel: str,
+        threshold_payload: Optional[dict],
+        threshold_input_value: Any,
+        max_events: int,
+    ) -> float:
+        runtime_config = RuntimeConfig()
+        threshold_value: Optional[float] = None
 
+        if isinstance(threshold_payload, dict):
+            threshold_value = _as_float(threshold_payload.get("threshold"))
 
-class CalibrationFileStore:
-    """
-    File based calibration storage.
+        if threshold_value is None:
+            threshold_value = _as_float(threshold_input_value)
 
-    Saves each calibration as a JSON file directly inside the calibration
-    directories defined in RosettaX.directories.
-    """
+        if threshold_value is None:
+            backend = BackEnd(fcs_path)
+            response = backend.process_scattering(
+                {
+                    "operation": "estimate_scattering_threshold",
+                    "column": str(scattering_channel),
+                    "nbins": int(runtime_config.Default.n_bins_for_plots),
+                    "number_of_points": int(max_events),
+                }
+            )
+            threshold_value = _as_float(response.get("threshold"))
 
-    fluorescence_folder = "fluorescence"
-    scattering_folder = "scattering"
+        if threshold_value is None:
+            threshold_value = 0.0
+
+        return float(threshold_value)
 
     @staticmethod
-    def _sanitize_filename(name: str) -> str:
-        sanitized_name = str(name or "").strip()
-        sanitized_name = re.sub(r"\s+", " ", sanitized_name)
-        sanitized_name = re.sub(r"[^A-Za-z0-9 _().]", "", sanitized_name)
-        sanitized_name = sanitized_name.replace(" ", "_")
+    def gate_fluorescence_values(
+        *,
+        fluorescence_values: np.ndarray,
+        scattering_values: np.ndarray,
+        threshold: float,
+    ) -> np.ndarray:
+        fluorescence_values = np.asarray(fluorescence_values, dtype=float)
+        scattering_values = np.asarray(scattering_values, dtype=float)
 
-        if not sanitized_name:
-            sanitized_name = "calibration"
-
-        return sanitized_name
-
-    @staticmethod
-    def _fluorescence_directory() -> Path:
-        directory = Path(fluorescence_calibration_directory).expanduser()
-        directory.mkdir(parents=True, exist_ok=True)
-        return directory
+        valid_mask = np.isfinite(fluorescence_values) & np.isfinite(scattering_values)
+        gate_mask = valid_mask & (scattering_values >= float(threshold))
+        return fluorescence_values[gate_mask]
 
     @staticmethod
-    def _scattering_directory() -> Path:
-        directory = Path(scattering_calibration_directory).expanduser()
-        directory.mkdir(parents=True, exist_ok=True)
-        return directory
+    def load_fluorescence_and_scattering_values(
+        *,
+        fcs_path: str,
+        fluorescence_channel: str,
+        scattering_channel: str,
+        max_events: int,
+    ) -> tuple[np.ndarray, np.ndarray]:
+        with FCSFile(fcs_path, writable=False) as fcs_file:
+            fluorescence_values = fcs_file.column_copy(
+                fluorescence_channel,
+                dtype=float,
+                n=max_events,
+            )
+            scattering_values = fcs_file.column_copy(
+                scattering_channel,
+                dtype=float,
+                n=max_events,
+            )
+
+        return (
+            np.asarray(fluorescence_values, dtype=float),
+            np.asarray(scattering_values, dtype=float),
+        )
 
     @classmethod
-    def save_fluorescent_setup_to_file(
+    def build_fluorescence_histogram_figure_dict(
         cls,
         *,
-        name: str,
-        payload: dict[str, Any],
-    ) -> SavedCalibrationInfo:
-        output_directory = cls._fluorescence_directory()
-        sanitized_name = cls._sanitize_filename(name)
+        fcs_path: str,
+        scattering_channel: str,
+        fluorescence_channel: str,
+        fluorescence_nbins: Any,
+        threshold_payload: Optional[dict],
+        threshold_input_value: Any,
+        max_events_for_plots: Any,
+    ) -> Optional[dict[str, Any]]:
+        runtime_config = RuntimeConfig()
 
-        filename = f"{sanitized_name}.json"
-        path = output_directory / filename
-
-        record = {
-            "schema": "rosettax_calibration_v1",
-            "kind": "fluorescence",
-            "created_at": datetime.now().isoformat(timespec="seconds"),
-            "name": str(name),
-            "payload": payload,
-        }
-
-        path.write_text(
-            json.dumps(record, indent=2, sort_keys=True),
-            encoding="utf-8",
+        max_events = _as_int(
+            max_events_for_plots,
+            default=runtime_config.Default.max_events_for_analysis,
+            min_value=10_000,
+            max_value=5_000_000,
         )
 
-        return SavedCalibrationInfo(
-            folder=cls.fluorescence_folder,
-            filename=filename,
-            path=path,
+        nbins = _as_int(
+            fluorescence_nbins,
+            default=runtime_config.Default.n_bins_for_plots,
+            min_value=10,
+            max_value=5000,
         )
+
+        threshold_value = cls.resolve_scattering_threshold(
+            fcs_path=fcs_path,
+            scattering_channel=scattering_channel,
+            threshold_payload=threshold_payload,
+            threshold_input_value=threshold_input_value,
+            max_events=max_events,
+        )
+
+        fluorescence_values, scattering_values = cls.load_fluorescence_and_scattering_values(
+            fcs_path=fcs_path,
+            fluorescence_channel=fluorescence_channel,
+            scattering_channel=scattering_channel,
+            max_events=max_events,
+        )
+
+        gated_values = cls.gate_fluorescence_values(
+            fluorescence_values=fluorescence_values,
+            scattering_values=scattering_values,
+            threshold=threshold_value,
+        )
+
+        figure = make_histogram_with_lines(
+            values=fluorescence_values,
+            overlay_values=gated_values,
+            nbins=nbins,
+            xaxis_title="Fluorescence (a.u.)",
+            line_positions=[],
+            line_labels=[],
+            base_name="all events",
+            overlay_name="gated events",
+        )
+
+        return figure.to_dict()
+
+    @staticmethod
+    def inject_peak_positions_into_table(
+        *,
+        table_data: Optional[list[dict[str, Any]]],
+        peak_positions: list[float],
+    ) -> list[dict[str, Any]]:
+        rows = [dict(row) for row in (table_data or [])]
+
+        finite_peak_positions: list[float] = []
+        for peak_position in peak_positions:
+            try:
+                value = float(peak_position)
+            except Exception:
+                continue
+            if np.isfinite(value):
+                finite_peak_positions.append(value)
+
+        if not finite_peak_positions:
+            return rows
+
+        while len(rows) < len(finite_peak_positions):
+            rows.append({"col1": "", "col2": ""})
+
+        for row_index, peak_position in enumerate(finite_peak_positions):
+            current_value = rows[row_index].get("col2", "")
+            if current_value is None or str(current_value).strip() == "":
+                rows[row_index]["col2"] = f"{peak_position:.6g}"
+
+        return rows
 
     @classmethod
-    def save_scattering_setup_to_file(
+    def find_fluorescence_peaks_and_prepare_outputs(
         cls,
         *,
-        name: str,
-        payload: dict[str, Any],
-    ) -> SavedCalibrationInfo:
-        output_directory = cls._scattering_directory()
-        sanitized_name = cls._sanitize_filename(name)
+        fcs_path: str,
+        scattering_channel: str,
+        fluorescence_channel: str,
+        fluorescence_peak_count: Any,
+        max_events_for_plots: Any,
+        scattering_threshold_payload: Optional[dict],
+        scattering_threshold_input_value: Any,
+        table_data: Optional[list[dict[str, Any]]],
+    ) -> FluorescencePeakResult:
+        runtime_config = RuntimeConfig()
 
-        filename = f"{sanitized_name}.json"
-        path = output_directory / filename
+        max_events = _as_int(
+            max_events_for_plots,
+            default=runtime_config.Default.max_events_for_analysis,
+            min_value=10_000,
+            max_value=5_000_000,
+        )
 
-        record = {
-            "schema": "rosettax_calibration_v1",
-            "kind": "scattering",
-            "created_at": datetime.now().isoformat(timespec="seconds"),
-            "name": str(name),
-            "payload": payload,
+        max_peaks = _as_int(
+            fluorescence_peak_count,
+            default=runtime_config.Default.peak_count,
+            min_value=1,
+            max_value=100,
+        )
+
+        threshold_value = cls.resolve_scattering_threshold(
+            fcs_path=fcs_path,
+            scattering_channel=scattering_channel,
+            threshold_payload=scattering_threshold_payload,
+            threshold_input_value=scattering_threshold_input_value,
+            max_events=max_events,
+        )
+
+        backend = BackEnd(fcs_path)
+        peaks_payload = backend.find_fluorescence_peaks(
+            column=fluorescence_channel,
+            max_peaks=max_peaks,
+            gating_column=scattering_channel,
+            gating_threshold=threshold_value,
+            number_of_points=max_events,
+            debug=False,
+        )
+
+        peak_positions: list[float] = []
+        for raw_peak_position in peaks_payload.get("peak_positions", []) or []:
+            peak_position = _as_float(raw_peak_position)
+            if peak_position is not None:
+                peak_positions.append(float(peak_position))
+
+        peak_labels = [f"{peak_position:.3g}" for peak_position in peak_positions]
+
+        updated_table_data = cls.inject_peak_positions_into_table(
+            table_data=table_data,
+            peak_positions=peak_positions,
+        )
+
+        peak_lines_payload = {
+            "positions": peak_positions,
+            "labels": peak_labels,
         }
 
-        path.write_text(
-            json.dumps(record, indent=2, sort_keys=True),
-            encoding="utf-8",
+        return FluorescencePeakResult(
+            updated_table_data=updated_table_data,
+            peak_lines_payload=peak_lines_payload,
         )
-
-        return SavedCalibrationInfo(
-            folder=cls.scattering_folder,
-            filename=filename,
-            path=path,
-        )
-
-    @classmethod
-    def list_saved_calibrations(cls) -> dict[str, list[str]]:
-        """
-        Returns a dict shaped like the Sidebar expects:
-            {
-                "fluorescence": [file1, file2, ...],
-                "scattering": [file1, file2, ...],
-            }
-        """
-        fluorescence_directory = cls._fluorescence_directory()
-        scattering_directory = cls._scattering_directory()
-
-        fluorescence_files = sorted(
-            file_path.name
-            for file_path in fluorescence_directory.glob("*.json")
-            if file_path.is_file()
-        )
-        scattering_files = sorted(
-            file_path.name
-            for file_path in scattering_directory.glob("*.json")
-            if file_path.is_file()
-        )
-
-        result: dict[str, list[str]] = {}
-
-        if fluorescence_files:
-            result[cls.fluorescence_folder] = fluorescence_files
-
-        if scattering_files:
-            result[cls.scattering_folder] = scattering_files
-
-        return result

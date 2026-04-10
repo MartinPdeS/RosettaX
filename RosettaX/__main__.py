@@ -12,6 +12,18 @@ from RosettaX.pages.sidebar.main import sidebar_html
 from RosettaX.utils.parser import _parse_args
 from RosettaX.utils.runtime_config import RuntimeConfig
 
+import logging
+import sys
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+    stream=sys.stdout,
+    force=True,
+)
+
+logging.getLogger("RosettaX").setLevel(logging.DEBUG)
+
 class RosettaXApplication:
     """
     Main Dash application wrapper.

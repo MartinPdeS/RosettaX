@@ -2,11 +2,15 @@
 
 from dataclasses import dataclass
 from typing import Any, Optional
+import logging
 
 import dash
 import dash_bootstrap_components as dbc
 
 from RosettaX.pages.fluorescence import service
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -58,6 +62,7 @@ class SaveSection:
 
     def __init__(self, page) -> None:
         self.page = page
+        logger.debug("Initialized SaveSection with page=%r", page)
 
     def get_layout(self) -> dbc.Card:
         """
@@ -68,6 +73,7 @@ class SaveSection:
         dbc.Card
             A Dash Bootstrap Card containing the save section layout.
         """
+        logger.debug("Building save section layout.")
         return dbc.Card(
             [
                 dbc.CardHeader("5. Save calibration"),
@@ -95,6 +101,7 @@ class SaveSection:
         dash.html.Div
             Row containing the save calibration button and calibration name input.
         """
+        logger.debug("Building save calibration row.")
         return dash.html.Div(
             [
                 dbc.Button(
@@ -118,6 +125,7 @@ class SaveSection:
         """
         Register callbacks for the save section.
         """
+        logger.debug("Registering save section callbacks.")
 
         @dash.callback(
             dash.Output(self.page.ids.Save.save_out, "children"),
@@ -148,14 +156,40 @@ class SaveSection:
             tuple
                 Dash outputs in the declared Output order.
             """
+            logger.debug(
+                "save_section_actions called with n_clicks_save_calibration=%r file_name=%r calib_payload_type=%s calib_payload_keys=%r",
+                n_clicks_save_calibration,
+                file_name,
+                type(calib_payload).__name__,
+                list(calib_payload.keys()) if isinstance(calib_payload, dict) else None,
+            )
+
             parsed = self._parse_and_validate_common(
                 file_name=file_name,
                 calib_payload=calib_payload,
             )
+
             if isinstance(parsed, SaveResult):
+                logger.debug(
+                    "save_section_actions validation failed with message=%r",
+                    parsed.save_out,
+                )
                 return parsed.to_tuple()
 
-            return self._action_save_calibration(inputs=parsed).to_tuple()
+            try:
+                result = self._action_save_calibration(inputs=parsed)
+            except Exception:
+                logger.exception(
+                    "Failed to save calibration with file_name=%r calib_payload_keys=%r",
+                    parsed.file_name,
+                    list(parsed.calib_payload.keys()) if isinstance(parsed.calib_payload, dict) else None,
+                )
+                return SaveResult(
+                    save_out="Failed to save calibration. See terminal logs for details.",
+                ).to_tuple()
+
+            logger.debug("save_section_actions succeeded with output=%r", result.save_out)
+            return result.to_tuple()
 
     def _parse_and_validate_common(
         self,
@@ -171,17 +205,32 @@ class SaveSection:
         SaveInputs | SaveResult
             SaveInputs when validation passes, otherwise SaveResult containing an error message.
         """
+        logger.debug(
+            "_parse_and_validate_common called with file_name=%r calib_payload_type=%s",
+            file_name,
+            type(calib_payload).__name__,
+        )
+
         if not isinstance(calib_payload, dict) or not calib_payload:
+            logger.debug(
+                "_parse_and_validate_common failed because calib_payload is missing or invalid: %r",
+                calib_payload,
+            )
             return SaveResult(save_out="No calibration payload available. Run Calibrate first.")
 
         file_name_clean = str(file_name or "").strip()
+        logger.debug("Normalized file_name=%r to file_name_clean=%r", file_name, file_name_clean)
+
         if not file_name_clean:
+            logger.debug("_parse_and_validate_common failed because file_name_clean is empty.")
             return SaveResult(save_out="Please provide a calibration name.")
 
-        return SaveInputs(
+        parsed_inputs = SaveInputs(
             file_name=file_name_clean,
             calib_payload=calib_payload,
         )
+        logger.debug("Validation succeeded with parsed_inputs=%r", parsed_inputs)
+        return parsed_inputs
 
     def _action_save_calibration(self, *, inputs: SaveInputs) -> SaveResult:
         """
@@ -192,9 +241,21 @@ class SaveSection:
         SaveResult
             User feedback message.
         """
+        logger.debug(
+            "_action_save_calibration called with file_name=%r payload_keys=%r",
+            inputs.file_name,
+            list(inputs.calib_payload.keys()) if isinstance(inputs.calib_payload, dict) else None,
+        )
+
         saved = service.CalibrationFileStore.save_fluorescent_setup_to_file(
             name=inputs.file_name,
             payload=dict(inputs.calib_payload or {}),
+        )
+
+        logger.debug(
+            "_action_save_calibration saved successfully to folder=%r filename=%r",
+            saved.folder,
+            saved.filename,
         )
 
         return SaveResult(
