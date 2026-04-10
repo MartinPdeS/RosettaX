@@ -1,5 +1,4 @@
 import argparse
-from RosettaX.pages.runtime_config import RuntimeConfig
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog="RosettaX")

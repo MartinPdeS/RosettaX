@@ -33,6 +33,7 @@ class SaveResult:
     """
 
     save_out: Any = dash.no_update
+    sidebar_store: Any = dash.no_update
 
     def to_tuple(self) -> tuple:
         """
@@ -45,6 +46,7 @@ class SaveResult:
         """
         return (
             self.save_out,
+            self.sidebar_store,
         )
 
 
@@ -59,7 +61,7 @@ class SaveSection:
     def __init__(self, page) -> None:
         self.page = page
 
-    def get_layout(self) -> dbc.Card:
+    def _get_layout(self) -> dbc.Card:
         """
         Create the layout for the save section.
 
@@ -121,6 +123,7 @@ class SaveSection:
 
         @dash.callback(
             dash.Output(self.page.ids.Save.save_out, "children"),
+            dash.Output(self.page.ids.Sidebar.sidebar_store, "data"),
             dash.Input(self.page.ids.Save.save_calibration_btn, "n_clicks"),
             dash.State(self.page.ids.Save.file_name, "value"),
             dash.State(self.page.ids.Calibration.calibration_store, "data"),
@@ -190,13 +193,16 @@ class SaveSection:
         Returns
         -------
         SaveResult
-            User feedback message.
+            Updated sidebar store and a user feedback message.
         """
         saved = service.CalibrationFileStore.save_fluorescent_setup_to_file(
             name=inputs.file_name,
             payload=dict(inputs.calib_payload or {}),
         )
 
+        next_sidebar = service.CalibrationFileStore.list_saved_calibrations()
+
         return SaveResult(
             save_out=f'Saved calibration "{inputs.file_name}" as {saved.folder}/{saved.filename}',
+            sidebar_store=next_sidebar,
         )

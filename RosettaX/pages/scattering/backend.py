@@ -27,8 +27,8 @@ import uuid
 
 import numpy as np
 
-from RosettaX.reader import FCSFile
-from RosettaX.clusterings import SigmaThresholdHDBSCAN
+from RosettaX.utils.reader import FCSFile
+from RosettaX.utils.clusterings import SigmaThresholdHDBSCAN
 from RosettaX.calibration import FluorescenceCalibration
 
 

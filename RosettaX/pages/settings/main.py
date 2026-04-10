@@ -4,16 +4,20 @@ from RosettaX.pages.settings import sections
 
 from RosettaX.pages.settings.ids import Ids
 
-class SettingsPage(
-    sections.DefaultSettingValues,
-    sections.CreateProfilePage,
-    sections.DeleteProfilePage
-):
+class SettingsPage():
     def __init__(self) -> None:
         self.ids = Ids()
 
-        self.card_body_scroll = {"maxHeight": "60vh", "overflowY": "auto"}
-        self.graph_style = {"width": "100%", "height": "45vh"}
+        self.style = {
+            "card_body_scroll": {"maxHeight": "60vh", "overflowY": "auto"},
+            "graph": {"width": "100%", "height": "45vh"},
+        }
+
+        self.sections = [
+            sections.DefaultSection(page=self),
+            sections.CreateSection(page=self),
+            sections.DeleteSection(page=self),
+        ]
 
         self.backend = None
 
@@ -23,13 +27,12 @@ class SettingsPage(
 
         Returns
         -------
-        FluorescentCalibrationPage
+        SettingsPage
             The page instance, returned for chaining purposes.
         """
-        dash.register_page(__name__, path="/settings", name="Settings", order=1)
-        self._edit_settings_register_callbacks()
-        self._create_profile_register_callbacks()
-        self._delete_profile_register_callbacks()
+        dash.register_page(__name__, path="/settings", name="Settings", order=4)
+        for section in self.sections:
+            section._register_callbacks()
         return self
 
     def layout(self) -> dash.html.Div:
@@ -45,9 +48,7 @@ class SettingsPage(
             [
                 dash.html.H1("Settings"),
                 dash.html.P("Configure your RosettaX instance here. You can change the backend, manage your data, and adjust other settings."),
-                self._edit_settings_get_layout(),
-                self._create_profile_get_layout(),
-                self._delete_profile_get_layout(),
+                *[section._get_layout() for section in self.sections]
             ]
         )
 

@@ -8,9 +8,12 @@ import numpy as np
 import plotly.graph_objs as go
 
 from RosettaX.utils.reader import FCSFile
-from RosettaX.pages.runtime_config import RuntimeConfig
+from RosettaX.utils.runtime_config import RuntimeConfig
+from RosettaX.utils.casting import _as_float
+from RosettaX.utils.plottings import _make_info_figure
 
-@dataclass(frozen=True)
+
+@dataclass
 class CalibrationResult:
     """
     Container for all Dash outputs of the calibration callback.
@@ -19,7 +22,7 @@ class CalibrationResult:
     matching the Dash Output order.
     """
 
-    figure: Any = dash.no_update
+    figure_store: Any = dash.no_update
     calibration_store: Any = dash.no_update
     slope_out: str = ""
     intercept_out: str = ""
@@ -34,10 +37,10 @@ class CalibrationResult:
         -------
         tuple
             Outputs in the exact order declared in the Dash callback:
-            (figure, calibration_store, slope_out, intercept_out, r_squared_out, apply_status)
+            (figure_store, calibration_store, slope_out, intercept_out, r_squared_out, apply_status)
         """
         return (
-            self.figure,
+            self.figure_store,
             self.calibration_store,
             self.slope_out,
             self.intercept_out,
@@ -53,7 +56,10 @@ class CalibrationSection:
     ]
     default_bead_rows = [{"col1": "", "col2": ""} for _ in range(3)]
 
-    def _calibration_get_layout(self) -> dbc.Card:
+    def __init__(self, page) -> None:
+        self.page = page
+
+    def get_layout(self) -> dbc.Card:
         """
         Build the Dash layout for the calibration section.
 
@@ -64,55 +70,271 @@ class CalibrationSection:
         """
         return dbc.Card(
             [
-                dbc.CardHeader("4. Calibration"),
-                dbc.Collapse(
-                    dbc.CardBody(
-                        [
-                            dash.html.H5("Bead specifications"),
-                            dash.dash_table.DataTable(
-                                id=self.ids.Calibration.bead_table,
-                                columns=self.bead_table_columns,
-                                data=self.default_bead_rows,
-                                editable=True,
-                                row_deletable=True,
-                                style_table={"overflowX": "auto"},
-                            ),
-                            dash.html.Div(
-                                [dash.html.Button("Add Row", id=self.ids.Calibration.add_row_btn, n_clicks=0)],
-                                style={"marginTop": "10px"},
-                            ),
-                            dash.html.Br(),
-                            dash.html.Button("Create Calibration", id=self.ids.Calibration.calibrate_btn, n_clicks=0),
-                            dash.html.Hr(),
-                            dash.dcc.Loading(
-                                dash.dcc.Graph(id=self.ids.Calibration.graph_calibration, style=self.graph_style),
-                                type="default",
-                            ),
-                            dash.html.Br(),
-                            dash.html.Div(
-                                [
-                                    dash.html.Div(
-                                        [dash.html.Div("Slope:"), dash.html.Div("", id=self.ids.Calibration.slope_out)],
-                                        style={"display": "flex", "gap": "8px"},
-                                    ),
-                                    dash.html.Div(
-                                        [dash.html.Div("Intercept:"), dash.html.Div("", id=self.ids.Calibration.intercept_out)],
-                                        style={"display": "flex", "gap": "8px"},
-                                    ),
-                                    dash.html.Div(
-                                        [dash.html.Div("R²:"), dash.html.Div("", id=self.ids.Calibration.r_squared_out)],
-                                        style={"display": "flex", "gap": "8px"},
-                                    ),
-                                ]
-                            ),
-                            dash.html.Br(),
-                            dash.html.Div(id=self.ids.Calibration.apply_status, style={"marginTop": "8px"}),
-                        ],
-                    ),
-                    id=f"collapse-{self.ids.page_name}-calibration",
-                    is_open=True,
-                ),
+                self._build_header(),
+                self._build_collapse(),
             ]
+        )
+
+    def _build_header(self) -> dbc.CardHeader:
+        """
+        Build the card header.
+
+        Returns
+        -------
+        dbc.CardHeader
+            Header for the calibration section.
+        """
+        return dbc.CardHeader("4. Calibration")
+
+    def _build_collapse(self) -> dbc.Collapse:
+        """
+        Build the collapsible container for the calibration section.
+
+        Returns
+        -------
+        dbc.Collapse
+            Collapse wrapping the calibration card body.
+        """
+        return dbc.Collapse(
+            self._build_body(),
+            id=f"collapse-{self.page.ids.page_name}-calibration",
+            is_open=True,
+        )
+
+    def _build_body(self) -> dbc.CardBody:
+        """
+        Build the main card body.
+
+        Returns
+        -------
+        dbc.CardBody
+            Card body containing all calibration controls and outputs.
+        """
+        return dbc.CardBody(
+            [
+                self._build_graph_store(),
+                self._build_bead_specifications_block(),
+                dash.html.Br(),
+                self._build_actions_block(),
+                dash.html.Hr(),
+                self._build_graph_block(),
+                dash.html.Br(),
+                self._build_fit_outputs_block(),
+                dash.html.Br(),
+                self._build_status_block(),
+            ]
+        )
+
+    def _build_graph_store(self) -> dash.dcc.Store:
+        """
+        Build the store holding the calibration figure.
+
+        Returns
+        -------
+        dash.dcc.Store
+            Store containing the calibration figure as a Plotly dict.
+        """
+        return dash.dcc.Store(id=self.page.ids.Calibration.graph_store)
+
+    def _build_bead_specifications_block(self) -> dash.html.Div:
+        """
+        Build the bead specification editor block.
+
+        Returns
+        -------
+        dash.html.Div
+            Container with title, bead table, and add row button.
+        """
+        return dash.html.Div(
+            [
+                dash.html.H5("Bead specifications"),
+                self._build_bead_table(),
+                self._build_add_row_button_row(),
+            ]
+        )
+
+    def _build_bead_table(self) -> dash.dash_table.DataTable:
+        """
+        Build the editable bead specification table.
+
+        Returns
+        -------
+        dash.dash_table.DataTable
+            Editable bead table.
+        """
+        return dash.dash_table.DataTable(
+            id=self.page.ids.Calibration.bead_table,
+            columns=self.bead_table_columns,
+            data=self.default_bead_rows,
+            editable=True,
+            row_deletable=True,
+            style_table={"overflowX": "auto"},
+        )
+
+    def _build_add_row_button_row(self) -> dash.html.Div:
+        """
+        Build the add row button row.
+
+        Returns
+        -------
+        dash.html.Div
+            Container holding the add row button.
+        """
+        return dash.html.Div(
+            [
+                dash.html.Button(
+                    "Add Row",
+                    id=self.page.ids.Calibration.add_row_btn,
+                    n_clicks=0,
+                )
+            ],
+            style={"marginTop": "10px"},
+        )
+
+    def _build_actions_block(self) -> dash.html.Div:
+        """
+        Build the action button block.
+
+        Returns
+        -------
+        dash.html.Div
+            Container holding the calibration action button.
+        """
+        return dash.html.Div(
+            [
+                self._build_calibrate_button(),
+            ]
+        )
+
+    def _build_calibrate_button(self) -> dash.html.Button:
+        """
+        Build the calibration button.
+
+        Returns
+        -------
+        dash.html.Button
+            Button used to trigger calibration.
+        """
+        return dash.html.Button(
+            "Create Calibration",
+            id=self.page.ids.Calibration.calibrate_btn,
+            n_clicks=0,
+        )
+
+    def _build_graph_block(self) -> dash.html.Div:
+        """
+        Build the graph related block.
+
+        Returns
+        -------
+        dash.html.Div
+            Container holding graph toggle and graph container.
+        """
+        return dash.html.Div(
+            [
+                self._build_graph_toggle_switch(),
+                dash.html.Br(),
+                self._build_graph_container(),
+            ]
+        )
+
+    def _build_graph_toggle_switch(self) -> dash.html.Div:
+        """
+        Build the local switch controlling whether the calibration plot is shown.
+
+        Returns
+        -------
+        dash.html.Div
+            Container holding the graph toggle switch.
+        """
+        return dash.html.Div(
+            [
+                dbc.Checklist(
+                    id=self.page.ids.Calibration.graph_toggle_switch,
+                    options=[{"label": "Show calibration plot", "value": "enabled"}],
+                    value=[],
+                    switch=True,
+                ),
+            ],
+            style={"marginTop": "10px"},
+        )
+
+    def _build_graph_container(self) -> dash.html.Div:
+        """
+        Build the container holding the calibration graph.
+
+        Returns
+        -------
+        dash.html.Div
+            Container with loading wrapper and graph.
+        """
+        return dash.html.Div(
+            [
+                dash.dcc.Loading(
+                    dash.dcc.Graph(
+                        id=self.page.ids.Calibration.graph_calibration,
+                        style=self.page.style["graph"],
+                    ),
+                    type="default",
+                ),
+            ],
+            id=self.page.ids.Calibration.graph_toggle_container,
+            style={"display": "none"},
+        )
+
+    def _build_fit_outputs_block(self) -> dash.html.Div:
+        """
+        Build the block displaying fitted calibration parameters.
+
+        Returns
+        -------
+        dash.html.Div
+            Container holding slope, intercept, and R² outputs.
+        """
+        return dash.html.Div(
+            [
+                self._build_output_row("Slope:", self.page.ids.Calibration.slope_out),
+                self._build_output_row("Intercept:", self.page.ids.Calibration.intercept_out),
+                self._build_output_row("R²:", self.page.ids.Calibration.r_squared_out),
+            ]
+        )
+
+    def _build_output_row(self, label: str, output_id: str) -> dash.html.Div:
+        """
+        Build a labeled output row.
+
+        Parameters
+        ----------
+        label : str
+            Label shown at the left of the row.
+        output_id : str
+            Dash id of the output value container.
+
+        Returns
+        -------
+        dash.html.Div
+            Row containing label and output value.
+        """
+        return dash.html.Div(
+            [
+                dash.html.Div(label),
+                dash.html.Div("", id=output_id),
+            ],
+            style={"display": "flex", "gap": "8px"},
+        )
+
+    def _build_status_block(self) -> dash.html.Div:
+        """
+        Build the status message block.
+
+        Returns
+        -------
+        dash.html.Div
+            Status output container.
+        """
+        return dash.html.Div(
+            id=self.page.ids.Calibration.apply_status,
+            style={"marginTop": "8px"},
         )
 
     def _extract_xy_from_table(self, table_data: List[dict]) -> Tuple[np.ndarray, np.ndarray]:
@@ -136,8 +358,8 @@ class CalibrationSection:
         intensity_au_values: List[float] = []
 
         for row in table_data or []:
-            intensity_calibrated_units = self._as_float(row.get("col1"))
-            intensity_au = self._as_float(row.get("col2"))
+            intensity_calibrated_units = _as_float(row.get("col1"))
+            intensity_au = _as_float(row.get("col2"))
             if intensity_calibrated_units is None or intensity_au is None:
                 continue
             intensity_calibrated_units_values.append(intensity_calibrated_units)
@@ -183,112 +405,124 @@ class CalibrationSection:
         return 1.0 - ss_res / ss_tot
 
     @staticmethod
-    def _as_float(value: Any) -> Optional[float]:
+    def _is_graph_enabled(graph_toggle_value: Any) -> bool:
         """
-        Parse a value into a finite float.
+        Return whether the calibration plot switch is enabled.
 
         Parameters
         ----------
-        value : Any
-            Candidate value from UI components (may be str, int, float, or None).
+        graph_toggle_value : Any
+            Checklist value.
 
         Returns
         -------
-        Optional[float]
-            Parsed float if valid and finite, otherwise None.
+        bool
+            True when the graph toggle contains "enabled".
         """
-        if value is None:
-            return None
+        return isinstance(graph_toggle_value, list) and ("enabled" in graph_toggle_value)
 
-        if isinstance(value, (int, float)):
-            v = float(value)
-            return v if np.isfinite(v) else None
+    def _build_calibration_figure(
+        self,
+        *,
+        x_log10: np.ndarray,
+        y_log10: np.ndarray,
+        slope: float,
+        intercept: float,
+    ) -> go.Figure:
+        """
+        Build the calibration figure.
 
-        if isinstance(value, str):
-            s = value.strip()
-            if not s:
-                return None
-            s = s.replace(",", ".")
-            try:
-                v = float(s)
-            except ValueError:
-                return None
-            return v if np.isfinite(v) else None
+        Parameters
+        ----------
+        x_log10 : np.ndarray
+            Log10 transformed x values.
+        y_log10 : np.ndarray
+            Log10 transformed y values.
+        slope : float
+            Fitted slope.
+        intercept : float
+            Fitted intercept.
 
-        return None
+        Returns
+        -------
+        go.Figure
+            Plotly figure containing calibration points and fit line.
+        """
+        x_log10_fit = np.linspace(float(np.min(x_log10)), float(np.max(x_log10)), 200)
+        y_log10_fit = slope * x_log10_fit + intercept
 
-    def _calibration_register_callbacks(self) -> None:
+        figure = go.Figure()
+        figure.add_trace(go.Scatter(x=x_log10, y=y_log10, mode="markers", name="beads"))
+        figure.add_trace(go.Scatter(x=x_log10_fit, y=y_log10_fit, mode="lines", name="fit"))
+        figure.update_layout(
+            xaxis_title="log10(Intensity [a.u.])",
+            yaxis_title="log10(Intensity [calibrated units])",
+            separators=".,",
+            hovermode="closest",
+        )
+        return figure
+
+    def _register_callbacks(self) -> None:
         """
         Register callbacks for the calibration section.
-
-        This includes:
-        - Adding a new editable row in the bead DataTable.
-        - Fitting a calibration curve from bead points and optionally applying it to the selected detector.
-
-        Regression model
-        ---------------
-        The regression is performed in log10 space:
-
-            log10(y) = slope * log10(x) + intercept
-
-        where:
-            x = Intensity [a.u.]
-            y = Intensity [calibrated units]
-
-        Plot behavior
-        -------------
-        The plot uses linear Plotly axes, but it displays log10 transformed data. This makes the
-        regression appear as a straight line without using Plotly log axis types.
-
-        Applying calibration
-        -------------------
-        When applying to event data, the mapping is evaluated in linear space:
-
-            y = 10**intercept * x**slope
-
-        This guarantees positive calibrated values for positive x.
         """
         runtime_config = RuntimeConfig()
+
         @dash.callback(
-            dash.Output(self.ids.Calibration.bead_table, "data", allow_duplicate=True),
-            dash.Input(self.ids.Calibration.add_row_btn, "n_clicks"),
-            dash.State(self.ids.Calibration.bead_table, "data"),
-            dash.State(self.ids.Calibration.bead_table, "columns"),
+            dash.Output(self.page.ids.Calibration.graph_toggle_container, "style"),
+            dash.Input(self.page.ids.Calibration.graph_toggle_switch, "value"),
+            prevent_initial_call=False,
+        )
+        def toggle_calibration_graph_container(graph_toggle_value: Any) -> dict:
+            graph_enabled = self._is_graph_enabled(graph_toggle_value)
+            return {"display": "block"} if graph_enabled else {"display": "none"}
+
+        @dash.callback(
+            dash.Output(self.page.ids.Calibration.graph_calibration, "figure"),
+            dash.Input(self.page.ids.Calibration.graph_toggle_switch, "value"),
+            dash.Input(self.page.ids.Calibration.graph_store, "data"),
+            prevent_initial_call=False,
+        )
+        def update_calibration_graph(
+            graph_toggle_value: Any,
+            stored_figure: Any,
+        ) -> go.Figure:
+            graph_enabled = self._is_graph_enabled(graph_toggle_value)
+
+            if not graph_enabled:
+                return _make_info_figure("Calibration plot is hidden.")
+
+            if not stored_figure:
+                return _make_info_figure("Create a calibration first.")
+
+            return go.Figure(stored_figure)
+
+        @dash.callback(
+            dash.Output(self.page.ids.Calibration.bead_table, "data", allow_duplicate=True),
+            dash.Input(self.page.ids.Calibration.add_row_btn, "n_clicks"),
+            dash.State(self.page.ids.Calibration.bead_table, "data"),
+            dash.State(self.page.ids.Calibration.bead_table, "columns"),
             prevent_initial_call=True,
         )
         def add_row(n_clicks: int, rows: List[dict], columns: List[dict]) -> List[dict]:
             """
             Append a blank row to the bead DataTable.
-
-            Parameters
-            ----------
-            n_clicks : int
-                Click count of the Add Row button.
-            rows : List[dict]
-                Current table rows.
-            columns : List[dict]
-                Column definitions used to build an empty row.
-
-            Returns
-            -------
-            List[dict]
-                Updated table rows with one appended blank row.
             """
             next_rows = list(rows or [])
-            next_rows.append({c["id"]: "" for c in columns})
+            next_rows.append({column["id"]: "" for column in columns})
             return next_rows
 
         @dash.callback(
-            dash.Output(self.ids.Calibration.graph_calibration, "figure"),
-            dash.Output(self.ids.Calibration.calibration_store, "data"),
-            dash.Output(self.ids.Calibration.slope_out, "children"),
-            dash.Output(self.ids.Calibration.intercept_out, "children"),
-            dash.Output(self.ids.Calibration.r_squared_out, "children"),
-            dash.Output(self.ids.Calibration.apply_status, "children"),
-            dash.Input(self.ids.Calibration.calibrate_btn, "n_clicks"),
-            dash.State(self.ids.Load.uploaded_fcs_path_store, "data"),
-            dash.State(self.ids.Calibration.bead_table, "data"),
-            dash.State(self.ids.Fluorescence.detector_dropdown, "value"),
+            dash.Output(self.page.ids.Calibration.graph_store, "data"),
+            dash.Output(self.page.ids.Calibration.calibration_store, "data"),
+            dash.Output(self.page.ids.Calibration.slope_out, "children"),
+            dash.Output(self.page.ids.Calibration.intercept_out, "children"),
+            dash.Output(self.page.ids.Calibration.r_squared_out, "children"),
+            dash.Output(self.page.ids.Calibration.apply_status, "children"),
+            dash.Input(self.page.ids.Calibration.calibrate_btn, "n_clicks"),
+            dash.State(self.page.ids.Load.uploaded_fcs_path_store, "data"),
+            dash.State(self.page.ids.Calibration.bead_table, "data"),
+            dash.State(self.page.ids.Fluorescence.detector_dropdown, "value"),
             prevent_initial_call=True,
         )
         def calibrate_and_apply(
@@ -298,27 +532,15 @@ class CalibrationSection:
             detector_column: Optional[str],
         ) -> tuple:
             """
-            Fit a log10 space regression from bead table points and optionally apply it.
-
-            Bead table columns:
-            - col1: Intensity [calibrated units]
-            - col2: Intensity [a.u.]
-
-            The fit is done on log10 transformed data and the plot shows log10 transformed axes
-            values on standard linear Plotly axes.
-
-            Returns
-            -------
-            tuple
-                Dash outputs in the declared Output order.
+            Fit a log10 regression from bead table points and optionally apply it.
             """
-            fig = go.Figure()
+            figure = go.Figure()
 
             try:
                 if not bead_file_path:
-                    fig.update_layout(title="Upload a bead file first.")
+                    figure = _make_info_figure("Upload a bead file first.")
                     return CalibrationResult(
-                        figure=fig,
+                        figure_store=figure.to_dict(),
                         calibration_store=dash.no_update,
                         slope_out="",
                         intercept_out="",
@@ -328,9 +550,9 @@ class CalibrationSection:
 
                 intensity_calibrated_units, intensity_au = self._extract_xy_from_table(table_data or [])
                 if intensity_calibrated_units.size < 2:
-                    fig.update_layout(title="Need at least 2 bead points to calibrate.")
+                    figure = _make_info_figure("Need at least 2 bead points to calibrate.")
                     return CalibrationResult(
-                        figure=fig,
+                        figure_store=figure.to_dict(),
                         calibration_store=dash.no_update,
                         slope_out="",
                         intercept_out="",
@@ -338,21 +560,21 @@ class CalibrationSection:
                         apply_status="Need at least 2 valid bead rows.",
                     ).to_tuple()
 
-                y = np.asarray(intensity_calibrated_units, dtype=float)
-                x = np.asarray(intensity_au, dtype=float)
+                intensity_calibrated_units = np.asarray(intensity_calibrated_units, dtype=float)
+                intensity_au = np.asarray(intensity_au, dtype=float)
 
-                finite_mask = np.isfinite(x) & np.isfinite(y)
-                x = x[finite_mask]
-                y = y[finite_mask]
+                finite_mask = np.isfinite(intensity_au) & np.isfinite(intensity_calibrated_units)
+                intensity_au = intensity_au[finite_mask]
+                intensity_calibrated_units = intensity_calibrated_units[finite_mask]
 
-                positive_mask = (x > 0.0) & (y > 0.0)
-                x = x[positive_mask]
-                y = y[positive_mask]
+                positive_mask = (intensity_au > 0.0) & (intensity_calibrated_units > 0.0)
+                intensity_au = intensity_au[positive_mask]
+                intensity_calibrated_units = intensity_calibrated_units[positive_mask]
 
-                if x.size < 2:
-                    fig.update_layout(title="Need at least 2 positive finite points for log10 fit.")
+                if intensity_au.size < 2:
+                    figure = _make_info_figure("Need at least 2 positive finite points for log10 fit.")
                     return CalibrationResult(
-                        figure=fig,
+                        figure_store=figure.to_dict(),
                         calibration_store=dash.no_update,
                         slope_out="",
                         intercept_out="",
@@ -360,43 +582,46 @@ class CalibrationSection:
                         apply_status="Need at least 2 positive finite bead points for log10 fit.",
                     ).to_tuple()
 
-                x_log10 = np.log10(x)
-                y_log10 = np.log10(y)
+                intensity_au_log10 = np.log10(intensity_au)
+                intensity_calibrated_units_log10 = np.log10(intensity_calibrated_units)
 
-                slope, intercept = np.polyfit(x_log10, y_log10, 1)
+                slope, intercept = np.polyfit(
+                    intensity_au_log10,
+                    intensity_calibrated_units_log10,
+                    1,
+                )
 
-                y_log10_pred = slope * x_log10 + intercept
-                r2 = self._compute_r_squared(y_true=y_log10, y_pred=y_log10_pred)
-
+                intensity_calibrated_units_log10_predicted = (
+                    slope * intensity_au_log10 + intercept
+                )
+                r_squared = self._compute_r_squared(
+                    y_true=intensity_calibrated_units_log10,
+                    y_pred=intensity_calibrated_units_log10_predicted,
+                )
                 prefactor = 10.0 ** float(intercept)
 
-                calib_payload = {
+                calibration_payload = {
                     "slope": float(slope),
                     "intercept": float(intercept),
                     "prefactor": float(prefactor),
-                    "R_squared": float(r2),
+                    "R_squared": float(r_squared),
                     "model": "log10(y)=slope*log10(x)+intercept; y=(10**intercept) * x**slope",
                     "x_definition": "Intensity [a.u.]",
                     "y_definition": "Intensity [calibrated units]",
                 }
 
-                x_log10_fit = np.linspace(float(np.min(x_log10)), float(np.max(x_log10)), 200)
-                y_log10_fit = slope * x_log10_fit + intercept
-
-                fig.add_trace(go.Scatter(x=x_log10, y=y_log10, mode="markers", name="beads"))
-                fig.add_trace(go.Scatter(x=x_log10_fit, y=y_log10_fit, mode="lines", name="fit"))
-                fig.update_layout(
-                    xaxis_title="log10(Intensity [a.u.])",
-                    yaxis_title="log10(Intensity [calibrated units])",
-                    separators=".,",
-                    hovermode="closest",
+                figure = self._build_calibration_figure(
+                    x_log10=intensity_au_log10,
+                    y_log10=intensity_calibrated_units_log10,
+                    slope=float(slope),
+                    intercept=float(intercept),
                 )
 
                 if not detector_column:
-                    apply_msg = "Calibration fit OK. Select a fluorescence detector to apply."
+                    apply_status = "Calibration fit OK. Select a fluorescence detector to apply."
                 else:
-                    with FCSFile(str(bead_file_path), writable=False) as fcs:
-                        raw_intensity_au = fcs.column_copy(str(detector_column), dtype=float)
+                    with FCSFile(str(bead_file_path), writable=False) as fcs_file:
+                        raw_intensity_au = fcs_file.column_copy(str(detector_column), dtype=float)
 
                     raw_intensity_au = np.asarray(raw_intensity_au, dtype=float)
                     raw_intensity_au = raw_intensity_au[np.isfinite(raw_intensity_au)]
@@ -406,21 +631,25 @@ class CalibrationSection:
                     calibrated_intensity_units = calibrated_intensity_units[np.isfinite(calibrated_intensity_units)]
                     calibrated_intensity_units = calibrated_intensity_units[calibrated_intensity_units > 0.0]
 
-                    apply_msg = f"Applied to {calibrated_intensity_units.size} events using detector '{detector_column}'." if runtime_config.debug else ""
+                    apply_status = (
+                        f"Applied to {calibrated_intensity_units.size} events using detector '{detector_column}'."
+                        if runtime_config.debug
+                        else ""
+                    )
 
                 return CalibrationResult(
-                    figure=fig,
-                    calibration_store=calib_payload,
+                    figure_store=figure.to_dict(),
+                    calibration_store=calibration_payload,
                     slope_out=f"{float(slope):.6g}",
                     intercept_out=f"{float(intercept):.6g} (A={float(prefactor):.6g})",
-                    r_squared_out=f"{float(r2):.6g}",
-                    apply_status=apply_msg,
+                    r_squared_out=f"{float(r_squared):.6g}",
+                    apply_status=apply_status,
                 ).to_tuple()
 
             except Exception as exc:
-                fig.update_layout(title="Calibration failed due to an exception.")
+                figure = _make_info_figure("Calibration failed.")
                 return CalibrationResult(
-                    figure=fig,
+                    figure_store=figure.to_dict(),
                     calibration_store=dash.no_update,
                     slope_out="",
                     intercept_out="",

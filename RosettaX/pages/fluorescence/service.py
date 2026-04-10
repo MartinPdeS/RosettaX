@@ -1,14 +1,13 @@
-
 from typing import Any, Optional
 from dataclasses import dataclass
 import json
-import os
 import re
 from datetime import datetime
 from pathlib import Path
 
-
 from RosettaX.utils.reader import FCSFile
+from RosettaX.utils.directories import fluorescence_calibration_directory, scattering_calibration_directory
+
 
 @dataclass(frozen=True)
 class ChannelOptions:
@@ -19,9 +18,28 @@ class ChannelOptions:
 
 
 class FileStateRefresher:
-    def __init__(self, *, scatter_keywords: list[str], non_valid_keywords: list[str]) -> None:
-        self.scatter_keywords = [str(k).lower() for k in scatter_keywords]
-        self.non_valid_keywords = [str(k).lower() for k in non_valid_keywords]
+    scatter_keywords = [
+        "scatter",
+        "fsc",
+        "ssc",
+        "sals",
+        "lals",
+        "mals",
+        "405ls",
+        "488ls",
+        "638ls",
+        "fs-a",
+        "fs-h",
+        "ss-a",
+        "ss-h",
+    ]
+
+    non_valid_keywords = [
+        "time",
+        "width",
+        "diameter",
+        "cross section",
+    ]
 
     def options_from_file(
         self,
@@ -43,9 +61,9 @@ class FileStateRefresher:
         fluorescence_options: list[dict[str, str]] = []
 
         for column in columns:
-            lower = str(column).strip().lower()
-            is_scatter = any(keyword in lower for keyword in self.scatter_keywords)
-            is_invalid = any(keyword in lower for keyword in self.non_valid_keywords)
+            lower_column = str(column).strip().lower()
+            is_scatter = any(keyword in lower_column for keyword in self.scatter_keywords)
+            is_invalid = any(keyword in lower_column for keyword in self.non_valid_keywords)
 
             if is_scatter:
                 scatter_options.append({"label": str(column), "value": str(column)})
@@ -55,16 +73,18 @@ class FileStateRefresher:
         scatter_value = None
         fluorescence_value = None
 
-        preferred_scatter = str(preferred_scatter or "").strip()
-        preferred_fluorescence = str(preferred_fluorescence or "").strip()
+        preferred_scatter_clean = str(preferred_scatter or "").strip()
+        preferred_fluorescence_clean = str(preferred_fluorescence or "").strip()
 
-        if preferred_scatter and any(o["value"] == preferred_scatter for o in scatter_options):
-            scatter_value = preferred_scatter
+        if preferred_scatter_clean and any(option["value"] == preferred_scatter_clean for option in scatter_options):
+            scatter_value = preferred_scatter_clean
         elif scatter_options:
             scatter_value = scatter_options[0]["value"]
 
-        if preferred_fluorescence and any(o["value"] == preferred_fluorescence for o in fluorescence_options):
-            fluorescence_value = preferred_fluorescence
+        if preferred_fluorescence_clean and any(
+            option["value"] == preferred_fluorescence_clean for option in fluorescence_options
+        ):
+            fluorescence_value = preferred_fluorescence_clean
         elif fluorescence_options:
             fluorescence_value = fluorescence_options[0]["value"]
 
@@ -87,53 +107,49 @@ class CalibrationFileStore:
     """
     File based calibration storage.
 
-    Saves each calibration as a JSON file on disk and can list saved calibrations
-    for populating the sidebar.
-
-    Directory selection
-    -------------------
-    Uses environment variable ROSETTAX_CALIBRATION_DIR if defined,
-    otherwise defaults to ~/.rosettax/calibrations
+    Saves each calibration as a JSON file directly inside the calibration
+    directories defined in RosettaX.directories.
     """
 
     fluorescence_folder = "fluorescence"
-
-    @staticmethod
-    def _root_dir() -> Path:
-        env = os.environ.get("ROSETTAX_CALIBRATION_DIR", "").strip()
-        if env:
-            root = Path(env).expanduser()
-        else:
-            root = Path.home() / ".rosettax" / "calibrations"
-        root.mkdir(parents=True, exist_ok=True)
-        return root
+    scattering_folder = "scattering"
 
     @staticmethod
     def _sanitize_filename(name: str) -> str:
-        s = str(name or "").strip()
-        s = re.sub(r"\s+", " ", s)
-        s = re.sub(r"[^A-Za-z0-9 _().]", "", s)
-        s = s.replace(" ", "_")
-        if not s:
-            s = "calibration"
-        return s
+        sanitized_name = str(name or "").strip()
+        sanitized_name = re.sub(r"\s+", " ", sanitized_name)
+        sanitized_name = re.sub(r"[^A-Za-z0-9 _().]", "", sanitized_name)
+        sanitized_name = sanitized_name.replace(" ", "_")
+
+        if not sanitized_name:
+            sanitized_name = "calibration"
+
+        return sanitized_name
+
+    @staticmethod
+    def _fluorescence_directory() -> Path:
+        directory = Path(fluorescence_calibration_directory).expanduser()
+        directory.mkdir(parents=True, exist_ok=True)
+        return directory
+
+    @staticmethod
+    def _scattering_directory() -> Path:
+        directory = Path(scattering_calibration_directory).expanduser()
+        directory.mkdir(parents=True, exist_ok=True)
+        return directory
 
     @classmethod
-    def _folder_dir(cls, folder: str) -> Path:
-        p = cls._root_dir() / str(folder)
-        p.mkdir(parents=True, exist_ok=True)
-        return p
+    def save_fluorescent_setup_to_file(
+        cls,
+        *,
+        name: str,
+        payload: dict[str, Any],
+    ) -> SavedCalibrationInfo:
+        output_directory = cls._fluorescence_directory()
+        sanitized_name = cls._sanitize_filename(name)
 
-    @classmethod
-    def save_fluorescent_setup_to_file(cls, *, name: str, payload: dict[str, Any]) -> SavedCalibrationInfo:
-        folder = cls.fluorescence_folder
-        out_dir = cls._folder_dir(folder)
-
-        safe = cls._sanitize_filename(name)
-        stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        # filename = f"{safe}_{stamp}.json"
-        filename = f"{safe}.json"
-        path = out_dir / filename
+        filename = f"{sanitized_name}.json"
+        path = output_directory / filename
 
         record = {
             "schema": "rosettax_calibration_v1",
@@ -143,24 +159,78 @@ class CalibrationFileStore:
             "payload": payload,
         }
 
-        path.write_text(json.dumps(record, indent=2, sort_keys=True), encoding="utf-8")
-        return SavedCalibrationInfo(folder=folder, filename=filename, path=path)
+        path.write_text(
+            json.dumps(record, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+
+        return SavedCalibrationInfo(
+            folder=cls.fluorescence_folder,
+            filename=filename,
+            path=path,
+        )
+
+    @classmethod
+    def save_scattering_setup_to_file(
+        cls,
+        *,
+        name: str,
+        payload: dict[str, Any],
+    ) -> SavedCalibrationInfo:
+        output_directory = cls._scattering_directory()
+        sanitized_name = cls._sanitize_filename(name)
+
+        filename = f"{sanitized_name}.json"
+        path = output_directory / filename
+
+        record = {
+            "schema": "rosettax_calibration_v1",
+            "kind": "scattering",
+            "created_at": datetime.now().isoformat(timespec="seconds"),
+            "name": str(name),
+            "payload": payload,
+        }
+
+        path.write_text(
+            json.dumps(record, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+
+        return SavedCalibrationInfo(
+            folder=cls.scattering_folder,
+            filename=filename,
+            path=path,
+        )
 
     @classmethod
     def list_saved_calibrations(cls) -> dict[str, list[str]]:
         """
-        Returns a dict shaped like your Sidebar expects:
-            { folder_name: [file1, file2, ...] }
+        Returns a dict shaped like the Sidebar expects:
+            {
+                "fluorescence": [file1, file2, ...],
+                "scattering": [file1, file2, ...],
+            }
         """
-        root = cls._root_dir()
+        fluorescence_directory = cls._fluorescence_directory()
+        scattering_directory = cls._scattering_directory()
+
+        fluorescence_files = sorted(
+            file_path.name
+            for file_path in fluorescence_directory.glob("*.json")
+            if file_path.is_file()
+        )
+        scattering_files = sorted(
+            file_path.name
+            for file_path in scattering_directory.glob("*.json")
+            if file_path.is_file()
+        )
 
         result: dict[str, list[str]] = {}
-        if not root.exists():
-            return result
 
-        for folder_path in sorted([p for p in root.iterdir() if p.is_dir()]):
-            files = sorted([p.name for p in folder_path.glob("*.json") if p.is_file()])
-            if files:
-                result[folder_path.name] = files
+        if fluorescence_files:
+            result[cls.fluorescence_folder] = fluorescence_files
+
+        if scattering_files:
+            result[cls.scattering_folder] = scattering_files
 
         return result

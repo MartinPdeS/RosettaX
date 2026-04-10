@@ -1,55 +1,76 @@
-page_name = "scattering_calibration"
+PAGE_NAME = "scattering_calibration"
 
 class Ids:
+    page_name = PAGE_NAME
 
     # Upload section
     class Upload:
-        filename = f"{page_name}-upload_filename"
-        saved_as = f"{page_name}-upload_saved_as"
-        fcs_path_store = f"{page_name}-uploaded_fcs_path_store"
-        upload = f"{page_name}-upload"
+        filename = f"{PAGE_NAME}-upload_filename"
+        saved_as = f"{PAGE_NAME}-upload_saved_as"
+        fcs_path_store = f"{PAGE_NAME}-uploaded_fcs_path_store"
+        upload = f"{PAGE_NAME}-upload"
 
-    collapse_example = f"{page_name}-collapse_example"
+    collapse_example = f"{PAGE_NAME}-collapse_example"
 
     # Parameters section
     class Parameters:
-        mie_model_parameters_container = f"{page_name}-mie_model_parameters_container"
-        mie_model = f"{page_name}-mie_model"
+        mie_model_parameters_container = f"{PAGE_NAME}-mie_model_parameters_container"
+        mie_model = f"{PAGE_NAME}-mie_model"
 
-        particle_diameter = f"{page_name}-particle_diameter"
-        particle_index = f"{page_name}-particle_index"
+        particle_diameter = f"{PAGE_NAME}-particle_diameter"
+        particle_index = f"{PAGE_NAME}-particle_index"
 
-        medium_index = f"{page_name}-medium_index"
-        custom_medium_index = f"{page_name}-custom_medium_index"
-        core_index = f"{page_name}-core_index"
-        core_diameter = f"{page_name}-core_diameter"
-        shell_index = f"{page_name}-shell_index"
-        shell_thickness = f"{page_name}-shell_thickness"
+        medium_refractive_index = f"{PAGE_NAME}-medium_refractive_index"
+        custom_medium_refractive_index = f"{PAGE_NAME}-custom_medium_refractive_index"
+        core_refractive_index = f"{PAGE_NAME}-core_refractive_index"
+        core_diameter = f"{PAGE_NAME}-core_diameter"
+        shell_refractive_index = f"{PAGE_NAME}-shell_refractive_index"
+        shell_thickness = f"{PAGE_NAME}-shell_thickness"
 
-        particle_index_source = f"{page_name}-particle-index-source"
-        particle_index_custom = f"{page_name}-particle-index-custom"
+        particle_refractive_index_source = f"{PAGE_NAME}-particle-refractive-index-source"
+        particle_refractive_index_custom = f"{PAGE_NAME}-particle-refractive-index-custom"
 
-        core_index_source = f"{page_name}-core-index-source"
-        core_index_custom = f"{page_name}-core-index-custom"
-        medium_index_custom = f"{page_name}-medium-index-custom"
-        medium_index_source = f"{page_name}-medium-index-source"
+        core_refractive_index_source = f"{PAGE_NAME}-core-refractive-index-source"
+        core_refractive_index_custom = f"{PAGE_NAME}-core-refractive-index-custom"
+        medium_refractive_index_custom = f"{PAGE_NAME}-medium-refractive-index-custom"
+        medium_refractive_index_source = f"{PAGE_NAME}-medium-refractive-index-source"
 
-        shell_index_source = f"{page_name}-shell-index-source"
-        shell_index_custom = f"{page_name}-shell-index-custom"
+        shell_refractive_index_source = f"{PAGE_NAME}-shell-refractive-index-source"
+        shell_refractive_index_custom = f"{PAGE_NAME}-shell-refractive-index-custom"
 
 
-    calibrate_example_btn = f"{page_name}-calibrate_example_btn"
-    scattering_detector_dropdown = f"{page_name}-scattering_detector_dropdown"
-    fluorescence_detector_dropdown = f"{page_name}-fluorescence_detector_dropdown"
+    calibrate_example_btn = f"{PAGE_NAME}-calibrate_example_btn"
+    scattering_detector_dropdown = f"{PAGE_NAME}-scattering_detector_dropdown"
+    fluorescence_detector_dropdown = f"{PAGE_NAME}-fluorescence_detector_dropdown"
 
     # Export section
     class Export:
-        run_calibration_btn = f"{page_name}-run_calibration_btn"
-        file_name = f"{page_name}-export_file_name"
-        result_out = f"{page_name}-result_out"
-        save_export_btn = f"{page_name}-save_export_btn"
-        interpolate_method = f"{page_name}-interpolate_method"
-        interpolate_au = f"{page_name}-interpolate_au"
-        interpolate_area = f"{page_name}-interpolate_area"
-        interpolate_btn = f"{page_name}-interpolate_btn"
-        collapse = f"{page_name}-collapse_export"
+        run_calibration_btn = f"{PAGE_NAME}-run_calibration_btn"
+        file_name = f"{PAGE_NAME}-export_file_name"
+        result_out = f"{PAGE_NAME}-result_out"
+        save_export_btn = f"{PAGE_NAME}-save_export_btn"
+        interpolate_method = f"{PAGE_NAME}-interpolate_method"
+        interpolate_au = f"{PAGE_NAME}-interpolate_au"
+        interpolate_area = f"{PAGE_NAME}-interpolate_area"
+        interpolate_btn = f"{PAGE_NAME}-interpolate_btn"
+        collapse = f"{PAGE_NAME}-collapse_export"
+
+    class Calibration:
+        calibration_store = f"{PAGE_NAME}-calibration_store"
+
+
+    class Save:
+        channel_name = f"{PAGE_NAME}-channel-name"
+        file_name = f"{PAGE_NAME}-file-name"
+        save_btn = f"{PAGE_NAME}-save-btn"
+        save_out = f"{PAGE_NAME}-save-out"
+        add_mesf_btn = f"{PAGE_NAME}-add-mesf-btn"
+        save_calibration_btn = f"{PAGE_NAME}-save-calibration-btn"
+        export_mode = f"{PAGE_NAME}-export-mode"
+        export_filename = f"{PAGE_NAME}-export-filename"
+        export_file_btn = f"{PAGE_NAME}-export-file-btn"
+        export_download = f"{PAGE_NAME}-export-download"
+
+    class Sidebar:
+        sidebar_store = f"{PAGE_NAME}-sidebar-store"
+        sidebar_content = f"{PAGE_NAME}-sidebar-content"

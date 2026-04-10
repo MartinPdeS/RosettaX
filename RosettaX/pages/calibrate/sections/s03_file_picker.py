@@ -8,9 +8,6 @@ from datetime import datetime
 
 import dash
 import dash_bootstrap_components as dbc
-from dash import dcc, html
-
-from RosettaX.pages.calibrate.ids import Ids
 
 
 @dataclass(frozen=True)
@@ -27,7 +24,8 @@ class FilePickerResult:
 
 
 class FilePickerSection:
-    def __init__(self) -> None:
+    def __init__(self, page) -> None:
+        self.page = page
         self._upload_dir = Path.home() / ".rosettax" / "uploads"
         self._upload_dir.mkdir(parents=True, exist_ok=True)
 
@@ -37,9 +35,9 @@ class FilePickerSection:
                 dbc.CardHeader("1. Upload input FCS"),
                 dbc.CardBody(
                     [
-                        dcc.Upload(
-                            id=Ids.FilePicker.upload,
-                            children=html.Div(["Drag and drop or ", html.A("select an .fcs file")]),
+                        dash.dcc.Upload(
+                            id=self.page.ids.FilePicker.upload,
+                            children=dash.html.Div(["Drag and drop or ", dash.html.A("select an .fcs file")]),
                             multiple=False,
                             style={
                                 "width": "100%",
@@ -52,25 +50,25 @@ class FilePickerSection:
                                 "cursor": "pointer",
                             },
                         ),
-                        html.Div(style={"height": "10px"}),
+                        dash.html.Div(style={"height": "10px"}),
                         dbc.Alert(
                             "No file loaded.",
-                            id=Ids.FilePicker.upload_status,
+                            id=self.page.ids.FilePicker.upload_status,
                             color="secondary",
                             style={"marginBottom": "0px"},
                         ),
-                        dcc.Store(id=Ids.Stores.uploaded_fcs_path_store),
+                        dash.dcc.Store(id=self.page.ids.Stores.uploaded_fcs_path_store),
                     ]
                 ),
             ]
         )
 
-    def register_callbacks(self) -> None:
+    def _register_callbacks(self) -> None:
         @dash.callback(
-            dash.Output(Ids.Stores.uploaded_fcs_path_store, "data"),
-            dash.Output(Ids.FilePicker.upload_status, "children"),
-            dash.Input(Ids.FilePicker.upload, "contents"),
-            dash.State(Ids.FilePicker.upload, "filename"),
+            dash.Output(self.page.ids.Stores.uploaded_fcs_path_store, "data"),
+            dash.Output(self.page.ids.FilePicker.upload_status, "children"),
+            dash.Input(self.page.ids.FilePicker.upload, "contents"),
+            dash.State(self.page.ids.FilePicker.upload, "filename"),
             prevent_initial_call=True,
         )
         def save_uploaded_file(contents: Optional[str], filename: Optional[str]) -> tuple:

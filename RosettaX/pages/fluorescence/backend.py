@@ -8,7 +8,115 @@ import uuid
 
 from RosettaX.utils.reader import FCSFile
 from RosettaX.utils.clusterings import SigmaThresholdHDBSCAN
-from RosettaX.pages.fluorescence.utils import FluorescenceCalibration
+
+
+class FluorescenceCalibration:
+    """
+    Linear calibration mapping intensity (a.u.) to MESF.
+
+    Model
+    -----
+    MESF = slope * intensity + intercept
+    """
+
+    def __init__(self, MESF: np.ndarray, intensity: np.ndarray):
+        """
+        Parameters
+        ----------
+        MESF : np.ndarray
+            Molecules of Equivalent Soluble Fluorochrome.
+        intensity
+            Fluorescence intensity (a.u.).
+        """
+        x = np.asarray(intensity, dtype=float).reshape(-1)
+        y = np.asarray(MESF, dtype=float).reshape(-1)
+
+        mask = np.isfinite(x) & np.isfinite(y)
+        x = x[mask]
+        y = y[mask]
+
+        if x.size < 2:
+            raise ValueError("Need at least two valid points to fit calibration.")
+
+        self.intensity = x
+        self.MESF = y
+        self.slope, self.intercept = np.polyfit(self.intensity, self.MESF, 1)
+        self.R_squared = self.calculate_r_squared()
+
+    def calibrate(self, intensity: np.ndarray) -> np.ndarray:
+        """
+        Convert intensity values (a.u.) into MESF using the fitted linear model.
+
+        Parameters
+        ----------
+        intensity : np.ndarray
+            Fluorescence intensity (a.u.) to calibrate.
+
+        Returns
+        -------
+        np.ndarray
+            Calibrated MESF values corresponding to the input intensities.
+        """
+        x = np.asarray(intensity, dtype=float)
+        return self.slope * x + self.intercept
+
+    def calculate_r_squared(self) -> float:
+        """
+        Calculate the coefficient of determination (R²) for the fitted model.
+
+        R² = 1 - (SS_res / SS_tot)
+
+        Returns
+        -------
+        float
+            R² value indicating the goodness of fit (1.0 is perfect fit, 0.
+        """
+        y_pred = self.slope * self.intensity + self.intercept
+        ss_res = np.sum((self.MESF - y_pred) ** 2)
+        ss_tot = np.sum((self.MESF - self.MESF.mean()) ** 2)
+        if ss_tot == 0:
+            R_squared = 1.0 if ss_res == 0 else 0.0
+        else:
+            R_squared = 1.0 - ss_res / ss_tot
+        return R_squared
+
+    def to_dict(self) -> dict:
+        """
+        Serialize calibration parameters for storage in Dash (dcc.Store).
+
+        Returns
+        -------
+        dict
+            Dictionary containing slope, intercept, and R² for the calibration.
+        """
+        return {"slope": float(self.slope), "intercept": float(self.intercept), "R_squared": float(self.R_squared)}
+
+    @classmethod
+    def from_dict(cls, payload: dict) -> "FluorescenceCalibration":
+        """
+        Reconstruct a calibration from stored parameters.
+
+        Notes
+        -----
+        This builds an instance without refitting. It is useful when you want the same API.
+
+        Parameters
+        ----------
+        payload : dict
+            Dictionary containing slope, intercept, and R² for the calibration.
+
+        Returns
+        -------
+        FluorescenceCalibration
+            An instance of FluorescenceCalibration with parameters set from the payload.
+        """
+        obj = cls.__new__(cls)
+        obj.slope = float(payload["slope"])
+        obj.intercept = float(payload["intercept"])
+        obj.R_squared = float(payload["R_squared"])
+        obj.intensity = np.array([], dtype=float)
+        obj.MESF = np.array([], dtype=float)
+        return obj
 
 
 class BackEnd:
@@ -335,34 +443,37 @@ class BackEnd:
             "output_column": data.get("output_column", None),
         }
 
-    def find_fluorescence_peaks(self, data: dict[str, Any]) -> dict[str, Any]:
+    def find_fluorescence_peaks(
+            self,
+            column,
+            max_peaks: int = 10,
+            min_cluster_size: int = 100,
+            threshold: float = 0.0,
+            gating_column: str | None = None,
+            gating_threshold: float = 0.0,
+            number_of_points: int | None = 40_000,
+            debug: bool = False,
+        ) -> dict[str, Any]:
         """
         Find fluorescence peaks using clustering, optionally after gating.
 
-        Required keys
-        -------------
+        Parameters
+        ----------
         column : str
-            Fluorescence column used for clustering.
-
-        Optional keys
-        -------------
+            Fluorescence column to analyze.
         max_peaks : int
             Maximum number of peaks to return. Default 10.
         min_cluster_size : int
-            Minimum cluster size for HDBSCAN. Default 200.
-        threshold : float
-            Threshold on x used by the clustering helper. Default 0.0.
-        number_of_points : int | None
-            Maximum number of points to read from file. Default 40000.
+            Minimum cluster size for peak detection. Default 100.
+        gating_column : Optional[str]
+            If provided, the name of the scattering column used for gating.
+        gating_threshold : float
+            If `gating_column` is provided, the threshold value for gating. Default 0.0.
+        number_of_points : Optional[int]
+            If not None, the algorithm uses only the first N finite points after gating.
+            Default 40,000.
         debug : bool
-            Forwarded to the clustering helper. Default False.
-
-        Gating optional keys
-        --------------------
-        gating_column : str | None
-            Scattering column used for gating.
-        gating_threshold : float | None
-            Threshold on the gating column. Values below are excluded.
+            If True, the clustering helper may return additional debug information.
 
         Returns
         -------
@@ -386,27 +497,17 @@ class BackEnd:
         """
         self._require_file_path()
 
-        column = data.get("column")
         if not column:
             raise ValueError('Missing required key "column".')
         column = str(column).strip()
         if not column:
             raise ValueError('Key "column" must be a non empty string.')
 
-        max_peaks = int(data.get("max_peaks", 10))
         if max_peaks < 1:
             max_peaks = 1
 
-        min_cluster_size = int(data.get("min_cluster_size", 200))
         if min_cluster_size < 2:
             min_cluster_size = 2
-
-        threshold = float(data.get("threshold", 0.0))
-        debug = bool(data.get("debug", False))
-        number_of_points = data.get("number_of_points", 40_000)
-
-        gating_column = data.get("gating_column", None)
-        gating_threshold = data.get("gating_threshold", None)
 
         with FCSFile(self.file_path, writable=False) as fcs_file:
             fluorescence_values = fcs_file.column_copy(

@@ -1,252 +1,217 @@
+from typing import Optional
 import numpy as np
-import matplotlib.pyplot as plt
+import plotly.graph_objs as go
 
-def plot_2d_clusters(
-    data_clean,
-    labels,
-    means,
-    modes,
+def make_histogram_with_lines(
     *,
-    x_original=None,
-    y_original=None,
-    gridsize=200,
-    cmap="tab10",
-    background_cmap="gray_r",
-    figsize=(8, 8),
-    scatter_size=10,
-):
+    values: np.ndarray,
+    nbins: int,
+    xaxis_title: str,
+    line_positions: list[float],
+    line_labels: list[str],
+    overlay_values: Optional[np.ndarray] = None,
+    base_name: str = "all events",
+    overlay_name: str = "gated events",
+    title: Optional[str] = None,
+) -> go.Figure:
     """
-    Plot 2D clusters obtained from a thresholded GMM or DBSCAN.
+    Build a histogram figure with optional vertical lines.
 
     Parameters
     ----------
-    data_clean : ndarray of shape (N, 2)
-        Cleaned 2D data used for clustering.
-
-    labels : ndarray of shape (N,)
-        Cluster labels for cleaned data.
-
-    means : ndarray of shape (K, 2)
-        Estimated cluster centers (GMM means).
-
-    modes : ndarray of shape (K, 2)
-        KDE-derived cluster modes.
-
-    x_original, y_original : ndarray or None
-        Full original dataset to draw background density (optional).
-
-    gridsize : int
-        Resolution of hexbin background.
-
-    cmap : str
-        Colormap for the cluster points.
-
-    background_cmap : str
-        Colormap for the background hexbin.
-
-    scatter_size : int
-        Size of cluster scatter points.
-
-    Returns
-    -------
-    fig, ax : matplotlib figure and axis
+    values : np.ndarray
+        Array of values to plot in the histogram.
+    nbins : int
+        Number of bins for the histogram.
+    xaxis_title : str
+        Label for the x axis.
+    line_positions : list[float]
+        X positions for vertical lines to indicate peaks or thresholds.
+    line_labels : list[str]
+        Labels corresponding to each vertical line.
+    overlay_values : Optional[np.ndarray]
+        Optional second set of values to overlay as a second histogram (e.g. gated events).
+    base_name : str
+        Legend name for the main histogram.
+    overlay_name : str
+        Legend name for the overlay histogram.
+    title : Optional[str]
+        Optional title for the figure.
     """
+    values = np.asarray(values, dtype=float)
+    values = values[np.isfinite(values)]
 
-    import numpy as np
-    import matplotlib.pyplot as plt
+    overlay = None
+    if overlay_values is not None:
+        overlay = np.asarray(overlay_values, dtype=float)
+        overlay = overlay[np.isfinite(overlay)]
 
-    data_clean = np.asarray(data_clean)
-    x = data_clean[:, 0]
-    y = data_clean[:, 1]
+    fig = go.Figure()
 
-    fig, ax = plt.subplots(figsize=figsize)
+    fig.add_trace(
+        go.Histogram(
+            x=values,
+            nbinsx=int(nbins),
+            name=str(base_name),
+            opacity=0.55 if overlay is not None else 1.0,
+            bingroup="hist",
+        )
+    )
 
-    # ---------------------------------------------------------
-    # Background hexbin (optional)
-    # ---------------------------------------------------------
-    if x_original is not None and y_original is not None:
-        ax.hexbin(
-            x_original,
-            y_original,
-            gridsize=gridsize,
-            mincnt=1,
-            cmap=background_cmap,
-            bins="log",
-            alpha=0.8,
+    if overlay is not None:
+        fig.add_trace(
+            go.Histogram(
+                x=overlay,
+                nbinsx=int(nbins),
+                name=str(overlay_name),
+                opacity=0.85,
+                bingroup="hist",
+            )
         )
 
-    # ---------------------------------------------------------
-    # Cluster points
-    # ---------------------------------------------------------
-    unique_labels = np.unique(labels)
-    cmap_obj = plt.get_cmap(cmap)
+    for x, label in zip(line_positions, line_labels):
+        try:
+            xv = float(x)
+        except Exception:
+            continue
+        if not np.isfinite(xv):
+            continue
 
-    for i, lab in enumerate(unique_labels):
-        mask = labels == lab
-        ax.scatter(
-            x[mask],
-            y[mask],
-            s=scatter_size,
-            color=cmap_obj(i),
-            alpha=0.9,
-            label=f"Cluster {lab}",
+        fig.add_shape(
+            type="line",
+            x0=xv,
+            x1=xv,
+            y0=0,
+            y1=1,
+            xref="x",
+            yref="paper",
+            line={"width": 2, "dash": "dash"},
         )
 
-    # ---------------------------------------------------------
-    # Plot means
-    # ---------------------------------------------------------
-    if means is not None and len(means) > 0:
-        ax.scatter(
-            means[:, 0],
-            means[:, 1],
-            s=200,
-            color="black",
-            marker="x",
-            linewidths=2,
-            label="Means",
+        fig.add_annotation(
+            x=xv,
+            y=1.02,
+            xref="x",
+            yref="paper",
+            text=str(label),
+            showarrow=False,
+            textangle=-45,
+            xanchor="left",
+            yanchor="bottom",
+            align="left",
+            bgcolor="rgba(255,255,255,0.6)",
         )
 
-    # ---------------------------------------------------------
-    # Plot modes
-    # ---------------------------------------------------------
-    if modes is not None and len(modes) > 0:
-        ax.scatter(
-            modes[:, 0],
-            modes[:, 1],
-            s=260,
-            color="red",
-            marker="*",
-            label="Modes",
-        )
+    fig.update_layout(
+        title="" if title is None else str(title),
+        xaxis_title=xaxis_title,
+        yaxis_title="Count",
+        bargap=0.02,
+        showlegend=(overlay is not None),
+        separators=".,",
+        barmode="overlay",
+        hovermode="x unified",
+        xaxis={"showspikes": True, "spikemode": "across", "spikesnap": "cursor"},
+    )
 
-    ax.set_xlabel("X")
-    ax.set_ylabel("Y")
-    ax.legend()
-    return fig, ax
+    return fig
 
 
-
-def plot_1d_clusters(
-    x_clean,
-    labels,
-    means,
-    modes,
+def add_vertical_lines(
     *,
-    x_original=None,
-    bins=200,
-    log_scale=False,
-    figsize=(8, 5),
-    cmap="tab10",
-):
+    fig: go.Figure,
+    line_positions: list[float],
+    line_labels: Optional[list[str]] = None,
+    line_width: int = 2,
+    line_dash: str = "dash",
+    annotation_y: float = 1.02,
+) -> go.Figure:
     """
-    Plot 1D clusters obtained from a thresholded GMM.
+    Adds vertical lines (and optional labels) to an existing Plotly figure.
+
+    Notes
+    - Uses yref="paper" so the line spans the full plot height.
+    - Safe to call repeatedly: it only appends new shapes/annotations.
 
     Parameters
     ----------
-    x_clean : ndarray
-        Cleaned data used for clustering.
-
-    labels : ndarray
-        Cluster labels for x_clean.
-
-    means : ndarray of shape (K, 1)
-        Gaussian means from GMM.
-
-    modes : ndarray of shape (K, 1)
-        KDE-derived modes.
-
-    x_original : ndarray or None
-        Raw data for background histogram.
-
-    bins : int
-        Number of histogram bins.
-
-    log_scale : bool
-        If True, plot in log(x) space.
-
-    cmap : str
-        Matplotlib colormap name.
+    fig : go.Figure
+        Existing figure to add lines to.
+    line_positions : list[float]
+        X positions of vertical lines to add.
+    line_labels : Optional[list[str]]
+        Optional labels for each line. If fewer labels than positions, remaining will be empty.
+    line_width : int
+        Width of the vertical lines.
+    line_dash : str
+        Dash style for the vertical lines (e.g. "dash", "dot", "solid").
+    annotation_y : float
+        Y position in paper coordinates for the line labels.
 
     Returns
     -------
-    fig, ax : matplotlib figure and axis
+    go.Figure
+        The same figure instance with new lines and annotations added.
     """
-    import matplotlib.pyplot as plt
-    import numpy as np
+    if line_labels is None:
+        line_labels = []
 
-    x_clean = np.asarray(x_clean)
+    # Pad labels to match positions
+    if len(line_labels) < len(line_positions):
+        line_labels = list(line_labels) + [""] * (len(line_positions) - len(line_labels))
 
-    # Prepare plotting values
-    if log_scale:
-        # filter non-positive values
-        x_plot = np.log(x_clean[x_clean > 0])
+    for x, label in zip(line_positions, line_labels):
+        try:
+            xv = float(x)
+        except Exception:
+            continue
+        if not np.isfinite(xv):
+            continue
 
-        if x_original is not None:
-            x_bg = np.log(x_original[x_original > 0])
-        else:
-            x_bg = None
-
-        means_plot = np.log(means[:, 0])
-        modes_plot = np.log(modes[:, 0])
-        xlabel = "log(x)"
-    else:
-        x_plot = x_clean
-        x_bg = x_original
-        means_plot = means[:, 0]
-        modes_plot = modes[:, 0]
-        xlabel = "x"
-
-    fig, ax = plt.subplots(figsize=figsize)
-
-    # Background histogram
-    if x_bg is not None:
-        ax.hist(
-            x_bg,
-            bins=bins,
-            color="lightgray",
-            alpha=0.4,
-            label="Background",
+        fig.add_shape(
+            type="line",
+            x0=xv,
+            x1=xv,
+            y0=0,
+            y1=1,
+            xref="x",
+            yref="paper",
+            line={"width": int(line_width), "dash": str(line_dash)},
         )
 
-    # Plot clusters
-    unique_labels = np.unique(labels)
-    cmap_obj = plt.get_cmap(cmap)
+        label_str = str(label).strip()
+        if label_str:
+            fig.add_annotation(
+                x=xv,
+                y=float(annotation_y),
+                xref="x",
+                yref="paper",
+                text=label_str,
+                showarrow=False,
+                textangle=-45,
+                xanchor="left",
+                yanchor="bottom",
+                align="left",
+                bgcolor="rgba(255,255,255,0.6)",
+            )
 
-    for i, lab in enumerate(unique_labels):
-        xc = x_plot[labels == lab]
-        ax.hist(
-            xc,
-            bins=bins,
-            color=cmap_obj(i),
-            alpha=0.7,
-            label=f"Cluster {lab}",
-        )
+    return fig
 
-    # Plot means (black dashed)
-    ax.vlines(
-        means_plot,
-        ymin=0,
-        ymax=ax.get_ylim()[1],
-        color="black",
-        linestyle="--",
-        linewidth=2,
-        label="Means",
+def _make_info_figure(message: str) -> go.Figure:
+    fig = go.Figure()
+    fig.add_annotation(
+        text=message,
+        x=0.5,
+        y=0.5,
+        xref="paper",
+        yref="paper",
+        showarrow=False,
     )
-
-    # Plot modes (red solid)
-    ax.vlines(
-        modes_plot,
-        ymin=0,
-        ymax=ax.get_ylim()[1],
-        color="red",
-        linestyle="-",
-        linewidth=2,
-        label="Modes",
+    fig.update_xaxes(visible=False)
+    fig.update_yaxes(visible=False)
+    fig.update_layout(
+        height=350,
+        margin=dict(l=20, r=20, t=20, b=20),
+        separators=".,",
     )
-
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel("Counts")
-    ax.legend()
-
-    return fig, ax
-
+    return fig

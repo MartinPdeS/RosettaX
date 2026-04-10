@@ -2,12 +2,8 @@
 
 from dataclasses import dataclass
 from typing import Any
-
 import dash
 import dash_bootstrap_components as dbc
-from dash import html
-
-from RosettaX.pages.calibrate.ids import Ids
 
 
 @dataclass(frozen=True)
@@ -19,6 +15,9 @@ class ApplyCalibrationResult:
 
 
 class ApplySection:
+    def __init__(self, page) -> None:
+        self.page = page
+
     def get_layout(self) -> dbc.Card:
         return dbc.Card(
             [
@@ -27,14 +26,14 @@ class ApplySection:
                     [
                         dbc.Button(
                             "Apply",
-                            id=Ids.Apply.apply_button,
+                            id=self.page.ids.Apply.apply_button,
                             n_clicks=0,
                             color="primary",
                         ),
-                        html.Div(style={"height": "10px"}),
+                        dash.html.Div(style={"height": "10px"}),
                         dbc.Alert(
                             "Status will appear here.",
-                            id=Ids.Apply.status,
+                            id=self.page.ids.Apply.status,
                             color="secondary",
                             style={"marginBottom": "0px"},
                         ),
@@ -43,12 +42,12 @@ class ApplySection:
             ]
         )
 
-    def register_callbacks(self) -> None:
+    def _register_callbacks(self) -> None:
         @dash.callback(
-            dash.Output(Ids.Apply.status, "children"),
-            dash.Input(Ids.Apply.apply_button, "n_clicks"),
-            dash.State(Ids.Stores.selected_calibration_path_store, "data"),
-            dash.State(Ids.ChannelPicker.dropdown, "value"),
+            dash.Output(self.page.ids.Apply.status, "children"),
+            dash.Input(self.page.ids.Apply.apply_button, "n_clicks"),
+            dash.State(self.page.ids.Stores.selected_calibration_path_store, "data"),
+            dash.State(self.page.ids.ChannelPicker.dropdown, "value"),
             prevent_initial_call=True,
         )
         def apply_calibration(n_clicks: int, selected_calibration: Any, target_channel: Any) -> tuple:

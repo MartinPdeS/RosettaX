@@ -10,42 +10,22 @@ import dash_bootstrap_components as dbc
 from dash import Input, Output, State, callback, dcc, html
 
 from RosettaX.pages import styling
+from RosettaX.pages.fluorescence import service
 from RosettaX.pages.fluorescence.backend import BackEnd
-from RosettaX.pages.runtime_config import RuntimeConfig
+from RosettaX.utils.runtime_config import RuntimeConfig
 
 
 @dataclass(frozen=True)
 class LoadResult:
-    """
-    Container for all Dash outputs of the load callback.
-
-    This keeps the callback return logic stable and makes the Output ordering explicit.
-    """
-
     uploaded_fcs_path_store: Any = dash.no_update
-    upload_saved_as: Any = dash.no_update
     scattering_detector_options: Any = dash.no_update
     scattering_detector_value: Any = dash.no_update
     fluorescence_detector_options: Any = dash.no_update
     fluorescence_detector_value: Any = dash.no_update
 
     def to_tuple(self) -> tuple:
-        """
-        Convert to the tuple expected by Dash multi output callbacks.
-
-        Returns
-        -------
-        tuple
-            (uploaded_fcs_path_store,
-             upload_saved_as,
-             scattering_detector_options,
-             scattering_detector_value,
-             fluorescence_detector_options,
-             fluorescence_detector_value)
-        """
         return (
             self.uploaded_fcs_path_store,
-            self.upload_saved_as,
             self.scattering_detector_options,
             self.scattering_detector_value,
             self.fluorescence_detector_options,
@@ -68,14 +48,18 @@ class LoadSection:
     This section is the sole owner of detector dropdown Outputs.
     """
 
-    def _load_get_layout(self) -> dbc.Card:
+    def __init__(self, page) -> None:
+        self.page = page
+        self.file_state = service.FileStateRefresher()
+
+    def get_layout(self) -> dbc.Card:
         """
         Build the layout for the load section and inject an initial file path store.
         """
         runtime_config = RuntimeConfig()
 
-        widget = dcc.Upload(
-            id=self.ids.Load.upload,
+        upload_widget = dcc.Upload(
+            id=self.page.ids.Load.upload,
             children=html.Div(["Drag and Drop or ", html.A("Select Bead File")]),
             style=styling.UPLOAD,
             multiple=False,
@@ -88,15 +72,14 @@ class LoadSection:
                 dbc.CardBody(
                     [
                         dcc.Store(
-                            id=self.ids.Load.fcs_path_store,
+                            id=self.page.ids.Load.fcs_path_store,
                             data=runtime_config.fcs_file_path,
                             storage_type="memory",
                         ),
-                        widget,
-                        html.Div(id=self.ids.Load.upload_filename),
-                        html.Div(id=self.ids.Load.upload_saved_as),
+                        upload_widget,
+                        html.Div(id=self.page.ids.Load.upload_filename),
                     ],
-                    style=self.card_body_scroll,
+                    style=self.page.style["body_scroll"],
                 ),
             ]
         )
@@ -113,41 +96,65 @@ class LoadSection:
         tmp_dir = Path(tempfile.gettempdir()) / "rosettax_uploads"
         tmp_dir.mkdir(parents=True, exist_ok=True)
 
-        out_path = tmp_dir / f"{next(tempfile._get_candidate_names())}{suffix}"
-        out_path.write_bytes(raw)
-        return str(out_path)
+        output_path = tmp_dir / f"{next(tempfile._get_candidate_names())}{suffix}"
+        output_path.write_bytes(raw)
+        return str(output_path)
 
-    def _load_register_callbacks(self) -> None:
+    @staticmethod
+    def _pick_dropdown_value(
+        *,
+        preferred_value: Optional[str],
+        current_value: Optional[str],
+        options: list[dict[str, str]],
+    ) -> Optional[str]:
+        allowed_values = {
+            str(option.get("value"))
+            for option in options
+            if "value" in option
+        }
+
+        if preferred_value is not None and str(preferred_value) in allowed_values:
+            return str(preferred_value)
+
+        if current_value is not None and str(current_value) in allowed_values:
+            return str(current_value)
+
+        if options:
+            return str(options[0].get("value"))
+
+        return None
+
+    def _register_callbacks(self) -> None:
         """
         Register callbacks for:
-        - showing filename
+        - showing filename in the GUI
         - loading from upload or CLI path
+        - printing terminal diagnostics
         """
+
         @callback(
-            Output(self.ids.Load.upload_filename, "children"),
-            Input(self.ids.Load.upload, "filename"),
+            Output(self.page.ids.Load.upload_filename, "children"),
+            Input(self.page.ids.Load.upload, "filename"),
             prevent_initial_call=True,
         )
-        def show_filename(name: Any) -> str:
-            runtime_config = RuntimeConfig()
+        def show_filename(filename: Any) -> str:
+            if filename:
+                print(f"Selected file: {filename}")
+                return str(filename)
 
-            if not runtime_config.debug:
-                return ""
-
-            return f"Selected file: {name}" if name else ""
+            return ""
 
         @callback(
-            Output(self.ids.Load.uploaded_fcs_path_store, "data"),
-            Output(self.ids.Load.upload_saved_as, "children"),
-            Output(self.ids.Scattering.detector_dropdown, "options"),
-            Output(self.ids.Scattering.detector_dropdown, "value"),
-            Output(self.ids.Fluorescence.detector_dropdown, "options"),
-            Output(self.ids.Fluorescence.detector_dropdown, "value"),
-            Input(self.ids.Load.upload, "contents"),
-            Input(self.ids.Load.fcs_path_store, "data"),
-            State(self.ids.Load.upload, "filename"),
-            State(self.ids.Scattering.detector_dropdown, "value"),
-            State(self.ids.Fluorescence.detector_dropdown, "value"),
+            Output(self.page.ids.Load.uploaded_fcs_path_store, "data"),
+            Output(self.page.ids.Scattering.detector_dropdown, "options"),
+            Output(self.page.ids.Scattering.detector_dropdown, "value"),
+            Output(self.page.ids.Fluorescence.detector_dropdown, "options"),
+            Output(self.page.ids.Fluorescence.detector_dropdown, "value"),
+            Input(self.page.ids.Load.upload, "contents"),
+            Input(self.page.ids.Load.fcs_path_store, "data"),
+            State(self.page.ids.Load.upload, "filename"),
+            State(self.page.ids.Scattering.detector_dropdown, "value"),
+            State(self.page.ids.Fluorescence.detector_dropdown, "value"),
             prevent_initial_call=False,
         )
         def load_file(
@@ -157,23 +164,20 @@ class LoadSection:
             current_scatter_value: Any,
             current_fluorescence_value: Any,
         ) -> tuple:
-
-            runtime_config = RuntimeConfig()
-
             selected_path: Optional[str] = None
-            status_message: str = ""
 
-            # Upload mode
             if contents and filename:
                 try:
                     selected_path = self.write_upload_to_tempfile(
                         contents=str(contents),
                         filename=str(filename),
                     )
-                    status_message = f"Saved as: {selected_path}"
+                    print(f"Selected file: {filename}")
+                    print(f"Saved as: {selected_path}")
+
                 except Exception as exc:
+                    print(f"Failed to save file: {exc}")
                     return LoadResult(
-                        upload_saved_as=f"Failed to save file: {exc}",
                         scattering_detector_options=[],
                         scattering_detector_value=None,
                         fluorescence_detector_options=[],
@@ -182,11 +186,10 @@ class LoadSection:
 
             elif isinstance(initial_fcs_path, str) and initial_fcs_path.strip():
                 selected_path = initial_fcs_path.strip()
-                status_message = f"Loaded from CLI path: {selected_path}"
+                print(f"Loaded from CLI path: {selected_path}")
 
             else:
                 return LoadResult(
-                    upload_saved_as="No file loaded." if runtime_config.debug else "",
                     scattering_detector_options=[],
                     scattering_detector_value=None,
                     fluorescence_detector_options=[],
@@ -194,11 +197,12 @@ class LoadSection:
                 ).to_tuple()
 
             try:
-                self.backend = BackEnd(selected_path)
+                self.page.backend = BackEnd(selected_path)
 
             except Exception as exc:
+                print(f"Failed to initialize backend: {exc}")
                 return LoadResult(
-                    upload_saved_as=f"Failed to initialize backend: {exc}",
+                    uploaded_fcs_path_store=selected_path,
                     scattering_detector_options=[],
                     scattering_detector_value=None,
                     fluorescence_detector_options=[],
@@ -207,10 +211,11 @@ class LoadSection:
 
             try:
                 channels = self.file_state.options_from_file(selected_path)
+
             except Exception as exc:
+                print(f"Loaded file but could not read channels: {exc}")
                 return LoadResult(
                     uploaded_fcs_path_store=selected_path,
-                    upload_saved_as=f"{status_message}, but could not read: {exc}",
                     scattering_detector_options=[],
                     scattering_detector_value=None,
                     fluorescence_detector_options=[],
@@ -220,7 +225,6 @@ class LoadSection:
             scatter_options = list(channels.scatter_options or [])
             fluorescence_options = list(channels.fluorescence_options or [])
 
-            # Scattering selection (automatic only)
             scatter_value = self._pick_dropdown_value(
                 preferred_value=None,
                 current_value=str(current_scatter_value) if current_scatter_value else None,
@@ -233,7 +237,8 @@ class LoadSection:
                     options=scatter_options,
                 )
 
-            # Fluorescence selection (CLI preferred)
+            runtime_config = RuntimeConfig()
+
             fluorescence_value = self._pick_dropdown_value(
                 preferred_value=runtime_config.fluorescence_page_fluorescence_detector,
                 current_value=str(current_fluorescence_value) if current_fluorescence_value else None,
@@ -248,30 +253,8 @@ class LoadSection:
 
             return LoadResult(
                 uploaded_fcs_path_store=selected_path,
-                upload_saved_as=status_message if runtime_config.debug else "",
                 scattering_detector_options=scatter_options,
                 scattering_detector_value=scatter_value,
                 fluorescence_detector_options=fluorescence_options,
                 fluorescence_detector_value=fluorescence_value,
             ).to_tuple()
-
-    @staticmethod
-    def _pick_dropdown_value(
-        *,
-        preferred_value: Optional[str],
-        current_value: Optional[str],
-        options: list[dict[str, str]],
-    ) -> Optional[str]:
-
-        allowed = {str(o.get("value")) for o in options if "value" in o}
-
-        if preferred_value is not None and str(preferred_value) in allowed:
-            return str(preferred_value)
-
-        if current_value is not None and str(current_value) in allowed:
-            return str(current_value)
-
-        if options:
-            return str(options[0].get("value"))
-
-        return None

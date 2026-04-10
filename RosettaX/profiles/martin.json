@@ -8,7 +8,7 @@
     "particle_refractive_index": 1.59,
     "max_events_for_analysis": 10000,
     "n_bins_for_plots": 1000,
-    "peak_count": 2,
+    "peak_count": 4,
     "mesf_values": "",
     "fcs_file_path": ""
 }

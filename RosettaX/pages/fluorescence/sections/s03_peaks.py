@@ -8,9 +8,10 @@ import plotly.graph_objs as go
 
 from RosettaX.pages.fluorescence.backend import BackEnd
 from RosettaX.pages import styling
-from RosettaX.pages.runtime_config import RuntimeConfig
+from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.utils.reader import FCSFile
-from RosettaX.pages.fluorescence.utils import make_histogram_with_lines, add_vertical_lines
+from RosettaX.utils.plottings import make_histogram_with_lines, add_vertical_lines, _make_info_figure
+from RosettaX.utils.casting import _as_float, _as_int
 
 
 class PeaksSection:
@@ -28,10 +29,10 @@ class PeaksSection:
     ----------------------------
     This class assumes these attributes exist on `self`:
 
-    - self.ids: namespace containing component IDs
+    - self.page.ids: namespace containing component IDs
     - self.graph_style: style dict for plotly graphs
     - self.default_fluorescence_nbins: int, used when estimating threshold as a fallback
-    - self._as_float(...), self._as_int(...): parsing helpers (implemented below for completeness)
+    - _as_float(...), _as_float(...): parsing helpers (implemented below for completeness)
     - self._empty_fig(): helper returning an empty plotly figure (implemented below)
 
     Notes
@@ -40,7 +41,10 @@ class PeaksSection:
     rather than using a long lived backend instance, to avoid stale paths and file handle issues.
     """
 
-    def _fluorescence_get_layout(self) -> dbc.Card:
+    def __init__(self, page) -> None:
+        self.page = page
+
+    def get_layout(self) -> dbc.Card:
         """
         Build the Dash layout for the fluorescence after thresholding section.
 
@@ -51,12 +55,12 @@ class PeaksSection:
         """
         return dbc.Card(
             [
-                self._fluorescence_build_header(),
-                self._fluorescence_build_body(),
+                self.build_header(),
+                self.build_body(),
             ]
         )
 
-    def _fluorescence_build_header(self) -> dbc.CardHeader:
+    def build_header(self) -> dbc.CardHeader:
         """
         Build the card header.
 
@@ -67,7 +71,7 @@ class PeaksSection:
         """
         return dbc.CardHeader("3. Fluorescence channel after thresholding")
 
-    def _fluorescence_build_body(self) -> dbc.CardBody:
+    def build_body(self) -> dbc.CardBody:
         """
         Build the card body.
 
@@ -79,20 +83,51 @@ class PeaksSection:
         return dbc.CardBody(
             [
                 dash.html.Br(),
-                self._fluorescence_build_detector_dropdown(),
+                self._build_detector_dropdown(),
                 dash.html.Br(),
-                self._fluorescence_build_peak_controls(),
+                self._build_peak_controls(),
                 dash.html.Br(),
+                self._build_graph_toggle_switch(),
                 dash.html.Br(),
-                self._fluorescence_build_histogram_graph(),
-                dash.html.Br(),
-                self._fluorescence_build_yscale_switch(),
-                dash.html.Br(),
-                self._fluorescence_build_nbins_input(),
+                self._build_graph_controls_container(),
             ]
         )
 
-    def _fluorescence_build_detector_dropdown(self) -> dash.html.Div:
+    def _build_graph_toggle_switch(self) -> dash.html.Div:
+        """
+        Build the local switch controlling whether the histogram graph is shown.
+        """
+        return dash.html.Div(
+            [
+                dbc.Checklist(
+                    id=self.page.ids.Fluorescence.graph_toggle_switch,
+                    options=[{"label": "Show histogram", "value": "enabled"}],
+                    value=[],
+                    switch=True,
+                ),
+            ],
+            style=styling.CARD,
+        )
+
+
+    def _build_graph_controls_container(self) -> dash.html.Div:
+        """
+        Build the container holding graph and graph related controls.
+        """
+        return dash.html.Div(
+            [
+                dash.html.Br(),
+                self._build_histogram_graph(),
+                dash.html.Br(),
+                self._build_yscale_switch(),
+                dash.html.Br(),
+                self._build_nbins_input(),
+            ],
+            id=self.page.ids.Fluorescence.graph_toggle_container,
+            style={"display": "none"},
+        )
+
+    def _build_detector_dropdown(self) -> dash.html.Div:
         """
         Build the fluorescence detector dropdown row.
 
@@ -105,7 +140,7 @@ class PeaksSection:
             [
                 dash.html.Div("Fluorescence detector:"),
                 dash.dcc.Dropdown(
-                    id=self.ids.Fluorescence.detector_dropdown,
+                    id=self.page.ids.Fluorescence.detector_dropdown,
                     style={"width": "500px"},
                     optionHeight=50,
                     maxHeight=500,
@@ -115,7 +150,7 @@ class PeaksSection:
             style=styling.CARD,
         )
 
-    def _fluorescence_build_peak_controls(self) -> dash.html.Div:
+    def _build_peak_controls(self) -> dash.html.Div:
         """
         Build controls for peak finding.
 
@@ -127,7 +162,7 @@ class PeaksSection:
         runtime_config = RuntimeConfig()
 
         peak_count_input = dash.dcc.Input(
-            id=self.ids.Fluorescence.peak_count_input,
+            id=self.page.ids.Fluorescence.peak_count_input,
             type="number",
             min=1,
             step=1,
@@ -145,7 +180,7 @@ class PeaksSection:
 
         find_peaks_button = dash.html.Button(
             "Find peaks",
-            id=self.ids.Fluorescence.find_peaks_btn,
+            id=self.page.ids.Fluorescence.find_peaks_btn,
             n_clicks=0,
             style={"marginLeft": "16px"},
         )
@@ -155,7 +190,7 @@ class PeaksSection:
             style={"display": "flex", "alignItems": "center"},
         )
 
-    def _fluorescence_build_histogram_graph(self) -> dash.dcc.Loading:
+    def _build_histogram_graph(self) -> dash.dcc.Loading:
         """
         Build the histogram graph wrapper.
 
@@ -166,13 +201,13 @@ class PeaksSection:
         """
         return dash.dcc.Loading(
             dash.dcc.Graph(
-                id=self.ids.Fluorescence.graph_hist,
-                style=self.graph_style,
+                id=self.page.ids.Fluorescence.graph_hist,
+                style=self.page.style["graph"],
             ),
             type="default",
         )
 
-    def _fluorescence_build_yscale_switch(self) -> dbc.Checklist:
+    def _build_yscale_switch(self) -> dbc.Checklist:
         """
         Build the y scale switch (log or linear counts).
 
@@ -182,14 +217,14 @@ class PeaksSection:
             Switch used to toggle log counts on the histogram.
         """
         return dbc.Checklist(
-            id=self.ids.Fluorescence.yscale_switch,
+            id=self.page.ids.Fluorescence.yscale_switch,
             options=[{"label": "Log scale (counts)", "value": "log"}],
             value=["log"],
             switch=True,
             style={"display": "block"},
         )
 
-    def _fluorescence_build_nbins_input(self) -> dash.html.Div:
+    def _build_nbins_input(self) -> dash.html.Div:
         """
         Build the histogram bin count input.
 
@@ -202,9 +237,9 @@ class PeaksSection:
 
         return dash.html.Div(
             [
-                dash.html.Div("number of bins:"),
+                dash.html.Div("Number of bins:"),
                 dash.dcc.Input(
-                    id=self.ids.Fluorescence.nbins_input,
+                    id=self.page.ids.Fluorescence.nbins_input,
                     type="number",
                     min=10,
                     step=10,
@@ -264,7 +299,7 @@ class PeaksSection:
 
         return rows
 
-    def _fluorescence_register_callbacks(self) -> None:
+    def _register_callbacks(self) -> None:
         """
         Register callbacks for fluorescence histogram generation and peak finding.
 
@@ -328,10 +363,10 @@ class PeaksSection:
             threshold_value: Optional[float] = None
 
             if isinstance(threshold_payload, dict):
-                threshold_value = self._as_float(threshold_payload.get("threshold"))
+                threshold_value = _as_float(threshold_payload.get("threshold"))
 
             if threshold_value is None:
-                threshold_value = self._as_float(threshold_input_value)
+                threshold_value = _as_float(threshold_input_value)
 
             if threshold_value is None:
                 backend = BackEnd(fcs_path)
@@ -343,7 +378,7 @@ class PeaksSection:
                         "number_of_points": int(max_events),
                     }
                 )
-                threshold_value = self._as_float(response.get("threshold"))
+                threshold_value = _as_float(response.get("threshold"))
 
             if threshold_value is None:
                 threshold_value = 0.0
@@ -351,18 +386,28 @@ class PeaksSection:
             return float(threshold_value)
 
         @dash.callback(
-            dash.Output(self.ids.Fluorescence.peak_lines_store, "data", allow_duplicate=True),
-            dash.Input(self.ids.Fluorescence.detector_dropdown, "value"),
-            dash.Input(self.ids.Load.uploaded_fcs_path_store, "data"),
-            dash.Input(self.ids.Scattering.detector_dropdown, "value"),
+            dash.Output(self.page.ids.Fluorescence.graph_toggle_container, "style"),
+            dash.Input(self.page.ids.Fluorescence.graph_toggle_switch, "value"),
+            prevent_initial_call=False,
+        )
+        def toggle_fluorescence_graph_container(graph_toggle_value: Any) -> dict:
+            enabled = isinstance(graph_toggle_value, list) and ("enabled" in graph_toggle_value)
+            return {"display": "block"} if enabled else {"display": "none"}
+
+
+        @dash.callback(
+            dash.Output(self.page.ids.Fluorescence.peak_lines_store, "data", allow_duplicate=True),
+            dash.Input(self.page.ids.Fluorescence.detector_dropdown, "value"),
+            dash.Input(self.page.ids.Load.uploaded_fcs_path_store, "data"),
+            dash.Input(self.page.ids.Scattering.detector_dropdown, "value"),
             prevent_initial_call=True,
         )
         def clear_peak_lines_on_context_change(fluorescence_channel, fcs_path, scattering_channel):
             return {"positions": [], "labels": []}
 
         @dash.callback(
-            dash.Output(self.ids.Fluorescence.peak_lines_store, "data", allow_duplicate=True),
-            dash.Input(self.ids.Fluorescence.detector_dropdown, "value"),
+            dash.Output(self.page.ids.Fluorescence.peak_lines_store, "data", allow_duplicate=True),
+            dash.Input(self.page.ids.Fluorescence.detector_dropdown, "value"),
             prevent_initial_call=True,
         )
         def clear_peak_lines_on_detector_change(fluorescence_channel: Optional[str]):
@@ -377,9 +422,9 @@ class PeaksSection:
 
 
         @dash.callback(
-            dash.Output(self.ids.Fluorescence.source_channel_store, "data", allow_duplicate=True),
-            dash.Input(self.ids.Fluorescence.detector_dropdown, "value"),
-            dash.State(self.ids.Fluorescence.source_channel_store, "data"),
+            dash.Output(self.page.ids.Fluorescence.source_channel_store, "data", allow_duplicate=True),
+            dash.Input(self.page.ids.Fluorescence.detector_dropdown, "value"),
+            dash.State(self.page.ids.Fluorescence.source_channel_store, "data"),
             prevent_initial_call=True,
         )
         def lock_fluorescence_source_channel(
@@ -417,17 +462,19 @@ class PeaksSection:
             return chosen
 
         @dash.callback(
-            dash.Output(self.ids.Fluorescence.hist_store, "data", allow_duplicate=True),
-            dash.Input(self.ids.Load.uploaded_fcs_path_store, "data"),
-            dash.Input(self.ids.Scattering.detector_dropdown, "value"),
-            dash.Input(self.ids.Fluorescence.detector_dropdown, "value"),
-            dash.Input(self.ids.Fluorescence.nbins_input, "value"),
-            dash.Input(self.ids.Scattering.threshold_store, "data"),
-            dash.Input(self.ids.Scattering.threshold_input, "value"),
-            dash.State(self.ids.Load.max_events_for_plots_input, "value", allow_optional=True),
+            dash.Output(self.page.ids.Fluorescence.hist_store, "data", allow_duplicate=True),
+            dash.Input(self.page.ids.Fluorescence.graph_toggle_switch, "value"),
+            dash.Input(self.page.ids.Load.uploaded_fcs_path_store, "data"),
+            dash.Input(self.page.ids.Scattering.detector_dropdown, "value"),
+            dash.Input(self.page.ids.Fluorescence.detector_dropdown, "value"),
+            dash.Input(self.page.ids.Fluorescence.nbins_input, "value"),
+            dash.Input(self.page.ids.Scattering.threshold_store, "data"),
+            dash.Input(self.page.ids.Scattering.threshold_input, "value"),
+            dash.State(self.page.ids.Load.max_events_for_plots_input, "value", allow_optional=True),
             prevent_initial_call=True,
         )
         def refresh_fluorescence_hist_store(
+            graph_toggle_value: Any,
             fcs_path: Optional[str],
             scattering_channel: Optional[str],
             fluorescence_channel: Optional[str],
@@ -450,6 +497,10 @@ class PeaksSection:
             Any
                 Plotly figure as dict if successful, otherwise dash.no_update.
             """
+            graph_enabled = isinstance(graph_toggle_value, list) and ("enabled" in graph_toggle_value)
+            if not graph_enabled:
+                return dash.no_update
+
             runtime_config = RuntimeConfig()
 
             fcs_path_clean = str(fcs_path or "").strip()
@@ -459,7 +510,7 @@ class PeaksSection:
             if not fcs_path_clean or not scattering_clean or not fluorescence_clean:
                 return dash.no_update
 
-            max_events_for_plots_int = self._as_int(
+            max_events_for_plots_int = _as_int(
                 max_events_for_plots,
                 default=runtime_config.max_events_for_analysis,
                 min_value=10_000,
@@ -474,7 +525,7 @@ class PeaksSection:
                 max_events=max_events_for_plots_int,
             )
 
-            nbins = self._as_int(
+            nbins = _as_int(
                 fluorescence_nbins,
                 default=runtime_config.n_bins_for_plots,
                 min_value=10,
@@ -520,38 +571,28 @@ class PeaksSection:
             return fig.to_dict()
 
         @dash.callback(
-            dash.Output(self.ids.Fluorescence.graph_hist, "figure"),
-            dash.Input(self.ids.Fluorescence.yscale_switch, "value"),
-            dash.Input(self.ids.Fluorescence.hist_store, "data"),
-            dash.Input(self.ids.Fluorescence.peak_lines_store, "data"),
+            dash.Output(self.page.ids.Fluorescence.graph_hist, "figure"),
+            dash.Input(self.page.ids.Fluorescence.graph_toggle_switch, "value"),
+            dash.Input(self.page.ids.Fluorescence.yscale_switch, "value"),
+            dash.Input(self.page.ids.Fluorescence.hist_store, "data"),
+            dash.Input(self.page.ids.Fluorescence.peak_lines_store, "data"),
         )
-        def update_fluorescence_yscale(yscale_selection: Any, stored_figure: Any, peak_lines: Any) -> go.Figure:
+        def update_fluorescence_yscale(
+            graph_toggle_value: Any,
+            yscale_selection: Any,
+            stored_figure: Any,
+            peak_lines: Any,
+        ) -> go.Figure:
             """
             Update the displayed fluorescence histogram figure.
-
-            This callback:
-            - Rehydrates the figure from `fluorescence_hist_store`.
-            - Adds peak vertical lines from `fluorescence_peak_lines_store`.
-            - Applies y axis log or linear scaling.
-
-            Parameters
-            ----------
-            yscale_selection : Any
-                Checklist value list containing "log" when log scale is enabled.
-            stored_figure : Any
-                Plotly figure dict from the histogram store.
-            peak_lines : Any
-                Dict with keys "positions" and "labels" describing peak vertical lines.
-
-            Returns
-            -------
-            go.Figure
-                Displayed figure.
             """
+            graph_enabled = isinstance(graph_toggle_value, list) and ("enabled" in graph_toggle_value)
+
+            if not graph_enabled:
+                return _make_info_figure("Histogram is hidden.")
+
             if not stored_figure:
-                fig = go.Figure()
-                fig.update_layout(title="Select file + channels first.", separators=".,")
-                return fig
+                return _make_info_figure("Select file and channels first.")
 
             fig = go.Figure(stored_figure)
 
@@ -569,21 +610,22 @@ class PeaksSection:
 
             use_log = isinstance(yscale_selection, list) and ("log" in yscale_selection)
             fig.update_yaxes(type="log" if use_log else "linear")
+            fig.update_layout(separators=".,")
             return fig
 
         @dash.callback(
-            dash.Output(self.ids.Calibration.bead_table, "data", allow_duplicate=True),
-            dash.Output(self.ids.Fluorescence.peak_lines_store, "data", allow_duplicate=True),
-            dash.Input(self.ids.Fluorescence.find_peaks_btn, "n_clicks"),
-            dash.State(self.ids.Load.uploaded_fcs_path_store, "data"),
-            dash.State(self.ids.Scattering.detector_dropdown, "value"),
-            dash.State(self.ids.Fluorescence.detector_dropdown, "value"),
-            dash.State(self.ids.Fluorescence.nbins_input, "value"),
-            dash.State(self.ids.Fluorescence.peak_count_input, "value"),
-            dash.State(self.ids.Load.max_events_for_plots_input, "value", allow_optional=True),
-            dash.State(self.ids.Scattering.threshold_store, "data"),
-            dash.State(self.ids.Scattering.threshold_input, "value"),
-            dash.State(self.ids.Calibration.bead_table, "data"),
+            dash.Output(self.page.ids.Calibration.bead_table, "data", allow_duplicate=True),
+            dash.Output(self.page.ids.Fluorescence.peak_lines_store, "data", allow_duplicate=True),
+            dash.Input(self.page.ids.Fluorescence.find_peaks_btn, "n_clicks"),
+            dash.State(self.page.ids.Load.uploaded_fcs_path_store, "data"),
+            dash.State(self.page.ids.Scattering.detector_dropdown, "value"),
+            dash.State(self.page.ids.Fluorescence.detector_dropdown, "value"),
+            dash.State(self.page.ids.Fluorescence.nbins_input, "value"),
+            dash.State(self.page.ids.Fluorescence.peak_count_input, "value"),
+            dash.State(self.page.ids.Load.max_events_for_plots_input, "value", allow_optional=True),
+            dash.State(self.page.ids.Scattering.threshold_store, "data"),
+            dash.State(self.page.ids.Scattering.threshold_input, "value"),
+            dash.State(self.page.ids.Calibration.bead_table, "data"),
             prevent_initial_call=True,
         )
         def find_peaks_and_update_table(
@@ -634,7 +676,7 @@ class PeaksSection:
             if not fcs_path or not scattering_channel or not fluorescence_channel:
                 return dash.no_update, dash.no_update
 
-            max_events = self._as_int(
+            max_events = _as_int(
                 max_events_for_plots,
                 default=runtime_config.max_events_for_analysis,
                 min_value=10_000,
@@ -649,14 +691,14 @@ class PeaksSection:
                 max_events=int(max_events),
             )
 
-            nbins = self._as_int(
+            nbins = _as_int(
                 fluorescence_nbins,
                 default=runtime_config.n_bins_for_plots,
                 min_value=10,
                 max_value=5000,
             )
 
-            max_peaks = self._as_int(
+            max_peaks = _as_int(
                 fluorescence_peak_count,
                 default=runtime_config.peak_count,
                 min_value=1,
@@ -664,14 +706,14 @@ class PeaksSection:
             )
 
             backend = BackEnd(str(fcs_path))
+
             peaks_payload = backend.find_fluorescence_peaks(
-                {
-                    "column": str(fluorescence_channel),
-                    "max_peaks": int(max_peaks),
-                    "gating_column": str(scattering_channel),
-                    "gating_threshold": float(threshold_value),
-                    "number_of_points": int(max_events),
-                }
+                column=str(fluorescence_channel),
+                max_peaks=int(max_peaks),
+                gating_column=str(scattering_channel),
+                gating_threshold=float(threshold_value),
+                number_of_points=int(max_events),
+                debug=False
             )
 
             peak_positions_raw = peaks_payload.get("peak_positions", []) or []
@@ -696,12 +738,14 @@ class PeaksSection:
 
             peak_positions: List[float] = []
             for p in peak_positions_raw:
-                v = self._as_float(p)
+                v = _as_float(p)
                 if v is None:
                     continue
                 peak_positions.append(float(v))
 
             peak_labels = [f"{float(p):.3g}" for p in peak_positions]
+
+            print(f"Found peaks at positions: {peak_positions}")
 
             _ = make_histogram_with_lines(
                 values=fluorescence_values,
@@ -735,74 +779,6 @@ class PeaksSection:
         fig = go.Figure()
         fig.update_layout(separators=".,")
         return fig
-
-    @staticmethod
-    def _as_float(value: Any) -> Optional[float]:
-        """
-        Parse a value into a finite float.
-
-        Parameters
-        ----------
-        value : Any
-            Candidate value from a UI component.
-
-        Returns
-        -------
-        Optional[float]
-            Parsed float if valid and finite, otherwise None.
-        """
-        if value is None:
-            return None
-
-        if isinstance(value, (int, float)):
-            v = float(value)
-            return v if np.isfinite(v) else None
-
-        if isinstance(value, str):
-            s = value.strip()
-            if not s:
-                return None
-            s = s.replace(",", ".")
-            try:
-                v = float(s)
-            except ValueError:
-                return None
-            return v if np.isfinite(v) else None
-
-        return None
-
-    @staticmethod
-    def _as_int(value: Any, default: int, min_value: int, max_value: int) -> int:
-        """
-        Parse a value into an int, with fallback and clamping.
-
-        Parameters
-        ----------
-        value : Any
-            Candidate value from a UI component.
-        default : int
-            Value used if parsing fails.
-        min_value : int
-            Minimum allowed value after parsing.
-        max_value : int
-            Maximum allowed value after parsing.
-
-        Returns
-        -------
-        int
-            Parsed and clamped integer.
-        """
-        try:
-            v = int(value)
-        except Exception:
-            v = default
-
-        if v < min_value:
-            v = min_value
-        if v > max_value:
-            v = max_value
-
-        return v
 
     @staticmethod
     def apply_gate(*, fluorescence_values: np.ndarray, scattering_values: np.ndarray, threshold: float) -> np.ndarray:

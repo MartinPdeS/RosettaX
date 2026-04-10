@@ -8,18 +8,6 @@ class RuntimeConfig:
     _instance: ClassVar[Optional["RuntimeConfig"]] = None
     _initialized: ClassVar[bool] = False
 
-    debug: bool = False
-
-    # Fluorescence calibration page, visibility
-    fluorescence_show_scattering_controls: bool = True
-    fluorescence_show_threshold_controls: bool = True
-    fluorescence_show_fluorescence_controls: bool = True
-
-    # Fluorescence calibration page, debug outputs
-    fluorescence_debug_scattering: bool = False
-    fluorescence_debug_fluorescence: bool = False
-    fluorescence_debug_load: bool = False
-
     # General analysis parameters
     max_events_for_analysis: Optional[int] = 200_000
     n_bins_for_plots: Optional[int] = 400
@@ -35,10 +23,10 @@ class RuntimeConfig:
     # Optical properties for Mie theory calculations
     particle_diameter_nm: float = 100
     particle_refractive_index: float = 1.59
-    medium_index: float = 1.33
+    medium_refractive_index: float = 1.33
 
-    core_index: float = 1.59
-    shell_index: float = 1.40
+    core_refractive_index: float = 1.59
+    shell_refractive_index: float = 1.40
     shell_thickness_nm: float = 20
     core_diameter_nm: float = 100
 
@@ -88,32 +76,3 @@ class RuntimeConfig:
         except Exception as error:
             print(f"Error loading JSON config: {error}")
             return {}
-
-
-
-# _runtime_config: Optional[RuntimeConfig] = None
-
-# def get_runtime_config() -> RuntimeConfig:
-#     global _runtime_config
-#     if _runtime_config is None:
-#         _runtime_config = RuntimeConfig()
-#         _runtime_config.apply_policy()
-#     return _runtime_config
-
-# def update_runtime_config(**kwargs) -> None:
-#     """
-#     Update the runtime configuration with new values. This function takes keyword arguments corresponding to the fields of the RuntimeConfig dataclass. Only fields that are explicitly provided will be updated; others will remain unchanged.
-#     """
-#     global _runtime_config
-#     global _loaded_already
-#     if _runtime_config is None:
-#         _runtime_config = RuntimeConfig()
-#         if not _loaded_already:
-#             _runtime_config.load_json("default_profile.json")
-#             _loaded_already = True
-
-#     for key, value in kwargs.items():
-#         setattr(_runtime_config, key, value)
-#         _runtime_config.mark_explicit(key)
-
-#     _runtime_config.apply_policy()

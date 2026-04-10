@@ -2,10 +2,11 @@
 
 from dash import html
 
-from RosettaX.pages.calibrate.ids import Ids
-
-
 class HeaderSection:
+    def __init__(self, page) -> None:
+        self.page = page
+
+
     def get_layout(self) -> html.Div:
         return html.Div(
             [
@@ -15,6 +16,9 @@ class HeaderSection:
                     style={"opacity": 0.85, "marginBottom": "0px"},
                 ),
             ],
-            id=Ids.Header.container,
+            id=self.page.ids.Header.container,
             style={"paddingTop": "24px"},
         )
+
+    def _register_callbacks(self) -> None:
+        pass

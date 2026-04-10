@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Any
 import dash_bootstrap_components as dbc
 from dash import Input, Output, State, callback, dcc, html
@@ -6,7 +5,7 @@ from dash import Input, Output, State, callback, dcc, html
 from RosettaX.pages.settings.ids import Ids
 from RosettaX.pages.settings.utils import create_profile
 
-class CreateProfilePage():
+class CreateSection():
     """
     Section 1: Load an FCS file and initialize the detector dropdowns.
 
@@ -20,8 +19,10 @@ class CreateProfilePage():
 
     This section is the sole owner of detector dropdown Outputs.
     """
+    def __init__(self, page) -> None:
+        self.page = page
 
-    def _create_profile_get_layout(self) -> dbc.Card:
+    def _get_layout(self) -> dbc.Card:
         """
         Build the layout for the load section and inject an initial file path store.
         """
@@ -47,12 +48,12 @@ class CreateProfilePage():
                         ),
 
                     ],
-                    style=self.card_body_scroll,
+                    style=self.page.style["card_body_scroll"],
                 ),
             ]
         )
 
-    def _create_profile_register_callbacks(self) -> None:
+    def _register_callbacks(self) -> None:
         """
         Register callbacks for:
         - showing filename

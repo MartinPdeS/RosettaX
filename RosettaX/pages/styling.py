@@ -4,16 +4,6 @@ CONTENT = {
         "padding": "2rem 1rem",
 }
 
-# SIDEBAR = {
-#     "position": "fixed",
-#     "top": 0,
-#     "left": 0,
-#     "bottom": 0,
-#     "width": "380px",
-#     "minWidth": "380px",
-#     "padding": "2rem 1rem",
-# }
-
 SIDEBAR = {
     "position": "fixed",
     "top": 0,

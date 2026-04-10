@@ -1,9 +1,7 @@
 from pathlib import Path
 import json
 
-profile_directory = Path(__file__).parent.parent.parent / "profiles"
-
-default_profile_location = profile_directory / "default_profile.json"
+from RosettaX.utils.directories import default_profile_location, profile_directory
 
 assert default_profile_location.exists(), f"Default profile not found at {default_profile_location}. Please ensure that the default profile exists and is located at the correct path."
 

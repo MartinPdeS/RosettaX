@@ -9,8 +9,8 @@ from dash import Input, Output, dcc, html
 
 from RosettaX.pages import styling
 from RosettaX.pages.sidebar.main import sidebar_html
-from RosettaX.parser import _parse_args
-from RosettaX.pages.runtime_config import RuntimeConfig
+from RosettaX.utils.parser import _parse_args
+from RosettaX.utils.runtime_config import RuntimeConfig
 
 class RosettaXApplication:
     """

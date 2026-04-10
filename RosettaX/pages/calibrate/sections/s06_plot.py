@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from dataclasses import dataclass
-from typing import Any, Optional, Tuple
+from typing import Any, Optional
 
 import numpy as np
 import dash
@@ -9,7 +9,6 @@ import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
 from dash import dcc, html
 
-from RosettaX.pages.calibrate.ids import Ids
 from RosettaX.utils.reader import FCSFile
 
 
@@ -18,7 +17,6 @@ class PlotResult:
     """
     Container for the Dash outputs of the plot callback.
     """
-
     figure: Any = dash.no_update
     status: Any = dash.no_update
     channel_value: Any = dash.no_update
@@ -28,6 +26,9 @@ class PlotResult:
 
 
 class PlotSection:
+    def __init__(self, page) -> None:
+        self.page = page
+
     def get_layout(self) -> dbc.Card:
         return dbc.Card(
             [
@@ -37,13 +38,13 @@ class PlotSection:
                         self._controls_row(),
                         html.Div(style={"height": "10px"}),
                         dcc.Loading(
-                            dcc.Graph(id=Ids.Plot.graph, style={"height": "360px"}),
+                            dcc.Graph(id=self.page.ids.Plot.graph, style={"height": "360px"}),
                             type="default",
                         ),
                         html.Div(style={"height": "10px"}),
                         dbc.Alert(
                             "Upload an FCS file, then pick a channel to plot.",
-                            id=Ids.Plot.status,
+                            id=self.page.ids.Plot.status,
                             color="secondary",
                             style={"marginBottom": "0px"},
                         ),
@@ -59,7 +60,7 @@ class PlotSection:
                     [
                         html.Div("Channel", style={"marginBottom": "6px"}),
                         dcc.Dropdown(
-                            id=Ids.Plot.channel_dropdown,
+                            id=self.page.ids.Plot.channel_dropdown,
                             options=[],
                             value=None,
                             placeholder="Select channel to plot",
@@ -73,7 +74,7 @@ class PlotSection:
                     [
                         html.Div("Bins", style={"marginBottom": "6px"}),
                         dcc.Input(
-                            id=Ids.Plot.nbins_input,
+                            id=self.page.ids.Plot.nbins_input,
                             type="number",
                             min=10,
                             step=10,
@@ -87,7 +88,7 @@ class PlotSection:
                     [
                         html.Div("Max events", style={"marginBottom": "6px"}),
                         dcc.Input(
-                            id=Ids.Plot.max_events_input,
+                            id=self.page.ids.Plot.max_events_input,
                             type="number",
                             min=1_000,
                             step=10_000,
@@ -101,7 +102,7 @@ class PlotSection:
                     [
                         html.Div("Counts scale", style={"marginBottom": "6px"}),
                         dbc.Checklist(
-                            id=Ids.Plot.yscale_switch,
+                            id=self.page.ids.Plot.yscale_switch,
                             options=[{"label": "Log", "value": "log"}],
                             value=["log"],
                             switch=True,
@@ -114,10 +115,10 @@ class PlotSection:
             style={"display": "flex", "gap": "14px", "alignItems": "flexEnd", "flexWrap": "wrap"},
         )
 
-    def register_callbacks(self) -> None:
+    def _register_callbacks(self) -> None:
         @dash.callback(
-            dash.Output(Ids.Plot.channel_dropdown, "options"),
-            dash.Input(Ids.Stores.uploaded_fcs_path_store, "data"),
+            dash.Output(self.page.ids.Plot.channel_dropdown, "options"),
+            dash.Input(self.page.ids.Stores.uploaded_fcs_path_store, "data"),
             prevent_initial_call=True,
         )
         def populate_plot_channels(fcs_path: Optional[str]) -> list[dict[str, str]]:
@@ -133,14 +134,14 @@ class PlotSection:
             return [{"label": n, "value": n} for n in names]
 
         @dash.callback(
-            dash.Output(Ids.Plot.graph, "figure"),
-            dash.Output(Ids.Plot.status, "children"),
-            dash.Output(Ids.Plot.channel_dropdown, "value"),
-            dash.Input(Ids.Stores.uploaded_fcs_path_store, "data"),
-            dash.Input(Ids.Plot.channel_dropdown, "value"),
-            dash.Input(Ids.Plot.nbins_input, "value"),
-            dash.Input(Ids.Plot.max_events_input, "value"),
-            dash.Input(Ids.Plot.yscale_switch, "value"),
+            dash.Output(self.page.ids.Plot.graph, "figure"),
+            dash.Output(self.page.ids.Plot.status, "children"),
+            dash.Output(self.page.ids.Plot.channel_dropdown, "value"),
+            dash.Input(self.page.ids.Stores.uploaded_fcs_path_store, "data"),
+            dash.Input(self.page.ids.Plot.channel_dropdown, "value"),
+            dash.Input(self.page.ids.Plot.nbins_input, "value"),
+            dash.Input(self.page.ids.Plot.max_events_input, "value"),
+            dash.Input(self.page.ids.Plot.yscale_switch, "value"),
             prevent_initial_call=True,
         )
         def update_plot(

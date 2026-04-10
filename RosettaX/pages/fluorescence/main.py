@@ -1,45 +1,24 @@
 import dash
-from dash import dcc, html
 
-from RosettaX.pages.fluorescence import service
 from RosettaX.pages.fluorescence.ids import Ids
 from RosettaX.pages.fluorescence import sections
 
-class FluorescentCalibrationPage(
-    sections.LoadSection,
-    sections.ScatteringSection,
-    sections.PeaksSection,
-    sections.CalibrationSection,
-    sections.SaveSection
-):
+class FluorescencePage():
     def __init__(self) -> None:
         self.ids = Ids()
 
-        self.card_body_scroll = {"maxHeight": "60vh", "overflowY": "auto"}
-        self.graph_style = {"width": "100%", "height": "45vh"}
+        self.style = {
+            "body_scroll": {"maxHeight": "80vh", "overflowY": "auto"},
+            "graph": {"width": "100%", "height": "60vh"},
+        }
 
-        self.scatter_keywords = [
-            "scatter",
-            "fsc",
-            "ssc",
-            "sals",
-            "lals",
-            "mals",
-            "405ls",
-            "488ls",
-            "638ls",
-            "fs-a",
-            "fs-h",
-            "ss-a",
-            "ss-h",
+        self.sections = [
+            sections.LoadSection(page=self),
+            sections.ScatteringSection(page=self),
+            sections.PeaksSection(page=self),
+            sections.CalibrationSection(page=self),
+            sections.SaveSection(page=self)
         ]
-
-        self.non_valid_keywords = ["time", "width", "diameter", "cross section"]
-
-        self.file_state = service.FileStateRefresher(
-            scatter_keywords=self.scatter_keywords,
-            non_valid_keywords=self.non_valid_keywords,
-        )
 
         self.backend = None
 
@@ -53,38 +32,32 @@ class FluorescentCalibrationPage(
             The page instance, returned for chaining purposes.
         """
         dash.register_page(__name__, path="/fluorescent_calibration", name="Fluorescence", order=1)
-        self._load_register_callbacks()
-        self._scattering_register_callbacks()
-        self._fluorescence_register_callbacks()
-        self._calibration_register_callbacks()
-        self._save_register_callbacks()
+
+        for section in self.sections:
+            section._register_callbacks()
         return self
 
-    def layout(self) -> html.Div:
+    def layout(self) -> dash.html.Div:
         """
         The layout is defined here in the main page file since it composes sections that are defined across multiple files.
 
         Returns
         -------
-        html.Div
+        dash.html.Div
             The layout of the fluorescent calibration page, composed of multiple sections.
         """
-        return html.Div(
+        return dash.html.Div(
             [
-                dcc.Store(id=self.ids.Load.uploaded_fcs_path_store, storage_type="session"),
-                dcc.Store(id=self.ids.Calibration.calibration_store, storage_type="session"),
-                dcc.Store(id=self.ids.Scattering.threshold_store, storage_type="session"),
-                dcc.Store(id=self.ids.Fluorescence.hist_store, storage_type="memory"),
-                dcc.Store(id=self.ids.Fluorescence.source_channel_store, storage_type="memory"),
-                dcc.Store(id=self.ids.Fluorescence.peak_lines_store, storage_type="memory"),
-                html.H1("Fluorescent Calibration"),
-                html.Br(),
-                self._load_get_layout(),
-                self._scattering_get_layout(),
-                self._fluorescence_get_layout(),
-                self._calibration_get_layout(),
-                self._save_get_layout(),
+                dash.dcc.Store(id=self.ids.Load.uploaded_fcs_path_store, storage_type="session"),
+                dash.dcc.Store(id=self.ids.Calibration.calibration_store, storage_type="session"),
+                dash.dcc.Store(id=self.ids.Scattering.threshold_store, storage_type="session"),
+                dash.dcc.Store(id=self.ids.Fluorescence.hist_store, storage_type="memory"),
+                dash.dcc.Store(id=self.ids.Fluorescence.source_channel_store, storage_type="memory"),
+                dash.dcc.Store(id=self.ids.Fluorescence.peak_lines_store, storage_type="memory"),
+                dash.html.H1("Fluorescent Calibration"),
+                dash.html.Br(),
+                *[section.get_layout() for section in self.sections]
             ]
         )
 
-layout = FluorescentCalibrationPage().register().layout()
+layout = FluorescencePage().register().layout()

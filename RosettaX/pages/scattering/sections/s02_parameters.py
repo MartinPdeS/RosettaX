@@ -3,7 +3,7 @@ from typing import Any, Optional, Sequence
 import dash
 import dash_bootstrap_components as dbc
 
-from RosettaX.pages.runtime_config import RuntimeConfig
+from RosettaX.utils.runtime_config import RuntimeConfig
 
 
 class ParametersSection:
@@ -22,7 +22,10 @@ class ParametersSection:
     `ids.Parameters.mie_model_parameters_container`.
     """
 
-    def _parameters_get_layout(self) -> dbc.Card:
+    def __init__(self, page) -> None:
+        self.page = page
+
+    def _get_layout(self) -> dbc.Card:
         """
         Build the card layout for the parameters section.
 
@@ -32,7 +35,7 @@ class ParametersSection:
             Card containing the particle type selector, the dynamic parameters block,
             and the calibrate button.
         """
-        ids = self.ids
+        ids = self.page.ids
 
         return dbc.Card(
             [
@@ -41,19 +44,19 @@ class ParametersSection:
                     dbc.CardBody(
                         dash.html.Div(
                             [
-                                self._parameters_build_particle_type_row(),
+                                self._build_particle_type_row(),
                                 dash.html.Div(id=ids.Parameters.mie_model_parameters_container),
-                                self._parameters_build_calibrate_button(),
+                                self._build_calibrate_button(),
                             ]
                         )
                     ),
-                    id=self.ids.collapse_example,
+                    id=self.page.ids.collapse_example,
                     is_open=True,
                 ),
             ]
         )
 
-    def _parameters_register_callbacks(self) -> None:
+    def _register_callbacks(self) -> None:
         """
         Register Dash callbacks for this section.
 
@@ -66,24 +69,24 @@ class ParametersSection:
         ---------
         Call once during app startup.
         """
-        self._parameters_register_render_callbacks()
-        self._parameters_register_refractive_index_callbacks()
+        self._register_render_callbacks()
+        self._register_refractive_index_callbacks()
 
-    def _parameters_register_render_callbacks(self) -> None:
+    def _register_render_callbacks(self) -> None:
         """
         Register callbacks that render the dynamic parameter block.
         """
         @dash.callback(
-            dash.Output(self.ids.Parameters.mie_model_parameters_container, "children"),
-            dash.Input(self.ids.Parameters.mie_model, "value"),
+            dash.Output(self.page.ids.Parameters.mie_model_parameters_container, "children"),
+            dash.Input(self.page.ids.Parameters.mie_model, "value"),
             prevent_initial_call=False,
         )
-        def _parameters_render_mie_model_parameters(mie_model_value: Optional[str]):
+        def _render_mie_model_parameters(mie_model_value: Optional[str]):
             if mie_model_value == "Core/Shell Sphere":
-                return self._parameters_build_core_shell_parameters_block()
-            return self._parameters_build_solid_sphere_parameters_block()
+                return self._build_core_shell_parameters_block()
+            return self._build_solid_sphere_parameters_block()
 
-    def _parameters_register_refractive_index_callbacks(self) -> None:
+    def _register_refractive_index_callbacks(self) -> None:
         """
         Register callbacks that apply preset dropdown selections to numeric RI inputs.
 
@@ -92,48 +95,48 @@ class ParametersSection:
         The preset dropdown is a convenience input.
         The numeric input always holds the effective value used by computation.
         """
-        def _parameters_apply_preset_value(preset_value: Any, current_value: Any):
+        def _apply_preset_value(preset_value: Any, current_value: Any):
             if preset_value is None:
                 return current_value
             return float(preset_value)
 
         @dash.callback(
-            dash.Output(self.ids.Parameters.medium_index_custom, "value"),
-            dash.Input(self.ids.Parameters.medium_index_source, "value"),
-            dash.State(self.ids.Parameters.medium_index_custom, "value"),
+            dash.Output(self.page.ids.Parameters.medium_refractive_index_custom, "value"),
+            dash.Input(self.page.ids.Parameters.medium_refractive_index_source, "value"),
+            dash.State(self.page.ids.Parameters.medium_refractive_index_custom, "value"),
             prevent_initial_call=True,
         )
-        def _parameters_apply_medium_preset(preset_value: Any, current_value: Any):
-            return _parameters_apply_preset_value(preset_value, current_value)
+        def _apply_medium_preset(preset_value: Any, current_value: Any):
+            return _apply_preset_value(preset_value, current_value)
 
         @dash.callback(
-            dash.Output(self.ids.Parameters.particle_index_custom, "value"),
-            dash.Input(self.ids.Parameters.particle_index_source, "value"),
-            dash.State(self.ids.Parameters.particle_index_custom, "value"),
+            dash.Output(self.page.ids.Parameters.particle_refractive_index_custom, "value"),
+            dash.Input(self.page.ids.Parameters.particle_refractive_index_source, "value"),
+            dash.State(self.page.ids.Parameters.particle_refractive_index_custom, "value"),
             prevent_initial_call=True,
         )
-        def _parameters_apply_particle_preset(preset_value: Any, current_value: Any):
-            return _parameters_apply_preset_value(preset_value, current_value)
+        def _apply_particle_preset(preset_value: Any, current_value: Any):
+            return _apply_preset_value(preset_value, current_value)
 
         @dash.callback(
-            dash.Output(self.ids.Parameters.core_index_custom, "value"),
-            dash.Input(self.ids.Parameters.core_index_source, "value"),
-            dash.State(self.ids.Parameters.core_index_custom, "value"),
+            dash.Output(self.page.ids.Parameters.core_refractive_index_custom, "value"),
+            dash.Input(self.page.ids.Parameters.core_refractive_index_source, "value"),
+            dash.State(self.page.ids.Parameters.core_refractive_index_custom, "value"),
             prevent_initial_call=True,
         )
-        def _parameters_apply_core_preset(preset_value: Any, current_value: Any):
-            return _parameters_apply_preset_value(preset_value, current_value)
+        def _apply_core_preset(preset_value: Any, current_value: Any):
+            return _apply_preset_value(preset_value, current_value)
 
         @dash.callback(
-            dash.Output(self.ids.Parameters.shell_index_custom, "value"),
-            dash.Input(self.ids.Parameters.shell_index_source, "value"),
-            dash.State(self.ids.Parameters.shell_index_custom, "value"),
+            dash.Output(self.page.ids.Parameters.shell_refractive_index_custom, "value"),
+            dash.Input(self.page.ids.Parameters.shell_refractive_index_source, "value"),
+            dash.State(self.page.ids.Parameters.shell_refractive_index_custom, "value"),
             prevent_initial_call=True,
         )
-        def _parameters_apply_shell_preset(preset_value: Any, current_value: Any):
-            return _parameters_apply_preset_value(preset_value, current_value)
+        def _apply_shell_preset(preset_value: Any, current_value: Any):
+            return _apply_preset_value(preset_value, current_value)
 
-    def _parameters_build_particle_type_row(self) -> dash.html.Div:
+    def _build_particle_type_row(self) -> dash.html.Div:
         """
         Build the "Particle Type" selector row.
 
@@ -142,13 +145,13 @@ class ParametersSection:
         dash.html.Div
             Inline row with label and dropdown selector.
         """
-        ids = self.ids
+        ids = self.page.ids
 
-        return self._parameters_inline_row(
+        return self._inline_row(
             "Particle Type:",
             dash.dcc.Dropdown(
                 id=ids.Parameters.mie_model,
-                options=self._parameters_get_mie_model_options(),
+                options=self._get_mie_model_options(),
                 value="Solid Sphere",
                 clearable=False,
                 searchable=False,
@@ -157,7 +160,7 @@ class ParametersSection:
             margin_top=False,
         )
 
-    def _parameters_build_calibrate_button(self) -> dash.html.Button:
+    def _build_calibrate_button(self) -> dash.html.Button:
         """
         Build the calibrate button.
 
@@ -168,12 +171,12 @@ class ParametersSection:
         """
         return dash.html.Button(
             "Calibrate",
-            id=self.ids.calibrate_example_btn,
+            id=self.page.ids.calibrate_example_btn,
             n_clicks=0,
             style={"marginTop": "8px"},
         )
 
-    def _parameters_get_mie_model_options(self) -> list[dict]:
+    def _get_mie_model_options(self) -> list[dict]:
         """
         Options for the particle type dropdown.
 
@@ -187,7 +190,7 @@ class ParametersSection:
             {"label": "Core/Shell Sphere", "value": "Core/Shell Sphere"},
         ]
 
-    def _parameters_build_common_medium_parameters_rows(self) -> list:
+    def _build_common_medium_parameters_rows(self) -> list:
         """
         Build the shared medium refractive index row.
 
@@ -199,16 +202,16 @@ class ParametersSection:
         runtime_config = RuntimeConfig()
 
         return [
-            self._parameters_refractive_index_picker(
+            self._refractive_index_picker(
                 label="Medium Refractive Index:",
-                preset_id=self.ids.Parameters.medium_index_source,
-                value_id=self.ids.Parameters.medium_index_custom,
-                default_value=getattr(runtime_config, "default_medium_index", 1.333),
-                preset_options=self._parameters_get_medium_refractive_index_presets(),
+                preset_id=self.page.ids.Parameters.medium_refractive_index_source,
+                value_id=self.page.ids.Parameters.medium_refractive_index_custom,
+                default_value=getattr(runtime_config, "medium_refractive_index", 1.333),
+                preset_options=self._get_medium_refractive_index_presets(),
             )
         ]
 
-    def _parameters_get_medium_refractive_index_presets(self) -> list[dict]:
+    def _get_medium_refractive_index_presets(self) -> list[dict]:
         """
         Preset options for medium refractive index.
 
@@ -222,7 +225,7 @@ class ParametersSection:
             {"label": "PBS 1.335", "value": 1.335},
         ]
 
-    def _parameters_get_particle_refractive_index_presets(self) -> list[dict]:
+    def _get_particle_refractive_index_presets(self) -> list[dict]:
         """
         Preset options for particle refractive index (solid sphere).
 
@@ -238,7 +241,7 @@ class ParametersSection:
             {"label": "Lipid 1.47", "value": 1.47},
         ]
 
-    def _parameters_get_core_refractive_index_presets(self) -> list[dict]:
+    def _get_core_refractive_index_presets(self) -> list[dict]:
         """
         Preset options for core refractive index (core shell).
 
@@ -253,7 +256,7 @@ class ParametersSection:
             {"label": "Silica 1.45", "value": 1.45},
         ]
 
-    def _parameters_get_shell_refractive_index_presets(self) -> list[dict]:
+    def _get_shell_refractive_index_presets(self) -> list[dict]:
         """
         Preset options for shell refractive index (core shell).
 
@@ -267,7 +270,7 @@ class ParametersSection:
             {"label": "Waterlike 1.33", "value": 1.33},
         ]
 
-    def _parameters_build_solid_sphere_parameters_block(self) -> dash.html.Div:
+    def _build_solid_sphere_parameters_block(self) -> dash.html.Div:
         """
         Build the parameter block for a homogeneous solid sphere Mie model.
 
@@ -278,29 +281,29 @@ class ParametersSection:
         """
         runtime_config = RuntimeConfig()
 
-        diameter_row = self._parameters_build_numeric_input_row(
+        diameter_row = self._build_numeric_input_row(
             label="Particle Diameter (nm):",
-            component_id=self.ids.Parameters.particle_diameter,
+            component_id=self.page.ids.Parameters.particle_diameter,
             placeholder="Particle Diameter (nm)",
-            value=runtime_config.default_particle_diameter_nm,
+            value=runtime_config.particle_diameter_nm,
             min_value=1,
             step=1,
             width_px=220,
         )
 
-        particle_index_row = self._parameters_refractive_index_picker(
+        particle_refractive_index_row = self._refractive_index_picker(
             label="Particle Refractive Index:",
-            preset_id=self.ids.Parameters.particle_index_source,
-            value_id=self.ids.Parameters.particle_index_custom,
-            default_value=runtime_config.default_particle_index,
-            preset_options=self._parameters_get_particle_refractive_index_presets(),
+            preset_id=self.page.ids.Parameters.particle_refractive_index_source,
+            value_id=self.page.ids.Parameters.particle_refractive_index_custom,
+            default_value=runtime_config.particle_refractive_index,
+            preset_options=self._get_particle_refractive_index_presets(),
         )
 
-        common_rows = self._parameters_build_common_medium_parameters_rows()
+        common_rows = self._build_common_medium_parameters_rows()
 
-        return dash.html.Div([*common_rows, particle_index_row, diameter_row])
+        return dash.html.Div([*common_rows, particle_refractive_index_row, diameter_row])
 
-    def _parameters_build_core_shell_parameters_block(self) -> dash.html.Div:
+    def _build_core_shell_parameters_block(self) -> dash.html.Div:
         """
         Build the parameter block for a concentric core shell sphere Mie model.
 
@@ -311,39 +314,39 @@ class ParametersSection:
         """
         runtime_config = RuntimeConfig()
 
-        common_rows = self._parameters_build_common_medium_parameters_rows()
+        common_rows = self._build_common_medium_parameters_rows()
 
-        core_index_row = self._parameters_refractive_index_picker(
+        core_index_row = self._refractive_index_picker(
             label="Particle Core Refractive Index:",
-            preset_id=self.ids.Parameters.core_index_source,
-            value_id=self.ids.Parameters.core_index_custom,
-            default_value=runtime_config.default_core_index,
-            preset_options=self._parameters_get_core_refractive_index_presets(),
+            preset_id=self.page.ids.Parameters.core_refractive_index_source,
+            value_id=self.page.ids.Parameters.core_refractive_index_custom,
+            default_value=runtime_config.core_refractive_index,
+            preset_options=self._get_core_refractive_index_presets(),
         )
 
-        shell_index_row = self._parameters_refractive_index_picker(
+        shell_index_row = self._refractive_index_picker(
             label="Particle Shell Refractive Index:",
-            preset_id=self.ids.Parameters.shell_index_source,
-            value_id=self.ids.Parameters.shell_index_custom,
-            default_value=runtime_config.default_shell_index,
-            preset_options=self._parameters_get_shell_refractive_index_presets(),
+            preset_id=self.page.ids.Parameters.shell_refractive_index_source,
+            value_id=self.page.ids.Parameters.shell_refractive_index_custom,
+            default_value=runtime_config.shell_refractive_index,
+            preset_options=self._get_shell_refractive_index_presets(),
         )
 
-        core_diameter_row = self._parameters_build_numeric_input_row(
+        core_diameter_row = self._build_numeric_input_row(
             label="Particle Core Diameter (nm):",
-            component_id=self.ids.Parameters.core_diameter,
+            component_id=self.page.ids.Parameters.core_diameter,
             placeholder="Particle Core Diameter (nm)",
-            value=runtime_config.default_core_diameter_nm,
+            value=runtime_config.core_diameter_nm,
             min_value=1,
             step=1,
             width_px=220,
         )
 
-        shell_thickness_row = self._parameters_build_numeric_input_row(
+        shell_thickness_row = self._build_numeric_input_row(
             label="Particle Shell Thickness (nm):",
-            component_id=self.ids.Parameters.shell_thickness,
+            component_id=self.page.ids.Parameters.shell_thickness,
             placeholder="Particle Shell Thickness (nm)",
-            value=runtime_config.default_shell_thickness_nm,
+            value=runtime_config.shell_thickness_nm,
             min_value=0,
             step=1,
             width_px=220,
@@ -359,7 +362,7 @@ class ParametersSection:
             ]
         )
 
-    def _parameters_build_numeric_input_row(
+    def _build_numeric_input_row(
         self,
         *,
         label: str,
@@ -394,7 +397,7 @@ class ParametersSection:
         dash.html.Div
             A row containing the label and numeric input.
         """
-        return self._parameters_inline_row(
+        return self._inline_row(
             label,
             dash.dcc.Input(
                 id=component_id,
@@ -408,7 +411,7 @@ class ParametersSection:
             ),
         )
 
-    def _parameters_refractive_index_picker(
+    def _refractive_index_picker(
         self,
         *,
         label: str,
@@ -448,9 +451,10 @@ class ParametersSection:
         """
         preset_dropdown = dash.dcc.Dropdown(
             id=preset_id,
-            options=[{"label": preset_placeholder_label, "value": None}, *list(preset_options)],
+            options=list(preset_options),
             value=None,
-            clearable=False,
+            placeholder=preset_placeholder_label,
+            clearable=True,
             searchable=False,
             style={"width": "220px", "marginRight": "10px"},
         )
@@ -470,9 +474,9 @@ class ParametersSection:
             style={"display": "flex", "alignItems": "center"},
         )
 
-        return self._parameters_inline_row(label, control)
+        return self._inline_row(label, control)
 
-    def _parameters_inline_row(self, label: str, control, *, margin_top: bool = True) -> dash.html.Div:
+    def _inline_row(self, label: str, control, *, margin_top: bool = True) -> dash.html.Div:
         """
         Create a single label + control row with strict alignment.
 

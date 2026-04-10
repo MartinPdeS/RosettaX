@@ -3,26 +3,31 @@ import dash
 from RosettaX.pages.scattering.ids import Ids
 from RosettaX.pages.scattering import sections
 
-class ScatterCalibrationPage(
-    sections.LoadSection,
-    sections.ParametersSection,
-    sections.ExportSection
-):
+class ScatterCalibrationPage():
     def __init__(self) -> None:
         self.ids = Ids()
 
-        self.scroll_style = {"maxHeight": "60vh", "overflowY": "auto"}
-        self.row_style = {"display": "flex", "alignItems": "center", "gap": "10px", "marginTop": "8px"}
-        self.label_style = {"minWidth": "160px"}
+        self.style = {
+            "body_scroll": {"maxHeight": "80vh", "overflowY": "auto"},
+            "graph": {"width": "100%", "height": "60vh"},
+            "row": {"display": "flex", "alignItems": "center", "gap": "10px", "marginTop": "8px"},
+            "label": {"minWidth": "160px"},
+            "card_body_scroll": {"maxHeight": "60vh", "overflowY": "auto"},
+        }
 
-        self.card_body_scroll = {"maxHeight": "60vh", "overflowY": "auto"}
-        self.graph_style = {"width": "100%", "height": "45vh"}
+        self.sections = [
+            sections.LoadSection(page=self),
+            sections.ParametersSection(page=self),
+            sections.CalibrationSection(page=self),
+            sections.SaveSection(page=self)
+        ]
 
     def register(self) -> "ScatterCalibrationPage":
         dash.register_page(__name__, path="/scatter_calibration", name="Scattering", order=2)
-        self._load_register_callbacks()
-        self._parameters_register_callbacks()
-        # self._export_register_callbacks()
+
+        for section in self.sections:
+            section._register_callbacks()
+
         return self
 
     def layout(self) -> dash.html.Div:
@@ -38,9 +43,7 @@ class ScatterCalibrationPage(
             [
                 dash.html.H1("Scattering Calibration"),
                 dash.html.Br(),
-                self._load_get_layout(),
-                self._parameters_get_layout(),
-                self._export_get_layout(),
+                *[section._get_layout() for section in self.sections],
             ]
         )
 
