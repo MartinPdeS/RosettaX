@@ -386,6 +386,26 @@ class PeaksSection:
             return float(threshold_value)
 
         @dash.callback(
+            dash.Output(self.page.ids.Fluorescence.peak_count_input, "value"),
+            dash.Output(self.page.ids.Fluorescence.nbins_input, "value"),
+            dash.Input("runtime-config-store", "data"),
+            prevent_initial_call=False,
+        )
+        def sync_controls_from_runtime_store(runtime_config_data):
+            runtime_config = RuntimeConfig()
+
+            if not isinstance(runtime_config_data, dict):
+                return (
+                    runtime_config.peak_count,
+                    runtime_config.n_bins_for_plots,
+                )
+
+            return (
+                runtime_config_data.get("peak_count", runtime_config.peak_count),
+                runtime_config_data.get("n_bins_for_plots", runtime_config.n_bins_for_plots),
+            )
+
+        @dash.callback(
             dash.Output(self.page.ids.Fluorescence.graph_toggle_container, "style"),
             dash.Input(self.page.ids.Fluorescence.graph_toggle_switch, "value"),
             prevent_initial_call=False,

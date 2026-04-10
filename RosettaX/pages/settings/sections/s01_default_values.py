@@ -3,16 +3,30 @@ from typing import Any
 from dash import html
 import dash_bootstrap_components as dbc
 from dash import Input, Output, State, callback, dcc, html
-from RosettaX.pages.settings.ids import Ids
 
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.pages.settings.utils import list_setting_files, get_saved_profile, save_profile
 import re
 
 
-class DefaultSection():
+class DefaultSection:
     def __init__(self, page) -> None:
         self.page = page
+        self.persistence_type = "session"
+
+    def _persistent_input(self, **kwargs):
+        return dcc.Input(
+            persistence=True,
+            persistence_type=self.persistence_type,
+            **kwargs,
+        )
+
+    def _persistent_dropdown(self, **kwargs):
+        return dcc.Dropdown(
+            persistence=True,
+            persistence_type=self.persistence_type,
+            **kwargs,
+        )
 
     def _get_layout(self):
         runtime_config = RuntimeConfig()
@@ -24,8 +38,8 @@ class DefaultSection():
                     [
                         self._setting_row(
                             "Medium Refractive Index:",
-                            dcc.Input(
-                                id=Ids.Default.medium_refractive_index,
+                            self._persistent_input(
+                                id=self.page.ids.Default.medium_refractive_index,
                                 type="number",
                                 value=runtime_config.medium_refractive_index,
                                 step=0.001,
@@ -36,8 +50,8 @@ class DefaultSection():
                         ),
                         self._setting_row(
                             "Core Refractive Index:",
-                            dcc.Input(
-                                id=Ids.Default.core_refractive_index,
+                            self._persistent_input(
+                                id=self.page.ids.Default.core_refractive_index,
                                 type="number",
                                 value=runtime_config.core_refractive_index,
                                 step=0.001,
@@ -48,8 +62,8 @@ class DefaultSection():
                         ),
                         self._setting_row(
                             "Shell Refractive Index:",
-                            dcc.Input(
-                                id=Ids.Default.shell_refractive_index,
+                            self._persistent_input(
+                                id=self.page.ids.Default.shell_refractive_index,
                                 type="number",
                                 value=runtime_config.shell_refractive_index,
                                 step=0.001,
@@ -60,8 +74,8 @@ class DefaultSection():
                         ),
                         self._setting_row(
                             "Shell Thickness (nm):",
-                            dcc.Input(
-                                id=Ids.Default.shell_thickness_nm,
+                            self._persistent_input(
+                                id=self.page.ids.Default.shell_thickness_nm,
                                 type="number",
                                 value=runtime_config.shell_thickness_nm,
                                 step=0.01,
@@ -72,8 +86,8 @@ class DefaultSection():
                         ),
                         self._setting_row(
                             "Core Diameter (nm):",
-                            dcc.Input(
-                                id=Ids.Default.core_diameter_nm,
+                            self._persistent_input(
+                                id=self.page.ids.Default.core_diameter_nm,
                                 type="number",
                                 value=runtime_config.core_diameter_nm,
                                 step=0.01,
@@ -84,8 +98,8 @@ class DefaultSection():
                         ),
                         self._setting_row(
                             "Particle diameter (nm):",
-                            dcc.Input(
-                                id=Ids.Default.particle_diameter_nm,
+                            self._persistent_input(
+                                id=self.page.ids.Default.particle_diameter_nm,
                                 type="number",
                                 value=runtime_config.particle_diameter_nm,
                                 step=1,
@@ -96,8 +110,8 @@ class DefaultSection():
                         ),
                         self._setting_row(
                             "Particle refractive index:",
-                            dcc.Input(
-                                id=Ids.Default.particle_refractive_index,
+                            self._persistent_input(
+                                id=self.page.ids.Default.particle_refractive_index,
                                 type="number",
                                 value=runtime_config.particle_refractive_index,
                                 step=0.001,
@@ -108,8 +122,8 @@ class DefaultSection():
                         ),
                         self._setting_row(
                             "Max events for analysis:",
-                            dcc.Input(
-                                id=Ids.Default.max_events_for_analysis,
+                            self._persistent_input(
+                                id=self.page.ids.Default.max_events_for_analysis,
                                 value=runtime_config.max_events_for_analysis,
                                 type="number",
                                 step=1,
@@ -119,8 +133,8 @@ class DefaultSection():
                         ),
                         self._setting_row(
                             "Number of bins for plots:",
-                            dcc.Input(
-                                id=Ids.Default.n_bins_for_plots,
+                            self._persistent_input(
+                                id=self.page.ids.Default.n_bins_for_plots,
                                 value=runtime_config.n_bins_for_plots,
                                 type="number",
                                 step=10,
@@ -130,8 +144,8 @@ class DefaultSection():
                         ),
                         self._setting_row(
                             "Peak count:",
-                            dcc.Input(
-                                id=Ids.Default.peak_count,
+                            self._persistent_input(
+                                id=self.page.ids.Default.peak_count,
                                 value=runtime_config.peak_count,
                                 type="number",
                                 step=1,
@@ -142,16 +156,16 @@ class DefaultSection():
                         ),
                         self._setting_row(
                             "MESF Values:",
-                            dcc.Input(
-                                id=Ids.Default.mesf_values,
+                            self._persistent_input(
+                                id=self.page.ids.Default.mesf_values,
                                 value=runtime_config.mesf_values,
                                 style={"width": "100%"},
                             ),
                         ),
                         self._setting_row(
                             "FCS File Path:",
-                            dcc.Input(
-                                id=Ids.Default.fcs_file_path,
+                            self._persistent_input(
+                                id=self.page.ids.Default.fcs_file_path,
                                 value=runtime_config.fcs_file_path,
                                 style={"width": "100%"},
                             ),
@@ -168,11 +182,14 @@ class DefaultSection():
                 dbc.CardBody(
                     [
                         html.P("Dropdown of saved profiles with option to load profile values into the inputs below."),
-                        dcc.Dropdown(
-                            options=[{"label": profile, "value": profile + '.json'} for profile in list_setting_files()],
+                        self._persistent_dropdown(
+                            options=[
+                                {"label": profile, "value": profile + ".json"}
+                                for profile in list_setting_files()
+                            ],
                             value="default_profile.json" if list_setting_files() else None,
                             placeholder="Select Profile",
-                            id=Ids.Default.values_profile_dropdown,
+                            id=self.page.ids.Default.values_profile_dropdown,
                         ),
                         html.P(
                             "Set default values for your experiments. These values will be used when no specific values are provided for a sample."
@@ -181,12 +198,12 @@ class DefaultSection():
                         default_settings_section,
                         dbc.Button(
                             "Save Changes",
-                            id=Ids.Default.save_changes_button,
+                            id=self.page.ids.Default.save_changes_button,
                             color="primary",
                             style={"marginTop": "10px"},
                         ),
                         html.Div(
-                            id=Ids.Default.save_confirmation,
+                            id=self.page.ids.Default.save_confirmation,
                             style={"marginTop": "10px", "color": "green"},
                         ),
                     ]
@@ -194,29 +211,24 @@ class DefaultSection():
             ]
         )
 
-
     def _register_callbacks(self) -> None:
-        """
-        Register callbacks for:
-        """
-
         @callback(
-            Output(Ids.Default.medium_refractive_index, "value"),
-            Output(Ids.Default.core_refractive_index, "value"),
-            Output(Ids.Default.shell_refractive_index, "value"),
-            Output(Ids.Default.shell_thickness_nm, "value"),
-            Output(Ids.Default.core_diameter_nm, "value"),
-            Output(Ids.Default.particle_diameter_nm, "value"),
-            Output(Ids.Default.particle_refractive_index, "value"),
-            Output(Ids.Default.max_events_for_analysis, "value"),
-            Output(Ids.Default.n_bins_for_plots, "value"),
-            Output(Ids.Default.peak_count, "value"),
-            Output(Ids.Default.mesf_values, "value"),
-            Output(Ids.Default.fcs_file_path, "value"),
-            Input(Ids.Default.values_profile_dropdown, "value"),
+            Output(self.page.ids.Default.medium_refractive_index, "value"),
+            Output(self.page.ids.Default.core_refractive_index, "value"),
+            Output(self.page.ids.Default.shell_refractive_index, "value"),
+            Output(self.page.ids.Default.shell_thickness_nm, "value"),
+            Output(self.page.ids.Default.core_diameter_nm, "value"),
+            Output(self.page.ids.Default.particle_diameter_nm, "value"),
+            Output(self.page.ids.Default.particle_refractive_index, "value"),
+            Output(self.page.ids.Default.max_events_for_analysis, "value"),
+            Output(self.page.ids.Default.n_bins_for_plots, "value"),
+            Output(self.page.ids.Default.peak_count, "value"),
+            Output(self.page.ids.Default.mesf_values, "value"),
+            Output(self.page.ids.Default.fcs_file_path, "value"),
+            Input(self.page.ids.Default.values_profile_dropdown, "value"),
             prevent_initial_call=True,
         )
-        def load_profile_defaults(dropdown_value: str) -> str:
+        def load_profile_defaults(dropdown_value: str):
             settings = get_saved_profile(dropdown_value)
             data = (
                 settings.get("medium_refractive_index", ""),
@@ -234,52 +246,73 @@ class DefaultSection():
             )
             runtime_config = RuntimeConfig()
             runtime_config.load_json(dropdown_value)
-            return data #, dropdown_value, settings
-
+            return data
 
         @callback(
-            Output(Ids.Default.save_confirmation, "children"),
-            Input(Ids.Default.save_changes_button, "n_clicks"),
-            State(Ids.Default.values_profile_dropdown, "value"),
-            State(Ids.Default.medium_refractive_index, "value"),
-            State(Ids.Default.core_refractive_index, "value"),
-            State(Ids.Default.shell_refractive_index, "value"),
-            State(Ids.Default.shell_thickness_nm, "value"),
-            State(Ids.Default.core_diameter_nm, "value"),
-            State(Ids.Default.particle_diameter_nm, "value"),
-            State(Ids.Default.particle_refractive_index, "value"),
-            State(Ids.Default.max_events_for_analysis, "value"),
-            State(Ids.Default.n_bins_for_plots, "value"),
-            State(Ids.Default.peak_count, "value"),
-            State(Ids.Default.mesf_values, "value"),
-            State(Ids.Default.fcs_file_path, "value"),
+            Output(self.page.ids.Default.save_confirmation, "children"),
+            Output("runtime-config-store", "data"),
+            Input(self.page.ids.Default.save_changes_button, "n_clicks"),
+            State(self.page.ids.Default.values_profile_dropdown, "value"),
+            State(self.page.ids.Default.medium_refractive_index, "value"),
+            State(self.page.ids.Default.core_refractive_index, "value"),
+            State(self.page.ids.Default.shell_refractive_index, "value"),
+            State(self.page.ids.Default.shell_thickness_nm, "value"),
+            State(self.page.ids.Default.core_diameter_nm, "value"),
+            State(self.page.ids.Default.particle_diameter_nm, "value"),
+            State(self.page.ids.Default.particle_refractive_index, "value"),
+            State(self.page.ids.Default.max_events_for_analysis, "value"),
+            State(self.page.ids.Default.n_bins_for_plots, "value"),
+            State(self.page.ids.Default.peak_count, "value"),
+            State(self.page.ids.Default.mesf_values, "value"),
+            State(self.page.ids.Default.fcs_file_path, "value"),
             prevent_initial_call=True,
         )
         def edit_settings(name: Any, profile_target: str, *args) -> str:
             new_dict = {}
             keys = [
-                Ids.Default.medium_refractive_index,
-                Ids.Default.core_refractive_index,
-                Ids.Default.shell_refractive_index,
-                Ids.Default.shell_thickness_nm,
-                Ids.Default.core_diameter_nm,
-                Ids.Default.particle_diameter_nm,
-                Ids.Default.particle_refractive_index,
-                Ids.Default.max_events_for_analysis,
-                Ids.Default.n_bins_for_plots,
-                Ids.Default.peak_count,
-                Ids.Default.mesf_values,
-                Ids.Default.fcs_file_path,
+                "medium_refractive_index",
+                "core_refractive_index",
+                "shell_refractive_index",
+                "shell_thickness_nm",
+                "core_diameter_nm",
+                "particle_diameter_nm",
+                "particle_refractive_index",
+                "max_events_for_analysis",
+                "n_bins_for_plots",
+                "peak_count",
+                "mesf_values",
+                "fcs_file_path",
             ]
-            for key, value in zip(keys, args):
-                new_dict[key] = value
 
-            new_dict[Ids.Default.mesf_values] = re.sub(r'[^\d,\s]', '', new_dict[Ids.Default.mesf_values])
+            new_dict = {key: value for key, value in zip(keys, args)}
+
+            new_dict[self.page.ids.Default.mesf_values] = re.sub(
+                r"[^\d,\s]",
+                "",
+                new_dict[self.page.ids.Default.mesf_values],
+            )
 
             save_profile(profile_target, new_dict)
+
             runtime_config = RuntimeConfig()
             runtime_config.update(**new_dict)
-            return "Changes saved!"
+
+            runtime_config_data = {
+                "medium_refractive_index": runtime_config.medium_refractive_index,
+                "core_refractive_index": runtime_config.core_refractive_index,
+                "shell_refractive_index": runtime_config.shell_refractive_index,
+                "shell_thickness_nm": runtime_config.shell_thickness_nm,
+                "core_diameter_nm": runtime_config.core_diameter_nm,
+                "particle_diameter_nm": runtime_config.particle_diameter_nm,
+                "particle_refractive_index": runtime_config.particle_refractive_index,
+                "max_events_for_analysis": runtime_config.max_events_for_analysis,
+                "n_bins_for_plots": runtime_config.n_bins_for_plots,
+                "peak_count": runtime_config.peak_count,
+                "mesf_values": runtime_config.mesf_values,
+                "fcs_file_path": runtime_config.fcs_file_path,
+            }
+
+            return "Changes saved!", runtime_config_data
 
 
     def _setting_row(self, label: str, component):

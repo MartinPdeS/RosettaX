@@ -4,11 +4,11 @@
     "shell_refractive_index": 1.5,
     "shell_thickness_nm": 15,
     "core_diameter_nm": 100,
-    "particle_diameter_nm": 150,
+    "particle_diameter_nm": 160,
     "particle_refractive_index": 1.59,
     "max_events_for_analysis": 10000,
     "n_bins_for_plots": 1000,
-    "peak_count": 2,
+    "peak_count": 3,
     "mesf_values": "",
     "fcs_file_path": ""
 }

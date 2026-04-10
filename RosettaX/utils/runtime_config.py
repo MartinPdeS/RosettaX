@@ -76,3 +76,39 @@ class RuntimeConfig:
         except Exception as error:
             print(f"Error loading JSON config: {error}")
             return {}
+
+    def __repr__(self) -> str:
+        return (
+            f"RuntimeConfig(max_events_for_analysis={self.max_events_for_analysis}, "
+            f"n_bins_for_plots={self.n_bins_for_plots}, "
+            f"peak_count={self.peak_count}, "
+            f"fcs_file_path={self.fcs_file_path}, "
+            f"fluorescence_page_scattering_detector={self.fluorescence_page_scattering_detector}, "
+            f"fluorescence_page_fluorescence_detector={self.fluorescence_page_fluorescence_detector}, "
+            f"mesf_values={self.mesf_values}, "
+            f"particle_diameter_nm={self.particle_diameter_nm}, "
+            f"particle_refractive_index={self.particle_refractive_index}, "
+            f"medium_refractive_index={self.medium_refractive_index}, "
+            f"core_refractive_index={self.core_refractive_index}, "
+            f"shell_refractive_index={self.shell_refractive_index}, "
+            f"shell_thickness_nm={self.shell_thickness_nm}, "
+            f"core_diameter_nm={self.core_diameter_nm}"
+        )
+
+    def to_dict(self) -> dict:
+        return {
+            "max_events_for_analysis": self.max_events_for_analysis,
+            "n_bins_for_plots": self.n_bins_for_plots,
+            "peak_count": self.peak_count,
+            "fcs_file_path": self.fcs_file_path,
+            "fluorescence_page_scattering_detector": self.fluorescence_page_scattering_detector,
+            "fluorescence_page_fluorescence_detector": self.fluorescence_page_fluorescence_detector,
+            "mesf_values": self.mesf_values,
+            "particle_diameter_nm": self.particle_diameter_nm,
+            "particle_refractive_index": self.particle_refractive_index,
+            "medium_refractive_index": self.medium_refractive_index,
+            "core_refractive_index": self.core_refractive_index,
+            "shell_refractive_index": self.shell_refractive_index,
+            "shell_thickness_nm": self.shell_thickness_nm,
+            "core_diameter_nm": self.core_diameter_nm,
+        }

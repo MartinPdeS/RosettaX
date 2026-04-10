@@ -35,7 +35,6 @@ class RosettaXApplication:
         self.host = str(host)
         self.port = int(port)
         self.open_browser = bool(open_browser)
-
         self.app = dash.Dash(
             __name__,
             external_stylesheets=[self._theme_light],
@@ -177,6 +176,8 @@ class RosettaXApplication:
             },
         )
 
+
+
         self.app.layout = html.Div(
             [
                 dcc.Location(id="url"),
@@ -199,6 +200,7 @@ class RosettaXApplication:
                 theme_header,
                 sidebar_content,
                 main_content,
+                dcc.Store(id="runtime-config-store", storage_type="session", data=RuntimeConfig().to_dict())
             ]
         )
 
