@@ -211,7 +211,7 @@ class DefaultSection:
             ]
         )
 
-    def _register_callbacks(self) -> None:
+    def register_callbacks(self) -> None:
         @callback(
             Output(self.page.ids.Default.medium_refractive_index, "value"),
             Output(self.page.ids.Default.core_refractive_index, "value"),

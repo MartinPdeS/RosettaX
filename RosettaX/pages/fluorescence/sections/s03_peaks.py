@@ -6,10 +6,9 @@ import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
 
 from RosettaX.pages import styling
-from RosettaX.pages.fluorescence.service import FluorescenceService
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.utils.plottings import add_vertical_lines, _make_info_figure
-
+from RosettaX.pages.fluorescence.backend import BackEnd
 
 logger = logging.getLogger(__name__)
 
@@ -153,7 +152,7 @@ class PeaksSection:
             style=styling.CARD,
         )
 
-    def _register_callbacks(self) -> None:
+    def register_callbacks(self) -> None:
         @dash.callback(
             dash.Output(self.page.ids.Fluorescence.peak_count_input, "value"),
             dash.Output(self.page.ids.Fluorescence.nbins_input, "value"),
@@ -325,8 +324,8 @@ class PeaksSection:
                 return dash.no_update
 
             try:
-                figure_dict = FluorescenceService.build_fluorescence_histogram_figure_dict(
-                    fcs_path=fcs_path_clean,
+                backend = BackEnd(fcs_path)
+                figure_dict = backend.build_fluorescence_histogram_figure_dict(
                     scattering_channel=scattering_channel_clean,
                     fluorescence_channel=fluorescence_channel_clean,
                     fluorescence_nbins=fluorescence_nbins,
@@ -334,6 +333,7 @@ class PeaksSection:
                     threshold_input_value=threshold_input_value,
                     max_events_for_plots=max_events_for_plots,
                 )
+
             except Exception:
                 logger.exception(
                     "Failed to build fluorescence histogram figure dict for "
@@ -492,8 +492,8 @@ class PeaksSection:
                 return dash.no_update, dash.no_update
 
             try:
-                result = FluorescenceService.find_fluorescence_peaks_and_prepare_outputs(
-                    fcs_path=fcs_path_clean,
+                backend = BackEnd(fcs_path)
+                result = backend.find_fluorescence_peaks_and_prepare_outputs(
                     scattering_channel=scattering_channel_clean,
                     fluorescence_channel=fluorescence_channel_clean,
                     fluorescence_peak_count=fluorescence_peak_count,

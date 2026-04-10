@@ -209,7 +209,7 @@ class LoadSection:
         )
         return ""
 
-    def _register_callbacks(self) -> None:
+    def register_callbacks(self) -> None:
         """
         Register callbacks for:
         - loading from upload or restored session path

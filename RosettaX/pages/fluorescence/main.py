@@ -34,7 +34,7 @@ class FluorescencePage():
         dash.register_page(__name__, path="/fluorescent_calibration", name="Fluorescence", order=1)
 
         for section in self.sections:
-            section._register_callbacks()
+            section.register_callbacks()
         return self
 
     def layout(self) -> dash.html.Div:

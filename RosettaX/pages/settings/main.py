@@ -32,7 +32,7 @@ class SettingsPage():
         """
         dash.register_page(__name__, path="/settings", name="Settings", order=4)
         for section in self.sections:
-            section._register_callbacks()
+            section.register_callbacks()
         return self
 
     def layout(self) -> dash.html.Div:

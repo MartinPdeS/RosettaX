@@ -121,7 +121,7 @@ class SaveSection:
             style={"display": "flex", "alignItems": "center", "gap": "12px"},
         )
 
-    def _register_callbacks(self) -> None:
+    def register_callbacks(self) -> None:
         """
         Register callbacks for the save section.
         """
@@ -247,10 +247,12 @@ class SaveSection:
             list(inputs.calib_payload.keys()) if isinstance(inputs.calib_payload, dict) else None,
         )
 
-        saved = service.CalibrationFileStore.save_fluorescent_setup_to_file(
+        saved = service.save_fluorescent_setup_to_file(
             name=inputs.file_name,
             payload=dict(inputs.calib_payload or {}),
         )
+
+        next_sidebar = service.list_saved_calibrations()
 
         logger.debug(
             "_action_save_calibration saved successfully to folder=%r filename=%r",

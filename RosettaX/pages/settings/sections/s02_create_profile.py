@@ -53,7 +53,7 @@ class CreateSection():
             ]
         )
 
-    def _register_callbacks(self) -> None:
+    def register_callbacks(self) -> None:
         """
         Register callbacks for:
         - showing filename

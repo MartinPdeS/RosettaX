@@ -26,7 +26,7 @@ class ScatterCalibrationPage():
         dash.register_page(__name__, path="/scatter_calibration", name="Scattering", order=2)
 
         for section in self.sections:
-            section._register_callbacks()
+            section.register_callbacks()
 
         return self
 
