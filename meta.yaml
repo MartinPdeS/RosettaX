@@ -28,6 +28,9 @@ requirements:
     - pandas
     - pydantic
     - martinpdes::mpsplots
+    - martinpdes::pymiesim
+    - logging
+    - scipy
 
 
 about:

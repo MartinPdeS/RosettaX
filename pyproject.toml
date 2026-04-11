@@ -24,6 +24,7 @@ keywords = ["flow-cytometre", "calibration", "physics", "data-analysis"]
 
 dependencies = [
     "PyMieSim",
+    "logging",
     "pydantic",
     "numpy",
     "MPSPlots",
