@@ -20,5 +20,5 @@ class HeaderSection:
             style={"paddingTop": "24px"},
         )
 
-    def _register_callbacks(self) -> None:
+    def register_callbacks(self) -> None:
         pass

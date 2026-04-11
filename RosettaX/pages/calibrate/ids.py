@@ -13,19 +13,15 @@ class Ids:
     class CalibrationPicker:
         dropdown = f"{page_name}-calibration-dropdown"
         refresh_button = f"{page_name}-refresh-button"
-        refresh_status = f"{page_name}-refresh-status"
 
     class FilePicker:
         upload = f"{page_name}-upload"
         upload_status = f"{page_name}-upload-status"
+        column_consistency_alert = f"{page_name}-column-consistency-alert"
 
     class ChannelPicker:
         dropdown = f"{page_name}-channel-dropdown"
         status = f"{page_name}-channel-status"
-
-    class Apply:
-        apply_button = f"{page_name}-apply-button"
-        status = f"{page_name}-status"
 
     class Plot:
         card_header = f"{page_name}-plot-card-header"
@@ -35,3 +31,9 @@ class Ids:
         max_events_input = f"{page_name}-plot-max-events-input"
         yscale_switch = f"{page_name}-plot-yscale-switch"
         status = f"{page_name}-plot-status"
+
+    class Export:
+        apply_and_export_button = f"{page_name}-apply-and-export-button"
+        status = f"{page_name}-status"
+        export_button = f"{page_name}-export-button"
+        export_columns_dropdown = f"{page_name}-export-columns-dropdown"

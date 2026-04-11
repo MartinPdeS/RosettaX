@@ -16,3 +16,4 @@ class SidebarIds:
 
     saved_profiles_dropdown = f"{page_name}-saved-profiles-dropdown"
     saved_profiles_load_status = f"{page_name}-saved-profiles-load-status"
+    saved_calibrations_refresh_store = f"{page_name}-saved-calibrations-refresh-store"

@@ -20,7 +20,7 @@ class ApplyCalibrationPage:
             sections.FilePickerSection(page=self),
             sections.ChannelPickerSection(page=self),
             sections.ApplySection(page=self),
-            sections.PlotSection(page=self),
+            # sections.PlotSection(page=self),
         ]
 
     def register(self) -> "ApplyCalibrationPage":
@@ -29,7 +29,7 @@ class ApplyCalibrationPage:
 
     def register_callbacks(self) -> "ApplyCalibrationPage":
         for section in self.sections:
-            section._register_callbacks()
+            section.register_callbacks()
 
         return self
 

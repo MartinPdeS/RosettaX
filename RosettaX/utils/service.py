@@ -342,3 +342,20 @@ def list_saved_calibrations_from_directory(
         return []
 
     return files
+
+def resolve_first_fcs_path(uploaded_fcs_path_data: Any) -> Optional[str]:
+    if uploaded_fcs_path_data is None:
+        return None
+
+    current_value = uploaded_fcs_path_data
+
+    while isinstance(current_value, list):
+        if not current_value:
+            return None
+        current_value = current_value[0]
+
+    if current_value is None:
+        return None
+
+    resolved_path = str(current_value).strip()
+    return resolved_path or None

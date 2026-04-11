@@ -8,8 +8,10 @@ import dash
 import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
 from dash import dcc, html
+import logging
 
 from RosettaX.utils.reader import FCSFile
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -115,89 +117,55 @@ class PlotSection:
             style={"display": "flex", "gap": "14px", "alignItems": "flexEnd", "flexWrap": "wrap"},
         )
 
-    def _register_callbacks(self) -> None:
+
+    def register_callbacks(self) -> None:
         @dash.callback(
             dash.Output(self.page.ids.Plot.channel_dropdown, "options"),
-            dash.Input(self.page.ids.Stores.uploaded_fcs_path_store, "data"),
-            prevent_initial_call=True,
-        )
-        def populate_plot_channels(fcs_path: Optional[str]) -> list[dict[str, str]]:
-            if not fcs_path:
-                return []
-
-            try:
-                with FCSFile(str(fcs_path), writable=False) as fcs:
-                    names = fcs.get_column_names()
-            except Exception:
-                return []
-
-            return [{"label": n, "value": n} for n in names]
-
-        @dash.callback(
-            dash.Output(self.page.ids.Plot.graph, "figure"),
-            dash.Output(self.page.ids.Plot.status, "children"),
             dash.Output(self.page.ids.Plot.channel_dropdown, "value"),
             dash.Input(self.page.ids.Stores.uploaded_fcs_path_store, "data"),
-            dash.Input(self.page.ids.Plot.channel_dropdown, "value"),
-            dash.Input(self.page.ids.Plot.nbins_input, "value"),
-            dash.Input(self.page.ids.Plot.max_events_input, "value"),
-            dash.Input(self.page.ids.Plot.yscale_switch, "value"),
-            prevent_initial_call=True,
+            dash.State(self.page.ids.Plot.channel_dropdown, "value"),
+            prevent_initial_call=False,
         )
-        def update_plot(
+        def populate_plot_channels(
             fcs_path: Optional[str],
-            channel: Optional[str],
-            nbins_value: Any,
-            max_events_value: Any,
-            yscale_value: Any,
-        ) -> tuple:
+            current_value: Optional[str],
+        ) -> tuple[list[dict[str, str]], Optional[str]]:
+            logger.debug(
+                "populate_plot_channels called with fcs_path=%r current_value=%r",
+                fcs_path,
+                current_value,
+            )
+
             if not fcs_path:
-                fig = self._empty_figure()
-                return PlotResult(
-                    figure=fig,
-                    status="Upload an FCS file first.",
-                    channel_value=None,
-                ).to_tuple()
-
-            nbins = self._as_int(nbins_value, default=200, min_value=10, max_value=5000)
-            max_events = self._as_int(max_events_value, default=200_000, min_value=1_000, max_value=5_000_000)
-            use_log = isinstance(yscale_value, list) and ("log" in yscale_value)
-
-            if not channel:
-                fig = self._empty_figure()
-                return PlotResult(
-                    figure=fig,
-                    status="Select a channel to plot.",
-                    channel_value=dash.no_update,
-                ).to_tuple()
+                logger.debug("No FCS path provided. Returning empty channel dropdown.")
+                return [], None
 
             try:
                 with FCSFile(str(fcs_path), writable=False) as fcs:
-                    values = fcs.column_copy(str(channel), dtype=float, n=max_events)
-            except Exception as exc:
-                fig = self._empty_figure()
-                return PlotResult(
-                    figure=fig,
-                    status=f"Could not read channel: {type(exc).__name__}: {exc}",
-                    channel_value=dash.no_update,
-                ).to_tuple()
+                    channel_names = fcs.get_column_names()
+            except Exception:
+                logger.exception(
+                    "Failed to read channel names from fcs_path=%r",
+                    fcs_path,
+                )
+                return [], None
 
-            values = np.asarray(values, dtype=float)
-            values = values[np.isfinite(values)]
-            if values.size == 0:
-                fig = self._empty_figure()
-                return PlotResult(
-                    figure=fig,
-                    status="No finite values found for this channel.",
-                    channel_value=dash.no_update,
-                ).to_tuple()
+            options = [{"label": name, "value": name} for name in channel_names]
 
-            fig = self._histogram_figure(values=values, nbins=nbins, channel=str(channel), use_log=use_log)
-            return PlotResult(
-                figure=fig,
-                status=f"Plotted {values.size} values from {channel}.",
-                channel_value=dash.no_update,
-            ).to_tuple()
+            allowed_values = {str(option["value"]) for option in options}
+
+            if current_value in allowed_values:
+                resolved_value = current_value
+            else:
+                resolved_value = options[0]["value"] if options else None
+
+            logger.debug(
+                "Resolved plot channel dropdown with %r options and value=%r",
+                len(options),
+                resolved_value,
+            )
+
+            return options, resolved_value
 
     @staticmethod
     def _empty_figure() -> go.Figure:

@@ -8,7 +8,7 @@ import dash
 import dash_bootstrap_components as dbc
 
 from RosettaX.utils import service, directories
-
+from RosettaX.pages.sidebar.ids import SidebarIds
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,6 @@ class SaveInputs:
     file_name: str
     calib_payload: Optional[dict]
 
-
 @dataclass(frozen=True)
 class SaveResult:
     """
@@ -37,6 +36,7 @@ class SaveResult:
     """
 
     save_out: Any = dash.no_update
+    sidebar_refresh_signal: Any = dash.no_update
 
     def to_tuple(self) -> tuple:
         """
@@ -49,6 +49,7 @@ class SaveResult:
         """
         return (
             self.save_out,
+            self.sidebar_refresh_signal,
         )
 
 
@@ -129,15 +130,18 @@ class SaveSection:
 
         @dash.callback(
             dash.Output(self.page.ids.Save.save_out, "children"),
+            dash.Output(SidebarIds.saved_calibrations_refresh_store, "data"),
             dash.Input(self.page.ids.Save.save_calibration_btn, "n_clicks"),
             dash.State(self.page.ids.Save.file_name, "value"),
             dash.State(self.page.ids.Calibration.calibration_store, "data"),
+            dash.State(SidebarIds.saved_calibrations_refresh_store, "data"),
             prevent_initial_call=True,
         )
         def save_section_actions(
             n_clicks_save_calibration: int,
             file_name: str,
             calib_payload: Optional[dict],
+            current_sidebar_refresh_signal: Any,
         ) -> tuple:
             """
             Save the current calibration payload.
@@ -177,7 +181,7 @@ class SaveSection:
                 return parsed.to_tuple()
 
             try:
-                result = self._action_save_calibration(inputs=parsed)
+                result = self._action_save_calibration(inputs=parsed, current_sidebar_refresh_signal=current_sidebar_refresh_signal)
             except Exception:
                 logger.exception(
                     "Failed to save calibration with file_name=%r calib_payload_keys=%r",
@@ -186,6 +190,7 @@ class SaveSection:
                 )
                 return SaveResult(
                     save_out="Failed to save calibration. See terminal logs for details.",
+                    sidebar_refresh_signal=dash.no_update,
                 ).to_tuple()
 
             logger.debug("save_section_actions succeeded with output=%r", result.save_out)
@@ -232,14 +237,19 @@ class SaveSection:
         logger.debug("Validation succeeded with parsed_inputs=%r", parsed_inputs)
         return parsed_inputs
 
-    def _action_save_calibration(self, *, inputs: SaveInputs) -> SaveResult:
+    def _action_save_calibration(
+        self,
+        *,
+        inputs: SaveInputs,
+        current_sidebar_refresh_signal: Any,
+    ) -> SaveResult:
         """
         Save the current calibration payload as a file on disk.
 
         Returns
         -------
         SaveResult
-            User feedback message.
+            User feedback message and sidebar refresh signal.
         """
         logger.debug(
             "_action_save_calibration called with file_name=%r payload_keys=%r",
@@ -260,6 +270,9 @@ class SaveSection:
             saved.filename,
         )
 
+        next_refresh_signal = 1 if current_sidebar_refresh_signal is None else int(current_sidebar_refresh_signal) + 1
+
         return SaveResult(
             save_out=f'Saved calibration "{inputs.file_name}" as {saved.folder}/{saved.filename}',
+            sidebar_refresh_signal=next_refresh_signal,
         )

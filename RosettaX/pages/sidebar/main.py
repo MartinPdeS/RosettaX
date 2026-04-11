@@ -1,3 +1,4 @@
+from typing import Any
 import webbrowser
 from pathlib import Path
 
@@ -31,12 +32,15 @@ class Sidebar:
         return f"{self.page_name}-{name}"
 
     def register_callbacks(self) -> "Sidebar":
+
         @dash.callback(
             dash.Output(SidebarIds.saved_calibrations_body_container, "children"),
             dash.Input(SidebarIds.saved_calibrations_refresh_button, "n_clicks"),
+            dash.Input(SidebarIds.saved_calibrations_refresh_store, "data"),
             prevent_initial_call=True,
         )
-        def refresh_saved_calibrations_list(n_clicks: int):
+        def refresh_saved_calibrations_list(n_clicks: int, refresh_signal: Any):
+            del n_clicks, refresh_signal
             sidebar_data = self._list_saved_calibrations()
             return self._saved_calibration_items(sidebar_data)
 
@@ -96,11 +100,12 @@ class Sidebar:
         sidebar_data = sidebar if sidebar is not None else self._list_saved_calibrations()
 
         return [
+            dcc.Store(id=SidebarIds.saved_calibrations_refresh_store, data=0),
             html.Div(
                 self._build_sidebar_children(sidebar_data),
                 style=styling.SIDEBAR,
                 id=self._id("container"),
-            )
+            ),
         ]
 
     def _build_sidebar_children(self, sidebar: dict[str, list[str]]) -> list[object]:
