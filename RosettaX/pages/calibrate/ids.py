@@ -33,6 +33,7 @@ class Ids:
         status = f"{page_name}-plot-status"
 
     class Export:
+        download = f"{page_name}-download"
         apply_and_export_button = f"{page_name}-apply-and-export-button"
         status = f"{page_name}-status"
         export_button = f"{page_name}-export-button"
