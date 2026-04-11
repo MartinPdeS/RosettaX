@@ -9,41 +9,41 @@ class Ids:
         saved_as = f"{PAGE_NAME}-upload_saved_as"
         fcs_path_store = f"{PAGE_NAME}-uploaded_fcs_path_store"
         upload = f"{PAGE_NAME}-upload"
-
-    collapse_example = f"{PAGE_NAME}-collapse_example"
+        filename_store = f"{PAGE_NAME}-filename_store"
+        max_events_for_plots_input = f"{PAGE_NAME}-scattering_max_events_for_plots_input"
 
     # Parameters section
     class Parameters:
         mie_model_parameters_container = f"{PAGE_NAME}-mie_model_parameters_container"
         mie_model = f"{PAGE_NAME}-mie_model"
-
         particle_diameter = f"{PAGE_NAME}-particle_diameter"
         particle_index = f"{PAGE_NAME}-particle_index"
-
         medium_refractive_index = f"{PAGE_NAME}-medium_refractive_index"
         custom_medium_refractive_index = f"{PAGE_NAME}-custom_medium_refractive_index"
         core_refractive_index = f"{PAGE_NAME}-core_refractive_index"
         core_diameter = f"{PAGE_NAME}-core_diameter"
         shell_refractive_index = f"{PAGE_NAME}-shell_refractive_index"
         shell_thickness = f"{PAGE_NAME}-shell_thickness"
-
         particle_refractive_index_source = f"{PAGE_NAME}-particle-refractive-index-source"
         particle_refractive_index_custom = f"{PAGE_NAME}-particle-refractive-index-custom"
-
         core_refractive_index_source = f"{PAGE_NAME}-core-refractive-index-source"
         core_refractive_index_custom = f"{PAGE_NAME}-core-refractive-index-custom"
         medium_refractive_index_custom = f"{PAGE_NAME}-medium-refractive-index-custom"
         medium_refractive_index_source = f"{PAGE_NAME}-medium-refractive-index-source"
-
         shell_refractive_index_source = f"{PAGE_NAME}-shell-refractive-index-source"
         shell_refractive_index_custom = f"{PAGE_NAME}-shell-refractive-index-custom"
+        collapse_example = f"{PAGE_NAME}-collapse_example"
+        solid_sphere_container = f"{PAGE_NAME}-solid_sphere_container"
+        core_shell_container = f"{PAGE_NAME}-core_shell_container"
 
+    class Scattering:
+        detector_dropdown = f"{PAGE_NAME}-scattering_detector_dropdown"
+        debug_container = f"{PAGE_NAME}-scattering_debug_container"
+        debug_switch = f"{PAGE_NAME}-scattering_debug_switch"
+        nbins_input = f"{PAGE_NAME}-scattering_nbins_input"
+        graph_hist = f"{PAGE_NAME}-scattering_graph_hist"
+        yscale_switch = f"{PAGE_NAME}-scattering_yscale_switch"
 
-    calibrate_example_btn = f"{PAGE_NAME}-calibrate_example_btn"
-    scattering_detector_dropdown = f"{PAGE_NAME}-scattering_detector_dropdown"
-    fluorescence_detector_dropdown = f"{PAGE_NAME}-fluorescence_detector_dropdown"
-
-    # Export section
     class Export:
         run_calibration_btn = f"{PAGE_NAME}-run_calibration_btn"
         file_name = f"{PAGE_NAME}-export_file_name"
@@ -57,7 +57,7 @@ class Ids:
 
     class Calibration:
         calibration_store = f"{PAGE_NAME}-calibration_store"
-
+        calibrate_example_btn = f"{PAGE_NAME}-calibrate_example_btn"
 
     class Save:
         channel_name = f"{PAGE_NAME}-channel-name"

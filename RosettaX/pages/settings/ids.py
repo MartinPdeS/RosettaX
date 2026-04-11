@@ -8,6 +8,7 @@ class Ids:
     page_name = "settings"
 
     class Default:
+        mie_model = "Solid Sphere"
         medium_refractive_index = "medium_refractive_index"
         core_refractive_index = "core_refractive_index"
         shell_refractive_index = "shell_refractive_index"

@@ -11,6 +11,7 @@ from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.utils.reader import FCSFile
 from RosettaX.utils.plottings import make_histogram_with_lines, _make_info_figure
 from RosettaX.utils.casting import _as_float, _as_int
+from RosettaX.utils.service import build_channel_options_from_file
 
 
 logger = logging.getLogger(__name__)
@@ -334,6 +335,7 @@ class ScatteringSection:
             type="default",
         )
 
+
     def register_callbacks(self) -> None:
         """
         Register callbacks for scattering threshold estimation and histogram display.
@@ -367,7 +369,7 @@ class ScatteringSection:
             dash.Input(self.page.ids.Scattering.yscale_switch, "value"),
             dash.Input(self.page.ids.Scattering.debug_switch, "value"),
             dash.State(self.page.ids.Scattering.threshold_store, "data", allow_optional=True),
-            dash.State(self.page.ids.Load.max_events_for_plots_input, "value", allow_optional=True),
+            dash.State(self.page.ids.Upload.max_events_for_plots_input, "value", allow_optional=True),
             prevent_initial_call=True,
         )
         def scattering_section(
@@ -392,6 +394,10 @@ class ScatteringSection:
                 max_events_for_plots=max_events_for_plots,
             )
             return self._run_scattering_callback(callback_inputs).to_tuple()
+
+
+
+
 
     def _toggle_debug_container(self, debug_switch_value: Any) -> dict:
         """

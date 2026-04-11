@@ -28,7 +28,7 @@ class FluorescencePage():
 
         Returns
         -------
-        FluorescentCalibrationPage
+        FluorescencePage
             The page instance, returned for chaining purposes.
         """
         dash.register_page(__name__, path="/fluorescent_calibration", name="Fluorescence", order=1)
@@ -48,7 +48,7 @@ class FluorescencePage():
         """
         return dash.html.Div(
             [
-                dash.dcc.Store(id=self.ids.Load.uploaded_fcs_path_store, storage_type="session"),
+                dash.dcc.Store(id=self.ids.Upload.uploaded_fcs_path_store, storage_type="session"),
                 dash.dcc.Store(id=self.ids.Calibration.calibration_store, storage_type="session"),
                 dash.dcc.Store(id=self.ids.Scattering.threshold_store, storage_type="session"),
                 dash.dcc.Store(id=self.ids.Fluorescence.hist_store, storage_type="session"),

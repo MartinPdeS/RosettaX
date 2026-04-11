@@ -17,6 +17,7 @@ class ScatterCalibrationPage():
 
         self.sections = [
             sections.LoadSection(page=self),
+            sections.ScatteringSection(page=self),
             sections.ParametersSection(page=self),
             sections.CalibrationSection(page=self),
             sections.SaveSection(page=self)
@@ -43,7 +44,7 @@ class ScatterCalibrationPage():
             [
                 dash.html.H1("Scattering Calibration"),
                 dash.html.Br(),
-                *[section._get_layout() for section in self.sections],
+                *[section.get_layout() for section in self.sections],
             ]
         )
 

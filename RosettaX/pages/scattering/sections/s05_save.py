@@ -7,7 +7,7 @@ import logging
 import dash
 import dash_bootstrap_components as dbc
 
-from RosettaX.pages.fluorescence import service
+from RosettaX.utils import service, directories
 
 
 logger = logging.getLogger(__name__)
@@ -290,9 +290,11 @@ class SaveSection:
         )
 
         try:
-            saved = service.CalibrationFileStore.save_fluorescent_setup_to_file(
+            saved = service.save_calibration_to_file(
                 name=inputs.file_name,
                 payload=dict(inputs.calib_payload or {}),
+                calibration_kind="scattering",
+                output_directory=directories.scattering_calibration_directory,
             )
             logger.debug(
                 "Calibration saved successfully to folder=%r filename=%r",
@@ -300,7 +302,9 @@ class SaveSection:
                 saved.filename,
             )
 
-            next_sidebar = service.CalibrationFileStore.list_saved_calibrations()
+            next_sidebar = service.list_saved_calibrations_from_directory(
+                directory=directories.scattering_calibration_directory,
+            )
             logger.debug(
                 "Sidebar refresh succeeded with sidebar_store_type=%s",
                 type(next_sidebar).__name__,

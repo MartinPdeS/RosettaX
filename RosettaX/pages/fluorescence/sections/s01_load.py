@@ -13,7 +13,7 @@ import dash_bootstrap_components as dbc
 from dash import Input, Output, State, callback, dcc, html
 
 from RosettaX.pages import styling
-from RosettaX.pages.fluorescence import service
+from RosettaX.utils import service
 from RosettaX.pages.fluorescence.backend import BackEnd
 from RosettaX.utils.runtime_config import RuntimeConfig
 
@@ -63,7 +63,6 @@ class LoadSection:
 
     def __init__(self, page) -> None:
         self.page = page
-        self.file_state = service.FileStateRefresher()
         logger.debug("Initialized LoadSection with page=%r", page)
 
     @property
@@ -74,7 +73,7 @@ class LoadSection:
         This avoids having to modify the page ids class just to keep one extra
         piece of session state.
         """
-        store_id = f"{self.page.ids.Load.uploaded_fcs_path_store}-filename"
+        store_id = f"{self.page.ids.Upload.uploaded_fcs_path_store}-filename"
         logger.debug("Resolved uploaded_fcs_filename_store_id=%r", store_id)
         return store_id
 
@@ -94,7 +93,7 @@ class LoadSection:
         )
 
         upload_widget = dcc.Upload(
-            id=self.page.ids.Load.upload,
+            id=self.page.ids.Upload.upload,
             children=html.Div(["Drag and Drop or ", html.A("Select Bead File")]),
             style=styling.UPLOAD,
             multiple=False,
@@ -107,7 +106,7 @@ class LoadSection:
                 dbc.CardBody(
                     [
                         dcc.Store(
-                            id=self.page.ids.Load.uploaded_fcs_path_store,
+                            id=self.page.ids.Upload.uploaded_fcs_path_store,
                             data=initial_fcs_path,
                             storage_type="session",
                         ),
@@ -117,7 +116,7 @@ class LoadSection:
                             storage_type="session",
                         ),
                         upload_widget,
-                        html.Div(id=self.page.ids.Load.upload_filename),
+                        html.Div(id=self.page.ids.Upload.upload_filename),
                     ],
                     style=self.page.style["body_scroll"],
                 ),
@@ -219,16 +218,16 @@ class LoadSection:
         logger.debug("Registering load section callbacks.")
 
         @callback(
-            Output(self.page.ids.Load.uploaded_fcs_path_store, "data"),
+            Output(self.page.ids.Upload.uploaded_fcs_path_store, "data"),
             Output(self.uploaded_fcs_filename_store_id, "data"),
-            Output(self.page.ids.Load.upload_filename, "children"),
+            Output(self.page.ids.Upload.upload_filename, "children"),
             Output(self.page.ids.Scattering.detector_dropdown, "options"),
             Output(self.page.ids.Scattering.detector_dropdown, "value"),
             Output(self.page.ids.Fluorescence.detector_dropdown, "options"),
             Output(self.page.ids.Fluorescence.detector_dropdown, "value"),
-            Input(self.page.ids.Load.upload, "contents"),
-            Input(self.page.ids.Load.uploaded_fcs_path_store, "data"),
-            State(self.page.ids.Load.upload, "filename"),
+            Input(self.page.ids.Upload.upload, "contents"),
+            Input(self.page.ids.Upload.uploaded_fcs_path_store, "data"),
+            State(self.page.ids.Upload.upload, "filename"),
             State(self.uploaded_fcs_filename_store_id, "data"),
             State(self.page.ids.Scattering.detector_dropdown, "value"),
             State(self.page.ids.Fluorescence.detector_dropdown, "value"),
@@ -333,7 +332,7 @@ class LoadSection:
                 ).to_tuple()
 
             try:
-                channels = self.file_state.options_from_file(selected_path)
+                channels = service.build_channel_options_from_file(selected_path)
                 logger.debug("Channel extraction succeeded for selected_path=%r channels=%r", selected_path, channels)
 
             except Exception:
@@ -356,7 +355,7 @@ class LoadSection:
             logger.debug("Updated runtime config with fcs_file_path=%r", selected_path)
 
             scatter_options = list(channels.scatter_options or [])
-            fluorescence_options = list(channels.fluorescence_options or [])
+            fluorescence_options = list(channels.secondary_options or [])
 
             logger.debug(
                 "Resolved scatter_options_count=%r fluorescence_options_count=%r",

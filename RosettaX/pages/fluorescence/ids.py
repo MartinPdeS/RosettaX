@@ -4,7 +4,7 @@ PAGE_NAME = "fluorescent_calibration"
 class Ids:
     page_name = PAGE_NAME
 
-    class Load:
+    class Upload:
         fcs_path_store = f"{PAGE_NAME}-initial-fcs-path-store"
         upload = f"{PAGE_NAME}-upload-data"
         upload_filename = f"{PAGE_NAME}-upload-file-name"

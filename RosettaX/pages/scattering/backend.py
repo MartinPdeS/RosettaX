@@ -29,7 +29,7 @@ import numpy as np
 
 from RosettaX.utils.reader import FCSFile
 from RosettaX.utils.clusterings import SigmaThresholdHDBSCAN
-from RosettaX.calibration import FluorescenceCalibration
+
 
 
 class BackEnd:

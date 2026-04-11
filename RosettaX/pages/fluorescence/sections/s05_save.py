@@ -7,7 +7,7 @@ import logging
 import dash
 import dash_bootstrap_components as dbc
 
-from RosettaX.pages.fluorescence import service
+from RosettaX.utils import service, directories
 
 
 logger = logging.getLogger(__name__)
@@ -247,12 +247,12 @@ class SaveSection:
             list(inputs.calib_payload.keys()) if isinstance(inputs.calib_payload, dict) else None,
         )
 
-        saved = service.save_fluorescent_setup_to_file(
+        saved = service.save_calibration_to_file(
             name=inputs.file_name,
             payload=dict(inputs.calib_payload or {}),
+            calibration_kind="fluorescence",
+            output_directory=directories.fluorescence_calibration_directory,
         )
-
-        next_sidebar = service.list_saved_calibrations()
 
         logger.debug(
             "_action_save_calibration saved successfully to folder=%r filename=%r",

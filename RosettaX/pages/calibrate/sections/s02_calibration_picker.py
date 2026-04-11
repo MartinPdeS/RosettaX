@@ -5,8 +5,7 @@ from typing import Any, Optional
 import dash
 import dash_bootstrap_components as dbc
 
-from RosettaX.pages.fluorescence import service
-
+from RosettaX.utils import service, directories
 
 class CalibrationPickerSection:
     def __init__(self, page) -> None:
@@ -68,7 +67,9 @@ class CalibrationPickerSection:
         )
         def refresh_calibration_options(n_clicks: int) -> tuple:
             try:
-                sidebar = service.CalibrationFileStore.list_saved_calibrations()
+                sidebar = service.list_saved_calibrations_from_directory(
+                    folder_name=directories.scattering_calibration_directory,
+                )
             except Exception as exc:
                 return [], f"Could not read saved calibrations: {type(exc).__name__}: {exc}"
 

@@ -155,6 +155,20 @@ class DefaultSection:
                             ),
                         ),
                         self._setting_row(
+                            "Particle type:",
+                            self._persistent_dropdown(
+                                id=self.page.ids.Default.mie_model,
+                                options=[
+                                    {"label": "Solid Sphere", "value": "Solid Sphere"},
+                                    {"label": "Core/Shell Sphere", "value": "Core/Shell Sphere"},
+                                ],
+                                value=getattr(runtime_config.Default, "mie_model", "Solid Sphere"),
+                                clearable=False,
+                                searchable=False,
+                                style={"width": "100%"},
+                            ),
+                        ),
+                        self._setting_row(
                             "MESF Values:",
                             self._persistent_input(
                                 id=self.page.ids.Default.mesf_values,
@@ -223,6 +237,7 @@ class DefaultSection:
             Output(self.page.ids.Default.max_events_for_analysis, "value"),
             Output(self.page.ids.Default.n_bins_for_plots, "value"),
             Output(self.page.ids.Default.peak_count, "value"),
+            Output(self.page.ids.Default.mie_model, "value"),
             Output(self.page.ids.Default.mesf_values, "value"),
             Output(self.page.ids.Default.fcs_file_path, "value"),
             Input(self.page.ids.Default.values_profile_dropdown, "value"),
@@ -241,6 +256,7 @@ class DefaultSection:
                 settings.get("max_events_for_analysis", ""),
                 settings.get("n_bins_for_plots", ""),
                 settings.get("peak_count", ""),
+                settings.get("mie_model", "Solid Sphere"),
                 settings.get("mesf_values", ""),
                 settings.get("fcs_file_path", ""),
             )
@@ -263,12 +279,14 @@ class DefaultSection:
             State(self.page.ids.Default.max_events_for_analysis, "value"),
             State(self.page.ids.Default.n_bins_for_plots, "value"),
             State(self.page.ids.Default.peak_count, "value"),
+            State(self.page.ids.Default.mie_model, "value"),
             State(self.page.ids.Default.mesf_values, "value"),
             State(self.page.ids.Default.fcs_file_path, "value"),
             prevent_initial_call=True,
         )
-        def edit_settings(name: Any, profile_target: str, *args) -> str:
-            new_dict = {}
+        def edit_settings(name: Any, profile_target: str, *args) -> tuple[str, dict[str, Any]]:
+            del name
+
             keys = [
                 "medium_refractive_index",
                 "core_refractive_index",
@@ -280,16 +298,17 @@ class DefaultSection:
                 "max_events_for_analysis",
                 "n_bins_for_plots",
                 "peak_count",
+                "mie_model",
                 "mesf_values",
                 "fcs_file_path",
             ]
 
             new_dict = {key: value for key, value in zip(keys, args)}
 
-            new_dict[self.page.ids.Default.mesf_values] = re.sub(
+            new_dict["mesf_values"] = re.sub(
                 r"[^\d,\s]",
                 "",
-                new_dict[self.page.ids.Default.mesf_values],
+                str(new_dict.get("mesf_values", "")),
             )
 
             save_profile(profile_target, new_dict)
@@ -298,22 +317,22 @@ class DefaultSection:
             runtime_config.update(**new_dict)
 
             runtime_config_data = {
-                "medium_refractive_index": runtime_config.Default.medium_refractive_index,
-                "core_refractive_index": runtime_config.Default.core_refractive_index,
-                "shell_refractive_index": runtime_config.Default.shell_refractive_index,
-                "shell_thickness_nm": runtime_config.Default.shell_thickness,
-                "core_diameter_nm": runtime_config.Default.core_diameter,
-                "particle_diameter_nm": runtime_config.Default.particle_diameter,
-                "particle_refractive_index": runtime_config.Default.particle_refractive_index,
-                "max_events_for_analysis": runtime_config.Default.max_events_for_analysis,
-                "n_bins_for_plots": runtime_config.Default.n_bins_for_plots,
-                "peak_count": runtime_config.Default.peak_count,
-                "mesf_values": runtime_config.Default.mesf_values,
-                "fcs_file_path": runtime_config.Default.fcs_file_path,
+                "medium_refractive_index": new_dict.get("medium_refractive_index"),
+                "core_refractive_index": new_dict.get("core_refractive_index"),
+                "shell_refractive_index": new_dict.get("shell_refractive_index"),
+                "shell_thickness_nm": new_dict.get("shell_thickness_nm"),
+                "core_diameter_nm": new_dict.get("core_diameter_nm"),
+                "particle_diameter_nm": new_dict.get("particle_diameter_nm"),
+                "particle_refractive_index": new_dict.get("particle_refractive_index"),
+                "max_events_for_analysis": new_dict.get("max_events_for_analysis"),
+                "n_bins_for_plots": new_dict.get("n_bins_for_plots"),
+                "peak_count": new_dict.get("peak_count"),
+                "mie_model": new_dict.get("mie_model"),
+                "mesf_values": new_dict.get("mesf_values"),
+                "fcs_file_path": new_dict.get("fcs_file_path"),
             }
 
             return "Changes saved!", runtime_config_data
-
 
     def _setting_row(self, label: str, component):
         return html.Div(

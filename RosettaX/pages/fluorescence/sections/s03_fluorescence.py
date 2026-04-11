@@ -214,7 +214,7 @@ class PeaksSection:
         @dash.callback(
             dash.Output(self.page.ids.Fluorescence.peak_lines_store, "data", allow_duplicate=True),
             dash.Input(self.page.ids.Fluorescence.detector_dropdown, "value"),
-            dash.Input(self.page.ids.Load.uploaded_fcs_path_store, "data"),
+            dash.Input(self.page.ids.Upload.uploaded_fcs_path_store, "data"),
             dash.Input(self.page.ids.Scattering.detector_dropdown, "value"),
             prevent_initial_call=True,
         )
@@ -272,13 +272,13 @@ class PeaksSection:
         @dash.callback(
             dash.Output(self.page.ids.Fluorescence.hist_store, "data", allow_duplicate=True),
             dash.Input(self.page.ids.Fluorescence.graph_toggle_switch, "value"),
-            dash.Input(self.page.ids.Load.uploaded_fcs_path_store, "data"),
+            dash.Input(self.page.ids.Upload.uploaded_fcs_path_store, "data"),
             dash.Input(self.page.ids.Scattering.detector_dropdown, "value"),
             dash.Input(self.page.ids.Fluorescence.detector_dropdown, "value"),
             dash.Input(self.page.ids.Fluorescence.nbins_input, "value"),
             dash.Input(self.page.ids.Scattering.threshold_store, "data"),
             dash.Input(self.page.ids.Scattering.threshold_input, "value"),
-            dash.State(self.page.ids.Load.max_events_for_plots_input, "value", allow_optional=True),
+            dash.State(self.page.ids.Upload.max_events_for_plots_input, "value", allow_optional=True),
             prevent_initial_call=True,
         )
         def refresh_fluorescence_hist_store(
@@ -438,11 +438,11 @@ class PeaksSection:
             dash.Output(self.page.ids.Calibration.bead_table, "data", allow_duplicate=True),
             dash.Output(self.page.ids.Fluorescence.peak_lines_store, "data", allow_duplicate=True),
             dash.Input(self.page.ids.Fluorescence.find_peaks_btn, "n_clicks"),
-            dash.State(self.page.ids.Load.uploaded_fcs_path_store, "data"),
+            dash.State(self.page.ids.Upload.uploaded_fcs_path_store, "data"),
             dash.State(self.page.ids.Scattering.detector_dropdown, "value"),
             dash.State(self.page.ids.Fluorescence.detector_dropdown, "value"),
             dash.State(self.page.ids.Fluorescence.peak_count_input, "value"),
-            dash.State(self.page.ids.Load.max_events_for_plots_input, "value", allow_optional=True),
+            dash.State(self.page.ids.Upload.max_events_for_plots_input, "value", allow_optional=True),
             dash.State(self.page.ids.Scattering.threshold_store, "data"),
             dash.State(self.page.ids.Scattering.threshold_input, "value"),
             dash.State(self.page.ids.Calibration.bead_table, "data"),

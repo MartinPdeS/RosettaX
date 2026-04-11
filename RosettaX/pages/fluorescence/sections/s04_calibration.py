@@ -641,7 +641,7 @@ class CalibrationSection:
             dash.Output(self.page.ids.Calibration.r_squared_out, "children"),
             dash.Output(self.page.ids.Calibration.apply_status, "children"),
             dash.Input(self.page.ids.Calibration.calibrate_btn, "n_clicks"),
-            dash.State(self.page.ids.Load.uploaded_fcs_path_store, "data"),
+            dash.State(self.page.ids.Upload.uploaded_fcs_path_store, "data"),
             dash.State(self.page.ids.Calibration.bead_table, "data"),
             dash.State(self.page.ids.Fluorescence.detector_dropdown, "value"),
             prevent_initial_call=True,
