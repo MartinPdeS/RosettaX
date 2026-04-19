@@ -1,13 +1,18 @@
 # -*- coding: utf-8 -*-
 
-from typing import Any, Optional
-from pathlib import Path
 import logging
+from pathlib import Path
+from typing import Any, Optional
+from urllib.parse import parse_qs
 
 import dash
 import dash_bootstrap_components as dbc
 
-from RosettaX.utils import directories
+from RosettaX.utils.directories import (
+    fluorescence_calibration_directory,
+    scattering_calibration_directory,
+)
+
 
 logger = logging.getLogger(__name__)
 
@@ -16,46 +21,46 @@ class CalibrationPickerSection:
     def __init__(self, page) -> None:
         self.page = page
 
+        self._folder_definitions: list[tuple[str, str, Path]] = [
+            ("fluorescence", "Fluorescence", Path(fluorescence_calibration_directory)),
+            ("scattering", "Scattering", Path(scattering_calibration_directory)),
+        ]
+
+        logger.debug(
+            "Initialized CalibrationPickerSection for page=%s",
+            self.page.__class__.__name__,
+        )
+
     def get_layout(self) -> dbc.Card:
+        logger.debug("Building CalibrationPickerSection layout")
+
         return dbc.Card(
             [
-                dbc.CardHeader(
-                    dash.html.Div(
-                        [
-                            dash.html.Div("3. Select calibration"),
-                            dbc.Button(
-                                "Update",
-                                id=self.page.ids.CalibrationPicker.refresh_button,
-                                n_clicks=0,
-                                color="secondary",
-                                outline=True,
-                                size="sm",
-                                className="rounded-pill",
-                            ),
-                        ],
-                        style={
-                            "display": "flex",
-                            "alignItems": "center",
-                            "justifyContent": "space-between",
-                        },
-                    )
-                ),
+                dbc.CardHeader("1. Select calibration"),
                 dbc.CardBody(
                     [
-                        dash.html.Div("Saved calibration", style={"marginBottom": "6px"}),
-                        dash.dcc.Dropdown(
-                            id=self.page.ids.CalibrationPicker.dropdown,
-                            options=[],
-                            value=None,
-                            placeholder="Select calibration",
-                            clearable=True,
-                            persistence=True,
-                            persistence_type="session",
-                        ),
-                        dash.html.Div(style={"height": "10px"}),
-                        dash.dcc.Store(
-                            id=self.page.ids.Stores.selected_calibration_path_store,
-                            storage_type="session",
+                        dbc.Row(
+                            [
+                                dbc.Col(
+                                    dbc.Select(
+                                        id=self.page.ids.CalibrationPicker.dropdown,
+                                        options=[],
+                                        value=None,
+                                    ),
+                                    width=True,
+                                ),
+                                dbc.Col(
+                                    dbc.Button(
+                                        "Refresh",
+                                        id=self.page.ids.CalibrationPicker.refresh_button,
+                                        color="secondary",
+                                        outline=True,
+                                    ),
+                                    width="auto",
+                                ),
+                            ],
+                            className="g-2",
+                            align="center",
                         ),
                     ]
                 ),
@@ -63,101 +68,149 @@ class CalibrationPickerSection:
         )
 
     def register_callbacks(self) -> None:
+        logger.debug("Registering CalibrationPickerSection callbacks")
+
         @dash.callback(
             dash.Output(self.page.ids.CalibrationPicker.dropdown, "options"),
-            dash.Input(self.page.ids.CalibrationPicker.refresh_button, "n_clicks"),
-            prevent_initial_call=False,
-        )
-        def refresh_calibration_options(n_clicks: int) -> list[dict[str, str]]:
-            del n_clicks
-
-            logger.debug("Refreshing calibration dropdown options.")
-
-            try:
-                options = self._build_calibration_dropdown_options()
-            except Exception:
-                logger.exception("Could not build calibration dropdown options.")
-                return []
-
-            logger.debug("Loaded %d calibration option(s).", len(options))
-            return options
-
-        @dash.callback(
             dash.Output(self.page.ids.CalibrationPicker.dropdown, "value"),
-            dash.Input(self.page.ids.CalibrationPicker.dropdown, "options"),
-            dash.State(self.page.ids.Stores.selected_calibration_path_store, "data"),
-            prevent_initial_call=False,
-        )
-        def restore_selected_calibration(
-            options: list[dict[str, str]],
-            stored_selected_path: Optional[str],
-        ) -> Any:
-            logger.debug(
-                "restore_selected_calibration called with stored_selected_path=%r",
-                stored_selected_path,
-            )
-
-            if not options:
-                logger.debug("No options available. Returning None.")
-                return None
-
-            allowed_values = {str(option["value"]) for option in options}
-
-            if stored_selected_path in allowed_values:
-                logger.debug(
-                    "Restoring stored calibration selection: %r",
-                    stored_selected_path,
-                )
-                return stored_selected_path
-
-            logger.debug("Stored calibration not available anymore. Falling back to first option.")
-            return options[0]["value"]
-
-        @dash.callback(
             dash.Output(self.page.ids.Stores.selected_calibration_path_store, "data"),
-            dash.Input(self.page.ids.CalibrationPicker.dropdown, "value"),
+            dash.Input(self.page.ids.CalibrationPicker.refresh_button, "n_clicks"),
+            dash.Input(self.page.ids.Page.location, "search"),
+            dash.State(self.page.ids.CalibrationPicker.dropdown, "value"),
             prevent_initial_call=False,
         )
-        def store_selected_calibration_path(selected: Optional[str]) -> Any:
+        def refresh_calibration_picker(
+            refresh_button_clicks: Optional[int],
+            search: Optional[str],
+            current_dropdown_value: Any,
+        ) -> tuple[list[dict[str, str]], Optional[str], Optional[str]]:
             logger.debug(
-                "store_selected_calibration_path called with selected=%r",
-                selected,
+                "refresh_calibration_picker called with refresh_button_clicks=%r search=%r current_dropdown_value=%r",
+                refresh_button_clicks,
+                search,
+                current_dropdown_value,
             )
 
-            if not selected:
-                logger.debug("No calibration selected. Returning None.")
-                return None
+            dropdown_options = self._build_dropdown_options()
+            allowed_values = {
+                str(option["value"])
+                for option in dropdown_options
+                if isinstance(option, dict) and "value" in option
+            }
 
-            selected_path = str(selected)
-            logger.debug("Persisting selected calibration path=%r", selected_path)
-            return selected_path
+            logger.debug(
+                "Built %d calibration dropdown options",
+                len(dropdown_options),
+            )
 
-    def _build_calibration_dropdown_options(self) -> list[dict[str, str]]:
-        options: list[dict[str, str]] = []
+            selected_calibration_from_url = self._extract_selected_calibration_from_search(search)
 
-        for folder_name, folder_path in [
-            ("fluorescence", directories.fluorescence_calibration_directory),
-            ("scattering", directories.scattering_calibration_directory),
-        ]:
-            for file_name in self._list_json_files_in_directory(folder_path):
-                relative_value = f"{folder_name}/{file_name}"
-                options.append(
-                    {
-                        "label": relative_value,
-                        "value": relative_value,
-                    }
+            if (
+                selected_calibration_from_url is not None
+                and selected_calibration_from_url in allowed_values
+            ):
+                resolved_dropdown_value = selected_calibration_from_url
+                logger.debug(
+                    "Using URL-selected calibration=%r",
+                    resolved_dropdown_value,
                 )
 
-        options.sort(key=lambda item: item["label"].lower())
-        return options
+            elif (
+                current_dropdown_value is not None
+                and str(current_dropdown_value) in allowed_values
+            ):
+                resolved_dropdown_value = str(current_dropdown_value)
+                logger.debug(
+                    "Keeping current dropdown selection=%r",
+                    resolved_dropdown_value,
+                )
+
+            elif dropdown_options:
+                resolved_dropdown_value = str(dropdown_options[0]["value"])
+                logger.debug(
+                    "Using first available calibration=%r",
+                    resolved_dropdown_value,
+                )
+
+            else:
+                resolved_dropdown_value = None
+                logger.debug("No calibration files found, dropdown will remain empty")
+
+            return (
+                dropdown_options,
+                resolved_dropdown_value,
+                resolved_dropdown_value,
+            )
+
+    def _build_dropdown_options(self) -> list[dict[str, str]]:
+        logger.debug("Building calibration dropdown options from disk")
+
+        dropdown_options: list[dict[str, str]] = []
+
+        for folder_key, folder_label, folder_path in self._folder_definitions:
+            try:
+                folder_path.mkdir(parents=True, exist_ok=True)
+
+                calibration_file_paths = sorted(
+                    [
+                        path
+                        for path in folder_path.glob("*.json")
+                        if path.is_file()
+                    ],
+                    key=lambda path: path.name.lower(),
+                )
+
+                logger.debug(
+                    "Found %d calibration files in folder_key=%r folder_path=%r",
+                    len(calibration_file_paths),
+                    folder_key,
+                    str(folder_path),
+                )
+
+                for calibration_file_path in calibration_file_paths:
+                    dropdown_options.append(
+                        {
+                            "label": f"{folder_label} | {calibration_file_path.name}",
+                            "value": f"{folder_key}/{calibration_file_path.name}",
+                        }
+                    )
+
+            except Exception:
+                logger.exception(
+                    "Failed while building dropdown options for folder_key=%r folder_path=%r",
+                    folder_key,
+                    str(folder_path),
+                )
+
+        logger.debug(
+            "Returning %d total calibration dropdown options",
+            len(dropdown_options),
+        )
+        return dropdown_options
 
     @staticmethod
-    def _list_json_files_in_directory(directory: Path | str) -> list[str]:
-        directory_path = Path(directory).expanduser()
-        directory_path.mkdir(parents=True, exist_ok=True)
-
-        return sorted(
-            file_path.name
-            for file_path in directory_path.glob("*.json")
-            if file_path.is_file()
+    def _extract_selected_calibration_from_search(search: Optional[str]) -> Optional[str]:
+        logger.debug(
+            "Extracting selected_calibration from search=%r",
+            search,
         )
+
+        if not search:
+            return None
+
+        parsed_query = parse_qs(search.lstrip("?"))
+        selected_calibration_values = parsed_query.get("selected_calibration", [])
+
+        if not selected_calibration_values:
+            return None
+
+        selected_calibration = str(selected_calibration_values[0]).strip()
+
+        if not selected_calibration:
+            return None
+
+        logger.debug(
+            "Extracted selected_calibration=%r from URL query string",
+            selected_calibration,
+        )
+        return selected_calibration

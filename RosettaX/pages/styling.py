@@ -1,19 +1,3 @@
-CONTENT = {
-        "margin-left": "28rem",
-        "margin-right": "2rem",
-        "padding": "2rem 1rem",
-}
-
-SIDEBAR = {
-    "position": "fixed",
-    "top": 0,
-    "left": 0,
-    "bottom": 0,
-    "width": "380px",
-    "padding": "1rem",
-    "overflowY": "auto",
-}
-
 UPLOAD = {
     "width": "100%",
     "height": "60px",
@@ -29,4 +13,23 @@ CARD = {
     "display": "flex",
     "gap": "12px",
     "alignItems": "center"
+}
+
+SIDEBAR = {
+    "position": "fixed",
+    "top": 0,
+    "left": 0,
+    "bottom": 0,
+    "width": f"460px",
+    "padding": "16px",
+    "overflowY": "auto",
+    "zIndex": 1000,
+    "boxSizing": "border-box",
+}
+
+CONTENT = {
+    "marginLeft": f"460px",
+    "padding": "16px",
+    "minHeight": "100vh",
+    "boxSizing": "border-box",
 }

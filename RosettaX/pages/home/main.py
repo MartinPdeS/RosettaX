@@ -1,194 +1,391 @@
 import dash
 import dash_bootstrap_components as dbc
-from dash import dcc, html
+from dash import html
 
 
 class HomePage:
     def __init__(self) -> None:
         self.page_name = "home"
-        self.path = "/"
-        self.name = "Home"
+        self.container_style = {
+            "paddingTop": "24px",
+            "paddingBottom": "48px",
+        }
 
-        self.container_style = {"paddingBottom": "48px"}
+        self.github_url = "https://github.com/MartinPdeS/RosettaX"
+        self.pypi_url = "https://pypi.org/project/RosettaX/"
+        self.anaconda_url = "https://anaconda.org/channels/martinpdes/packages/lightwave2d/overview"
 
     def _id(self, name: str) -> str:
         return f"{self.page_name}-{name}"
 
-    def register(self) -> "HomePage":
-        dash.register_page(__name__, path=self.path, name=self.name, order=0)
-        return self
-
-    def layout(self) -> dbc.Container:
+    def layout(self, **_kwargs) -> dbc.Container:
         return dbc.Container(
             [
-                self._header_section(),
-                html.Hr(),
-                self._intro_cards_row(),
-                self._create_calibration_row(),
-                html.Hr(),
-                # self._quick_navigation_row(),
+                self._hero_section(),
+                html.Div(style={"height": "20px"}),
+                self._primary_actions_row(),
+                html.Div(style={"height": "20px"}),
+                self._workflow_and_reuse_row(),
+                html.Div(style={"height": "20px"}),
+                self._project_links_row(),
+                html.Div(style={"height": "20px"}),
+                self._tips_row(),
             ],
             fluid=True,
             style=self.container_style,
         )
 
-    def _header_section(self) -> html.Div:
-        return html.Div(
-            [
-                html.H1("RosettaX", style={"marginBottom": "6px"}),
-                html.P(
-                    "Flow cytometry calibration tool.",
-                    style={"opacity": 0.85, "marginBottom": "0px"},
-                ),
-            ],
-            style={"paddingTop": "24px"},
+    def _hero_section(self) -> dbc.Card:
+        return dbc.Card(
+            dbc.CardBody(
+                [
+                    html.H1(
+                        "RosettaX",
+                        style={
+                            "marginBottom": "8px",
+                            "fontWeight": "700",
+                        },
+                    ),
+                    html.P(
+                        "Flow cytometry calibration workspace for building, saving, reviewing, and applying fluorescence and scattering calibrations.",
+                        style={
+                            "fontSize": "1.05rem",
+                            "opacity": 0.9,
+                            "marginBottom": "16px",
+                            "maxWidth": "900px",
+                        },
+                    ),
+                    html.Div(
+                        [
+                            dbc.Button(
+                                "Create fluorescence calibration",
+                                href="/fluorescent_calibration",
+                                id=self._id("hero-fluorescence"),
+                                color="success",
+                                style={"marginRight": "10px", "marginBottom": "10px"},
+                            ),
+                            dbc.Button(
+                                "Create scattering calibration",
+                                href="/scatter_calibration",
+                                id=self._id("hero-scattering"),
+                                color="secondary",
+                                style={"marginRight": "10px", "marginBottom": "10px"},
+                            ),
+                            dbc.Button(
+                                "Apply saved calibration",
+                                href="/apply-calibration",
+                                id=self._id("hero-apply"),
+                                color="primary",
+                                outline=True,
+                                style={"marginBottom": "10px"},
+                            ),
+                        ]
+                    ),
+                ]
+            ),
+            style={"height": "100%"},
         )
 
-    def _intro_cards_row(self) -> dbc.Row:
+    def _primary_actions_row(self) -> dbc.Row:
         return dbc.Row(
             [
-                dbc.Col(self._new_here_card(), md=6),
-                dbc.Col(self._existing_calibrations_card(), md=6),
+                dbc.Col(self._fluorescence_card(), md=4),
+                dbc.Col(self._scattering_card(), md=4),
+                dbc.Col(self._apply_card(), md=4),
             ],
-            style={"marginBottom": "16px"},
+            className="g-3",
         )
 
-    def _new_here_card(self) -> dbc.Card:
+    def _fluorescence_card(self) -> dbc.Card:
         return self._card_with_body(
-            [
-                html.H3("New here?", style={"marginTop": "0px"}),
-                html.P(
-                    "Start with the Help page. It walks through the workflow: "
-                    "scattering threshold, fluorescence peaks, MESF fitting, saving, and applying.",
-                    style={"opacity": 0.9},
-                ),
-                dbc.Button(
-                    "Open Help",
-                    href="/help",
-                    id=self._id("help-link"),
-                    color="primary",
-                ),
-            ]
+            title="Fluorescence calibration",
+            description=(
+                "Build a fluorescence calibration from an uploaded FCS file by selecting the relevant channels, detecting peaks, fitting the calibration, and saving the result."
+            ),
+            button_text="Open fluorescence workflow",
+            button_href="/fluorescence",
+            button_color="success",
+            button_id=self._id("fluorescence-link"),
         )
 
-    def _existing_calibrations_card(self) -> dbc.Card:
+    def _scattering_card(self) -> dbc.Card:
         return self._card_with_body(
-            [
-                html.H3("Already have calibrations?", style={"marginTop": "0px"}),
-                html.P(
-                    "If a calibration has been saved, select it from the sidebar. "
-                    "You can reuse it without rebuilding.",
-                    style={"opacity": 0.9},
-                ),
-                dbc.Alert(
-                    "Tip: saved calibrations appear under the sidebar calibration section.",
-                    color="info",
-                    style={"marginBottom": "0px"},
-                ),
-            ]
+            title="Scattering calibration",
+            description=(
+                "Build a scattering calibration from an uploaded FCS file, configure the relevant parameters, review the fit, and save the resulting calibration payload."
+            ),
+            button_text="Open scattering workflow",
+            button_href="/scattering",
+            button_color="secondary",
+            button_id=self._id("scattering-link"),
         )
 
-    def _create_calibration_row(self) -> dbc.Row:
-        return dbc.Row([dbc.Col(self._create_calibration_card(), md=12)])
+    def _apply_card(self) -> dbc.Card:
+        return self._card_with_body(
+            title="Apply calibration",
+            description=(
+                "Load one or more FCS files, select a saved calibration, choose the target and export channels, and export calibrated files."
+            ),
+            button_text="Open apply workflow",
+            button_href="/apply-calibration",
+            button_color="primary",
+            button_id=self._id("apply-link"),
+        )
 
-    def _create_calibration_card(self) -> dbc.Card:
+    def _workflow_and_reuse_row(self) -> dbc.Row:
+        return dbc.Row(
+            [
+                dbc.Col(self._workflow_card(), md=7),
+                dbc.Col(self._reuse_card(), md=5),
+            ],
+            className="g-3",
+        )
+
+    def _workflow_card(self) -> dbc.Card:
         return dbc.Card(
             [
-                dbc.CardHeader("Create a new calibration"),
+                dbc.CardHeader("Typical workflow"),
                 dbc.CardBody(
                     [
-                        html.P(
-                            "Choose the calibration type you want to create.",
-                            style={"opacity": 0.9},
-                        ),
-                        self._create_calibration_buttons_row(),
-                        html.Hr(),
-                        self._workflow_bullets(),
+                        html.Ol(
+                            [
+                                html.Li("Choose fluorescence or scattering calibration."),
+                                html.Li("Upload the FCS file used for calibration."),
+                                html.Li("Select the relevant channels and review the intermediate outputs."),
+                                html.Li("Fit and save the calibration as JSON."),
+                                html.Li("Reuse the saved calibration later from the sidebar or the apply page."),
+                            ],
+                            style={"marginBottom": "0px"},
+                        )
                     ]
                 ),
             ],
             style={"height": "100%"},
         )
 
-    def _create_calibration_buttons_row(self) -> dbc.Row:
+    def _reuse_card(self) -> dbc.Card:
+        return dbc.Card(
+            [
+                dbc.CardHeader("Reuse saved calibrations"),
+                dbc.CardBody(
+                    [
+                        html.P(
+                            "Saved calibrations appear in the sidebar and can be opened directly.",
+                            style={"opacity": 0.9},
+                        ),
+                        html.Ul(
+                            [
+                                html.Li("Click the calibration name to inspect its JSON content."),
+                                html.Li("Click Apply to open the apply page with that calibration preselected."),
+                                html.Li("Use Refresh in the sidebar if you added files manually."),
+                            ],
+                            style={"marginBottom": "16px"},
+                        ),
+                        dbc.Button(
+                            "Open apply page",
+                            href="/apply-calibration",
+                            id=self._id("reuse-apply"),
+                            color="primary",
+                            outline=True,
+                        ),
+                    ]
+                ),
+            ],
+            style={"height": "100%"},
+        )
+
+    def _project_links_row(self) -> dbc.Row:
         return dbc.Row(
             [
-                dbc.Col(
-                    dbc.Button(
-                        "Fluorescent Calibration",
-                        href="/fluorescent_calibration",
-                        id=self._id("fluorescent-link"),
-                        color="success",
-                        style={"width": "100%"},
-                    ),
-                    md=6,
-                ),
-                dbc.Col(
-                    dbc.Button(
-                        "Scatter Calibration",
-                        href="/scatter_calibration",
-                        id=self._id("scatter-link"),
-                        color="secondary",
-                        style={"width": "100%"},
-                    ),
-                    md=6,
-                ),
+                dbc.Col(self._project_links_card(), md=12),
             ],
-            style={"marginTop": "8px"},
+            className="g-3",
         )
 
-    def _workflow_bullets(self) -> html.Ul:
-        return html.Ul(
+    def _project_links_card(self) -> dbc.Card:
+        return dbc.Card(
             [
-                html.Li("Upload bead FCS file"),
-                html.Li("Set scattering threshold (noise removal)"),
-                html.Li("Detect fluorescence peaks (after gating)"),
-                html.Li("Fit MESF calibration and save payload"),
+                dbc.CardHeader("Project links"),
+                dbc.CardBody(
+                    [
+                        html.P(
+                            "External resources for the project and distribution channels.",
+                            style={"opacity": 0.9},
+                        ),
+                        dbc.Row(
+                            [
+                                dbc.Col(
+                                    dbc.Card(
+                                        dbc.CardBody(
+                                            [
+                                                html.H5("GitHub", style={"marginTop": "0px"}),
+                                                html.P(
+                                                    "Browse the source code, issues, and repository history.",
+                                                    style={"opacity": 0.9},
+                                                ),
+                                                dbc.Button(
+                                                    "Open GitHub",
+                                                    href=self.github_url,
+                                                    target="_blank",
+                                                    rel="noopener noreferrer",
+                                                    color="dark",
+                                                    id=self._id("github-link"),
+                                                    style={"width": "100%"},
+                                                ),
+                                            ]
+                                        ),
+                                        style={"height": "100%"},
+                                    ),
+                                    md=4,
+                                ),
+                                dbc.Col(
+                                    dbc.Card(
+                                        dbc.CardBody(
+                                            [
+                                                html.H5("PyPI", style={"marginTop": "0px"}),
+                                                html.P(
+                                                    "Open the Python package page and installation metadata.",
+                                                    style={"opacity": 0.9},
+                                                ),
+                                                dbc.Button(
+                                                    "Open PyPI",
+                                                    href=self.pypi_url,
+                                                    target="_blank",
+                                                    rel="noopener noreferrer",
+                                                    color="primary",
+                                                    id=self._id("pypi-link"),
+                                                    style={"width": "100%"},
+                                                ),
+                                            ]
+                                        ),
+                                        style={"height": "100%"},
+                                    ),
+                                    md=4,
+                                ),
+                                dbc.Col(
+                                    dbc.Card(
+                                        dbc.CardBody(
+                                            [
+                                                html.H5("Anaconda", style={"marginTop": "0px"}),
+                                                html.P(
+                                                    "Open the Anaconda channel or package overview page.",
+                                                    style={"opacity": 0.9},
+                                                ),
+                                                dbc.Button(
+                                                    "Open Anaconda",
+                                                    href=self.anaconda_url,
+                                                    target="_blank",
+                                                    rel="noopener noreferrer",
+                                                    color="secondary",
+                                                    id=self._id("anaconda-link"),
+                                                    style={"width": "100%"},
+                                                ),
+                                            ]
+                                        ),
+                                        style={"height": "100%"},
+                                    ),
+                                    md=4,
+                                ),
+                            ],
+                            className="g-3",
+                        ),
+                    ]
+                ),
             ],
-            style={"marginBottom": "0px"},
+            style={"height": "100%"},
         )
 
-    def _quick_navigation_row(self) -> dbc.Row:
-        return dbc.Row([dbc.Col(self._quick_navigation_card(), md=12)])
+    def _tips_row(self) -> dbc.Row:
+        return dbc.Row(
+            [
+                dbc.Col(self._tips_card(), md=8),
+                dbc.Col(self._settings_card(), md=4),
+            ],
+            className="g-3",
+        )
 
-    def _quick_navigation_card(self) -> dbc.Card:
+    def _tips_card(self) -> dbc.Card:
+        return dbc.Card(
+            [
+                dbc.CardHeader("Practical notes"),
+                dbc.CardBody(
+                    [
+                        html.Ul(
+                            [
+                                html.Li("Use fluorescence calibration when you need a saved intensity mapping from measured signal to calibrated units."),
+                                html.Li("Use scattering calibration when the calibration is based on scatter response and model parameters."),
+                                html.Li("When applying a calibration to multiple files, keep detector names consistent across the uploaded batch."),
+                                html.Li("Use the sidebar JSON preview when you want to quickly verify what is inside a saved calibration."),
+                            ],
+                            style={"marginBottom": "0px"},
+                        )
+                    ]
+                ),
+            ],
+            style={"height": "100%"},
+        )
+
+    def _settings_card(self) -> dbc.Card:
+        return dbc.Card(
+            [
+                dbc.CardHeader("Configuration"),
+                dbc.CardBody(
+                    [
+                        html.P(
+                            "Manage profiles and default settings for the application.",
+                            style={"opacity": 0.9},
+                        ),
+                        dbc.Button(
+                            "Open settings",
+                            href="/settings",
+                            id=self._id("settings-link"),
+                            color="dark",
+                            outline=True,
+                        ),
+                    ]
+                ),
+            ],
+            style={"height": "100%"},
+        )
+
+    def _card_with_body(
+        self,
+        *,
+        title: str,
+        description: str,
+        button_text: str,
+        button_href: str,
+        button_color: str,
+        button_id: str,
+    ) -> dbc.Card:
         return dbc.Card(
             dbc.CardBody(
                 [
-                    html.H4("Quick navigation", style={"marginTop": "0px"}),
+                    html.H4(title, style={"marginTop": "0px", "marginBottom": "10px"}),
                     html.P(
-                        "Use these links if you know where you want to go.",
-                        style={"opacity": 0.85},
+                        description,
+                        style={"opacity": 0.9, "minHeight": "120px"},
                     ),
-                    self._quick_links(),
+                    dbc.Button(
+                        button_text,
+                        href=button_href,
+                        id=button_id,
+                        color=button_color,
+                        style={"width": "100%"},
+                    ),
                 ]
-            )
-        )
-
-    def _quick_links(self) -> html.Div:
-        return html.Div(
-            [
-                dcc.Link("Help", href="/help", id=self._id("quick-help")),
-                html.Span("  |  "),
-                dcc.Link(
-                    "Fluorescent Calibration",
-                    href="/fluorescent_calibration",
-                    id=self._id("quick-fluorescent"),
-                ),
-                html.Span("  |  "),
-                dcc.Link(
-                    "Scatter Calibration",
-                    href="/scatter_calibration",
-                    id=self._id("quick-scatter"),
-                ),
-            ]
-        )
-
-    def _card_with_body(self, body_children: list[object]) -> dbc.Card:
-        return dbc.Card(
-            dbc.CardBody(body_children),
+            ),
             style={"height": "100%"},
         )
 
 
-layout = HomePage().register().layout()
+_page = HomePage()
+layout = _page.layout
+
+dash.register_page(
+    __name__,
+    path="/home",
+    name="Home",
+    order=0,
+    layout=layout,
+)

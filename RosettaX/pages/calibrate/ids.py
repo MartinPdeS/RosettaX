@@ -3,6 +3,9 @@ page_name = "apply_calibration"
 
 
 class Ids:
+    class Page:
+        location = f"{page_name}-location"
+
     class Stores:
         selected_calibration_path_store = f"{page_name}-selected-calibration-path-store"
         uploaded_fcs_path_store = f"{page_name}-uploaded-fcs-path-store"

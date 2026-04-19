@@ -1,37 +1,89 @@
-from typing import Any
+# -*- coding: utf-8 -*-
+
+import logging
 import webbrowser
 from pathlib import Path
+from typing import Any, Optional
+from urllib.parse import quote
+import os
+import platform
+import subprocess
 
 import dash
 import dash_bootstrap_components as dbc
-from dash import dcc, html, no_update
+from dash import dcc, html
 
-from RosettaX.pages import styling
 from RosettaX.pages.settings.utils import list_setting_files, profile_directory
-from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.utils.directories import (
     fluorescence_calibration_directory,
     scattering_calibration_directory,
 )
 
-from .ids import SidebarIds
+def _open_directory(path: Path) -> None:
+    resolved_path = Path(path).resolve()
+
+    logger.debug("Opening directory at path=%r", str(resolved_path))
+
+    if not resolved_path.exists():
+        raise FileNotFoundError(f"Directory does not exist: {resolved_path}")
+
+    system_name = platform.system()
+
+    if system_name == "Darwin":
+        subprocess.run(["open", str(resolved_path)], check=True)
+        return
+
+    if system_name == "Windows":
+        os.startfile(str(resolved_path))
+        return
+
+    if system_name == "Linux":
+        subprocess.run(["xdg-open", str(resolved_path)], check=True)
+        return
+
+    raise RuntimeError(f"Unsupported operating system: {system_name}")
+
+
+logger = logging.getLogger(__name__)
+
+
+class SidebarIds:
+    prefix = "sidebar"
+
+    saved_calibrations_refresh_button = f"{prefix}-saved-calibrations-refresh-button"
+    saved_calibrations_open_folder_button = f"{prefix}-saved-calibrations-open-folder-button"
+    saved_calibrations_open_folder_status = f"{prefix}-saved-calibrations-open-folder-status"
+    saved_calibrations_body_container = f"{prefix}-saved-calibrations-body-container"
+    saved_calibrations_refresh_store = f"{prefix}-saved-calibrations-refresh-store"
+
+    saved_profiles_refresh_button = f"{prefix}-saved-profiles-refresh-button"
+    saved_profiles_open_folder_button = f"{prefix}-saved-profiles-open-folder-button"
+    saved_profiles_open_folder_status = f"{prefix}-saved-profiles-open-folder-status"
+    saved_profiles_dropdown = f"{prefix}-saved-profiles-dropdown"
+    saved_profiles_load_status = f"{prefix}-saved-profiles-load-status"
 
 
 class Sidebar:
     def __init__(self) -> None:
         self.page_name = "sidebar"
         self.logo_src = "/assets/logo.png"
-        self.sidebar_width_px = 380
+        self.logo_max_height_px = 156
+
+        self.sidebar_width_px = 460
 
         self._folder_display_order: list[tuple[str, str]] = [
             ("fluorescence", "Fluorescence"),
             ("scattering", "Scattering"),
         ]
 
-    def _id(self, name: str) -> str:
-        return f"{self.page_name}-{name}"
+        logger.debug(
+            "Initialized Sidebar with sidebar_width_px=%r logo_src=%r",
+            self.sidebar_width_px,
+            self.logo_src,
+        )
 
-    def register_callbacks(self) -> "Sidebar":
+    def register_callbacks(self) -> None:
+        logger.debug("Registering sidebar callbacks")
 
         @dash.callback(
             dash.Output(SidebarIds.saved_calibrations_body_container, "children"),
@@ -39,385 +91,409 @@ class Sidebar:
             dash.Input(SidebarIds.saved_calibrations_refresh_store, "data"),
             prevent_initial_call=True,
         )
-        def refresh_saved_calibrations_list(n_clicks: int, refresh_signal: Any):
-            del n_clicks, refresh_signal
-            sidebar_data = self._list_saved_calibrations()
-            return self._saved_calibration_items(sidebar_data)
+        def refresh_saved_calibrations(
+            refresh_button_clicks: Optional[int],
+            refresh_signal: Any,
+        ):
+            logger.debug(
+                "refresh_saved_calibrations called with refresh_button_clicks=%r refresh_signal=%r",
+                refresh_button_clicks,
+                refresh_signal,
+            )
+
+            saved_calibrations = self._list_saved_calibrations()
+
+            logger.debug(
+                "Loaded saved calibrations from disk with fluorescence=%d scattering=%d",
+                len(saved_calibrations.get("fluorescence", [])),
+                len(saved_calibrations.get("scattering", [])),
+            )
+            return self._build_saved_calibrations_body(saved_calibrations)
+
+
+
+
+
+
+
 
         @dash.callback(
             dash.Output(SidebarIds.saved_calibrations_open_folder_status, "children"),
             dash.Input(SidebarIds.saved_calibrations_open_folder_button, "n_clicks"),
             prevent_initial_call=True,
         )
-        def open_calibration_folder(n_clicks: int) -> str:
-            target_directory = self._calibration_open_directory()
+        def open_saved_calibrations_folder(n_clicks: Optional[int]):
+            logger.debug(
+                "open_saved_calibrations_folder called with n_clicks=%r",
+                n_clicks,
+            )
+            del n_clicks
+
             try:
-                webbrowser.open(target_directory.as_uri())
-                return f"Opened: {target_directory}"
+                calibration_root_directory = Path(fluorescence_calibration_directory).resolve().parent
+                logger.debug(
+                    "Opening calibration root directory=%r",
+                    str(calibration_root_directory),
+                )
+                _open_directory(calibration_root_directory)
+                return f"Opened calibration folder: {calibration_root_directory}"
             except Exception as exc:
-                return f"Could not open folder: {type(exc).__name__}: {exc}"
+                logger.exception("Failed to open calibration folder")
+                return f"Could not open calibration folder: {type(exc).__name__}: {exc}"
+
+
+
+
 
         @dash.callback(
             dash.Output(SidebarIds.saved_profiles_dropdown, "options"),
             dash.Input(SidebarIds.saved_profiles_refresh_button, "n_clicks"),
-            prevent_initial_call=True,
+            prevent_initial_call=False,
         )
-        def refresh_saved_profiles_list(n_clicks: int):
-            return self._saved_profile_dropdown_options()
+        def refresh_saved_profiles(_n_clicks: Optional[int]):
+            logger.debug("refresh_saved_profiles called with n_clicks=%r", _n_clicks)
+
+            try:
+                setting_files = list_setting_files()
+                options = [{"label": file_name, "value": file_name} for file_name in setting_files]
+                logger.debug("Loaded %d profile options", len(options))
+                return options
+            except Exception:
+                logger.exception("Failed to refresh saved profiles")
+                return []
+
+
 
         @dash.callback(
             dash.Output(SidebarIds.saved_profiles_open_folder_status, "children"),
             dash.Input(SidebarIds.saved_profiles_open_folder_button, "n_clicks"),
             prevent_initial_call=True,
         )
-        def open_profiles_folder(n_clicks: int) -> str:
-            root_dir = Path(profile_directory)
-            try:
-                webbrowser.open(root_dir.as_uri())
-                return f"Opened: {root_dir}"
-            except Exception as exc:
-                return f"Could not open folder: {type(exc).__name__}: {exc}"
-
-        @dash.callback(
-            dash.Output(SidebarIds.saved_profiles_load_status, "children"),
-            dash.Input(SidebarIds.saved_profiles_dropdown, "value"),
-            prevent_initial_call=True,
-        )
-        def load_selected_profile(profile_name: str) -> str:
-            if not profile_name:
-                return no_update
+        def open_saved_profiles_folder(n_clicks: Optional[int]):
+            logger.debug("open_saved_profiles_folder called with n_clicks=%r", n_clicks)
+            del n_clicks
 
             try:
-                runtime_config = RuntimeConfig()
-                runtime_config.load_json(f"{profile_name}.json")
-                return f"Loaded profile: {profile_name}.json"
+                resolved_profile_directory = Path(profile_directory).resolve()
+                logger.debug("Opening profile directory=%r", str(resolved_profile_directory))
+                _open_directory(resolved_profile_directory)
+                return f"Opened profile folder: {resolved_profile_directory}"
             except Exception as exc:
-                return f"Could not load profile: {type(exc).__name__}: {exc}"
+                logger.exception("Failed to open profile folder")
+                return f"Could not open profile folder: {type(exc).__name__}: {exc}"
 
-        return self
 
-    def layout(self, sidebar: dict[str, list[str]] | None = None) -> list[object]:
-        sidebar_data = sidebar if sidebar is not None else self._list_saved_calibrations()
 
-        return [
-            dcc.Store(id=SidebarIds.saved_calibrations_refresh_store, data=0),
-            html.Div(
-                self._build_sidebar_children(sidebar_data),
-                style=styling.SIDEBAR,
-                id=self._id("container"),
-            ),
-        ]
+    def layout(self, sidebar: Optional[dict[str, list[str]]] = None) -> html.Div:
+        logger.debug("Building sidebar layout with sidebar=%r", sidebar)
 
-    def _build_sidebar_children(self, sidebar: dict[str, list[str]]) -> list[object]:
-        return [
-            self._build_logo_section(),
-            html.Hr(),
-            self._build_navigation_section(),
-            html.Hr(),
-            self._build_saved_calibrations_section(sidebar),
-            html.Hr(),
-            self._build_saved_profiles_section(),
-        ]
-
-    def _build_logo_section(self) -> html.Div:
-        logo_style = {
-            "display": "block",
-            "width": "100%",
-            "height": "auto",
-            "objectFit": "contain",
-        }
+        if sidebar is None:
+            sidebar = self._list_saved_calibrations()
 
         return html.Div(
-            html.Img(
-                src=self.logo_src,
-                style=logo_style,
-                id=self._id("logo"),
-            ),
+            [
+                self._build_logo_section(),
+                self._build_navigation_section(),
+                self._build_saved_calibrations_section(sidebar),
+                self._build_saved_profiles_section(),
+                dcc.Store(id=SidebarIds.saved_calibrations_refresh_store, data=0),
+            ],
             style={
-                "width": "100%",
+                "width": f"{self.sidebar_width_px}px",
+                "height": "100vh",
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "16px",
+                "overflowY": "auto",
+                "paddingRight": "8px",
+                "boxSizing": "border-box",
             },
-            id=self._id("logo-section"),
+        )
+
+    def _list_saved_calibrations(self) -> dict[str, list[str]]:
+        logger.debug("Listing saved calibrations from disk")
+
+        saved_calibrations: dict[str, list[str]] = {
+            "fluorescence": [],
+            "scattering": [],
+        }
+
+        folder_to_directory = {
+            "fluorescence": Path(fluorescence_calibration_directory),
+            "scattering": Path(scattering_calibration_directory),
+        }
+
+        for folder_name, directory_path in folder_to_directory.items():
+            try:
+                directory_path.mkdir(parents=True, exist_ok=True)
+                file_names = sorted(
+                    [
+                        path.name
+                        for path in directory_path.glob("*.json")
+                        if path.is_file()
+                    ],
+                    key=str.lower,
+                )
+                saved_calibrations[folder_name] = file_names
+
+                logger.debug(
+                    "Found %d calibration files in folder=%r directory=%r",
+                    len(file_names),
+                    folder_name,
+                    str(directory_path),
+                )
+
+            except Exception:
+                logger.exception(
+                    "Failed to list calibration files for folder=%r directory=%r",
+                    folder_name,
+                    str(directory_path),
+                )
+                saved_calibrations[folder_name] = []
+
+        return saved_calibrations
+
+    def _build_logo_section(self) -> html.Div:
+        return html.Div(
+            [
+                html.Img(
+                    src=self.logo_src,
+                    style={
+                        "width": "100%",
+                        "height": "auto",
+                        "display": "block",
+                        "objectFit": "contain",
+                        "maxHeight": f"{self.logo_max_height_px}px",
+                    },
+                )
+            ],
+            style={"width": "100%"},
         )
 
     def _build_navigation_section(self) -> html.Div:
         return html.Div(
             [
-                html.P("Navigation bar", className="lead"),
-                self._build_navigation_links(),
-            ],
-            id=self._id("navigation-section"),
-        )
-
-    def _build_navigation_links(self) -> dbc.Nav:
-        return dbc.Nav(
-            [
-                dbc.NavLink(
-                    page["name"],
-                    href=page["relative_path"],
-                    active="exact",
+                dbc.Nav(
+                    [
+                        dbc.NavLink("Home", href="/home", active="exact"),
+                        dbc.NavLink("Help", href="/help", active="exact"),
+                        dbc.NavLink("Fluorescence", href="/fluorescence", active="exact"),
+                        dbc.NavLink("Scattering", href="/scattering", active="exact"),
+                        dbc.NavLink("Apply calibration", href="/calibrate", active="exact"),
+                        dbc.NavLink("Settings", href="/settings", active="exact"),
+                    ],
+                    vertical=True,
+                    pills=True,
                 )
-                for page in dash.page_registry.values()
-            ],
-            vertical=True,
-            pills=True,
+            ]
         )
 
-    def _build_saved_calibrations_section(self, sidebar: dict[str, list[str]]) -> html.Div:
-        return html.Div(
-            [
-                dbc.Card(
-                    [
-                        self._build_saved_calibrations_header(),
-                        self._build_saved_calibrations_body(sidebar),
-                    ],
-                    style={"height": "100%"},
-                    id=self._id("saved-calibrations-card"),
-                ),
-            ],
-            id=self._id("saved-calibrations-section"),
-        )
-
-    def _build_saved_calibrations_header(self) -> dbc.CardHeader:
-        return dbc.CardHeader(
-            self._build_card_header_row(
-                title="Saved Calibrations",
-                open_button_id=SidebarIds.saved_calibrations_open_folder_button,
-                refresh_button_id=SidebarIds.saved_calibrations_refresh_button,
-            )
-        )
-
-    def _build_saved_calibrations_body(self, sidebar: dict[str, list[str]]) -> dbc.CardBody:
-        return dbc.CardBody(
-            [
-                html.Div(
-                    self._saved_calibration_items(sidebar),
-                    id=SidebarIds.saved_calibrations_body_container,
-                ),
-                self._build_status_div(SidebarIds.saved_calibrations_open_folder_status),
-            ],
-            style={"maxHeight": "30vh", "overflowY": "auto"},
-        )
-
-    def _build_saved_profiles_section(self) -> html.Div:
-        return html.Div(
-            [
-                dbc.Card(
-                    [
-                        self._build_saved_profiles_header(),
-                        self._build_saved_profiles_body(),
-                    ],
-                    style={"height": "100%"},
-                    id=self._id("saved-profiles-card"),
-                ),
-            ],
-            id=self._id("saved-profiles-section"),
-        )
-
-    def _build_saved_profiles_header(self) -> dbc.CardHeader:
-        return dbc.CardHeader(
-            self._build_card_header_row(
-                title="Saved Profiles",
-                open_button_id=SidebarIds.saved_profiles_open_folder_button,
-                refresh_button_id=SidebarIds.saved_profiles_refresh_button,
-            )
-        )
-
-    def _build_saved_profiles_body(self) -> dbc.CardBody:
-        return dbc.CardBody(
-            [
-                self._saved_profile_dropdown(),
-                self._build_status_div(SidebarIds.saved_profiles_load_status),
-                self._build_status_div(SidebarIds.saved_profiles_open_folder_status),
-            ],
-            style={"maxHeight": "30vh", "overflowY": "auto"},
-        )
-
-    def _build_card_header_row(
+    def _build_saved_calibrations_section(
         self,
-        *,
-        title: str,
-        open_button_id: str,
-        refresh_button_id: str,
-    ) -> html.Div:
-        return html.Div(
-            [
-                html.Div(title),
-                self._build_header_buttons(
-                    open_button_id=open_button_id,
-                    refresh_button_id=refresh_button_id,
-                ),
-            ],
-            style={
-                "display": "flex",
-                "alignItems": "center",
-                "justifyContent": "space-between",
-                "gap": "12px",
-            },
+        saved_calibrations: dict[str, list[str]],
+    ) -> dbc.Card:
+        logger.debug(
+            "Building saved calibrations section with fluorescence=%d scattering=%d",
+            len(saved_calibrations.get("fluorescence", [])),
+            len(saved_calibrations.get("scattering", [])),
         )
 
-    def _build_header_buttons(
+        return dbc.Card(
+            [
+                dbc.CardHeader("Saved calibrations"),
+                dbc.CardBody(
+                    [
+                        html.Div(
+                            [
+                                dbc.Button(
+                                    "Open folder",
+                                    id=SidebarIds.saved_calibrations_open_folder_button,
+                                    size="sm",
+                                    color="secondary",
+                                ),
+                                dbc.Button(
+                                    "Refresh",
+                                    id=SidebarIds.saved_calibrations_refresh_button,
+                                    size="sm",
+                                    color="secondary",
+                                ),
+                            ],
+                            style={
+                                "display": "flex",
+                                "gap": "8px",
+                                "marginBottom": "10px",
+                                "flexWrap": "wrap",
+                            },
+                        ),
+                        html.Div(
+                            self._build_saved_calibrations_body(saved_calibrations),
+                            id=SidebarIds.saved_calibrations_body_container,
+                        ),
+                        html.Div(style={"height": "8px"}),
+                        html.Small(
+                            id=SidebarIds.saved_calibrations_open_folder_status,
+                            style={"opacity": 0.75},
+                        ),
+                    ]
+                ),
+            ]
+        )
+
+    def _build_saved_calibrations_body(
         self,
-        *,
-        open_button_id: str,
-        refresh_button_id: str,
-    ) -> html.Div:
-        return html.Div(
-            [
-                dbc.Button(
-                    "Open folder",
-                    id=open_button_id,
-                    n_clicks=0,
-                    color="secondary",
-                    outline=True,
-                    size="sm",
-                    className="rounded-pill",
-                ),
-                dbc.Button(
-                    "Update",
-                    id=refresh_button_id,
-                    n_clicks=0,
-                    color="secondary",
-                    outline=True,
-                    size="sm",
-                    className="rounded-pill",
-                ),
-            ],
-            style={
-                "display": "flex",
-                "gap": "8px",
-                "alignItems": "center",
-            },
-        )
+        saved_calibrations: dict[str, list[str]],
+    ) -> list[html.Div]:
+        body_children: list[html.Div] = []
 
-    def _build_status_div(self, component_id: str) -> html.Div:
-        return html.Div(
-            "",
-            id=component_id,
-            style={
-                "marginTop": "10px",
-                "opacity": 0.75,
-                "fontSize": "0.9rem",
-            },
-        )
-
-    def _saved_calibration_items(self, sidebar: dict[str, list[str]]) -> list[html.Div]:
-        normalized_sidebar = self._normalize_sidebar_data(sidebar)
-
-        items: list[html.Div] = []
         for folder_key, folder_label in self._folder_display_order:
-            files = sorted(set(normalized_sidebar.get(folder_key, [])))
-            items.append(
-                self._saved_folder_section(
-                    folder_key=folder_key,
-                    folder_label=folder_label,
-                    files=files,
+            file_names = saved_calibrations.get(folder_key, [])
+
+            logger.debug(
+                "Rendering folder_key=%r with %d files",
+                folder_key,
+                len(file_names),
+            )
+
+            if file_names:
+                file_list = html.Ul(
+                    [self._saved_file_item(folder_key, file_name) for file_name in file_names],
+                    style={"paddingLeft": "20px", "marginBottom": "0px"},
+                )
+            else:
+                file_list = html.Div(
+                    "No calibration found.",
+                    style={"opacity": 0.7, "fontStyle": "italic"},
+                )
+
+            body_children.append(
+                html.Div(
+                    [
+                        html.Div(
+                            folder_label,
+                            style={
+                                "fontWeight": "600",
+                                "marginBottom": "6px",
+                            },
+                        ),
+                        file_list,
+                    ],
+                    style={"marginBottom": "12px"},
                 )
             )
 
-        return items
+        return body_children
 
-    def _normalize_sidebar_data(self, sidebar: dict[str, list[str]] | None) -> dict[str, list[str]]:
-        sidebar = dict(sidebar or {})
-        normalized_sidebar: dict[str, list[str]] = {}
-
-        for folder, files in sidebar.items():
-            folder_key = self._normalize_folder_key(folder)
-            if folder_key not in normalized_sidebar:
-                normalized_sidebar[folder_key] = []
-            normalized_sidebar[folder_key].extend([str(file) for file in (files or [])])
-
-        return normalized_sidebar
-
-    @staticmethod
-    def _normalize_folder_key(folder: str) -> str:
-        normalized_folder = str(folder or "").strip().lower()
-        normalized_folder = normalized_folder.replace(" ", "_")
-        return normalized_folder
-
-    def _saved_profile_dropdown(self) -> dcc.Dropdown | dbc.Alert:
-        options = self._saved_profile_dropdown_options()
-
-        if not options:
-            return dbc.Alert(
-                "No saved profiles found.",
-                color="secondary",
-                style={"marginBottom": "0px"},
-            )
-
-        return dcc.Dropdown(
-            id=SidebarIds.saved_profiles_dropdown,
-            options=options,
-            placeholder="Select a profile",
-            clearable=True,
+    def _saved_file_item(self, folder: str, file_name: str) -> html.Li:
+        logger.debug(
+            "Building sidebar item for folder=%r file_name=%r",
+            folder,
+            file_name,
         )
 
-    def _saved_profile_dropdown_options(self) -> list[dict[str, str]]:
-        profiles = sorted(set(list_setting_files()))
-        return [{"label": profile_name, "value": profile_name} for profile_name in profiles]
+        selected_calibration_value = f"{folder}/{file_name}"
+        apply_href = f"/calibrate?selected_calibration={quote(selected_calibration_value, safe='')}"
 
-    def _saved_folder_section(
-        self,
-        *,
-        folder_key: str,
-        folder_label: str,
-        files: list[str],
-    ) -> html.Div:
-        return html.Div(
-            [
-                html.H5(folder_label, style={"marginBottom": "8px"}),
-                self._build_saved_folder_content(folder_key=folder_key, files=files),
-                html.Hr(style={"opacity": 0.25}),
-            ],
-            id=self._id(f"saved-folder-{folder_key}"),
-        )
-
-    def _build_saved_folder_content(self, *, folder_key: str, files: list[str]) -> object:
-        if files:
-            return html.Ul([self._saved_file_item(folder_key, file_name) for file_name in files])
-
-        return dbc.Alert(
-            "No saved calibrations found.",
-            color="secondary",
-            style={"marginBottom": "0px"},
-        )
-
-    def _saved_file_item(self, folder: str, file: str) -> html.Li:
         return html.Li(
-            dcc.Link(
-                file,
-                href=f"/apply-calibration/{folder}/{file}",
-                id={"type": "apply-calibration", "index": f"{folder}/{file}"},
+            html.Div(
+                [
+                    html.Div(
+                        dcc.Link(
+                            file_name,
+                            href=f"/calibration-json/{folder}/{file_name}",
+                            target="_blank",
+                            style={
+                                "overflowWrap": "anywhere",
+                                "wordBreak": "break-word",
+                            },
+                        ),
+                        style={
+                            "flex": "1 1 auto",
+                            "minWidth": "0",
+                        },
+                    ),
+                    dbc.Button(
+                        "Apply",
+                        href=apply_href,
+                        color="link",
+                        size="sm",
+                        style={
+                            "padding": "0px",
+                            "whiteSpace": "nowrap",
+                            "textDecoration": "none",
+                            "flex": "0 0 auto",
+                        },
+                    ),
+                ],
+                style={
+                    "display": "flex",
+                    "justifyContent": "space-between",
+                    "alignItems": "flex-start",
+                    "gap": "12px",
+                    "width": "100%",
+                },
             )
         )
 
-    def _list_saved_calibrations(self) -> dict[str, list[str]]:
-        return {
-            "fluorescence": self._list_json_files_in_directory(fluorescence_calibration_directory),
-            "scattering": self._list_json_files_in_directory(scattering_calibration_directory),
-        }
-
-    @staticmethod
-    def _list_json_files_in_directory(directory: Path | str) -> list[str]:
-        directory_path = Path(directory).expanduser()
-        directory_path.mkdir(parents=True, exist_ok=True)
-
-        return sorted(
-            file_path.name
-            for file_path in directory_path.glob("*.json")
-            if file_path.is_file()
+    def _build_saved_profiles_section(self) -> dbc.Card:
+        return dbc.Card(
+            [
+                dbc.CardHeader("Saved profiles"),
+                dbc.CardBody(
+                    [
+                        html.Div(
+                            [
+                                dbc.Button(
+                                    "Open folder",
+                                    id=SidebarIds.saved_profiles_open_folder_button,
+                                    size="sm",
+                                    color="secondary",
+                                ),
+                                dbc.Button(
+                                    "Refresh",
+                                    id=SidebarIds.saved_profiles_refresh_button,
+                                    size="sm",
+                                    color="secondary",
+                                ),
+                            ],
+                            style={
+                                "display": "flex",
+                                "gap": "8px",
+                                "marginBottom": "10px",
+                                "flexWrap": "wrap",
+                            },
+                        ),
+                        dcc.Dropdown(
+                            id=SidebarIds.saved_profiles_dropdown,
+                            options=[],
+                            value=None,
+                            placeholder="Select a saved profile",
+                            clearable=True,
+                        ),
+                        html.Div(style={"height": "8px"}),
+                        html.Small(
+                            id=SidebarIds.saved_profiles_load_status,
+                            style={"opacity": 0.75},
+                        ),
+                        html.Div(style={"height": "8px"}),
+                        html.Small(
+                            id=SidebarIds.saved_profiles_open_folder_status,
+                            style={"opacity": 0.75},
+                        ),
+                    ]
+                ),
+            ]
         )
 
-    def _calibration_open_directory(self) -> Path:
-        fluorescence_directory = Path(fluorescence_calibration_directory).expanduser()
-        scattering_directory = Path(scattering_calibration_directory).expanduser()
-
-        fluorescence_directory.mkdir(parents=True, exist_ok=True)
-        scattering_directory.mkdir(parents=True, exist_ok=True)
-
-        if fluorescence_directory.parent == scattering_directory.parent:
-            return fluorescence_directory.parent
-
-        return fluorescence_directory
 
 
-sidebar_html = Sidebar().register_callbacks().layout
+_sidebar_instance = Sidebar()
+
+
+def register_sidebar_callbacks() -> None:
+    logger.debug("register_sidebar_callbacks called")
+    _sidebar_instance.register_callbacks()
+
+
+def sidebar_html(sidebar: Optional[dict[str, list[str]]]) -> html.Div:
+    logger.debug("sidebar_html called with sidebar=%r", sidebar)
+    return _sidebar_instance.layout(sidebar)

@@ -3,7 +3,8 @@ import dash
 from RosettaX.pages.scattering.ids import Ids
 from RosettaX.pages.scattering import sections
 
-class ScatterCalibrationPage():
+
+class ScatterCalibrationPage:
     def __init__(self) -> None:
         self.ids = Ids()
 
@@ -20,26 +21,15 @@ class ScatterCalibrationPage():
             sections.ScatteringSection(page=self),
             sections.ParametersSection(page=self),
             sections.CalibrationSection(page=self),
-            sections.SaveSection(page=self)
+            sections.SaveSection(page=self),
         ]
 
-    def register(self) -> "ScatterCalibrationPage":
-        dash.register_page(__name__, path="/scatter_calibration", name="Scattering", order=2)
-
+    def register_callbacks(self) -> "ScatterCalibrationPage":
         for section in self.sections:
             section.register_callbacks()
-
         return self
 
     def layout(self) -> dash.html.Div:
-        """
-        The layout is defined here in the main page file since it composes sections that are defined across multiple files.
-
-        Returns
-        -------
-        dash.html.Div
-            The layout of the scatter calibration page, composed of multiple sections.
-        """
         return dash.html.Div(
             [
                 dash.html.H1("Scattering Calibration"),
@@ -49,4 +39,13 @@ class ScatterCalibrationPage():
         )
 
 
-layout = ScatterCalibrationPage().register().layout()
+_page = ScatterCalibrationPage().register_callbacks()
+layout = _page.layout
+
+dash.register_page(
+    __name__,
+    path="/scattering",
+    name="Scattering",
+    order=2,
+    layout=layout,
+)

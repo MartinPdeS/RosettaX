@@ -1,4 +1,8 @@
-import json
+# -*- coding: utf-8 -*-
+
+import importlib
+import logging
+import sys
 import webbrowser
 from threading import Timer
 from typing import Any, Optional
@@ -8,12 +12,10 @@ import dash_bootstrap_components as dbc
 from dash import Input, Output, dcc, html
 
 from RosettaX.pages import styling
-from RosettaX.pages.sidebar.main import sidebar_html
+from RosettaX.pages.sidebar.main import sidebar_html, register_sidebar_callbacks
 from RosettaX.utils.parser import _parse_args
 from RosettaX.utils.runtime_config import RuntimeConfig
 
-import logging
-import sys
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -22,18 +24,15 @@ logging.basicConfig(
     force=True,
 )
 
+logger = logging.getLogger(__name__)
 logging.getLogger("RosettaX").setLevel(logging.DEBUG)
+
 
 class RosettaXApplication:
     """
-    Main Dash application wrapper.
-
-    Adds
-    ----
-    - Sidebar + page container layout
-    - Session stores used across pages
-    - Dark mode switch (default is dark) that toggles the Bootstrap theme
+    Main Dash application for RosettaX.
     """
+
     _theme_light = dbc.themes.FLATLY
     _theme_dark = dbc.themes.SLATE
 
@@ -47,73 +46,145 @@ class RosettaXApplication:
         self.host = str(host)
         self.port = int(port)
         self.open_browser = bool(open_browser)
+
+        logger.debug(
+            "Initializing RosettaXApplication with host=%r port=%r open_browser=%r",
+            self.host,
+            self.port,
+            self.open_browser,
+        )
+
         self.app = dash.Dash(
             __name__,
-            external_stylesheets=[self._theme_light],
+            external_stylesheets=[self._theme_dark],
             use_pages=True,
+            pages_folder="",
             suppress_callback_exceptions=True,
         )
+
+        logger.debug("Dash application instantiated with default dark theme")
+
+        self._register_pages()
+        logger.debug("Registered Dash pages: %r", list(dash.page_registry.keys()))
+
+        register_sidebar_callbacks()
 
         self._register_callbacks()
         self._set_layout()
 
-    @staticmethod
-    def create_table_from_dict(*, json_path: str) -> list[dict[str, str]]:
+    def _register_pages(self) -> None:
         """
-        Load a JSON settings file and convert default MESF entries into a table-like list.
+        Import all page modules after Dash app instantiation.
+        """
+        page_modules = [
+            "RosettaX.pages.home.main",
+            "RosettaX.pages.settings.main",
+            "RosettaX.pages.fluorescence.main",
+            "RosettaX.pages.scattering.main",
+            "RosettaX.pages.calibrate.main",
+            "RosettaX.pages.help.main",
+            "RosettaX.pages.calibration_json.main",
+        ]
 
-        Returns
-        -------
-        list[dict[str, str]]
-            Each row is {"col1": <mesf_value>, "col2": ""}. If loading fails, returns
-            a single empty row.
+        logger.debug("Registering page modules")
+
+        for module_name in page_modules:
+            try:
+                logger.debug("Importing page module=%r", module_name)
+                importlib.import_module(module_name)
+                logger.debug("Successfully imported page module=%r", module_name)
+            except Exception:
+                logger.exception("Failed to import page module=%r", module_name)
+                raise
+
+    @staticmethod
+    def create_mesf_default_table_from_runtime_config() -> list[dict[str, str]]:
         """
+        Build the default MESF table from the RuntimeConfig singleton.
+        """
+        logger.debug("Building MESF default table from RuntimeConfig singleton")
+
         try:
-            with open(json_path, "r", encoding="utf-8") as file:
-                data = json.load(file)
+            runtime_config_payload = RuntimeConfig().to_dict()
+
+            if not isinstance(runtime_config_payload, dict):
+                logger.warning(
+                    "RuntimeConfig.to_dict() did not return a dictionary. Got type=%r",
+                    type(runtime_config_payload).__name__,
+                )
+                return [{"col1": "", "col2": ""}]
 
             table_data: list[dict[str, str]] = []
-            for _key, value in (data or {}).items():
+
+            for key, value in runtime_config_payload.items():
                 if not isinstance(value, dict):
+                    logger.debug(
+                        "Skipping non-dictionary runtime config entry: key=%r value=%r",
+                        key,
+                        value,
+                    )
                     continue
-                if value.get("default", True):
-                    mesf_values = str(value.get("mesf_values", "")).split(",")
-                    for mesf in mesf_values:
-                        mesf_clean = str(mesf).strip()
-                        if mesf_clean:
-                            table_data.append({"col1": mesf_clean, "col2": ""})
+
+                if not value.get("default", True):
+                    logger.debug("Skipping non-default entry: key=%r", key)
+                    continue
+
+                mesf_values = value.get("mesf_values", "")
+
+                if isinstance(mesf_values, str):
+                    mesf_candidates = mesf_values.split(",")
+                elif isinstance(mesf_values, (list, tuple)):
+                    mesf_candidates = list(mesf_values)
+                else:
+                    logger.debug(
+                        "Skipping entry with unsupported mesf_values type: key=%r type=%r",
+                        key,
+                        type(mesf_values).__name__,
+                    )
+                    continue
+
+                for mesf_value in mesf_candidates:
+                    mesf_clean = str(mesf_value).strip()
+                    if mesf_clean:
+                        table_data.append({"col1": mesf_clean, "col2": ""})
 
             if not table_data:
-                table_data = [{"col1": "", "col2": ""}]
+                logger.warning(
+                    "No MESF defaults were found in RuntimeConfig. Using one blank row."
+                )
+                return [{"col1": "", "col2": ""}]
 
+            logger.debug(
+                "Built %d MESF default rows from RuntimeConfig",
+                len(table_data),
+            )
             return table_data
+
         except Exception:
+            logger.exception("Failed to build MESF default table from RuntimeConfig")
             return [{"col1": "", "col2": ""}]
 
     def _register_callbacks(self) -> None:
         """
-        Register app-level callbacks.
-
-        Includes
-        --------
-        - Routing container updates
-        - Sidebar updates
-        - Theme switcher: toggles the Bootstrap theme between dark and light
+        Register application-level Dash callbacks.
         """
-        @self.app.callback(
-            Output("page-content", "children"),
-            Input("url", "pathname"),
-        )
-        def _display_page(_pathname: Optional[str]):
-            return dash.page_container
+        logger.debug("Registering app-level callbacks")
 
         @self.app.callback(
             Output("sidebar-content", "children"),
             Input("url", "pathname"),
             Input("apply-calibration-store", "data"),
         )
-        def _update_sidebar(_url: Optional[str], sidebar_data: Any):
-            return sidebar_html(sidebar_data)
+        def _update_sidebar(
+            pathname: Optional[str],
+            sidebar_refresh_signal: Any,
+        ):
+            logger.debug(
+                "Refreshing sidebar for pathname=%r sidebar_refresh_signal=%r",
+                pathname,
+                sidebar_refresh_signal,
+            )
+            return sidebar_html(None)
 
         @self.app.callback(
             Output("theme-link", "href"),
@@ -121,56 +192,43 @@ class RosettaXApplication:
             Input("theme-switch", "value"),
         )
         def _toggle_theme(is_dark: bool):
-            """
-            Toggle theme based on switch state.
+            logger.debug("Theme toggle callback called with is_dark=%r", is_dark)
 
-            Parameters
-            ----------
-            is_dark:
-                True means dark theme, False means light theme.
-
-            Returns
-            -------
-            tuple[str, dict]
-                - href for the Bootstrap CSS link
-                - a small session store payload describing the theme
-            """
             if bool(is_dark):
+                logger.debug("Applying dark theme")
                 return self._theme_dark, {"theme": "dark"}
+
+            logger.debug("Applying light theme")
             return self._theme_light, {"theme": "light"}
 
-    def _set_layout(self) -> None:
-        """
-        Build the full application layout.
+    def _build_main_content(self) -> html.Div:
+        logger.debug("Building main content container")
 
-        Notes
-        -----
-        The theme switch is placed in a small header bar at the top right.
-        Default is dark mode.
-        """
-        main_content = html.Div(
+        return html.Div(
             dash.page_container,
             id="page-content",
             style=styling.CONTENT,
         )
 
-        sidebar_content = html.Div(
+    def _build_sidebar_content(self) -> html.Div:
+        logger.debug("Building sidebar content container")
+
+        return html.Div(
             id="sidebar-content",
             style=styling.SIDEBAR,
         )
 
-        mesf_default_table = self.create_table_from_dict(
-            json_path="RosettaX/data/settings/saved_mesf_values.json"
-        )
+    def _build_theme_header(self) -> html.Div:
+        logger.debug("Building theme header with default dark mode enabled")
 
-        theme_header = html.Div(
+        return html.Div(
             [
                 html.Div(
                     [
                         html.Span("Dark mode", style={"marginRight": "10px"}),
                         dbc.Switch(
                             id="theme-switch",
-                            value=False,
+                            value=True,
                             persistence=True,
                             persistence_type="session",
                         ),
@@ -188,61 +246,106 @@ class RosettaXApplication:
             },
         )
 
+    def _build_stores(self, *, mesf_default_table: list[dict[str, str]]) -> list:
+        logger.debug(
+            "Building application stores with %d MESF default rows",
+            len(mesf_default_table),
+        )
 
+        runtime_config_payload = RuntimeConfig().to_dict()
+
+        logger.debug(
+            "Runtime config payload prepared for storage with type=%r",
+            type(runtime_config_payload).__name__,
+        )
+
+        return [
+            dcc.Store(
+                id="theme-store",
+                data={"theme": "dark"},
+                storage_type="session",
+            ),
+            dcc.Store(
+                id="apply-calibration-store",
+                data=0,
+                storage_type="session",
+            ),
+            dcc.Store(
+                id="MESF-default_table-store",
+                data=mesf_default_table,
+                storage_type="session",
+            ),
+            dcc.Store(
+                id="runtime-config-store",
+                storage_type="session",
+                data=runtime_config_payload,
+            ),
+        ]
+
+    def _build_theme_link(self) -> html.Link:
+        logger.debug("Building theme link with default dark theme href")
+
+        return html.Link(
+            id="theme-link",
+            rel="stylesheet",
+            href=self._theme_dark,
+        )
+
+    def _set_layout(self) -> None:
+        logger.debug("Building application layout")
+
+        mesf_default_table = self.create_mesf_default_table_from_runtime_config()
+
+        main_content = self._build_main_content()
+        sidebar_content = self._build_sidebar_content()
+        theme_header = self._build_theme_header()
+        theme_link = self._build_theme_link()
+        stores = self._build_stores(mesf_default_table=mesf_default_table)
 
         self.app.layout = html.Div(
             [
                 dcc.Location(id="url"),
-                dcc.Store(
-                    id="theme-store",
-                    data={"theme": "light"},
-                    storage_type="session",
-                ),
-                dcc.Store(
-                    data={"Fluorescent": [], "Scattering": []},
-                    id="apply-calibration-store",
-                    storage_type="session",
-                ),
-                dcc.Store(
-                    data=mesf_default_table,
-                    id="MESF-default_table-store",
-                    storage_type="session",
-                ),
-                html.Link(id="theme-link", rel="stylesheet", href=self._theme_light),
+                *stores,
+                theme_link,
                 theme_header,
                 sidebar_content,
                 main_content,
-                dcc.Store(id="runtime-config-store", storage_type="session", data=RuntimeConfig().to_dict())
             ]
         )
 
+        logger.debug("Application layout built successfully")
+
     def run(self) -> None:
-        """
-        Start the Dash server, optionally opening the browser.
-        """
+        logger.debug(
+            "Starting Dash server with host=%r port=%r open_browser=%r",
+            self.host,
+            self.port,
+            self.open_browser,
+        )
+
         if self.open_browser:
+            logger.debug("Browser auto-open requested. Scheduling browser launch.")
             Timer(1, self._open_browser).start()
 
         self.app.run(
             host=self.host,
             port=self.port,
-            debug=True
+            debug=True,
         )
 
     def _open_browser(self) -> None:
-        """
-        Open the app URL in a new browser window.
-        """
-        webbrowser.open_new(f"http://{self.host}:{self.port}")
+        url = f"http://{self.host}:{self.port}/home"
+        logger.debug("Opening browser at url=%r", url)
+        webbrowser.open_new(url)
 
 
 def main(argv: Optional[list[str]] = None) -> None:
-    """
-    CLI entrypoint.
-    """
+    logger.debug("Entering main with argv=%r", argv)
+
     args = _parse_args(argv)
 
     runtime_config = RuntimeConfig()
+    logger.debug("Loading runtime configuration from default_profile.json")
     runtime_config.load_json("default_profile.json")
 
     app = RosettaXApplication(
@@ -250,7 +353,6 @@ def main(argv: Optional[list[str]] = None) -> None:
         port=int(args.port),
         open_browser=not bool(args.no_browser),
     )
-
     app.run()
 
 
