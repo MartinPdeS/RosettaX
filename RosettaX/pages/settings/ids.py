@@ -1,3 +1,5 @@
+page_name = "settings"
+
 class Ids:
     """
     Id namespace for the fluorescent calibration page.
@@ -30,6 +32,18 @@ class Ids:
         core_diameter_nm = "core_diameter_nm"
 
         save_confirmation = "save_confirmation"
+
+        default_gating_channel = f"{page_name}-default-gating-channel"
+        default_gating_threshold = f"{page_name}-default-gating-threshold"
+        show_calibration_plot_by_default = f"{page_name}-show-calibration-plot-by-default"
+        histogram_scale = f"{page_name}-histogram-scale"
+        default_output_suffix = f"{page_name}-default-output-suffix"
+        operator_name = f"{page_name}-operator-name"
+        instrument_name = f"{page_name}-instrument-name"
+        theme_mode = f"{page_name}-theme-mode"
+
+
+
 
     class NewProfile:
         profile_name = "new_profile_name"

@@ -3,7 +3,7 @@ from typing import Any
 import dash_bootstrap_components as dbc
 from dash import Input, Output, State, callback, dcc, html
 
-from RosettaX.pages.settings.utils import list_setting_files
+from RosettaX.utils import directories
 from RosettaX.pages.settings.ids import Ids
 
 class DeleteSection():
@@ -38,7 +38,7 @@ class DeleteSection():
                         html.Div(
                             [
                                 dcc.Dropdown(
-                                    options=[{"label": profile, "value": profile+'.json'} for profile in list_setting_files()],
+                                    options=[{"label": profile, "value": profile+'.json'} for profile in directories.list_profiles()],
                                     placeholder="Select Profile",
                                     id=Ids.DeleteProfile.delete_profile_name,
                                 ),

@@ -8,11 +8,7 @@ from urllib.parse import parse_qs
 import dash
 import dash_bootstrap_components as dbc
 
-from RosettaX.utils.directories import (
-    fluorescence_calibration_directory,
-    scattering_calibration_directory,
-)
-
+from RosettaX.utils import directories
 
 logger = logging.getLogger(__name__)
 
@@ -22,8 +18,8 @@ class CalibrationPickerSection:
         self.page = page
 
         self._folder_definitions: list[tuple[str, str, Path]] = [
-            ("fluorescence", "Fluorescence", Path(fluorescence_calibration_directory)),
-            ("scattering", "Scattering", Path(scattering_calibration_directory)),
+            ("fluorescence", "Fluorescence", directories.fluorescence_calibration),
+            ("scattering", "Scattering", directories.scattering_calibration),
         ]
 
         logger.debug(

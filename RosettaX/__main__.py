@@ -14,11 +14,10 @@ import dash_bootstrap_components as dbc
 from dash import Input, Output, dcc, html
 
 from RosettaX.pages import styling
-from RosettaX.pages.settings.utils import profile_directory
 from RosettaX.pages.sidebar.main import SidebarIds, register_sidebar_callbacks, sidebar_html
 from RosettaX.utils.parser import _parse_args
 from RosettaX.utils.runtime_config import RuntimeConfig
-
+from RosettaX.utils import directories
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -227,7 +226,7 @@ class RosettaXApplication:
                 if not selected_profile_file_name.endswith(".json"):
                     selected_profile_file_name = f"{selected_profile_file_name}.json"
 
-                resolved_profile_path = Path(profile_directory).resolve() / selected_profile_file_name
+                resolved_profile_path = Path(directories.profiles).resolve() / selected_profile_file_name
                 logger.debug(
                     "Resolved sidebar selected profile path=%r",
                     str(resolved_profile_path),

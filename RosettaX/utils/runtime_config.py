@@ -3,6 +3,7 @@ from typing import Optional, ClassVar
 import json
 import logging
 
+from RosettaX.utils import directories
 
 logger = logging.getLogger(__name__)
 
@@ -77,9 +78,7 @@ class RuntimeConfig:
         return cls()
 
     def load_json(self, json_filename: str) -> dict:
-        from RosettaX.pages.settings.utils import profile_directory
-
-        json_path = profile_directory / json_filename
+        json_path = directories.profiles / json_filename
         logger.debug("RuntimeConfig.load_json called with json_path=%r", str(json_path))
 
         try:

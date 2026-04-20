@@ -10,8 +10,6 @@ from RosettaX.pages.calibrate.ids import Ids
 
 class ApplyCalibrationPage:
     def __init__(self) -> None:
-        self.path = "/calibrate"
-        self.name = "Apply Calibration"
         self.container_style = {"paddingBottom": "48px"}
 
         self.ids = Ids()
@@ -22,7 +20,6 @@ class ApplyCalibrationPage:
             sections.FilePickerSection(page=self),
             sections.ChannelPickerSection(page=self),
             sections.ApplySection(page=self),
-            # sections.PlotSection(page=self),
         ]
 
     def register_callbacks(self) -> Self:
@@ -54,8 +51,8 @@ layout = _page.layout
 
 dash.register_page(
     __name__,
-    path=_page.path,
-    name=_page.name,
+    path="/calibrate",
+    name="Apply Calibration",
     order=3,
     layout=layout,
 )

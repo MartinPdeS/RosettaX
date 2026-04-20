@@ -10,11 +10,7 @@ from dash import html
 
 from RosettaX.utils.calibration_records import extract_calibration_summary
 from RosettaX.utils.calibration_summary import build_calibration_summary_card
-from RosettaX.utils.directories import (
-    fluorescence_calibration_directory,
-    scattering_calibration_directory,
-)
-
+from RosettaX.utils import directories
 
 logger = logging.getLogger(__name__)
 
@@ -23,9 +19,9 @@ def _resolve_calibration_file_path(folder: str, file_name: str) -> Path:
     normalized_folder = str(folder).strip().lower()
 
     if normalized_folder == "fluorescence":
-        base_directory = Path(fluorescence_calibration_directory)
+        base_directory = Path(directories.fluorescence_calibration)
     elif normalized_folder == "scattering":
-        base_directory = Path(scattering_calibration_directory)
+        base_directory = Path(directories.scattering_calibration)
     else:
         raise ValueError(f"Unsupported calibration folder: {folder}")
 

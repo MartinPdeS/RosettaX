@@ -10,6 +10,6 @@
     "n_bins_for_plots": 1000,
     "peak_count": 2,
     "mie_model": "Solid Sphere",
-    "mesf_values": "1, 100",
-    "fcs_file_path": ""
+    "mesf_values": "1, 3",
+    "fcs_file_path": "/var/folders/nx/6l9ysx0j7yb5szphhl8jskyh0000gn/T/rosettax_uploads/z17idfod.fcs"
 }

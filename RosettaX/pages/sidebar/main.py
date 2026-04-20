@@ -11,11 +11,7 @@ import dash
 import dash_bootstrap_components as dbc
 from dash import dcc, html
 from RosettaX.pages.sidebar.ids import SidebarIds
-from RosettaX.pages.settings.utils import list_setting_files, profile_directory
-from RosettaX.utils.directories import (
-    fluorescence_calibration_directory,
-    scattering_calibration_directory,
-)
+from RosettaX.utils import directories
 
 
 logger = logging.getLogger(__name__)
@@ -108,7 +104,7 @@ class Sidebar:
             del n_clicks
 
             try:
-                calibration_root_directory = Path(fluorescence_calibration_directory).resolve().parent
+                calibration_root_directory = Path(directories.fluorescence_calibration).resolve().parent
                 logger.debug(
                     "Opening calibration root directory=%r",
                     str(calibration_root_directory),
@@ -153,7 +149,7 @@ class Sidebar:
                 else:
                     selected_profile_file_name = selected_profile_name
 
-                resolved_profile_path = Path(profile_directory).resolve() / selected_profile_file_name
+                resolved_profile_path = Path(directories.profiles).resolve() / selected_profile_file_name
                 logger.debug(
                     "Resolved selected profile path=%r from selected_profile=%r",
                     str(resolved_profile_path),
@@ -183,7 +179,7 @@ class Sidebar:
             del n_clicks
 
             try:
-                resolved_profile_directory = Path(profile_directory).resolve()
+                resolved_profile_directory = Path(directories.profiles).resolve()
                 logger.debug("Opening profile directory=%r", str(resolved_profile_directory))
                 _open_directory(resolved_profile_directory)
                 return f"Opened profile folder: {resolved_profile_directory}"
@@ -231,8 +227,8 @@ class Sidebar:
         }
 
         folder_to_directory = {
-            "fluorescence": Path(fluorescence_calibration_directory),
-            "scattering": Path(scattering_calibration_directory),
+            "fluorescence": Path(directories.fluorescence_calibration),
+            "scattering": Path(directories.scattering_calibration),
         }
 
         for folder_name, directory_path in folder_to_directory.items():
@@ -502,7 +498,7 @@ class Sidebar:
         logger.debug("Building saved profile options from disk")
 
         try:
-            setting_files = list_setting_files()
+            setting_files = directories.list_profiles()
             options = [{"label": file_name, "value": file_name} for file_name in setting_files]
             logger.debug("Built %d saved profile options", len(options))
             return options
