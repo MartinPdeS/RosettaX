@@ -1,9 +1,9 @@
 PAGE_NAME = "scattering_calibration"
 
+
 class Ids:
     page_name = PAGE_NAME
 
-    # Upload section
     class Upload:
         filename = f"{PAGE_NAME}-upload_filename"
         saved_as = f"{PAGE_NAME}-upload_saved_as"
@@ -12,7 +12,6 @@ class Ids:
         filename_store = f"{PAGE_NAME}-filename_store"
         max_events_for_plots_input = f"{PAGE_NAME}-scattering_max_events_for_plots_input"
 
-    # Parameters section
     class Parameters:
         mie_model_parameters_container = f"{PAGE_NAME}-mie_model_parameters_container"
         mie_model = f"{PAGE_NAME}-mie_model"
@@ -35,14 +34,26 @@ class Ids:
         collapse_example = f"{PAGE_NAME}-collapse_example"
         solid_sphere_container = f"{PAGE_NAME}-solid_sphere_container"
         core_shell_container = f"{PAGE_NAME}-core_shell_container"
+        optical_configuration_preset = f"{PAGE_NAME}-optical-configuration-preset"
+        wavelength_nm = f"{PAGE_NAME}-wavelength-nm"
+        optical_power_watt = f"{PAGE_NAME}-optical-power-watt"
+        source_numerical_aperture = f"{PAGE_NAME}-source-numerical-aperture"
+        detector_numerical_aperture = f"{PAGE_NAME}-detector-numerical-aperture"
+        detector_cache_numerical_aperture = f"{PAGE_NAME}-detector-cache-numerical-aperture"
+        detector_sampling = f"{PAGE_NAME}-detector-sampling"
+
+
 
     class Scattering:
         detector_dropdown = f"{PAGE_NAME}-scattering_detector_dropdown"
-        debug_container = f"{PAGE_NAME}-scattering_debug_container"
-        debug_switch = f"{PAGE_NAME}-scattering_debug_switch"
-        nbins_input = f"{PAGE_NAME}-scattering_nbins_input"
         graph_hist = f"{PAGE_NAME}-scattering_graph_hist"
         yscale_switch = f"{PAGE_NAME}-scattering_yscale_switch"
+        nbins_input = f"{PAGE_NAME}-scattering_nbins_input"
+        peak_count_input = f"{PAGE_NAME}-scattering-peak-count-input"
+        find_peaks_btn = f"{PAGE_NAME}-scattering-find-peaks-btn"
+        graph_toggle_switch = f"{PAGE_NAME}-scattering-graph-toggle-switch"
+        graph_toggle_container = f"{PAGE_NAME}-scattering-graph-toggle-container"
+        peak_lines_store = f"{PAGE_NAME}-scattering-peak-lines-store"
 
     class Export:
         run_calibration_btn = f"{PAGE_NAME}-run_calibration_btn"
@@ -57,7 +68,16 @@ class Ids:
 
     class Calibration:
         calibration_store = f"{PAGE_NAME}-calibration_store"
-        calibrate_example_btn = f"{PAGE_NAME}-calibrate_example_btn"
+        calibrate_btn = f"{PAGE_NAME}-calibrate-btn"
+        graph_store = f"{PAGE_NAME}-graph_store"
+        reference_axis_label = f"{PAGE_NAME}-reference-axis-label"
+        bead_table = f"{PAGE_NAME}-bead-table"
+        add_row_btn = f"{PAGE_NAME}-add-row-btn"
+        graph_calibration = f"{PAGE_NAME}-graph-calibration"
+        slope_out = f"{PAGE_NAME}-slope-out"
+        intercept_out = f"{PAGE_NAME}-intercept-out"
+        r_squared_out = f"{PAGE_NAME}-r-squared-out"
+        apply_status = f"{PAGE_NAME}-apply-status"
 
     class Save:
         channel_name = f"{PAGE_NAME}-channel-name"

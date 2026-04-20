@@ -53,7 +53,7 @@ class CalibrationResult:
         )
 
 
-class CalibrationSection:
+class Calibration:
     bead_table_columns = [
         {"name": "Intensity [calibrated units]", "id": "col1", "editable": True},
         {"name": "Intensity [a.u.]", "id": "col2", "editable": True},

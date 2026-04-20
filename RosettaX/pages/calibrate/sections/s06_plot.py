@@ -27,7 +27,7 @@ class PlotResult:
         return (self.figure, self.status, self.channel_value)
 
 
-class PlotSection:
+class Plot:
     def __init__(self, page) -> None:
         self.page = page
 

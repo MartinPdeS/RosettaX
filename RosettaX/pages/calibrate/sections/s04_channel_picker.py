@@ -13,7 +13,7 @@ from RosettaX.utils import service
 logger = logging.getLogger(__name__)
 
 
-class ChannelPickerSection:
+class ChannelPicker:
     def __init__(self, page) -> None:
         self.page = page
         logger.debug("Initialized ChannelPickerSection with page=%r", page)

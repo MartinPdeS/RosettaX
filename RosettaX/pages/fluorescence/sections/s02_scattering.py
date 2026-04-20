@@ -83,7 +83,7 @@ class ScatteringResult:
         )
 
 
-class ScatteringSection:
+class Scattering:
     """
     Render and manage the scattering detector threshold and debug histogram section.
 
@@ -394,10 +394,6 @@ class ScatteringSection:
                 max_events_for_plots=max_events_for_plots,
             )
             return self._run_scattering_callback(callback_inputs).to_tuple()
-
-
-
-
 
     def _toggle_debug_container(self, debug_switch_value: Any) -> dict:
         """

@@ -5,7 +5,7 @@ from dash import Input, Output, State, callback, dcc, html
 from RosettaX.pages.settings.ids import Ids
 from RosettaX.pages.settings.utils import create_profile
 
-class CreateSection():
+class CreateProfile():
     """
     Section 1: Load an FCS file and initialize the detector dropdowns.
 

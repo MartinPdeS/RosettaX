@@ -5,7 +5,7 @@
     "shell_thickness_nm": 20,
     "core_diameter_nm": 100,
     "particle_diameter_nm": 100,
-    "particle_refractive_index": 1.69,
+    "particle_refractive_index": 1.59,
     "max_events_for_analysis": 10000,
     "n_bins_for_plots": 1000,
     "peak_count": 3,

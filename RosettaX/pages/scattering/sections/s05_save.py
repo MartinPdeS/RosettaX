@@ -54,7 +54,7 @@ class SaveResult:
         )
 
 
-class SaveSection:
+class Save:
     """
     Save section.
 

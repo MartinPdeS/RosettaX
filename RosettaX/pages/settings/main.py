@@ -14,9 +14,9 @@ class SettingsPage:
         }
 
         self.sections = [
-            sections.DefaultSection(page=self),
-            sections.CreateSection(page=self),
-            sections.DeleteSection(page=self),
+            sections.DefaultProfile(page=self),
+            sections.CreateProfile(page=self),
+            sections.DeleteProfile(page=self),
         ]
 
         self.backend = None

@@ -15,11 +15,11 @@ class ApplyCalibrationPage:
         self.ids = Ids()
 
         self.sections = [
-            sections.HeaderSection(page=self),
-            sections.CalibrationPickerSection(page=self),
-            sections.FilePickerSection(page=self),
-            sections.ChannelPickerSection(page=self),
-            sections.ApplySection(page=self),
+            sections.Header(page=self),
+            sections.CalibrationPicker(page=self),
+            sections.FilePicker(page=self),
+            sections.ChannelPicker(page=self),
+            sections.Apply(page=self),
         ]
 
     def register_callbacks(self) -> Self:

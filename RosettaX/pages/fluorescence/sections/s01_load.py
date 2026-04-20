@@ -43,7 +43,7 @@ class LoadResult:
         )
 
 
-class LoadSection:
+class Upload:
     """
     Section 1: Load an FCS file and initialize the detector dropdowns.
 

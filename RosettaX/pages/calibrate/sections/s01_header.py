@@ -2,7 +2,7 @@
 
 from dash import html
 
-class HeaderSection:
+class Header:
     def __init__(self, page) -> None:
         self.page = page
 

@@ -13,7 +13,7 @@ from RosettaX.pages.fluorescence.backend import BackEnd
 logger = logging.getLogger(__name__)
 
 
-class PeaksSection:
+class Peaks:
     def __init__(self, page) -> None:
         self.page = page
 

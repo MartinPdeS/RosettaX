@@ -7,6 +7,7 @@ from RosettaX.pages.scattering import sections
 class ScatterCalibrationPage:
     def __init__(self) -> None:
         self.ids = Ids()
+        self.backend = None
 
         self.style = {
             "body_scroll": {"maxHeight": "80vh", "overflowY": "auto"},
@@ -17,11 +18,11 @@ class ScatterCalibrationPage:
         }
 
         self.sections = [
-            sections.LoadSection(page=self),
-            sections.ScatteringSection(page=self),
-            sections.ParametersSection(page=self),
-            sections.CalibrationSection(page=self),
-            sections.SaveSection(page=self),
+            sections.Upload(page=self),
+            sections.Scattering(page=self),
+            sections.Parameters(page=self),
+            sections.Calibration(page=self),
+            sections.Save(page=self),
         ]
 
     def register_callbacks(self) -> "ScatterCalibrationPage":
@@ -32,6 +33,11 @@ class ScatterCalibrationPage:
     def layout(self) -> dash.html.Div:
         return dash.html.Div(
             [
+                dash.dcc.Store(
+                    id=self.ids.Scattering.peak_lines_store,
+                    storage_type="session",
+                    data={"positions": [], "labels": []},
+                ),
                 dash.html.H1("Scattering Calibration"),
                 dash.html.Br(),
                 *[section.get_layout() for section in self.sections],

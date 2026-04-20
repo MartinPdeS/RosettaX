@@ -22,7 +22,7 @@ class UploadState:
     uploaded_filename: Any = dash.no_update
 
 
-class LoadSection:
+class Upload:
     def __init__(self, page) -> None:
         self.page = page
         logger.debug("Initialized LoadSection with page=%r", page)
@@ -98,13 +98,12 @@ class LoadSection:
                 uploaded_filename=None,
             )
 
-        try:
-            self.page.backend = BackEnd(temporary_fcs_path)
-        except Exception:
-            logger.exception(
-                "Failed to initialize BackEnd for temporary_fcs_path=%r",
-                temporary_fcs_path,
-            )
+        self.page.backend = None
+        logger.debug(
+            "Stored uploaded scattering FCS path=%r. BackEnd will be created later when a detector is selected.",
+            temporary_fcs_path,
+        )
+
 
         return UploadState(
             uploaded_fcs_path=temporary_fcs_path,

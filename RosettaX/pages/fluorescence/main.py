@@ -15,11 +15,11 @@ class FluorescencePage:
         }
 
         self.sections = [
-            sections.LoadSection(page=self),
-            sections.ScatteringSection(page=self),
-            sections.PeaksSection(page=self),
-            sections.CalibrationSection(page=self),
-            sections.SaveSection(page=self),
+            sections.Upload(page=self),
+            sections.Scattering(page=self),
+            sections.Peaks(page=self),
+            sections.Calibration(page=self),
+            sections.Save(page=self),
         ]
 
         self.backend = None

@@ -6,7 +6,7 @@ from dash import Input, Output, State, callback, dcc, html
 from RosettaX.utils import directories
 from RosettaX.pages.settings.ids import Ids
 
-class DeleteSection():
+class DeleteProfile():
     """
     Section 1: Load an FCS file and initialize the detector dropdowns.
 

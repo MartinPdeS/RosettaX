@@ -36,7 +36,7 @@ class FilePickerResult:
         )
 
 
-class FilePickerSection:
+class FilePicker:
     def __init__(self, page) -> None:
         self.page = page
         self._upload_dir = Path.home() / ".rosettax" / "uploads"

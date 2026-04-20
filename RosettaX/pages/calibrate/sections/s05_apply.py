@@ -35,7 +35,7 @@ class ApplySectionResult:
         )
 
 
-class ApplySection:
+class Apply:
     def __init__(self, page) -> None:
         self.page = page
 
@@ -311,7 +311,7 @@ class ApplySection:
 
     @staticmethod
     def _resolve_first_uploaded_fcs_path(uploaded_fcs_path: Any) -> Optional[str]:
-        resolved_uploaded_fcs_paths = ApplySection._resolve_uploaded_fcs_paths(uploaded_fcs_path)
+        resolved_uploaded_fcs_paths = Apply._resolve_uploaded_fcs_paths(uploaded_fcs_path)
         if not resolved_uploaded_fcs_paths:
             return None
         return resolved_uploaded_fcs_paths[0]

@@ -10,7 +10,7 @@ from RosettaX.utils.runtime_config import RuntimeConfig
 import re
 
 
-class DefaultSection:
+class DefaultProfile:
     def __init__(self, page) -> None:
         self.page = page
         self.persistence_type = "session"

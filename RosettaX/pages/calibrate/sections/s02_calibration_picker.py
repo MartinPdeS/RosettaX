@@ -13,7 +13,7 @@ from RosettaX.utils import directories
 logger = logging.getLogger(__name__)
 
 
-class CalibrationPickerSection:
+class CalibrationPicker:
     def __init__(self, page) -> None:
         self.page = page
 
