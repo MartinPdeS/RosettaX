@@ -51,35 +51,9 @@ class HomePage:
                         style={
                             "fontSize": "1.05rem",
                             "opacity": 0.9,
-                            "marginBottom": "16px",
+                            "marginBottom": "0px",
                             "maxWidth": "900px",
                         },
-                    ),
-                    html.Div(
-                        [
-                            dbc.Button(
-                                "Create fluorescence calibration",
-                                href="/fluorescent_calibration",
-                                id=self._id("hero-fluorescence"),
-                                color="success",
-                                style={"marginRight": "10px", "marginBottom": "10px"},
-                            ),
-                            dbc.Button(
-                                "Create scattering calibration",
-                                href="/scatter_calibration",
-                                id=self._id("hero-scattering"),
-                                color="secondary",
-                                style={"marginRight": "10px", "marginBottom": "10px"},
-                            ),
-                            dbc.Button(
-                                "Apply saved calibration",
-                                href="/apply-calibration",
-                                id=self._id("hero-apply"),
-                                color="primary",
-                                outline=True,
-                                style={"marginBottom": "10px"},
-                            ),
-                        ]
                     ),
                 ]
             ),
@@ -127,7 +101,7 @@ class HomePage:
                 "Load one or more FCS files, select a saved calibration, choose the target and export channels, and export calibrated files."
             ),
             button_text="Open apply workflow",
-            button_href="/apply-calibration",
+            button_href="/calibrate",
             button_color="primary",
             button_id=self._id("apply-link"),
         )

@@ -89,19 +89,19 @@ class HelpPage:
                     [
                         dbc.Button(
                             "Fluorescence",
-                            href="/fluorescent_calibration",
+                            href="/fluorescence",
                             color="success",
                             style={"width": "100%", "marginBottom": "10px"},
                         ),
                         dbc.Button(
                             "Scattering",
-                            href="/scatter_calibration",
+                            href="/scattering",
                             color="secondary",
                             style={"width": "100%", "marginBottom": "10px"},
                         ),
                         dbc.Button(
                             "Apply calibration",
-                            href="/apply-calibration",
+                            href="/calibrate",
                             color="primary",
                             outline=True,
                             style={"width": "100%", "marginBottom": "10px"},
@@ -283,6 +283,6 @@ dash.register_page(
     __name__,
     path="/help",
     name="Help",
-    order=5,
+    order=3,
     layout=layout,
 )

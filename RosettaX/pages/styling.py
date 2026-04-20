@@ -20,7 +20,7 @@ SIDEBAR = {
     "top": 0,
     "left": 0,
     "bottom": 0,
-    "width": f"460px",
+    "width": f"500px",
     "padding": "16px",
     "overflowY": "auto",
     "zIndex": 1000,

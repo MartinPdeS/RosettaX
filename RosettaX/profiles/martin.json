@@ -2,13 +2,14 @@
     "medium_refractive_index": 1.5,
     "core_refractive_index": 1.5,
     "shell_refractive_index": 1.5,
-    "shell_thickness": "",
-    "core_diameter": "",
-    "particle_diameter": "",
+    "shell_thickness_nm": "",
+    "core_diameter_nm": "",
+    "particle_diameter_nm": "",
     "particle_refractive_index": 1.59,
     "max_events_for_analysis": 10000,
     "n_bins_for_plots": 1000,
     "peak_count": 2,
+    "mie_model": "Solid Sphere",
     "mesf_values": "1, 100",
     "fcs_file_path": ""
 }

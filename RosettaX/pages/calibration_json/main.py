@@ -5,8 +5,11 @@ import logging
 from pathlib import Path
 
 import dash
+import dash_bootstrap_components as dbc
 from dash import html
 
+from RosettaX.utils.calibration_records import extract_calibration_summary
+from RosettaX.utils.calibration_summary import build_calibration_summary_card
 from RosettaX.utils.directories import (
     fluorescence_calibration_directory,
     scattering_calibration_directory,
@@ -44,18 +47,30 @@ def layout(folder: str = "", file_name: str = "", **_kwargs):
 
     try:
         calibration_file_path = _resolve_calibration_file_path(folder, file_name)
-        payload = json.loads(calibration_file_path.read_text(encoding="utf-8"))
+        record = json.loads(calibration_file_path.read_text(encoding="utf-8"))
+        summary = extract_calibration_summary(record)
 
         return html.Div(
             [
                 html.H3(f"{folder} / {file_name}"),
-                html.Pre(
-                    json.dumps(payload, indent=4, ensure_ascii=False),
-                    style={
-                        "whiteSpace": "pre-wrap",
-                        "fontFamily": "monospace",
-                        "fontSize": "0.95rem",
-                    },
+                html.Div(style={"height": "12px"}),
+                build_calibration_summary_card(summary),
+                html.Div(style={"height": "16px"}),
+                dbc.Card(
+                    [
+                        dbc.CardHeader("Raw JSON"),
+                        dbc.CardBody(
+                            html.Pre(
+                                json.dumps(record, indent=4, ensure_ascii=False),
+                                style={
+                                    "whiteSpace": "pre-wrap",
+                                    "fontFamily": "monospace",
+                                    "fontSize": "0.95rem",
+                                    "marginBottom": "0px",
+                                },
+                            )
+                        ),
+                    ]
                 ),
             ],
             style={"padding": "20px"},

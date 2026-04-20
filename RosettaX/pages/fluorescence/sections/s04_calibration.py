@@ -2,7 +2,7 @@
 from typing import Any, List, Optional, Tuple
 from dataclasses import dataclass
 import logging
-
+from pathlib import Path
 import dash
 import dash_bootstrap_components as dbc
 import numpy as np
@@ -644,6 +644,8 @@ class CalibrationSection:
             dash.State(self.page.ids.Upload.uploaded_fcs_path_store, "data"),
             dash.State(self.page.ids.Calibration.bead_table, "data"),
             dash.State(self.page.ids.Fluorescence.detector_dropdown, "value"),
+            dash.State(self.page.ids.Scattering.detector_dropdown, "value"),
+            dash.State(self.page.ids.Scattering.threshold_store, "data"),
             prevent_initial_call=True,
         )
         def calibrate_and_apply(
@@ -651,6 +653,8 @@ class CalibrationSection:
             bead_file_path: Optional[str],
             table_data: Optional[list[dict]],
             detector_column: Optional[str],
+            scattering_detector_column: Optional[str],
+            scattering_threshold: Any,
         ) -> tuple:
             """
             Fit a log10 regression from bead table points and optionally apply it.
@@ -769,14 +773,48 @@ class CalibrationSection:
                     float(r_squared),
                 )
 
+                reference_points = [
+                    {
+                        "reference_value": float(reference_value),
+                        "measured_value": float(measured_value),
+                    }
+                    for reference_value, measured_value in zip(
+                        intensity_calibrated_units,
+                        intensity_au,
+                        strict=False,
+                    )
+                ]
+
                 calibration_payload = {
-                    "slope": float(slope),
-                    "intercept": float(intercept),
-                    "prefactor": float(prefactor),
-                    "R_squared": float(r_squared),
-                    "model": "log10(y)=slope*log10(x)+intercept; y=(10**intercept) * x**slope",
-                    "x_definition": "Intensity [a.u.]",
-                    "y_definition": "Intensity [calibrated units]",
+                    "schema_version": "1.0",
+                    "calibration_type": "fluorescence",
+                    "name": "",
+                    "created_at": "",
+                    "source_file": Path(str(bead_file_path)).name if bead_file_path else None,
+                    "source_channel": str(detector_column) if detector_column else None,
+                    "gating_channel": str(scattering_detector_column) if scattering_detector_column else None,
+                    "gating_threshold": _as_float(scattering_threshold),
+                    "fit_model": "log10(y)=slope*log10(x)+intercept; y=(10**intercept) * x**slope",
+                    "fit_metrics": {
+                        "r_squared": float(r_squared),
+                        "point_count": int(len(reference_points)),
+                    },
+                    "parameters": {
+                        "slope": float(slope),
+                        "intercept": float(intercept),
+                        "prefactor": float(prefactor),
+                    },
+                    "reference_points": reference_points,
+                    "export_notes": "",
+                    "payload": {
+                        "slope": float(slope),
+                        "intercept": float(intercept),
+                        "prefactor": float(prefactor),
+                        "R_squared": float(r_squared),
+                        "model": "log10(y)=slope*log10(x)+intercept; y=(10**intercept) * x**slope",
+                        "x_definition": "Intensity [a.u.]",
+                        "y_definition": "Intensity [calibrated units]",
+                    },
                 }
 
                 figure = self._build_calibration_figure(

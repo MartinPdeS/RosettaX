@@ -1,23 +1,25 @@
 # -*- coding: utf-8 -*-
-
 import logging
-import webbrowser
-from pathlib import Path
-from typing import Any, Optional
-from urllib.parse import quote
 import os
 import platform
 import subprocess
+from pathlib import Path
+from typing import Any, Optional
+from urllib.parse import quote
 
 import dash
 import dash_bootstrap_components as dbc
 from dash import dcc, html
-
+from RosettaX.pages.sidebar.ids import SidebarIds
 from RosettaX.pages.settings.utils import list_setting_files, profile_directory
 from RosettaX.utils.directories import (
     fluorescence_calibration_directory,
     scattering_calibration_directory,
 )
+
+
+logger = logging.getLogger(__name__)
+
 
 def _open_directory(path: Path) -> None:
     resolved_path = Path(path).resolve()
@@ -44,23 +46,7 @@ def _open_directory(path: Path) -> None:
     raise RuntimeError(f"Unsupported operating system: {system_name}")
 
 
-logger = logging.getLogger(__name__)
 
-
-class SidebarIds:
-    prefix = "sidebar"
-
-    saved_calibrations_refresh_button = f"{prefix}-saved-calibrations-refresh-button"
-    saved_calibrations_open_folder_button = f"{prefix}-saved-calibrations-open-folder-button"
-    saved_calibrations_open_folder_status = f"{prefix}-saved-calibrations-open-folder-status"
-    saved_calibrations_body_container = f"{prefix}-saved-calibrations-body-container"
-    saved_calibrations_refresh_store = f"{prefix}-saved-calibrations-refresh-store"
-
-    saved_profiles_refresh_button = f"{prefix}-saved-profiles-refresh-button"
-    saved_profiles_open_folder_button = f"{prefix}-saved-profiles-open-folder-button"
-    saved_profiles_open_folder_status = f"{prefix}-saved-profiles-open-folder-status"
-    saved_profiles_dropdown = f"{prefix}-saved-profiles-dropdown"
-    saved_profiles_load_status = f"{prefix}-saved-profiles-load-status"
 
 
 class Sidebar:
@@ -68,7 +54,6 @@ class Sidebar:
         self.page_name = "sidebar"
         self.logo_src = "/assets/logo.png"
         self.logo_max_height_px = 156
-
         self.sidebar_width_px = 460
 
         self._folder_display_order: list[tuple[str, str]] = [
@@ -110,13 +95,6 @@ class Sidebar:
             )
             return self._build_saved_calibrations_body(saved_calibrations)
 
-
-
-
-
-
-
-
         @dash.callback(
             dash.Output(SidebarIds.saved_calibrations_open_folder_status, "children"),
             dash.Input(SidebarIds.saved_calibrations_open_folder_button, "n_clicks"),
@@ -141,28 +119,59 @@ class Sidebar:
                 logger.exception("Failed to open calibration folder")
                 return f"Could not open calibration folder: {type(exc).__name__}: {exc}"
 
-
-
-
-
         @dash.callback(
             dash.Output(SidebarIds.saved_profiles_dropdown, "options"),
             dash.Input(SidebarIds.saved_profiles_refresh_button, "n_clicks"),
-            prevent_initial_call=False,
+            prevent_initial_call=True,
         )
         def refresh_saved_profiles(_n_clicks: Optional[int]):
             logger.debug("refresh_saved_profiles called with n_clicks=%r", _n_clicks)
+            return self._build_saved_profile_options()
+
+        @dash.callback(
+            dash.Output(SidebarIds.selected_profile_store, "data"),
+            dash.Output(SidebarIds.saved_profiles_load_status, "children"),
+            dash.Input(SidebarIds.saved_profiles_dropdown, "value"),
+            prevent_initial_call=False,
+        )
+        def load_selected_profile(selected_profile: Optional[str]):
+            logger.debug("load_selected_profile called with selected_profile=%r", selected_profile)
+
+            if not selected_profile:
+                logger.debug("No selected profile. Clearing selected profile store.")
+                return None, "No profile selected."
 
             try:
-                setting_files = list_setting_files()
-                options = [{"label": file_name, "value": file_name} for file_name in setting_files]
-                logger.debug("Loaded %d profile options", len(options))
-                return options
-            except Exception:
-                logger.exception("Failed to refresh saved profiles")
-                return []
+                selected_profile_name = str(selected_profile).strip()
 
+                if not selected_profile_name:
+                    logger.debug("Selected profile was empty after stripping.")
+                    return None, "No profile selected."
 
+                if not selected_profile_name.endswith(".json"):
+                    selected_profile_file_name = f"{selected_profile_name}.json"
+                else:
+                    selected_profile_file_name = selected_profile_name
+
+                resolved_profile_path = Path(profile_directory).resolve() / selected_profile_file_name
+                logger.debug(
+                    "Resolved selected profile path=%r from selected_profile=%r",
+                    str(resolved_profile_path),
+                    selected_profile,
+                )
+
+                if not resolved_profile_path.exists():
+                    raise FileNotFoundError(f"Profile does not exist: {resolved_profile_path}")
+
+                logger.debug(
+                    "Selected profile exists. Storing selected_profile=%r",
+                    selected_profile_file_name,
+                )
+                return selected_profile_file_name, f"Selected profile: {selected_profile_file_name}"
+
+            except Exception as exc:
+                logger.exception("Failed to resolve selected profile=%r", selected_profile)
+                return dash.no_update, f"Could not select profile: {type(exc).__name__}: {exc}"
 
         @dash.callback(
             dash.Output(SidebarIds.saved_profiles_open_folder_status, "children"),
@@ -182,8 +191,6 @@ class Sidebar:
                 logger.exception("Failed to open profile folder")
                 return f"Could not open profile folder: {type(exc).__name__}: {exc}"
 
-
-
     def layout(self, sidebar: Optional[dict[str, list[str]]] = None) -> html.Div:
         logger.debug("Building sidebar layout with sidebar=%r", sidebar)
 
@@ -197,6 +204,11 @@ class Sidebar:
                 self._build_saved_calibrations_section(sidebar),
                 self._build_saved_profiles_section(),
                 dcc.Store(id=SidebarIds.saved_calibrations_refresh_store, data=0),
+                dcc.Store(
+                    id=SidebarIds.selected_profile_store,
+                    data=None,
+                    storage_type="session",
+                ),
             ],
             style={
                 "width": f"{self.sidebar_width_px}px",
@@ -464,10 +476,12 @@ class Sidebar:
                         ),
                         dcc.Dropdown(
                             id=SidebarIds.saved_profiles_dropdown,
-                            options=[],
+                            options=self._build_saved_profile_options(),
                             value=None,
                             placeholder="Select a saved profile",
                             clearable=True,
+                            persistence=True,
+                            persistence_type="session",
                         ),
                         html.Div(style={"height": "8px"}),
                         html.Small(
@@ -484,6 +498,17 @@ class Sidebar:
             ]
         )
 
+    def _build_saved_profile_options(self) -> list[dict[str, str]]:
+        logger.debug("Building saved profile options from disk")
+
+        try:
+            setting_files = list_setting_files()
+            options = [{"label": file_name, "value": file_name} for file_name in setting_files]
+            logger.debug("Built %d saved profile options", len(options))
+            return options
+        except Exception:
+            logger.exception("Failed to build saved profile options")
+            return []
 
 
 _sidebar_instance = Sidebar()

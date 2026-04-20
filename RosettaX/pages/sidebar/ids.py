@@ -12,3 +12,4 @@ class SidebarIds:
     saved_profiles_open_folder_status = f"{prefix}-saved-profiles-open-folder-status"
     saved_profiles_dropdown = f"{prefix}-saved-profiles-dropdown"
     saved_profiles_load_status = f"{prefix}-saved-profiles-load-status"
+    selected_profile_store = f"{prefix}-selected-profile-store"

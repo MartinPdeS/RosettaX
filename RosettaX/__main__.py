@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import importlib
+import json
 import logging
 import sys
 import webbrowser
+from pathlib import Path
 from threading import Timer
 from typing import Any, Optional
 
@@ -12,7 +14,8 @@ import dash_bootstrap_components as dbc
 from dash import Input, Output, dcc, html
 
 from RosettaX.pages import styling
-from RosettaX.pages.sidebar.main import sidebar_html, register_sidebar_callbacks
+from RosettaX.pages.settings.utils import profile_directory
+from RosettaX.pages.sidebar.main import SidebarIds, register_sidebar_callbacks, sidebar_html
 from RosettaX.utils.parser import _parse_args
 from RosettaX.utils.runtime_config import RuntimeConfig
 
@@ -68,7 +71,6 @@ class RosettaXApplication:
         logger.debug("Registered Dash pages: %r", list(dash.page_registry.keys()))
 
         register_sidebar_callbacks()
-
         self._register_callbacks()
         self._set_layout()
 
@@ -98,18 +100,19 @@ class RosettaXApplication:
                 raise
 
     @staticmethod
-    def create_mesf_default_table_from_runtime_config() -> list[dict[str, str]]:
+    def create_mesf_default_table_from_runtime_payload(
+        *,
+        runtime_config_payload: dict[str, Any],
+    ) -> list[dict[str, str]]:
         """
-        Build the default MESF table from the RuntimeConfig singleton.
+        Build the default MESF table from a runtime config payload dictionary.
         """
-        logger.debug("Building MESF default table from RuntimeConfig singleton")
+        logger.debug("Building MESF default table from runtime config payload")
 
         try:
-            runtime_config_payload = RuntimeConfig().to_dict()
-
             if not isinstance(runtime_config_payload, dict):
                 logger.warning(
-                    "RuntimeConfig.to_dict() did not return a dictionary. Got type=%r",
+                    "runtime_config_payload is not a dictionary. Got type=%r",
                     type(runtime_config_payload).__name__,
                 )
                 return [{"col1": "", "col2": ""}]
@@ -150,19 +153,29 @@ class RosettaXApplication:
 
             if not table_data:
                 logger.warning(
-                    "No MESF defaults were found in RuntimeConfig. Using one blank row."
+                    "No MESF defaults were found in runtime config payload. Using one blank row."
                 )
                 return [{"col1": "", "col2": ""}]
 
             logger.debug(
-                "Built %d MESF default rows from RuntimeConfig",
+                "Built %d MESF default rows from runtime config payload",
                 len(table_data),
             )
             return table_data
 
         except Exception:
-            logger.exception("Failed to build MESF default table from RuntimeConfig")
+            logger.exception("Failed to build MESF default table from runtime config payload")
             return [{"col1": "", "col2": ""}]
+
+    @classmethod
+    def create_mesf_default_table_from_runtime_config(cls) -> list[dict[str, str]]:
+        """
+        Build the default MESF table from the RuntimeConfig singleton.
+        """
+        logger.debug("Building MESF default table from RuntimeConfig singleton")
+        return cls.create_mesf_default_table_from_runtime_payload(
+            runtime_config_payload=RuntimeConfig().to_dict(),
+        )
 
     def _register_callbacks(self) -> None:
         """
@@ -185,6 +198,71 @@ class RosettaXApplication:
                 sidebar_refresh_signal,
             )
             return sidebar_html(None)
+
+        @self.app.callback(
+            Output("runtime-config-store", "data", allow_duplicate=True),
+            Output("MESF-default_table-store", "data"),
+            Input(SidebarIds.selected_profile_store, "data"),
+            prevent_initial_call=True,
+        )
+        def _load_runtime_config_from_sidebar_profile(
+            selected_profile_from_sidebar: Optional[str],
+        ):
+            logger.debug(
+                "_load_runtime_config_from_sidebar_profile called with selected_profile_from_sidebar=%r",
+                selected_profile_from_sidebar,
+            )
+
+            if not selected_profile_from_sidebar:
+                logger.debug("No selected profile from sidebar. Leaving stores unchanged.")
+                return dash.no_update, dash.no_update
+
+            try:
+                selected_profile_file_name = str(selected_profile_from_sidebar).strip()
+
+                if not selected_profile_file_name:
+                    logger.debug("Selected profile file name was empty after stripping.")
+                    return dash.no_update, dash.no_update
+
+                if not selected_profile_file_name.endswith(".json"):
+                    selected_profile_file_name = f"{selected_profile_file_name}.json"
+
+                resolved_profile_path = Path(profile_directory).resolve() / selected_profile_file_name
+                logger.debug(
+                    "Resolved sidebar selected profile path=%r",
+                    str(resolved_profile_path),
+                )
+
+                if not resolved_profile_path.exists():
+                    raise FileNotFoundError(f"Profile does not exist: {resolved_profile_path}")
+
+                runtime_config_payload = json.loads(
+                    resolved_profile_path.read_text(encoding="utf-8")
+                )
+
+                logger.debug(
+                    "Loaded runtime config payload from sidebar profile=%r type=%r",
+                    selected_profile_file_name,
+                    type(runtime_config_payload).__name__,
+                )
+
+                mesf_default_table = self.create_mesf_default_table_from_runtime_payload(
+                    runtime_config_payload=runtime_config_payload,
+                )
+
+                logger.debug(
+                    "Returning updated runtime config and MESF table with row_count=%r",
+                    len(mesf_default_table),
+                )
+
+                return runtime_config_payload, mesf_default_table
+
+            except Exception:
+                logger.exception(
+                    "Failed to load runtime config from sidebar selected profile=%r",
+                    selected_profile_from_sidebar,
+                )
+                return dash.no_update, dash.no_update
 
         @self.app.callback(
             Output("theme-link", "href"),
