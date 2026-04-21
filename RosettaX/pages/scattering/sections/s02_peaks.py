@@ -1,12 +1,14 @@
+# -*- coding: utf-8 -*-
+
 from dataclasses import dataclass
-from typing import Any, Optional, Tuple
+from typing import Any, Optional
 import logging
 
 import dash
 import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
 
-from RosettaX.pages import styling
+from RosettaX.utils import styling
 from RosettaX.pages.scattering.backend import BackEnd
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.utils.plottings import add_vertical_lines, _make_info_figure
@@ -39,7 +41,9 @@ class Scattering:
     - Populate the scattering detector dropdown from the uploaded FCS file.
     - Render histogram and peak finding controls.
     - Build a histogram preview for the selected detector.
-    - Detect histogram peaks and populate the scattering calibration table.
+    - Detect scattering peaks and write measured peak positions into the
+      calibration table, which is the source of truth.
+    - Keep graph peak markers synchronized with the detected peaks.
     """
 
     def __init__(self, page) -> None:
@@ -192,7 +196,7 @@ class Scattering:
         )
 
     def register_callbacks(self) -> None:
-        logger.debug("Registering scattering callbacks.")
+        logger.debug("Registering ScatteringSection callbacks.")
 
         @dash.callback(
             dash.Output(self.page.ids.Scattering.detector_dropdown, "options"),
@@ -204,7 +208,7 @@ class Scattering:
         def populate_scattering_detector_dropdown(
             uploaded_fcs_path: Any,
             current_detector_value: Any,
-        ) -> tuple:
+        ) -> tuple[list[dict[str, Any]], Any]:
             return self._populate_scattering_detector_dropdown(
                 uploaded_fcs_path=uploaded_fcs_path,
                 current_detector_value=current_detector_value,
@@ -215,11 +219,11 @@ class Scattering:
             dash.Input(self.page.ids.Scattering.graph_toggle_switch, "value"),
             prevent_initial_call=False,
         )
-        def toggle_scattering_graph_container(graph_toggle_value: Any) -> dict:
+        def toggle_scattering_graph_container(graph_toggle_value: Any) -> dict[str, str]:
             graph_enabled = self._is_enabled(graph_toggle_value)
 
             logger.debug(
-                "toggle_scattering_graph_container called with graph_toggle_value=%r resolved graph_enabled=%r",
+                "toggle_scattering_graph_container called with graph_toggle_value=%r resolved_graph_enabled=%r",
                 graph_toggle_value,
                 graph_enabled,
             )
@@ -228,18 +232,18 @@ class Scattering:
 
         @dash.callback(
             dash.Output(self.page.ids.Scattering.peak_lines_store, "data", allow_duplicate=True),
-            dash.Input(self.page.ids.Scattering.detector_dropdown, "value"),
             dash.Input(self.page.ids.Upload.fcs_path_store, "data"),
+            dash.Input(self.page.ids.Scattering.detector_dropdown, "value"),
             prevent_initial_call=True,
         )
         def clear_peak_lines_on_context_change(
+            uploaded_fcs_path: Any,
             scattering_channel: Any,
-            fcs_path: Any,
-        ) -> dict:
+        ) -> dict[str, list[Any]]:
             logger.debug(
-                "clear_peak_lines_on_context_change called with scattering_channel=%r fcs_path=%r",
+                "clear_peak_lines_on_context_change called with uploaded_fcs_path=%r scattering_channel=%r",
+                uploaded_fcs_path,
                 scattering_channel,
-                fcs_path,
             )
             return {"positions": [], "labels": []}
 
@@ -285,7 +289,8 @@ class Scattering:
             if not callback_inputs.graph_enabled:
                 return _make_info_figure("Histogram is hidden.")
 
-            if not uploaded_fcs_path:
+            uploaded_fcs_path_clean = self._clean_optional_string(uploaded_fcs_path)
+            if not uploaded_fcs_path_clean:
                 return _make_info_figure("Upload an FCS file first.")
 
             if not callback_inputs.scattering_channel:
@@ -293,21 +298,33 @@ class Scattering:
 
             try:
                 scattering_backend = BackEnd(
-                    fcs_file_path=str(uploaded_fcs_path),
-                    detector_column=str(callback_inputs.scattering_channel),
+                    fcs_file_path=uploaded_fcs_path_clean,
+                    detector_column=callback_inputs.scattering_channel,
                 )
 
                 histogram_result = scattering_backend.build_histogram(
-                    n_bins_for_plots=int(callback_inputs.nbins),
-                    max_events_for_analysis=int(callback_inputs.max_events),
+                    n_bins_for_plots=callback_inputs.nbins,
+                    max_events_for_analysis=callback_inputs.max_events,
                 )
 
-                line_positions: list = []
-                line_labels: list = []
+                line_positions: list[float] = []
+                line_labels: list[str] = []
 
                 if isinstance(peak_lines, dict):
-                    line_positions = peak_lines.get("positions") or []
-                    line_labels = peak_lines.get("labels") or []
+                    line_positions = [
+                        float(value)
+                        for value in (peak_lines.get("positions") or [])
+                    ]
+                    line_labels = [
+                        str(value)
+                        for value in (peak_lines.get("labels") or [])
+                    ]
+
+                logger.debug(
+                    "update_scattering_histogram using line_positions=%r line_labels=%r",
+                    line_positions,
+                    line_labels,
+                )
 
                 figure = scattering_backend.build_histogram_figure(
                     histogram_result=histogram_result,
@@ -328,7 +345,7 @@ class Scattering:
             except Exception as exc:
                 logger.exception(
                     "Failed to build scattering histogram for uploaded_fcs_path=%r channel=%r nbins=%r max_events=%r",
-                    uploaded_fcs_path,
+                    uploaded_fcs_path_clean,
                     callback_inputs.scattering_channel,
                     callback_inputs.nbins,
                     callback_inputs.max_events,
@@ -342,13 +359,13 @@ class Scattering:
             dash.State(self.page.ids.Upload.fcs_path_store, "data"),
             dash.State(self.page.ids.Scattering.detector_dropdown, "value"),
             dash.State(self.page.ids.Scattering.peak_count_input, "value"),
-            dash.State(self.page.ids.Scattering.nbins_input, "value"),
             dash.State(
                 self.page.ids.Upload.max_events_for_plots_input,
                 "value",
                 allow_optional=True,
             ),
             dash.State(self.page.ids.Calibration.bead_table, "data"),
+            dash.State(self.page.ids.Parameters.mie_model, "value"),
             prevent_initial_call=True,
         )
         def find_peaks_and_update_table(
@@ -356,33 +373,49 @@ class Scattering:
             uploaded_fcs_path: Optional[str],
             scattering_channel: Optional[str],
             peak_count: Any,
-            scattering_nbins: Any,
             max_events_for_plots: Any,
-            table_data: Optional[list[dict]],
+            table_data: Optional[list[dict[str, Any]]],
+            mie_model: Any,
         ) -> tuple[Any, Any]:
             logger.debug(
-                "find_peaks_and_update_table called with n_clicks=%r uploaded_fcs_path=%r scattering_channel=%r peak_count=%r scattering_nbins=%r max_events_for_plots=%r table_rows=%r",
+                "find_peaks_and_update_table called with n_clicks=%r uploaded_fcs_path=%r scattering_channel=%r peak_count=%r max_events_for_plots=%r table_rows=%r mie_model=%r",
                 n_clicks,
                 uploaded_fcs_path,
                 scattering_channel,
                 peak_count,
-                scattering_nbins,
                 max_events_for_plots,
                 None if table_data is None else len(table_data),
+                mie_model,
             )
 
             if not n_clicks:
+                logger.debug("Find peaks button not clicked yet. Returning no_update.")
                 return dash.no_update, dash.no_update
 
             uploaded_fcs_path_clean = self._clean_optional_string(uploaded_fcs_path)
             scattering_channel_clean = self._clean_optional_string(scattering_channel)
+            resolved_mie_model = self._resolve_mie_model(mie_model)
 
             if not uploaded_fcs_path_clean or not scattering_channel_clean:
+                logger.debug(
+                    "Missing required peak-finding context uploaded_fcs_path_clean=%r scattering_channel_clean=%r",
+                    uploaded_fcs_path_clean,
+                    scattering_channel_clean,
+                )
                 return dash.no_update, dash.no_update
 
-            resolved_peak_count = _as_int(peak_count, default=3, min_value=1, max_value=50)
-            resolved_nbins = _as_int(scattering_nbins, default=100, min_value=10, max_value=5000)
-            resolved_max_events = _as_int(max_events_for_plots, default=10000, min_value=1, max_value=5_000_000)
+            resolved_peak_count = _as_int(
+                peak_count,
+                default=3,
+                min_value=1,
+                max_value=50,
+            )
+            resolved_max_events = _as_int(
+                max_events_for_plots,
+                default=10000,
+                min_value=1,
+                max_value=5_000_000,
+            )
 
             try:
                 scattering_backend = BackEnd(
@@ -390,46 +423,43 @@ class Scattering:
                     detector_column=scattering_channel_clean,
                 )
 
-                histogram_result = scattering_backend.build_histogram(
-                    n_bins_for_plots=resolved_nbins,
+                peak_detection_result = scattering_backend.find_scattering_peaks(
+                    max_peaks=resolved_peak_count,
                     max_events_for_analysis=resolved_max_events,
+                    debug=False,
                 )
 
-                peak_detection_result = scattering_backend.find_histogram_peaks(
-                    histogram_result=histogram_result,
-                    peak_count=resolved_peak_count,
-                )
-
-                updated_table_data = self._inject_peak_positions_into_table(
-                    table_data=table_data,
-                    peak_positions=peak_detection_result.peak_positions,
-                )
+                peak_positions = [
+                    float(value)
+                    for value in peak_detection_result.peak_positions.tolist()
+                ]
 
                 peak_lines_payload = {
-                    "positions": [
-                        float(value) for value in peak_detection_result.peak_positions.tolist()
-                    ],
-                    "labels": [
-                        f"Peak {index + 1}"
-                        for index in range(len(peak_detection_result.peak_positions))
-                    ],
+                    "positions": peak_positions,
+                    "labels": [f"Peak {index + 1}" for index in range(len(peak_positions))],
                 }
 
+                updated_table_data = self._write_measured_peaks_into_table(
+                    table_data=table_data,
+                    peak_positions=peak_positions,
+                    mie_model=resolved_mie_model,
+                )
+
                 logger.debug(
-                    "Scattering peak finding succeeded. peak_positions=%r updated_table_rows=%r",
-                    peak_lines_payload["positions"],
-                    None if updated_table_data is None else len(updated_table_data),
+                    "Peak finding succeeded with peak_positions=%r updated_table_rows=%r updated_table_data=%r",
+                    peak_positions,
+                    len(updated_table_data),
+                    updated_table_data,
                 )
 
                 return updated_table_data, peak_lines_payload
 
             except Exception:
                 logger.exception(
-                    "Failed to find scattering peaks for uploaded_fcs_path=%r scattering_channel=%r peak_count=%r scattering_nbins=%r max_events_for_plots=%r",
+                    "Failed to find scattering peaks for uploaded_fcs_path=%r scattering_channel=%r peak_count=%r max_events_for_plots=%r",
                     uploaded_fcs_path_clean,
                     scattering_channel_clean,
                     resolved_peak_count,
-                    resolved_nbins,
                     resolved_max_events,
                 )
                 raise
@@ -439,20 +469,22 @@ class Scattering:
         *,
         uploaded_fcs_path: Any,
         current_detector_value: Any,
-    ) -> tuple:
-        if not uploaded_fcs_path:
-            logger.debug("No uploaded FCS path available. Returning empty dropdown.")
+    ) -> tuple[list[dict[str, Any]], Any]:
+        uploaded_fcs_path_clean = self._clean_optional_string(uploaded_fcs_path)
+
+        if not uploaded_fcs_path_clean:
+            logger.debug("No uploaded FCS path available. Returning empty detector dropdown.")
             return [], None
 
         try:
             channels = build_channel_options_from_file(
-                uploaded_fcs_path,
+                uploaded_fcs_path_clean,
                 preferred_scatter=current_detector_value,
             )
         except Exception:
             logger.exception(
                 "Failed to extract scattering channels from uploaded_fcs_path=%r",
-                uploaded_fcs_path,
+                uploaded_fcs_path_clean,
             )
             return [], None
 
@@ -460,7 +492,7 @@ class Scattering:
         scattering_detector_value = channels.scatter_value
 
         logger.debug(
-            "Resolved scattering detector dropdown with %r options and value=%r",
+            "Resolved scattering detector dropdown with option_count=%r value=%r",
             len(scattering_detector_options),
             scattering_detector_value,
         )
@@ -500,28 +532,77 @@ class Scattering:
             "Parsed scattering histogram callback inputs=%r",
             parsed_inputs,
         )
+
         return parsed_inputs
 
-    def _inject_peak_positions_into_table(
+    def _write_measured_peaks_into_table(
         self,
         *,
-        table_data: Optional[list[dict]],
-        peak_positions: Any,
-    ) -> list[dict]:
-        existing_rows = [dict(row) for row in (table_data or [])]
-        if peak_positions is None:
-            peak_positions = []
-        else:
-            peak_positions = list(peak_positions)
+        table_data: Optional[list[dict[str, Any]]],
+        peak_positions: list[float],
+        mie_model: str,
+    ) -> list[dict[str, str]]:
+        logger.debug(
+            "_write_measured_peaks_into_table called with mie_model=%r peak_positions=%r existing_row_count=%r",
+            mie_model,
+            peak_positions,
+            0 if table_data is None else len(table_data),
+        )
 
-        required_row_count = max(len(existing_rows), len(peak_positions))
-        while len(existing_rows) < required_row_count:
-            existing_rows.append({"col1": "", "col2": "", "col3": ""})
+        updated_rows = [dict(row) for row in (table_data or [])]
+        required_row_count = max(len(updated_rows), len(peak_positions), 3)
 
-        for index, peak_position in enumerate(peak_positions):
-            existing_rows[index]["col2"] = f"{float(peak_position):.6g}"
+        while len(updated_rows) < required_row_count:
+            updated_rows.append(self._build_empty_row_for_model(mie_model))
 
-        return existing_rows
+        for row_index, row in enumerate(updated_rows):
+            if mie_model == "Core/Shell Sphere":
+                normalized_row = {
+                    "core_diameter_nm": "" if row.get("core_diameter_nm") is None else str(row.get("core_diameter_nm")),
+                    "shell_thickness_nm": "" if row.get("shell_thickness_nm") is None else str(row.get("shell_thickness_nm")),
+                    "outer_diameter_nm": "" if row.get("outer_diameter_nm") is None else str(row.get("outer_diameter_nm")),
+                    "measured_peak_position": "",
+                    "expected_coupling": "" if row.get("expected_coupling") is None else str(row.get("expected_coupling")),
+                }
+            else:
+                normalized_row = {
+                    "particle_diameter_nm": "" if row.get("particle_diameter_nm") is None else str(row.get("particle_diameter_nm")),
+                    "measured_peak_position": "",
+                    "expected_coupling": "" if row.get("expected_coupling") is None else str(row.get("expected_coupling")),
+                }
+
+            if row_index < len(peak_positions):
+                normalized_row["measured_peak_position"] = f"{float(peak_positions[row_index]):.6g}"
+
+            updated_rows[row_index] = normalized_row
+
+        logger.debug(
+            "_write_measured_peaks_into_table returning row_count=%r rows=%r",
+            len(updated_rows),
+            updated_rows,
+        )
+
+        return updated_rows
+
+    def _build_empty_row_for_model(self, mie_model: str) -> dict[str, str]:
+        if mie_model == "Core/Shell Sphere":
+            return {
+                "core_diameter_nm": "",
+                "shell_thickness_nm": "",
+                "outer_diameter_nm": "",
+                "measured_peak_position": "",
+                "expected_coupling": "",
+            }
+
+        return {
+            "particle_diameter_nm": "",
+            "measured_peak_position": "",
+            "expected_coupling": "",
+        }
+
+    def _resolve_mie_model(self, mie_model: Any) -> str:
+        mie_model_string = self._clean_optional_string(mie_model)
+        return "Core/Shell Sphere" if mie_model_string == "Core/Shell Sphere" else "Solid Sphere"
 
     def _is_enabled(self, value: Any) -> bool:
         return isinstance(value, list) and ("enabled" in value)

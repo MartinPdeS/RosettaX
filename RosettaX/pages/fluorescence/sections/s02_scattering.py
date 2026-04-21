@@ -6,12 +6,11 @@ import dash
 import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
 
-from RosettaX.pages import styling
+from RosettaX.utils import styling
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.utils.reader import FCSFile
 from RosettaX.utils.plottings import make_histogram_with_lines, _make_info_figure
 from RosettaX.utils.casting import _as_float, _as_int
-from RosettaX.utils.service import build_channel_options_from_file
 
 
 logger = logging.getLogger(__name__)
@@ -19,31 +18,6 @@ logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class ScatteringCallbackInputs:
-    """
-    Parsed callback inputs for the scattering section.
-
-    Attributes
-    ----------
-    triggered_id : Any
-        Dash callback trigger identifier.
-    debug_enabled : bool
-        Whether the local debug graph switch is enabled.
-    scattering_channel : str
-        Clean scattering channel name.
-    nbins : int
-        Number of histogram bins.
-    max_events : int
-        Maximum number of events to process.
-    yscale_selection : Any
-        Raw checklist value for the y axis scale.
-    manual_threshold : Optional[float]
-        Parsed threshold from the manual threshold input.
-    stored_threshold : Optional[float]
-        Parsed threshold from the threshold store.
-    must_estimate : bool
-        Whether threshold estimation should be recomputed.
-    """
-
     triggered_id: Any
     debug_enabled: bool
     scattering_channel: str
@@ -57,25 +31,11 @@ class ScatteringCallbackInputs:
 
 @dataclass
 class ScatteringResult:
-    """
-    Container for the Dash outputs of the scattering callback.
-
-    This keeps the callback return logic clean and localizes the Dash output ordering.
-    """
-
     figure: Any = dash.no_update
     scattering_threshold_store: Any = dash.no_update
     scattering_threshold_input_value: Any = dash.no_update
 
     def to_tuple(self) -> tuple:
-        """
-        Convert to the tuple expected by the Dash callback Outputs.
-
-        Returns
-        -------
-        tuple
-            (figure, scattering_threshold_store, scattering_threshold_input_value)
-        """
         return (
             self.figure,
             self.scattering_threshold_store,
@@ -84,38 +44,13 @@ class ScatteringResult:
 
 
 class Scattering:
-    """
-    Render and manage the scattering detector threshold and debug histogram section.
-
-    Responsibilities
-    ----------------
-    - Render the scattering detector controls and optional debug graph.
-    - Estimate a scattering threshold from the active FCS file.
-    - Allow manual threshold override.
-    - Build a histogram view with the active threshold line.
-    """
-
     def __init__(self, page) -> None:
-        """
-        Initialize the scattering section.
-
-        Parameters
-        ----------
-        page : Any
-            Parent page object providing ids, style, and backend access.
-        """
         self.page = page
+        self.runtime_config = RuntimeConfig()
+        self.default = self.runtime_config.Default
         logger.debug("Initialized ScatteringSection with page=%r", page)
 
     def get_layout(self) -> dbc.Card:
-        """
-        Build the Dash layout for the scattering section.
-
-        Returns
-        -------
-        dbc.Card
-            Card containing the scattering controls and histogram plot.
-        """
         return dbc.Card(
             [
                 self._build_header(),
@@ -124,25 +59,9 @@ class Scattering:
         )
 
     def _build_header(self) -> dbc.CardHeader:
-        """
-        Build the section header.
-
-        Returns
-        -------
-        dbc.CardHeader
-            Section header.
-        """
         return dbc.CardHeader("2. Scattering channel")
 
     def _build_body(self) -> dbc.CardBody:
-        """
-        Build the section body.
-
-        Returns
-        -------
-        dbc.CardBody
-            Section body containing controls and debug graph.
-        """
         return dbc.CardBody(
             [
                 self._build_debug_store(),
@@ -156,28 +75,12 @@ class Scattering:
         )
 
     def _build_debug_store(self) -> dash.dcc.Store:
-        """
-        Store the local debug visibility state for this section.
-
-        Returns
-        -------
-        dash.dcc.Store
-            Store containing whether debug controls are visible.
-        """
         return dash.dcc.Store(
             id=self.page.ids.Scattering.debug_store,
             data={"enabled": False},
         )
 
     def _build_detector_row(self) -> dash.html.Div:
-        """
-        Build the dropdown row for selecting the scattering detector channel.
-
-        Returns
-        -------
-        dash.html.Div
-            Row containing a label and dropdown.
-        """
         return dash.html.Div(
             [
                 dash.html.Div("Scattering detector:"),
@@ -193,20 +96,12 @@ class Scattering:
         )
 
     def _build_debug_switch_row(self) -> dash.html.Div:
-        """
-        Build the row containing the local debug switch.
-
-        Returns
-        -------
-        dash.html.Div
-            Row containing the debug switch.
-        """
         return dash.html.Div(
             [
                 dbc.Checklist(
                     id=self.page.ids.Scattering.debug_switch,
-                    options=[{"label": "Show debug graph", "value": "enabled"}],
-                    value=[],
+                    options=[{"label": "Show graph", "value": "enabled"}],
+                    value=["enabled"] if self.default.show_graphs else [],
                     switch=True,
                 ),
             ],
@@ -214,14 +109,6 @@ class Scattering:
         )
 
     def _build_debug_controls_container(self) -> dash.html.Div:
-        """
-        Build the container that holds all debug only controls and graph.
-
-        Returns
-        -------
-        dash.html.Div
-            Container whose visibility is controlled by the local debug switch.
-        """
         return dash.html.Div(
             [
                 self._build_estimate_and_threshold_row(),
@@ -237,16 +124,6 @@ class Scattering:
         )
 
     def _build_nbins_row(self) -> dash.html.Div:
-        """
-        Build the input row for selecting histogram bin count.
-
-        Returns
-        -------
-        dash.html.Div
-            Row containing a label and numeric input.
-        """
-        runtime_config = RuntimeConfig()
-
         return dash.html.Div(
             [
                 dash.html.Div("Number of bins:"),
@@ -255,7 +132,7 @@ class Scattering:
                     type="number",
                     min=10,
                     step=10,
-                    value=runtime_config.Default.n_bins_for_plots,
+                    value=self.default.n_bins_for_plots,
                     style={"width": "160px"},
                 ),
             ],
@@ -263,14 +140,6 @@ class Scattering:
         )
 
     def _build_estimate_and_threshold_row(self) -> dash.html.Div:
-        """
-        Build the row containing the estimate button and the threshold input.
-
-        Returns
-        -------
-        dash.html.Div
-            Row with estimate threshold button and threshold text input.
-        """
         return dash.html.Div(
             [
                 dash.html.Div(
@@ -303,14 +172,6 @@ class Scattering:
         )
 
     def _build_yscale_switch(self) -> dbc.Checklist:
-        """
-        Build the y scale toggle for counts.
-
-        Returns
-        -------
-        dbc.Checklist
-            Switch to toggle log y axis.
-        """
         return dbc.Checklist(
             id=self.page.ids.Scattering.yscale_switch,
             options=[{"label": "Log scale (counts)", "value": "log"}],
@@ -319,14 +180,6 @@ class Scattering:
         )
 
     def _build_histogram_graph(self) -> dash.dcc.Loading:
-        """
-        Build the histogram graph wrapper.
-
-        Returns
-        -------
-        dash.dcc.Loading
-            Loading wrapper containing the Plotly graph.
-        """
         return dash.dcc.Loading(
             dash.dcc.Graph(
                 id=self.page.ids.Scattering.graph_hist,
@@ -335,12 +188,32 @@ class Scattering:
             type="default",
         )
 
-
     def register_callbacks(self) -> None:
-        """
-        Register callbacks for scattering threshold estimation and histogram display.
-        """
         logger.debug("Registering scattering callbacks.")
+
+        @dash.callback(
+            dash.Output(self.page.ids.Scattering.debug_switch, "value"),
+            dash.Input("runtime-config-store", "data"),
+            prevent_initial_call=False,
+        )
+        def sync_scattering_graph_visibility_from_runtime_store(runtime_config_data: Any) -> list[str]:
+            if not isinstance(runtime_config_data, dict):
+                logger.debug(
+                    "sync_scattering_graph_visibility_from_runtime_store received non-dict payload=%r. Using Default.show_graphs=%r",
+                    runtime_config_data,
+                    self.default.show_graphs,
+                )
+                return ["enabled"] if self.default.show_graphs else []
+
+            resolved_show_graphs = bool(
+                runtime_config_data.get("show_graphs", self.default.show_graphs)
+            )
+            logger.debug(
+                "sync_scattering_graph_visibility_from_runtime_store resolved_show_graphs=%r from runtime_config_data=%r",
+                resolved_show_graphs,
+                runtime_config_data,
+            )
+            return ["enabled"] if resolved_show_graphs else []
 
         @dash.callback(
             dash.Output(self.page.ids.Scattering.debug_container, "style"),
@@ -357,6 +230,14 @@ class Scattering:
         )
         def sync_scattering_nbins_from_runtime_store(runtime_config_data: Any) -> int:
             return self._resolve_nbins_from_runtime_store(runtime_config_data)
+
+        @dash.callback(
+            dash.Output(self.page.ids.Upload.max_events_for_plots_input, "value"),
+            dash.Input("runtime-config-store", "data"),
+            prevent_initial_call=False,
+        )
+        def sync_max_events_from_runtime_store(runtime_config_data: Any) -> int:
+            return self._resolve_max_events_from_runtime_store(runtime_config_data)
 
         @dash.callback(
             dash.Output(self.page.ids.Scattering.graph_hist, "figure"),
@@ -396,19 +277,6 @@ class Scattering:
             return self._run_scattering_callback(callback_inputs).to_tuple()
 
     def _toggle_debug_container(self, debug_switch_value: Any) -> dict:
-        """
-        Resolve the visibility style for the debug controls container.
-
-        Parameters
-        ----------
-        debug_switch_value : Any
-            Checklist value for the debug switch.
-
-        Returns
-        -------
-        dict
-            Dash style dictionary controlling container visibility.
-        """
         debug_enabled = self._is_switch_enabled(debug_switch_value)
         logger.debug(
             "_toggle_debug_container called with debug_switch_value=%r resolved debug_enabled=%r",
@@ -418,32 +286,17 @@ class Scattering:
         return {"display": "block"} if debug_enabled else {"display": "none"}
 
     def _resolve_nbins_from_runtime_store(self, runtime_config_data: Any) -> int:
-        """
-        Resolve the histogram bin count from the runtime config store.
-
-        Parameters
-        ----------
-        runtime_config_data : Any
-            Runtime config store payload.
-
-        Returns
-        -------
-        int
-            Resolved number of bins.
-        """
-        runtime_config = RuntimeConfig()
-
         if not isinstance(runtime_config_data, dict):
             logger.debug(
-                "_resolve_nbins_from_runtime_store received non-dict payload=%r. Using default nbins=%r",
+                "_resolve_nbins_from_runtime_store received non-dict payload=%r. Using Default.n_bins_for_plots=%r",
                 runtime_config_data,
-                runtime_config.Default.n_bins_for_plots,
+                self.default.n_bins_for_plots,
             )
-            return runtime_config.Default.n_bins_for_plots
+            return self.default.n_bins_for_plots
 
         resolved_nbins = runtime_config_data.get(
             "n_bins_for_plots",
-            runtime_config.Default.n_bins_for_plots,
+            self.default.n_bins_for_plots,
         )
         logger.debug(
             "_resolve_nbins_from_runtime_store resolved nbins=%r from runtime_config_data=%r",
@@ -451,6 +304,26 @@ class Scattering:
             runtime_config_data,
         )
         return resolved_nbins
+
+    def _resolve_max_events_from_runtime_store(self, runtime_config_data: Any) -> int:
+        if not isinstance(runtime_config_data, dict):
+            logger.debug(
+                "_resolve_max_events_from_runtime_store received non-dict payload=%r. Using Default.max_events_for_analysis=%r",
+                runtime_config_data,
+                self.default.max_events_for_analysis,
+            )
+            return self.default.max_events_for_analysis
+
+        resolved_max_events = runtime_config_data.get(
+            "max_events_for_analysis",
+            self.default.max_events_for_analysis,
+        )
+        logger.debug(
+            "_resolve_max_events_from_runtime_store resolved max_events=%r from runtime_config_data=%r",
+            resolved_max_events,
+            runtime_config_data,
+        )
+        return resolved_max_events
 
     def _parse_scattering_callback_inputs(
         self,
@@ -463,31 +336,6 @@ class Scattering:
         scattering_threshold_store_data: Any,
         max_events_for_plots: Any,
     ) -> ScatteringCallbackInputs:
-        """
-        Parse and normalize raw callback state for the scattering callback.
-
-        Parameters
-        ----------
-        threshold_input_value : Any
-            Manual threshold input value.
-        scattering_channel : Any
-            Raw scattering detector value.
-        scattering_nbins : Any
-            Raw histogram bin count input.
-        yscale_selection : Any
-            Raw y axis scale selection.
-        debug_switch_value : Any
-            Raw debug switch selection.
-        scattering_threshold_store_data : Any
-            Threshold store payload.
-        max_events_for_plots : Any
-            Raw maximum event count input.
-
-        Returns
-        -------
-        ScatteringCallbackInputs
-            Parsed callback inputs grouped in a single object.
-        """
         triggered_id = dash.callback_context.triggered_id
         debug_enabled = self._is_switch_enabled(debug_switch_value)
         max_events, nbins = self._parse_limits(
@@ -523,19 +371,6 @@ class Scattering:
         self,
         callback_inputs: ScatteringCallbackInputs,
     ) -> ScatteringResult:
-        """
-        Execute the scattering callback business logic.
-
-        Parameters
-        ----------
-        callback_inputs : ScatteringCallbackInputs
-            Parsed callback inputs.
-
-        Returns
-        -------
-        ScatteringResult
-            Callback outputs packed in a result object.
-        """
         logger.debug("_run_scattering_callback called with callback_inputs=%r", callback_inputs)
 
         try:
@@ -579,35 +414,9 @@ class Scattering:
         return result
 
     def _is_switch_enabled(self, switch_value: Any) -> bool:
-        """
-        Return whether a checklist style switch is enabled.
-
-        Parameters
-        ----------
-        switch_value : Any
-            Checklist value.
-
-        Returns
-        -------
-        bool
-            True when "enabled" is present.
-        """
         return isinstance(switch_value, list) and ("enabled" in switch_value)
 
     def _clean_channel_name(self, scattering_channel: Any) -> str:
-        """
-        Normalize the scattering channel value to a clean string.
-
-        Parameters
-        ----------
-        scattering_channel : Any
-            Raw channel value from Dash.
-
-        Returns
-        -------
-        str
-            Cleaned channel name or empty string.
-        """
         if scattering_channel is None:
             return ""
 
@@ -619,19 +428,6 @@ class Scattering:
         return scattering_channel_clean
 
     def _extract_stored_threshold(self, scattering_threshold_store_data: Any) -> Optional[float]:
-        """
-        Extract a numeric threshold from the threshold store payload.
-
-        Parameters
-        ----------
-        scattering_threshold_store_data : Any
-            Store payload.
-
-        Returns
-        -------
-        Optional[float]
-            Parsed threshold or None.
-        """
         if not isinstance(scattering_threshold_store_data, dict):
             return None
 
@@ -644,23 +440,6 @@ class Scattering:
         threshold_value: float,
         nbins: int,
     ) -> dict:
-        """
-        Build the payload stored in the threshold store.
-
-        Parameters
-        ----------
-        scattering_channel : str
-            Clean scattering channel name.
-        threshold_value : float
-            Threshold value.
-        nbins : int
-            Number of bins.
-
-        Returns
-        -------
-        dict
-            Threshold store payload.
-        """
         return {
             "scattering_channel": scattering_channel or None,
             "threshold": float(threshold_value),
@@ -668,33 +447,16 @@ class Scattering:
         }
 
     def _parse_limits(self, *, max_events_for_plots: Any, scattering_nbins: Any) -> Tuple[int, int]:
-        """
-        Parse and clamp max events and number of bins.
-
-        Parameters
-        ----------
-        max_events_for_plots : Any
-            User input for max events.
-        scattering_nbins : Any
-            User input for histogram bin count.
-
-        Returns
-        -------
-        Tuple[int, int]
-            (max_events, nbins) clamped to safe ranges.
-        """
-        runtime_config = RuntimeConfig()
-
         max_events = _as_int(
-            max_events_for_plots if max_events_for_plots is not None else runtime_config.Default.max_events_for_analysis,
-            default=runtime_config.Default.max_events_for_analysis,
-            min_value=10_000,
+            max_events_for_plots if max_events_for_plots is not None else self.default.max_events_for_analysis,
+            default=self.default.max_events_for_analysis,
+            min_value=1_000,
             max_value=5_000_000,
         )
 
         nbins = _as_int(
             scattering_nbins,
-            default=runtime_config.Default.n_bins_for_plots,
+            default=self.default.n_bins_for_plots,
             min_value=10,
             max_value=5000,
         )
@@ -711,29 +473,6 @@ class Scattering:
         manual_thr: Optional[float],
         store_thr: Optional[float],
     ) -> Tuple[float, Any]:
-        """
-        Resolve the threshold value to use and decide whether to update the input field.
-
-        Parameters
-        ----------
-        must_estimate : bool
-            Whether the backend estimation must run.
-        scattering_channel : str
-            Clean selected scattering channel name.
-        nbins : int
-            Histogram bin count.
-        max_events : int
-            Maximum number of points used for estimation.
-        manual_thr : Optional[float]
-            Parsed threshold value from user input, if valid.
-        store_thr : Optional[float]
-            Previously stored threshold value, if present.
-
-        Returns
-        -------
-        Tuple[float, Any]
-            (threshold_value, threshold_input_output)
-        """
         logger.debug(
             "_resolve_threshold called with must_estimate=%r scattering_channel=%r nbins=%r "
             "max_events=%r manual_thr=%r store_thr=%r",
@@ -801,29 +540,6 @@ class Scattering:
         yscale_selection: Any,
         threshold_value: float,
     ) -> go.Figure:
-        """
-        Build the scattering histogram figure with a vertical threshold line.
-
-        Parameters
-        ----------
-        debug_enabled : bool
-            Whether the local debug mode is enabled.
-        scattering_channel : str
-            Clean scattering channel name.
-        nbins : int
-            Number of bins.
-        max_events : int
-            Maximum number of events to read.
-        yscale_selection : Any
-            Checklist value for y scale.
-        threshold_value : float
-            Threshold value to draw.
-
-        Returns
-        -------
-        go.Figure
-            Plotly histogram figure or an info figure.
-        """
         logger.debug(
             "_build_scattering_histogram called with debug_enabled=%r scattering_channel=%r "
             "nbins=%r max_events=%r yscale_selection=%r threshold_value=%r",

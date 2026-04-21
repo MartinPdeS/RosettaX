@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 import logging
-import os
-import platform
-import subprocess
 from pathlib import Path
 from typing import Any, Optional
 from urllib.parse import quote
@@ -10,39 +7,12 @@ from urllib.parse import quote
 import dash
 import dash_bootstrap_components as dbc
 from dash import dcc, html
+
 from RosettaX.pages.sidebar.ids import SidebarIds
 from RosettaX.utils import directories
 
 
 logger = logging.getLogger(__name__)
-
-
-def _open_directory(path: Path) -> None:
-    resolved_path = Path(path).resolve()
-
-    logger.debug("Opening directory at path=%r", str(resolved_path))
-
-    if not resolved_path.exists():
-        raise FileNotFoundError(f"Directory does not exist: {resolved_path}")
-
-    system_name = platform.system()
-
-    if system_name == "Darwin":
-        subprocess.run(["open", str(resolved_path)], check=True)
-        return
-
-    if system_name == "Windows":
-        os.startfile(str(resolved_path))
-        return
-
-    if system_name == "Linux":
-        subprocess.run(["xdg-open", str(resolved_path)], check=True)
-        return
-
-    raise RuntimeError(f"Unsupported operating system: {system_name}")
-
-
-
 
 
 class Sidebar:
@@ -64,7 +34,7 @@ class Sidebar:
         )
 
     def register_callbacks(self) -> None:
-        logger.debug("Registering sidebar callbacks")
+        logger.debug("Registering sidebar callbacks.")
 
         @dash.callback(
             dash.Output(SidebarIds.saved_calibrations_body_container, "children"),
@@ -109,10 +79,10 @@ class Sidebar:
                     "Opening calibration root directory=%r",
                     str(calibration_root_directory),
                 )
-                _open_directory(calibration_root_directory)
+                directories.open_directory(calibration_root_directory)
                 return f"Opened calibration folder: {calibration_root_directory}"
             except Exception as exc:
-                logger.exception("Failed to open calibration folder")
+                logger.exception("Failed to open calibration folder.")
                 return f"Could not open calibration folder: {type(exc).__name__}: {exc}"
 
         @dash.callback(
@@ -144,12 +114,9 @@ class Sidebar:
                     logger.debug("Selected profile was empty after stripping.")
                     return None, "No profile selected."
 
-                if not selected_profile_name.endswith(".json"):
-                    selected_profile_file_name = f"{selected_profile_name}.json"
-                else:
-                    selected_profile_file_name = selected_profile_name
-
+                selected_profile_file_name = self._normalize_profile_filename(selected_profile_name)
                 resolved_profile_path = Path(directories.profiles).resolve() / selected_profile_file_name
+
                 logger.debug(
                     "Resolved selected profile path=%r from selected_profile=%r",
                     str(resolved_profile_path),
@@ -181,10 +148,10 @@ class Sidebar:
             try:
                 resolved_profile_directory = Path(directories.profiles).resolve()
                 logger.debug("Opening profile directory=%r", str(resolved_profile_directory))
-                _open_directory(resolved_profile_directory)
+                directories.open_directory(resolved_profile_directory)
                 return f"Opened profile folder: {resolved_profile_directory}"
             except Exception as exc:
-                logger.exception("Failed to open profile folder")
+                logger.exception("Failed to open profile folder.")
                 return f"Could not open profile folder: {type(exc).__name__}: {exc}"
 
     def layout(self, sidebar: Optional[dict[str, list[str]]] = None) -> html.Div:
@@ -218,8 +185,19 @@ class Sidebar:
             },
         )
 
+    def _normalize_profile_filename(self, filename: str) -> str:
+        normalized_filename = str(filename or "").strip()
+
+        if not normalized_filename:
+            raise ValueError("Profile filename cannot be empty.")
+
+        if not normalized_filename.endswith(".json"):
+            normalized_filename = f"{normalized_filename}.json"
+
+        return normalized_filename
+
     def _list_saved_calibrations(self) -> dict[str, list[str]]:
-        logger.debug("Listing saved calibrations from disk")
+        logger.debug("Listing saved calibrations from disk.")
 
         saved_calibrations: dict[str, list[str]] = {
             "fluorescence": [],
@@ -495,15 +473,15 @@ class Sidebar:
         )
 
     def _build_saved_profile_options(self) -> list[dict[str, str]]:
-        logger.debug("Building saved profile options from disk")
+        logger.debug("Building saved profile options from disk.")
 
         try:
             setting_files = directories.list_profiles()
             options = [{"label": file_name, "value": file_name} for file_name in setting_files]
-            logger.debug("Built %d saved profile options", len(options))
+            logger.debug("Built %d saved profile options.", len(options))
             return options
         except Exception:
-            logger.exception("Failed to build saved profile options")
+            logger.exception("Failed to build saved profile options.")
             return []
 
 
@@ -511,7 +489,7 @@ _sidebar_instance = Sidebar()
 
 
 def register_sidebar_callbacks() -> None:
-    logger.debug("register_sidebar_callbacks called")
+    logger.debug("register_sidebar_callbacks called.")
     _sidebar_instance.register_callbacks()
 
 

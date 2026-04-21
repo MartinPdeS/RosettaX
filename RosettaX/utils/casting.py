@@ -1,5 +1,7 @@
 from typing import Any, Optional
 import numpy as np
+import re
+
 
 def _as_float(value: Any) -> Optional[float]:
     """
@@ -67,3 +69,60 @@ def _as_int(value: Any, default: int, min_value: int, max_value: int) -> int:
         v = max_value
 
     return v
+
+
+def _as_float_list(value: Any) -> np.ndarray:
+    """
+    Parse a value into a 1D NumPy array of finite floats.
+
+    Accepted inputs
+    ---------------
+    - list, tuple, or ndarray of numeric like values
+    - string with values separated by commas, semicolons, or whitespace
+
+    Examples
+    --------
+    "100, 200, 300" -> array([100., 200., 300.])
+    "100;200;300"   -> array([100., 200., 300.])
+    "100 200 300"   -> array([100., 200., 300.])
+
+    Parameters
+    ----------
+    value : Any
+        Candidate value from UI components.
+
+    Returns
+    -------
+    np.ndarray
+        1D array of finite floats. Invalid entries are ignored.
+    """
+    if value is None:
+        return np.asarray([], dtype=float)
+
+    if isinstance(value, np.ndarray):
+        raw_values = value.reshape(-1).tolist()
+    elif isinstance(value, (list, tuple)):
+        raw_values = list(value)
+    elif isinstance(value, str):
+        stripped_value = value.strip()
+        if not stripped_value:
+            return np.asarray([], dtype=float)
+
+        normalized_value = stripped_value.replace(";", ",")
+        raw_values = [
+            part.strip()
+            for part in re.split(r"[,\s]+", normalized_value)
+            if part.strip()
+        ]
+    else:
+        raw_values = [value]
+
+    parsed_values: list[float] = []
+
+    for raw_value in raw_values:
+        parsed_value = _as_float(raw_value)
+        if parsed_value is None:
+            continue
+        parsed_values.append(float(parsed_value))
+
+    return np.asarray(parsed_values, dtype=float)

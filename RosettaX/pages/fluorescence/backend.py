@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import annotations
-
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
@@ -11,10 +9,13 @@ import uuid
 import numpy as np
 
 from RosettaX.utils.reader import FCSFile
-from RosettaX.utils.clusterings import SigmaThresholdHDBSCAN
 from RosettaX.utils.casting import _as_float, _as_int
 from RosettaX.utils.plottings import make_histogram_with_lines
 from RosettaX.utils.runtime_config import RuntimeConfig
+from RosettaX.utils.peak_detection import (
+    find_1d_signal_peaks,
+    inject_peak_positions_into_table,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -539,52 +540,6 @@ class BackEnd:
 
         return figure.to_dict()
 
-    @staticmethod
-    def inject_peak_positions_into_table(
-        *,
-        table_data: Optional[list[dict[str, Any]]],
-        peak_positions: list[float],
-    ) -> list[dict[str, Any]]:
-        """
-        Inject peak positions into the fluorescence calibration table.
-
-        Parameters
-        ----------
-        table_data : Optional[list[dict[str, Any]]]
-            Existing table rows.
-        peak_positions : list[float]
-            Peak positions to insert.
-
-        Returns
-        -------
-        list[dict[str, Any]]
-            Updated table rows.
-        """
-        rows = [dict(row) for row in (table_data or [])]
-
-        finite_peak_positions: list[float] = []
-        for peak_position in peak_positions:
-            try:
-                value = float(peak_position)
-            except Exception:
-                continue
-
-            if np.isfinite(value):
-                finite_peak_positions.append(value)
-
-        if not finite_peak_positions:
-            return rows
-
-        while len(rows) < len(finite_peak_positions):
-            rows.append({"col1": "", "col2": ""})
-
-        for row_index, peak_position in enumerate(finite_peak_positions):
-            current_value = rows[row_index].get("col2", "")
-            if current_value is None or str(current_value).strip() == "":
-                rows[row_index]["col2"] = f"{peak_position:.6g}"
-
-        return rows
-
     def find_fluorescence_peaks_and_prepare_outputs(
         self,
         *,
@@ -661,9 +616,11 @@ class BackEnd:
 
         peak_labels = [f"{peak_position:.3g}" for peak_position in peak_positions]
 
-        updated_table_data = self.inject_peak_positions_into_table(
+        updated_table_data = inject_peak_positions_into_table(
             table_data=table_data,
             peak_positions=peak_positions,
+            peak_column_id="col2",
+            default_row_factory=lambda: {"col1": "", "col2": ""},
         )
 
         peak_lines_payload = {
@@ -750,7 +707,8 @@ class BackEnd:
         debug: bool = False,
     ) -> dict[str, Any]:
         """
-        Find fluorescence peaks using clustering, optionally after scattering gating.
+        Find fluorescence peaks using the shared 1D peak detection utility,
+        optionally after scattering gating.
 
         Parameters
         ----------
@@ -769,7 +727,7 @@ class BackEnd:
         number_of_points : int | None
             Number of points to read at most.
         debug : bool
-            Debug flag passed to the clustering helper.
+            Debug flag passed to the peak detection helper.
 
         Returns
         -------
@@ -822,100 +780,15 @@ class BackEnd:
         else:
             values = fluorescence_values[np.isfinite(fluorescence_values)]
 
-        if values.size == 0:
-            return {
-                "peak_positions": [],
-                "cluster_modes": [],
-                "cluster_means": [],
-                "cluster_sizes": [],
-                "n_points": 0,
-            }
-
-        model = SigmaThresholdHDBSCAN()
-
-        labels, means, modes, clean_data, clean_mask = model.fit(
-            x=values,
-            n_clusters=int(max_peaks),
-            threshold_x=float(threshold),
-            min_cluster_size=int(min_cluster_size),
+        peak_result = find_1d_signal_peaks(
+            values=values,
+            max_peaks=max_peaks,
+            min_cluster_size=min_cluster_size,
+            threshold=threshold,
             debug=debug,
         )
 
-        labels = np.asarray(labels)
-        means = np.asarray(means, dtype=float).squeeze()
-        modes = np.asarray(modes, dtype=float).squeeze()
-
-        labels = np.atleast_1d(labels)
-        means = np.atleast_1d(means)
-        modes = np.atleast_1d(modes)
-
-        if modes.size == 0:
-            return {
-                "peak_positions": [],
-                "cluster_modes": [],
-                "cluster_means": [],
-                "cluster_sizes": [],
-                "n_points": int(values.size),
-            }
-
-        good_labels = labels[labels >= 0]
-        if good_labels.size == 0:
-            return {
-                "peak_positions": [],
-                "cluster_modes": [],
-                "cluster_means": [],
-                "cluster_sizes": [],
-                "n_points": int(values.size),
-            }
-
-        unique_labels, counts = np.unique(good_labels, return_counts=True)
-        size_by_label = {int(label): int(count) for label, count in zip(unique_labels, counts)}
-
-        clusters: list[dict[str, Any]] = []
-        for index in range(int(modes.size)):
-            mode_value = float(modes[index])
-            if not np.isfinite(mode_value):
-                continue
-
-            mean_value = float(means[index]) if index < means.size and np.isfinite(means[index]) else float("nan")
-            label = int(index)
-            cluster_size = int(size_by_label.get(label, 0))
-
-            clusters.append(
-                {
-                    "label": label,
-                    "mode": mode_value,
-                    "mean": mean_value,
-                    "size": cluster_size,
-                }
-            )
-
-        clusters = [cluster for cluster in clusters if cluster["size"] > 0]
-
-        if not clusters:
-            return {
-                "peak_positions": [],
-                "cluster_modes": [],
-                "cluster_means": [],
-                "cluster_sizes": [],
-                "n_points": int(values.size),
-            }
-
-        clusters.sort(key=lambda cluster: cluster["size"], reverse=True)
-        clusters = clusters[: int(max_peaks)]
-        clusters.sort(key=lambda cluster: cluster["mode"])
-
-        peak_positions = [float(cluster["mode"]) for cluster in clusters]
-        cluster_means = [float(cluster["mean"]) for cluster in clusters]
-        cluster_sizes = [int(cluster["size"]) for cluster in clusters]
-
-        return {
-            "peak_positions": peak_positions,
-            "cluster_modes": peak_positions,
-            "cluster_means": cluster_means,
-            "cluster_sizes": cluster_sizes,
-            "n_points": int(values.size),
-        }
+        return peak_result.to_dict()
 
     def export_fluorescence_calibration(self, data: dict[str, Any]) -> dict[str, Any]:
         """

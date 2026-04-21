@@ -12,8 +12,7 @@ import dash
 import dash_bootstrap_components as dbc
 from dash import Input, Output, State, callback, dcc, html
 
-from RosettaX.pages import styling
-from RosettaX.utils import service
+from RosettaX.utils import styling, service
 from RosettaX.pages.fluorescence.backend import BackEnd
 from RosettaX.utils.runtime_config import RuntimeConfig
 

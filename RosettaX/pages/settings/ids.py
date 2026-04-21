@@ -41,9 +41,8 @@ class Ids:
         operator_name = f"{page_name}-operator-name"
         instrument_name = f"{page_name}-instrument-name"
         theme_mode = f"{page_name}-theme-mode"
-
-
-
+        wavelength_nm = f"{page_name}-wavelength-nm"
+        show_graphs = f"{page_name}-show-graphs"
 
     class NewProfile:
         profile_name = "new_profile_name"

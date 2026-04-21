@@ -3,6 +3,7 @@ from typing import Any, List, Optional, Tuple
 from dataclasses import dataclass
 import logging
 from pathlib import Path
+
 import dash
 import dash_bootstrap_components as dbc
 import numpy as np
@@ -12,7 +13,7 @@ from RosettaX.utils.reader import FCSFile
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.utils.casting import _as_float
 from RosettaX.utils.plottings import _make_info_figure
-
+from RosettaX.utils import styling
 
 logger = logging.getLogger(__name__)
 
@@ -21,9 +22,6 @@ logger = logging.getLogger(__name__)
 class CalibrationResult:
     """
     Container for all Dash outputs of the calibration callback.
-
-    This lets the callback return a single object instead of manually building a long tuple
-    matching the Dash Output order.
     """
 
     figure_store: Any = dash.no_update
@@ -34,15 +32,6 @@ class CalibrationResult:
     apply_status: str = ""
 
     def to_tuple(self) -> tuple:
-        """
-        Converts this result to the tuple expected by Dash multi output callbacks.
-
-        Returns
-        -------
-        tuple
-            Outputs in the exact order declared in the Dash callback:
-            (figure_store, calibration_store, slope_out, intercept_out, r_squared_out, apply_status)
-        """
         return (
             self.figure_store,
             self.calibration_store,
@@ -62,17 +51,11 @@ class Calibration:
 
     def __init__(self, page) -> None:
         self.page = page
+        self.runtime_config = RuntimeConfig()
+        self.default = self.runtime_config.Default
         logger.debug("Initialized CalibrationSection with page=%r", page)
 
     def get_layout(self) -> dbc.Card:
-        """
-        Build the Dash layout for the calibration section.
-
-        Returns
-        -------
-        dbc.Card
-            A card containing bead specification editing, calibration action, plot, and fit outputs.
-        """
         logger.debug("Building calibration section layout.")
         return dbc.Card(
             [
@@ -82,27 +65,9 @@ class Calibration:
         )
 
     def _build_header(self) -> dbc.CardHeader:
-        """
-        Build the card header.
-
-        Returns
-        -------
-        dbc.CardHeader
-            Header for the calibration section.
-        """
-        logger.debug("Building calibration header.")
         return dbc.CardHeader("4. Calibration")
 
     def _build_collapse(self) -> dbc.Collapse:
-        """
-        Build the collapsible container for the calibration section.
-
-        Returns
-        -------
-        dbc.Collapse
-            Collapse wrapping the calibration card body.
-        """
-        logger.debug("Building calibration collapse.")
         return dbc.Collapse(
             self._build_body(),
             id=f"collapse-{self.page.ids.page_name}-calibration",
@@ -110,15 +75,6 @@ class Calibration:
         )
 
     def _build_body(self) -> dbc.CardBody:
-        """
-        Build the main card body.
-
-        Returns
-        -------
-        dbc.CardBody
-            Card body containing all calibration controls and outputs.
-        """
-        logger.debug("Building calibration body.")
         return dbc.CardBody(
             [
                 self._build_graph_store(),
@@ -135,27 +91,9 @@ class Calibration:
         )
 
     def _build_graph_store(self) -> dash.dcc.Store:
-        """
-        Build the store holding the calibration figure.
-
-        Returns
-        -------
-        dash.dcc.Store
-            Store containing the calibration figure as a Plotly dict.
-        """
-        logger.debug("Building calibration graph store.")
         return dash.dcc.Store(id=self.page.ids.Calibration.graph_store)
 
     def _build_bead_specifications_block(self) -> dash.html.Div:
-        """
-        Build the bead specification editor block.
-
-        Returns
-        -------
-        dash.html.Div
-            Container with title, bead table, and add row button.
-        """
-        logger.debug("Building bead specification block.")
         return dash.html.Div(
             [
                 dash.html.H5("Bead specifications"),
@@ -165,19 +103,10 @@ class Calibration:
         )
 
     def _build_bead_table(self) -> dash.dash_table.DataTable:
-        """
-        Build the editable bead specification table.
-
-        Returns
-        -------
-        dash.dash_table.DataTable
-            Editable bead table.
-        """
-        runtime_config = RuntimeConfig()
-        bead_rows = self._build_bead_rows_from_mesf_values(runtime_config.Default.mesf_values)
+        bead_rows = self._build_bead_rows_from_mesf_values(self.default.mesf_values)
         logger.debug(
             "Building bead table with default mesf_values=%r resulting rows=%r",
-            runtime_config.Default.mesf_values,
+            self.default.mesf_values,
             bead_rows,
         )
 
@@ -185,21 +114,10 @@ class Calibration:
             id=self.page.ids.Calibration.bead_table,
             columns=self.bead_table_columns,
             data=bead_rows,
-            editable=True,
-            row_deletable=True,
-            style_table={"overflowX": "auto"},
+            **styling.DATATABLE,
         )
 
     def _build_add_row_button_row(self) -> dash.html.Div:
-        """
-        Build the add row button row.
-
-        Returns
-        -------
-        dash.html.Div
-            Container holding the add row button.
-        """
-        logger.debug("Building add row button row.")
         return dash.html.Div(
             [
                 dash.html.Button(
@@ -212,15 +130,6 @@ class Calibration:
         )
 
     def _build_actions_block(self) -> dash.html.Div:
-        """
-        Build the action button block.
-
-        Returns
-        -------
-        dash.html.Div
-            Container holding the calibration action button.
-        """
-        logger.debug("Building calibration actions block.")
         return dash.html.Div(
             [
                 self._build_calibrate_button(),
@@ -228,15 +137,6 @@ class Calibration:
         )
 
     def _build_calibrate_button(self) -> dash.html.Button:
-        """
-        Build the calibration button.
-
-        Returns
-        -------
-        dash.html.Button
-            Button used to trigger calibration.
-        """
-        logger.debug("Building calibrate button.")
         return dash.html.Button(
             "Create Calibration",
             id=self.page.ids.Calibration.calibrate_btn,
@@ -244,15 +144,6 @@ class Calibration:
         )
 
     def _build_graph_block(self) -> dash.html.Div:
-        """
-        Build the graph related block.
-
-        Returns
-        -------
-        dash.html.Div
-            Container holding graph toggle and graph container.
-        """
-        logger.debug("Building calibration graph block.")
         return dash.html.Div(
             [
                 self._build_graph_toggle_switch(),
@@ -262,21 +153,12 @@ class Calibration:
         )
 
     def _build_graph_toggle_switch(self) -> dash.html.Div:
-        """
-        Build the local switch controlling whether the calibration plot is shown.
-
-        Returns
-        -------
-        dash.html.Div
-            Container holding the graph toggle switch.
-        """
-        logger.debug("Building calibration graph toggle switch.")
         return dash.html.Div(
             [
                 dbc.Checklist(
                     id=self.page.ids.Calibration.graph_toggle_switch,
                     options=[{"label": "Show calibration plot", "value": "enabled"}],
-                    value=[],
+                    value=["enabled"] if self.default.show_graphs else [],
                     switch=True,
                 ),
             ],
@@ -284,15 +166,6 @@ class Calibration:
         )
 
     def _build_graph_container(self) -> dash.html.Div:
-        """
-        Build the container holding the calibration graph.
-
-        Returns
-        -------
-        dash.html.Div
-            Container with loading wrapper and graph.
-        """
-        logger.debug("Building calibration graph container.")
         return dash.html.Div(
             [
                 dash.dcc.Loading(
@@ -308,15 +181,6 @@ class Calibration:
         )
 
     def _build_fit_outputs_block(self) -> dash.html.Div:
-        """
-        Build the block displaying fitted calibration parameters.
-
-        Returns
-        -------
-        dash.html.Div
-            Container holding slope, intercept, and R² outputs.
-        """
-        logger.debug("Building fit outputs block.")
         return dash.html.Div(
             [
                 self._build_output_row("Slope:", self.page.ids.Calibration.slope_out),
@@ -326,22 +190,6 @@ class Calibration:
         )
 
     def _build_output_row(self, label: str, output_id: str) -> dash.html.Div:
-        """
-        Build a labeled output row.
-
-        Parameters
-        ----------
-        label : str
-            Label shown at the left of the row.
-        output_id : str
-            Dash id of the output value container.
-
-        Returns
-        -------
-        dash.html.Div
-            Row containing label and output value.
-        """
-        logger.debug("Building output row for label=%r output_id=%r", label, output_id)
         return dash.html.Div(
             [
                 dash.html.Div(label),
@@ -351,38 +199,16 @@ class Calibration:
         )
 
     def _build_status_block(self) -> dash.html.Div:
-        """
-        Build the status message block.
-
-        Returns
-        -------
-        dash.html.Div
-            Status output container.
-        """
-        logger.debug("Building calibration status block.")
         return dash.html.Div(
             id=self.page.ids.Calibration.apply_status,
             style={"marginTop": "8px"},
         )
 
     def _extract_xy_from_table(self, table_data: List[dict]) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        Extract calibration points from the bead DataTable.
-
-        Parameters
-        ----------
-        table_data : List[dict]
-            Rows from the Dash DataTable.
-            Expected keys are:
-            - "col1": Intensity [calibrated units]
-            - "col2": Intensity [a.u.]
-
-        Returns
-        -------
-        Tuple[np.ndarray, np.ndarray]
-            (intensity_calibrated_units, intensity_au) as float arrays, excluding rows that cannot be parsed.
-        """
-        logger.debug("Extracting XY from bead table with row_count=%r", None if table_data is None else len(table_data))
+        logger.debug(
+            "Extracting XY from bead table with row_count=%r",
+            None if table_data is None else len(table_data),
+        )
 
         intensity_calibrated_units_values: List[float] = []
         intensity_au_values: List[float] = []
@@ -417,21 +243,6 @@ class Calibration:
 
     @staticmethod
     def _compute_r_squared(*, y_true: np.ndarray, y_pred: np.ndarray) -> float:
-        """
-        Compute the coefficient of determination R squared.
-
-        Parameters
-        ----------
-        y_true : np.ndarray
-            Ground truth values.
-        y_pred : np.ndarray
-            Predicted values.
-
-        Returns
-        -------
-        float
-            R squared, or NaN if it cannot be computed.
-        """
         y_true = np.asarray(y_true, dtype=float)
         y_pred = np.asarray(y_pred, dtype=float)
 
@@ -444,6 +255,7 @@ class Calibration:
 
         ss_res = float(np.sum((y_true - y_pred) ** 2))
         ss_tot = float(np.sum((y_true - float(np.mean(y_true))) ** 2))
+
         if ss_tot <= 0.0:
             return float("nan")
 
@@ -451,19 +263,6 @@ class Calibration:
 
     @staticmethod
     def _is_graph_enabled(graph_toggle_value: Any) -> bool:
-        """
-        Return whether the calibration plot switch is enabled.
-
-        Parameters
-        ----------
-        graph_toggle_value : Any
-            Checklist value.
-
-        Returns
-        -------
-        bool
-            True when the graph toggle contains "enabled".
-        """
         enabled = isinstance(graph_toggle_value, list) and ("enabled" in graph_toggle_value)
         logger.debug(
             "_is_graph_enabled called with graph_toggle_value=%r resolved=%r",
@@ -480,25 +279,6 @@ class Calibration:
         slope: float,
         intercept: float,
     ) -> go.Figure:
-        """
-        Build the calibration figure.
-
-        Parameters
-        ----------
-        x_log10 : np.ndarray
-            Log10 transformed x values.
-        y_log10 : np.ndarray
-            Log10 transformed y values.
-        slope : float
-            Fitted slope.
-        intercept : float
-            Fitted intercept.
-
-        Returns
-        -------
-        go.Figure
-            Plotly figure containing calibration points and fit line.
-        """
         logger.debug(
             "Building calibration figure with point_count=%r slope=%r intercept=%r",
             len(x_log10),
@@ -521,12 +301,8 @@ class Calibration:
         return figure
 
     def register_callbacks(self) -> None:
-        """
-        Register callbacks for the calibration section.
-        """
         logger.debug("Registering calibration callbacks.")
-        runtime_config = RuntimeConfig()
-        logger.debug("RuntimeConfig at calibration callback registration=%r", runtime_config)
+        logger.debug("RuntimeConfig at calibration callback registration=%r", self.runtime_config)
 
         @dash.callback(
             dash.Output(self.page.ids.Calibration.bead_table, "data"),
@@ -534,21 +310,20 @@ class Calibration:
             prevent_initial_call=False,
         )
         def sync_bead_table_from_runtime_store(runtime_config_data: Any) -> list[dict]:
-            runtime_config = RuntimeConfig()
             logger.debug(
                 "sync_bead_table_from_runtime_store called with runtime_config_data=%r",
                 runtime_config_data,
             )
 
             if not isinstance(runtime_config_data, dict):
-                default_rows = self._build_bead_rows_from_mesf_values(runtime_config.Default.mesf_values)
+                default_rows = self._build_bead_rows_from_mesf_values(self.default.mesf_values)
                 logger.debug(
                     "Runtime config data is not a dict. Returning default bead rows=%r",
                     default_rows,
                 )
                 return default_rows
 
-            mesf_values = runtime_config_data.get("mesf_values", runtime_config.Default.mesf_values)
+            mesf_values = runtime_config_data.get("mesf_values", self.default.mesf_values)
             resolved_rows = self._build_bead_rows_from_mesf_values(mesf_values)
             logger.debug(
                 "Resolved bead rows from runtime store mesf_values=%r rows=%r",
@@ -556,6 +331,30 @@ class Calibration:
                 resolved_rows,
             )
             return resolved_rows
+
+        @dash.callback(
+            dash.Output(self.page.ids.Calibration.graph_toggle_switch, "value"),
+            dash.Input("runtime-config-store", "data"),
+            prevent_initial_call=False,
+        )
+        def sync_calibration_graph_toggle_from_runtime_store(runtime_config_data: Any) -> list[str]:
+            if not isinstance(runtime_config_data, dict):
+                logger.debug(
+                    "sync_calibration_graph_toggle_from_runtime_store received non-dict payload=%r. Using Default.show_graphs=%r",
+                    runtime_config_data,
+                    self.default.show_graphs,
+                )
+                return ["enabled"] if self.default.show_graphs else []
+
+            resolved_show_graphs = bool(
+                runtime_config_data.get("show_graphs", self.default.show_graphs)
+            )
+            logger.debug(
+                "sync_calibration_graph_toggle_from_runtime_store resolved_show_graphs=%r from runtime_config_data=%r",
+                resolved_show_graphs,
+                runtime_config_data,
+            )
+            return ["enabled"] if resolved_show_graphs else []
 
         @dash.callback(
             dash.Output(self.page.ids.Calibration.graph_toggle_container, "style"),
@@ -617,9 +416,6 @@ class Calibration:
             prevent_initial_call=True,
         )
         def add_row(n_clicks: int, rows: List[dict], columns: List[dict]) -> List[dict]:
-            """
-            Append a blank row to the bead DataTable.
-            """
             logger.debug(
                 "add_row called with n_clicks=%r existing_row_count=%r columns=%r",
                 n_clicks,
@@ -656,12 +452,8 @@ class Calibration:
             scattering_detector_column: Optional[str],
             scattering_threshold: Any,
         ) -> tuple:
-            """
-            Fit a log10 regression from bead table points and optionally apply it.
-            """
             logger.debug(
-                "calibrate_and_apply called with n_clicks=%r bead_file_path=%r "
-                "table_row_count=%r detector_column=%r",
+                "calibrate_and_apply called with n_clicks=%r bead_file_path=%r table_row_count=%r detector_column=%r",
                 n_clicks,
                 bead_file_path,
                 None if table_data is None else len(table_data),
@@ -741,8 +533,7 @@ class Calibration:
                 intensity_calibrated_units_log10 = np.log10(intensity_calibrated_units)
 
                 logger.debug(
-                    "Performing polyfit on %r log10 points. "
-                    "x range=[%r, %r] y range=[%r, %r]",
+                    "Performing polyfit on %r log10 points. x range=[%r, %r] y range=[%r, %r]",
                     intensity_au_log10.size,
                     float(np.min(intensity_au_log10)),
                     float(np.max(intensity_au_log10)),

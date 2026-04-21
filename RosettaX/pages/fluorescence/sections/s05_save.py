@@ -261,7 +261,7 @@ class Save:
             name=inputs.file_name,
             payload=dict(inputs.calib_payload or {}),
             calibration_kind="fluorescence",
-            output_directory=directories.fluorescence_calibration_directory,
+            output_directory=directories.fluorescence_calibration,
         )
 
         logger.debug(

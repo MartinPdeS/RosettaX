@@ -1,4 +1,5 @@
 from typing import Any, Optional
+import re
 
 import dash
 import dash_bootstrap_components as dbc
@@ -7,7 +8,7 @@ from dash import Input, Output, State, callback, dcc, html
 from RosettaX.pages.settings.utils import get_saved_profile, save_profile
 from RosettaX.utils import directories
 from RosettaX.utils.runtime_config import RuntimeConfig
-import re
+from RosettaX.utils.casting import _as_float_list
 
 
 class DefaultProfile:
@@ -95,7 +96,7 @@ class DefaultProfile:
                     "Peak count:",
                     self._persistent_input(
                         id=self.page.ids.Default.peak_count,
-                        value=getattr(runtime_config.Default, "peak_count", 3),
+                        value=runtime_config.Default.peak_count,
                         type="number",
                         step=1,
                         min=1,
@@ -111,7 +112,7 @@ class DefaultProfile:
                             {"label": "Linear", "value": "linear"},
                             {"label": "Log", "value": "log"},
                         ],
-                        value=getattr(runtime_config.Default, "histogram_scale", "linear"),
+                        value=runtime_config.Default.histogram_scale,
                         clearable=False,
                         searchable=False,
                         style={"width": "100%"},
@@ -129,7 +130,7 @@ class DefaultProfile:
                     self._persistent_input(
                         id=self.page.ids.Default.medium_refractive_index,
                         type="number",
-                        value=getattr(runtime_config.Default, "medium_refractive_index", ""),
+                        value=runtime_config.Default.medium_refractive_index,
                         step=0.001,
                         min=0.001,
                         max=2.5,
@@ -141,7 +142,7 @@ class DefaultProfile:
                     self._persistent_input(
                         id=self.page.ids.Default.core_refractive_index,
                         type="number",
-                        value=getattr(runtime_config.Default, "core_refractive_index", ""),
+                        value=runtime_config.Default.core_refractive_index,
                         step=0.001,
                         min=0.001,
                         max=2.5,
@@ -153,7 +154,7 @@ class DefaultProfile:
                     self._persistent_input(
                         id=self.page.ids.Default.shell_refractive_index,
                         type="number",
-                        value=getattr(runtime_config.Default, "shell_refractive_index", ""),
+                        value=runtime_config.Default.shell_refractive_index,
                         step=0.001,
                         min=0.001,
                         max=2.5,
@@ -165,7 +166,7 @@ class DefaultProfile:
                     self._persistent_input(
                         id=self.page.ids.Default.particle_refractive_index,
                         type="number",
-                        value=getattr(runtime_config.Default, "particle_refractive_index", ""),
+                        value=runtime_config.Default.particle_refractive_index,
                         step=0.001,
                         min=0.001,
                         max=2.5,
@@ -173,38 +174,43 @@ class DefaultProfile:
                     ),
                 ),
                 self._setting_row(
-                    "Shell thickness (nm):",
+                    "Wavelength (nm):",
                     self._persistent_input(
-                        id=self.page.ids.Default.shell_thickness_nm,
+                        id=self.page.ids.Default.wavelength_nm,
                         type="number",
-                        value=getattr(runtime_config.Default, "shell_thickness", ""),
-                        step=0.01,
-                        min=0.01,
-                        max=1000,
-                        style={"width": "100%"},
-                    ),
-                ),
-                self._setting_row(
-                    "Core diameter (nm):",
-                    self._persistent_input(
-                        id=self.page.ids.Default.core_diameter_nm,
-                        type="number",
-                        value=getattr(runtime_config.Default, "core_diameter", ""),
-                        step=0.01,
-                        min=0.01,
-                        max=1000,
-                        style={"width": "100%"},
-                    ),
-                ),
-                self._setting_row(
-                    "Particle diameter (nm):",
-                    self._persistent_input(
-                        id=self.page.ids.Default.particle_diameter_nm,
-                        type="number",
-                        value=getattr(runtime_config.Default, "particle_diameter", ""),
+                        value=runtime_config.Default.wavelength_nm,
                         step=1,
                         min=1,
-                        max=1000,
+                        style={"width": "100%"},
+                    ),
+                ),
+                self._setting_row(
+                    "Shell thickness list (nm):",
+                    self._persistent_input(
+                        id=self.page.ids.Default.shell_thickness_nm,
+                        type="text",
+                        value=self._format_float_list_for_input(runtime_config.Default.shell_thickness_nm),
+                        placeholder="5, 10, 15",
+                        style={"width": "100%"},
+                    ),
+                ),
+                self._setting_row(
+                    "Core diameter list (nm):",
+                    self._persistent_input(
+                        id=self.page.ids.Default.core_diameter_nm,
+                        type="text",
+                        value=self._format_float_list_for_input(runtime_config.Default.core_diameter_nm),
+                        placeholder="80, 120, 160",
+                        style={"width": "100%"},
+                    ),
+                ),
+                self._setting_row(
+                    "Particle diameter list (nm):",
+                    self._persistent_input(
+                        id=self.page.ids.Default.particle_diameter_nm,
+                        type="text",
+                        value=self._format_float_list_for_input(runtime_config.Default.particle_diameter_nm),
+                        placeholder="100, 200, 300",
                         style={"width": "100%"},
                     ),
                 ),
@@ -216,7 +222,7 @@ class DefaultProfile:
                             {"label": "Solid Sphere", "value": "Solid Sphere"},
                             {"label": "Core/Shell Sphere", "value": "Core/Shell Sphere"},
                         ],
-                        value=getattr(runtime_config.Default, "mie_model", "Solid Sphere"),
+                        value=runtime_config.Default.mie_model,
                         clearable=False,
                         searchable=False,
                         style={"width": "100%"},
@@ -226,7 +232,7 @@ class DefaultProfile:
                     "Default gating channel:",
                     self._persistent_input(
                         id=self.page.ids.Default.default_gating_channel,
-                        value=getattr(runtime_config.Default, "default_gating_channel", ""),
+                        value=runtime_config.Default.default_gating_channel,
                         style={"width": "100%"},
                     ),
                 ),
@@ -234,7 +240,7 @@ class DefaultProfile:
                     "Default gating threshold:",
                     self._persistent_input(
                         id=self.page.ids.Default.default_gating_threshold,
-                        value=getattr(runtime_config.Default, "default_gating_threshold", ""),
+                        value=runtime_config.Default.default_gating_threshold,
                         style={"width": "100%"},
                     ),
                 ),
@@ -249,7 +255,7 @@ class DefaultProfile:
                     "Max events for analysis:",
                     self._persistent_input(
                         id=self.page.ids.Default.max_events_for_analysis,
-                        value=getattr(runtime_config.Default, "max_events_for_analysis", ""),
+                        value=runtime_config.Default.max_events_for_analysis,
                         type="number",
                         step=1,
                         min=1,
@@ -260,7 +266,7 @@ class DefaultProfile:
                     "Number of bins for plots:",
                     self._persistent_input(
                         id=self.page.ids.Default.n_bins_for_plots,
-                        value=getattr(runtime_config.Default, "n_bins_for_plots", ""),
+                        value=runtime_config.Default.n_bins_for_plots,
                         type="number",
                         step=10,
                         min=10,
@@ -275,7 +281,7 @@ class DefaultProfile:
                             {"label": "Yes", "value": "yes"},
                             {"label": "No", "value": "no"},
                         ],
-                        value=getattr(runtime_config.Default, "show_calibration_plot_by_default", "no"),
+                        value=runtime_config.Default.show_calibration_plot_by_default,
                         clearable=False,
                         searchable=False,
                         style={"width": "100%"},
@@ -285,7 +291,7 @@ class DefaultProfile:
                     "Default output suffix:",
                     self._persistent_input(
                         id=self.page.ids.Default.default_output_suffix,
-                        value=getattr(runtime_config.Default, "default_output_suffix", "_calibrated"),
+                        value=runtime_config.Default.default_output_suffix,
                         style={"width": "100%"},
                     ),
                 ),
@@ -293,7 +299,7 @@ class DefaultProfile:
                     "Operator name:",
                     self._persistent_input(
                         id=self.page.ids.Default.operator_name,
-                        value=getattr(runtime_config.Default, "operator_name", ""),
+                        value=runtime_config.Default.operator_name,
                         style={"width": "100%"},
                     ),
                 ),
@@ -301,7 +307,7 @@ class DefaultProfile:
                     "Instrument name:",
                     self._persistent_input(
                         id=self.page.ids.Default.instrument_name,
-                        value=getattr(runtime_config.Default, "instrument_name", ""),
+                        value=runtime_config.Default.instrument_name,
                         style={"width": "100%"},
                     ),
                 ),
@@ -316,7 +322,7 @@ class DefaultProfile:
                     "Default FCS file path:",
                     self._persistent_input(
                         id=self.page.ids.Default.fcs_file_path,
-                        value=getattr(runtime_config.Default, "fcs_file_path", ""),
+                        value=runtime_config.Default.fcs_file_path,
                         style={"width": "100%"},
                     ),
                 ),
@@ -328,7 +334,21 @@ class DefaultProfile:
                             {"label": "Dark", "value": "dark"},
                             {"label": "Light", "value": "light"},
                         ],
-                        value=getattr(runtime_config.Default, "theme_mode", "dark"),
+                        value=runtime_config.Default.theme_mode,
+                        clearable=False,
+                        searchable=False,
+                        style={"width": "100%"},
+                    ),
+                ),
+                self._setting_row(
+                    "Show graphs:",
+                    self._persistent_dropdown(
+                        id=self.page.ids.Default.show_graphs,
+                        options=[
+                            {"label": "Yes", "value": "yes"},
+                            {"label": "No", "value": "no"},
+                        ],
+                        value="yes" if runtime_config.Default.show_graphs else "no",
                         clearable=False,
                         searchable=False,
                         style={"width": "100%"},
@@ -364,6 +384,7 @@ class DefaultProfile:
             Output(self.page.ids.Default.core_diameter_nm, "value"),
             Output(self.page.ids.Default.particle_diameter_nm, "value"),
             Output(self.page.ids.Default.particle_refractive_index, "value"),
+            Output(self.page.ids.Default.wavelength_nm, "value"),
             Output(self.page.ids.Default.max_events_for_analysis, "value"),
             Output(self.page.ids.Default.n_bins_for_plots, "value"),
             Output(self.page.ids.Default.peak_count, "value"),
@@ -378,12 +399,13 @@ class DefaultProfile:
             Output(self.page.ids.Default.operator_name, "value"),
             Output(self.page.ids.Default.instrument_name, "value"),
             Output(self.page.ids.Default.theme_mode, "value"),
+            Output(self.page.ids.Default.show_graphs, "value"),
             Input(self.page.ids.Default.values_profile_dropdown, "value"),
             prevent_initial_call=True,
         )
         def load_profile_defaults(dropdown_value: Optional[str]):
             if not dropdown_value:
-                return tuple([dash.no_update] * 21)
+                return tuple([dash.no_update] * 23)
 
             settings = get_saved_profile(dropdown_value) or {}
 
@@ -391,27 +413,29 @@ class DefaultProfile:
             runtime_config.load_json(dropdown_value)
 
             return (
-                settings.get("medium_refractive_index", ""),
-                settings.get("core_refractive_index", ""),
-                settings.get("shell_refractive_index", ""),
-                settings.get("shell_thickness_nm", ""),
-                settings.get("core_diameter_nm", ""),
-                settings.get("particle_diameter_nm", ""),
-                settings.get("particle_refractive_index", ""),
-                settings.get("max_events_for_analysis", ""),
-                settings.get("n_bins_for_plots", ""),
-                settings.get("peak_count", ""),
-                settings.get("mie_model", "Solid Sphere"),
-                settings.get("mesf_values", ""),
-                settings.get("fcs_file_path", ""),
-                settings.get("default_gating_channel", ""),
-                settings.get("default_gating_threshold", ""),
-                settings.get("show_calibration_plot_by_default", "no"),
-                settings.get("histogram_scale", "linear"),
-                settings.get("default_output_suffix", "_calibrated"),
-                settings.get("operator_name", ""),
-                settings.get("instrument_name", ""),
-                settings.get("theme_mode", "dark"),
+                settings.get("medium_refractive_index", runtime_config.Default.medium_refractive_index),
+                settings.get("core_refractive_index", runtime_config.Default.core_refractive_index),
+                settings.get("shell_refractive_index", runtime_config.Default.shell_refractive_index),
+                self._format_float_list_for_input(settings.get("shell_thickness_nm", runtime_config.Default.shell_thickness_nm)),
+                self._format_float_list_for_input(settings.get("core_diameter_nm", runtime_config.Default.core_diameter_nm)),
+                self._format_float_list_for_input(settings.get("particle_diameter_nm", runtime_config.Default.particle_diameter_nm)),
+                settings.get("particle_refractive_index", runtime_config.Default.particle_refractive_index),
+                settings.get("wavelength_nm", runtime_config.Default.wavelength_nm),
+                settings.get("max_events_for_analysis", runtime_config.Default.max_events_for_analysis),
+                settings.get("n_bins_for_plots", runtime_config.Default.n_bins_for_plots),
+                settings.get("peak_count", runtime_config.Default.peak_count),
+                settings.get("mie_model", runtime_config.Default.mie_model),
+                settings.get("mesf_values", runtime_config.Default.mesf_values),
+                settings.get("fcs_file_path", runtime_config.Default.fcs_file_path),
+                settings.get("default_gating_channel", runtime_config.Default.default_gating_channel),
+                settings.get("default_gating_threshold", runtime_config.Default.default_gating_threshold),
+                settings.get("show_calibration_plot_by_default", runtime_config.Default.show_calibration_plot_by_default),
+                settings.get("histogram_scale", runtime_config.Default.histogram_scale),
+                settings.get("default_output_suffix", runtime_config.Default.default_output_suffix),
+                settings.get("operator_name", runtime_config.Default.operator_name),
+                settings.get("instrument_name", runtime_config.Default.instrument_name),
+                settings.get("theme_mode", runtime_config.Default.theme_mode),
+                "yes" if settings.get("show_graphs", runtime_config.Default.show_graphs) else "no",
             )
 
         @callback(
@@ -429,6 +453,7 @@ class DefaultProfile:
             State(self.page.ids.Default.core_diameter_nm, "value"),
             State(self.page.ids.Default.particle_diameter_nm, "value"),
             State(self.page.ids.Default.particle_refractive_index, "value"),
+            State(self.page.ids.Default.wavelength_nm, "value"),
             State(self.page.ids.Default.max_events_for_analysis, "value"),
             State(self.page.ids.Default.n_bins_for_plots, "value"),
             State(self.page.ids.Default.peak_count, "value"),
@@ -443,6 +468,7 @@ class DefaultProfile:
             State(self.page.ids.Default.operator_name, "value"),
             State(self.page.ids.Default.instrument_name, "value"),
             State(self.page.ids.Default.theme_mode, "value"),
+            State(self.page.ids.Default.show_graphs, "value"),
             prevent_initial_call=True,
         )
         def edit_settings(_n_clicks: Any, profile_target: str, *args):
@@ -457,6 +483,7 @@ class DefaultProfile:
                     "core_diameter_nm",
                     "particle_diameter_nm",
                     "particle_refractive_index",
+                    "wavelength_nm",
                     "max_events_for_analysis",
                     "n_bins_for_plots",
                     "peak_count",
@@ -471,6 +498,7 @@ class DefaultProfile:
                     "operator_name",
                     "instrument_name",
                     "theme_mode",
+                    "show_graphs",
                 ]
 
                 new_dict = {key: value for key, value in zip(keys, args)}
@@ -479,6 +507,14 @@ class DefaultProfile:
                     r"[^\d,\s]",
                     "",
                     str(new_dict.get("mesf_values", "")),
+                )
+
+                new_dict["particle_diameter_nm"] = self._format_float_list_for_input(new_dict.get("particle_diameter_nm", ""))
+                new_dict["core_diameter_nm"] = self._format_float_list_for_input(new_dict.get("core_diameter_nm", ""))
+                new_dict["shell_thickness_nm"] = self._format_float_list_for_input(new_dict.get("shell_thickness_nm", ""))
+
+                new_dict["show_graphs"] = (
+                    str(new_dict.get("show_graphs", "yes")).strip().lower() == "yes"
                 )
 
                 if not profile_target:
@@ -525,6 +561,7 @@ class DefaultProfile:
             Input(self.page.ids.Default.core_diameter_nm, "value"),
             Input(self.page.ids.Default.particle_diameter_nm, "value"),
             Input(self.page.ids.Default.particle_refractive_index, "value"),
+            Input(self.page.ids.Default.wavelength_nm, "value"),
             Input(self.page.ids.Default.max_events_for_analysis, "value"),
             Input(self.page.ids.Default.n_bins_for_plots, "value"),
             Input(self.page.ids.Default.peak_count, "value"),
@@ -539,6 +576,7 @@ class DefaultProfile:
             Input(self.page.ids.Default.operator_name, "value"),
             Input(self.page.ids.Default.instrument_name, "value"),
             Input(self.page.ids.Default.theme_mode, "value"),
+            Input(self.page.ids.Default.show_graphs, "value"),
             prevent_initial_call=True,
         )
         def clear_save_confirmation(*_args):
@@ -549,11 +587,7 @@ class DefaultProfile:
 
         for profile_name in directories.list_profiles():
             profile_file_name = str(profile_name)
-            profile_label = (
-                profile_file_name[:-5]
-                if profile_file_name.endswith(".json")
-                else profile_file_name
-            )
+            profile_label = profile_file_name[:-5] if profile_file_name.endswith(".json") else profile_file_name
             options.append(
                 {
                     "label": profile_label,
@@ -574,6 +608,14 @@ class DefaultProfile:
             return "default_profile.json"
 
         return profile_options[0]["value"]
+
+    def _format_float_list_for_input(self, value: Any) -> str:
+        parsed_values = _as_float_list(value)
+
+        if parsed_values.size == 0:
+            return ""
+
+        return ", ".join(f"{float(item):.6g}" for item in parsed_values)
 
     def _setting_row(self, label: str, component):
         return html.Div(

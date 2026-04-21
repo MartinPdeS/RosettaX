@@ -2,7 +2,17 @@
 # -*- coding: utf-8 -*-
 
 from pathlib import Path
+import logging
+import os
+import platform
+import subprocess
+
 import RosettaX
+
+logger = logging.getLogger(__name__)
+
+
+
 
 root = Path(RosettaX.__path__[0])
 
@@ -71,3 +81,27 @@ def list_calibrations(calibration_type: str) -> list[str]:
             list_of_filenames.append(file.name)
     return list_of_filenames
 
+
+def open_directory(path: Path) -> None:
+    resolved_path = Path(path).resolve()
+
+    logger.debug("Opening directory at path=%r", str(resolved_path))
+
+    if not resolved_path.exists():
+        raise FileNotFoundError(f"Directory does not exist: {resolved_path}")
+
+    system_name = platform.system()
+
+    if system_name == "Darwin":
+        subprocess.run(["open", str(resolved_path)], check=True)
+        return
+
+    if system_name == "Windows":
+        os.startfile(str(resolved_path))
+        return
+
+    if system_name == "Linux":
+        subprocess.run(["xdg-open", str(resolved_path)], check=True)
+        return
+
+    raise RuntimeError(f"Unsupported operating system: {system_name}")

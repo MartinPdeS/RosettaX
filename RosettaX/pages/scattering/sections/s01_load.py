@@ -9,8 +9,7 @@ import dash
 import dash_bootstrap_components as dbc
 from dash import Input, Output, State, callback, dcc, html
 
-from RosettaX.pages import styling
-from RosettaX.pages.scattering.backend import BackEnd
+from RosettaX.utils import styling
 
 
 logger = logging.getLogger(__name__)

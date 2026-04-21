@@ -5,7 +5,7 @@ import dash
 import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
 
-from RosettaX.pages import styling
+from RosettaX.utils import styling
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.utils.plottings import add_vertical_lines, _make_info_figure
 from RosettaX.pages.fluorescence.backend import BackEnd
@@ -16,6 +16,8 @@ logger = logging.getLogger(__name__)
 class Peaks:
     def __init__(self, page) -> None:
         self.page = page
+        self.runtime_config = RuntimeConfig()
+        self.default = self.runtime_config.Default
 
     def get_layout(self) -> dbc.Card:
         return dbc.Card(
@@ -48,7 +50,7 @@ class Peaks:
                 dbc.Checklist(
                     id=self.page.ids.Fluorescence.graph_toggle_switch,
                     options=[{"label": "Show histogram", "value": "enabled"}],
-                    value=[],
+                    value=["enabled"] if self.default.show_graphs else [],
                     switch=True,
                 ),
             ],
@@ -85,14 +87,12 @@ class Peaks:
         )
 
     def _build_peak_controls(self) -> dash.html.Div:
-        runtime_config = RuntimeConfig()
-
         peak_count_input = dash.dcc.Input(
             id=self.page.ids.Fluorescence.peak_count_input,
             type="number",
             min=1,
             step=1,
-            value=runtime_config.Default.peak_count,
+            value=self.default.peak_count,
             style={"width": "120px"},
         )
 
@@ -135,8 +135,6 @@ class Peaks:
         )
 
     def _build_nbins_input(self) -> dash.html.Div:
-        runtime_config = RuntimeConfig()
-
         return dash.html.Div(
             [
                 dash.html.Div("Number of bins:"),
@@ -145,7 +143,7 @@ class Peaks:
                     type="number",
                     min=10,
                     step=10,
-                    value=runtime_config.Default.n_bins_for_plots,
+                    value=self.default.n_bins_for_plots,
                     style={"width": "160px"},
                 ),
             ],
@@ -160,8 +158,6 @@ class Peaks:
             prevent_initial_call=False,
         )
         def sync_controls_from_runtime_store(runtime_config_data: Any) -> tuple[Any, Any]:
-            runtime_config = RuntimeConfig()
-
             logger.debug(
                 "sync_controls_from_runtime_store called with runtime_config_data=%r",
                 runtime_config_data,
@@ -170,21 +166,21 @@ class Peaks:
             if not isinstance(runtime_config_data, dict):
                 logger.debug(
                     "Runtime config store is not a dict. Using defaults peak_count=%r nbins=%r",
-                    runtime_config.Default.peak_count,
-                    runtime_config.Default.n_bins_for_plots,
+                    self.default.peak_count,
+                    self.default.n_bins_for_plots,
                 )
                 return (
-                    runtime_config.Default.peak_count,
-                    runtime_config.Default.n_bins_for_plots,
+                    self.default.peak_count,
+                    self.default.n_bins_for_plots,
                 )
 
             peak_count_value = runtime_config_data.get(
                 "peak_count",
-                runtime_config.Default.peak_count,
+                self.default.peak_count,
             )
             fluorescence_nbins_value = runtime_config_data.get(
                 "n_bins_for_plots",
-                runtime_config.Default.n_bins_for_plots,
+                self.default.n_bins_for_plots,
             )
 
             logger.debug(
@@ -194,6 +190,32 @@ class Peaks:
             )
 
             return peak_count_value, fluorescence_nbins_value
+
+        @dash.callback(
+            dash.Output(self.page.ids.Fluorescence.graph_toggle_switch, "value"),
+            dash.Input("runtime-config-store", "data"),
+            prevent_initial_call=False,
+        )
+        def sync_graph_toggle_from_runtime_store(runtime_config_data: Any) -> list[str]:
+            if not isinstance(runtime_config_data, dict):
+                logger.debug(
+                    "sync_graph_toggle_from_runtime_store received non-dict payload=%r. Using Default.show_graphs=%r",
+                    runtime_config_data,
+                    self.default.show_graphs,
+                )
+                return ["enabled"] if self.default.show_graphs else []
+
+            resolved_show_graphs = bool(
+                runtime_config_data.get("show_graphs", self.default.show_graphs)
+            )
+
+            logger.debug(
+                "sync_graph_toggle_from_runtime_store resolved_show_graphs=%r from runtime_config_data=%r",
+                resolved_show_graphs,
+                runtime_config_data,
+            )
+
+            return ["enabled"] if resolved_show_graphs else []
 
         @dash.callback(
             dash.Output(self.page.ids.Fluorescence.graph_toggle_container, "style"),
@@ -528,37 +550,10 @@ class Peaks:
 
             return result.updated_table_data, result.peak_lines_payload
 
-
     def _is_enabled(self, value: Any) -> bool:
-        """
-        Return whether a checklist switch style value is enabled.
-
-        Parameters
-        ----------
-        value : Any
-            Dash checklist value.
-
-        Returns
-        -------
-        bool
-            True when "enabled" is present.
-        """
         return isinstance(value, list) and ("enabled" in value)
 
     def _clean_optional_string(self, value: Any) -> str:
-        """
-        Normalize an optional string like value from Dash inputs.
-
-        Parameters
-        ----------
-        value : Any
-            Raw value.
-
-        Returns
-        -------
-        str
-            Cleaned string or empty string.
-        """
         if value is None:
             return ""
 

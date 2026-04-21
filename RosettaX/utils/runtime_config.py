@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from typing import Optional, ClassVar
+from pathlib import Path
+from typing import Optional, ClassVar, Any
 import json
 import logging
 
@@ -8,29 +9,51 @@ from RosettaX.utils import directories
 logger = logging.getLogger(__name__)
 
 
+class _RuntimeDefaultNamespace:
+    """
+    Dynamic attribute container backed by a dictionary.
+
+    This object lets the rest of the code keep using:
+
+        runtime_config.Default.some_key
+
+    without requiring every key to be hardcoded in Python.
+    """
+
+    def __init__(self) -> None:
+        object.__setattr__(self, "_data", {})
+
+    def load_dict(self, data: dict[str, Any]) -> None:
+        object.__setattr__(self, "_data", dict(data))
+
+    def update_dict(self, data: dict[str, Any]) -> None:
+        self._data.update(data)
+
+    def to_dict(self) -> dict[str, Any]:
+        return dict(self._data)
+
+    def __getattr__(self, name: str) -> Any:
+        try:
+            return self._data[name]
+        except KeyError as exc:
+            raise AttributeError(name) from exc
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        self._data[name] = value
+
+    def __contains__(self, name: str) -> bool:
+        return name in self._data
+
+    def __repr__(self) -> str:
+        return f"_RuntimeDefaultNamespace({self._data!r})"
+
+
 @dataclass
 class RuntimeConfig:
     _instance: ClassVar[Optional["RuntimeConfig"]] = None
     _initialized: ClassVar[bool] = False
 
-    class Default:
-        # General analysis parameters
-        max_events_for_analysis: Optional[int] = 200_000
-        n_bins_for_plots: Optional[int] = 400
-        peak_count: Optional[int] = 3
-
-        # Fluorescence calibration page defaults
-        fluorescence_page_scattering_detector: Optional[str] = None
-        fluorescence_page_fluorescence_detector: Optional[str] = None
-        particle_diameter = 100
-        particle_refractive_index = 1.59
-        medium_refractive_index = 1.33
-        core_refractive_index = 1.59
-        shell_refractive_index = 1.40
-        shell_thickness = 20
-        core_diameter = 100
-        mesf_values: Optional[str] = "1, 10, 100"
-        fcs_file_path: Optional[str] = None
+    Default: ClassVar[_RuntimeDefaultNamespace] = _RuntimeDefaultNamespace()
 
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
@@ -47,63 +70,103 @@ class RuntimeConfig:
             return
 
         self.__class__._initialized = True
-        logger.debug("Initialized RuntimeConfig singleton.")
+        logger.debug("Initializing RuntimeConfig singleton.")
+
+        self._load_default_profile_on_startup()
+
+    def _load_default_profile_on_startup(self) -> None:
+        """
+        Load the startup defaults from the default profile file.
+
+        The JSON profile is the source of truth for all default fields.
+        """
+        candidate_paths = [
+            Path(directories.default_profile),
+            Path(directories.profiles) / "default_profile.json",
+        ]
+
+        for json_path in candidate_paths:
+            if not json_path.exists():
+                continue
+
+            try:
+                with json_path.open("r", encoding="utf-8") as file_handle:
+                    data = json.load(file_handle)
+
+                if not isinstance(data, dict):
+                    raise TypeError(
+                        f"Default profile must contain a JSON object, got {type(data).__name__}."
+                    )
+
+                self.Default.load_dict(data)
+                logger.debug(
+                    "Loaded startup default profile from json_path=%r with keys=%r",
+                    str(json_path),
+                    list(data.keys()),
+                )
+                return
+
+            except Exception:
+                logger.exception(
+                    "Failed to load startup default profile from json_path=%r",
+                    str(json_path),
+                )
+
+        logger.warning(
+            "No valid default profile could be loaded. RuntimeConfig.Default is empty."
+        )
+        self.Default.load_dict({})
 
     def update(self, **kwargs) -> None:
         """
         Update the runtime configuration with new values.
 
-        This function takes keyword arguments corresponding to the fields of the
-        RuntimeConfig.Default class. Only fields that are explicitly provided
-        will be updated. Unknown keys are ignored.
+        Any provided key is accepted. The profile JSON defines the schema.
         """
         logger.debug("RuntimeConfig.update called with kwargs=%r", kwargs)
 
         for key, value in kwargs.items():
-            if hasattr(self.Default, key):
-                old_value = getattr(self.Default, key)
-                setattr(self.Default, key, value)
-                logger.debug(
-                    "Updated RuntimeConfig.Default.%s from %r to %r",
-                    key,
-                    old_value,
-                    value,
-                )
-            else:
-                logger.warning("Ignored unknown RuntimeConfig key=%r value=%r", key, value)
+            old_value = self.Default.to_dict().get(key, None)
+            setattr(self.Default, key, value)
+            logger.debug(
+                "Updated RuntimeConfig.Default.%s from %r to %r",
+                key,
+                old_value,
+                value,
+            )
 
     @classmethod
     def get_instance(cls) -> "RuntimeConfig":
         logger.debug("RuntimeConfig.get_instance called.")
         return cls()
 
-    def load_json(self, json_filename: str) -> dict:
-        json_path = directories.profiles / json_filename
+    def load_json(self, json_filename: str) -> dict[str, Any]:
+        """
+        Load a profile JSON file into the runtime configuration.
+        """
+        normalized_filename = str(json_filename).strip()
+        if not normalized_filename.endswith(".json"):
+            normalized_filename = f"{normalized_filename}.json"
+
+        json_path = Path(directories.profiles) / normalized_filename
         logger.debug("RuntimeConfig.load_json called with json_path=%r", str(json_path))
 
         try:
-            with open(json_path, "r", encoding="utf-8") as file:
-                data = json.load(file)
+            with json_path.open("r", encoding="utf-8") as file_handle:
+                data = json.load(file_handle)
 
-            logger.debug("Loaded JSON config data=%r", data)
+            if not isinstance(data, dict):
+                raise TypeError(
+                    f"Runtime config JSON must contain a JSON object, got {type(data).__name__}."
+                )
 
-            for key, value in data.items():
-                if hasattr(self.Default, key):
-                    old_value = getattr(self.Default, key)
-                    setattr(self.Default, key, value)
-                    logger.debug(
-                        "Loaded RuntimeConfig.Default.%s from JSON. Old value=%r new value=%r",
-                        key,
-                        old_value,
-                        value,
-                    )
-                else:
-                    logger.warning(
-                        "Ignored unknown RuntimeConfig key from JSON: key=%r value=%r",
-                        key,
-                        value,
-                    )
+            self.Default.load_dict(data)
 
+            logger.debug(
+                "Loaded RuntimeConfig.Default from JSON json_path=%r keys=%r",
+                str(json_path),
+                list(data.keys()),
+            )
             return data
 
         except Exception:
@@ -111,42 +174,11 @@ class RuntimeConfig:
             return {}
 
     def __repr__(self) -> str:
-        representation = (
-            f"RuntimeConfig("
-            f"max_events_for_analysis={self.Default.max_events_for_analysis}, "
-            f"n_bins_for_plots={self.Default.n_bins_for_plots}, "
-            f"peak_count={self.Default.peak_count}, "
-            f"fcs_file_path={self.Default.fcs_file_path}, "
-            f"fluorescence_page_scattering_detector={self.Default.fluorescence_page_scattering_detector}, "
-            f"fluorescence_page_fluorescence_detector={self.Default.fluorescence_page_fluorescence_detector}, "
-            f"mesf_values={self.Default.mesf_values}, "
-            f"particle_diameter={self.Default.particle_diameter}, "
-            f"particle_refractive_index={self.Default.particle_refractive_index}, "
-            f"medium_refractive_index={self.Default.medium_refractive_index}, "
-            f"core_refractive_index={self.Default.core_refractive_index}, "
-            f"shell_refractive_index={self.Default.shell_refractive_index}, "
-            f"shell_thickness={self.Default.shell_thickness}, "
-            f"core_diameter={self.Default.core_diameter})"
-        )
+        representation = f"RuntimeConfig({self.Default.to_dict()!r})"
         logger.debug("RuntimeConfig.__repr__ returning %r", representation)
         return representation
 
-    def to_dict(self) -> dict:
-        runtime_config_dict = {
-            "max_events_for_analysis": self.Default.max_events_for_analysis,
-            "n_bins_for_plots": self.Default.n_bins_for_plots,
-            "peak_count": self.Default.peak_count,
-            "fcs_file_path": self.Default.fcs_file_path,
-            "fluorescence_page_scattering_detector": self.Default.fluorescence_page_scattering_detector,
-            "fluorescence_page_fluorescence_detector": self.Default.fluorescence_page_fluorescence_detector,
-            "mesf_values": self.Default.mesf_values,
-            "particle_diameter": self.Default.particle_diameter,
-            "particle_refractive_index": self.Default.particle_refractive_index,
-            "medium_refractive_index": self.Default.medium_refractive_index,
-            "core_refractive_index": self.Default.core_refractive_index,
-            "shell_refractive_index": self.Default.shell_refractive_index,
-            "shell_thickness": self.Default.shell_thickness,
-            "core_diameter": self.Default.core_diameter,
-        }
+    def to_dict(self) -> dict[str, Any]:
+        runtime_config_dict = self.Default.to_dict()
         logger.debug("RuntimeConfig.to_dict returning %r", runtime_config_dict)
         return runtime_config_dict

@@ -36,19 +36,19 @@ class Ids:
         core_shell_container = f"{PAGE_NAME}-core_shell_container"
         optical_configuration_preset = f"{PAGE_NAME}-optical-configuration-preset"
         wavelength_nm = f"{PAGE_NAME}-wavelength-nm"
-        optical_power_watt = f"{PAGE_NAME}-optical-power-watt"
-        source_numerical_aperture = f"{PAGE_NAME}-source-numerical-aperture"
         detector_numerical_aperture = f"{PAGE_NAME}-detector-numerical-aperture"
         detector_cache_numerical_aperture = f"{PAGE_NAME}-detector-cache-numerical-aperture"
         detector_sampling = f"{PAGE_NAME}-detector-sampling"
-
-
+        homogeneous_geometry_store = f"{PAGE_NAME}-homogeneous-geometry-store"
+        core_shell_geometry_store = f"{PAGE_NAME}-core-shell-geometry-store"
 
     class Scattering:
         detector_dropdown = f"{PAGE_NAME}-scattering_detector_dropdown"
+        debug_container = f"{PAGE_NAME}-scattering_debug_container"
+        debug_switch = f"{PAGE_NAME}-scattering_debug_switch"
+        nbins_input = f"{PAGE_NAME}-scattering_nbins_input"
         graph_hist = f"{PAGE_NAME}-scattering_graph_hist"
         yscale_switch = f"{PAGE_NAME}-scattering_yscale_switch"
-        nbins_input = f"{PAGE_NAME}-scattering_nbins_input"
         peak_count_input = f"{PAGE_NAME}-scattering-peak-count-input"
         find_peaks_btn = f"{PAGE_NAME}-scattering-find-peaks-btn"
         graph_toggle_switch = f"{PAGE_NAME}-scattering-graph-toggle-switch"
@@ -68,9 +68,9 @@ class Ids:
 
     class Calibration:
         calibration_store = f"{PAGE_NAME}-calibration_store"
+        compute_model_btn = f"{PAGE_NAME}-compute-model-btn"
         calibrate_btn = f"{PAGE_NAME}-calibrate-btn"
         graph_store = f"{PAGE_NAME}-graph_store"
-        reference_axis_label = f"{PAGE_NAME}-reference-axis-label"
         bead_table = f"{PAGE_NAME}-bead-table"
         add_row_btn = f"{PAGE_NAME}-add-row-btn"
         graph_calibration = f"{PAGE_NAME}-graph-calibration"
@@ -90,7 +90,3 @@ class Ids:
         export_filename = f"{PAGE_NAME}-export-filename"
         export_file_btn = f"{PAGE_NAME}-export-file-btn"
         export_download = f"{PAGE_NAME}-export-download"
-
-    class Sidebar:
-        sidebar_store = f"{PAGE_NAME}-sidebar-store"
-        sidebar_content = f"{PAGE_NAME}-sidebar-content"

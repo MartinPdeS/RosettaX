@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
+
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
+import logging
 
 import numpy as np
 import plotly.graph_objs as go
-from scipy.signal import find_peaks
+
+from RosettaX.utils.peak_detection import PeakDetectionResult, find_1d_signal_peaks
+from RosettaX.utils.reader import FCSFile
 
 from PyMieSim.units import ureg
 from PyMieSim.experiment.detector_set import PhotodiodeSet
@@ -14,7 +18,8 @@ from PyMieSim.experiment.source_set import GaussianSet
 from PyMieSim.experiment.polarization_set import PolarizationSet
 from PyMieSim.experiment import Setup
 
-from RosettaX.utils.reader import FCSFile
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -30,20 +35,6 @@ class HistogramResult:
             "counts": self.counts.tolist(),
             "edges": self.edges.tolist(),
             "centers": self.centers.tolist(),
-        }
-
-
-@dataclass(frozen=True)
-class PeakDetectionResult:
-    peak_indices: np.ndarray
-    peak_positions: np.ndarray
-    peak_heights: np.ndarray
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "peak_indices": self.peak_indices.tolist(),
-            "peak_positions": self.peak_positions.tolist(),
-            "peak_heights": self.peak_heights.tolist(),
         }
 
 
@@ -90,6 +81,11 @@ class ScatteringCalibrationFitResult:
 
 
 class BackEnd:
+    """
+    Numerical backend for scattering histogram construction, peak detection,
+    modeled coupling computation, and calibration fitting.
+    """
+
     def __init__(
         self,
         *,
@@ -99,12 +95,27 @@ class BackEnd:
         self.fcs_file_path = str(fcs_file_path)
         self.detector_column = str(detector_column)
 
+        logger.debug(
+            "Initialized Scattering BackEnd with fcs_file_path=%r detector_column=%r",
+            self.fcs_file_path,
+            self.detector_column,
+        )
+
     def load_signal(
         self,
         *,
         max_events_for_analysis: Optional[int] = None,
         require_positive_values: bool = False,
     ) -> np.ndarray:
+        """
+        Load a detector signal from the FCS file.
+        """
+        logger.debug(
+            "load_signal called with max_events_for_analysis=%r require_positive_values=%r",
+            max_events_for_analysis,
+            require_positive_values,
+        )
+
         with FCSFile(self.fcs_file_path, writable=False) as fcs_file:
             signal = fcs_file.column_copy(self.detector_column, dtype=float)
 
@@ -117,6 +128,13 @@ class BackEnd:
         if max_events_for_analysis is not None:
             signal = signal[: int(max_events_for_analysis)]
 
+        logger.debug(
+            "load_signal returning n_values=%r min=%r max=%r",
+            signal.size,
+            None if signal.size == 0 else float(np.min(signal)),
+            None if signal.size == 0 else float(np.max(signal)),
+        )
+
         return signal
 
     def build_histogram(
@@ -125,6 +143,15 @@ class BackEnd:
         n_bins_for_plots: int,
         max_events_for_analysis: Optional[int] = None,
     ) -> HistogramResult:
+        """
+        Build a 1D histogram from the detector signal.
+        """
+        logger.debug(
+            "build_histogram called with n_bins_for_plots=%r max_events_for_analysis=%r",
+            n_bins_for_plots,
+            max_events_for_analysis,
+        )
+
         values = self.load_signal(
             max_events_for_analysis=max_events_for_analysis,
             require_positive_values=False,
@@ -136,12 +163,21 @@ class BackEnd:
         counts, edges = np.histogram(values, bins=int(n_bins_for_plots))
         centers = 0.5 * (edges[:-1] + edges[1:])
 
-        return HistogramResult(
+        histogram_result = HistogramResult(
             values=np.asarray(values, dtype=float),
             counts=np.asarray(counts, dtype=float),
             edges=np.asarray(edges, dtype=float),
             centers=np.asarray(centers, dtype=float),
         )
+
+        logger.debug(
+            "build_histogram returning n_values=%r n_bins=%r nonzero_bins=%r",
+            histogram_result.values.size,
+            histogram_result.counts.size,
+            int(np.count_nonzero(histogram_result.counts)),
+        )
+
+        return histogram_result
 
     def build_histogram_figure(
         self,
@@ -150,6 +186,15 @@ class BackEnd:
         use_log_counts: bool = False,
         peak_positions: Optional[np.ndarray] = None,
     ) -> go.Figure:
+        """
+        Build a Plotly histogram figure.
+        """
+        logger.debug(
+            "build_histogram_figure called with use_log_counts=%r peak_count=%r",
+            use_log_counts,
+            0 if peak_positions is None else len(np.asarray(peak_positions).reshape(-1)),
+        )
+
         figure = go.Figure()
 
         figure.add_trace(
@@ -160,7 +205,10 @@ class BackEnd:
             )
         )
 
-        for peak_position in np.asarray(peak_positions if peak_positions is not None else [], dtype=float):
+        for peak_position in np.asarray(
+            peak_positions if peak_positions is not None else [],
+            dtype=float,
+        ):
             figure.add_vline(
                 x=float(peak_position),
                 line_width=2,
@@ -178,55 +226,46 @@ class BackEnd:
 
         return figure
 
-    def find_histogram_peaks(
+    def find_scattering_peaks(
         self,
         *,
-        histogram_result: HistogramResult,
-        peak_count: int,
-        minimum_peak_prominence_fraction: float = 0.03,
-        minimum_peak_distance_bins: int = 5,
+        max_peaks: int,
+        min_cluster_size: int = 100,
+        threshold: float = 0.0,
+        max_events_for_analysis: Optional[int] = None,
+        debug: bool = False,
     ) -> PeakDetectionResult:
-        counts = np.asarray(histogram_result.counts, dtype=float)
-        centers = np.asarray(histogram_result.centers, dtype=float)
-
-        if counts.size == 0:
-            raise ValueError("Histogram counts are empty.")
-
-        if peak_count < 1:
-            raise ValueError("peak_count must be at least 1.")
-
-        maximum_count = float(np.max(counts))
-        if maximum_count <= 0.0:
-            raise ValueError("Histogram contains no positive counts.")
-
-        prominence_threshold = maximum_count * float(minimum_peak_prominence_fraction)
-
-        peak_indices, peak_properties = find_peaks(
-            counts,
-            prominence=prominence_threshold,
-            distance=int(minimum_peak_distance_bins),
+        """
+        Detect peaks in the 1D detector signal.
+        """
+        logger.debug(
+            "find_scattering_peaks called with max_peaks=%r min_cluster_size=%r threshold=%r max_events_for_analysis=%r debug=%r",
+            max_peaks,
+            min_cluster_size,
+            threshold,
+            max_events_for_analysis,
+            debug,
         )
 
-        if peak_indices.size == 0:
-            raise ValueError("No peaks were detected in the scattering histogram.")
-
-        peak_heights = counts[peak_indices]
-        sort_indices = np.argsort(peak_heights)[::-1]
-        peak_indices = peak_indices[sort_indices][: int(peak_count)]
-        peak_heights = peak_heights[sort_indices][: int(peak_count)]
-
-        peak_positions = centers[peak_indices]
-
-        order_by_position = np.argsort(peak_positions)
-        peak_indices = peak_indices[order_by_position]
-        peak_heights = peak_heights[order_by_position]
-        peak_positions = peak_positions[order_by_position]
-
-        return PeakDetectionResult(
-            peak_indices=np.asarray(peak_indices, dtype=int),
-            peak_positions=np.asarray(peak_positions, dtype=float),
-            peak_heights=np.asarray(peak_heights, dtype=float),
+        values = self.load_signal(
+            max_events_for_analysis=max_events_for_analysis,
+            require_positive_values=False,
         )
+
+        peak_detection_result = find_1d_signal_peaks(
+            values=values,
+            max_peaks=max_peaks,
+            min_cluster_size=min_cluster_size,
+            threshold=threshold,
+            debug=debug,
+        )
+
+        logger.debug(
+            "find_scattering_peaks returning peak_positions=%r",
+            peak_detection_result.peak_positions.tolist(),
+        )
+
+        return peak_detection_result
 
     def compute_modeled_coupling_from_diameters(
         self,
@@ -239,15 +278,43 @@ class BackEnd:
         medium_refractive_index: float,
         particle_refractive_index: float,
         detector_cache_numerical_aperture: Optional[float] = None,
-        detector_rotation_degree: float = 0.0,
         detector_phi_offset_degree: float = 0.0,
         detector_gamma_offset_degree: float = 0.0,
         polarization_angle_degree: float = 0.0,
         detector_sampling: int = 600,
     ) -> ModeledCouplingResult:
+        """
+        Compute modeled coupling values for a list of particle diameters.
+
+        Notes
+        -----
+        This function is intentionally defensive because the PyMieSim call can
+        block for some parameter combinations. We therefore log every stage and
+        retry once with a smaller detector sampling value before failing.
+        """
+        import time
+
+        logger.debug(
+            "compute_modeled_coupling_from_diameters called with particle_diameters_nm=%r wavelength_nm=%r source_numerical_aperture=%r optical_power_watt=%r detector_numerical_aperture=%r medium_refractive_index=%r particle_refractive_index=%r detector_cache_numerical_aperture=%r detector_phi_offset_degree=%r detector_gamma_offset_degree=%r polarization_angle_degree=%r detector_sampling=%r",
+            np.asarray(particle_diameters_nm).tolist(),
+            wavelength_nm,
+            source_numerical_aperture,
+            optical_power_watt,
+            detector_numerical_aperture,
+            medium_refractive_index,
+            particle_refractive_index,
+            detector_cache_numerical_aperture,
+            detector_phi_offset_degree,
+            detector_gamma_offset_degree,
+            polarization_angle_degree,
+            detector_sampling,
+        )
+
         particle_diameters_nm = np.asarray(particle_diameters_nm, dtype=float).reshape(-1)
         particle_diameters_nm = particle_diameters_nm[np.isfinite(particle_diameters_nm)]
         particle_diameters_nm = particle_diameters_nm[particle_diameters_nm > 0.0]
+
+        logger.debug("Sanitized particle_diameters_nm=%r", particle_diameters_nm.tolist())
 
         if particle_diameters_nm.size == 0:
             raise ValueError("No valid positive particle diameters were provided.")
@@ -258,44 +325,100 @@ class BackEnd:
             else float(detector_cache_numerical_aperture)
         )
 
-        polarization_set = PolarizationSet(
-            angles=[float(polarization_angle_degree)] * ureg.degree,
+        logger.debug(
+            "Resolved detector cache numerical aperture=%r",
+            resolved_detector_cache_numerical_aperture,
         )
 
-        source_set = GaussianSet(
-            wavelength=[float(wavelength_nm)] * ureg.nanometer,
-            polarization=polarization_set,
-            optical_power=[float(optical_power_watt)] * ureg.watt,
-            numerical_aperture=[float(source_numerical_aperture)],
-        )
+        def _run_coupling(simulation_sampling: int) -> np.ndarray:
+            logger.debug("Building PolarizationSet with sampling=%r.", simulation_sampling)
+            polarization_set = PolarizationSet(
+                angles=[float(polarization_angle_degree)] * ureg.degree,
+            )
 
-        scatterer_set = SphereSet(
-            diameter=particle_diameters_nm * ureg.nanometer,
-            material=[complex(float(particle_refractive_index), 0.0)],
-            medium=[float(medium_refractive_index)],
-        )
+            logger.debug("Building GaussianSet.")
+            source_set = GaussianSet(
+                wavelength=[float(wavelength_nm)] * ureg.nanometer,
+                polarization=polarization_set,
+                optical_power=[float(optical_power_watt)] * ureg.watt,
+                numerical_aperture=[float(source_numerical_aperture)],
+            )
 
-        detector_set = PhotodiodeSet(
-            numerical_aperture=[float(detector_numerical_aperture)],
-            cache_numerical_aperture=[resolved_detector_cache_numerical_aperture],
-            rotation=[float(detector_rotation_degree)] * ureg.degree,
-            phi_offset=[float(detector_phi_offset_degree)] * ureg.degree,
-            gamma_offset=[float(detector_gamma_offset_degree)] * ureg.degree,
-            sampling=[int(detector_sampling)],
-        )
+            logger.debug("Building SphereSet.")
+            scatterer_set = SphereSet(
+                diameter=particle_diameters_nm * ureg.nanometer,
+                material=[complex(float(particle_refractive_index), 0.0)],
+                medium=[float(medium_refractive_index)],
+            )
 
-        experiment = Setup(
-            scatterer_set=scatterer_set,
-            source_set=source_set,
-            detector_set=detector_set,
-        )
+            logger.debug("Building PhotodiodeSet.")
+            detector_set = PhotodiodeSet(
+                numerical_aperture=[float(detector_numerical_aperture)],
+                cache_numerical_aperture=[resolved_detector_cache_numerical_aperture],
+                phi_offset=[float(detector_phi_offset_degree)] * ureg.degree,
+                gamma_offset=[float(detector_gamma_offset_degree)] * ureg.degree,
+                sampling=[int(simulation_sampling)],
+            )
 
-        coupling_values = experiment.get("coupling", as_numpy=True).squeeze()
-        coupling_values = np.asarray(coupling_values, dtype=float).reshape(-1)
+            logger.debug("Building Setup.")
+            experiment = Setup(
+                scatterer_set=scatterer_set,
+                source_set=source_set,
+                detector_set=detector_set,
+            )
+
+            logger.debug(
+                "Calling experiment.get('coupling', as_numpy=True) with sampling=%r.",
+                simulation_sampling,
+            )
+            start_time = time.perf_counter()
+            coupling_values = experiment.get("coupling", as_numpy=True)
+            elapsed_time = time.perf_counter() - start_time
+
+            logger.debug(
+                "experiment.get('coupling') returned after %.3f s with raw type=%s value=%r",
+                elapsed_time,
+                type(coupling_values).__name__,
+                coupling_values,
+            )
+
+            coupling_values = np.asarray(coupling_values).squeeze()
+            logger.debug(
+                "Coupling after squeeze type=%s shape=%r dtype=%r",
+                type(coupling_values).__name__,
+                getattr(coupling_values, "shape", None),
+                getattr(coupling_values, "dtype", None),
+            )
+
+            coupling_values = np.real_if_close(coupling_values, tol=1000)
+            coupling_values = np.asarray(coupling_values, dtype=float).reshape(-1)
+
+            logger.debug(
+                "Processed coupling values with sampling=%r => %r",
+                simulation_sampling,
+                coupling_values.tolist(),
+            )
+
+            return coupling_values
+
+        try:
+            coupling_values = _run_coupling(int(detector_sampling))
+        except Exception:
+            logger.exception(
+                "Primary coupling computation failed with detector_sampling=%r. Retrying with a smaller sampling value.",
+                detector_sampling,
+            )
+
+            fallback_sampling = max(50, min(200, int(detector_sampling)))
+            if fallback_sampling == int(detector_sampling):
+                fallback_sampling = 100
+
+            coupling_values = _run_coupling(fallback_sampling)
 
         if coupling_values.size != particle_diameters_nm.size:
             raise ValueError(
-                "Modeled coupling result size does not match the provided particle diameter size."
+                "Modeled coupling result size does not match the provided particle diameter size. "
+                f"Got {coupling_values.size} modeled values for {particle_diameters_nm.size} diameters."
             )
 
         model_metadata = {
@@ -304,7 +427,6 @@ class BackEnd:
             "optical_power_watt": float(optical_power_watt),
             "detector_numerical_aperture": float(detector_numerical_aperture),
             "detector_cache_numerical_aperture": float(resolved_detector_cache_numerical_aperture),
-            "detector_rotation_degree": float(detector_rotation_degree),
             "detector_phi_offset_degree": float(detector_phi_offset_degree),
             "detector_gamma_offset_degree": float(detector_gamma_offset_degree),
             "polarization_angle_degree": float(polarization_angle_degree),
@@ -313,11 +435,18 @@ class BackEnd:
             "particle_refractive_index": float(particle_refractive_index),
         }
 
-        return ModeledCouplingResult(
+        modeled_coupling_result = ModeledCouplingResult(
             particle_diameters_nm=particle_diameters_nm,
-            expected_coupling_values=np.asarray(coupling_values, dtype=float),
+            expected_coupling_values=coupling_values,
             model_metadata=model_metadata,
         )
+
+        logger.debug(
+            "compute_modeled_coupling_from_diameters returning expected_coupling_values=%r",
+            modeled_coupling_result.expected_coupling_values.tolist(),
+        )
+
+        return modeled_coupling_result
 
     def fit_measured_peak_positions_to_modeled_coupling(
         self,
@@ -325,6 +454,17 @@ class BackEnd:
         measured_peak_positions: np.ndarray,
         modeled_coupling_result: ModeledCouplingResult,
     ) -> ScatteringCalibrationFitResult:
+        """
+        Fit a log10 to log10 calibration model between measured peak positions
+        and expected coupling values.
+        """
+        logger.debug(
+            "fit_measured_peak_positions_to_modeled_coupling called with measured_peak_positions=%r modeled_particle_diameters_nm=%r modeled_expected_coupling_values=%r",
+            np.asarray(measured_peak_positions).tolist(),
+            modeled_coupling_result.particle_diameters_nm.tolist(),
+            modeled_coupling_result.expected_coupling_values.tolist(),
+        )
+
         measured_peak_positions = np.asarray(measured_peak_positions, dtype=float).reshape(-1)
         measured_peak_positions = measured_peak_positions[np.isfinite(measured_peak_positions)]
         measured_peak_positions = measured_peak_positions[measured_peak_positions > 0.0]
@@ -333,6 +473,7 @@ class BackEnd:
             modeled_coupling_result.particle_diameters_nm,
             dtype=float,
         ).reshape(-1)
+
         expected_coupling_values = np.asarray(
             modeled_coupling_result.expected_coupling_values,
             dtype=float,
@@ -362,13 +503,15 @@ class BackEnd:
         fitted_expected_coupling_values_log10 = (
             slope * measured_peak_positions_log10 + intercept
         )
+
         r_squared = self._compute_r_squared(
             y_true=expected_coupling_values_log10,
             y_pred=fitted_expected_coupling_values_log10,
         )
+
         prefactor = 10.0 ** float(intercept)
 
-        return ScatteringCalibrationFitResult(
+        fit_result = ScatteringCalibrationFitResult(
             slope=float(slope),
             intercept=float(intercept),
             prefactor=float(prefactor),
@@ -381,11 +524,29 @@ class BackEnd:
             fitted_expected_coupling_values_log10=fitted_expected_coupling_values_log10,
         )
 
+        logger.debug(
+            "fit_measured_peak_positions_to_modeled_coupling returning slope=%r intercept=%r prefactor=%r r_squared=%r",
+            fit_result.slope,
+            fit_result.intercept,
+            fit_result.prefactor,
+            fit_result.r_squared,
+        )
+
+        return fit_result
+
     def build_calibration_figure(
         self,
         *,
         fit_result: ScatteringCalibrationFitResult,
     ) -> go.Figure:
+        """
+        Build the calibration fit figure.
+        """
+        logger.debug(
+            "build_calibration_figure called with n_points=%r",
+            fit_result.measured_peak_positions.size,
+        )
+
         measured_peak_positions_log10_fit = np.linspace(
             float(np.min(fit_result.measured_peak_positions_log10)),
             float(np.max(fit_result.measured_peak_positions_log10)),
@@ -432,6 +593,14 @@ class BackEnd:
         fit_result: ScatteringCalibrationFitResult,
         notes: str = "",
     ) -> dict[str, Any]:
+        """
+        Build the serialized calibration payload.
+        """
+        logger.debug(
+            "build_calibration_payload called with n_reference_points=%r",
+            fit_result.measured_peak_positions.size,
+        )
+
         reference_points = []
 
         for measured_peak_position, particle_diameter_nm, expected_coupling_value in zip(
@@ -448,7 +617,7 @@ class BackEnd:
                 }
             )
 
-        return {
+        payload = {
             "schema": "rosettax_calibration_v1",
             "created_at": "",
             "kind": "scattering",
@@ -487,6 +656,13 @@ class BackEnd:
                 },
             },
         }
+
+        logger.debug(
+            "build_calibration_payload returning payload keys=%r",
+            list(payload.keys()),
+        )
+
+        return payload
 
     @staticmethod
     def parse_particle_diameter_list(particle_diameter_list_text: str) -> np.ndarray:

@@ -42,26 +42,18 @@ class Calibration:
     """
     Scattering calibration section.
 
-    Workflow
-    --------
-    - Build a histogram from the selected scattering detector.
-    - Detect peak positions from that histogram.
-    - Read the user provided particle diameters from the table.
-    - Compute expected coupling values with PyMieSim.
-    - Fit measured peak positions to modeled coupling in log10 space.
-    - Store the resulting calibration payload and figure.
+    Responsibilities
+    ----------------
+    - Read the calibration reference table as the source of truth.
+    - Compute expected coupling values for the solid sphere model.
+    - Write expected coupling values back into the table.
+    - Fit the calibration curve and update outputs.
+
+    Notes
+    -----
+    The calibration table is rendered in the parameter section.
+    This section only reads and updates it.
     """
-
-    bead_table_columns = [
-        {"name": "Particle diameter [nm]", "id": "col1", "editable": True},
-        {"name": "Measured peak position [a.u.]", "id": "col2", "editable": False},
-        {"name": "Expected coupling", "id": "col3", "editable": False},
-    ]
-
-    default_bead_rows = [
-        {"col1": "", "col2": "", "col3": ""}
-        for _ in range(3)
-    ]
 
     def __init__(self, page) -> None:
         self.page = page
@@ -70,15 +62,11 @@ class Calibration:
     def get_layout(self) -> dbc.Card:
         return dbc.Card(
             [
-                dbc.CardHeader("4. Calibration"),
+                dbc.CardHeader("4. Calibration results"),
                 dbc.CardBody(
                     [
                         dash.dcc.Store(id=self.page.ids.Calibration.graph_store),
                         dash.dcc.Store(id=self.page.ids.Calibration.calibration_store),
-                        self._build_reference_axis_label_row(),
-                        dash.html.Br(),
-                        self._build_bead_table_block(),
-                        dash.html.Hr(),
                         self._build_graph_block(),
                         dash.html.Br(),
                         self._build_fit_outputs_block(),
@@ -88,45 +76,6 @@ class Calibration:
                             style={"marginTop": "8px"},
                         ),
                     ]
-                ),
-            ]
-        )
-
-    def _build_reference_axis_label_row(self) -> dash.html.Div:
-        return dash.html.Div(
-            [
-                dash.html.Div("Reference axis label:"),
-                dash.dcc.Input(
-                    id=self.page.ids.Calibration.reference_axis_label,
-                    type="text",
-                    value="Expected coupling",
-                    style={"width": "320px"},
-                ),
-            ],
-            style={"display": "flex", "alignItems": "center", "gap": "12px"},
-        )
-
-    def _build_bead_table_block(self) -> dash.html.Div:
-        return dash.html.Div(
-            [
-                dash.html.H5("Particle diameter list"),
-                dash.dash_table.DataTable(
-                    id=self.page.ids.Calibration.bead_table,
-                    columns=self.bead_table_columns,
-                    data=self.default_bead_rows,
-                    editable=True,
-                    row_deletable=True,
-                    style_table={"overflowX": "auto"},
-                ),
-                dash.html.Div(
-                    [
-                        dash.html.Button(
-                            "Add Row",
-                            id=self.page.ids.Calibration.add_row_btn,
-                            n_clicks=0,
-                        )
-                    ],
-                    style={"marginTop": "10px"},
                 ),
             ]
         )
@@ -161,28 +110,6 @@ class Calibration:
 
     def register_callbacks(self) -> None:
         @dash.callback(
-            dash.Output(
-                self.page.ids.Calibration.bead_table,
-                "data",
-                allow_duplicate=True,
-            ),
-            dash.Input(self.page.ids.Calibration.add_row_btn, "n_clicks"),
-            dash.State(self.page.ids.Calibration.bead_table, "data"),
-            dash.State(self.page.ids.Calibration.bead_table, "columns"),
-            prevent_initial_call=True,
-        )
-        def add_row(
-            n_clicks: int,
-            rows: list[dict],
-            columns: list[dict],
-        ) -> list[dict]:
-            del n_clicks
-
-            next_rows = list(rows or [])
-            next_rows.append({column["id"]: "" for column in columns})
-            return next_rows
-
-        @dash.callback(
             dash.Output(self.page.ids.Calibration.graph_store, "data"),
             dash.Output(self.page.ids.Calibration.calibration_store, "data"),
             dash.Output(
@@ -197,62 +124,48 @@ class Calibration:
             dash.Input(self.page.ids.Calibration.calibrate_btn, "n_clicks"),
             dash.State(self.page.ids.Upload.fcs_path_store, "data"),
             dash.State(self.page.ids.Scattering.detector_dropdown, "value"),
-            dash.State(self.page.ids.Scattering.nbins_input, "value"),
-            dash.State(
-                self.page.ids.Upload.max_events_for_plots_input,
-                "value",
-                allow_optional=True,
-            ),
-            dash.State(self.page.ids.Calibration.bead_table, "data"),
-            dash.State(self.page.ids.Calibration.reference_axis_label, "value"),
             dash.State(self.page.ids.Parameters.mie_model, "value"),
+            dash.State(self.page.ids.Calibration.bead_table, "data"),
             dash.State(self.page.ids.Parameters.medium_refractive_index_custom, "value"),
             dash.State(self.page.ids.Parameters.particle_refractive_index_custom, "value"),
             dash.State(self.page.ids.Parameters.core_refractive_index_custom, "value"),
             dash.State(self.page.ids.Parameters.shell_refractive_index_custom, "value"),
-            dash.State(self.page.ids.Parameters.particle_diameter, "value"),
-            dash.State(self.page.ids.Parameters.core_diameter, "value"),
-            dash.State(self.page.ids.Parameters.shell_thickness, "value"),
             dash.State(self.page.ids.Parameters.wavelength_nm, "value"),
             dash.State(self.page.ids.Parameters.detector_numerical_aperture, "value"),
             dash.State(self.page.ids.Parameters.detector_cache_numerical_aperture, "value"),
             dash.State(self.page.ids.Parameters.detector_sampling, "value"),
-            dash.State("runtime-config-store", "data"),
             prevent_initial_call=True,
         )
-        def calibrate_scattering(
+        def fit_scattering_calibration(
             _n_clicks: int,
             uploaded_fcs_path: Optional[str],
             detector_column: Optional[str],
-            n_bins_for_plots: Any,
-            max_events_for_plots: Any,
-            table_data: Optional[list[dict]],
-            reference_axis_label: Optional[str],
             mie_model: Any,
+            bead_table_data: Optional[list[dict[str, Any]]],
             medium_refractive_index: Any,
             particle_refractive_index: Any,
             core_refractive_index: Any,
             shell_refractive_index: Any,
-            particle_diameter: Any,
-            core_diameter: Any,
-            shell_thickness: Any,
             wavelength_nm: Any,
             detector_numerical_aperture: Any,
             detector_cache_numerical_aperture: Any,
             detector_sampling: Any,
-            runtime_config_data: Any,
         ) -> tuple:
             logger.debug(
-                "calibrate_scattering called with n_clicks=%r uploaded_fcs_path=%r detector_column=%r",
+                "fit_scattering_calibration called with n_clicks=%r uploaded_fcs_path=%r detector_column=%r mie_model=%r table_row_count=%r bead_table_data=%r",
                 _n_clicks,
                 uploaded_fcs_path,
                 detector_column,
+                mie_model,
+                0 if bead_table_data is None else len(bead_table_data),
+                bead_table_data,
             )
             del _n_clicks
 
-            try:
-                logger.debug("Starting scattering calibration validation.")
+            resolved_mie_model = self._resolve_mie_model(mie_model)
+            current_table_rows = [dict(row) for row in (bead_table_data or [])]
 
+            try:
                 if not uploaded_fcs_path:
                     logger.debug("Calibration aborted because uploaded_fcs_path is missing.")
                     figure = _make_info_figure("Upload an FCS file first.")
@@ -273,54 +186,14 @@ class Calibration:
                         apply_status="Missing scattering detector.",
                     ).to_tuple()
 
-                logger.debug("Input validation passed.")
-
-                resolved_mie_model = None if mie_model is None else str(mie_model).strip()
-                logger.debug("Resolved mie model=%r", resolved_mie_model)
-
-                if resolved_mie_model == "Core/Shell Sphere":
-                    logger.debug("Calibration aborted because Core/Shell Sphere is not implemented.")
-                    figure = _make_info_figure(
-                        "Core/Shell Sphere coupling is not implemented yet in this calibration workflow."
-                    )
-                    return CalibrationResult(
-                        figure_store=figure.to_dict(),
-                        calibration_store=dash.no_update,
-                        bead_table_data=dash.no_update,
-                        apply_status="Core/Shell Sphere is not implemented yet for scattering calibration.",
-                    ).to_tuple()
-
-                resolved_peak_count = self._resolve_peak_count(runtime_config_data)
-                resolved_n_bins_for_plots = self._resolve_n_bins_for_plots(
-                    n_bins_for_plots=n_bins_for_plots,
-                    runtime_config_data=runtime_config_data,
-                )
-                resolved_max_events_for_plots = self._resolve_max_events_for_plots(
-                    max_events_for_plots=max_events_for_plots,
-                    runtime_config_data=runtime_config_data,
-                )
-
-                logger.debug(
-                    "Resolved control values peak_count=%r n_bins=%r max_events=%r",
-                    resolved_peak_count,
-                    resolved_n_bins_for_plots,
-                    resolved_max_events_for_plots,
-                )
-
                 resolved_medium_refractive_index = self._as_required_float(
                     medium_refractive_index,
                     "medium_refractive_index",
-                )
-                resolved_particle_refractive_index = self._as_required_float(
-                    particle_refractive_index,
-                    "particle_refractive_index",
                 )
                 resolved_wavelength_nm = self._as_required_float(
                     wavelength_nm,
                     "wavelength_nm",
                 )
-                resolved_optical_power_watt = 1.0
-                resolved_source_numerical_aperture = 0.1
                 resolved_detector_numerical_aperture = self._as_required_float(
                     detector_numerical_aperture,
                     "detector_numerical_aperture",
@@ -334,16 +207,13 @@ class Calibration:
                     "detector_sampling",
                 )
 
+                resolved_optical_power_watt = 1.0
+                resolved_source_numerical_aperture = 0.1
+
                 logger.debug(
-                    "Resolved physical parameters medium_refractive_index=%r "
-                    "particle_refractive_index=%r wavelength_nm=%r optical_power_watt=%r "
-                    "source_numerical_aperture=%r detector_numerical_aperture=%r "
-                    "detector_cache_numerical_aperture=%r detector_sampling=%r",
+                    "Resolved optical parameters medium_refractive_index=%r wavelength_nm=%r detector_numerical_aperture=%r detector_cache_numerical_aperture=%r detector_sampling=%r",
                     resolved_medium_refractive_index,
-                    resolved_particle_refractive_index,
                     resolved_wavelength_nm,
-                    resolved_optical_power_watt,
-                    resolved_source_numerical_aperture,
                     resolved_detector_numerical_aperture,
                     resolved_detector_cache_numerical_aperture,
                     resolved_detector_sampling,
@@ -353,71 +223,85 @@ class Calibration:
                     fcs_file_path=str(uploaded_fcs_path),
                     detector_column=str(detector_column),
                 )
-                logger.debug("Scattering backend created successfully.")
 
-                histogram_result = scattering_backend.build_histogram(
-                    n_bins_for_plots=resolved_n_bins_for_plots,
-                    max_events_for_analysis=resolved_max_events_for_plots,
-                )
-                logger.debug(
-                    "Histogram built successfully with value_count=%r",
-                    histogram_result.values.size,
-                )
-
-                peak_detection_result = scattering_backend.find_histogram_peaks(
-                    histogram_result=histogram_result,
-                    peak_count=resolved_peak_count,
-                )
-                logger.debug(
-                    "Peak detection succeeded with peak_positions=%r",
-                    peak_detection_result.peak_positions.tolist(),
-                )
-
-                particle_diameters_nm = self._extract_particle_diameters_from_table(
-                    table_data or []
-                )
-                logger.debug(
-                    "Extracted particle diameters=%r",
-                    particle_diameters_nm.tolist(),
-                )
-
-                if particle_diameters_nm.size < 2:
-                    logger.debug(
-                        "Calibration aborted because fewer than 2 valid particle diameters were provided."
+                if resolved_mie_model == "Core/Shell Sphere":
+                    resolved_core_refractive_index = self._as_required_float(
+                        core_refractive_index,
+                        "core_refractive_index",
                     )
+                    resolved_shell_refractive_index = self._as_required_float(
+                        shell_refractive_index,
+                        "shell_refractive_index",
+                    )
+
+                    parsed_core_shell_rows = self._parse_core_shell_rows_for_fit(
+                        rows=current_table_rows,
+                    )
+
+                    logger.debug(
+                        "Parsed core shell table rows row_count=%r row_indices=%r core_diameters_nm=%r shell_thicknesses_nm=%r outer_diameters_nm=%r measured_peak_positions=%r",
+                        parsed_core_shell_rows["row_count"],
+                        parsed_core_shell_rows["row_indices"],
+                        parsed_core_shell_rows["core_diameters_nm"].tolist(),
+                        parsed_core_shell_rows["shell_thicknesses_nm"].tolist(),
+                        parsed_core_shell_rows["outer_diameters_nm"].tolist(),
+                        parsed_core_shell_rows["measured_peak_positions"].tolist(),
+                    )
+
+                    if parsed_core_shell_rows["row_count"] < 2:
+                        figure = _make_info_figure(
+                            "Enter at least 2 valid core shell rows with measured peak positions."
+                        )
+                        return CalibrationResult(
+                            figure_store=figure.to_dict(),
+                            calibration_store=dash.no_update,
+                            bead_table_data=dash.no_update,
+                            apply_status="Need at least 2 valid core shell rows.",
+                        ).to_tuple()
+
                     figure = _make_info_figure(
-                        "Enter at least 2 particle diameters in the first column."
+                        "Core/Shell Sphere coupling is not implemented yet in the scattering backend."
                     )
                     return CalibrationResult(
                         figure_store=figure.to_dict(),
                         calibration_store=dash.no_update,
-                        bead_table_data=dash.no_update,
-                        apply_status="Need at least 2 valid particle diameters.",
-                    ).to_tuple()
-
-                if particle_diameters_nm.size != peak_detection_result.peak_positions.size:
-                    logger.debug(
-                        "Calibration aborted because particle diameter count=%r does not match peak count=%r",
-                        particle_diameters_nm.size,
-                        peak_detection_result.peak_positions.size,
-                    )
-                    figure = _make_info_figure(
-                        "The number of particle diameters must match the number of detected peaks."
-                    )
-                    return CalibrationResult(
-                        figure_store=figure.to_dict(),
-                        calibration_store=dash.no_update,
-                        bead_table_data=dash.no_update,
+                        bead_table_data=current_table_rows,
                         apply_status=(
-                            f"Detected {peak_detection_result.peak_positions.size} peaks but "
-                            f"received {particle_diameters_nm.size} particle diameters."
+                            f"Core/Shell rows parsed successfully with core RI={resolved_core_refractive_index:.6g} "
+                            f"and shell RI={resolved_shell_refractive_index:.6g}, but expected coupling computation is not implemented yet."
                         ),
                     ).to_tuple()
 
-                logger.debug("About to call compute_modeled_coupling_from_diameters.")
+                resolved_particle_refractive_index = self._as_required_float(
+                    particle_refractive_index,
+                    "particle_refractive_index",
+                )
+
+                parsed_sphere_rows = self._parse_sphere_rows_for_fit(
+                    rows=current_table_rows,
+                )
+
+                logger.debug(
+                    "Parsed sphere table rows row_count=%r row_indices=%r particle_diameters_nm=%r measured_peak_positions=%r",
+                    parsed_sphere_rows["row_count"],
+                    parsed_sphere_rows["row_indices"],
+                    parsed_sphere_rows["particle_diameters_nm"].tolist(),
+                    parsed_sphere_rows["measured_peak_positions"].tolist(),
+                )
+
+                if parsed_sphere_rows["row_count"] < 2:
+                    figure = _make_info_figure(
+                        "Enter at least 2 valid rows with particle diameter and measured peak position."
+                    )
+                    return CalibrationResult(
+                        figure_store=figure.to_dict(),
+                        calibration_store=dash.no_update,
+                        bead_table_data=dash.no_update,
+                        apply_status="Need at least 2 valid calibration rows.",
+                    ).to_tuple()
 
                 modeled_coupling_result = scattering_backend.compute_modeled_coupling_from_diameters(
-                    particle_diameters_nm=particle_diameters_nm,
+                    particle_diameters_nm=parsed_sphere_rows["particle_diameters_nm"],
                     wavelength_nm=resolved_wavelength_nm,
                     source_numerical_aperture=resolved_source_numerical_aperture,
                     optical_power_watt=resolved_optical_power_watt,
@@ -425,7 +309,6 @@ class Calibration:
                     medium_refractive_index=resolved_medium_refractive_index,
                     particle_refractive_index=resolved_particle_refractive_index,
                     detector_cache_numerical_aperture=resolved_detector_cache_numerical_aperture,
-                    detector_rotation_degree=0.0,
                     detector_phi_offset_degree=0.0,
                     detector_gamma_offset_degree=0.0,
                     polarization_angle_degree=0.0,
@@ -433,44 +316,44 @@ class Calibration:
                 )
 
                 logger.debug(
-                    "Returned from compute_modeled_coupling_from_diameters with expected_coupling_values=%r",
+                    "Modeled coupling values=%r",
                     modeled_coupling_result.expected_coupling_values.tolist(),
                 )
 
                 fit_result = scattering_backend.fit_measured_peak_positions_to_modeled_coupling(
-                    measured_peak_positions=peak_detection_result.peak_positions,
+                    measured_peak_positions=parsed_sphere_rows["measured_peak_positions"],
                     modeled_coupling_result=modeled_coupling_result,
                 )
+
                 logger.debug(
-                    "Fit succeeded with slope=%r intercept=%r r_squared=%r",
+                    "Fit result slope=%r intercept=%r prefactor=%r r_squared=%r",
                     fit_result.slope,
                     fit_result.intercept,
+                    fit_result.prefactor,
                     fit_result.r_squared,
                 )
 
                 figure = scattering_backend.build_calibration_figure(
                     fit_result=fit_result,
                 )
-                logger.debug("Calibration figure built successfully.")
 
                 calibration_payload = scattering_backend.build_calibration_payload(
-                    peak_detection_result=peak_detection_result,
+                    peak_detection_result=self._build_peak_detection_result_like_object(
+                        peak_positions=np.asarray(parsed_sphere_rows["measured_peak_positions"], dtype=float),
+                    ),
                     modeled_coupling_result=modeled_coupling_result,
                     fit_result=fit_result,
                     notes="",
                 )
-                logger.debug("Calibration payload built successfully.")
 
                 calibration_payload["payload"]["parameters"].update(
                     {
                         "mie_model": resolved_mie_model,
                         "medium_refractive_index": resolved_medium_refractive_index,
                         "particle_refractive_index": resolved_particle_refractive_index,
-                        "core_refractive_index": core_refractive_index,
-                        "shell_refractive_index": shell_refractive_index,
-                        "particle_diameter_nm": particle_diameter,
-                        "core_diameter_nm": core_diameter,
-                        "shell_thickness_nm": shell_thickness,
+                        "core_refractive_index": self._as_optional_float(core_refractive_index),
+                        "shell_refractive_index": self._as_optional_float(shell_refractive_index),
+                        "particle_diameter_nm": fit_result.particle_diameters_nm.tolist(),
                         "wavelength_nm": resolved_wavelength_nm,
                         "optical_power_watt": resolved_optical_power_watt,
                         "source_numerical_aperture": resolved_source_numerical_aperture,
@@ -480,31 +363,26 @@ class Calibration:
                     }
                 )
 
-                if reference_axis_label:
-                    calibration_payload["payload"]["payload"]["y_definition"] = str(reference_axis_label)
-
-                updated_table_data = self._build_updated_table_data(
-                    particle_diameters_nm=fit_result.particle_diameters_nm,
-                    measured_peak_positions=fit_result.measured_peak_positions,
+                updated_table_rows = self._write_expected_coupling_into_sphere_table(
+                    rows=current_table_rows,
+                    row_indices=parsed_sphere_rows["row_indices"],
                     expected_coupling_values=fit_result.expected_coupling_values,
                 )
+
                 logger.debug(
-                    "Updated table data prepared with row_count=%r",
-                    len(updated_table_data),
+                    "Updated table rows after fit=%r",
+                    updated_table_rows,
                 )
 
-                result = CalibrationResult(
+                return CalibrationResult(
                     figure_store=figure.to_dict(),
                     calibration_store=calibration_payload,
-                    bead_table_data=updated_table_data,
+                    bead_table_data=updated_table_rows,
                     slope_out=f"{fit_result.slope:.6g}",
                     intercept_out=f"{fit_result.intercept:.6g} (A={fit_result.prefactor:.6g})",
                     r_squared_out=f"{fit_result.r_squared:.6g}",
-                    apply_status="Scattering calibration created successfully.",
-                )
-
-                logger.debug("Scattering calibration completed successfully.")
-                return result.to_tuple()
+                    apply_status="Scattering calibration fitted successfully.",
+                ).to_tuple()
 
             except Exception as exc:
                 logger.exception("Scattering calibration failed.")
@@ -519,32 +397,6 @@ class Calibration:
                     apply_status=f"{type(exc).__name__}: {exc}",
                 ).to_tuple()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         @dash.callback(
             dash.Output(self.page.ids.Calibration.graph_calibration, "figure"),
             dash.Input(self.page.ids.Calibration.graph_store, "data"),
@@ -552,101 +404,160 @@ class Calibration:
         )
         def update_calibration_graph(stored_figure: Any) -> go.Figure:
             if not stored_figure:
-                return _make_info_figure("Create a calibration first.")
+                return _make_info_figure("Fit a calibration first.")
 
             return go.Figure(stored_figure)
 
-    def _resolve_peak_count(self, runtime_config_data: Any) -> int:
-        if not isinstance(runtime_config_data, dict):
-            return 3
+    def _resolve_mie_model(self, mie_model: Any) -> str:
+        mie_model_string = "" if mie_model is None else str(mie_model).strip()
+        return "Core/Shell Sphere" if mie_model_string == "Core/Shell Sphere" else "Solid Sphere"
 
-        try:
-            return max(1, int(runtime_config_data.get("peak_count", 3)))
-        except Exception:
-            return 3
-
-    def _resolve_n_bins_for_plots(
+    def _parse_sphere_rows_for_fit(
         self,
         *,
-        n_bins_for_plots: Any,
-        runtime_config_data: Any,
-    ) -> int:
-        if n_bins_for_plots not in (None, ""):
-            return max(10, int(n_bins_for_plots))
-
-        if isinstance(runtime_config_data, dict):
-            try:
-                return max(10, int(runtime_config_data.get("n_bins_for_plots", 100)))
-            except Exception:
-                pass
-
-        return 100
-
-    def _resolve_max_events_for_plots(
-        self,
-        *,
-        max_events_for_plots: Any,
-        runtime_config_data: Any,
-    ) -> int:
-        if max_events_for_plots not in (None, ""):
-            return max(1, int(max_events_for_plots))
-
-        if isinstance(runtime_config_data, dict):
-            try:
-                return max(1, int(runtime_config_data.get("max_events_for_analysis", 10000)))
-            except Exception:
-                pass
-
-        return 10000
-
-    def _extract_particle_diameters_from_table(
-        self,
-        table_data: list[dict[str, Any]],
-    ) -> np.ndarray:
+        rows: Optional[list[dict[str, Any]]],
+    ) -> dict[str, Any]:
+        row_indices: list[int] = []
         particle_diameters_nm: list[float] = []
+        measured_peak_positions: list[float] = []
 
-        for row in table_data or []:
-            raw_particle_diameter = row.get("col1")
-
+        for row_index, row in enumerate(rows or []):
             try:
-                if raw_particle_diameter in ("", None):
+                raw_particle_diameter_nm = row.get("particle_diameter_nm")
+                raw_measured_peak_position = row.get("measured_peak_position")
+
+                if raw_particle_diameter_nm in ("", None) or raw_measured_peak_position in ("", None):
                     continue
 
-                particle_diameter_nm = float(raw_particle_diameter)
+                particle_diameter_nm = float(raw_particle_diameter_nm)
+                measured_peak_position = float(raw_measured_peak_position)
             except Exception:
+                logger.debug("Skipping invalid sphere row row_index=%r row=%r", row_index, row)
                 continue
 
-            if particle_diameter_nm <= 0.0:
+            if particle_diameter_nm <= 0.0 or measured_peak_position <= 0.0:
+                logger.debug(
+                    "Skipping non-positive sphere row row_index=%r particle_diameter_nm=%r measured_peak_position=%r",
+                    row_index,
+                    particle_diameter_nm,
+                    measured_peak_position,
+                )
                 continue
 
-            particle_diameters_nm.append(float(particle_diameter_nm))
+            row_indices.append(row_index)
+            particle_diameters_nm.append(particle_diameter_nm)
+            measured_peak_positions.append(measured_peak_position)
 
-        return np.asarray(particle_diameters_nm, dtype=float)
+        return {
+            "row_count": len(row_indices),
+            "row_indices": row_indices,
+            "particle_diameters_nm": np.asarray(particle_diameters_nm, dtype=float),
+            "measured_peak_positions": np.asarray(measured_peak_positions, dtype=float),
+        }
 
-    def _build_updated_table_data(
+    def _parse_core_shell_rows_for_fit(
         self,
         *,
-        particle_diameters_nm: np.ndarray,
-        measured_peak_positions: np.ndarray,
+        rows: Optional[list[dict[str, Any]]],
+    ) -> dict[str, Any]:
+        row_indices: list[int] = []
+        core_diameters_nm: list[float] = []
+        shell_thicknesses_nm: list[float] = []
+        outer_diameters_nm: list[float] = []
+        measured_peak_positions: list[float] = []
+
+        for row_index, row in enumerate(rows or []):
+            try:
+                raw_core_diameter_nm = row.get("core_diameter_nm")
+                raw_shell_thickness_nm = row.get("shell_thickness_nm")
+                raw_measured_peak_position = row.get("measured_peak_position")
+
+                if (
+                    raw_core_diameter_nm in ("", None)
+                    or raw_shell_thickness_nm in ("", None)
+                    or raw_measured_peak_position in ("", None)
+                ):
+                    continue
+
+                core_diameter_nm = float(raw_core_diameter_nm)
+                shell_thickness_nm = float(raw_shell_thickness_nm)
+                measured_peak_position = float(raw_measured_peak_position)
+            except Exception:
+                logger.debug("Skipping invalid core-shell row row_index=%r row=%r", row_index, row)
+                continue
+
+            if core_diameter_nm <= 0.0 or shell_thickness_nm < 0.0 or measured_peak_position <= 0.0:
+                logger.debug(
+                    "Skipping non-positive core-shell row row_index=%r core_diameter_nm=%r shell_thickness_nm=%r measured_peak_position=%r",
+                    row_index,
+                    core_diameter_nm,
+                    shell_thickness_nm,
+                    measured_peak_position,
+                )
+                continue
+
+            outer_diameter_nm = core_diameter_nm + 2.0 * shell_thickness_nm
+
+            row_indices.append(row_index)
+            core_diameters_nm.append(core_diameter_nm)
+            shell_thicknesses_nm.append(shell_thickness_nm)
+            outer_diameters_nm.append(outer_diameter_nm)
+            measured_peak_positions.append(measured_peak_position)
+
+        return {
+            "row_count": len(row_indices),
+            "row_indices": row_indices,
+            "core_diameters_nm": np.asarray(core_diameters_nm, dtype=float),
+            "shell_thicknesses_nm": np.asarray(shell_thicknesses_nm, dtype=float),
+            "outer_diameters_nm": np.asarray(outer_diameters_nm, dtype=float),
+            "measured_peak_positions": np.asarray(measured_peak_positions, dtype=float),
+        }
+
+    def _write_expected_coupling_into_sphere_table(
+        self,
+        *,
+        rows: list[dict[str, Any]],
+        row_indices: list[int],
         expected_coupling_values: np.ndarray,
     ) -> list[dict[str, str]]:
-        updated_rows: list[dict[str, str]] = []
+        updated_rows = [dict(row) for row in rows]
+        expected_coupling_values = np.asarray(expected_coupling_values, dtype=float).reshape(-1)
 
-        for particle_diameter_nm, measured_peak_position, expected_coupling_value in zip(
-            particle_diameters_nm,
-            measured_peak_positions,
+        logger.debug(
+            "_write_expected_coupling_into_sphere_table called with row_indices=%r expected_coupling_values=%r",
+            row_indices,
+            expected_coupling_values.tolist(),
+        )
+
+        for row in updated_rows:
+            row["expected_coupling"] = ""
+
+        for row_index, expected_coupling_value in zip(
+            row_indices,
             expected_coupling_values,
             strict=False,
         ):
-            updated_rows.append(
-                {
-                    "col1": f"{float(particle_diameter_nm):.6g}",
-                    "col2": f"{float(measured_peak_position):.6g}",
-                    "col3": f"{float(expected_coupling_value):.6g}",
-                }
-            )
+            if row_index >= len(updated_rows):
+                continue
 
-        return updated_rows
+            updated_rows[row_index]["expected_coupling"] = f"{float(expected_coupling_value):.6g}"
+
+        return [
+            {
+                key: "" if value is None else str(value)
+                for key, value in row.items()
+            }
+            for row in updated_rows
+        ]
+
+    def _build_peak_detection_result_like_object(self, peak_positions: np.ndarray):
+        peak_positions = np.asarray(peak_positions, dtype=float)
+
+        class PeakDetectionResultLike:
+            def __init__(self, positions: np.ndarray) -> None:
+                self.peak_positions = positions
+
+        return PeakDetectionResultLike(peak_positions)
 
     def _as_required_float(self, value: Any, field_name: str) -> float:
         try:
@@ -663,3 +574,11 @@ class Calibration:
             return int(value)
         except Exception as exc:
             raise ValueError(f"Invalid value for {field_name}: {value!r}") from exc
+
+    def _as_optional_float(self, value: Any) -> Optional[float]:
+        try:
+            if value in (None, ""):
+                return None
+            return float(value)
+        except Exception:
+            return None

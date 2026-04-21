@@ -13,7 +13,7 @@ import dash
 import dash_bootstrap_components as dbc
 from dash import Input, Output, dcc, html
 
-from RosettaX.pages import styling
+from RosettaX.utils import styling
 from RosettaX.pages.sidebar.main import SidebarIds, register_sidebar_callbacks, sidebar_html
 from RosettaX.utils.parser import _parse_args
 from RosettaX.utils.runtime_config import RuntimeConfig
@@ -181,6 +181,25 @@ class RosettaXApplication:
         Register application-level Dash callbacks.
         """
         logger.debug("Registering app-level callbacks")
+
+        @dash.callback(
+            dash.Output("theme-switch", "value", allow_duplicate=True),
+            dash.Input("runtime-config-store", "data"),
+            prevent_initial_call=True,
+        )
+        def sync_theme_switch_from_runtime_config(runtime_config_data: Any):
+            if not isinstance(runtime_config_data, dict):
+                return dash.no_update
+
+            theme_mode = str(runtime_config_data.get("theme_mode", "")).strip().lower()
+
+            if theme_mode == "light":
+                return False
+
+            if theme_mode == "dark":
+                return True
+
+            return dash.no_update
 
         @self.app.callback(
             Output("sidebar-content", "children"),
