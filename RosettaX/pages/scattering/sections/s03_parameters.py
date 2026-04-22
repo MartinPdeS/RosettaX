@@ -42,7 +42,7 @@ class Parameters:
 
     sphere_table_columns = [
         {"name": "Particle diameter [nm]", "id": "particle_diameter_nm", "editable": True},
-        {"name": "Measured peak position [a.u.] (optional)", "id": "measured_peak_position", "editable": True},
+        {"name": "Measured peak position [a.u.]", "id": "measured_peak_position", "editable": True},
         {"name": "Expected coupling", "id": "expected_coupling", "editable": False},
     ]
 
@@ -50,7 +50,7 @@ class Parameters:
         {"name": "Core diameter [nm]", "id": "core_diameter_nm", "editable": True},
         {"name": "Shell thickness [nm]", "id": "shell_thickness_nm", "editable": True},
         {"name": "Outer diameter [nm]", "id": "outer_diameter_nm", "editable": False},
-        {"name": "Measured peak position [a.u.] (optional)", "id": "measured_peak_position", "editable": True},
+        {"name": "Measured peak position [a.u.]", "id": "measured_peak_position", "editable": True},
         {"name": "Expected coupling", "id": "expected_coupling", "editable": False},
     ]
 

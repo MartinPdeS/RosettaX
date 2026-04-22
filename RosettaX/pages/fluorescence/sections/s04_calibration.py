@@ -15,6 +15,7 @@ from RosettaX.utils.casting import _as_float
 from RosettaX.utils.plottings import _make_info_figure
 from RosettaX.utils import styling
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -47,19 +48,18 @@ class Calibration:
         {"name": "Intensity [calibrated units]", "id": "col1", "editable": True},
         {"name": "Intensity [a.u.]", "id": "col2", "editable": True},
     ]
+
     default_bead_rows = [{"col1": "", "col2": ""} for _ in range(3)]
 
     def __init__(self, page) -> None:
         self.page = page
-        self.runtime_config = RuntimeConfig()
         logger.debug("Initialized CalibrationSection with page=%r", page)
 
-    def _refresh_runtime(self) -> RuntimeConfig:
-        self.runtime_config = RuntimeConfig()
-        return self.runtime_config
+    def _get_runtime_config(self) -> RuntimeConfig:
+        return RuntimeConfig()
 
     def _get_default_mesf_values(self) -> Any:
-        runtime_config = self._refresh_runtime()
+        runtime_config = self._get_runtime_config()
         return runtime_config.get_path("calibration.mesf_values", default=[])
 
     def get_layout(self) -> dbc.Card:
@@ -286,7 +286,6 @@ class Calibration:
 
     def register_callbacks(self) -> None:
         logger.debug("Registering calibration callbacks.")
-        logger.debug("RuntimeConfig at calibration callback registration=%r", self.runtime_config)
 
         @dash.callback(
             dash.Output(self.page.ids.Calibration.bead_table, "data"),
@@ -299,12 +298,18 @@ class Calibration:
                 runtime_config_data,
             )
 
-            runtime_config = self._refresh_runtime()
+            if not isinstance(runtime_config_data, dict):
+                default_mesf_values = self._get_default_mesf_values()
+                resolved_rows = self._build_bead_rows_from_mesf_values(default_mesf_values)
 
-            if isinstance(runtime_config_data, dict):
-                runtime_config.Default.load_dict(runtime_config_data)
+                logger.debug(
+                    "Runtime config data is not a dict. Returning default rows=%r",
+                    resolved_rows,
+                )
+                return resolved_rows
 
-            mesf_values = runtime_config.get_path("calibration.mesf_values", default=[])
+            calibration_section = runtime_config_data.get("calibration") or {}
+            mesf_values = calibration_section.get("mesf_values", [])
             resolved_rows = self._build_bead_rows_from_mesf_values(mesf_values)
 
             logger.debug(
@@ -319,9 +324,7 @@ class Calibration:
             dash.Input(self.page.ids.Calibration.graph_store, "data"),
             prevent_initial_call=False,
         )
-        def update_calibration_graph(
-            stored_figure: Any,
-        ) -> go.Figure:
+        def update_calibration_graph(stored_figure: Any) -> go.Figure:
             logger.debug(
                 "update_calibration_graph called with stored_figure_type=%s",
                 type(stored_figure).__name__,
@@ -394,6 +397,8 @@ class Calibration:
                 None if table_data is None else len(table_data),
                 detector_column,
             )
+
+            del n_clicks
 
             figure = go.Figure()
 
@@ -551,11 +556,13 @@ class Calibration:
                 )
 
                 if not detector_column:
-                    apply_status = "Calibration fit OK. Select a fluorescence detector to apply."
-                    logger.debug("No detector selected. Returning calibration fit without applying to events.")
+                    apply_status = "Calibration fit created successfully."
+                    logger.debug(
+                        "No fluorescence detector selected. Returning calibration fit without detector preview."
+                    )
                 else:
                     logger.debug(
-                        "Applying calibration to detector_column=%r using bead_file_path=%r",
+                        "Computing calibration preview for detector_column=%r using bead_file_path=%r",
                         detector_column,
                         bead_file_path,
                     )
@@ -572,13 +579,14 @@ class Calibration:
                     calibrated_intensity_units = calibrated_intensity_units[calibrated_intensity_units > 0.0]
 
                     logger.debug(
-                        "Applied calibration to detector=%r valid_event_count=%r",
+                        "Computed calibration preview for detector=%r valid_event_count=%r",
                         detector_column,
                         calibrated_intensity_units.size,
                     )
 
                     apply_status = (
-                        f"Applied to {calibrated_intensity_units.size} events using detector '{detector_column}'."
+                        f"Calibration fit created successfully. "
+                        f"Preview computed for {calibrated_intensity_units.size} valid events on detector '{detector_column}'."
                     )
 
                 result = CalibrationResult(
@@ -636,10 +644,15 @@ class Calibration:
         for raw_part in raw_parts:
             if not raw_part:
                 continue
+
             parsed_value = _as_float(raw_part)
             if parsed_value is None:
-                logger.debug("Skipping MESF part=%r because it could not be parsed to float.", raw_part)
+                logger.debug(
+                    "Skipping MESF part=%r because it could not be parsed to float.",
+                    raw_part,
+                )
                 continue
+
             parsed_values.append(f"{float(parsed_value):.6g}")
 
         logger.debug("Parsed MESF values=%r", parsed_values)

@@ -179,10 +179,13 @@ class Scattering:
         )
 
     def _build_yscale_switch(self) -> dbc.Checklist:
+        runtime_config = self._refresh_runtime()
+        histogram_scale = runtime_config.get_str("calibration.histogram_scale", default="log")
+
         return dbc.Checklist(
             id=self.page.ids.Scattering.yscale_switch,
             options=[{"label": "Log scale (counts)", "value": "log"}],
-            value=["log"],
+            value=["log"] if histogram_scale == "log" else [],
             switch=True,
         )
 
@@ -197,6 +200,24 @@ class Scattering:
 
     def register_callbacks(self) -> None:
         logger.debug("Registering scattering callbacks.")
+
+        @dash.callback(
+            dash.Output(self.page.ids.Scattering.yscale_switch, "value"),
+            dash.Input("runtime-config-store", "data"),
+            prevent_initial_call=False,
+        )
+        def sync_scattering_yscale_from_runtime_store(runtime_config_data: Any) -> list[str]:
+            del runtime_config_data
+
+            runtime_config = self._refresh_runtime()
+            histogram_scale = runtime_config.get_str("calibration.histogram_scale", default="log")
+
+            logger.debug(
+                "sync_scattering_yscale_from_runtime_store resolved histogram_scale=%r",
+                histogram_scale,
+            )
+
+            return ["log"] if histogram_scale == "log" else []
 
         @dash.callback(
             dash.Output(self.page.ids.Scattering.debug_switch, "value"),

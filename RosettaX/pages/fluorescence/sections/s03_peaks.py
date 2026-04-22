@@ -145,10 +145,13 @@ class Peaks:
         )
 
     def _build_yscale_switch(self) -> dbc.Checklist:
+        runtime_config = self._refresh_runtime()
+        histogram_scale = runtime_config.get_str("calibration.histogram_scale", default="log")
+
         return dbc.Checklist(
             id=self.page.ids.Fluorescence.yscale_switch,
             options=[{"label": "Log scale (counts)", "value": "log"}],
-            value=["log"],
+            value=["log"] if histogram_scale == "log" else [],
             switch=True,
             style={"display": "block"},
         )
@@ -199,6 +202,31 @@ class Peaks:
             )
 
             return peak_count_value, fluorescence_nbins_value
+
+        @dash.callback(
+            dash.Output(self.page.ids.Fluorescence.yscale_switch, "value"),
+            dash.Input("runtime-config-store", "data"),
+            prevent_initial_call=False,
+        )
+        def sync_fluorescence_yscale_from_runtime_store(runtime_config_data: Any) -> list[str]:
+            logger.debug(
+                "sync_fluorescence_yscale_from_runtime_store called with runtime_config_data=%r",
+                runtime_config_data,
+            )
+
+            runtime_config = self._refresh_runtime()
+
+            if isinstance(runtime_config_data, dict):
+                runtime_config.Default.load_dict(runtime_config_data)
+
+            histogram_scale = runtime_config.get_str("calibration.histogram_scale", default="log")
+
+            logger.debug(
+                "sync_fluorescence_yscale_from_runtime_store resolved histogram_scale=%r",
+                histogram_scale,
+            )
+
+            return ["log"] if histogram_scale == "log" else []
 
         @dash.callback(
             dash.Output(self.page.ids.Fluorescence.graph_toggle_switch, "value"),
