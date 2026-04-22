@@ -126,3 +126,27 @@ def _as_float_list(value: Any) -> np.ndarray:
         parsed_values.append(float(parsed_value))
 
     return np.asarray(parsed_values, dtype=float)
+
+def as_required_float(value: Any, field_name: str) -> float:
+    try:
+        if value in (None, ""):
+            raise ValueError
+        return float(value)
+    except Exception as exc:
+        raise ValueError(f"Invalid value for {field_name}: {value!r}") from exc
+
+def as_required_int(value: Any, field_name: str) -> int:
+    try:
+        if value in (None, ""):
+            raise ValueError
+        return int(value)
+    except Exception as exc:
+        raise ValueError(f"Invalid value for {field_name}: {value!r}") from exc
+
+def as_optional_float(value: Any) -> Optional[float]:
+    try:
+        if value in (None, ""):
+            return None
+        return float(value)
+    except Exception:
+        return None

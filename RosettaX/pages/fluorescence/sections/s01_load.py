@@ -27,24 +27,26 @@ class UploadState:
     scattering_detector_value: Any = dash.no_update
     fluorescence_detector_options: Any = dash.no_update
     fluorescence_detector_value: Any = dash.no_update
+    runtime_config_data: Any = dash.no_update
 
 
 class Upload:
     def __init__(self, page) -> None:
         self.page = page
-        self.runtime_config = RuntimeConfig()
         logger.debug("Initialized Upload section with page=%r", page)
 
     @property
     def uploaded_fcs_filename_store_id(self) -> str:
         return f"{self.page.ids.Upload.uploaded_fcs_path_store}-filename"
 
-    def _refresh_runtime(self) -> RuntimeConfig:
-        self.runtime_config = RuntimeConfig()
-        return self.runtime_config
-
     def _get_initial_fluorescence_fcs_file_path(self) -> Optional[str]:
-        runtime_config = self._refresh_runtime()
+        """
+        Use the default profile only for first layout construction.
+
+        The live session state must come from runtime-config-store inside callbacks,
+        not from a hidden RuntimeConfig instance.
+        """
+        runtime_config = RuntimeConfig.from_default_profile()
         return runtime_config.get_path("files.fluorescence_fcs_file_path", default=None)
 
     def get_layout(self):
@@ -135,7 +137,10 @@ class Upload:
         stored_filename: Optional[str],
         current_scattering_detector_value: Optional[str],
         current_fluorescence_detector_value: Optional[str],
+        runtime_config_data: Optional[dict[str, Any]],
     ) -> UploadState:
+        runtime_config = RuntimeConfig.from_dict(runtime_config_data)
+
         if contents and filename:
             try:
                 selected_fcs_path = self.write_upload_to_tempfile(
@@ -155,10 +160,15 @@ class Upload:
                     scattering_detector_value=None,
                     fluorescence_detector_options=[],
                     fluorescence_detector_value=None,
+                    runtime_config_data=runtime_config.to_dict(),
                 )
         elif stored_fcs_path:
             selected_fcs_path = str(stored_fcs_path).strip()
-            display_filename = str(stored_filename).strip() if stored_filename else Path(selected_fcs_path).name
+            display_filename = (
+                str(stored_filename).strip()
+                if stored_filename
+                else Path(selected_fcs_path).name
+            )
         else:
             return UploadState(
                 uploaded_fcs_path=None,
@@ -167,6 +177,7 @@ class Upload:
                 scattering_detector_value=None,
                 fluorescence_detector_options=[],
                 fluorescence_detector_value=None,
+                runtime_config_data=runtime_config.to_dict(),
             )
 
         try:
@@ -187,6 +198,7 @@ class Upload:
                 scattering_detector_value=None,
                 fluorescence_detector_options=[],
                 fluorescence_detector_value=None,
+                runtime_config_data=runtime_config.to_dict(),
             )
 
         try:
@@ -207,11 +219,11 @@ class Upload:
                 scattering_detector_value=None,
                 fluorescence_detector_options=[],
                 fluorescence_detector_value=None,
+                runtime_config_data=runtime_config.to_dict(),
             )
 
-        runtime_config = self._refresh_runtime()
         runtime_config.update_paths(
-            updates={
+            **{
                 "files.fluorescence_fcs_file_path": selected_fcs_path,
             }
         )
@@ -268,6 +280,7 @@ class Upload:
             scattering_detector_value=scattering_detector_value,
             fluorescence_detector_options=fluorescence_detector_options,
             fluorescence_detector_value=fluorescence_detector_value,
+            runtime_config_data=runtime_config.to_dict(),
         )
 
     def register_callbacks(self):
@@ -290,13 +303,15 @@ class Upload:
             Output(self.page.ids.Scattering.detector_dropdown, "value"),
             Output(self.page.ids.Fluorescence.detector_dropdown, "options"),
             Output(self.page.ids.Fluorescence.detector_dropdown, "value"),
+            Output("runtime-config-store", "data", allow_duplicate=True),
             Input(self.page.ids.Upload.upload, "contents"),
             Input(self.page.ids.Upload.uploaded_fcs_path_store, "data"),
             State(self.page.ids.Upload.upload, "filename"),
             State(self.uploaded_fcs_filename_store_id, "data"),
             State(self.page.ids.Scattering.detector_dropdown, "value"),
             State(self.page.ids.Fluorescence.detector_dropdown, "value"),
-            prevent_initial_call=False,
+            State("runtime-config-store", "data"),
+            prevent_initial_call="initial_duplicate",
         )
         def handle_upload(
             contents,
@@ -305,6 +320,7 @@ class Upload:
             stored_filename,
             current_scattering_detector_value,
             current_fluorescence_detector_value,
+            runtime_config_data,
         ):
             logger.debug(
                 "handle_upload called with contents_type=%s stored_fcs_path=%r filename=%r "
@@ -333,6 +349,11 @@ class Upload:
                     if current_fluorescence_detector_value
                     else None
                 ),
+                runtime_config_data=(
+                    runtime_config_data
+                    if isinstance(runtime_config_data, dict)
+                    else None
+                ),
             )
 
             logger.debug(
@@ -354,4 +375,5 @@ class Upload:
                 upload_state.scattering_detector_value,
                 upload_state.fluorescence_detector_options,
                 upload_state.fluorescence_detector_value,
+                upload_state.runtime_config_data,
             )

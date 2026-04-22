@@ -5,11 +5,22 @@ import logging
 
 import dash
 import dash_bootstrap_components as dbc
-import numpy as np
 
-from RosettaX.pages.scattering.backend import BackEnd
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.utils import styling
+from RosettaX.pages.scattering.services.parameter_model import compute_model_for_rows
+from RosettaX.pages.scattering.services.parameter_table import (
+    build_empty_row_for_model,
+    build_empty_rows_for_model,
+    core_shell_table_columns,
+    get_table_columns_for_model,
+    normalize_table_rows,
+    populate_table_from_runtime_defaults,
+    remap_table_rows_to_model,
+    resolve_mie_model,
+    sphere_table_columns,
+    table_is_effectively_empty,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -21,7 +32,7 @@ class Parameters:
 
     Design
     ------
-    The visible table is the single source of truth for:
+    The visible table is the source of truth for:
     - particle geometry
     - optional measured peak positions
     - expected coupling values
@@ -31,72 +42,65 @@ class Parameters:
     - switches the visible table schema when the particle type changes
     - lets the user add rows
     - keeps the table internally consistent
-    - computes model coupling directly into the table
+    - computes expected coupling directly into the table
 
     Notes
     -----
     - Measured peak positions are optional for model computation.
-    - Compute model only fills the expected coupling column.
+    - Compute Expected Coupling only fills the expected coupling column.
+    - Fit Calibration is the action that generates the graphs and calibration payload.
     - The table remains editable and persistent across the session.
     """
 
-    sphere_table_columns = [
-        {"name": "Particle diameter [nm]", "id": "particle_diameter_nm", "editable": True},
-        {"name": "Measured peak position [a.u.]", "id": "measured_peak_position", "editable": True},
-        {"name": "Expected coupling", "id": "expected_coupling", "editable": False},
-    ]
-
-    core_shell_table_columns = [
-        {"name": "Core diameter [nm]", "id": "core_diameter_nm", "editable": True},
-        {"name": "Shell thickness [nm]", "id": "shell_thickness_nm", "editable": True},
-        {"name": "Outer diameter [nm]", "id": "outer_diameter_nm", "editable": False},
-        {"name": "Measured peak position [a.u.]", "id": "measured_peak_position", "editable": True},
-        {"name": "Expected coupling", "id": "expected_coupling", "editable": False},
-    ]
+    sphere_table_columns = sphere_table_columns
+    core_shell_table_columns = core_shell_table_columns
 
     def __init__(self, page) -> None:
         self.page = page
-        self.runtime_config = RuntimeConfig()
         logger.debug("Initialized Parameters section with page=%r", page)
 
-    def _refresh_runtime(self) -> RuntimeConfig:
-        self.runtime_config = RuntimeConfig()
-        return self.runtime_config
+    def _get_default_runtime_config(self) -> RuntimeConfig:
+        """
+        Use the default profile only for initial layout construction.
+
+        Live session state must come from runtime-config-store inside callbacks.
+        """
+        return RuntimeConfig.from_default_profile()
 
     def _get_default_mie_model(self) -> str:
-        runtime_config = self._refresh_runtime()
+        runtime_config = self._get_default_runtime_config()
         return runtime_config.get_str("particle_model.mie_model", default="Solid Sphere")
 
     def _get_default_wavelength_nm(self) -> float:
-        runtime_config = self._refresh_runtime()
+        runtime_config = self._get_default_runtime_config()
         return runtime_config.get_float("optics.wavelength_nm", default=700.0)
 
     def _get_default_detector_numerical_aperture(self) -> float:
-        runtime_config = self._refresh_runtime()
+        runtime_config = self._get_default_runtime_config()
         return runtime_config.get_float("optics.detector_numerical_aperture", default=0.2)
 
     def _get_default_detector_cache_numerical_aperture(self) -> float:
-        runtime_config = self._refresh_runtime()
+        runtime_config = self._get_default_runtime_config()
         return runtime_config.get_float("optics.detector_cache_numerical_aperture", default=0.0)
 
     def _get_default_detector_sampling(self) -> int:
-        runtime_config = self._refresh_runtime()
+        runtime_config = self._get_default_runtime_config()
         return runtime_config.get_int("optics.detector_sampling", default=600)
 
     def _get_default_medium_refractive_index(self) -> float:
-        runtime_config = self._refresh_runtime()
+        runtime_config = self._get_default_runtime_config()
         return runtime_config.get_float("optics.medium_refractive_index", default=1.333)
 
     def _get_default_particle_refractive_index(self) -> float:
-        runtime_config = self._refresh_runtime()
+        runtime_config = self._get_default_runtime_config()
         return runtime_config.get_float("particle_model.particle_refractive_index", default=1.59)
 
     def _get_default_core_refractive_index(self) -> float:
-        runtime_config = self._refresh_runtime()
+        runtime_config = self._get_default_runtime_config()
         return runtime_config.get_float("particle_model.core_refractive_index", default=1.47)
 
     def _get_default_shell_refractive_index(self) -> float:
-        runtime_config = self._refresh_runtime()
+        runtime_config = self._get_default_runtime_config()
         return runtime_config.get_float("particle_model.shell_refractive_index", default=1.46)
 
     def get_layout(self) -> dbc.Card:
@@ -130,7 +134,7 @@ class Parameters:
                 dash.html.Hr(),
                 self._build_reference_table_section(),
                 dash.html.Div(style={"height": "12px"}),
-                self._build_compute_model_button(),
+                self._build_compute_model_block(),
             ]
         )
 
@@ -268,13 +272,14 @@ class Parameters:
                 dash.html.Div(
                     "The table is the source of truth. Edit the particle geometry directly here. "
                     "Measured peak positions are optional at this stage. "
-                    "Click Compute model to fill only the expected coupling column.",
+                    "First click Compute Expected Coupling to fill the model column. "
+                    "Then click Fit Calibration in the next section to generate the graphs and calibration.",
                     style={"marginBottom": "10px", "opacity": 0.8},
                 ),
                 dash.dash_table.DataTable(
                     id=self.page.ids.Calibration.bead_table,
                     columns=self.sphere_table_columns,
-                    data=self._build_empty_rows_for_model("Solid Sphere", row_count=3),
+                    data=build_empty_rows_for_model("Solid Sphere", row_count=3),
                     **styling.DATATABLE,
                 ),
                 dash.html.Div(
@@ -290,9 +295,20 @@ class Parameters:
             ]
         )
 
+    def _build_compute_model_block(self) -> dash.html.Div:
+        return dash.html.Div(
+            [
+                self._build_compute_model_button(),
+                dash.html.Div(
+                    "This step only fills the expected coupling column in the table.",
+                    style={"marginTop": "8px", "opacity": 0.75},
+                ),
+            ]
+        )
+
     def _build_compute_model_button(self) -> dash.html.Button:
         return dash.html.Button(
-            "Compute model",
+            "Compute Expected Coupling",
             id=self.page.ids.Calibration.compute_model_btn,
             n_clicks=0,
             style={"marginTop": "12px"},
@@ -329,10 +345,9 @@ class Parameters:
                 runtime_config_data,
             )
 
-            runtime_config = self._refresh_runtime()
-
-            if isinstance(runtime_config_data, dict):
-                runtime_config.Default.load_dict(runtime_config_data)
+            runtime_config = RuntimeConfig.from_dict(
+                runtime_config_data if isinstance(runtime_config_data, dict) else None
+            )
 
             resolved_values = (
                 runtime_config.get_str("particle_model.mie_model", default="Solid Sphere"),
@@ -364,13 +379,13 @@ class Parameters:
             dash.State(self.page.ids.Calibration.bead_table, "data"),
             prevent_initial_call=True,
         )
-        def populate_table_from_runtime_defaults(
+        def populate_table_from_runtime_defaults_callback(
             runtime_config_data: Any,
             mie_model: Any,
             current_rows: Optional[list[dict[str, Any]]],
         ) -> Any:
-            resolved_mie_model = self._resolve_mie_model(mie_model)
-            normalized_current_rows = self._normalize_table_rows(
+            resolved_mie_model = resolve_mie_model(mie_model)
+            normalized_current_rows = normalize_table_rows(
                 mie_model=resolved_mie_model,
                 current_rows=current_rows,
             )
@@ -382,81 +397,25 @@ class Parameters:
                 normalized_current_rows,
             )
 
-            if not self._table_is_effectively_empty(
+            if not table_is_effectively_empty(
                 mie_model=resolved_mie_model,
                 rows=normalized_current_rows,
             ):
                 logger.debug("Table already contains user data. Leaving it unchanged.")
                 return dash.no_update
 
-            if not isinstance(runtime_config_data, dict):
-                logger.debug("No runtime config data available.")
-                return dash.no_update
-
-            runtime_config = self._refresh_runtime()
-            runtime_config.Default.load_dict(runtime_config_data)
-
-            if resolved_mie_model == "Core/Shell Sphere":
-                core_diameters_nm = self._as_float_list_from_runtime_value(
-                    runtime_config.get_path("particle_model.core_diameter_nm", default=[]),
-                )
-                shell_thicknesses_nm = self._as_float_list_from_runtime_value(
-                    runtime_config.get_path("particle_model.shell_thickness_nm", default=[]),
-                )
-
-                row_count = max(3, len(core_diameters_nm), len(shell_thicknesses_nm))
-                rows: list[dict[str, str]] = []
-
-                for index in range(row_count):
-                    core_value = (
-                        f"{float(core_diameters_nm[index]):.6g}"
-                        if index < len(core_diameters_nm)
-                        else ""
-                    )
-                    shell_value = (
-                        f"{float(shell_thicknesses_nm[index]):.6g}"
-                        if index < len(shell_thicknesses_nm)
-                        else ""
-                    )
-
-                    rows.append(
-                        {
-                            "core_diameter_nm": core_value,
-                            "shell_thickness_nm": shell_value,
-                            "outer_diameter_nm": self._compute_outer_diameter_string(
-                                core_diameter_nm=core_value,
-                                shell_thickness_nm=shell_value,
-                            ),
-                            "measured_peak_position": "",
-                            "expected_coupling": "",
-                        }
-                    )
-
-                logger.debug("Populated core shell table from runtime defaults rows=%r", rows)
-                return rows
-
-            particle_diameters_nm = self._as_float_list_from_runtime_value(
-                runtime_config.get_path("particle_model.particle_diameter_nm", default=[]),
+            runtime_config = RuntimeConfig.from_dict(
+                runtime_config_data if isinstance(runtime_config_data, dict) else None
             )
 
-            row_count = max(3, len(particle_diameters_nm))
-            rows = []
+            rows = populate_table_from_runtime_defaults(
+                mie_model=resolved_mie_model,
+                runtime_particle_diameters_nm=runtime_config.get_path("particle_model.particle_diameter_nm", default=[]),
+                runtime_core_diameters_nm=runtime_config.get_path("particle_model.core_diameter_nm", default=[]),
+                runtime_shell_thicknesses_nm=runtime_config.get_path("particle_model.shell_thickness_nm", default=[]),
+            )
 
-            for index in range(row_count):
-                particle_value = (
-                    f"{float(particle_diameters_nm[index]):.6g}"
-                    if index < len(particle_diameters_nm)
-                    else ""
-                )
-                rows.append(
-                    {
-                        "particle_diameter_nm": particle_value,
-                        "measured_peak_position": "",
-                        "expected_coupling": "",
-                    }
-                )
-
-            logger.debug("Populated solid sphere table from runtime defaults rows=%r", rows)
+            logger.debug("Populated table from runtime defaults rows=%r", rows)
             return rows
 
     def _register_post_compute_cleanup_callbacks(self) -> None:
@@ -467,7 +426,7 @@ class Parameters:
             prevent_initial_call=True,
         )
         def clear_table_selection_after_compute(_n_clicks: int) -> tuple[None, list]:
-            logger.debug("Clearing bead table selection after Compute model.")
+            logger.debug("Clearing bead table selection after Compute Expected Coupling.")
             return None, []
 
     def _register_visibility_callbacks(self) -> None:
@@ -478,7 +437,7 @@ class Parameters:
             prevent_initial_call=False,
         )
         def toggle_parameter_blocks(mie_model_value: Optional[str]) -> tuple[dict[str, str], dict[str, str]]:
-            resolved_mie_model = self._resolve_mie_model(mie_model_value)
+            resolved_mie_model = resolve_mie_model(mie_model_value)
             logger.debug("toggle_parameter_blocks called with resolved_mie_model=%r", resolved_mie_model)
 
             if resolved_mie_model == "Core/Shell Sphere":
@@ -607,9 +566,9 @@ class Parameters:
             mie_model: Any,
             current_rows: Optional[list[dict[str, Any]]],
         ) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
-            resolved_mie_model = self._resolve_mie_model(mie_model)
-            next_columns = self._get_table_columns_for_model(resolved_mie_model)
-            next_rows = self._remap_table_rows_to_model(
+            resolved_mie_model = resolve_mie_model(mie_model)
+            next_columns = get_table_columns_for_model(resolved_mie_model)
+            next_rows = remap_table_rows_to_model(
                 mie_model=resolved_mie_model,
                 current_rows=current_rows,
             )
@@ -640,9 +599,9 @@ class Parameters:
         ) -> list[dict[str, str]]:
             del n_clicks
 
-            resolved_mie_model = self._resolve_mie_model(mie_model)
+            resolved_mie_model = resolve_mie_model(mie_model)
             next_rows = [dict(row) for row in (rows or [])]
-            next_rows.append(self._build_empty_row_for_model(resolved_mie_model))
+            next_rows.append(build_empty_row_for_model(resolved_mie_model))
 
             logger.debug(
                 "add_row resolved_mie_model=%r new_row_count=%r rows=%r",
@@ -670,8 +629,8 @@ class Parameters:
         ) -> list[dict[str, str]]:
             del _data_timestamp
 
-            resolved_mie_model = self._resolve_mie_model(mie_model)
-            normalized_rows = self._normalize_table_rows(
+            resolved_mie_model = resolve_mie_model(mie_model)
+            normalized_rows = normalize_table_rows(
                 mie_model=resolved_mie_model,
                 current_rows=current_rows,
             )
@@ -725,385 +684,27 @@ class Parameters:
                 current_rows,
             )
 
-            resolved_rows = [dict(row) for row in (current_rows or [])]
-            resolved_mie_model = self._resolve_mie_model(mie_model)
+            del n_clicks
 
-            if not resolved_rows:
+            resolved_mie_model = resolve_mie_model(mie_model)
+
+            if not current_rows:
                 logger.debug("compute_model found no rows. Returning empty model-specific defaults.")
-                return self._build_empty_rows_for_model(resolved_mie_model, row_count=3)
+                return build_empty_rows_for_model(resolved_mie_model, row_count=3)
 
-            try:
-                resolved_medium_refractive_index = self._as_required_float(
-                    medium_refractive_index,
-                    "medium_refractive_index",
-                )
-                resolved_wavelength_nm = self._as_required_float(
-                    wavelength_nm,
-                    "wavelength_nm",
-                )
-                resolved_detector_numerical_aperture = self._as_required_float(
-                    detector_numerical_aperture,
-                    "detector_numerical_aperture",
-                )
-                resolved_detector_cache_numerical_aperture = self._as_required_float(
-                    detector_cache_numerical_aperture,
-                    "detector_cache_numerical_aperture",
-                )
-                resolved_detector_sampling = self._as_required_int(
-                    detector_sampling,
-                    "detector_sampling",
-                )
-            except Exception:
-                logger.exception("compute_model aborted because optical parameters are invalid.")
-                return self._normalize_table_rows(
-                    mie_model=resolved_mie_model,
-                    current_rows=resolved_rows,
-                )
-
-            logger.debug(
-                "compute_model resolved optical parameters medium_refractive_index=%r wavelength_nm=%r detector_numerical_aperture=%r detector_cache_numerical_aperture=%r detector_sampling=%r",
-                resolved_medium_refractive_index,
-                resolved_wavelength_nm,
-                resolved_detector_numerical_aperture,
-                resolved_detector_cache_numerical_aperture,
-                resolved_detector_sampling,
-            )
-
-            backend = BackEnd()
-
-            if resolved_mie_model == "Core/Shell Sphere":
-                logger.debug("compute_model running in Core/Shell Sphere mode.")
-                try:
-                    _resolved_core_refractive_index = self._as_required_float(
-                        core_refractive_index,
-                        "core_refractive_index",
-                    )
-                    resolved_shell_refractive_index = self._as_required_float(
-                        shell_refractive_index,
-                        "shell_refractive_index",
-                    )
-                except Exception:
-                    logger.exception("compute_model aborted because core/shell refractive indices are invalid.")
-                    return self._normalize_table_rows(
-                        mie_model=resolved_mie_model,
-                        current_rows=resolved_rows,
-                    )
-
-                valid_row_indices: list[int] = []
-                outer_diameters_nm: list[float] = []
-
-                updated_rows = self._normalize_table_rows(
-                    mie_model=resolved_mie_model,
-                    current_rows=resolved_rows,
-                )
-
-                for row_index, row in enumerate(updated_rows):
-                    outer_diameter_nm = self._as_optional_float(row.get("outer_diameter_nm"))
-                    if outer_diameter_nm is None or outer_diameter_nm <= 0.0:
-                        updated_rows[row_index]["expected_coupling"] = ""
-                        continue
-
-                    valid_row_indices.append(row_index)
-                    outer_diameters_nm.append(float(outer_diameter_nm))
-
-                logger.debug(
-                    "compute_model core-shell valid_row_indices=%r outer_diameters_nm=%r",
-                    valid_row_indices,
-                    outer_diameters_nm,
-                )
-
-                if not outer_diameters_nm:
-                    logger.debug("compute_model found no valid core-shell rows.")
-                    return updated_rows
-
-                try:
-                    modeled_coupling_result = backend.compute_modeled_coupling_from_diameters(
-                        particle_diameters_nm=np.asarray(outer_diameters_nm, dtype=float),
-                        wavelength_nm=resolved_wavelength_nm,
-                        source_numerical_aperture=0.1,
-                        optical_power_watt=1.0,
-                        detector_numerical_aperture=resolved_detector_numerical_aperture,
-                        medium_refractive_index=resolved_medium_refractive_index,
-                        particle_refractive_index=resolved_shell_refractive_index,
-                        detector_cache_numerical_aperture=resolved_detector_cache_numerical_aperture,
-                        detector_phi_offset_degree=0.0,
-                        detector_gamma_offset_degree=0.0,
-                        polarization_angle_degree=0.0,
-                        detector_sampling=resolved_detector_sampling,
-                    )
-                except Exception:
-                    logger.exception("compute_model failed during core-shell outer-diameter approximation.")
-                    return updated_rows
-
-                for row_index, expected_coupling in zip(
-                    valid_row_indices,
-                    modeled_coupling_result.expected_coupling_values,
-                    strict=False,
-                ):
-                    updated_rows[row_index]["expected_coupling"] = f"{float(expected_coupling):.6g}"
-
-                logger.debug("compute_model returning updated core-shell rows=%r", updated_rows)
-                return updated_rows
-
-            logger.debug("compute_model running in Solid Sphere mode.")
-
-            try:
-                resolved_particle_refractive_index = self._as_required_float(
-                    particle_refractive_index,
-                    "particle_refractive_index",
-                )
-            except Exception:
-                logger.exception("compute_model aborted because particle refractive index is invalid.")
-                return self._normalize_table_rows(
-                    mie_model=resolved_mie_model,
-                    current_rows=resolved_rows,
-                )
-
-            valid_row_indices = []
-            particle_diameters_nm = []
-
-            updated_rows = self._normalize_table_rows(
+            return compute_model_for_rows(
                 mie_model=resolved_mie_model,
-                current_rows=resolved_rows,
+                current_rows=current_rows,
+                medium_refractive_index=medium_refractive_index,
+                particle_refractive_index=particle_refractive_index,
+                core_refractive_index=core_refractive_index,
+                shell_refractive_index=shell_refractive_index,
+                wavelength_nm=wavelength_nm,
+                detector_numerical_aperture=detector_numerical_aperture,
+                detector_cache_numerical_aperture=detector_cache_numerical_aperture,
+                detector_sampling=detector_sampling,
+                logger=logger,
             )
-
-            for row_index, row in enumerate(updated_rows):
-                particle_diameter_nm = self._as_optional_float(row.get("particle_diameter_nm"))
-                if particle_diameter_nm is None or particle_diameter_nm <= 0.0:
-                    updated_rows[row_index]["expected_coupling"] = ""
-                    continue
-
-                valid_row_indices.append(row_index)
-                particle_diameters_nm.append(float(particle_diameter_nm))
-
-            logger.debug(
-                "compute_model solid-sphere valid_row_indices=%r particle_diameters_nm=%r",
-                valid_row_indices,
-                particle_diameters_nm,
-            )
-
-            if not particle_diameters_nm:
-                logger.debug("compute_model found no valid solid-sphere rows.")
-                return updated_rows
-
-            try:
-                modeled_coupling_result = backend.compute_modeled_coupling_from_diameters(
-                    particle_diameters_nm=np.asarray(particle_diameters_nm, dtype=float),
-                    wavelength_nm=resolved_wavelength_nm,
-                    source_numerical_aperture=0.1,
-                    optical_power_watt=1.0,
-                    detector_numerical_aperture=resolved_detector_numerical_aperture,
-                    medium_refractive_index=resolved_medium_refractive_index,
-                    particle_refractive_index=resolved_particle_refractive_index,
-                    detector_cache_numerical_aperture=resolved_detector_cache_numerical_aperture,
-                    detector_phi_offset_degree=0.0,
-                    detector_gamma_offset_degree=0.0,
-                    polarization_angle_degree=0.0,
-                    detector_sampling=resolved_detector_sampling,
-                )
-            except Exception:
-                logger.exception("compute_model failed during solid-sphere coupling computation.")
-                return updated_rows
-
-            for row_index, expected_coupling in zip(
-                valid_row_indices,
-                modeled_coupling_result.expected_coupling_values,
-                strict=False,
-            ):
-                updated_rows[row_index]["expected_coupling"] = f"{float(expected_coupling):.6g}"
-
-            logger.debug("compute_model returning updated solid-sphere rows=%r", updated_rows)
-            return updated_rows
-
-    def _resolve_mie_model(self, mie_model: Any) -> str:
-        mie_model_string = "" if mie_model is None else str(mie_model).strip()
-        return "Core/Shell Sphere" if mie_model_string == "Core/Shell Sphere" else "Solid Sphere"
-
-    def _get_table_columns_for_model(self, mie_model: str) -> list[dict[str, Any]]:
-        return list(self.core_shell_table_columns) if mie_model == "Core/Shell Sphere" else list(self.sphere_table_columns)
-
-    def _build_empty_row_for_model(self, mie_model: str) -> dict[str, str]:
-        if mie_model == "Core/Shell Sphere":
-            return {
-                "core_diameter_nm": "",
-                "shell_thickness_nm": "",
-                "outer_diameter_nm": "",
-                "measured_peak_position": "",
-                "expected_coupling": "",
-            }
-
-        return {
-            "particle_diameter_nm": "",
-            "measured_peak_position": "",
-            "expected_coupling": "",
-        }
-
-    def _build_empty_rows_for_model(self, mie_model: str, row_count: int) -> list[dict[str, str]]:
-        return [self._build_empty_row_for_model(mie_model) for _ in range(int(row_count))]
-
-    def _remap_table_rows_to_model(
-        self,
-        *,
-        mie_model: str,
-        current_rows: Optional[list[dict[str, Any]]],
-    ) -> list[dict[str, str]]:
-        resolved_current_rows = [dict(row) for row in (current_rows or [])]
-        row_count = max(3, len(resolved_current_rows))
-        remapped_rows: list[dict[str, str]] = []
-
-        if mie_model == "Core/Shell Sphere":
-            for row_index in range(row_count):
-                source_row = resolved_current_rows[row_index] if row_index < len(resolved_current_rows) else {}
-
-                particle_diameter_nm = self._normalize_editable_cell(source_row.get("particle_diameter_nm"))
-                core_diameter_nm = self._normalize_editable_cell(source_row.get("core_diameter_nm"))
-                shell_thickness_nm = self._normalize_editable_cell(source_row.get("shell_thickness_nm"))
-                measured_peak_position = self._normalize_editable_cell(source_row.get("measured_peak_position"))
-                expected_coupling = self._normalize_readonly_cell(source_row.get("expected_coupling"))
-
-                if not core_diameter_nm and particle_diameter_nm:
-                    core_diameter_nm = particle_diameter_nm
-
-                outer_diameter_nm = self._compute_outer_diameter_string(
-                    core_diameter_nm=core_diameter_nm,
-                    shell_thickness_nm=shell_thickness_nm,
-                )
-
-                remapped_rows.append(
-                    {
-                        "core_diameter_nm": core_diameter_nm,
-                        "shell_thickness_nm": shell_thickness_nm,
-                        "outer_diameter_nm": outer_diameter_nm,
-                        "measured_peak_position": measured_peak_position,
-                        "expected_coupling": expected_coupling,
-                    }
-                )
-
-            return remapped_rows
-
-        for row_index in range(row_count):
-            source_row = resolved_current_rows[row_index] if row_index < len(resolved_current_rows) else {}
-
-            particle_diameter_nm = self._normalize_editable_cell(source_row.get("particle_diameter_nm"))
-            core_diameter_nm = self._normalize_editable_cell(source_row.get("core_diameter_nm"))
-            outer_diameter_nm = self._normalize_editable_cell(source_row.get("outer_diameter_nm"))
-            measured_peak_position = self._normalize_editable_cell(source_row.get("measured_peak_position"))
-            expected_coupling = self._normalize_readonly_cell(source_row.get("expected_coupling"))
-
-            if not particle_diameter_nm:
-                if outer_diameter_nm:
-                    particle_diameter_nm = outer_diameter_nm
-                elif core_diameter_nm:
-                    particle_diameter_nm = core_diameter_nm
-
-            remapped_rows.append(
-                {
-                    "particle_diameter_nm": particle_diameter_nm,
-                    "measured_peak_position": measured_peak_position,
-                    "expected_coupling": expected_coupling,
-                }
-            )
-
-        return remapped_rows
-
-    def _normalize_table_rows(
-        self,
-        *,
-        mie_model: str,
-        current_rows: Optional[list[dict[str, Any]]],
-    ) -> list[dict[str, str]]:
-        resolved_current_rows = [dict(row) for row in (current_rows or [])]
-
-        if mie_model == "Core/Shell Sphere":
-            normalized_rows: list[dict[str, str]] = []
-
-            for source_row in resolved_current_rows:
-                core_diameter_nm = self._normalize_editable_cell(source_row.get("core_diameter_nm"))
-                shell_thickness_nm = self._normalize_editable_cell(source_row.get("shell_thickness_nm"))
-                measured_peak_position = self._normalize_editable_cell(source_row.get("measured_peak_position"))
-                expected_coupling = self._normalize_readonly_cell(source_row.get("expected_coupling"))
-
-                outer_diameter_nm = self._compute_outer_diameter_string(
-                    core_diameter_nm=core_diameter_nm,
-                    shell_thickness_nm=shell_thickness_nm,
-                )
-
-                normalized_rows.append(
-                    {
-                        "core_diameter_nm": core_diameter_nm,
-                        "shell_thickness_nm": shell_thickness_nm,
-                        "outer_diameter_nm": outer_diameter_nm,
-                        "measured_peak_position": measured_peak_position,
-                        "expected_coupling": expected_coupling,
-                    }
-                )
-
-            return normalized_rows
-
-        normalized_rows: list[dict[str, str]] = []
-
-        for source_row in resolved_current_rows:
-            normalized_rows.append(
-                {
-                    "particle_diameter_nm": self._normalize_editable_cell(source_row.get("particle_diameter_nm")),
-                    "measured_peak_position": self._normalize_editable_cell(source_row.get("measured_peak_position")),
-                    "expected_coupling": self._normalize_readonly_cell(source_row.get("expected_coupling")),
-                }
-            )
-
-        return normalized_rows
-
-    def _normalize_editable_cell(self, value: Any) -> str:
-        if value is None:
-            return ""
-        return str(value).strip()
-
-    def _normalize_readonly_cell(self, value: Any) -> str:
-        if value is None:
-            return ""
-        return str(value).strip()
-
-    def _compute_outer_diameter_string(
-        self,
-        *,
-        core_diameter_nm: Any,
-        shell_thickness_nm: Any,
-    ) -> str:
-        try:
-            resolved_core_diameter_nm = float(core_diameter_nm)
-            resolved_shell_thickness_nm = float(shell_thickness_nm)
-        except Exception:
-            return ""
-
-        if resolved_core_diameter_nm <= 0.0 or resolved_shell_thickness_nm < 0.0:
-            return ""
-
-        outer_diameter_nm = resolved_core_diameter_nm + 2.0 * resolved_shell_thickness_nm
-        return f"{outer_diameter_nm:.6g}"
-
-    def _as_required_float(self, value: Any, field_name: str) -> float:
-        try:
-            if value in (None, ""):
-                raise ValueError
-            return float(value)
-        except Exception as exc:
-            raise ValueError(f"Invalid value for {field_name}: {value!r}") from exc
-
-    def _as_optional_float(self, value: Any) -> Optional[float]:
-        try:
-            if value in (None, ""):
-                return None
-            return float(value)
-        except Exception:
-            return None
-
-    def _as_required_int(self, value: Any, field_name: str) -> int:
-        try:
-            if value in (None, ""):
-                raise ValueError
-            return int(value)
-        except Exception as exc:
-            raise ValueError(f"Invalid value for {field_name}: {value!r}") from exc
 
     def _build_numeric_input_row(
         self,
@@ -1272,69 +873,3 @@ class Parameters:
             {"label": "Higher NA collection", "value": "higher_na_collection"},
             {"label": "Low sampling preview", "value": "low_sampling_preview"},
         ]
-
-    def _table_is_effectively_empty(
-        self,
-        *,
-        mie_model: str,
-        rows: Optional[list[dict[str, Any]]],
-    ) -> bool:
-        normalized_rows = self._normalize_table_rows(
-            mie_model=mie_model,
-            current_rows=rows,
-        )
-
-        if not normalized_rows:
-            return True
-
-        if mie_model == "Core/Shell Sphere":
-            for row in normalized_rows:
-                if (
-                    str(row.get("core_diameter_nm", "")).strip()
-                    or str(row.get("shell_thickness_nm", "")).strip()
-                    or str(row.get("measured_peak_position", "")).strip()
-                    or str(row.get("expected_coupling", "")).strip()
-                ):
-                    return False
-            return True
-
-        for row in normalized_rows:
-            if (
-                str(row.get("particle_diameter_nm", "")).strip()
-                or str(row.get("measured_peak_position", "")).strip()
-                or str(row.get("expected_coupling", "")).strip()
-            ):
-                return False
-
-        return True
-
-    def _as_float_list_from_runtime_value(self, value: Any) -> list[float]:
-        if value in (None, ""):
-            return []
-
-        if isinstance(value, (list, tuple)):
-            result: list[float] = []
-            for item in value:
-                try:
-                    parsed_value = float(item)
-                except Exception:
-                    continue
-                if np.isfinite(parsed_value):
-                    result.append(float(parsed_value))
-            return result
-
-        text = str(value).replace(";", ",")
-        result = []
-
-        for part in text.split(","):
-            part = part.strip()
-            if not part:
-                continue
-            try:
-                parsed_value = float(part)
-            except Exception:
-                continue
-            if np.isfinite(parsed_value):
-                result.append(float(parsed_value))
-
-        return result

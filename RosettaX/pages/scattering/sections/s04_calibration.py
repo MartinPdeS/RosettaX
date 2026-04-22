@@ -47,17 +47,15 @@ class Calibration:
     Responsibilities
     ----------------
     - Read the calibration reference table as the source of truth.
-    - Compute expected coupling values for the solid sphere model.
-    - Write expected coupling values back into the table.
-    - Fit the calibration curve and update outputs.
+    - Fit the calibration curve from measured peak position and expected coupling.
     - Render two graphs side by side:
-      1. calibration fit graph
-      2. measured peak position versus expected coupling graph
+      1. measured peak position versus expected coupling
+      2. fitted calibration graph
 
-    Notes
-    -----
-    The calibration table is rendered in the parameter section.
-    This section only reads and updates it.
+    Workflow
+    --------
+    1. Compute Expected Coupling in the previous section.
+    2. Click Fit Calibration here to generate the graphs and calibration payload.
     """
 
     def __init__(self, page) -> None:
@@ -67,14 +65,14 @@ class Calibration:
     def get_layout(self) -> dbc.Card:
         return dbc.Card(
             [
-                dbc.CardHeader("4. Calibration results"),
+                dbc.CardHeader("4. Fit calibration"),
                 dbc.CardBody(
                     [
                         dash.dcc.Store(id=self.page.ids.Calibration.graph_store),
-                        dash.dcc.Store(
-                            id=f"{self.page.ids.Calibration.graph_store}-model",
-                        ),
+                        dash.dcc.Store(id=f"{self.page.ids.Calibration.graph_store}-model"),
                         dash.dcc.Store(id=self.page.ids.Calibration.calibration_store),
+                        self._build_action_block(),
+                        dash.html.Br(),
                         self._build_graph_block(),
                         dash.html.Br(),
                         self._build_fit_outputs_block(),
@@ -84,6 +82,21 @@ class Calibration:
                             style={"marginTop": "8px"},
                         ),
                     ]
+                ),
+            ]
+        )
+
+    def _build_action_block(self) -> dash.html.Div:
+        return dash.html.Div(
+            [
+                dash.html.Button(
+                    "Fit Calibration",
+                    id=self.page.ids.Calibration.calibrate_btn,
+                    n_clicks=0,
+                ),
+                dash.html.Div(
+                    "This step uses the measured peak positions and expected coupling values currently present in the table.",
+                    style={"marginTop": "8px", "opacity": 0.75},
                 ),
             ]
         )
@@ -172,7 +185,7 @@ class Calibration:
             prevent_initial_call=True,
         )
         def fit_scattering_calibration(
-            _n_clicks: int,
+            n_clicks: int,
             uploaded_fcs_path: Optional[str],
             detector_column: Optional[str],
             mie_model: Any,
@@ -188,36 +201,36 @@ class Calibration:
         ) -> tuple:
             logger.debug(
                 "fit_scattering_calibration called with n_clicks=%r uploaded_fcs_path=%r detector_column=%r mie_model=%r table_row_count=%r bead_table_data=%r",
-                _n_clicks,
+                n_clicks,
                 uploaded_fcs_path,
                 detector_column,
                 mie_model,
                 0 if bead_table_data is None else len(bead_table_data),
                 bead_table_data,
             )
-            del _n_clicks
+            del n_clicks
 
             resolved_mie_model = self._resolve_mie_model(mie_model)
             current_table_rows = [dict(row) for row in (bead_table_data or [])]
 
             try:
                 if not uploaded_fcs_path:
-                    calibration_figure = _make_info_figure("Upload an FCS file first.")
-                    model_figure = _make_info_figure("Upload an FCS file first.")
+                    left_figure = _make_info_figure("Upload an FCS file first.")
+                    right_figure = _make_info_figure("Upload an FCS file first.")
                     return CalibrationResult(
-                        figure_store=calibration_figure.to_dict(),
-                        model_figure_store=model_figure.to_dict(),
+                        figure_store=left_figure.to_dict(),
+                        model_figure_store=right_figure.to_dict(),
                         calibration_store=dash.no_update,
                         bead_table_data=dash.no_update,
                         apply_status="Missing FCS file.",
                     ).to_tuple()
 
                 if not detector_column:
-                    calibration_figure = _make_info_figure("Select a scattering detector first.")
-                    model_figure = _make_info_figure("Select a scattering detector first.")
+                    left_figure = _make_info_figure("Select a scattering detector first.")
+                    right_figure = _make_info_figure("Select a scattering detector first.")
                     return CalibrationResult(
-                        figure_store=calibration_figure.to_dict(),
-                        model_figure_store=model_figure.to_dict(),
+                        figure_store=left_figure.to_dict(),
+                        model_figure_store=right_figure.to_dict(),
                         calibration_store=dash.no_update,
                         bead_table_data=dash.no_update,
                         apply_status="Missing scattering detector.",
@@ -258,7 +271,6 @@ class Calibration:
 
                 scattering_backend = BackEnd(
                     fcs_file_path=str(uploaded_fcs_path),
-                    detector_column=str(detector_column),
                 )
 
                 if resolved_mie_model == "Core/Shell Sphere":
@@ -286,36 +298,36 @@ class Calibration:
                     )
 
                     if parsed_core_shell_rows["row_count"] < 2:
-                        calibration_figure = _make_info_figure(
+                        left_figure = _make_info_figure(
                             "Enter at least 2 valid core shell rows with measured peak positions."
                         )
-                        model_figure = _make_info_figure(
+                        right_figure = _make_info_figure(
                             "Enter at least 2 valid core shell rows with measured peak positions."
                         )
                         return CalibrationResult(
-                            figure_store=calibration_figure.to_dict(),
-                            model_figure_store=model_figure.to_dict(),
+                            figure_store=left_figure.to_dict(),
+                            model_figure_store=right_figure.to_dict(),
                             calibration_store=dash.no_update,
                             bead_table_data=dash.no_update,
                             apply_status="Need at least 2 valid core shell rows.",
                         ).to_tuple()
 
-                    calibration_figure = _make_info_figure(
-                        "Core/Shell Sphere coupling is not implemented yet in the scattering backend."
-                    )
-                    model_figure = self._build_core_shell_placeholder_figure(
+                    left_figure = self._build_core_shell_placeholder_figure(
                         measured_peak_positions=parsed_core_shell_rows["measured_peak_positions"],
                         outer_diameters_nm=parsed_core_shell_rows["outer_diameters_nm"],
                     )
+                    right_figure = _make_info_figure(
+                        "Core/Shell Sphere coupling fit is not implemented yet."
+                    )
 
                     return CalibrationResult(
-                        figure_store=calibration_figure.to_dict(),
-                        model_figure_store=model_figure.to_dict(),
+                        figure_store=left_figure.to_dict(),
+                        model_figure_store=right_figure.to_dict(),
                         calibration_store=dash.no_update,
                         bead_table_data=current_table_rows,
                         apply_status=(
                             f"Core/Shell rows parsed successfully with core RI={resolved_core_refractive_index:.6g} "
-                            f"and shell RI={resolved_shell_refractive_index:.6g}, but expected coupling computation is not implemented yet."
+                            f"and shell RI={resolved_shell_refractive_index:.6g}, but fitting is not implemented yet."
                         ),
                     ).to_tuple()
 
@@ -337,15 +349,15 @@ class Calibration:
                 )
 
                 if parsed_sphere_rows["row_count"] < 2:
-                    calibration_figure = _make_info_figure(
+                    left_figure = _make_info_figure(
                         "Enter at least 2 valid rows with particle diameter and measured peak position."
                     )
-                    model_figure = _make_info_figure(
-                        "Enter at least 2 valid rows with particle diameter and measured peak position."
+                    right_figure = _make_info_figure(
+                        "You may need to click Compute Expected Coupling first."
                     )
                     return CalibrationResult(
-                        figure_store=calibration_figure.to_dict(),
-                        model_figure_store=model_figure.to_dict(),
+                        figure_store=left_figure.to_dict(),
+                        model_figure_store=right_figure.to_dict(),
                         calibration_store=dash.no_update,
                         bead_table_data=dash.no_update,
                         apply_status="Need at least 2 valid calibration rows.",
@@ -384,11 +396,7 @@ class Calibration:
                     fit_result.r_squared,
                 )
 
-                calibration_figure = scattering_backend.build_calibration_figure(
-                    fit_result=fit_result,
-                )
-
-                model_figure = self._build_model_comparison_figure(
+                left_figure = self._build_model_comparison_figure(
                     measured_peak_positions=np.asarray(
                         parsed_sphere_rows["measured_peak_positions"],
                         dtype=float,
@@ -403,7 +411,13 @@ class Calibration:
                     ),
                 )
 
+                right_figure = scattering_backend.build_calibration_figure(
+                    detector_column=str(detector_column),
+                    fit_result=fit_result,
+                )
+
                 calibration_payload = scattering_backend.build_calibration_payload(
+                    detector_column=str(detector_column),
                     peak_detection_result=self._build_peak_detection_result_like_object(
                         peak_positions=np.asarray(parsed_sphere_rows["measured_peak_positions"], dtype=float),
                     ),
@@ -441,23 +455,23 @@ class Calibration:
                 )
 
                 return CalibrationResult(
-                    figure_store=calibration_figure.to_dict(),
-                    model_figure_store=model_figure.to_dict(),
+                    figure_store=left_figure.to_dict(),
+                    model_figure_store=right_figure.to_dict(),
                     calibration_store=calibration_payload,
                     bead_table_data=updated_table_rows,
                     slope_out=f"{fit_result.slope:.6g}",
                     intercept_out=f"{fit_result.intercept:.6g} (A={fit_result.prefactor:.6g})",
                     r_squared_out=f"{fit_result.r_squared:.6g}",
-                    apply_status="Scattering calibration fitted successfully.",
+                    apply_status="Calibration fitted successfully.",
                 ).to_tuple()
 
             except Exception as exc:
                 logger.exception("Scattering calibration failed.")
-                calibration_figure = _make_info_figure("Scattering calibration failed.")
-                model_figure = _make_info_figure("Scattering calibration failed.")
+                left_figure = _make_info_figure("Calibration fitting failed.")
+                right_figure = _make_info_figure("Calibration fitting failed.")
                 return CalibrationResult(
-                    figure_store=calibration_figure.to_dict(),
-                    model_figure_store=model_figure.to_dict(),
+                    figure_store=left_figure.to_dict(),
+                    model_figure_store=right_figure.to_dict(),
                     calibration_store=dash.no_update,
                     bead_table_data=dash.no_update,
                     slope_out="",
@@ -471,20 +485,46 @@ class Calibration:
             dash.Input(self.page.ids.Calibration.graph_store, "data"),
             prevent_initial_call=False,
         )
-        def update_calibration_graph(stored_figure: Any) -> go.Figure:
+        def update_left_graph(stored_figure: Any) -> go.Figure:
+            logger.debug(
+                "update_left_graph called with stored_figure_type=%s",
+                type(stored_figure).__name__,
+            )
+
             if not stored_figure:
-                return _make_info_figure("Fit a calibration first.")
-            return go.Figure(stored_figure)
+                return _make_info_figure("Click Fit Calibration to generate the comparison graph.")
+
+            try:
+                return go.Figure(stored_figure)
+            except Exception:
+                logger.exception(
+                    "Failed to reconstruct left graph from stored_figure=%r",
+                    stored_figure,
+                )
+                return _make_info_figure("Failed to render comparison graph.")
 
         @dash.callback(
             dash.Output(f"{self.page.ids.Calibration.graph_calibration}-model", "figure"),
             dash.Input(f"{self.page.ids.Calibration.graph_store}-model", "data"),
             prevent_initial_call=False,
         )
-        def update_model_graph(stored_figure: Any) -> go.Figure:
+        def update_right_graph(stored_figure: Any) -> go.Figure:
+            logger.debug(
+                "update_right_graph called with stored_figure_type=%s",
+                type(stored_figure).__name__,
+            )
+
             if not stored_figure:
-                return _make_info_figure("Fit a calibration first.")
-            return go.Figure(stored_figure)
+                return _make_info_figure("Click Fit Calibration to generate the fitted graph.")
+
+            try:
+                return go.Figure(stored_figure)
+            except Exception:
+                logger.exception(
+                    "Failed to reconstruct right graph from stored_figure=%r",
+                    stored_figure,
+                )
+                return _make_info_figure("Failed to render fitted graph.")
 
     def _build_model_comparison_figure(
         self,
@@ -514,7 +554,7 @@ class Calibration:
         )
 
         figure.update_layout(
-            title="Measured peak vs expected coupling",
+            title="Measured peak position vs expected coupling",
             xaxis_title="Measured peak position [a.u.]",
             yaxis_title="Expected coupling",
             separators=".,",

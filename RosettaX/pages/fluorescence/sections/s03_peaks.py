@@ -7,8 +7,16 @@ import plotly.graph_objs as go
 
 from RosettaX.utils import styling
 from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.utils.plottings import add_vertical_lines, _make_info_figure
 from RosettaX.pages.fluorescence.backend import BackEnd
+from RosettaX.pages.fluorescence.services.peaks import (
+    clean_optional_string,
+    clear_peak_lines_payload,
+    is_enabled,
+    lock_source_channel,
+    rebuild_fluorescence_histogram_figure,
+    should_refresh_histogram_store,
+)
+
 
 logger = logging.getLogger(__name__)
 
@@ -16,22 +24,25 @@ logger = logging.getLogger(__name__)
 class Peaks:
     def __init__(self, page) -> None:
         self.page = page
-        self.runtime_config = RuntimeConfig()
 
-    def _refresh_runtime(self) -> RuntimeConfig:
-        self.runtime_config = RuntimeConfig()
-        return self.runtime_config
+    def _get_default_runtime_config(self) -> RuntimeConfig:
+        """
+        Use the default profile only for initial layout construction.
+
+        Live session state must come from runtime-config-store inside callbacks.
+        """
+        return RuntimeConfig.from_default_profile()
 
     def _get_default_show_graphs(self) -> bool:
-        runtime_config = self._refresh_runtime()
+        runtime_config = self._get_default_runtime_config()
         return runtime_config.get_show_graphs(default=False)
 
     def _get_default_peak_count(self) -> int:
-        runtime_config = self._refresh_runtime()
+        runtime_config = self._get_default_runtime_config()
         return runtime_config.get_int("calibration.peak_count", default=4)
 
     def _get_default_n_bins_for_plots(self) -> int:
-        runtime_config = self._refresh_runtime()
+        runtime_config = self._get_default_runtime_config()
         return runtime_config.get_int("calibration.n_bins_for_plots", default=100)
 
     def get_layout(self) -> dbc.Card:
@@ -145,7 +156,7 @@ class Peaks:
         )
 
     def _build_yscale_switch(self) -> dbc.Checklist:
-        runtime_config = self._refresh_runtime()
+        runtime_config = self._get_default_runtime_config()
         histogram_scale = runtime_config.get_str("calibration.histogram_scale", default="log")
 
         return dbc.Checklist(
@@ -187,10 +198,9 @@ class Peaks:
                 runtime_config_data,
             )
 
-            runtime_config = self._refresh_runtime()
-
-            if isinstance(runtime_config_data, dict):
-                runtime_config.Default.load_dict(runtime_config_data)
+            runtime_config = RuntimeConfig.from_dict(
+                runtime_config_data if isinstance(runtime_config_data, dict) else None
+            )
 
             peak_count_value = runtime_config.get_int("calibration.peak_count", default=4)
             fluorescence_nbins_value = runtime_config.get_int("calibration.n_bins_for_plots", default=100)
@@ -214,11 +224,9 @@ class Peaks:
                 runtime_config_data,
             )
 
-            runtime_config = self._refresh_runtime()
-
-            if isinstance(runtime_config_data, dict):
-                runtime_config.Default.load_dict(runtime_config_data)
-
+            runtime_config = RuntimeConfig.from_dict(
+                runtime_config_data if isinstance(runtime_config_data, dict) else None
+            )
             histogram_scale = runtime_config.get_str("calibration.histogram_scale", default="log")
 
             logger.debug(
@@ -234,11 +242,9 @@ class Peaks:
             prevent_initial_call=False,
         )
         def sync_graph_toggle_from_runtime_store(runtime_config_data: Any) -> list[str]:
-            runtime_config = self._refresh_runtime()
-
-            if isinstance(runtime_config_data, dict):
-                runtime_config.Default.load_dict(runtime_config_data)
-
+            runtime_config = RuntimeConfig.from_dict(
+                runtime_config_data if isinstance(runtime_config_data, dict) else None
+            )
             resolved_show_graphs = runtime_config.get_show_graphs(default=False)
 
             logger.debug(
@@ -255,7 +261,7 @@ class Peaks:
             prevent_initial_call=False,
         )
         def toggle_fluorescence_graph_container(graph_toggle_value: Any) -> dict:
-            graph_enabled = self._is_enabled(graph_toggle_value)
+            graph_enabled = is_enabled(graph_toggle_value)
 
             logger.debug(
                 "toggle_fluorescence_graph_container called with graph_toggle_value=%r resolved graph_enabled=%r",
@@ -284,7 +290,7 @@ class Peaks:
                 scattering_channel,
             )
 
-            return {"positions": [], "labels": []}
+            return clear_peak_lines_payload()
 
         @dash.callback(
             dash.Output(self.page.ids.Fluorescence.source_channel_store, "data", allow_duplicate=True),
@@ -296,32 +302,11 @@ class Peaks:
             fluorescence_channel: Optional[str],
             current_locked: Optional[str],
         ) -> Optional[str]:
-            fluorescence_channel_clean = self._clean_optional_string(fluorescence_channel)
-
-            logger.debug(
-                "lock_fluorescence_source_channel called with fluorescence_channel=%r cleaned=%r current_locked=%r",
-                fluorescence_channel,
-                fluorescence_channel_clean,
-                current_locked,
+            return lock_source_channel(
+                fluorescence_channel=fluorescence_channel,
+                current_locked=current_locked,
+                logger=logger,
             )
-
-            if not fluorescence_channel_clean:
-                logger.debug("No valid fluorescence channel selected. Returning dash.no_update.")
-                return dash.no_update
-
-            if isinstance(current_locked, str) and current_locked.strip():
-                logger.debug(
-                    "Source channel already locked to %r. Returning dash.no_update.",
-                    current_locked,
-                )
-                return dash.no_update
-
-            logger.debug(
-                "Locking fluorescence source channel to %r.",
-                fluorescence_channel_clean,
-            )
-
-            return fluorescence_channel_clean
 
         @dash.callback(
             dash.Output(self.page.ids.Fluorescence.hist_store, "data", allow_duplicate=True),
@@ -345,14 +330,19 @@ class Peaks:
             threshold_input_value: Any,
             max_events_for_plots: Any,
         ) -> Any:
-            graph_enabled = self._is_enabled(graph_toggle_value)
-            fcs_path_clean = self._clean_optional_string(fcs_path)
-            scattering_channel_clean = self._clean_optional_string(scattering_channel)
-            fluorescence_channel_clean = self._clean_optional_string(fluorescence_channel)
+            should_refresh, fcs_path_clean, scattering_channel_clean, fluorescence_channel_clean = (
+                should_refresh_histogram_store(
+                    graph_toggle_value=graph_toggle_value,
+                    fcs_path=fcs_path,
+                    scattering_channel=scattering_channel,
+                    fluorescence_channel=fluorescence_channel,
+                    logger=logger,
+                )
+            )
 
             logger.debug(
-                "refresh_fluorescence_hist_store called with graph_enabled=%r fcs_path=%r scattering_channel=%r fluorescence_channel=%r fluorescence_nbins=%r threshold_payload=%r threshold_input_value=%r max_events_for_plots=%r",
-                graph_enabled,
+                "refresh_fluorescence_hist_store called with should_refresh=%r fcs_path=%r scattering_channel=%r fluorescence_channel=%r fluorescence_nbins=%r threshold_payload=%r threshold_input_value=%r max_events_for_plots=%r",
+                should_refresh,
                 fcs_path_clean,
                 scattering_channel_clean,
                 fluorescence_channel_clean,
@@ -362,23 +352,11 @@ class Peaks:
                 max_events_for_plots,
             )
 
-            if not graph_enabled:
-                logger.debug("Histogram graph is disabled. Returning dash.no_update.")
-                return dash.no_update
-
-            if not fcs_path_clean or not scattering_channel_clean or not fluorescence_channel_clean:
-                logger.debug(
-                    "Missing required input for fluorescence histogram build. "
-                    "fcs_path_clean=%r scattering_channel_clean=%r fluorescence_channel_clean=%r. "
-                    "Returning dash.no_update.",
-                    fcs_path_clean,
-                    scattering_channel_clean,
-                    fluorescence_channel_clean,
-                )
+            if not should_refresh:
                 return dash.no_update
 
             try:
-                backend = BackEnd(fcs_path)
+                backend = BackEnd(fcs_path_clean)
                 figure_dict = backend.build_fluorescence_histogram_figure_dict(
                     scattering_channel=scattering_channel_clean,
                     fluorescence_channel=fluorescence_channel_clean,
@@ -387,7 +365,6 @@ class Peaks:
                     threshold_input_value=threshold_input_value,
                     max_events_for_plots=max_events_for_plots,
                 )
-
             except Exception:
                 logger.exception(
                     "Failed to build fluorescence histogram figure dict for "
@@ -430,63 +407,13 @@ class Peaks:
             stored_figure: Any,
             peak_lines: Any,
         ) -> go.Figure:
-            graph_enabled = self._is_enabled(graph_toggle_value)
-
-            logger.debug(
-                "update_fluorescence_yscale called with graph_enabled=%r yscale_selection=%r stored_figure_type=%s peak_lines=%r",
-                graph_enabled,
-                yscale_selection,
-                type(stored_figure).__name__,
-                peak_lines,
+            return rebuild_fluorescence_histogram_figure(
+                graph_toggle_value=graph_toggle_value,
+                yscale_selection=yscale_selection,
+                stored_figure=stored_figure,
+                peak_lines=peak_lines,
+                logger=logger,
             )
-
-            if not graph_enabled:
-                logger.debug("Histogram graph is hidden. Returning info figure.")
-                return _make_info_figure("Histogram is hidden.")
-
-            if not stored_figure:
-                logger.debug("No stored figure available. Returning info figure.")
-                return _make_info_figure("Select file and channels first.")
-
-            try:
-                figure = go.Figure(stored_figure)
-            except Exception:
-                logger.exception(
-                    "Failed to reconstruct Plotly figure from stored_figure with type=%s value=%r",
-                    type(stored_figure).__name__,
-                    stored_figure,
-                )
-                raise
-
-            line_positions: list = []
-            line_labels: list = []
-
-            if isinstance(peak_lines, dict):
-                line_positions = peak_lines.get("positions") or []
-                line_labels = peak_lines.get("labels") or []
-
-            logger.debug(
-                "Applying peak lines to fluorescence figure with line_positions=%r line_labels=%r",
-                line_positions,
-                line_labels,
-            )
-
-            figure = add_vertical_lines(
-                fig=figure,
-                line_positions=line_positions,
-                line_labels=line_labels,
-            )
-
-            use_log_scale = isinstance(yscale_selection, list) and ("log" in yscale_selection)
-            figure.update_yaxes(type="log" if use_log_scale else "linear")
-            figure.update_layout(separators=".,")
-
-            logger.debug(
-                "Updated fluorescence figure y axis to %r scale.",
-                "log" if use_log_scale else "linear",
-            )
-
-            return figure
 
         @dash.callback(
             dash.Output(self.page.ids.Calibration.bead_table, "data", allow_duplicate=True),
@@ -530,9 +457,9 @@ class Peaks:
                 logger.debug("Find peaks button has not been clicked. Returning dash.no_update.")
                 return dash.no_update, dash.no_update
 
-            fcs_path_clean = self._clean_optional_string(fcs_path)
-            scattering_channel_clean = self._clean_optional_string(scattering_channel)
-            fluorescence_channel_clean = self._clean_optional_string(fluorescence_channel)
+            fcs_path_clean = clean_optional_string(fcs_path)
+            scattering_channel_clean = clean_optional_string(scattering_channel)
+            fluorescence_channel_clean = clean_optional_string(fluorescence_channel)
 
             if not fcs_path_clean or not scattering_channel_clean or not fluorescence_channel_clean:
                 logger.debug(
@@ -546,7 +473,7 @@ class Peaks:
                 return dash.no_update, dash.no_update
 
             try:
-                backend = BackEnd(fcs_path)
+                backend = BackEnd(fcs_path_clean)
                 result = backend.find_fluorescence_peaks_and_prepare_outputs(
                     scattering_channel=scattering_channel_clean,
                     fluorescence_channel=fluorescence_channel_clean,
@@ -581,16 +508,3 @@ class Peaks:
             )
 
             return result.updated_table_data, result.peak_lines_payload
-
-    def _is_enabled(self, value: Any) -> bool:
-        return isinstance(value, list) and ("enabled" in value)
-
-    def _clean_optional_string(self, value: Any) -> str:
-        if value is None:
-            return ""
-
-        cleaned_value = str(value).strip()
-        if cleaned_value.lower() == "none":
-            return ""
-
-        return cleaned_value

@@ -51,7 +51,7 @@ class RosettaXApplication:
     - scattering table defaults
     - calibration-specific derived stores
 
-    Those belong inside their respective pages/sections.
+    Those belong inside their respective pages or sections.
     """
 
     _theme_light = dbc.themes.FLATLY
@@ -85,7 +85,6 @@ class RosettaXApplication:
             pages_folder="",
             suppress_callback_exceptions=True,
         )
-
         logger.debug("Dash application instantiated")
 
         self._register_pages()
@@ -101,10 +100,10 @@ class RosettaXApplication:
         """
         page_modules = [
             "RosettaX.pages.home.main",
-            "RosettaX.pages.settings.main",
             "RosettaX.pages.fluorescence.main",
             "RosettaX.pages.scattering.main",
             "RosettaX.pages.calibrate.main",
+            "RosettaX.pages.settings.main",
             "RosettaX.pages.help.main",
             "RosettaX.pages.calibration_json.main",
         ]
@@ -138,11 +137,9 @@ class RosettaXApplication:
                 runtime_config_data,
             )
 
-            runtime_config = RuntimeConfig()
-
-            if isinstance(runtime_config_data, dict):
-                runtime_config.Default.load_dict(runtime_config_data)
-
+            runtime_config = RuntimeConfig.from_dict(
+                runtime_config_data if isinstance(runtime_config_data, dict) else None
+            )
             theme_mode = runtime_config.get_theme_mode(default="dark")
 
             logger.debug(
@@ -195,36 +192,13 @@ class RosettaXApplication:
                     logger.debug("Selected profile file name is empty after stripping.")
                     return dash.no_update
 
-                if not selected_profile_file_name.endswith(".json"):
-                    selected_profile_file_name = f"{selected_profile_file_name}.json"
-
-                resolved_profile_path = Path(directories.profiles).resolve() / selected_profile_file_name
-                logger.debug(
-                    "Resolved sidebar selected profile path=%r",
-                    str(resolved_profile_path),
-                )
-
-                if not resolved_profile_path.exists():
-                    raise FileNotFoundError(f"Profile does not exist: {resolved_profile_path}")
-
-                runtime_config_payload = json.loads(
-                    resolved_profile_path.read_text(encoding="utf-8")
-                )
-
-                if not isinstance(runtime_config_payload, dict):
-                    raise TypeError(
-                        f"Profile payload must be a dictionary, got {type(runtime_config_payload).__name__}."
-                    )
-
-                runtime_config = RuntimeConfig()
-                runtime_config.Default.load_dict(runtime_config_payload)
+                runtime_config = RuntimeConfig.from_profile_name(selected_profile_file_name)
 
                 logger.debug(
-                    "Updated RuntimeConfig singleton from sidebar profile=%r",
+                    "Loaded runtime config payload from sidebar profile=%r",
                     selected_profile_file_name,
                 )
-
-                return runtime_config_payload
+                return runtime_config.to_dict()
 
             except Exception:
                 logger.exception(
@@ -254,7 +228,6 @@ class RosettaXApplication:
 
     def _build_main_content(self) -> html.Div:
         logger.debug("Building main content container")
-
         return html.Div(
             dash.page_container,
             id="page-content",
@@ -263,7 +236,6 @@ class RosettaXApplication:
 
     def _build_sidebar_content(self) -> html.Div:
         logger.debug("Building sidebar content container")
-
         return html.Div(
             id="sidebar-content",
             style=styling.SIDEBAR,
@@ -277,7 +249,7 @@ class RosettaXApplication:
         """
         logger.debug("Building application stores")
 
-        runtime_config = RuntimeConfig()
+        runtime_config = RuntimeConfig.from_default_profile()
         runtime_config_payload = runtime_config.to_dict()
         initial_theme_mode = runtime_config.get_theme_mode(default="dark")
 
@@ -306,10 +278,11 @@ class RosettaXApplication:
         ]
 
     def _build_theme_link(self) -> html.Link:
-        runtime_config = RuntimeConfig()
+        runtime_config = RuntimeConfig.from_default_profile()
         initial_theme_mode = runtime_config.get_theme_mode(default="dark")
-
-        initial_theme_href = self._theme_light if initial_theme_mode == "light" else self._theme_dark
+        initial_theme_href = (
+            self._theme_light if initial_theme_mode == "light" else self._theme_dark
+        )
 
         logger.debug(
             "Building theme link with initial_theme_mode=%r initial_theme_href=%r",
@@ -371,10 +344,6 @@ def main(argv: Optional[list[str]] = None) -> None:
     logger.debug("Entering main with argv=%r", argv)
 
     args = _parse_args(argv)
-
-    runtime_config = RuntimeConfig()
-    logger.debug("Loading runtime configuration from default_profile.json")
-    runtime_config.load_json("default_profile.json")
 
     app = RosettaXApplication(
         host=str(args.host),

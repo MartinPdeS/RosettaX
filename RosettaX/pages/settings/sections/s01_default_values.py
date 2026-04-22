@@ -31,8 +31,16 @@ class DefaultProfile:
             **kwargs,
         )
 
+    def _get_default_runtime_config(self) -> RuntimeConfig:
+        """
+        Use the default profile only for initial layout construction.
+
+        Live session state must come from runtime-config-store inside callbacks.
+        """
+        return RuntimeConfig.from_default_profile()
+
     def _get_layout(self):
-        runtime_config = RuntimeConfig()
+        runtime_config = self._get_default_runtime_config()
 
         return dbc.Card(
             [
@@ -437,7 +445,8 @@ class DefaultProfile:
                 return tuple([dash.no_update] * 24)
 
             saved_profile = get_saved_profile(dropdown_value) or {}
-            flattened_profile = self._flatten_profile_payload(saved_profile)
+            runtime_config = RuntimeConfig.from_dict(saved_profile)
+            flattened_profile = self._flatten_runtime_config(runtime_config)
 
             return (
                 flattened_profile.get("medium_refractive_index"),
@@ -519,9 +528,6 @@ class DefaultProfile:
                     )
 
                 save_profile(profile_target, nested_profile_payload)
-
-                runtime_config = RuntimeConfig()
-                runtime_config.Default.load_dict(nested_profile_payload)
 
                 return (
                     f"Saved profile: {profile_target}",
@@ -729,49 +735,46 @@ class DefaultProfile:
             },
         }
 
-    def _flatten_profile_payload(self, saved_profile: dict[str, Any]) -> dict[str, Any]:
-        if not isinstance(saved_profile, dict):
-            return {}
-
-        if "files" not in saved_profile and "optics" not in saved_profile and "particle_model" not in saved_profile:
-            return dict(saved_profile)
-
-        files_section = saved_profile.get("files") or {}
-        page_defaults_section = saved_profile.get("page_defaults") or {}
-        fluorescence_page_defaults_section = page_defaults_section.get("fluorescence") or {}
-        optics_section = saved_profile.get("optics") or {}
-        particle_model_section = saved_profile.get("particle_model") or {}
-        calibration_section = saved_profile.get("calibration") or {}
-        metadata_section = saved_profile.get("metadata") or {}
-        app_section = saved_profile.get("app") or {}
-
+    def _flatten_runtime_config(self, runtime_config: RuntimeConfig) -> dict[str, Any]:
         return {
-            "fluorescence_fcs_file_path": files_section.get("fluorescence_fcs_file_path"),
-            "scattering_fcs_file_path": files_section.get("scattering_fcs_file_path"),
-            "fluorescence_page_scattering_detector": fluorescence_page_defaults_section.get("scattering_detector"),
-            "fluorescence_page_fluorescence_detector": fluorescence_page_defaults_section.get("fluorescence_detector"),
-            "wavelength_nm": optics_section.get("wavelength_nm"),
-            "medium_refractive_index": optics_section.get("medium_refractive_index"),
-            "core_refractive_index": particle_model_section.get("core_refractive_index"),
-            "shell_refractive_index": particle_model_section.get("shell_refractive_index"),
-            "shell_thickness_nm": particle_model_section.get("shell_thickness_nm"),
-            "core_diameter_nm": particle_model_section.get("core_diameter_nm"),
-            "particle_diameter_nm": particle_model_section.get("particle_diameter_nm"),
-            "particle_refractive_index": particle_model_section.get("particle_refractive_index"),
-            "max_events_for_analysis": calibration_section.get("max_events_for_analysis"),
-            "n_bins_for_plots": calibration_section.get("n_bins_for_plots"),
-            "peak_count": calibration_section.get("peak_count"),
-            "mie_model": particle_model_section.get("mie_model"),
-            "mesf_values": calibration_section.get("mesf_values"),
-            "default_gating_channel": calibration_section.get("default_gating_channel"),
-            "default_gating_threshold": calibration_section.get("default_gating_threshold"),
-            "show_calibration_plot_by_default": calibration_section.get("show_calibration_plot_by_default"),
-            "histogram_scale": calibration_section.get("histogram_scale"),
-            "default_output_suffix": calibration_section.get("default_output_suffix"),
-            "operator_name": metadata_section.get("operator_name"),
-            "instrument_name": metadata_section.get("instrument_name"),
-            "theme_mode": app_section.get("theme_mode"),
-            "show_graphs": app_section.get("show_graphs"),
+            "fluorescence_fcs_file_path": runtime_config.get_path("files.fluorescence_fcs_file_path", default=None),
+            "scattering_fcs_file_path": runtime_config.get_path("files.scattering_fcs_file_path", default=None),
+            "fluorescence_page_scattering_detector": runtime_config.get_path(
+                "page_defaults.fluorescence.scattering_detector",
+                default=None,
+            ),
+            "fluorescence_page_fluorescence_detector": runtime_config.get_path(
+                "page_defaults.fluorescence.fluorescence_detector",
+                default=None,
+            ),
+            "wavelength_nm": runtime_config.get_float("optics.wavelength_nm", default=None),
+            "medium_refractive_index": runtime_config.get_float("optics.medium_refractive_index", default=None),
+            "core_refractive_index": runtime_config.get_float("particle_model.core_refractive_index", default=None),
+            "shell_refractive_index": runtime_config.get_float("particle_model.shell_refractive_index", default=None),
+            "shell_thickness_nm": runtime_config.get_path("particle_model.shell_thickness_nm", default=[]),
+            "core_diameter_nm": runtime_config.get_path("particle_model.core_diameter_nm", default=[]),
+            "particle_diameter_nm": runtime_config.get_path("particle_model.particle_diameter_nm", default=[]),
+            "particle_refractive_index": runtime_config.get_float(
+                "particle_model.particle_refractive_index",
+                default=None,
+            ),
+            "max_events_for_analysis": runtime_config.get_int("calibration.max_events_for_analysis", default=None),
+            "n_bins_for_plots": runtime_config.get_int("calibration.n_bins_for_plots", default=None),
+            "peak_count": runtime_config.get_int("calibration.peak_count", default=None),
+            "mie_model": runtime_config.get_str("particle_model.mie_model", default=""),
+            "mesf_values": runtime_config.get_path("calibration.mesf_values", default=[]),
+            "default_gating_channel": runtime_config.get_path("calibration.default_gating_channel", default=None),
+            "default_gating_threshold": runtime_config.get_path("calibration.default_gating_threshold", default=None),
+            "show_calibration_plot_by_default": runtime_config.get_bool(
+                "calibration.show_calibration_plot_by_default",
+                default=False,
+            ),
+            "histogram_scale": runtime_config.get_str("calibration.histogram_scale", default="log"),
+            "default_output_suffix": runtime_config.get_str("calibration.default_output_suffix", default=""),
+            "operator_name": runtime_config.get_str("metadata.operator_name", default=""),
+            "instrument_name": runtime_config.get_str("metadata.instrument_name", default=""),
+            "theme_mode": runtime_config.get_theme_mode(default="dark"),
+            "show_graphs": runtime_config.get_show_graphs(default=False),
         }
 
     @staticmethod

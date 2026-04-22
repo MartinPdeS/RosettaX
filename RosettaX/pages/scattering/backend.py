@@ -311,9 +311,8 @@ class BackEnd:
 
         return peak_detection_result
 
+    @staticmethod
     def compute_modeled_coupling_from_diameters(
-        self,
-        *,
         particle_diameters_nm: np.ndarray,
         wavelength_nm: float,
         source_numerical_aperture: float,

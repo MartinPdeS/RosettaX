@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Optional, Tuple
+from typing import Any, Optional
 import logging
 
 import dash
@@ -10,7 +10,15 @@ from RosettaX.utils import styling
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.utils.reader import FCSFile
 from RosettaX.utils.plottings import make_histogram_with_lines, _make_info_figure
-from RosettaX.utils.casting import _as_float, _as_int
+from RosettaX.utils import casting
+from RosettaX.pages.fluorescence.services.gating import (
+    build_threshold_store_payload,
+    clean_channel_name,
+    extract_stored_threshold,
+    is_switch_enabled,
+    parse_limits,
+    resolve_threshold,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -43,15 +51,18 @@ class ScatteringResult:
         )
 
 
-class Scattering:
+class Gating:
     def __init__(self, page) -> None:
         self.page = page
-        self.runtime_config = RuntimeConfig()
         logger.debug("Initialized ScatteringSection with page=%r", page)
 
-    def _refresh_runtime(self) -> RuntimeConfig:
-        self.runtime_config = RuntimeConfig()
-        return self.runtime_config
+    def _get_default_runtime_config(self) -> RuntimeConfig:
+        """
+        Use the default profile only for initial layout construction.
+
+        Live session state must come from runtime-config-store inside callbacks.
+        """
+        return RuntimeConfig.from_default_profile()
 
     def get_layout(self) -> dbc.Card:
         return dbc.Card(
@@ -99,7 +110,7 @@ class Scattering:
         )
 
     def _build_debug_switch_row(self) -> dash.html.Div:
-        runtime_config = self._refresh_runtime()
+        runtime_config = self._get_default_runtime_config()
 
         return dash.html.Div(
             [
@@ -129,7 +140,7 @@ class Scattering:
         )
 
     def _build_nbins_row(self) -> dash.html.Div:
-        runtime_config = self._refresh_runtime()
+        runtime_config = self._get_default_runtime_config()
 
         return dash.html.Div(
             [
@@ -179,7 +190,7 @@ class Scattering:
         )
 
     def _build_yscale_switch(self) -> dbc.Checklist:
-        runtime_config = self._refresh_runtime()
+        runtime_config = self._get_default_runtime_config()
         histogram_scale = runtime_config.get_str("calibration.histogram_scale", default="log")
 
         return dbc.Checklist(
@@ -207,9 +218,9 @@ class Scattering:
             prevent_initial_call=False,
         )
         def sync_scattering_yscale_from_runtime_store(runtime_config_data: Any) -> list[str]:
-            del runtime_config_data
-
-            runtime_config = self._refresh_runtime()
+            runtime_config = RuntimeConfig.from_dict(
+                runtime_config_data if isinstance(runtime_config_data, dict) else None
+            )
             histogram_scale = runtime_config.get_str("calibration.histogram_scale", default="log")
 
             logger.debug(
@@ -225,9 +236,9 @@ class Scattering:
             prevent_initial_call=False,
         )
         def sync_scattering_graph_visibility_from_runtime_store(runtime_config_data: Any) -> list[str]:
-            del runtime_config_data
-
-            runtime_config = self._refresh_runtime()
+            runtime_config = RuntimeConfig.from_dict(
+                runtime_config_data if isinstance(runtime_config_data, dict) else None
+            )
             resolved_show_graphs = runtime_config.get_show_graphs(default=True)
 
             logger.debug(
@@ -250,9 +261,9 @@ class Scattering:
             prevent_initial_call=False,
         )
         def sync_scattering_nbins_from_runtime_store(runtime_config_data: Any) -> int:
-            del runtime_config_data
-
-            runtime_config = self._refresh_runtime()
+            runtime_config = RuntimeConfig.from_dict(
+                runtime_config_data if isinstance(runtime_config_data, dict) else None
+            )
             resolved_nbins = runtime_config.get_int("calibration.n_bins_for_plots", default=100)
 
             logger.debug(
@@ -267,9 +278,9 @@ class Scattering:
             prevent_initial_call=False,
         )
         def sync_max_events_from_runtime_store(runtime_config_data: Any) -> int:
-            del runtime_config_data
-
-            runtime_config = self._refresh_runtime()
+            runtime_config = RuntimeConfig.from_dict(
+                runtime_config_data if isinstance(runtime_config_data, dict) else None
+            )
             resolved_max_events = runtime_config.get_int("calibration.max_events_for_analysis", default=10000)
 
             logger.debug(
@@ -290,9 +301,10 @@ class Scattering:
             dash.Input(self.page.ids.Scattering.debug_switch, "value"),
             dash.State(self.page.ids.Scattering.threshold_store, "data", allow_optional=True),
             dash.State(self.page.ids.Upload.max_events_for_plots_input, "value", allow_optional=True),
+            dash.State("runtime-config-store", "data"),
             prevent_initial_call=True,
         )
-        def scattering_section(
+        def update_scattering_threshold_and_histogram(
             n_clicks_estimate: int,
             threshold_input_value: Any,
             scattering_channel: Any,
@@ -301,6 +313,7 @@ class Scattering:
             debug_switch_value: Any,
             scattering_threshold_store_data: Any,
             max_events_for_plots: Any,
+            runtime_config_data: Any,
         ) -> tuple:
             del n_clicks_estimate
 
@@ -312,41 +325,18 @@ class Scattering:
                 debug_switch_value=debug_switch_value,
                 scattering_threshold_store_data=scattering_threshold_store_data,
                 max_events_for_plots=max_events_for_plots,
+                runtime_config_data=runtime_config_data,
             )
             return self._run_scattering_callback(callback_inputs).to_tuple()
 
     def _toggle_debug_container(self, debug_switch_value: Any) -> dict:
-        debug_enabled = self._is_switch_enabled(debug_switch_value)
+        debug_enabled = is_switch_enabled(debug_switch_value)
         logger.debug(
             "_toggle_debug_container called with debug_switch_value=%r resolved debug_enabled=%r",
             debug_switch_value,
             debug_enabled,
         )
         return {"display": "block"} if debug_enabled else {"display": "none"}
-
-    def _resolve_nbins_from_runtime_store(self, runtime_config_data: Any) -> int:
-        del runtime_config_data
-
-        runtime_config = self._refresh_runtime()
-        resolved_nbins = runtime_config.get_int("calibration.n_bins_for_plots", default=100)
-
-        logger.debug(
-            "_resolve_nbins_from_runtime_store resolved nbins=%r",
-            resolved_nbins,
-        )
-        return resolved_nbins
-
-    def _resolve_max_events_from_runtime_store(self, runtime_config_data: Any) -> int:
-        del runtime_config_data
-
-        runtime_config = self._refresh_runtime()
-        resolved_max_events = runtime_config.get_int("calibration.max_events_for_analysis", default=10000)
-
-        logger.debug(
-            "_resolve_max_events_from_runtime_store resolved max_events=%r",
-            resolved_max_events,
-        )
-        return resolved_max_events
 
     def _parse_scattering_callback_inputs(
         self,
@@ -358,16 +348,27 @@ class Scattering:
         debug_switch_value: Any,
         scattering_threshold_store_data: Any,
         max_events_for_plots: Any,
+        runtime_config_data: Any,
     ) -> ScatteringCallbackInputs:
         triggered_id = dash.callback_context.triggered_id
-        debug_enabled = self._is_switch_enabled(debug_switch_value)
-        max_events, nbins = self._parse_limits(
+        debug_enabled = is_switch_enabled(debug_switch_value)
+
+        runtime_config = RuntimeConfig.from_dict(
+            runtime_config_data if isinstance(runtime_config_data, dict) else None
+        )
+        default_max_events = runtime_config.get_int("calibration.max_events_for_analysis", default=10000)
+        default_nbins = runtime_config.get_int("calibration.n_bins_for_plots", default=100)
+
+        parsed_limits = parse_limits(
             max_events_for_plots=max_events_for_plots,
             scattering_nbins=scattering_nbins,
+            default_max_events=default_max_events,
+            default_nbins=default_nbins,
         )
-        scattering_channel_clean = self._clean_channel_name(scattering_channel)
-        stored_threshold = self._extract_stored_threshold(scattering_threshold_store_data)
-        manual_threshold = _as_float(threshold_input_value)
+
+        scattering_channel_clean = clean_channel_name(scattering_channel)
+        stored_threshold = extract_stored_threshold(scattering_threshold_store_data)
+        manual_threshold = casting._as_float(threshold_input_value)
 
         must_estimate = triggered_id in {
             self.page.ids.Scattering.find_threshold_btn,
@@ -379,8 +380,8 @@ class Scattering:
             triggered_id=triggered_id,
             debug_enabled=debug_enabled,
             scattering_channel=scattering_channel_clean,
-            nbins=nbins,
-            max_events=max_events,
+            nbins=parsed_limits.nbins,
+            max_events=parsed_limits.max_events,
             yscale_selection=yscale_selection,
             manual_threshold=manual_threshold,
             stored_threshold=stored_threshold,
@@ -397,16 +398,18 @@ class Scattering:
         logger.debug("_run_scattering_callback called with callback_inputs=%r", callback_inputs)
 
         try:
-            threshold_value, threshold_input_output = self._resolve_threshold(
+            threshold_value, threshold_input_output = resolve_threshold(
+                page_backend=self.page.backend,
                 must_estimate=callback_inputs.must_estimate,
                 scattering_channel=callback_inputs.scattering_channel,
                 nbins=callback_inputs.nbins,
                 max_events=callback_inputs.max_events,
                 manual_thr=callback_inputs.manual_threshold,
                 store_thr=callback_inputs.stored_threshold,
+                logger=logger,
             )
 
-            threshold_store_payload = self._build_threshold_store_payload(
+            threshold_store_payload = build_threshold_store_payload(
                 scattering_channel=callback_inputs.scattering_channel,
                 threshold_value=threshold_value,
                 nbins=callback_inputs.nbins,
@@ -435,128 +438,6 @@ class Scattering:
 
         logger.debug("Returning scattering result=%r", result)
         return result
-
-    def _is_switch_enabled(self, switch_value: Any) -> bool:
-        return isinstance(switch_value, list) and ("enabled" in switch_value)
-
-    def _clean_channel_name(self, scattering_channel: Any) -> str:
-        if scattering_channel is None:
-            return ""
-
-        scattering_channel_clean = str(scattering_channel).strip()
-
-        if scattering_channel_clean.lower() == "none":
-            return ""
-
-        return scattering_channel_clean
-
-    def _extract_stored_threshold(self, scattering_threshold_store_data: Any) -> Optional[float]:
-        if not isinstance(scattering_threshold_store_data, dict):
-            return None
-
-        return _as_float(scattering_threshold_store_data.get("threshold"))
-
-    def _build_threshold_store_payload(
-        self,
-        *,
-        scattering_channel: str,
-        threshold_value: float,
-        nbins: int,
-    ) -> dict:
-        return {
-            "scattering_channel": scattering_channel or None,
-            "threshold": float(threshold_value),
-            "nbins": int(nbins),
-        }
-
-    def _parse_limits(self, *, max_events_for_plots: Any, scattering_nbins: Any) -> Tuple[int, int]:
-        runtime_config = self._refresh_runtime()
-
-        default_max_events = runtime_config.get_int("calibration.max_events_for_analysis", default=10000)
-        default_nbins = runtime_config.get_int("calibration.n_bins_for_plots", default=100)
-
-        max_events = _as_int(
-            max_events_for_plots if max_events_for_plots is not None else default_max_events,
-            default=default_max_events,
-            min_value=1_000,
-            max_value=5_000_000,
-        )
-
-        nbins = _as_int(
-            scattering_nbins,
-            default=default_nbins,
-            min_value=10,
-            max_value=5000,
-        )
-
-        return max_events, nbins
-
-    def _resolve_threshold(
-        self,
-        *,
-        must_estimate: bool,
-        scattering_channel: str,
-        nbins: int,
-        max_events: int,
-        manual_thr: Optional[float],
-        store_thr: Optional[float],
-    ) -> Tuple[float, Any]:
-        logger.debug(
-            "_resolve_threshold called with must_estimate=%r scattering_channel=%r nbins=%r "
-            "max_events=%r manual_thr=%r store_thr=%r",
-            must_estimate,
-            scattering_channel,
-            nbins,
-            max_events,
-            manual_thr,
-            store_thr,
-        )
-
-        if must_estimate:
-            if self.page.backend is None:
-                logger.debug("_resolve_threshold cannot estimate because backend is None.")
-                return 0.0, dash.no_update
-
-            if not scattering_channel:
-                logger.debug("_resolve_threshold cannot estimate because scattering_channel is empty.")
-                return 0.0, dash.no_update
-
-            try:
-                response = self.page.backend.process_scattering(
-                    {
-                        "operation": "estimate_scattering_threshold",
-                        "column": scattering_channel,
-                        "nbins": int(nbins),
-                        "number_of_points": int(max_events),
-                    }
-                )
-            except Exception:
-                logger.exception(
-                    "Backend threshold estimation failed for scattering_channel=%r nbins=%r max_events=%r",
-                    scattering_channel,
-                    nbins,
-                    max_events,
-                )
-                raise
-
-            threshold_value = _as_float(response.get("threshold")) or 0.0
-            logger.debug(
-                "_resolve_threshold estimated threshold_value=%r from response=%r",
-                threshold_value,
-                response,
-            )
-            return float(threshold_value), f"{float(threshold_value):.6g}"
-
-        if manual_thr is not None:
-            logger.debug("_resolve_threshold using manual threshold=%r", manual_thr)
-            return float(manual_thr), dash.no_update
-
-        if store_thr is not None:
-            logger.debug("_resolve_threshold using stored threshold=%r", store_thr)
-            return float(store_thr), dash.no_update
-
-        logger.debug("_resolve_threshold fell back to default threshold=0.0")
-        return 0.0, dash.no_update
 
     def _build_scattering_histogram(
         self,

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 import logging
 
 import dash
@@ -9,26 +9,14 @@ import dash_bootstrap_components as dbc
 
 from RosettaX.utils import service, directories
 from RosettaX.pages.sidebar.ids import SidebarIds
+from RosettaX.pages.scattering.services.save import (
+    SaveInputs,
+    build_sidebar_refresh_payload,
+    validate_save_inputs,
+)
 
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass(frozen=True)
-class SaveInputs:
-    """
-    Parsed and validated inputs for Save section actions.
-
-    Attributes
-    ----------
-    file_name : str
-        Name used when saving a calibration file.
-    calib_payload : Optional[dict]
-        Calibration payload produced by the calibration step.
-    """
-
-    file_name: str
-    calib_payload: Optional[dict]
 
 
 @dataclass(frozen=True)
@@ -41,14 +29,6 @@ class SaveResult:
     sidebar_refresh_store: Any = dash.no_update
 
     def to_tuple(self) -> tuple:
-        """
-        Convert this object into the tuple expected by the Dash callback.
-
-        Returns
-        -------
-        tuple
-            Outputs in the exact order declared in the callback.
-        """
         return (
             self.save_out,
             self.sidebar_refresh_store,
@@ -72,13 +52,9 @@ class Save:
     def get_layout(self) -> dbc.Card:
         """
         Create the layout for the save section.
-
-        Returns
-        -------
-        dbc.Card
-            Save section card.
         """
         logger.debug("Building Save section layout.")
+
         return dbc.Card(
             [
                 self._build_header(),
@@ -119,13 +95,9 @@ class Save:
     def _build_save_calibration_row(self) -> dash.html.Div:
         """
         Build the save calibration row.
-
-        Returns
-        -------
-        dash.html.Div
-            Row containing the save button and file name input.
         """
         logger.debug("Building Save section calibration row.")
+
         return dash.html.Div(
             [
                 self._build_save_calibration_button(),
@@ -170,25 +142,8 @@ class Save:
         def save_section_actions(
             n_clicks_save_calibration: int,
             file_name: str,
-            calib_payload: Optional[dict],
+            calib_payload: dict | None,
         ) -> tuple:
-            """
-            Save the current calibration payload.
-
-            Parameters
-            ----------
-            n_clicks_save_calibration : int
-                Click count for save calibration.
-            file_name : str
-                Calibration name.
-            calib_payload : Optional[dict]
-                Calibration payload.
-
-            Returns
-            -------
-            tuple
-                Dash outputs in the declared Output order.
-            """
             logger.debug(
                 "save_section_actions called with n_clicks_save_calibration=%r file_name=%r calib_payload_type=%s calib_payload_keys=%r",
                 n_clicks_save_calibration,
@@ -197,27 +152,31 @@ class Save:
                 list(calib_payload.keys()) if isinstance(calib_payload, dict) else None,
             )
 
-            parsed_inputs_or_result = self._parse_and_validate_common(
+            del n_clicks_save_calibration
+
+            parsed_inputs, validation_error = validate_save_inputs(
                 file_name=file_name,
                 calib_payload=calib_payload,
             )
 
-            if isinstance(parsed_inputs_or_result, SaveResult):
+            if validation_error is not None:
                 logger.debug(
-                    "save_section_actions validation failed with save_out=%r sidebar_refresh_store_type=%s",
-                    parsed_inputs_or_result.save_out,
-                    type(parsed_inputs_or_result.sidebar_refresh_store).__name__,
+                    "save_section_actions validation failed with message=%r",
+                    validation_error,
                 )
-                return parsed_inputs_or_result.to_tuple()
+                return SaveResult(
+                    save_out=validation_error,
+                    sidebar_refresh_store=dash.no_update,
+                ).to_tuple()
 
             try:
-                result = self._action_save_calibration(inputs=parsed_inputs_or_result)
+                result = self._action_save_calibration(inputs=parsed_inputs)
             except Exception:
                 logger.exception(
                     "save_section_actions failed while saving calibration with file_name=%r calib_payload_keys=%r",
-                    parsed_inputs_or_result.file_name,
-                    list(parsed_inputs_or_result.calib_payload.keys())
-                    if isinstance(parsed_inputs_or_result.calib_payload, dict)
+                    parsed_inputs.file_name,
+                    list(parsed_inputs.calib_payload.keys())
+                    if isinstance(parsed_inputs.calib_payload, dict)
                     else None,
                 )
                 return SaveResult(
@@ -232,77 +191,9 @@ class Save:
             )
             return result.to_tuple()
 
-    def _parse_and_validate_common(
-        self,
-        *,
-        file_name: str,
-        calib_payload: Optional[dict],
-    ) -> SaveInputs | SaveResult:
-        """
-        Parse and validate inputs shared by save actions.
-
-        Parameters
-        ----------
-        file_name : str
-            Requested calibration file name.
-        calib_payload : Optional[dict]
-            Calibration payload.
-
-        Returns
-        -------
-        SaveInputs | SaveResult
-            SaveInputs when validation succeeds, otherwise SaveResult with an error message.
-        """
-        logger.debug(
-            "_parse_and_validate_common called with file_name=%r calib_payload_type=%s",
-            file_name,
-            type(calib_payload).__name__,
-        )
-
-        if not isinstance(calib_payload, dict) or not calib_payload:
-            logger.debug(
-                "_parse_and_validate_common failed because calib_payload is missing or invalid: %r",
-                calib_payload,
-            )
-            return SaveResult(
-                save_out="No calibration payload available. Run the calibration first.",
-                sidebar_refresh_store=dash.no_update,
-            )
-
-        file_name_clean = str(file_name or "").strip()
-        logger.debug(
-            "Normalized file_name=%r into file_name_clean=%r",
-            file_name,
-            file_name_clean,
-        )
-
-        if not file_name_clean:
-            logger.debug("_parse_and_validate_common failed because file_name_clean is empty.")
-            return SaveResult(
-                save_out="Please provide a calibration name.",
-                sidebar_refresh_store=dash.no_update,
-            )
-
-        parsed_inputs = SaveInputs(
-            file_name=file_name_clean,
-            calib_payload=calib_payload,
-        )
-        logger.debug("Validation succeeded with parsed_inputs=%r", parsed_inputs)
-        return parsed_inputs
-
     def _action_save_calibration(self, *, inputs: SaveInputs) -> SaveResult:
         """
         Save the current calibration payload to disk.
-
-        Parameters
-        ----------
-        inputs : SaveInputs
-            Parsed save inputs.
-
-        Returns
-        -------
-        SaveResult
-            Save status message and sidebar refresh trigger payload.
         """
         logger.debug(
             "_action_save_calibration called with file_name=%r payload_keys=%r",
@@ -331,16 +222,9 @@ class Save:
             saved.filename,
         )
 
-        sidebar_refresh_payload = {
-            "refresh": True,
-            "folder": str(saved.folder),
-            "filename": str(saved.filename),
-            "kind": "scattering",
-        }
-
-        logger.debug(
-            "Prepared sidebar refresh payload=%r",
-            sidebar_refresh_payload,
+        sidebar_refresh_payload = build_sidebar_refresh_payload(
+            saved_folder=saved.folder,
+            saved_filename=saved.filename,
         )
 
         return SaveResult(

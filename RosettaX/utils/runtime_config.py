@@ -1,85 +1,113 @@
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Optional, ClassVar, Any
+# -*- coding: utf-8 -*-
+import copy
 import json
 import logging
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Optional
 
 from RosettaX.utils import directories
+
 
 logger = logging.getLogger(__name__)
 
 
-class _RuntimeDefaultNamespace:
-    """
-    Dynamic attribute container backed by a dictionary.
-
-    This object lets the rest of the code keep using:
-
-        runtime_config.Default.some_key
-
-    for flat keys, while RuntimeConfig also provides nested path based accessors
-    for structured profiles.
-    """
-
-    def __init__(self) -> None:
-        object.__setattr__(self, "_data", {})
-
-    def load_dict(self, data: dict[str, Any]) -> None:
-        object.__setattr__(self, "_data", dict(data))
-
-    def update_dict(self, data: dict[str, Any]) -> None:
-        self._data.update(data)
-
-    def to_dict(self) -> dict[str, Any]:
-        return dict(self._data)
-
-    def __getattr__(self, name: str) -> Any:
-        try:
-            return self._data[name]
-        except KeyError as exc:
-            raise AttributeError(name) from exc
-
-    def __setattr__(self, name: str, value: Any) -> None:
-        self._data[name] = value
-
-    def __contains__(self, name: str) -> bool:
-        return name in self._data
-
-    def __repr__(self) -> str:
-        return f"_RuntimeDefaultNamespace({self._data!r})"
-
-
-@dataclass
+@dataclass(slots=True)
 class RuntimeConfig:
-    _instance: ClassVar[Optional["RuntimeConfig"]] = None
-    _initialized: ClassVar[bool] = False
+    """
+    Session-local runtime configuration container.
 
-    Default: ClassVar[_RuntimeDefaultNamespace] = _RuntimeDefaultNamespace()
+    Design goals
+    ------------
+    - Keep RuntimeConfig as the canonical source of truth for config structure,
+      access, loading, and saving.
+    - Avoid any hidden global mutable state.
+    - Keep the public API simple and close to the previous implementation.
+    - Allow cheap reconstruction from a Dash store payload on every callback.
 
-    def __new__(cls, *args, **kwargs):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            logger.debug("Created new RuntimeConfig singleton instance.")
-        else:
-            logger.debug("Reusing existing RuntimeConfig singleton instance.")
+    Notes
+    -----
+    RuntimeConfig is now a plain instance-backed object.
+    Each callback should rebuild it from the current ``dcc.Store`` payload:
 
-        return cls._instance
+        runtime_config = RuntimeConfig.from_dict(runtime_config_store_data)
 
-    def __init__(self, *args, **kwargs):
-        if self.__class__._initialized:
-            logger.debug("RuntimeConfig already initialized. Skipping __init__.")
-            return
+    and return ``runtime_config.to_dict()`` whenever the config was modified.
+    """
 
-        self.__class__._initialized = True
-        logger.debug("Initializing RuntimeConfig singleton.")
+    data: dict[str, Any] = field(default_factory=dict)
 
-        self._load_default_profile_on_startup()
+    def __post_init__(self) -> None:
+        if not isinstance(self.data, dict):
+            raise TypeError(
+                f"RuntimeConfig data must be a dictionary, got {type(self.data).__name__}."
+            )
+        self.data = copy.deepcopy(self.data)
+        logger.debug("Initialized RuntimeConfig with keys=%r", list(self.data.keys()))
 
-    def _load_default_profile_on_startup(self) -> None:
+    @classmethod
+    def from_dict(cls, data: Optional[dict[str, Any]]) -> "RuntimeConfig":
         """
-        Load the startup defaults from the default profile file.
+        Build a RuntimeConfig from an in-memory dictionary payload.
+        """
+        if data is None:
+            logger.debug("RuntimeConfig.from_dict received None. Using empty payload.")
+            return cls()
 
-        The JSON profile is the source of truth for all default fields.
+        if not isinstance(data, dict):
+            raise TypeError(
+                f"RuntimeConfig.from_dict expected a dictionary, got {type(data).__name__}."
+            )
+
+        logger.debug("RuntimeConfig.from_dict received keys=%r", list(data.keys()))
+        return cls(data=data)
+
+    @classmethod
+    def from_json_path(cls, json_path: Path | str) -> "RuntimeConfig":
+        """
+        Build a RuntimeConfig from a JSON file path.
+        """
+        resolved_json_path = Path(json_path).expanduser().resolve()
+        logger.debug("RuntimeConfig.from_json_path called with path=%r", str(resolved_json_path))
+
+        with resolved_json_path.open("r", encoding="utf-8") as file_handle:
+            payload = json.load(file_handle)
+
+        if not isinstance(payload, dict):
+            raise TypeError(
+                f"Runtime config JSON must contain a JSON object, got {type(payload).__name__}."
+            )
+
+        logger.debug(
+            "Loaded RuntimeConfig from path=%r with keys=%r",
+            str(resolved_json_path),
+            list(payload.keys()),
+        )
+        return cls.from_dict(payload)
+
+    @classmethod
+    def from_profile_name(cls, json_filename: str) -> "RuntimeConfig":
+        """
+        Build a RuntimeConfig from a profile name located in ``directories.profiles``.
+        """
+        normalized_filename = str(json_filename).strip()
+        if not normalized_filename:
+            raise ValueError("Profile filename cannot be empty.")
+
+        if not normalized_filename.endswith(".json"):
+            normalized_filename = f"{normalized_filename}.json"
+
+        json_path = Path(directories.profiles) / normalized_filename
+        logger.debug("RuntimeConfig.from_profile_name resolved json_path=%r", str(json_path))
+        return cls.from_json_path(json_path)
+
+    @classmethod
+    def from_default_profile(cls) -> "RuntimeConfig":
+        """
+        Load the startup default profile.
+
+        The first valid JSON object found among the candidate paths becomes the
+        initial runtime payload.
         """
         candidate_paths = [
             Path(directories.default_profile),
@@ -88,63 +116,48 @@ class RuntimeConfig:
 
         for json_path in candidate_paths:
             if not json_path.exists():
+                logger.debug("Default profile candidate does not exist: %r", str(json_path))
                 continue
 
             try:
-                with json_path.open("r", encoding="utf-8") as file_handle:
-                    data = json.load(file_handle)
-
-                if not isinstance(data, dict):
-                    raise TypeError(
-                        f"Default profile must contain a JSON object, got {type(data).__name__}."
-                    )
-
-                self.Default.load_dict(data)
-                logger.debug(
-                    "Loaded startup default profile from json_path=%r with keys=%r",
-                    str(json_path),
-                    list(data.keys()),
-                )
-                return
-
+                runtime_config = cls.from_json_path(json_path)
+                logger.debug("Loaded startup default profile from %r", str(json_path))
+                return runtime_config
             except Exception:
                 logger.exception(
                     "Failed to load startup default profile from json_path=%r",
                     str(json_path),
                 )
 
-        logger.warning(
-            "No valid default profile could be loaded. RuntimeConfig.Default is empty."
-        )
-        self.Default.load_dict({})
+        logger.warning("No valid default profile could be loaded. Using empty RuntimeConfig.")
+        return cls()
 
     @staticmethod
     def _split_path(path: str) -> list[str]:
         normalized_path = str(path).strip()
         if not normalized_path:
             raise ValueError("Path cannot be empty.")
+
         return [part for part in normalized_path.split(".") if part]
 
-    @staticmethod
-    def _get_nested_value(data: dict[str, Any], path: str, default: Any = None) -> Any:
+    @classmethod
+    def _get_nested_value(cls, data: dict[str, Any], path: str, default: Any = None) -> Any:
         current_value: Any = data
 
-        for path_part in RuntimeConfig._split_path(path):
+        for path_part in cls._split_path(path):
             if not isinstance(current_value, dict):
                 return default
-
             if path_part not in current_value:
                 return default
-
             current_value = current_value[path_part]
 
         return current_value
 
-    @staticmethod
-    def _set_nested_value(data: dict[str, Any], path: str, value: Any) -> None:
-        path_parts = RuntimeConfig._split_path(path)
-
+    @classmethod
+    def _set_nested_value(cls, data: dict[str, Any], path: str, value: Any) -> None:
+        path_parts = cls._split_path(path)
         current_dict = data
+
         for path_part in path_parts[:-1]:
             next_value = current_dict.get(path_part)
 
@@ -156,10 +169,23 @@ class RuntimeConfig:
 
         current_dict[path_parts[-1]] = value
 
-    def get_path(self, path: str, default: Any = None) -> Any:
-        runtime_config_dict = self.Default.to_dict()
-        resolved_value = self._get_nested_value(runtime_config_dict, path, default=default)
+    def to_dict(self) -> dict[str, Any]:
+        """
+        Return a deep copied payload safe to place into Dash stores.
+        """
+        runtime_config_dict = copy.deepcopy(self.data)
+        logger.debug("RuntimeConfig.to_dict returning keys=%r", list(runtime_config_dict.keys()))
+        return runtime_config_dict
 
+    def copy(self) -> "RuntimeConfig":
+        """
+        Return a deep copied RuntimeConfig instance.
+        """
+        logger.debug("Creating RuntimeConfig copy.")
+        return RuntimeConfig.from_dict(self.data)
+
+    def get_path(self, path: str, default: Any = None) -> Any:
+        resolved_value = self._get_nested_value(self.data, path, default=default)
         logger.debug(
             "RuntimeConfig.get_path called with path=%r default=%r resolved_value=%r",
             path,
@@ -169,12 +195,8 @@ class RuntimeConfig:
         return resolved_value
 
     def set_path(self, path: str, value: Any) -> None:
-        runtime_config_dict = self.Default.to_dict()
-        old_value = self._get_nested_value(runtime_config_dict, path, default=None)
-
-        self._set_nested_value(runtime_config_dict, path, value)
-        self.Default.load_dict(runtime_config_dict)
-
+        old_value = self._get_nested_value(self.data, path, default=None)
+        self._set_nested_value(self.data, path, value)
         logger.debug(
             "RuntimeConfig.set_path updated path=%r from %r to %r",
             path,
@@ -196,8 +218,10 @@ class RuntimeConfig:
 
         if isinstance(value, str):
             normalized_value = value.strip().lower()
+
             if normalized_value in {"true", "yes", "1", "on", "enabled"}:
                 return True
+
             if normalized_value in {"false", "no", "0", "off", "disabled"}:
                 return False
 
@@ -250,19 +274,18 @@ class RuntimeConfig:
         """
         return self.get_bool("app.show_graphs", default=default)
 
-    def update(self, **kwargs) -> None:
+    def update(self, **kwargs: Any) -> None:
         """
         Update the runtime configuration with flat keys.
 
-        This keeps backward compatibility with older parts of the codebase.
+        This keeps backward compatibility with older parts of the codebase that
+        still expect flat key assignment.
         """
         logger.debug("RuntimeConfig.update called with kwargs=%r", kwargs)
 
-        runtime_config_dict = self.Default.to_dict()
-
         for key, value in kwargs.items():
-            old_value = runtime_config_dict.get(key, None)
-            runtime_config_dict[key] = value
+            old_value = self.data.get(key, None)
+            self.data[key] = value
             logger.debug(
                 "Updated flat runtime key %s from %r to %r",
                 key,
@@ -270,28 +293,28 @@ class RuntimeConfig:
                 value,
             )
 
-        self.Default.load_dict(runtime_config_dict)
-
-    def update_paths(self, **path_value_pairs) -> None:
+    def update_paths(self, **path_value_pairs: Any) -> None:
         """
         Update the runtime configuration using dotted paths.
 
-        Example:
-            runtime_config.update_paths(
-                **{
-                    "app.theme_mode": "light",
-                    "app.show_graphs": True,
-                    "optics.wavelength_nm": 532,
-                }
-            )
+        Example
+        -------
+        runtime_config.update_paths(
+            **{
+                "app.theme_mode": "light",
+                "app.show_graphs": True,
+                "optics.wavelength_nm": 532,
+            }
+        )
         """
-        logger.debug("RuntimeConfig.update_paths called with path_value_pairs=%r", path_value_pairs)
-
-        runtime_config_dict = self.Default.to_dict()
+        logger.debug(
+            "RuntimeConfig.update_paths called with path_value_pairs=%r",
+            path_value_pairs,
+        )
 
         for path, value in path_value_pairs.items():
-            old_value = self._get_nested_value(runtime_config_dict, path, default=None)
-            self._set_nested_value(runtime_config_dict, path, value)
+            old_value = self._get_nested_value(self.data, path, default=None)
+            self._set_nested_value(self.data, path, value)
             logger.debug(
                 "Updated nested runtime path %s from %r to %r",
                 path,
@@ -299,16 +322,36 @@ class RuntimeConfig:
                 value,
             )
 
-        self.Default.load_dict(runtime_config_dict)
+    def with_path(self, path: str, value: Any) -> "RuntimeConfig":
+        """
+        Return a new RuntimeConfig with one updated nested path.
+        """
+        runtime_config = self.copy()
+        runtime_config.set_path(path, value)
+        return runtime_config
 
-    @classmethod
-    def get_instance(cls) -> "RuntimeConfig":
-        logger.debug("RuntimeConfig.get_instance called.")
-        return cls()
+    def with_updates(self, **kwargs: Any) -> "RuntimeConfig":
+        """
+        Return a new RuntimeConfig with updated flat keys.
+        """
+        runtime_config = self.copy()
+        runtime_config.update(**kwargs)
+        return runtime_config
+
+    def with_path_updates(self, **path_value_pairs: Any) -> "RuntimeConfig":
+        """
+        Return a new RuntimeConfig with updated dotted paths.
+        """
+        runtime_config = self.copy()
+        runtime_config.update_paths(**path_value_pairs)
+        return runtime_config
 
     def load_json(self, json_filename: str) -> dict[str, Any]:
         """
-        Load a profile JSON file into the runtime configuration.
+        Load a profile JSON file into this RuntimeConfig instance.
+
+        This preserves the old method name for compatibility, but it now mutates
+        only this instance, never any hidden global object.
         """
         normalized_filename = str(json_filename).strip()
         if not normalized_filename.endswith(".json"):
@@ -317,34 +360,23 @@ class RuntimeConfig:
         json_path = Path(directories.profiles) / normalized_filename
         logger.debug("RuntimeConfig.load_json called with json_path=%r", str(json_path))
 
-        try:
-            with json_path.open("r", encoding="utf-8") as file_handle:
-                data = json.load(file_handle)
+        with json_path.open("r", encoding="utf-8") as file_handle:
+            payload = json.load(file_handle)
 
-            if not isinstance(data, dict):
-                raise TypeError(
-                    f"Runtime config JSON must contain a JSON object, got {type(data).__name__}."
-                )
-
-            self.Default.load_dict(data)
-
-            logger.debug(
-                "Loaded RuntimeConfig.Default from JSON json_path=%r keys=%r",
-                str(json_path),
-                list(data.keys()),
+        if not isinstance(payload, dict):
+            raise TypeError(
+                f"Runtime config JSON must contain a JSON object, got {type(payload).__name__}."
             )
-            return data
 
-        except Exception:
-            logger.exception("Failed to load JSON config from json_path=%r", str(json_path))
-            return {}
+        self.data = copy.deepcopy(payload)
+        logger.debug(
+            "Loaded RuntimeConfig instance from JSON json_path=%r keys=%r",
+            str(json_path),
+            list(payload.keys()),
+        )
+        return self.to_dict()
 
     def __repr__(self) -> str:
-        representation = f"RuntimeConfig({self.Default.to_dict()!r})"
+        representation = f"RuntimeConfig({self.data!r})"
         logger.debug("RuntimeConfig.__repr__ returning %r", representation)
         return representation
-
-    def to_dict(self) -> dict[str, Any]:
-        runtime_config_dict = self.Default.to_dict()
-        logger.debug("RuntimeConfig.to_dict returning %r", runtime_config_dict)
-        return runtime_config_dict
