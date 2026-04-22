@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class CalibrationResult:
     figure_store: Any = dash.no_update
+    model_figure_store: Any = dash.no_update
     calibration_store: Any = dash.no_update
     bead_table_data: Any = dash.no_update
     slope_out: str = ""
@@ -29,6 +30,7 @@ class CalibrationResult:
     def to_tuple(self) -> tuple:
         return (
             self.figure_store,
+            self.model_figure_store,
             self.calibration_store,
             self.bead_table_data,
             self.slope_out,
@@ -48,6 +50,9 @@ class Calibration:
     - Compute expected coupling values for the solid sphere model.
     - Write expected coupling values back into the table.
     - Fit the calibration curve and update outputs.
+    - Render two graphs side by side:
+      1. calibration fit graph
+      2. measured peak position versus expected coupling graph
 
     Notes
     -----
@@ -66,6 +71,9 @@ class Calibration:
                 dbc.CardBody(
                     [
                         dash.dcc.Store(id=self.page.ids.Calibration.graph_store),
+                        dash.dcc.Store(
+                            id=f"{self.page.ids.Calibration.graph_store}-model",
+                        ),
                         dash.dcc.Store(id=self.page.ids.Calibration.calibration_store),
                         self._build_graph_block(),
                         dash.html.Br(),
@@ -83,11 +91,37 @@ class Calibration:
     def _build_graph_block(self) -> dash.html.Div:
         return dash.html.Div(
             [
-                dash.dcc.Graph(
-                    id=self.page.ids.Calibration.graph_calibration,
-                    style=self.page.style["graph"],
+                dash.html.Div(
+                    [
+                        dash.dcc.Graph(
+                            id=self.page.ids.Calibration.graph_calibration,
+                            style=self.page.style["graph"],
+                        ),
+                    ],
+                    style={
+                        "flex": "1",
+                        "minWidth": "0",
+                    },
                 ),
-            ]
+                dash.html.Div(
+                    [
+                        dash.dcc.Graph(
+                            id=f"{self.page.ids.Calibration.graph_calibration}-model",
+                            style=self.page.style["graph"],
+                        ),
+                    ],
+                    style={
+                        "flex": "1",
+                        "minWidth": "0",
+                    },
+                ),
+            ],
+            style={
+                "display": "flex",
+                "gap": "16px",
+                "alignItems": "stretch",
+                "width": "100%",
+            },
         )
 
     def _build_fit_outputs_block(self) -> dash.html.Div:
@@ -111,6 +145,7 @@ class Calibration:
     def register_callbacks(self) -> None:
         @dash.callback(
             dash.Output(self.page.ids.Calibration.graph_store, "data"),
+            dash.Output(f"{self.page.ids.Calibration.graph_store}-model", "data"),
             dash.Output(self.page.ids.Calibration.calibration_store, "data"),
             dash.Output(
                 self.page.ids.Calibration.bead_table,
@@ -167,20 +202,22 @@ class Calibration:
 
             try:
                 if not uploaded_fcs_path:
-                    logger.debug("Calibration aborted because uploaded_fcs_path is missing.")
-                    figure = _make_info_figure("Upload an FCS file first.")
+                    calibration_figure = _make_info_figure("Upload an FCS file first.")
+                    model_figure = _make_info_figure("Upload an FCS file first.")
                     return CalibrationResult(
-                        figure_store=figure.to_dict(),
+                        figure_store=calibration_figure.to_dict(),
+                        model_figure_store=model_figure.to_dict(),
                         calibration_store=dash.no_update,
                         bead_table_data=dash.no_update,
                         apply_status="Missing FCS file.",
                     ).to_tuple()
 
                 if not detector_column:
-                    logger.debug("Calibration aborted because detector_column is missing.")
-                    figure = _make_info_figure("Select a scattering detector first.")
+                    calibration_figure = _make_info_figure("Select a scattering detector first.")
+                    model_figure = _make_info_figure("Select a scattering detector first.")
                     return CalibrationResult(
-                        figure_store=figure.to_dict(),
+                        figure_store=calibration_figure.to_dict(),
+                        model_figure_store=model_figure.to_dict(),
                         calibration_store=dash.no_update,
                         bead_table_data=dash.no_update,
                         apply_status="Missing scattering detector.",
@@ -249,21 +286,31 @@ class Calibration:
                     )
 
                     if parsed_core_shell_rows["row_count"] < 2:
-                        figure = _make_info_figure(
+                        calibration_figure = _make_info_figure(
+                            "Enter at least 2 valid core shell rows with measured peak positions."
+                        )
+                        model_figure = _make_info_figure(
                             "Enter at least 2 valid core shell rows with measured peak positions."
                         )
                         return CalibrationResult(
-                            figure_store=figure.to_dict(),
+                            figure_store=calibration_figure.to_dict(),
+                            model_figure_store=model_figure.to_dict(),
                             calibration_store=dash.no_update,
                             bead_table_data=dash.no_update,
                             apply_status="Need at least 2 valid core shell rows.",
                         ).to_tuple()
 
-                    figure = _make_info_figure(
+                    calibration_figure = _make_info_figure(
                         "Core/Shell Sphere coupling is not implemented yet in the scattering backend."
                     )
+                    model_figure = self._build_core_shell_placeholder_figure(
+                        measured_peak_positions=parsed_core_shell_rows["measured_peak_positions"],
+                        outer_diameters_nm=parsed_core_shell_rows["outer_diameters_nm"],
+                    )
+
                     return CalibrationResult(
-                        figure_store=figure.to_dict(),
+                        figure_store=calibration_figure.to_dict(),
+                        model_figure_store=model_figure.to_dict(),
                         calibration_store=dash.no_update,
                         bead_table_data=current_table_rows,
                         apply_status=(
@@ -290,11 +337,15 @@ class Calibration:
                 )
 
                 if parsed_sphere_rows["row_count"] < 2:
-                    figure = _make_info_figure(
+                    calibration_figure = _make_info_figure(
+                        "Enter at least 2 valid rows with particle diameter and measured peak position."
+                    )
+                    model_figure = _make_info_figure(
                         "Enter at least 2 valid rows with particle diameter and measured peak position."
                     )
                     return CalibrationResult(
-                        figure_store=figure.to_dict(),
+                        figure_store=calibration_figure.to_dict(),
+                        model_figure_store=model_figure.to_dict(),
                         calibration_store=dash.no_update,
                         bead_table_data=dash.no_update,
                         apply_status="Need at least 2 valid calibration rows.",
@@ -333,8 +384,23 @@ class Calibration:
                     fit_result.r_squared,
                 )
 
-                figure = scattering_backend.build_calibration_figure(
+                calibration_figure = scattering_backend.build_calibration_figure(
                     fit_result=fit_result,
+                )
+
+                model_figure = self._build_model_comparison_figure(
+                    measured_peak_positions=np.asarray(
+                        parsed_sphere_rows["measured_peak_positions"],
+                        dtype=float,
+                    ),
+                    expected_coupling_values=np.asarray(
+                        fit_result.expected_coupling_values,
+                        dtype=float,
+                    ),
+                    particle_diameters_nm=np.asarray(
+                        parsed_sphere_rows["particle_diameters_nm"],
+                        dtype=float,
+                    ),
                 )
 
                 calibration_payload = scattering_backend.build_calibration_payload(
@@ -375,7 +441,8 @@ class Calibration:
                 )
 
                 return CalibrationResult(
-                    figure_store=figure.to_dict(),
+                    figure_store=calibration_figure.to_dict(),
+                    model_figure_store=model_figure.to_dict(),
                     calibration_store=calibration_payload,
                     bead_table_data=updated_table_rows,
                     slope_out=f"{fit_result.slope:.6g}",
@@ -386,9 +453,11 @@ class Calibration:
 
             except Exception as exc:
                 logger.exception("Scattering calibration failed.")
-                figure = _make_info_figure("Scattering calibration failed.")
+                calibration_figure = _make_info_figure("Scattering calibration failed.")
+                model_figure = _make_info_figure("Scattering calibration failed.")
                 return CalibrationResult(
-                    figure_store=figure.to_dict(),
+                    figure_store=calibration_figure.to_dict(),
+                    model_figure_store=model_figure.to_dict(),
                     calibration_store=dash.no_update,
                     bead_table_data=dash.no_update,
                     slope_out="",
@@ -405,8 +474,81 @@ class Calibration:
         def update_calibration_graph(stored_figure: Any) -> go.Figure:
             if not stored_figure:
                 return _make_info_figure("Fit a calibration first.")
-
             return go.Figure(stored_figure)
+
+        @dash.callback(
+            dash.Output(f"{self.page.ids.Calibration.graph_calibration}-model", "figure"),
+            dash.Input(f"{self.page.ids.Calibration.graph_store}-model", "data"),
+            prevent_initial_call=False,
+        )
+        def update_model_graph(stored_figure: Any) -> go.Figure:
+            if not stored_figure:
+                return _make_info_figure("Fit a calibration first.")
+            return go.Figure(stored_figure)
+
+    def _build_model_comparison_figure(
+        self,
+        *,
+        measured_peak_positions: np.ndarray,
+        expected_coupling_values: np.ndarray,
+        particle_diameters_nm: np.ndarray,
+    ) -> go.Figure:
+        figure = go.Figure()
+
+        hover_text = [
+            f"Diameter: {float(diameter):.6g} nm"
+            for diameter in particle_diameters_nm
+        ]
+
+        figure.add_trace(
+            go.Scatter(
+                x=measured_peak_positions,
+                y=expected_coupling_values,
+                mode="markers+text",
+                text=[f"{float(diameter):.6g} nm" for diameter in particle_diameters_nm],
+                textposition="top center",
+                hovertext=hover_text,
+                hoverinfo="x+y+text",
+                name="Reference points",
+            )
+        )
+
+        figure.update_layout(
+            title="Measured peak vs expected coupling",
+            xaxis_title="Measured peak position [a.u.]",
+            yaxis_title="Expected coupling",
+            separators=".,",
+            hovermode="closest",
+        )
+        return figure
+
+    def _build_core_shell_placeholder_figure(
+        self,
+        *,
+        measured_peak_positions: np.ndarray,
+        outer_diameters_nm: np.ndarray,
+    ) -> go.Figure:
+        figure = go.Figure()
+
+        figure.add_trace(
+            go.Scatter(
+                x=measured_peak_positions,
+                y=outer_diameters_nm,
+                mode="markers+text",
+                text=[f"{float(value):.6g} nm" for value in outer_diameters_nm],
+                textposition="top center",
+                name="Parsed rows",
+            )
+        )
+
+        figure.update_layout(
+            title="Parsed core shell rows",
+            xaxis_title="Measured peak position [a.u.]",
+            yaxis_title="Outer diameter [nm]",
+            separators=".,",
+            hovermode="closest",
+        )
+        return figure
 
     def _resolve_mie_model(self, mie_model: Any) -> str:
         mie_model_string = "" if mie_model is None else str(mie_model).strip()

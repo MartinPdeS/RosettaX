@@ -52,8 +52,15 @@ class Calibration:
     def __init__(self, page) -> None:
         self.page = page
         self.runtime_config = RuntimeConfig()
-        self.default = self.runtime_config.Default
         logger.debug("Initialized CalibrationSection with page=%r", page)
+
+    def _refresh_runtime(self) -> RuntimeConfig:
+        self.runtime_config = RuntimeConfig()
+        return self.runtime_config
+
+    def _get_default_mesf_values(self) -> Any:
+        runtime_config = self._refresh_runtime()
+        return runtime_config.get_path("calibration.mesf_values", default=[])
 
     def get_layout(self) -> dbc.Card:
         logger.debug("Building calibration section layout.")
@@ -103,10 +110,12 @@ class Calibration:
         )
 
     def _build_bead_table(self) -> dash.dash_table.DataTable:
-        bead_rows = self._build_bead_rows_from_mesf_values(self.default.mesf_values)
+        default_mesf_values = self._get_default_mesf_values()
+        bead_rows = self._build_bead_rows_from_mesf_values(default_mesf_values)
+
         logger.debug(
-            "Building bead table with default mesf_values=%r resulting rows=%r",
-            self.default.mesf_values,
+            "Building bead table with default_mesf_values=%r resulting rows=%r",
+            default_mesf_values,
             bead_rows,
         )
 
@@ -146,23 +155,8 @@ class Calibration:
     def _build_graph_block(self) -> dash.html.Div:
         return dash.html.Div(
             [
-                self._build_graph_toggle_switch(),
-                dash.html.Br(),
                 self._build_graph_container(),
             ]
-        )
-
-    def _build_graph_toggle_switch(self) -> dash.html.Div:
-        return dash.html.Div(
-            [
-                dbc.Checklist(
-                    id=self.page.ids.Calibration.graph_toggle_switch,
-                    options=[{"label": "Show calibration plot", "value": "enabled"}],
-                    value=["enabled"] if self.default.show_graphs else [],
-                    switch=True,
-                ),
-            ],
-            style={"marginTop": "10px"},
         )
 
     def _build_graph_container(self) -> dash.html.Div:
@@ -177,7 +171,7 @@ class Calibration:
                 ),
             ],
             id=self.page.ids.Calibration.graph_toggle_container,
-            style={"display": "none"},
+            style={"display": "block"},
         )
 
     def _build_fit_outputs_block(self) -> dash.html.Div:
@@ -246,30 +240,20 @@ class Calibration:
         y_true = np.asarray(y_true, dtype=float)
         y_pred = np.asarray(y_pred, dtype=float)
 
-        mask = np.isfinite(y_true) & np.isfinite(y_pred)
-        y_true = y_true[mask]
-        y_pred = y_pred[mask]
+        finite_mask = np.isfinite(y_true) & np.isfinite(y_pred)
+        y_true = y_true[finite_mask]
+        y_pred = y_pred[finite_mask]
 
         if y_true.size < 2:
             return float("nan")
 
-        ss_res = float(np.sum((y_true - y_pred) ** 2))
-        ss_tot = float(np.sum((y_true - float(np.mean(y_true))) ** 2))
+        sum_squared_residuals = float(np.sum((y_true - y_pred) ** 2))
+        sum_squared_total = float(np.sum((y_true - float(np.mean(y_true))) ** 2))
 
-        if ss_tot <= 0.0:
+        if sum_squared_total <= 0.0:
             return float("nan")
 
-        return 1.0 - ss_res / ss_tot
-
-    @staticmethod
-    def _is_graph_enabled(graph_toggle_value: Any) -> bool:
-        enabled = isinstance(graph_toggle_value, list) and ("enabled" in graph_toggle_value)
-        logger.debug(
-            "_is_graph_enabled called with graph_toggle_value=%r resolved=%r",
-            graph_toggle_value,
-            enabled,
-        )
-        return enabled
+        return 1.0 - sum_squared_residuals / sum_squared_total
 
     def _build_calibration_figure(
         self,
@@ -315,16 +299,14 @@ class Calibration:
                 runtime_config_data,
             )
 
-            if not isinstance(runtime_config_data, dict):
-                default_rows = self._build_bead_rows_from_mesf_values(self.default.mesf_values)
-                logger.debug(
-                    "Runtime config data is not a dict. Returning default bead rows=%r",
-                    default_rows,
-                )
-                return default_rows
+            runtime_config = self._refresh_runtime()
 
-            mesf_values = runtime_config_data.get("mesf_values", self.default.mesf_values)
+            if isinstance(runtime_config_data, dict):
+                runtime_config.Default.load_dict(runtime_config_data)
+
+            mesf_values = runtime_config.get_path("calibration.mesf_values", default=[])
             resolved_rows = self._build_bead_rows_from_mesf_values(mesf_values)
+
             logger.debug(
                 "Resolved bead rows from runtime store mesf_values=%r rows=%r",
                 mesf_values,
@@ -333,64 +315,17 @@ class Calibration:
             return resolved_rows
 
         @dash.callback(
-            dash.Output(self.page.ids.Calibration.graph_toggle_switch, "value"),
-            dash.Input("runtime-config-store", "data"),
-            prevent_initial_call=False,
-        )
-        def sync_calibration_graph_toggle_from_runtime_store(runtime_config_data: Any) -> list[str]:
-            if not isinstance(runtime_config_data, dict):
-                logger.debug(
-                    "sync_calibration_graph_toggle_from_runtime_store received non-dict payload=%r. Using Default.show_graphs=%r",
-                    runtime_config_data,
-                    self.default.show_graphs,
-                )
-                return ["enabled"] if self.default.show_graphs else []
-
-            resolved_show_graphs = bool(
-                runtime_config_data.get("show_graphs", self.default.show_graphs)
-            )
-            logger.debug(
-                "sync_calibration_graph_toggle_from_runtime_store resolved_show_graphs=%r from runtime_config_data=%r",
-                resolved_show_graphs,
-                runtime_config_data,
-            )
-            return ["enabled"] if resolved_show_graphs else []
-
-        @dash.callback(
-            dash.Output(self.page.ids.Calibration.graph_toggle_container, "style"),
-            dash.Input(self.page.ids.Calibration.graph_toggle_switch, "value"),
-            prevent_initial_call=False,
-        )
-        def toggle_calibration_graph_container(graph_toggle_value: Any) -> dict:
-            graph_enabled = self._is_graph_enabled(graph_toggle_value)
-            logger.debug(
-                "toggle_calibration_graph_container called with graph_toggle_value=%r resolved graph_enabled=%r",
-                graph_toggle_value,
-                graph_enabled,
-            )
-            return {"display": "block"} if graph_enabled else {"display": "none"}
-
-        @dash.callback(
             dash.Output(self.page.ids.Calibration.graph_calibration, "figure"),
-            dash.Input(self.page.ids.Calibration.graph_toggle_switch, "value"),
             dash.Input(self.page.ids.Calibration.graph_store, "data"),
             prevent_initial_call=False,
         )
         def update_calibration_graph(
-            graph_toggle_value: Any,
             stored_figure: Any,
         ) -> go.Figure:
-            graph_enabled = self._is_graph_enabled(graph_toggle_value)
             logger.debug(
-                "update_calibration_graph called with graph_toggle_value=%r graph_enabled=%r stored_figure_type=%s",
-                graph_toggle_value,
-                graph_enabled,
+                "update_calibration_graph called with stored_figure_type=%s",
                 type(stored_figure).__name__,
             )
-
-            if not graph_enabled:
-                logger.debug("Calibration graph is hidden. Returning info figure.")
-                return _make_info_figure("Calibration plot is hidden.")
 
             if not stored_figure:
                 logger.debug("No stored calibration figure available. Returning info figure.")

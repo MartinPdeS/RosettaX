@@ -176,7 +176,6 @@ class Apply:
             dash.Input(self.page.ids.Export.apply_and_export_button, "n_clicks"),
             dash.State(self.page.ids.Stores.uploaded_fcs_path_store, "data"),
             dash.State(self.page.ids.Stores.selected_calibration_path_store, "data"),
-            dash.State(self.page.ids.ChannelPicker.dropdown, "value"),
             dash.State(self.page.ids.Export.export_columns_dropdown, "value"),
             prevent_initial_call=True,
         )
@@ -184,15 +183,13 @@ class Apply:
             n_clicks: int,
             uploaded_fcs_path: Any,
             selected_calibration: Any,
-            target_channel: Any,
             export_columns: Any,
         ) -> tuple:
             logger.debug(
-                "apply_and_export_calibration called with n_clicks=%r uploaded_fcs_path=%r selected_calibration=%r target_channel=%r export_columns=%r",
+                "apply_and_export_calibration called with n_clicks=%r uploaded_fcs_path=%r selected_calibration=%r export_columns=%r",
                 n_clicks,
                 uploaded_fcs_path,
                 selected_calibration,
-                target_channel,
                 export_columns,
             )
             del n_clicks
@@ -211,21 +208,24 @@ class Apply:
                     dash.no_update,
                 )
 
-            if not target_channel:
-                return (
-                    "Select a target channel first.",
-                    dash.no_update,
-                )
-
-            resolved_export_columns = self._normalize_export_columns(export_columns)
-            final_export_columns = self._build_final_export_columns(
-                target_channel=target_channel,
-                export_columns=resolved_export_columns,
-            )
-
             try:
                 calibration_file_path = self._resolve_calibration_file_path(selected_calibration)
                 calibration_payload = self._load_calibration_payload(calibration_file_path)
+
+                print(calibration_payload, "---------------------------------------------------------------")
+
+                target_channel = str(calibration_payload.get("source_channel", "")).strip()
+                if not target_channel:
+                    return (
+                        'Calibration payload is missing "source_channel".',
+                        dash.no_update,
+                    )
+
+                resolved_export_columns = self._normalize_export_columns(export_columns)
+                final_export_columns = self._build_final_export_columns(
+                    target_channel=target_channel,
+                    export_columns=resolved_export_columns,
+                )
 
                 if len(resolved_uploaded_fcs_paths) == 1:
                     single_uploaded_fcs_path = resolved_uploaded_fcs_paths[0]
@@ -238,10 +238,10 @@ class Apply:
                         )
 
                         calibrated_values = self._apply_calibration_to_series(
-                            values=export_dataframe[str(target_channel)].to_numpy(copy=True),
+                            values=export_dataframe[target_channel].to_numpy(copy=True),
                             calibration_payload=calibration_payload,
                         )
-                        export_dataframe[str(target_channel)] = calibrated_values
+                        export_dataframe[target_channel] = calibrated_values
 
                         builder = FCSFile.builder_from_dataframe(
                             export_dataframe,
@@ -252,13 +252,14 @@ class Apply:
 
                     download_filename = self._build_export_filename(
                         uploaded_fcs_path=single_uploaded_fcs_path,
-                        target_channel=str(target_channel),
+                        target_channel=target_channel,
                     )
 
                     logger.debug(
-                        "Single-file calibration export succeeded with download_filename=%r exported_columns=%r",
+                        "Single-file calibration export succeeded with download_filename=%r exported_columns=%r target_channel=%r",
                         download_filename,
                         final_export_columns,
+                        target_channel,
                     )
 
                     return (
@@ -271,22 +272,21 @@ class Apply:
 
                 zip_bytes = self._build_zip_of_calibrated_files(
                     uploaded_fcs_paths=resolved_uploaded_fcs_paths,
-                    target_channel=str(target_channel),
+                    target_channel=target_channel,
                     final_export_columns=final_export_columns,
                     calibration_payload=calibration_payload,
                 )
 
                 zip_filename = self._build_zip_filename(
-                    target_channel=str(target_channel),
+                    target_channel=target_channel,
                     file_count=len(resolved_uploaded_fcs_paths),
                 )
 
             except Exception as exc:
                 logger.exception(
-                    "Failed to apply and export calibration for uploaded_fcs_path=%r selected_calibration=%r target_channel=%r",
+                    "Failed to apply and export calibration for uploaded_fcs_path=%r selected_calibration=%r",
                     uploaded_fcs_path,
                     selected_calibration,
-                    target_channel,
                 )
                 return (
                     f"Failed to apply and export calibration: {type(exc).__name__}: {exc}",
@@ -294,10 +294,11 @@ class Apply:
                 )
 
             logger.debug(
-                "Multi-file calibration export succeeded with zip_filename=%r exported_columns=%r file_count=%r",
+                "Multi-file calibration export succeeded with zip_filename=%r exported_columns=%r file_count=%r target_channel=%r",
                 zip_filename,
                 final_export_columns,
                 len(resolved_uploaded_fcs_paths),
+                target_channel,
             )
 
             return (
@@ -361,7 +362,7 @@ class Apply:
         folder_name, file_name = selected_calibration_str.split("/", 1)
 
         if folder_name == "fluorescence":
-            return Path(directories.fluorescence_calibration_directory) / file_name
+            return Path(directories.fluorescence_calibration) / file_name
 
         if folder_name == "scattering":
             return Path(directories.scattering_calibration_directory) / file_name
@@ -371,12 +372,21 @@ class Apply:
     @staticmethod
     def _load_calibration_payload(calibration_file_path: Path) -> dict[str, Any]:
         record = json.loads(calibration_file_path.read_text(encoding="utf-8"))
-        payload = record.get("payload")
 
-        if not isinstance(payload, dict):
-            raise ValueError("Calibration file payload is missing or invalid.")
+        if not isinstance(record, dict):
+            raise ValueError("Calibration file root record is invalid.")
 
-        return payload
+        outer_payload = record.get("payload")
+        if not isinstance(outer_payload, dict):
+            raise ValueError('Calibration file is missing top-level "payload".')
+
+        logger.debug(
+            "Loaded calibration file=%r with top-level payload keys=%r",
+            str(calibration_file_path),
+            list(outer_payload.keys()),
+        )
+
+        return outer_payload
 
     @staticmethod
     def _apply_calibration_to_series(
@@ -384,18 +394,65 @@ class Apply:
         values: np.ndarray,
         calibration_payload: dict[str, Any],
     ) -> np.ndarray:
-        if "slope" in calibration_payload:
-            slope = float(calibration_payload["slope"])
-            intercept = float(calibration_payload.get("intercept", 0.0))
-            return slope * np.asarray(values, dtype=float) + intercept
+        values_array = np.asarray(values, dtype=float)
 
-        if "scale" in calibration_payload:
-            scale = float(calibration_payload["scale"])
+        if not isinstance(calibration_payload, dict):
+            raise ValueError("Calibration payload must be a dictionary.")
+
+        nested_parameters = calibration_payload.get("parameters")
+        if not isinstance(nested_parameters, dict):
+            nested_parameters = {}
+
+        nested_payload = calibration_payload.get("payload")
+        if not isinstance(nested_payload, dict):
+            nested_payload = {}
+
+        fit_model = str(calibration_payload.get("fit_model", "")).strip()
+        nested_model = str(nested_payload.get("model", "")).strip()
+        resolved_model = fit_model or nested_model
+
+        if "log10(y)=slope*log10(x)+intercept" in resolved_model:
+            slope_value = nested_parameters.get("slope", nested_payload.get("slope"))
+            intercept_value = nested_parameters.get("intercept", nested_payload.get("intercept"))
+            prefactor_value = nested_parameters.get("prefactor", nested_payload.get("prefactor"))
+
+            if slope_value is None or intercept_value is None:
+                raise ValueError(
+                    "Log calibration payload is missing slope or intercept."
+                )
+
+            slope = float(slope_value)
+            intercept = float(intercept_value)
+            prefactor = float(prefactor_value) if prefactor_value is not None else float(10 ** intercept)
+
+            if np.any(values_array < 0):
+                raise ValueError("Log calibration cannot be applied to negative values.")
+
+            calibrated_values = np.zeros_like(values_array, dtype=float)
+            positive_mask = values_array > 0
+            calibrated_values[positive_mask] = prefactor * np.power(
+                values_array[positive_mask],
+                slope,
+            )
+            calibrated_values[~positive_mask] = 0.0
+
+            return calibrated_values
+
+        top_level_slope = calibration_payload.get("slope")
+        top_level_intercept = calibration_payload.get("intercept")
+        if top_level_slope is not None and top_level_intercept is not None:
+            slope = float(top_level_slope)
+            intercept = float(top_level_intercept)
+            return slope * values_array + intercept
+
+        top_level_scale = calibration_payload.get("scale")
+        if top_level_scale is not None:
+            scale = float(top_level_scale)
             offset = float(calibration_payload.get("offset", 0.0))
-            return scale * np.asarray(values, dtype=float) + offset
+            return scale * values_array + offset
 
         raise ValueError(
-            'Unsupported calibration payload format. Expected "slope"/"intercept" or "scale"/"offset".'
+            'Unsupported calibration payload format. Expected a log model, "slope"/"intercept", or "scale"/"offset".'
         )
 
     def _build_zip_of_calibrated_files(

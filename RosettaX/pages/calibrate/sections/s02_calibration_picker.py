@@ -69,22 +69,18 @@ class CalibrationPicker:
         @dash.callback(
             dash.Output(self.page.ids.CalibrationPicker.dropdown, "options"),
             dash.Output(self.page.ids.CalibrationPicker.dropdown, "value"),
-            dash.Output(self.page.ids.Stores.selected_calibration_path_store, "data"),
             dash.Input(self.page.ids.CalibrationPicker.refresh_button, "n_clicks"),
             dash.Input(self.page.ids.Page.location, "search"),
-            dash.State(self.page.ids.CalibrationPicker.dropdown, "value"),
             prevent_initial_call=False,
         )
         def refresh_calibration_picker(
             refresh_button_clicks: Optional[int],
             search: Optional[str],
-            current_dropdown_value: Any,
-        ) -> tuple[list[dict[str, str]], Optional[str], Optional[str]]:
+        ) -> tuple[list[dict[str, str]], Optional[str]]:
             logger.debug(
-                "refresh_calibration_picker called with refresh_button_clicks=%r search=%r current_dropdown_value=%r",
+                "refresh_calibration_picker called with refresh_button_clicks=%r search=%r",
                 refresh_button_clicks,
                 search,
-                current_dropdown_value,
             )
 
             dropdown_options = self._build_dropdown_options()
@@ -111,16 +107,6 @@ class CalibrationPicker:
                     resolved_dropdown_value,
                 )
 
-            elif (
-                current_dropdown_value is not None
-                and str(current_dropdown_value) in allowed_values
-            ):
-                resolved_dropdown_value = str(current_dropdown_value)
-                logger.debug(
-                    "Keeping current dropdown selection=%r",
-                    resolved_dropdown_value,
-                )
-
             elif dropdown_options:
                 resolved_dropdown_value = str(dropdown_options[0]["value"])
                 logger.debug(
@@ -135,8 +121,33 @@ class CalibrationPicker:
             return (
                 dropdown_options,
                 resolved_dropdown_value,
-                resolved_dropdown_value,
             )
+
+        @dash.callback(
+            dash.Output(self.page.ids.Stores.selected_calibration_path_store, "data"),
+            dash.Input(self.page.ids.CalibrationPicker.dropdown, "value"),
+            prevent_initial_call=False,
+        )
+        def sync_selected_calibration_store(
+            selected_dropdown_value: Optional[str],
+        ) -> Optional[str]:
+            logger.debug(
+                "sync_selected_calibration_store called with selected_dropdown_value=%r",
+                selected_dropdown_value,
+            )
+
+            if selected_dropdown_value is None:
+                return None
+
+            resolved_selected_dropdown_value = str(selected_dropdown_value).strip()
+            if not resolved_selected_dropdown_value:
+                return None
+
+            logger.debug(
+                "Updating selected_calibration_path_store=%r",
+                resolved_selected_dropdown_value,
+            )
+            return resolved_selected_dropdown_value
 
     def _build_dropdown_options(self) -> list[dict[str, str]]:
         logger.debug("Building calibration dropdown options from disk")

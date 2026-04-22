@@ -1,31 +1,58 @@
 {
-    "show_graphs": true,
-
-    "fluorescence_page_scattering_detector": null,
-    "fluorescence_page_fluorescence_detector": null,
-
-
-    "wavelength_nm": "502",
-    "medium_refractive_index": 1.334,
-    "core_refractive_index": 1.5,
-    "shell_refractive_index": 1.5,
-    "shell_thickness_nm": "20",
-    "core_diameter_nm": "100",
-    "max_events_for_analysis": 10000,
-    "particle_diameter_nm": "100, 200, 201",
-    "particle_refractive_index": 1.59,
-    "max_events_for_analysis": 100,
-    "n_bins_for_plots": 100,
-    "peak_count": 4,
-    "mie_model": "Core/Shell Sphere",
-    "mesf_values": "1, 3, 4, 5",
-    "fcs_file_path": "/var/folders/nx/6l9ysx0j7yb5szphhl8jskyh0000gn/T/rosettax_uploads/z17idfod.fcs",
-    "default_gating_channel": "",
-    "default_gating_threshold": "",
-    "show_calibration_plot_by_default": "no",
-    "histogram_scale": "log",
-    "default_output_suffix": "_calibrated",
-    "operator_name": "",
-    "instrument_name": "",
-    "theme_mode": "light"
+    "schema_version": "1.0",
+    "files": {
+        "fluorescence_fcs_file_path": null,
+        "scattering_fcs_file_path": null
+    },
+    "page_defaults": {
+        "fluorescence": {
+            "scattering_detector": null,
+            "fluorescence_detector": null
+        }
+    },
+    "optics": {
+        "wavelength_nm": 488.0,
+        "medium_refractive_index": 1.334
+    },
+    "particle_model": {
+        "mie_model": "Solid Sphere",
+        "particle_refractive_index": 1.59,
+        "core_refractive_index": 1.5,
+        "shell_refractive_index": 1.5,
+        "particle_diameter_nm": [
+            100.0,
+            200.0,
+            201.0
+        ],
+        "core_diameter_nm": [
+            100.0
+        ],
+        "shell_thickness_nm": [
+            20.0
+        ]
+    },
+    "calibration": {
+        "mesf_values": [
+            1.0,
+            3.0,
+            4.0,
+            5.0
+        ],
+        "peak_count": 4,
+        "max_events_for_analysis": 10000,
+        "n_bins_for_plots": 100,
+        "default_gating_channel": null,
+        "default_gating_threshold": null,
+        "show_calibration_plot_by_default": false,
+        "histogram_scale": "log",
+        "default_output_suffix": "_calibrated"
+    },
+    "metadata": {
+        "operator_name": null,
+        "instrument_name": null
+    },
+    "app": {
+        "theme_mode": "dark",
+        "show_graphs": true
+    }
 }

@@ -26,7 +26,8 @@ class Ids:
         values_profile_dropdown = "values_profile_dropdown"
 
         n_bins_for_plots = "n_bins_for_plots"
-        fcs_file_path = "fcs_file_path"
+        fluorescence_fcs_file_path = "fluorescence_fcs_file_path"
+        scattering_fcs_file_path = "scattering_fcs_file_path"
 
         shell_thickness_nm = "shell_thickness_nm"
         core_diameter_nm = "core_diameter_nm"

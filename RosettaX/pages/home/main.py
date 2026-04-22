@@ -25,8 +25,6 @@ class HomePage:
                 html.Div(style={"height": "20px"}),
                 self._primary_actions_row(),
                 html.Div(style={"height": "20px"}),
-                self._workflow_and_reuse_row(),
-                html.Div(style={"height": "20px"}),
                 self._project_links_row(),
                 html.Div(style={"height": "20px"}),
                 self._tips_row(),
@@ -106,68 +104,6 @@ class HomePage:
             button_id=self._id("apply-link"),
         )
 
-    def _workflow_and_reuse_row(self) -> dbc.Row:
-        return dbc.Row(
-            [
-                dbc.Col(self._workflow_card(), md=7),
-                dbc.Col(self._reuse_card(), md=5),
-            ],
-            className="g-3",
-        )
-
-    def _workflow_card(self) -> dbc.Card:
-        return dbc.Card(
-            [
-                dbc.CardHeader("Typical workflow"),
-                dbc.CardBody(
-                    [
-                        html.Ol(
-                            [
-                                html.Li("Choose fluorescence or scattering calibration."),
-                                html.Li("Upload the FCS file used for calibration."),
-                                html.Li("Select the relevant channels and review the intermediate outputs."),
-                                html.Li("Fit and save the calibration as JSON."),
-                                html.Li("Reuse the saved calibration later from the sidebar or the apply page."),
-                            ],
-                            style={"marginBottom": "0px"},
-                        )
-                    ]
-                ),
-            ],
-            style={"height": "100%"},
-        )
-
-    def _reuse_card(self) -> dbc.Card:
-        return dbc.Card(
-            [
-                dbc.CardHeader("Reuse saved calibrations"),
-                dbc.CardBody(
-                    [
-                        html.P(
-                            "Saved calibrations appear in the sidebar and can be opened directly.",
-                            style={"opacity": 0.9},
-                        ),
-                        html.Ul(
-                            [
-                                html.Li("Click the calibration name to inspect its JSON content."),
-                                html.Li("Click Apply to open the apply page with that calibration preselected."),
-                                html.Li("Use Refresh in the sidebar if you added files manually."),
-                            ],
-                            style={"marginBottom": "16px"},
-                        ),
-                        dbc.Button(
-                            "Open apply page",
-                            href="/apply-calibration",
-                            id=self._id("reuse-apply"),
-                            color="primary",
-                            outline=True,
-                        ),
-                    ]
-                ),
-            ],
-            style={"height": "100%"},
-        )
-
     def _project_links_row(self) -> dbc.Row:
         return dbc.Row(
             [
@@ -218,7 +154,7 @@ class HomePage:
                                             [
                                                 html.H5("PyPI", style={"marginTop": "0px"}),
                                                 html.P(
-                                                    "Open the Python package page and installation metadata.",
+                                                    "Open the PyPi Python package page.",
                                                     style={"opacity": 0.9},
                                                 ),
                                                 dbc.Button(

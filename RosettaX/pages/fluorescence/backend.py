@@ -25,13 +25,6 @@ logger = logging.getLogger(__name__)
 class FluorescencePeakResult:
     """
     Output payload for fluorescence peak finding and table injection.
-
-    Attributes
-    ----------
-    updated_table_data : list[dict[str, Any]]
-        Table rows updated with inferred fluorescence peaks.
-    peak_lines_payload : dict[str, list[Any]]
-        Plot annotation payload with peak positions and labels.
     """
 
     updated_table_data: list[dict[str, Any]]
@@ -41,23 +34,9 @@ class FluorescencePeakResult:
 class FluorescenceCalibration:
     """
     Linear calibration mapping intensity in arbitrary units to MESF.
-
-    Model
-    -----
-    MESF = slope * intensity + intercept
     """
 
     def __init__(self, MESF: np.ndarray, intensity: np.ndarray):
-        """
-        Fit a linear fluorescence calibration.
-
-        Parameters
-        ----------
-        MESF : np.ndarray
-            Molecules of Equivalent Soluble Fluorochrome.
-        intensity : np.ndarray
-            Fluorescence intensity in arbitrary units.
-        """
         x = np.asarray(intensity, dtype=float).reshape(-1)
         y = np.asarray(MESF, dtype=float).reshape(-1)
 
@@ -82,31 +61,10 @@ class FluorescenceCalibration:
         )
 
     def calibrate(self, intensity: np.ndarray) -> np.ndarray:
-        """
-        Convert intensity values to MESF using the fitted model.
-
-        Parameters
-        ----------
-        intensity : np.ndarray
-            Fluorescence intensity values in arbitrary units.
-
-        Returns
-        -------
-        np.ndarray
-            Calibrated MESF values.
-        """
         x = np.asarray(intensity, dtype=float)
         return self.slope * x + self.intercept
 
     def calculate_r_squared(self) -> float:
-        """
-        Calculate the coefficient of determination.
-
-        Returns
-        -------
-        float
-            R squared value.
-        """
         y_pred = self.slope * self.intensity + self.intercept
         ss_res = np.sum((self.MESF - y_pred) ** 2)
         ss_tot = np.sum((self.MESF - self.MESF.mean()) ** 2)
@@ -117,14 +75,6 @@ class FluorescenceCalibration:
         return float(1.0 - ss_res / ss_tot)
 
     def to_dict(self) -> dict[str, float]:
-        """
-        Serialize calibration parameters.
-
-        Returns
-        -------
-        dict[str, float]
-            Dictionary containing slope, intercept, and R squared.
-        """
         return {
             "slope": float(self.slope),
             "intercept": float(self.intercept),
@@ -133,19 +83,6 @@ class FluorescenceCalibration:
 
     @classmethod
     def from_dict(cls, payload: dict[str, Any]) -> "FluorescenceCalibration":
-        """
-        Reconstruct a calibration from stored parameters.
-
-        Parameters
-        ----------
-        payload : dict[str, Any]
-            Dictionary containing slope, intercept, and R squared.
-
-        Returns
-        -------
-        FluorescenceCalibration
-            Calibration instance with parameters restored from the payload.
-        """
         obj = cls.__new__(cls)
         obj.slope = float(payload["slope"])
         obj.intercept = float(payload["intercept"])
@@ -158,55 +95,45 @@ class FluorescenceCalibration:
 class BackEnd:
     """
     File bound analysis backend for fluorescence and scattering operations.
-
-    Responsibilities
-    ----------------
-    - Manage and validate an active FCS file path.
-    - Expose detector column names for UI dropdowns.
-    - Estimate scattering thresholds.
-    - Fit and apply fluorescence calibrations.
-    - Build fluorescence histogram payloads.
-    - Find fluorescence peaks, optionally after scattering gating.
-    - Export calibrated files.
-
-    Notes
-    -----
-    This class contains file bound numerical logic only.
-    Persistence of calibration JSON files belongs in the service layer.
     """
 
     def __init__(self, file_path: Optional[str | Path] = None) -> None:
-        """
-        Initialize the backend.
-
-        Parameters
-        ----------
-        file_path : Optional[str | Path]
-            Optional initial FCS file path.
-        """
         self.file_path: Optional[Path] = None
 
         if file_path is not None:
             self.set_file(file_path)
 
+    def _get_runtime_config(self) -> RuntimeConfig:
+        return RuntimeConfig()
+
+    def _get_calibration_max_events_for_analysis(self) -> int:
+        runtime_config = self._get_runtime_config()
+        return int(
+            runtime_config.get_path(
+                "calibration.max_events_for_analysis",
+                default=10000,
+            )
+        )
+
+    def _get_calibration_n_bins_for_plots(self) -> int:
+        runtime_config = self._get_runtime_config()
+        return int(
+            runtime_config.get_path(
+                "calibration.n_bins_for_plots",
+                default=100,
+            )
+        )
+
+    def _get_calibration_peak_count(self) -> int:
+        runtime_config = self._get_runtime_config()
+        return int(
+            runtime_config.get_path(
+                "calibration.peak_count",
+                default=4,
+            )
+        )
+
     def set_file(self, file_path: str | Path) -> None:
-        """
-        Set and validate the active FCS file path.
-
-        Parameters
-        ----------
-        file_path : str | Path
-            Path to an existing FCS file.
-
-        Raises
-        ------
-        FileNotFoundError
-            If the file does not exist.
-        Exception
-            Re raises the last exception encountered during validation.
-        RuntimeError
-            If validation fails without a captured exception.
-        """
         file_path = Path(file_path)
         logger.debug("BackEnd.set_file called with file_path=%r", str(file_path))
 
@@ -229,14 +156,6 @@ class BackEnd:
         raise last_exception if last_exception is not None else RuntimeError("Failed to load FCS file.")
 
     def get_column_names(self) -> list[str]:
-        """
-        Return detector column names from the active FCS file.
-
-        Returns
-        -------
-        list[str]
-            Detector names in file order.
-        """
         self._require_file_path()
 
         with FCSFile(self.file_path, writable=False) as fcs_file:
@@ -252,19 +171,6 @@ class BackEnd:
         return column_names
 
     def process_scattering(self, data: dict[str, Any]) -> dict[str, Any]:
-        """
-        Dispatch scattering operations.
-
-        Parameters
-        ----------
-        data : dict[str, Any]
-            Payload containing an operation key.
-
-        Returns
-        -------
-        dict[str, Any]
-            Operation specific response payload.
-        """
         operation = data.get("operation")
         if not operation:
             raise ValueError('Missing required key "operation" in payload.')
@@ -275,19 +181,6 @@ class BackEnd:
         raise ValueError(f"Unsupported scattering operation: {operation}")
 
     def estimate_scattering_threshold(self, data: dict[str, Any]) -> dict[str, Any]:
-        """
-        Estimate a scattering threshold.
-
-        Parameters
-        ----------
-        data : dict[str, Any]
-            Payload containing column, nbins, and number_of_points.
-
-        Returns
-        -------
-        dict[str, Any]
-            Threshold payload with threshold, method, n_points, and nbins.
-        """
         self._require_file_path()
 
         column = str(data.get("column") or "").strip()
@@ -340,27 +233,6 @@ class BackEnd:
         threshold_input_value: Any,
         max_events: int,
     ) -> float:
-        """
-        Resolve the effective scattering threshold from store, input, or fresh estimation.
-
-        Parameters
-        ----------
-        scattering_channel : str
-            Scattering detector channel.
-        threshold_payload : Optional[dict]
-            Existing threshold store payload.
-        threshold_input_value : Any
-            Manual threshold input value.
-        max_events : int
-            Maximum number of points used for estimation if needed.
-
-        Returns
-        -------
-        float
-            Effective scattering threshold.
-        """
-        runtime_config = RuntimeConfig()
-
         threshold_value: Optional[float] = None
 
         if isinstance(threshold_payload, dict):
@@ -374,7 +246,7 @@ class BackEnd:
                 {
                     "operation": "estimate_scattering_threshold",
                     "column": str(scattering_channel),
-                    "nbins": int(runtime_config.Default.n_bins_for_plots),
+                    "nbins": self._get_calibration_n_bins_for_plots(),
                     "number_of_points": int(max_events),
                 }
             )
@@ -392,23 +264,6 @@ class BackEnd:
         scattering_channel: str,
         max_events: int,
     ) -> tuple[np.ndarray, np.ndarray]:
-        """
-        Load fluorescence and scattering arrays from the active file.
-
-        Parameters
-        ----------
-        fluorescence_channel : str
-            Fluorescence detector column.
-        scattering_channel : str
-            Scattering detector column.
-        max_events : int
-            Maximum number of events to read.
-
-        Returns
-        -------
-        tuple[np.ndarray, np.ndarray]
-            Fluorescence values and scattering values.
-        """
         self._require_file_path()
 
         with FCSFile(self.file_path, writable=False) as fcs_file:
@@ -435,23 +290,6 @@ class BackEnd:
         scattering_values: np.ndarray,
         threshold: float,
     ) -> np.ndarray:
-        """
-        Gate fluorescence values by a scattering threshold.
-
-        Parameters
-        ----------
-        fluorescence_values : np.ndarray
-            Fluorescence values.
-        scattering_values : np.ndarray
-            Scattering values.
-        threshold : float
-            Scattering threshold.
-
-        Returns
-        -------
-        np.ndarray
-            Gated fluorescence values.
-        """
         fluorescence_values = np.asarray(fluorescence_values, dtype=float)
         scattering_values = np.asarray(scattering_values, dtype=float)
 
@@ -469,41 +307,16 @@ class BackEnd:
         threshold_input_value: Any,
         max_events_for_plots: Any,
     ) -> dict[str, Any]:
-        """
-        Build a fluorescence histogram figure payload.
-
-        Parameters
-        ----------
-        scattering_channel : str
-            Scattering detector channel used for gating.
-        fluorescence_channel : str
-            Fluorescence detector channel to plot.
-        fluorescence_nbins : Any
-            Requested number of bins.
-        threshold_payload : Optional[dict]
-            Scattering threshold store payload.
-        threshold_input_value : Any
-            Manual threshold input value.
-        max_events_for_plots : Any
-            Requested maximum number of events.
-
-        Returns
-        -------
-        dict[str, Any]
-            Plotly figure dictionary.
-        """
-        runtime_config = RuntimeConfig()
-
         max_events = _as_int(
             max_events_for_plots,
-            default=runtime_config.Default.max_events_for_analysis,
+            default=self._get_calibration_max_events_for_analysis(),
             min_value=10_000,
             max_value=5_000_000,
         )
 
         nbins = _as_int(
             fluorescence_nbins,
-            default=runtime_config.Default.n_bins_for_plots,
+            default=self._get_calibration_n_bins_for_plots(),
             min_value=10,
             max_value=5000,
         )
@@ -551,43 +364,16 @@ class BackEnd:
         scattering_threshold_input_value: Any,
         table_data: Optional[list[dict[str, Any]]],
     ) -> FluorescencePeakResult:
-        """
-        Find fluorescence peaks and prepare UI friendly outputs.
-
-        Parameters
-        ----------
-        scattering_channel : str
-            Scattering detector used for gating.
-        fluorescence_channel : str
-            Fluorescence detector to analyze.
-        fluorescence_peak_count : Any
-            Requested maximum number of peaks.
-        max_events_for_plots : Any
-            Requested maximum number of events.
-        scattering_threshold_payload : Optional[dict]
-            Threshold store payload.
-        scattering_threshold_input_value : Any
-            Manual threshold input value.
-        table_data : Optional[list[dict[str, Any]]]
-            Existing calibration table rows.
-
-        Returns
-        -------
-        FluorescencePeakResult
-            Updated table data and peak line payload.
-        """
-        runtime_config = RuntimeConfig()
-
         max_events = _as_int(
             max_events_for_plots,
-            default=runtime_config.Default.max_events_for_analysis,
+            default=self._get_calibration_max_events_for_analysis(),
             min_value=10_000,
             max_value=5_000_000,
         )
 
         max_peaks = _as_int(
             fluorescence_peak_count,
-            default=runtime_config.Default.peak_count,
+            default=self._get_calibration_peak_count(),
             min_value=1,
             max_value=100,
         )
@@ -634,19 +420,6 @@ class BackEnd:
         )
 
     def fit_fluorescence_calibration(self, data: dict[str, Any]) -> dict[str, Any]:
-        """
-        Fit a fluorescence calibration model.
-
-        Parameters
-        ----------
-        data : dict[str, Any]
-            Payload containing either direct arrays or table data.
-
-        Returns
-        -------
-        dict[str, Any]
-            Calibration payload.
-        """
         mesf_values, intensity_values = self._extract_mesf_intensity(data)
 
         calibration = FluorescenceCalibration(MESF=mesf_values, intensity=intensity_values)
@@ -655,19 +428,6 @@ class BackEnd:
         return payload
 
     def apply_fluorescence_calibration(self, data: dict[str, Any]) -> dict[str, Any]:
-        """
-        Apply a fluorescence calibration to a source column and return a preview.
-
-        Parameters
-        ----------
-        data : dict[str, Any]
-            Payload containing calibration, column, and optional preview size.
-
-        Returns
-        -------
-        dict[str, Any]
-            Preview payload.
-        """
         self._require_file_path()
 
         calibration_payload = data.get("calibration")
@@ -706,34 +466,6 @@ class BackEnd:
         number_of_points: int | None = 40_000,
         debug: bool = False,
     ) -> dict[str, Any]:
-        """
-        Find fluorescence peaks using the shared 1D peak detection utility,
-        optionally after scattering gating.
-
-        Parameters
-        ----------
-        column : str
-            Fluorescence column to analyze.
-        max_peaks : int
-            Maximum number of peaks to return.
-        min_cluster_size : int
-            Minimum cluster size for clustering.
-        threshold : float
-            Threshold passed to the clustering helper.
-        gating_column : str | None
-            Optional scattering column for gating.
-        gating_threshold : float
-            Threshold used when gating_column is provided.
-        number_of_points : int | None
-            Number of points to read at most.
-        debug : bool
-            Debug flag passed to the peak detection helper.
-
-        Returns
-        -------
-        dict[str, Any]
-            Peak result payload.
-        """
         self._require_file_path()
 
         if not column:
@@ -791,19 +523,6 @@ class BackEnd:
         return peak_result.to_dict()
 
     def export_fluorescence_calibration(self, data: dict[str, Any]) -> dict[str, Any]:
-        """
-        Export a calibrated FCS by injecting a new calibrated column.
-
-        Parameters
-        ----------
-        data : dict[str, Any]
-            Export payload.
-
-        Returns
-        -------
-        dict[str, Any]
-            Export result payload.
-        """
         cal_payload = data.get("calibration")
         if not isinstance(cal_payload, dict):
             raise ValueError('Expected "calibration" to be a dict.')
@@ -888,32 +607,11 @@ class BackEnd:
         raise last_exception if last_exception is not None else RuntimeError("Failed to export calibrated FCS.")
 
     def _require_file_path(self) -> None:
-        """
-        Ensure that an active file path is set.
-
-        Raises
-        ------
-        RuntimeError
-            If no file has been set.
-        """
         if self.file_path is None:
             raise RuntimeError("No FCS file set in BackEnd. Call set_file() first.")
 
     @staticmethod
     def _extract_mesf_intensity(data: dict[str, Any]) -> tuple[np.ndarray, np.ndarray]:
-        """
-        Extract MESF and intensity arrays from a payload.
-
-        Parameters
-        ----------
-        data : dict[str, Any]
-            Input payload.
-
-        Returns
-        -------
-        tuple[np.ndarray, np.ndarray]
-            MESF values and intensity values.
-        """
         if "MESF" in data and "intensity" in data:
             mesf_values = np.asarray(data["MESF"], dtype=float).squeeze()
             intensity_values = np.asarray(data["intensity"], dtype=float).squeeze()
@@ -933,19 +631,6 @@ class BackEnd:
 
     @staticmethod
     def _extract_mesf_intensity_from_table(table_data: Any) -> tuple[np.ndarray, np.ndarray]:
-        """
-        Parse calibration points from a table structure.
-
-        Parameters
-        ----------
-        table_data : Any
-            List of row dicts with keys "col1" and "col2".
-
-        Returns
-        -------
-        tuple[np.ndarray, np.ndarray]
-            MESF values and intensity values.
-        """
         if not isinstance(table_data, list):
             raise ValueError("table_data must be a list of row dicts")
 
@@ -972,19 +657,6 @@ class BackEnd:
 
     @staticmethod
     def _safe_float(value: Any) -> Optional[float]:
-        """
-        Parse a value into a finite float.
-
-        Parameters
-        ----------
-        value : Any
-            Candidate value.
-
-        Returns
-        -------
-        Optional[float]
-            Finite float if valid, otherwise None.
-        """
         if value is None:
             return None
 
@@ -1006,21 +678,6 @@ class BackEnd:
 
     @staticmethod
     def _otsu_threshold_1d(values: np.ndarray, nbins: int) -> Optional[float]:
-        """
-        Compute a 1D Otsu threshold.
-
-        Parameters
-        ----------
-        values : np.ndarray
-            Input values.
-        nbins : int
-            Histogram bin count.
-
-        Returns
-        -------
-        Optional[float]
-            Otsu threshold if computable.
-        """
         values = np.asarray(values, dtype=float)
         values = values[np.isfinite(values)]
 
@@ -1060,21 +717,6 @@ class BackEnd:
 
     @staticmethod
     def _robust_threshold_median_mad(values: np.ndarray, k: float) -> Optional[float]:
-        """
-        Compute a robust threshold using median and MAD.
-
-        Parameters
-        ----------
-        values : np.ndarray
-            Input values.
-        k : float
-            Scale factor.
-
-        Returns
-        -------
-        Optional[float]
-            Threshold if computable.
-        """
         values = np.asarray(values, dtype=float)
         values = values[np.isfinite(values)]
 

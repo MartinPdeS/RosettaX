@@ -17,7 +17,8 @@ class _RuntimeDefaultNamespace:
 
         runtime_config.Default.some_key
 
-    without requiring every key to be hardcoded in Python.
+    for flat keys, while RuntimeConfig also provides nested path based accessors
+    for structured profiles.
     """
 
     def __init__(self) -> None:
@@ -117,23 +118,188 @@ class RuntimeConfig:
         )
         self.Default.load_dict({})
 
+    @staticmethod
+    def _split_path(path: str) -> list[str]:
+        normalized_path = str(path).strip()
+        if not normalized_path:
+            raise ValueError("Path cannot be empty.")
+        return [part for part in normalized_path.split(".") if part]
+
+    @staticmethod
+    def _get_nested_value(data: dict[str, Any], path: str, default: Any = None) -> Any:
+        current_value: Any = data
+
+        for path_part in RuntimeConfig._split_path(path):
+            if not isinstance(current_value, dict):
+                return default
+
+            if path_part not in current_value:
+                return default
+
+            current_value = current_value[path_part]
+
+        return current_value
+
+    @staticmethod
+    def _set_nested_value(data: dict[str, Any], path: str, value: Any) -> None:
+        path_parts = RuntimeConfig._split_path(path)
+
+        current_dict = data
+        for path_part in path_parts[:-1]:
+            next_value = current_dict.get(path_part)
+
+            if not isinstance(next_value, dict):
+                next_value = {}
+                current_dict[path_part] = next_value
+
+            current_dict = next_value
+
+        current_dict[path_parts[-1]] = value
+
+    def get_path(self, path: str, default: Any = None) -> Any:
+        runtime_config_dict = self.Default.to_dict()
+        resolved_value = self._get_nested_value(runtime_config_dict, path, default=default)
+
+        logger.debug(
+            "RuntimeConfig.get_path called with path=%r default=%r resolved_value=%r",
+            path,
+            default,
+            resolved_value,
+        )
+        return resolved_value
+
+    def set_path(self, path: str, value: Any) -> None:
+        runtime_config_dict = self.Default.to_dict()
+        old_value = self._get_nested_value(runtime_config_dict, path, default=None)
+
+        self._set_nested_value(runtime_config_dict, path, value)
+        self.Default.load_dict(runtime_config_dict)
+
+        logger.debug(
+            "RuntimeConfig.set_path updated path=%r from %r to %r",
+            path,
+            old_value,
+            value,
+        )
+
+    def get_str(self, path: str, default: str = "") -> str:
+        value = self.get_path(path, default=default)
+        if value is None:
+            return default
+        return str(value).strip()
+
+    def get_bool(self, path: str, default: bool = False) -> bool:
+        value = self.get_path(path, default=default)
+
+        if isinstance(value, bool):
+            return value
+
+        if isinstance(value, str):
+            normalized_value = value.strip().lower()
+            if normalized_value in {"true", "yes", "1", "on", "enabled"}:
+                return True
+            if normalized_value in {"false", "no", "0", "off", "disabled"}:
+                return False
+
+        return bool(value)
+
+    def get_float(self, path: str, default: Optional[float] = None) -> Optional[float]:
+        value = self.get_path(path, default=default)
+
+        if value is None:
+            return default
+
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            logger.debug(
+                "RuntimeConfig.get_float could not coerce value=%r at path=%r. Returning default=%r",
+                value,
+                path,
+                default,
+            )
+            return default
+
+    def get_int(self, path: str, default: Optional[int] = None) -> Optional[int]:
+        value = self.get_path(path, default=default)
+
+        if value is None:
+            return default
+
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            logger.debug(
+                "RuntimeConfig.get_int could not coerce value=%r at path=%r. Returning default=%r",
+                value,
+                path,
+                default,
+            )
+            return default
+
+    def get_theme_mode(self, default: str = "dark") -> str:
+        """
+        Convenience accessor for the application theme.
+        """
+        theme_mode = self.get_str("app.theme_mode", default=default).lower()
+        return theme_mode if theme_mode in {"dark", "light"} else default
+
+    def get_show_graphs(self, default: bool = True) -> bool:
+        """
+        Convenience accessor for graph visibility preference.
+        """
+        return self.get_bool("app.show_graphs", default=default)
+
     def update(self, **kwargs) -> None:
         """
-        Update the runtime configuration with new values.
+        Update the runtime configuration with flat keys.
 
-        Any provided key is accepted. The profile JSON defines the schema.
+        This keeps backward compatibility with older parts of the codebase.
         """
         logger.debug("RuntimeConfig.update called with kwargs=%r", kwargs)
 
+        runtime_config_dict = self.Default.to_dict()
+
         for key, value in kwargs.items():
-            old_value = self.Default.to_dict().get(key, None)
-            setattr(self.Default, key, value)
+            old_value = runtime_config_dict.get(key, None)
+            runtime_config_dict[key] = value
             logger.debug(
-                "Updated RuntimeConfig.Default.%s from %r to %r",
+                "Updated flat runtime key %s from %r to %r",
                 key,
                 old_value,
                 value,
             )
+
+        self.Default.load_dict(runtime_config_dict)
+
+    def update_paths(self, **path_value_pairs) -> None:
+        """
+        Update the runtime configuration using dotted paths.
+
+        Example:
+            runtime_config.update_paths(
+                **{
+                    "app.theme_mode": "light",
+                    "app.show_graphs": True,
+                    "optics.wavelength_nm": 532,
+                }
+            )
+        """
+        logger.debug("RuntimeConfig.update_paths called with path_value_pairs=%r", path_value_pairs)
+
+        runtime_config_dict = self.Default.to_dict()
+
+        for path, value in path_value_pairs.items():
+            old_value = self._get_nested_value(runtime_config_dict, path, default=None)
+            self._set_nested_value(runtime_config_dict, path, value)
+            logger.debug(
+                "Updated nested runtime path %s from %r to %r",
+                path,
+                old_value,
+                value,
+            )
+
+        self.Default.load_dict(runtime_config_dict)
 
     @classmethod
     def get_instance(cls) -> "RuntimeConfig":

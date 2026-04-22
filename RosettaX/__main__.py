@@ -13,11 +13,11 @@ import dash
 import dash_bootstrap_components as dbc
 from dash import Input, Output, dcc, html
 
-from RosettaX.utils import styling
 from RosettaX.pages.sidebar.main import SidebarIds, register_sidebar_callbacks, sidebar_html
+from RosettaX.utils import directories, styling
 from RosettaX.utils.parser import _parse_args
 from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.utils import directories
+
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -33,10 +33,20 @@ logging.getLogger("RosettaX").setLevel(logging.DEBUG)
 class RosettaXApplication:
     """
     Main Dash application for RosettaX.
+
+    Design
+    ------
+    - The active theme is driven by the runtime profile only.
+    - There is no UI theme toggle here.
+    - The theme stylesheet, theme store, and sidebar logo are all derived from
+      the same resolved theme mode.
     """
 
     _theme_light = dbc.themes.FLATLY
     _theme_dark = dbc.themes.SLATE
+
+    _logo_light = "/assets/logo_light.png"
+    _logo_dark = "/assets/logo_dark.png"
 
     def __init__(
         self,
@@ -58,13 +68,13 @@ class RosettaXApplication:
 
         self.app = dash.Dash(
             __name__,
-            external_stylesheets=[self._theme_dark],
+            external_stylesheets=[],
             use_pages=True,
             pages_folder="",
             suppress_callback_exceptions=True,
         )
 
-        logger.debug("Dash application instantiated with default dark theme")
+        logger.debug("Dash application instantiated")
 
         self._register_pages()
         logger.debug("Registered Dash pages: %r", list(dash.page_registry.keys()))
@@ -104,7 +114,12 @@ class RosettaXApplication:
         runtime_config_payload: dict[str, Any],
     ) -> list[dict[str, str]]:
         """
-        Build the default MESF table from a runtime config payload dictionary.
+        Build the default MESF table from a runtime config payload.
+
+        Supported schemas
+        -----------------
+        - Nested schema: calibration.mesf_values
+        - Legacy flat schema: mesf_values
         """
         logger.debug("Building MESF default table from runtime config payload")
 
@@ -116,39 +131,24 @@ class RosettaXApplication:
                 )
                 return [{"col1": "", "col2": ""}]
 
-            table_data: list[dict[str, str]] = []
+            calibration_section = runtime_config_payload.get("calibration", {})
+            if isinstance(calibration_section, dict) and "mesf_values" in calibration_section:
+                mesf_values = calibration_section.get("mesf_values", [])
+            else:
+                mesf_values = runtime_config_payload.get("mesf_values", [])
 
-            for key, value in runtime_config_payload.items():
-                if not isinstance(value, dict):
-                    logger.debug(
-                        "Skipping non-dictionary runtime config entry: key=%r value=%r",
-                        key,
-                        value,
-                    )
-                    continue
+            if isinstance(mesf_values, str):
+                mesf_candidates = [item.strip() for item in mesf_values.split(",")]
+            elif isinstance(mesf_values, (list, tuple)):
+                mesf_candidates = [str(item).strip() for item in mesf_values]
+            else:
+                mesf_candidates = []
 
-                if not value.get("default", True):
-                    logger.debug("Skipping non-default entry: key=%r", key)
-                    continue
-
-                mesf_values = value.get("mesf_values", "")
-
-                if isinstance(mesf_values, str):
-                    mesf_candidates = mesf_values.split(",")
-                elif isinstance(mesf_values, (list, tuple)):
-                    mesf_candidates = list(mesf_values)
-                else:
-                    logger.debug(
-                        "Skipping entry with unsupported mesf_values type: key=%r type=%r",
-                        key,
-                        type(mesf_values).__name__,
-                    )
-                    continue
-
-                for mesf_value in mesf_candidates:
-                    mesf_clean = str(mesf_value).strip()
-                    if mesf_clean:
-                        table_data.append({"col1": mesf_clean, "col2": ""})
+            table_data: list[dict[str, str]] = [
+                {"col1": value, "col2": ""}
+                for value in mesf_candidates
+                if value
+            ]
 
             if not table_data:
                 logger.warning(
@@ -176,37 +176,62 @@ class RosettaXApplication:
             runtime_config_payload=RuntimeConfig().to_dict(),
         )
 
+    def _resolve_theme_mode_from_payload(self, runtime_config_payload: Any) -> str:
+        """
+        Resolve theme mode from a runtime payload.
+
+        The runtime config may follow the nested schema:
+            app.theme_mode
+
+        Fallback to RuntimeConfig helper if needed.
+        """
+        if isinstance(runtime_config_payload, dict):
+            app_section = runtime_config_payload.get("app", {})
+            if isinstance(app_section, dict):
+                theme_mode = str(app_section.get("theme_mode", "")).strip().lower()
+                if theme_mode in {"light", "dark"}:
+                    logger.debug(
+                        "Resolved theme mode=%r from runtime payload app section",
+                        theme_mode,
+                    )
+                    return theme_mode
+
+            legacy_theme_mode = str(runtime_config_payload.get("theme_mode", "")).strip().lower()
+            if legacy_theme_mode in {"light", "dark"}:
+                logger.debug(
+                    "Resolved legacy theme mode=%r from runtime payload root",
+                    legacy_theme_mode,
+                )
+                return legacy_theme_mode
+
+        runtime_config = RuntimeConfig()
+        theme_mode = runtime_config.get_theme_mode(default="dark")
+        logger.debug(
+            "Resolved theme mode=%r from RuntimeConfig helper fallback",
+            theme_mode,
+        )
+        return theme_mode if theme_mode in {"light", "dark"} else "dark"
+
+    def _theme_href_from_mode(self, theme_mode: str) -> str:
+        resolved_theme_mode = str(theme_mode).strip().lower()
+        return self._theme_light if resolved_theme_mode == "light" else self._theme_dark
+
+    def _logo_src_from_mode(self, theme_mode: str) -> str:
+        resolved_theme_mode = str(theme_mode).strip().lower()
+        return self._logo_light if resolved_theme_mode == "light" else self._logo_dark
+
     def _register_callbacks(self) -> None:
         """
         Register application-level Dash callbacks.
         """
         logger.debug("Registering app-level callbacks")
 
-        @dash.callback(
-            dash.Output("theme-switch", "value", allow_duplicate=True),
-            dash.Input("runtime-config-store", "data"),
-            prevent_initial_call=True,
-        )
-        def sync_theme_switch_from_runtime_config(runtime_config_data: Any):
-            if not isinstance(runtime_config_data, dict):
-                return dash.no_update
-
-            theme_mode = str(runtime_config_data.get("theme_mode", "")).strip().lower()
-
-            if theme_mode == "light":
-                return False
-
-            if theme_mode == "dark":
-                return True
-
-            return dash.no_update
-
         @self.app.callback(
             Output("sidebar-content", "children"),
             Input("url", "pathname"),
             Input("apply-calibration-store", "data"),
         )
-        def _update_sidebar(
+        def update_sidebar(
             pathname: Optional[str],
             sidebar_refresh_signal: Any,
         ):
@@ -220,27 +245,39 @@ class RosettaXApplication:
         @self.app.callback(
             Output("runtime-config-store", "data", allow_duplicate=True),
             Output("MESF-default_table-store", "data"),
+            Output("theme-store", "data"),
+            Output("theme-link", "href"),
             Input(SidebarIds.selected_profile_store, "data"),
             prevent_initial_call=True,
         )
-        def _load_runtime_config_from_sidebar_profile(
+        def load_runtime_config_from_sidebar_profile(
             selected_profile_from_sidebar: Optional[str],
         ):
             logger.debug(
-                "_load_runtime_config_from_sidebar_profile called with selected_profile_from_sidebar=%r",
+                "load_runtime_config_from_sidebar_profile called with selected_profile_from_sidebar=%r",
                 selected_profile_from_sidebar,
             )
 
             if not selected_profile_from_sidebar:
                 logger.debug("No selected profile from sidebar. Leaving stores unchanged.")
-                return dash.no_update, dash.no_update
+                return (
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                )
 
             try:
                 selected_profile_file_name = str(selected_profile_from_sidebar).strip()
 
                 if not selected_profile_file_name:
                     logger.debug("Selected profile file name was empty after stripping.")
-                    return dash.no_update, dash.no_update
+                    return (
+                        dash.no_update,
+                        dash.no_update,
+                        dash.no_update,
+                        dash.no_update,
+                    )
 
                 if not selected_profile_file_name.endswith(".json"):
                     selected_profile_file_name = f"{selected_profile_file_name}.json"
@@ -258,44 +295,71 @@ class RosettaXApplication:
                     resolved_profile_path.read_text(encoding="utf-8")
                 )
 
+                if not isinstance(runtime_config_payload, dict):
+                    raise TypeError(
+                        f"Profile JSON must contain a dictionary, got {type(runtime_config_payload).__name__}."
+                    )
+
                 logger.debug(
                     "Loaded runtime config payload from sidebar profile=%r type=%r",
                     selected_profile_file_name,
                     type(runtime_config_payload).__name__,
                 )
 
+                runtime_config = RuntimeConfig()
+                runtime_config.Default.load_dict(runtime_config_payload)
+
+                logger.debug(
+                    "Updated RuntimeConfig singleton from sidebar profile=%r",
+                    selected_profile_file_name,
+                )
+
                 mesf_default_table = self.create_mesf_default_table_from_runtime_payload(
                     runtime_config_payload=runtime_config_payload,
                 )
 
+                resolved_theme_mode = self._resolve_theme_mode_from_payload(runtime_config_payload)
+                resolved_theme_href = self._theme_href_from_mode(resolved_theme_mode)
+
                 logger.debug(
-                    "Returning updated runtime config and MESF table with row_count=%r",
-                    len(mesf_default_table),
+                    "Returning updated runtime config, MESF table, and theme mode=%r",
+                    resolved_theme_mode,
                 )
 
-                return runtime_config_payload, mesf_default_table
+                return (
+                    runtime_config_payload,
+                    mesf_default_table,
+                    {"theme": resolved_theme_mode},
+                    resolved_theme_href,
+                )
 
             except Exception:
                 logger.exception(
                     "Failed to load runtime config from sidebar selected profile=%r",
                     selected_profile_from_sidebar,
                 )
-                return dash.no_update, dash.no_update
+                return (
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                    dash.no_update,
+                )
 
         @self.app.callback(
-            Output("theme-link", "href"),
-            Output("theme-store", "data"),
-            Input("theme-switch", "value"),
+            Output("sidebar-logo", "src"),
+            Input("theme-store", "data"),
         )
-        def _toggle_theme(is_dark: bool):
-            logger.debug("Theme toggle callback called with is_dark=%r", is_dark)
+        def update_sidebar_logo(theme_store_data: Any):
+            logger.debug("Updating sidebar logo with theme_store_data=%r", theme_store_data)
 
-            if bool(is_dark):
-                logger.debug("Applying dark theme")
-                return self._theme_dark, {"theme": "dark"}
+            if isinstance(theme_store_data, dict):
+                theme_name = str(theme_store_data.get("theme", "dark")).strip().lower()
+            else:
+                theme_name = "dark"
 
-            logger.debug("Applying light theme")
-            return self._theme_light, {"theme": "light"}
+            resolved_logo = self._logo_src_from_mode(theme_name)
+            logger.debug("Resolved sidebar logo=%r for theme=%r", resolved_logo, theme_name)
+            return resolved_logo
 
     def _build_main_content(self) -> html.Div:
         logger.debug("Building main content container")
@@ -314,51 +378,26 @@ class RosettaXApplication:
             style=styling.SIDEBAR,
         )
 
-    def _build_theme_header(self) -> html.Div:
-        logger.debug("Building theme header with default dark mode enabled")
-
-        return html.Div(
-            [
-                html.Div(
-                    [
-                        html.Span("Dark mode", style={"marginRight": "10px"}),
-                        dbc.Switch(
-                            id="theme-switch",
-                            value=True,
-                            persistence=True,
-                            persistence_type="session",
-                        ),
-                    ],
-                    style={"display": "flex", "alignItems": "center"},
-                )
-            ],
-            style={
-                "position": "fixed",
-                "top": "10px",
-                "right": "16px",
-                "zIndex": 1100,
-                "padding": "6px 10px",
-                "borderRadius": "10px",
-            },
-        )
-
     def _build_stores(self, *, mesf_default_table: list[dict[str, str]]) -> list:
         logger.debug(
             "Building application stores with %d MESF default rows",
             len(mesf_default_table),
         )
 
-        runtime_config_payload = RuntimeConfig().to_dict()
+        runtime_config = RuntimeConfig()
+        runtime_config_payload = runtime_config.to_dict()
+        initial_theme_mode = runtime_config.get_theme_mode(default="dark")
 
         logger.debug(
-            "Runtime config payload prepared for storage with type=%r",
+            "Runtime config payload prepared for storage with type=%r initial_theme_mode=%r",
             type(runtime_config_payload).__name__,
+            initial_theme_mode,
         )
 
         return [
             dcc.Store(
                 id="theme-store",
-                data={"theme": "dark"},
+                data={"theme": initial_theme_mode},
                 storage_type="session",
             ),
             dcc.Store(
@@ -373,18 +412,26 @@ class RosettaXApplication:
             ),
             dcc.Store(
                 id="runtime-config-store",
-                storage_type="session",
                 data=runtime_config_payload,
+                storage_type="session",
             ),
         ]
 
     def _build_theme_link(self) -> html.Link:
-        logger.debug("Building theme link with default dark theme href")
+        runtime_config = RuntimeConfig()
+        initial_theme_mode = runtime_config.get_theme_mode(default="dark")
+        initial_theme_href = self._theme_href_from_mode(initial_theme_mode)
+
+        logger.debug(
+            "Building theme link with initial_theme_mode=%r initial_theme_href=%r",
+            initial_theme_mode,
+            initial_theme_href,
+        )
 
         return html.Link(
             id="theme-link",
             rel="stylesheet",
-            href=self._theme_dark,
+            href=initial_theme_href,
         )
 
     def _set_layout(self) -> None:
@@ -394,7 +441,6 @@ class RosettaXApplication:
 
         main_content = self._build_main_content()
         sidebar_content = self._build_sidebar_content()
-        theme_header = self._build_theme_header()
         theme_link = self._build_theme_link()
         stores = self._build_stores(mesf_default_table=mesf_default_table)
 
@@ -403,7 +449,6 @@ class RosettaXApplication:
                 dcc.Location(id="url"),
                 *stores,
                 theme_link,
-                theme_header,
                 sidebar_content,
                 main_content,
             ]

@@ -1,5 +1,6 @@
+# -*- coding: utf-8 -*-
+
 from typing import Any, Optional
-import re
 
 import dash
 import dash_bootstrap_components as dbc
@@ -8,7 +9,7 @@ from dash import Input, Output, State, callback, dcc, html
 from RosettaX.pages.settings.utils import get_saved_profile, save_profile
 from RosettaX.utils import directories
 from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.utils.casting import _as_float_list
+from RosettaX.utils.casting import _as_float, _as_float_list
 
 
 class DefaultProfile:
@@ -68,7 +69,7 @@ class DefaultProfile:
                 ),
                 self._setting_row(
                     "Saved profile:",
-                    self._persistent_dropdown(
+                    dcc.Dropdown(
                         id=self.page.ids.Default.values_profile_dropdown,
                         options=profile_options,
                         value=default_profile_value,
@@ -88,7 +89,9 @@ class DefaultProfile:
                     "MESF values:",
                     self._persistent_input(
                         id=self.page.ids.Default.mesf_values,
-                        value=getattr(runtime_config.Default, "mesf_values", ""),
+                        value=self._format_float_list_for_input(
+                            runtime_config.get_path("calibration.mesf_values", default=[])
+                        ),
                         style={"width": "100%"},
                     ),
                 ),
@@ -96,7 +99,7 @@ class DefaultProfile:
                     "Peak count:",
                     self._persistent_input(
                         id=self.page.ids.Default.peak_count,
-                        value=runtime_config.Default.peak_count,
+                        value=runtime_config.get_int("calibration.peak_count", default=4),
                         type="number",
                         step=1,
                         min=1,
@@ -112,7 +115,7 @@ class DefaultProfile:
                             {"label": "Linear", "value": "linear"},
                             {"label": "Log", "value": "log"},
                         ],
-                        value=runtime_config.Default.histogram_scale,
+                        value=runtime_config.get_str("calibration.histogram_scale", default="log"),
                         clearable=False,
                         searchable=False,
                         style={"width": "100%"},
@@ -130,7 +133,7 @@ class DefaultProfile:
                     self._persistent_input(
                         id=self.page.ids.Default.medium_refractive_index,
                         type="number",
-                        value=runtime_config.Default.medium_refractive_index,
+                        value=runtime_config.get_float("optics.medium_refractive_index", default=1.334),
                         step=0.001,
                         min=0.001,
                         max=2.5,
@@ -142,7 +145,7 @@ class DefaultProfile:
                     self._persistent_input(
                         id=self.page.ids.Default.core_refractive_index,
                         type="number",
-                        value=runtime_config.Default.core_refractive_index,
+                        value=runtime_config.get_float("particle_model.core_refractive_index", default=1.5),
                         step=0.001,
                         min=0.001,
                         max=2.5,
@@ -154,7 +157,7 @@ class DefaultProfile:
                     self._persistent_input(
                         id=self.page.ids.Default.shell_refractive_index,
                         type="number",
-                        value=runtime_config.Default.shell_refractive_index,
+                        value=runtime_config.get_float("particle_model.shell_refractive_index", default=1.5),
                         step=0.001,
                         min=0.001,
                         max=2.5,
@@ -166,7 +169,7 @@ class DefaultProfile:
                     self._persistent_input(
                         id=self.page.ids.Default.particle_refractive_index,
                         type="number",
-                        value=runtime_config.Default.particle_refractive_index,
+                        value=runtime_config.get_float("particle_model.particle_refractive_index", default=1.59),
                         step=0.001,
                         min=0.001,
                         max=2.5,
@@ -178,7 +181,7 @@ class DefaultProfile:
                     self._persistent_input(
                         id=self.page.ids.Default.wavelength_nm,
                         type="number",
-                        value=runtime_config.Default.wavelength_nm,
+                        value=runtime_config.get_float("optics.wavelength_nm", default=488.0),
                         step=1,
                         min=1,
                         style={"width": "100%"},
@@ -189,7 +192,9 @@ class DefaultProfile:
                     self._persistent_input(
                         id=self.page.ids.Default.shell_thickness_nm,
                         type="text",
-                        value=self._format_float_list_for_input(runtime_config.Default.shell_thickness_nm),
+                        value=self._format_float_list_for_input(
+                            runtime_config.get_path("particle_model.shell_thickness_nm", default=[])
+                        ),
                         placeholder="5, 10, 15",
                         style={"width": "100%"},
                     ),
@@ -199,7 +204,9 @@ class DefaultProfile:
                     self._persistent_input(
                         id=self.page.ids.Default.core_diameter_nm,
                         type="text",
-                        value=self._format_float_list_for_input(runtime_config.Default.core_diameter_nm),
+                        value=self._format_float_list_for_input(
+                            runtime_config.get_path("particle_model.core_diameter_nm", default=[])
+                        ),
                         placeholder="80, 120, 160",
                         style={"width": "100%"},
                     ),
@@ -209,7 +216,9 @@ class DefaultProfile:
                     self._persistent_input(
                         id=self.page.ids.Default.particle_diameter_nm,
                         type="text",
-                        value=self._format_float_list_for_input(runtime_config.Default.particle_diameter_nm),
+                        value=self._format_float_list_for_input(
+                            runtime_config.get_path("particle_model.particle_diameter_nm", default=[])
+                        ),
                         placeholder="100, 200, 300",
                         style={"width": "100%"},
                     ),
@@ -222,7 +231,7 @@ class DefaultProfile:
                             {"label": "Solid Sphere", "value": "Solid Sphere"},
                             {"label": "Core/Shell Sphere", "value": "Core/Shell Sphere"},
                         ],
-                        value=runtime_config.Default.mie_model,
+                        value=runtime_config.get_str("particle_model.mie_model", default="Solid Sphere"),
                         clearable=False,
                         searchable=False,
                         style={"width": "100%"},
@@ -232,7 +241,9 @@ class DefaultProfile:
                     "Default gating channel:",
                     self._persistent_input(
                         id=self.page.ids.Default.default_gating_channel,
-                        value=runtime_config.Default.default_gating_channel,
+                        value=self._coerce_optional_string(
+                            runtime_config.get_path("calibration.default_gating_channel", default=None)
+                        ) or "",
                         style={"width": "100%"},
                     ),
                 ),
@@ -240,7 +251,9 @@ class DefaultProfile:
                     "Default gating threshold:",
                     self._persistent_input(
                         id=self.page.ids.Default.default_gating_threshold,
-                        value=runtime_config.Default.default_gating_threshold,
+                        value=self._coerce_optional_string(
+                            runtime_config.get_path("calibration.default_gating_threshold", default=None)
+                        ) or "",
                         style={"width": "100%"},
                     ),
                 ),
@@ -255,7 +268,7 @@ class DefaultProfile:
                     "Max events for analysis:",
                     self._persistent_input(
                         id=self.page.ids.Default.max_events_for_analysis,
-                        value=runtime_config.Default.max_events_for_analysis,
+                        value=runtime_config.get_int("calibration.max_events_for_analysis", default=100),
                         type="number",
                         step=1,
                         min=1,
@@ -266,7 +279,7 @@ class DefaultProfile:
                     "Number of bins for plots:",
                     self._persistent_input(
                         id=self.page.ids.Default.n_bins_for_plots,
-                        value=runtime_config.Default.n_bins_for_plots,
+                        value=runtime_config.get_int("calibration.n_bins_for_plots", default=100),
                         type="number",
                         step=10,
                         min=10,
@@ -281,7 +294,9 @@ class DefaultProfile:
                             {"label": "Yes", "value": "yes"},
                             {"label": "No", "value": "no"},
                         ],
-                        value=runtime_config.Default.show_calibration_plot_by_default,
+                        value="yes"
+                        if runtime_config.get_bool("calibration.show_calibration_plot_by_default", default=False)
+                        else "no",
                         clearable=False,
                         searchable=False,
                         style={"width": "100%"},
@@ -291,7 +306,7 @@ class DefaultProfile:
                     "Default output suffix:",
                     self._persistent_input(
                         id=self.page.ids.Default.default_output_suffix,
-                        value=runtime_config.Default.default_output_suffix,
+                        value=runtime_config.get_str("calibration.default_output_suffix", default="_calibrated"),
                         style={"width": "100%"},
                     ),
                 ),
@@ -299,7 +314,7 @@ class DefaultProfile:
                     "Operator name:",
                     self._persistent_input(
                         id=self.page.ids.Default.operator_name,
-                        value=runtime_config.Default.operator_name,
+                        value=runtime_config.get_str("metadata.operator_name", default=""),
                         style={"width": "100%"},
                     ),
                 ),
@@ -307,7 +322,7 @@ class DefaultProfile:
                     "Instrument name:",
                     self._persistent_input(
                         id=self.page.ids.Default.instrument_name,
-                        value=runtime_config.Default.instrument_name,
+                        value=runtime_config.get_str("metadata.instrument_name", default=""),
                         style={"width": "100%"},
                     ),
                 ),
@@ -319,10 +334,22 @@ class DefaultProfile:
             [
                 html.H5("Miscellaneous"),
                 self._setting_row(
-                    "Default FCS file path:",
+                    "Default Fluorescence FCS file path:",
                     self._persistent_input(
-                        id=self.page.ids.Default.fcs_file_path,
-                        value=runtime_config.Default.fcs_file_path,
+                        id=self.page.ids.Default.fluorescence_fcs_file_path,
+                        value=self._coerce_optional_string(
+                            runtime_config.get_path("files.fluorescence_fcs_file_path", default=None)
+                        ) or "",
+                        style={"width": "100%"},
+                    ),
+                ),
+                self._setting_row(
+                    "Default Scattering FCS file path:",
+                    self._persistent_input(
+                        id=self.page.ids.Default.scattering_fcs_file_path,
+                        value=self._coerce_optional_string(
+                            runtime_config.get_path("files.scattering_fcs_file_path", default=None)
+                        ) or "",
                         style={"width": "100%"},
                     ),
                 ),
@@ -334,7 +361,7 @@ class DefaultProfile:
                             {"label": "Dark", "value": "dark"},
                             {"label": "Light", "value": "light"},
                         ],
-                        value=runtime_config.Default.theme_mode,
+                        value=runtime_config.get_theme_mode(default="dark"),
                         clearable=False,
                         searchable=False,
                         style={"width": "100%"},
@@ -348,7 +375,7 @@ class DefaultProfile:
                             {"label": "Yes", "value": "yes"},
                             {"label": "No", "value": "no"},
                         ],
-                        value="yes" if runtime_config.Default.show_graphs else "no",
+                        value="yes" if runtime_config.get_show_graphs(default=False) else "no",
                         clearable=False,
                         searchable=False,
                         style={"width": "100%"},
@@ -364,6 +391,7 @@ class DefaultProfile:
                     "Save changes",
                     id=self.page.ids.Default.save_changes_button,
                     color="primary",
+                    n_clicks=0,
                 ),
                 dbc.Alert(
                     "",
@@ -390,7 +418,8 @@ class DefaultProfile:
             Output(self.page.ids.Default.peak_count, "value"),
             Output(self.page.ids.Default.mie_model, "value"),
             Output(self.page.ids.Default.mesf_values, "value"),
-            Output(self.page.ids.Default.fcs_file_path, "value"),
+            Output(self.page.ids.Default.fluorescence_fcs_file_path, "value"),
+            Output(self.page.ids.Default.scattering_fcs_file_path, "value"),
             Output(self.page.ids.Default.default_gating_channel, "value"),
             Output(self.page.ids.Default.default_gating_threshold, "value"),
             Output(self.page.ids.Default.show_calibration_plot_by_default, "value"),
@@ -405,37 +434,36 @@ class DefaultProfile:
         )
         def load_profile_defaults(dropdown_value: Optional[str]):
             if not dropdown_value:
-                return tuple([dash.no_update] * 23)
+                return tuple([dash.no_update] * 24)
 
-            settings = get_saved_profile(dropdown_value) or {}
-
-            runtime_config = RuntimeConfig()
-            runtime_config.load_json(dropdown_value)
+            saved_profile = get_saved_profile(dropdown_value) or {}
+            flattened_profile = self._flatten_profile_payload(saved_profile)
 
             return (
-                settings.get("medium_refractive_index", runtime_config.Default.medium_refractive_index),
-                settings.get("core_refractive_index", runtime_config.Default.core_refractive_index),
-                settings.get("shell_refractive_index", runtime_config.Default.shell_refractive_index),
-                self._format_float_list_for_input(settings.get("shell_thickness_nm", runtime_config.Default.shell_thickness_nm)),
-                self._format_float_list_for_input(settings.get("core_diameter_nm", runtime_config.Default.core_diameter_nm)),
-                self._format_float_list_for_input(settings.get("particle_diameter_nm", runtime_config.Default.particle_diameter_nm)),
-                settings.get("particle_refractive_index", runtime_config.Default.particle_refractive_index),
-                settings.get("wavelength_nm", runtime_config.Default.wavelength_nm),
-                settings.get("max_events_for_analysis", runtime_config.Default.max_events_for_analysis),
-                settings.get("n_bins_for_plots", runtime_config.Default.n_bins_for_plots),
-                settings.get("peak_count", runtime_config.Default.peak_count),
-                settings.get("mie_model", runtime_config.Default.mie_model),
-                settings.get("mesf_values", runtime_config.Default.mesf_values),
-                settings.get("fcs_file_path", runtime_config.Default.fcs_file_path),
-                settings.get("default_gating_channel", runtime_config.Default.default_gating_channel),
-                settings.get("default_gating_threshold", runtime_config.Default.default_gating_threshold),
-                settings.get("show_calibration_plot_by_default", runtime_config.Default.show_calibration_plot_by_default),
-                settings.get("histogram_scale", runtime_config.Default.histogram_scale),
-                settings.get("default_output_suffix", runtime_config.Default.default_output_suffix),
-                settings.get("operator_name", runtime_config.Default.operator_name),
-                settings.get("instrument_name", runtime_config.Default.instrument_name),
-                settings.get("theme_mode", runtime_config.Default.theme_mode),
-                "yes" if settings.get("show_graphs", runtime_config.Default.show_graphs) else "no",
+                flattened_profile.get("medium_refractive_index"),
+                flattened_profile.get("core_refractive_index"),
+                flattened_profile.get("shell_refractive_index"),
+                self._format_float_list_for_input(flattened_profile.get("shell_thickness_nm")),
+                self._format_float_list_for_input(flattened_profile.get("core_diameter_nm")),
+                self._format_float_list_for_input(flattened_profile.get("particle_diameter_nm")),
+                flattened_profile.get("particle_refractive_index"),
+                flattened_profile.get("wavelength_nm"),
+                flattened_profile.get("max_events_for_analysis"),
+                flattened_profile.get("n_bins_for_plots"),
+                flattened_profile.get("peak_count"),
+                flattened_profile.get("mie_model"),
+                self._format_float_list_for_input(flattened_profile.get("mesf_values")),
+                flattened_profile.get("fluorescence_fcs_file_path") or "",
+                flattened_profile.get("scattering_fcs_file_path") or "",
+                flattened_profile.get("default_gating_channel") or "",
+                self._coerce_optional_string(flattened_profile.get("default_gating_threshold")) or "",
+                "yes" if flattened_profile.get("show_calibration_plot_by_default") else "no",
+                flattened_profile.get("histogram_scale"),
+                flattened_profile.get("default_output_suffix") or "",
+                flattened_profile.get("operator_name") or "",
+                flattened_profile.get("instrument_name") or "",
+                flattened_profile.get("theme_mode"),
+                "yes" if flattened_profile.get("show_graphs") else "no",
             )
 
         @callback(
@@ -443,7 +471,6 @@ class DefaultProfile:
             Output("runtime-config-store", "data"),
             Output(self.page.ids.Default.save_confirmation, "is_open"),
             Output(self.page.ids.Default.save_confirmation, "color"),
-            Output("theme-switch", "value"),
             Input(self.page.ids.Default.save_changes_button, "n_clicks"),
             State(self.page.ids.Default.values_profile_dropdown, "value"),
             State(self.page.ids.Default.medium_refractive_index, "value"),
@@ -459,7 +486,8 @@ class DefaultProfile:
             State(self.page.ids.Default.peak_count, "value"),
             State(self.page.ids.Default.mie_model, "value"),
             State(self.page.ids.Default.mesf_values, "value"),
-            State(self.page.ids.Default.fcs_file_path, "value"),
+            State(self.page.ids.Default.fluorescence_fcs_file_path, "value"),
+            State(self.page.ids.Default.scattering_fcs_file_path, "value"),
             State(self.page.ids.Default.default_gating_channel, "value"),
             State(self.page.ids.Default.default_gating_threshold, "value"),
             State(self.page.ids.Default.show_calibration_plot_by_default, "value"),
@@ -471,51 +499,16 @@ class DefaultProfile:
             State(self.page.ids.Default.show_graphs, "value"),
             prevent_initial_call=True,
         )
-        def edit_settings(_n_clicks: Any, profile_target: str, *args):
-            del _n_clicks
+        def edit_settings(n_clicks: Any, profile_target: str, *args):
+            if dash.ctx.triggered_id != self.page.ids.Default.save_changes_button:
+                return dash.no_update, dash.no_update, dash.no_update, dash.no_update
+
+            if not n_clicks:
+                return dash.no_update, dash.no_update, dash.no_update, dash.no_update
 
             try:
-                keys = [
-                    "medium_refractive_index",
-                    "core_refractive_index",
-                    "shell_refractive_index",
-                    "shell_thickness_nm",
-                    "core_diameter_nm",
-                    "particle_diameter_nm",
-                    "particle_refractive_index",
-                    "wavelength_nm",
-                    "max_events_for_analysis",
-                    "n_bins_for_plots",
-                    "peak_count",
-                    "mie_model",
-                    "mesf_values",
-                    "fcs_file_path",
-                    "default_gating_channel",
-                    "default_gating_threshold",
-                    "show_calibration_plot_by_default",
-                    "histogram_scale",
-                    "default_output_suffix",
-                    "operator_name",
-                    "instrument_name",
-                    "theme_mode",
-                    "show_graphs",
-                ]
-
-                new_dict = {key: value for key, value in zip(keys, args)}
-
-                new_dict["mesf_values"] = re.sub(
-                    r"[^\d,\s]",
-                    "",
-                    str(new_dict.get("mesf_values", "")),
-                )
-
-                new_dict["particle_diameter_nm"] = self._format_float_list_for_input(new_dict.get("particle_diameter_nm", ""))
-                new_dict["core_diameter_nm"] = self._format_float_list_for_input(new_dict.get("core_diameter_nm", ""))
-                new_dict["shell_thickness_nm"] = self._format_float_list_for_input(new_dict.get("shell_thickness_nm", ""))
-
-                new_dict["show_graphs"] = (
-                    str(new_dict.get("show_graphs", "yes")).strip().lower() == "yes"
-                )
+                flat_runtime_payload = self._build_flat_runtime_payload_from_form_values(args)
+                nested_profile_payload = self._build_nested_profile_payload(flat_runtime_payload)
 
                 if not profile_target:
                     return (
@@ -523,22 +516,18 @@ class DefaultProfile:
                         dash.no_update,
                         True,
                         "danger",
-                        dash.no_update,
                     )
 
-                save_profile(profile_target, new_dict)
+                save_profile(profile_target, nested_profile_payload)
 
                 runtime_config = RuntimeConfig()
-                runtime_config.update(**new_dict)
-
-                theme_is_dark = str(new_dict.get("theme_mode", "dark")).strip().lower() == "dark"
+                runtime_config.Default.load_dict(nested_profile_payload)
 
                 return (
                     f"Saved profile: {profile_target}",
-                    new_dict,
+                    nested_profile_payload,
                     True,
                     "success",
-                    theme_is_dark,
                 )
 
             except Exception as exc:
@@ -547,7 +536,6 @@ class DefaultProfile:
                     dash.no_update,
                     True,
                     "danger",
-                    dash.no_update,
                 )
 
         @callback(
@@ -567,7 +555,8 @@ class DefaultProfile:
             Input(self.page.ids.Default.peak_count, "value"),
             Input(self.page.ids.Default.mie_model, "value"),
             Input(self.page.ids.Default.mesf_values, "value"),
-            Input(self.page.ids.Default.fcs_file_path, "value"),
+            Input(self.page.ids.Default.fluorescence_fcs_file_path, "value"),
+            Input(self.page.ids.Default.scattering_fcs_file_path, "value"),
             Input(self.page.ids.Default.default_gating_channel, "value"),
             Input(self.page.ids.Default.default_gating_threshold, "value"),
             Input(self.page.ids.Default.show_calibration_plot_by_default, "value"),
@@ -608,6 +597,208 @@ class DefaultProfile:
             return "default_profile.json"
 
         return profile_options[0]["value"]
+
+    def _build_flat_runtime_payload_from_form_values(self, form_values: tuple[Any, ...]) -> dict[str, Any]:
+        keys = [
+            "medium_refractive_index",
+            "core_refractive_index",
+            "shell_refractive_index",
+            "shell_thickness_nm",
+            "core_diameter_nm",
+            "particle_diameter_nm",
+            "particle_refractive_index",
+            "wavelength_nm",
+            "max_events_for_analysis",
+            "n_bins_for_plots",
+            "peak_count",
+            "mie_model",
+            "mesf_values",
+            "fluorescence_fcs_file_path",
+            "scattering_fcs_file_path",
+            "default_gating_channel",
+            "default_gating_threshold",
+            "show_calibration_plot_by_default",
+            "histogram_scale",
+            "default_output_suffix",
+            "operator_name",
+            "instrument_name",
+            "theme_mode",
+            "show_graphs",
+        ]
+
+        flat_payload = {key: value for key, value in zip(keys, form_values)}
+
+        flat_payload["mesf_values"] = self._parse_float_list(flat_payload.get("mesf_values", ""))
+        flat_payload["particle_diameter_nm"] = self._parse_float_list(flat_payload.get("particle_diameter_nm", ""))
+        flat_payload["core_diameter_nm"] = self._parse_float_list(flat_payload.get("core_diameter_nm", ""))
+        flat_payload["shell_thickness_nm"] = self._parse_float_list(flat_payload.get("shell_thickness_nm", ""))
+
+        flat_payload["show_graphs"] = (
+            str(flat_payload.get("show_graphs", "yes")).strip().lower() == "yes"
+        )
+        flat_payload["show_calibration_plot_by_default"] = (
+            str(flat_payload.get("show_calibration_plot_by_default", "no")).strip().lower() == "yes"
+        )
+
+        flat_payload["wavelength_nm"] = self._coerce_optional_number(flat_payload.get("wavelength_nm"))
+        flat_payload["medium_refractive_index"] = self._coerce_optional_number(flat_payload.get("medium_refractive_index"))
+        flat_payload["core_refractive_index"] = self._coerce_optional_number(flat_payload.get("core_refractive_index"))
+        flat_payload["shell_refractive_index"] = self._coerce_optional_number(flat_payload.get("shell_refractive_index"))
+        flat_payload["particle_refractive_index"] = self._coerce_optional_number(flat_payload.get("particle_refractive_index"))
+        flat_payload["max_events_for_analysis"] = self._coerce_optional_integer(flat_payload.get("max_events_for_analysis"))
+        flat_payload["n_bins_for_plots"] = self._coerce_optional_integer(flat_payload.get("n_bins_for_plots"))
+        flat_payload["peak_count"] = self._coerce_optional_integer(flat_payload.get("peak_count"))
+
+        flat_payload["fluorescence_fcs_file_path"] = self._coerce_optional_string(
+            flat_payload.get("fluorescence_fcs_file_path")
+        )
+        flat_payload["scattering_fcs_file_path"] = self._coerce_optional_string(
+            flat_payload.get("scattering_fcs_file_path")
+        )
+        flat_payload["default_gating_channel"] = self._coerce_optional_string(
+            flat_payload.get("default_gating_channel")
+        )
+        flat_payload["default_gating_threshold"] = self._coerce_optional_string(
+            flat_payload.get("default_gating_threshold")
+        )
+        flat_payload["default_output_suffix"] = self._coerce_optional_string(
+            flat_payload.get("default_output_suffix")
+        )
+        flat_payload["operator_name"] = self._coerce_optional_string(
+            flat_payload.get("operator_name")
+        )
+        flat_payload["instrument_name"] = self._coerce_optional_string(
+            flat_payload.get("instrument_name")
+        )
+        flat_payload["histogram_scale"] = self._coerce_optional_string(
+            flat_payload.get("histogram_scale")
+        )
+        flat_payload["mie_model"] = self._coerce_optional_string(
+            flat_payload.get("mie_model")
+        )
+        flat_payload["theme_mode"] = self._coerce_optional_string(
+            flat_payload.get("theme_mode")
+        )
+
+        return flat_payload
+
+    def _build_nested_profile_payload(self, flat_payload: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "schema_version": "1.0",
+            "files": {
+                "fluorescence_fcs_file_path": flat_payload.get("fluorescence_fcs_file_path"),
+                "scattering_fcs_file_path": flat_payload.get("scattering_fcs_file_path"),
+            },
+            "page_defaults": {
+                "fluorescence": {
+                    "scattering_detector": None,
+                    "fluorescence_detector": None,
+                }
+            },
+            "optics": {
+                "wavelength_nm": flat_payload.get("wavelength_nm"),
+                "medium_refractive_index": flat_payload.get("medium_refractive_index"),
+            },
+            "particle_model": {
+                "mie_model": flat_payload.get("mie_model"),
+                "particle_refractive_index": flat_payload.get("particle_refractive_index"),
+                "core_refractive_index": flat_payload.get("core_refractive_index"),
+                "shell_refractive_index": flat_payload.get("shell_refractive_index"),
+                "particle_diameter_nm": flat_payload.get("particle_diameter_nm"),
+                "core_diameter_nm": flat_payload.get("core_diameter_nm"),
+                "shell_thickness_nm": flat_payload.get("shell_thickness_nm"),
+            },
+            "calibration": {
+                "mesf_values": flat_payload.get("mesf_values"),
+                "peak_count": flat_payload.get("peak_count"),
+                "max_events_for_analysis": flat_payload.get("max_events_for_analysis"),
+                "n_bins_for_plots": flat_payload.get("n_bins_for_plots"),
+                "default_gating_channel": flat_payload.get("default_gating_channel"),
+                "default_gating_threshold": flat_payload.get("default_gating_threshold"),
+                "show_calibration_plot_by_default": flat_payload.get("show_calibration_plot_by_default"),
+                "histogram_scale": flat_payload.get("histogram_scale"),
+                "default_output_suffix": flat_payload.get("default_output_suffix"),
+            },
+            "metadata": {
+                "operator_name": flat_payload.get("operator_name"),
+                "instrument_name": flat_payload.get("instrument_name"),
+            },
+            "app": {
+                "theme_mode": flat_payload.get("theme_mode"),
+                "show_graphs": flat_payload.get("show_graphs"),
+            },
+        }
+
+    def _flatten_profile_payload(self, saved_profile: dict[str, Any]) -> dict[str, Any]:
+        if not isinstance(saved_profile, dict):
+            return {}
+
+        if "files" not in saved_profile and "optics" not in saved_profile and "particle_model" not in saved_profile:
+            return dict(saved_profile)
+
+        files_section = saved_profile.get("files") or {}
+        page_defaults_section = saved_profile.get("page_defaults") or {}
+        fluorescence_page_defaults_section = page_defaults_section.get("fluorescence") or {}
+        optics_section = saved_profile.get("optics") or {}
+        particle_model_section = saved_profile.get("particle_model") or {}
+        calibration_section = saved_profile.get("calibration") or {}
+        metadata_section = saved_profile.get("metadata") or {}
+        app_section = saved_profile.get("app") or {}
+
+        return {
+            "fluorescence_fcs_file_path": files_section.get("fluorescence_fcs_file_path"),
+            "scattering_fcs_file_path": files_section.get("scattering_fcs_file_path"),
+            "fluorescence_page_scattering_detector": fluorescence_page_defaults_section.get("scattering_detector"),
+            "fluorescence_page_fluorescence_detector": fluorescence_page_defaults_section.get("fluorescence_detector"),
+            "wavelength_nm": optics_section.get("wavelength_nm"),
+            "medium_refractive_index": optics_section.get("medium_refractive_index"),
+            "core_refractive_index": particle_model_section.get("core_refractive_index"),
+            "shell_refractive_index": particle_model_section.get("shell_refractive_index"),
+            "shell_thickness_nm": particle_model_section.get("shell_thickness_nm"),
+            "core_diameter_nm": particle_model_section.get("core_diameter_nm"),
+            "particle_diameter_nm": particle_model_section.get("particle_diameter_nm"),
+            "particle_refractive_index": particle_model_section.get("particle_refractive_index"),
+            "max_events_for_analysis": calibration_section.get("max_events_for_analysis"),
+            "n_bins_for_plots": calibration_section.get("n_bins_for_plots"),
+            "peak_count": calibration_section.get("peak_count"),
+            "mie_model": particle_model_section.get("mie_model"),
+            "mesf_values": calibration_section.get("mesf_values"),
+            "default_gating_channel": calibration_section.get("default_gating_channel"),
+            "default_gating_threshold": calibration_section.get("default_gating_threshold"),
+            "show_calibration_plot_by_default": calibration_section.get("show_calibration_plot_by_default"),
+            "histogram_scale": calibration_section.get("histogram_scale"),
+            "default_output_suffix": calibration_section.get("default_output_suffix"),
+            "operator_name": metadata_section.get("operator_name"),
+            "instrument_name": metadata_section.get("instrument_name"),
+            "theme_mode": app_section.get("theme_mode"),
+            "show_graphs": app_section.get("show_graphs"),
+        }
+
+    @staticmethod
+    def _parse_float_list(value: Any) -> list[float]:
+        parsed_values = _as_float_list(value)
+        return [float(item) for item in parsed_values.tolist()]
+
+    @staticmethod
+    def _coerce_optional_number(value: Any) -> Optional[float]:
+        parsed_value = _as_float(value)
+        if parsed_value is None:
+            return None
+        return float(parsed_value)
+
+    @staticmethod
+    def _coerce_optional_integer(value: Any) -> Optional[int]:
+        parsed_value = _as_float(value)
+        if parsed_value is None:
+            return None
+        return int(parsed_value)
+
+    @staticmethod
+    def _coerce_optional_string(value: Any) -> Optional[str]:
+        if value is None:
+            return None
+        resolved_value = str(value).strip()
+        return resolved_value if resolved_value else None
 
     def _format_float_list_for_input(self, value: Any) -> str:
         parsed_values = _as_float_list(value)

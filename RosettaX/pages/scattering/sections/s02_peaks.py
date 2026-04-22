@@ -9,7 +9,6 @@ import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
 
 from RosettaX.utils import styling
-from RosettaX.pages.scattering.backend import BackEnd
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.utils.plottings import add_vertical_lines, _make_info_figure
 from RosettaX.utils.casting import _as_int
@@ -21,10 +20,6 @@ logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class ScatteringCallbackInputs:
-    """
-    Parsed callback inputs for the scattering histogram section.
-    """
-
     graph_enabled: bool
     scattering_channel: str
     nbins: int
@@ -36,19 +31,38 @@ class Scattering:
     """
     Render and manage the scattering detector histogram section.
 
-    Responsibilities
-    ----------------
-    - Populate the scattering detector dropdown from the uploaded FCS file.
-    - Render histogram and peak finding controls.
-    - Build a histogram preview for the selected detector.
-    - Detect scattering peaks and write measured peak positions into the
-      calibration table, which is the source of truth.
-    - Keep graph peak markers synchronized with the detected peaks.
+    Design
+    ------
+    - The upload section owns backend creation.
+    - This section only reuses self.page.backend.
+    - The backend is file bound.
+    - The detector channel is supplied at call time.
     """
 
     def __init__(self, page) -> None:
         self.page = page
+        self.runtime_config = RuntimeConfig()
         logger.debug("Initialized ScatteringSection with page=%r", page)
+
+    def _refresh_runtime(self) -> RuntimeConfig:
+        self.runtime_config = RuntimeConfig()
+        return self.runtime_config
+
+    def _get_default_peak_count(self) -> int:
+        runtime_config = self._refresh_runtime()
+        return runtime_config.get_int("calibration.peak_count", default=3)
+
+    def _get_default_show_graphs(self) -> bool:
+        runtime_config = self._refresh_runtime()
+        return runtime_config.get_show_graphs(default=False)
+
+    def _get_default_n_bins_for_plots(self) -> int:
+        runtime_config = self._refresh_runtime()
+        return runtime_config.get_int("calibration.n_bins_for_plots", default=100)
+
+    def _get_default_max_events_for_analysis(self) -> int:
+        runtime_config = self._refresh_runtime()
+        return runtime_config.get_int("calibration.max_events_for_analysis", default=10000)
 
     def get_layout(self) -> dbc.Card:
         return dbc.Card(
@@ -93,14 +107,12 @@ class Scattering:
         )
 
     def _build_peak_controls(self) -> dash.html.Div:
-        runtime_config = RuntimeConfig()
-
         peak_count_input = dash.dcc.Input(
             id=self.page.ids.Scattering.peak_count_input,
             type="number",
             min=1,
             step=1,
-            value=runtime_config.Default.peak_count,
+            value=self._get_default_peak_count(),
             style={"width": "120px"},
             persistence=True,
             persistence_type="session",
@@ -132,7 +144,7 @@ class Scattering:
                 dbc.Checklist(
                     id=self.page.ids.Scattering.graph_toggle_switch,
                     options=[{"label": "Show histogram", "value": "enabled"}],
-                    value=[],
+                    value=["enabled"] if self._get_default_show_graphs() else [],
                     switch=True,
                     persistence=True,
                     persistence_type="session",
@@ -176,8 +188,6 @@ class Scattering:
         )
 
     def _build_nbins_input(self) -> dash.html.Div:
-        runtime_config = RuntimeConfig()
-
         return dash.html.Div(
             [
                 dash.html.Div("Number of bins:"),
@@ -186,7 +196,7 @@ class Scattering:
                     type="number",
                     min=10,
                     step=10,
-                    value=runtime_config.Default.n_bins_for_plots,
+                    value=self._get_default_n_bins_for_plots(),
                     style={"width": "160px"},
                     persistence=True,
                     persistence_type="session",
@@ -212,6 +222,41 @@ class Scattering:
             return self._populate_scattering_detector_dropdown(
                 uploaded_fcs_path=uploaded_fcs_path,
                 current_detector_value=current_detector_value,
+            )
+
+        @dash.callback(
+            dash.Output(self.page.ids.Scattering.peak_count_input, "value"),
+            dash.Output(self.page.ids.Scattering.nbins_input, "value"),
+            dash.Output(self.page.ids.Scattering.graph_toggle_switch, "value"),
+            dash.Input("runtime-config-store", "data"),
+            prevent_initial_call=False,
+        )
+        def sync_controls_from_runtime_store(runtime_config_data: Any) -> tuple[Any, Any, Any]:
+            logger.debug(
+                "sync_controls_from_runtime_store called with runtime_config_data=%r",
+                runtime_config_data,
+            )
+
+            runtime_config = self._refresh_runtime()
+
+            if isinstance(runtime_config_data, dict):
+                runtime_config.Default.load_dict(runtime_config_data)
+
+            peak_count_value = runtime_config.get_int("calibration.peak_count", default=3)
+            n_bins_for_plots_value = runtime_config.get_int("calibration.n_bins_for_plots", default=100)
+            show_graphs_value = runtime_config.get_show_graphs(default=False)
+
+            logger.debug(
+                "Resolved scattering controls from runtime store peak_count=%r n_bins_for_plots=%r show_graphs=%r",
+                peak_count_value,
+                n_bins_for_plots_value,
+                show_graphs_value,
+            )
+
+            return (
+                peak_count_value,
+                n_bins_for_plots_value,
+                ["enabled"] if show_graphs_value else [],
             )
 
         @dash.callback(
@@ -296,17 +341,10 @@ class Scattering:
             if not callback_inputs.scattering_channel:
                 return _make_info_figure("Select a scattering detector first.")
 
+            if self.page.backend is None:
+                return _make_info_figure("Backend is not initialized. Upload an FCS file again.")
+
             try:
-                scattering_backend = BackEnd(
-                    fcs_file_path=uploaded_fcs_path_clean,
-                    detector_column=callback_inputs.scattering_channel,
-                )
-
-                histogram_result = scattering_backend.build_histogram(
-                    n_bins_for_plots=callback_inputs.nbins,
-                    max_events_for_analysis=callback_inputs.max_events,
-                )
-
                 line_positions: list[float] = []
                 line_labels: list[str] = []
 
@@ -320,14 +358,21 @@ class Scattering:
                         for value in (peak_lines.get("labels") or [])
                     ]
 
+                histogram_result = self.page.backend.build_histogram(
+                    detector_column=callback_inputs.scattering_channel,
+                    n_bins_for_plots=callback_inputs.nbins,
+                    max_events_for_analysis=callback_inputs.max_events,
+                )
+
                 logger.debug(
                     "update_scattering_histogram using line_positions=%r line_labels=%r",
                     line_positions,
                     line_labels,
                 )
 
-                figure = scattering_backend.build_histogram_figure(
+                figure = self.page.backend.build_histogram_figure(
                     histogram_result=histogram_result,
+                    detector_column=callback_inputs.scattering_channel,
                     use_log_counts=isinstance(callback_inputs.yscale_selection, list)
                     and ("log" in callback_inputs.yscale_selection),
                     peak_positions=line_positions,
@@ -404,26 +449,26 @@ class Scattering:
                 )
                 return dash.no_update, dash.no_update
 
+            if self.page.backend is None:
+                logger.debug("Backend is not initialized. Returning no_update.")
+                return dash.no_update, dash.no_update
+
             resolved_peak_count = _as_int(
                 peak_count,
-                default=3,
+                default=self._get_default_peak_count(),
                 min_value=1,
                 max_value=50,
             )
             resolved_max_events = _as_int(
                 max_events_for_plots,
-                default=10000,
+                default=self._get_default_max_events_for_analysis(),
                 min_value=1,
                 max_value=5_000_000,
             )
 
             try:
-                scattering_backend = BackEnd(
-                    fcs_file_path=uploaded_fcs_path_clean,
+                peak_detection_result = self.page.backend.find_scattering_peaks(
                     detector_column=scattering_channel_clean,
-                )
-
-                peak_detection_result = scattering_backend.find_scattering_peaks(
                     max_peaks=resolved_peak_count,
                     max_events_for_analysis=resolved_max_events,
                     debug=False,
@@ -508,20 +553,20 @@ class Scattering:
         yscale_selection: Any,
         max_events_for_plots: Any,
     ) -> ScatteringCallbackInputs:
-        runtime_config = RuntimeConfig()
+        runtime_config = self._refresh_runtime()
 
         parsed_inputs = ScatteringCallbackInputs(
             graph_enabled=self._is_enabled(graph_toggle_value),
             scattering_channel=self._clean_optional_string(scattering_channel),
             nbins=_as_int(
                 scattering_nbins,
-                default=runtime_config.Default.n_bins_for_plots,
+                default=runtime_config.get_int("calibration.n_bins_for_plots", default=100),
                 min_value=10,
                 max_value=5000,
             ),
             max_events=_as_int(
                 max_events_for_plots,
-                default=runtime_config.Default.max_events_for_analysis,
+                default=runtime_config.get_int("calibration.max_events_for_analysis", default=10000),
                 min_value=1,
                 max_value=5_000_000,
             ),

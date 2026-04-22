@@ -84,40 +84,67 @@ class BackEnd:
     """
     Numerical backend for scattering histogram construction, peak detection,
     modeled coupling computation, and calibration fitting.
+
+    Design
+    ------
+    This backend is file bound, not detector bound.
+
+    The FCS file is the stable context owned by the upload section.
+    The selected detector column is UI state and is therefore passed explicitly
+    to the methods that need it.
     """
 
     def __init__(
         self,
         *,
         fcs_file_path: str,
-        detector_column: str,
     ) -> None:
         self.fcs_file_path = str(fcs_file_path)
-        self.detector_column = str(detector_column)
 
         logger.debug(
-            "Initialized Scattering BackEnd with fcs_file_path=%r detector_column=%r",
+            "Initialized Scattering BackEnd with fcs_file_path=%r",
             self.fcs_file_path,
-            self.detector_column,
         )
+
+    def get_column_names(self) -> list[str]:
+        logger.debug("get_column_names called for fcs_file_path=%r", self.fcs_file_path)
+
+        with FCSFile(self.fcs_file_path, writable=False) as fcs_file:
+            detectors = fcs_file.text["Detectors"]
+            parameter_count = int(fcs_file.text["Keywords"]["$PAR"])
+
+            column_names = [
+                str(detectors[index].get("N", f"P{index}"))
+                for index in range(1, parameter_count + 1)
+            ]
+
+        logger.debug("get_column_names returning n_columns=%r", len(column_names))
+        return column_names
 
     def load_signal(
         self,
         *,
+        detector_column: str,
         max_events_for_analysis: Optional[int] = None,
         require_positive_values: bool = False,
     ) -> np.ndarray:
         """
         Load a detector signal from the FCS file.
         """
+        resolved_detector_column = str(detector_column).strip()
+
+        if not resolved_detector_column:
+            raise ValueError("detector_column must be a non empty string.")
+
         logger.debug(
-            "load_signal called with max_events_for_analysis=%r require_positive_values=%r",
+            "load_signal called with detector_column=%r max_events_for_analysis=%r require_positive_values=%r",
+            resolved_detector_column,
             max_events_for_analysis,
             require_positive_values,
         )
 
         with FCSFile(self.fcs_file_path, writable=False) as fcs_file:
-            signal = fcs_file.column_copy(self.detector_column, dtype=float)
+            signal = fcs_file.column_copy(resolved_detector_column, dtype=float)
 
         signal = np.asarray(signal, dtype=float).reshape(-1)
         signal = signal[np.isfinite(signal)]
@@ -129,7 +156,8 @@ class BackEnd:
             signal = signal[: int(max_events_for_analysis)]
 
         logger.debug(
-            "load_signal returning n_values=%r min=%r max=%r",
+            "load_signal returning detector_column=%r n_values=%r min=%r max=%r",
+            resolved_detector_column,
             signal.size,
             None if signal.size == 0 else float(np.min(signal)),
             None if signal.size == 0 else float(np.max(signal)),
@@ -140,19 +168,24 @@ class BackEnd:
     def build_histogram(
         self,
         *,
+        detector_column: str,
         n_bins_for_plots: int,
         max_events_for_analysis: Optional[int] = None,
     ) -> HistogramResult:
         """
         Build a 1D histogram from the detector signal.
         """
+        resolved_detector_column = str(detector_column).strip()
+
         logger.debug(
-            "build_histogram called with n_bins_for_plots=%r max_events_for_analysis=%r",
+            "build_histogram called with detector_column=%r n_bins_for_plots=%r max_events_for_analysis=%r",
+            resolved_detector_column,
             n_bins_for_plots,
             max_events_for_analysis,
         )
 
         values = self.load_signal(
+            detector_column=resolved_detector_column,
             max_events_for_analysis=max_events_for_analysis,
             require_positive_values=False,
         )
@@ -171,7 +204,8 @@ class BackEnd:
         )
 
         logger.debug(
-            "build_histogram returning n_values=%r n_bins=%r nonzero_bins=%r",
+            "build_histogram returning detector_column=%r n_values=%r n_bins=%r nonzero_bins=%r",
+            resolved_detector_column,
             histogram_result.values.size,
             histogram_result.counts.size,
             int(np.count_nonzero(histogram_result.counts)),
@@ -182,6 +216,7 @@ class BackEnd:
     def build_histogram_figure(
         self,
         *,
+        detector_column: str,
         histogram_result: HistogramResult,
         use_log_counts: bool = False,
         peak_positions: Optional[np.ndarray] = None,
@@ -189,8 +224,11 @@ class BackEnd:
         """
         Build a Plotly histogram figure.
         """
+        resolved_detector_column = str(detector_column).strip()
+
         logger.debug(
-            "build_histogram_figure called with use_log_counts=%r peak_count=%r",
+            "build_histogram_figure called with detector_column=%r use_log_counts=%r peak_count=%r",
+            resolved_detector_column,
             use_log_counts,
             0 if peak_positions is None else len(np.asarray(peak_positions).reshape(-1)),
         )
@@ -216,7 +254,7 @@ class BackEnd:
             )
 
         figure.update_layout(
-            xaxis_title=f"{self.detector_column} [a.u.]",
+            xaxis_title=f"{resolved_detector_column} [a.u.]",
             yaxis_title="Count",
             hovermode="closest",
             separators=".,",
@@ -229,6 +267,7 @@ class BackEnd:
     def find_scattering_peaks(
         self,
         *,
+        detector_column: str,
         max_peaks: int,
         min_cluster_size: int = 100,
         threshold: float = 0.0,
@@ -238,8 +277,11 @@ class BackEnd:
         """
         Detect peaks in the 1D detector signal.
         """
+        resolved_detector_column = str(detector_column).strip()
+
         logger.debug(
-            "find_scattering_peaks called with max_peaks=%r min_cluster_size=%r threshold=%r max_events_for_analysis=%r debug=%r",
+            "find_scattering_peaks called with detector_column=%r max_peaks=%r min_cluster_size=%r threshold=%r max_events_for_analysis=%r debug=%r",
+            resolved_detector_column,
             max_peaks,
             min_cluster_size,
             threshold,
@@ -248,6 +290,7 @@ class BackEnd:
         )
 
         values = self.load_signal(
+            detector_column=resolved_detector_column,
             max_events_for_analysis=max_events_for_analysis,
             require_positive_values=False,
         )
@@ -261,7 +304,8 @@ class BackEnd:
         )
 
         logger.debug(
-            "find_scattering_peaks returning peak_positions=%r",
+            "find_scattering_peaks returning detector_column=%r peak_positions=%r",
+            resolved_detector_column,
             peak_detection_result.peak_positions.tolist(),
         )
 
@@ -285,12 +329,6 @@ class BackEnd:
     ) -> ModeledCouplingResult:
         """
         Compute modeled coupling values for a list of particle diameters.
-
-        Notes
-        -----
-        This function is intentionally defensive because the PyMieSim call can
-        block for some parameter combinations. We therefore log every stage and
-        retry once with a smaller detector sampling value before failing.
         """
         import time
 
@@ -537,13 +575,17 @@ class BackEnd:
     def build_calibration_figure(
         self,
         *,
+        detector_column: str,
         fit_result: ScatteringCalibrationFitResult,
     ) -> go.Figure:
         """
         Build the calibration fit figure.
         """
+        resolved_detector_column = str(detector_column).strip()
+
         logger.debug(
-            "build_calibration_figure called with n_points=%r",
+            "build_calibration_figure called with detector_column=%r n_points=%r",
+            resolved_detector_column,
             fit_result.measured_peak_positions.size,
         )
 
@@ -577,7 +619,7 @@ class BackEnd:
         )
 
         figure.update_layout(
-            xaxis_title=f"log10({self.detector_column} peak position [a.u.])",
+            xaxis_title=f"log10({resolved_detector_column} peak position [a.u.])",
             yaxis_title="log10(Expected coupling)",
             hovermode="closest",
             separators=".,",
@@ -588,6 +630,7 @@ class BackEnd:
     def build_calibration_payload(
         self,
         *,
+        detector_column: str,
         peak_detection_result: PeakDetectionResult,
         modeled_coupling_result: ModeledCouplingResult,
         fit_result: ScatteringCalibrationFitResult,
@@ -596,8 +639,11 @@ class BackEnd:
         """
         Build the serialized calibration payload.
         """
+        resolved_detector_column = str(detector_column).strip()
+
         logger.debug(
-            "build_calibration_payload called with n_reference_points=%r",
+            "build_calibration_payload called with detector_column=%r n_reference_points=%r",
+            resolved_detector_column,
             fit_result.measured_peak_positions.size,
         )
 
@@ -628,7 +674,7 @@ class BackEnd:
                 "created_at": "",
                 "name": "",
                 "source_file": Path(self.fcs_file_path).name,
-                "source_channel": self.detector_column,
+                "source_channel": resolved_detector_column,
                 "fit_model": "log10(expected_coupling)=slope*log10(measured_peak_position)+intercept",
                 "fit_metrics": {
                     "r_squared": float(fit_result.r_squared),
@@ -651,7 +697,7 @@ class BackEnd:
                     "prefactor": float(fit_result.prefactor),
                     "R_squared": float(fit_result.r_squared),
                     "model": "log10(expected_coupling)=slope*log10(measured_peak_position)+intercept",
-                    "x_definition": f"{self.detector_column} peak position [a.u.]",
+                    "x_definition": f"{resolved_detector_column} peak position [a.u.]",
                     "y_definition": "Expected coupling",
                 },
             },

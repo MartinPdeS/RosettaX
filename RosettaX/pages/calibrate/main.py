@@ -18,7 +18,6 @@ class ApplyCalibrationPage:
             sections.Header(page=self),
             sections.CalibrationPicker(page=self),
             sections.FilePicker(page=self),
-            sections.ChannelPicker(page=self),
             sections.Apply(page=self),
         ]
 

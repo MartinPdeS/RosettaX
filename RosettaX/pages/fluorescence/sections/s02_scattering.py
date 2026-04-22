@@ -47,8 +47,11 @@ class Scattering:
     def __init__(self, page) -> None:
         self.page = page
         self.runtime_config = RuntimeConfig()
-        self.default = self.runtime_config.Default
         logger.debug("Initialized ScatteringSection with page=%r", page)
+
+    def _refresh_runtime(self) -> RuntimeConfig:
+        self.runtime_config = RuntimeConfig()
+        return self.runtime_config
 
     def get_layout(self) -> dbc.Card:
         return dbc.Card(
@@ -96,12 +99,14 @@ class Scattering:
         )
 
     def _build_debug_switch_row(self) -> dash.html.Div:
+        runtime_config = self._refresh_runtime()
+
         return dash.html.Div(
             [
                 dbc.Checklist(
                     id=self.page.ids.Scattering.debug_switch,
                     options=[{"label": "Show graph", "value": "enabled"}],
-                    value=["enabled"] if self.default.show_graphs else [],
+                    value=["enabled"] if runtime_config.get_show_graphs(default=True) else [],
                     switch=True,
                 ),
             ],
@@ -124,6 +129,8 @@ class Scattering:
         )
 
     def _build_nbins_row(self) -> dash.html.Div:
+        runtime_config = self._refresh_runtime()
+
         return dash.html.Div(
             [
                 dash.html.Div("Number of bins:"),
@@ -132,7 +139,7 @@ class Scattering:
                     type="number",
                     min=10,
                     step=10,
-                    value=self.default.n_bins_for_plots,
+                    value=runtime_config.get_int("calibration.n_bins_for_plots", default=100),
                     style={"width": "160px"},
                 ),
             ],
@@ -197,21 +204,14 @@ class Scattering:
             prevent_initial_call=False,
         )
         def sync_scattering_graph_visibility_from_runtime_store(runtime_config_data: Any) -> list[str]:
-            if not isinstance(runtime_config_data, dict):
-                logger.debug(
-                    "sync_scattering_graph_visibility_from_runtime_store received non-dict payload=%r. Using Default.show_graphs=%r",
-                    runtime_config_data,
-                    self.default.show_graphs,
-                )
-                return ["enabled"] if self.default.show_graphs else []
+            del runtime_config_data
 
-            resolved_show_graphs = bool(
-                runtime_config_data.get("show_graphs", self.default.show_graphs)
-            )
+            runtime_config = self._refresh_runtime()
+            resolved_show_graphs = runtime_config.get_show_graphs(default=True)
+
             logger.debug(
-                "sync_scattering_graph_visibility_from_runtime_store resolved_show_graphs=%r from runtime_config_data=%r",
+                "sync_scattering_graph_visibility_from_runtime_store resolved_show_graphs=%r",
                 resolved_show_graphs,
-                runtime_config_data,
             )
             return ["enabled"] if resolved_show_graphs else []
 
@@ -229,7 +229,16 @@ class Scattering:
             prevent_initial_call=False,
         )
         def sync_scattering_nbins_from_runtime_store(runtime_config_data: Any) -> int:
-            return self._resolve_nbins_from_runtime_store(runtime_config_data)
+            del runtime_config_data
+
+            runtime_config = self._refresh_runtime()
+            resolved_nbins = runtime_config.get_int("calibration.n_bins_for_plots", default=100)
+
+            logger.debug(
+                "sync_scattering_nbins_from_runtime_store resolved_nbins=%r",
+                resolved_nbins,
+            )
+            return resolved_nbins
 
         @dash.callback(
             dash.Output(self.page.ids.Upload.max_events_for_plots_input, "value"),
@@ -237,7 +246,16 @@ class Scattering:
             prevent_initial_call=False,
         )
         def sync_max_events_from_runtime_store(runtime_config_data: Any) -> int:
-            return self._resolve_max_events_from_runtime_store(runtime_config_data)
+            del runtime_config_data
+
+            runtime_config = self._refresh_runtime()
+            resolved_max_events = runtime_config.get_int("calibration.max_events_for_analysis", default=10000)
+
+            logger.debug(
+                "sync_max_events_from_runtime_store resolved_max_events=%r",
+                resolved_max_events,
+            )
+            return resolved_max_events
 
         @dash.callback(
             dash.Output(self.page.ids.Scattering.graph_hist, "figure"),
@@ -286,42 +304,26 @@ class Scattering:
         return {"display": "block"} if debug_enabled else {"display": "none"}
 
     def _resolve_nbins_from_runtime_store(self, runtime_config_data: Any) -> int:
-        if not isinstance(runtime_config_data, dict):
-            logger.debug(
-                "_resolve_nbins_from_runtime_store received non-dict payload=%r. Using Default.n_bins_for_plots=%r",
-                runtime_config_data,
-                self.default.n_bins_for_plots,
-            )
-            return self.default.n_bins_for_plots
+        del runtime_config_data
 
-        resolved_nbins = runtime_config_data.get(
-            "n_bins_for_plots",
-            self.default.n_bins_for_plots,
-        )
+        runtime_config = self._refresh_runtime()
+        resolved_nbins = runtime_config.get_int("calibration.n_bins_for_plots", default=100)
+
         logger.debug(
-            "_resolve_nbins_from_runtime_store resolved nbins=%r from runtime_config_data=%r",
+            "_resolve_nbins_from_runtime_store resolved nbins=%r",
             resolved_nbins,
-            runtime_config_data,
         )
         return resolved_nbins
 
     def _resolve_max_events_from_runtime_store(self, runtime_config_data: Any) -> int:
-        if not isinstance(runtime_config_data, dict):
-            logger.debug(
-                "_resolve_max_events_from_runtime_store received non-dict payload=%r. Using Default.max_events_for_analysis=%r",
-                runtime_config_data,
-                self.default.max_events_for_analysis,
-            )
-            return self.default.max_events_for_analysis
+        del runtime_config_data
 
-        resolved_max_events = runtime_config_data.get(
-            "max_events_for_analysis",
-            self.default.max_events_for_analysis,
-        )
+        runtime_config = self._refresh_runtime()
+        resolved_max_events = runtime_config.get_int("calibration.max_events_for_analysis", default=10000)
+
         logger.debug(
-            "_resolve_max_events_from_runtime_store resolved max_events=%r from runtime_config_data=%r",
+            "_resolve_max_events_from_runtime_store resolved max_events=%r",
             resolved_max_events,
-            runtime_config_data,
         )
         return resolved_max_events
 
@@ -447,16 +449,21 @@ class Scattering:
         }
 
     def _parse_limits(self, *, max_events_for_plots: Any, scattering_nbins: Any) -> Tuple[int, int]:
+        runtime_config = self._refresh_runtime()
+
+        default_max_events = runtime_config.get_int("calibration.max_events_for_analysis", default=10000)
+        default_nbins = runtime_config.get_int("calibration.n_bins_for_plots", default=100)
+
         max_events = _as_int(
-            max_events_for_plots if max_events_for_plots is not None else self.default.max_events_for_analysis,
-            default=self.default.max_events_for_analysis,
+            max_events_for_plots if max_events_for_plots is not None else default_max_events,
+            default=default_max_events,
             min_value=1_000,
             max_value=5_000_000,
         )
 
         nbins = _as_int(
             scattering_nbins,
-            default=self.default.n_bins_for_plots,
+            default=default_nbins,
             min_value=10,
             max_value=5000,
         )

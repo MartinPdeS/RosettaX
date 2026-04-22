@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 import logging
 from pathlib import Path
 from typing import Any, Optional
@@ -16,9 +17,26 @@ logger = logging.getLogger(__name__)
 
 
 class Sidebar:
+    """
+    Application sidebar.
+
+    Responsibilities
+    ----------------
+    - Render the logo and main navigation.
+    - Show saved calibration files grouped by category.
+    - Let the user navigate to the calibration page with a selected calibration.
+    - Show saved profiles and persist the selected profile.
+    - Expose small utility actions such as refresh and open folder.
+
+    Notes
+    -----
+    Internal app navigation is always performed with ``dcc.Link(..., refresh=False)``
+    so route changes stay inside Dash routing instead of triggering a full browser reload.
+    """
+
     def __init__(self) -> None:
         self.page_name = "sidebar"
-        self.logo_src = "/assets/logo.png"
+        self.logo_src = "/assets/logo_light.png"
         self.logo_max_height_px = 156
         self.sidebar_width_px = 460
 
@@ -34,6 +52,9 @@ class Sidebar:
         )
 
     def register_callbacks(self) -> None:
+        """
+        Register all sidebar callbacks.
+        """
         logger.debug("Registering sidebar callbacks.")
 
         @dash.callback(
@@ -81,6 +102,7 @@ class Sidebar:
                 )
                 directories.open_directory(calibration_root_directory)
                 return f"Opened calibration folder: {calibration_root_directory}"
+
             except Exception as exc:
                 logger.exception("Failed to open calibration folder.")
                 return f"Could not open calibration folder: {type(exc).__name__}: {exc}"
@@ -90,8 +112,8 @@ class Sidebar:
             dash.Input(SidebarIds.saved_profiles_refresh_button, "n_clicks"),
             prevent_initial_call=True,
         )
-        def refresh_saved_profiles(_n_clicks: Optional[int]):
-            logger.debug("refresh_saved_profiles called with n_clicks=%r", _n_clicks)
+        def refresh_saved_profiles(n_clicks: Optional[int]):
+            logger.debug("refresh_saved_profiles called with n_clicks=%r", n_clicks)
             return self._build_saved_profile_options()
 
         @dash.callback(
@@ -136,6 +158,7 @@ class Sidebar:
                 logger.exception("Failed to resolve selected profile=%r", selected_profile)
                 return dash.no_update, f"Could not select profile: {type(exc).__name__}: {exc}"
 
+
         @dash.callback(
             dash.Output(SidebarIds.saved_profiles_open_folder_status, "children"),
             dash.Input(SidebarIds.saved_profiles_open_folder_button, "n_clicks"),
@@ -150,11 +173,15 @@ class Sidebar:
                 logger.debug("Opening profile directory=%r", str(resolved_profile_directory))
                 directories.open_directory(resolved_profile_directory)
                 return f"Opened profile folder: {resolved_profile_directory}"
+
             except Exception as exc:
                 logger.exception("Failed to open profile folder.")
                 return f"Could not open profile folder: {type(exc).__name__}: {exc}"
 
     def layout(self, sidebar: Optional[dict[str, list[str]]] = None) -> html.Div:
+        """
+        Build the complete sidebar layout.
+        """
         logger.debug("Building sidebar layout with sidebar=%r", sidebar)
 
         if sidebar is None:
@@ -166,7 +193,10 @@ class Sidebar:
                 self._build_navigation_section(),
                 self._build_saved_calibrations_section(sidebar),
                 self._build_saved_profiles_section(),
-                dcc.Store(id=SidebarIds.saved_calibrations_refresh_store, data=0),
+                dcc.Store(
+                    id=SidebarIds.saved_calibrations_refresh_store,
+                    data=0,
+                ),
                 dcc.Store(
                     id=SidebarIds.selected_profile_store,
                     data=None,
@@ -186,6 +216,9 @@ class Sidebar:
         )
 
     def _normalize_profile_filename(self, filename: str) -> str:
+        """
+        Normalize a profile file name to a `.json` file name.
+        """
         normalized_filename = str(filename or "").strip()
 
         if not normalized_filename:
@@ -197,6 +230,9 @@ class Sidebar:
         return normalized_filename
 
     def _list_saved_calibrations(self) -> dict[str, list[str]]:
+        """
+        List saved calibration files from disk.
+        """
         logger.debug("Listing saved calibrations from disk.")
 
         saved_calibrations: dict[str, list[str]] = {
@@ -212,6 +248,7 @@ class Sidebar:
         for folder_name, directory_path in folder_to_directory.items():
             try:
                 directory_path.mkdir(parents=True, exist_ok=True)
+
                 file_names = sorted(
                     [
                         path.name
@@ -220,6 +257,7 @@ class Sidebar:
                     ],
                     key=str.lower,
                 )
+
                 saved_calibrations[folder_name] = file_names
 
                 logger.debug(
@@ -240,9 +278,13 @@ class Sidebar:
         return saved_calibrations
 
     def _build_logo_section(self) -> html.Div:
+        """
+        Build the logo section.
+        """
         return html.Div(
             [
                 html.Img(
+                    id="sidebar-logo",
                     src=self.logo_src,
                     style={
                         "width": "100%",
@@ -251,33 +293,49 @@ class Sidebar:
                         "objectFit": "contain",
                         "maxHeight": f"{self.logo_max_height_px}px",
                     },
-                )
+                ),
             ],
             style={"width": "100%"},
         )
 
     def _build_navigation_section(self) -> html.Div:
+        """
+        Build the main navigation section.
+        """
         return html.Div(
             [
                 dbc.Nav(
                     [
-                        dbc.NavLink("Home", href="/home", active="exact"),
-                        dbc.NavLink("Help", href="/help", active="exact"),
-                        dbc.NavLink("Fluorescence", href="/fluorescence", active="exact"),
-                        dbc.NavLink("Scattering", href="/scattering", active="exact"),
-                        dbc.NavLink("Apply calibration", href="/calibrate", active="exact"),
-                        dbc.NavLink("Settings", href="/settings", active="exact"),
+                        self._nav_link("Home", "/home"),
+                        self._nav_link("Help", "/help"),
+                        self._nav_link("Fluorescence", "/fluorescence"),
+                        self._nav_link("Scattering", "/scattering"),
+                        self._nav_link("Apply calibration", "/calibrate"),
+                        self._nav_link("Settings", "/settings"),
                     ],
                     vertical=True,
                     pills=True,
-                )
+                ),
             ]
+        )
+
+    def _nav_link(self, label: str, href: str) -> dbc.NavLink:
+        """
+        Build a sidebar navigation link.
+        """
+        return dbc.NavLink(
+            label,
+            href=href,
+            active="exact",
         )
 
     def _build_saved_calibrations_section(
         self,
         saved_calibrations: dict[str, list[str]],
     ) -> dbc.Card:
+        """
+        Build the saved calibrations card.
+        """
         logger.debug(
             "Building saved calibrations section with fluorescence=%d scattering=%d",
             len(saved_calibrations.get("fluorescence", [])),
@@ -329,6 +387,9 @@ class Sidebar:
         self,
         saved_calibrations: dict[str, list[str]],
     ) -> list[html.Div]:
+        """
+        Build the body content of the saved calibrations card.
+        """
         body_children: list[html.Div] = []
 
         for folder_key, folder_label in self._folder_display_order:
@@ -343,12 +404,18 @@ class Sidebar:
             if file_names:
                 file_list = html.Ul(
                     [self._saved_file_item(folder_key, file_name) for file_name in file_names],
-                    style={"paddingLeft": "20px", "marginBottom": "0px"},
+                    style={
+                        "paddingLeft": "20px",
+                        "marginBottom": "0px",
+                    },
                 )
             else:
                 file_list = html.Div(
                     "No calibration found.",
-                    style={"opacity": 0.7, "fontStyle": "italic"},
+                    style={
+                        "opacity": 0.7,
+                        "fontStyle": "italic",
+                    },
                 )
 
             body_children.append(
@@ -370,6 +437,13 @@ class Sidebar:
         return body_children
 
     def _saved_file_item(self, folder: str, file_name: str) -> html.Li:
+        """
+        Build one saved calibration row.
+
+        Two actions are provided:
+        - open the raw calibration JSON in a new tab
+        - navigate internally to the calibration application page with this calibration selected
+        """
         logger.debug(
             "Building sidebar item for folder=%r file_name=%r",
             folder,
@@ -386,7 +460,7 @@ class Sidebar:
                         dcc.Link(
                             file_name,
                             href=f"/calibration-json/{folder}/{file_name}",
-                            target="_blank",
+                            refresh=False,
                             style={
                                 "overflowWrap": "anywhere",
                                 "wordBreak": "break-word",
@@ -397,11 +471,10 @@ class Sidebar:
                             "minWidth": "0",
                         },
                     ),
-                    dbc.Button(
+                    dcc.Link(
                         "Apply",
                         href=apply_href,
-                        color="link",
-                        size="sm",
+                        refresh=False,
                         style={
                             "padding": "0px",
                             "whiteSpace": "nowrap",
@@ -421,6 +494,9 @@ class Sidebar:
         )
 
     def _build_saved_profiles_section(self) -> dbc.Card:
+        """
+        Build the saved profiles card.
+        """
         return dbc.Card(
             [
                 dbc.CardHeader("Saved profiles"),
@@ -473,6 +549,9 @@ class Sidebar:
         )
 
     def _build_saved_profile_options(self) -> list[dict[str, str]]:
+        """
+        Build saved profile dropdown options.
+        """
         logger.debug("Building saved profile options from disk.")
 
         try:
@@ -480,6 +559,7 @@ class Sidebar:
             options = [{"label": file_name, "value": file_name} for file_name in setting_files]
             logger.debug("Built %d saved profile options.", len(options))
             return options
+
         except Exception:
             logger.exception("Failed to build saved profile options.")
             return []
@@ -489,10 +569,16 @@ _sidebar_instance = Sidebar()
 
 
 def register_sidebar_callbacks() -> None:
+    """
+    Register callbacks for the singleton sidebar instance.
+    """
     logger.debug("register_sidebar_callbacks called.")
     _sidebar_instance.register_callbacks()
 
 
 def sidebar_html(sidebar: Optional[dict[str, list[str]]]) -> html.Div:
+    """
+    Build sidebar HTML for the singleton sidebar instance.
+    """
     logger.debug("sidebar_html called with sidebar=%r", sidebar)
     return _sidebar_instance.layout(sidebar)

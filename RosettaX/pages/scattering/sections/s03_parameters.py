@@ -57,8 +57,47 @@ class Parameters:
     def __init__(self, page) -> None:
         self.page = page
         self.runtime_config = RuntimeConfig()
-        self.default = self.runtime_config.Default
         logger.debug("Initialized Parameters section with page=%r", page)
+
+    def _refresh_runtime(self) -> RuntimeConfig:
+        self.runtime_config = RuntimeConfig()
+        return self.runtime_config
+
+    def _get_default_mie_model(self) -> str:
+        runtime_config = self._refresh_runtime()
+        return runtime_config.get_str("particle_model.mie_model", default="Solid Sphere")
+
+    def _get_default_wavelength_nm(self) -> float:
+        runtime_config = self._refresh_runtime()
+        return runtime_config.get_float("optics.wavelength_nm", default=700.0)
+
+    def _get_default_detector_numerical_aperture(self) -> float:
+        runtime_config = self._refresh_runtime()
+        return runtime_config.get_float("optics.detector_numerical_aperture", default=0.2)
+
+    def _get_default_detector_cache_numerical_aperture(self) -> float:
+        runtime_config = self._refresh_runtime()
+        return runtime_config.get_float("optics.detector_cache_numerical_aperture", default=0.0)
+
+    def _get_default_detector_sampling(self) -> int:
+        runtime_config = self._refresh_runtime()
+        return runtime_config.get_int("optics.detector_sampling", default=600)
+
+    def _get_default_medium_refractive_index(self) -> float:
+        runtime_config = self._refresh_runtime()
+        return runtime_config.get_float("optics.medium_refractive_index", default=1.333)
+
+    def _get_default_particle_refractive_index(self) -> float:
+        runtime_config = self._refresh_runtime()
+        return runtime_config.get_float("particle_model.particle_refractive_index", default=1.59)
+
+    def _get_default_core_refractive_index(self) -> float:
+        runtime_config = self._refresh_runtime()
+        return runtime_config.get_float("particle_model.core_refractive_index", default=1.47)
+
+    def _get_default_shell_refractive_index(self) -> float:
+        runtime_config = self._refresh_runtime()
+        return runtime_config.get_float("particle_model.shell_refractive_index", default=1.46)
 
     def get_layout(self) -> dbc.Card:
         logger.debug("Building Parameters layout.")
@@ -118,7 +157,7 @@ class Parameters:
                     label="Wavelength (nm):",
                     component_id=self.page.ids.Parameters.wavelength_nm,
                     placeholder="Wavelength (nm)",
-                    value=getattr(self.default, "wavelength_nm", 700.0),
+                    value=self._get_default_wavelength_nm(),
                     min_value=1,
                     step=1,
                     width_px=220,
@@ -127,7 +166,7 @@ class Parameters:
                     label="Detector NA:",
                     component_id=self.page.ids.Parameters.detector_numerical_aperture,
                     placeholder="Detector NA",
-                    value=getattr(self.default, "detector_numerical_aperture", 0.2),
+                    value=self._get_default_detector_numerical_aperture(),
                     min_value=0.0,
                     max_value=1.5,
                     step=0.001,
@@ -137,7 +176,7 @@ class Parameters:
                     label="Detector cache NA:",
                     component_id=self.page.ids.Parameters.detector_cache_numerical_aperture,
                     placeholder="Detector cache NA",
-                    value=getattr(self.default, "detector_cache_numerical_aperture", 0.2),
+                    value=self._get_default_detector_cache_numerical_aperture(),
                     min_value=0.0,
                     max_value=1.5,
                     step=0.001,
@@ -147,7 +186,7 @@ class Parameters:
                     label="Detector sampling:",
                     component_id=self.page.ids.Parameters.detector_sampling,
                     placeholder="Detector sampling",
-                    value=getattr(self.default, "detector_sampling", 600),
+                    value=self._get_default_detector_sampling(),
                     min_value=1,
                     step=1,
                     width_px=220,
@@ -164,7 +203,7 @@ class Parameters:
                     dash.dcc.Dropdown(
                         id=self.page.ids.Parameters.mie_model,
                         options=self._get_mie_model_options(),
-                        value=getattr(self.default, "mie_model", "Solid Sphere"),
+                        value=self._get_default_mie_model(),
                         clearable=False,
                         searchable=False,
                         persistence=True,
@@ -177,7 +216,7 @@ class Parameters:
                     label="Medium refractive index:",
                     preset_id=self.page.ids.Parameters.medium_refractive_index_source,
                     value_id=self.page.ids.Parameters.medium_refractive_index_custom,
-                    default_value=getattr(self.default, "medium_refractive_index", 1.333),
+                    default_value=self._get_default_medium_refractive_index(),
                     preset_options=self._get_medium_refractive_index_presets(),
                 ),
                 dash.html.Div(
@@ -199,7 +238,7 @@ class Parameters:
                 label="Particle refractive index:",
                 preset_id=self.page.ids.Parameters.particle_refractive_index_source,
                 value_id=self.page.ids.Parameters.particle_refractive_index_custom,
-                default_value=getattr(self.default, "particle_refractive_index", 1.59),
+                default_value=self._get_default_particle_refractive_index(),
                 preset_options=self._get_particle_refractive_index_presets(),
             ),
         ]
@@ -210,14 +249,14 @@ class Parameters:
                 label="Core refractive index:",
                 preset_id=self.page.ids.Parameters.core_refractive_index_source,
                 value_id=self.page.ids.Parameters.core_refractive_index_custom,
-                default_value=getattr(self.default, "core_refractive_index", 1.47),
+                default_value=self._get_default_core_refractive_index(),
                 preset_options=self._get_core_refractive_index_presets(),
             ),
             self._refractive_index_picker(
                 label="Shell refractive index:",
                 preset_id=self.page.ids.Parameters.shell_refractive_index_source,
                 value_id=self.page.ids.Parameters.shell_refractive_index_custom,
-                default_value=getattr(self.default, "shell_refractive_index", 1.46),
+                default_value=self._get_default_shell_refractive_index(),
                 preset_options=self._get_shell_refractive_index_presets(),
             ),
         ]
@@ -236,7 +275,7 @@ class Parameters:
                     id=self.page.ids.Calibration.bead_table,
                     columns=self.sphere_table_columns,
                     data=self._build_empty_rows_for_model("Solid Sphere", row_count=3),
-                    **styling.DATATABLE
+                    **styling.DATATABLE,
                 ),
                 dash.html.Div(
                     [
@@ -270,8 +309,6 @@ class Parameters:
         self._register_table_default_population_callback()
         self._register_runtime_sync_callbacks()
 
-
-
     def _register_runtime_sync_callbacks(self) -> None:
         @dash.callback(
             dash.Output(self.page.ids.Parameters.mie_model, "value"),
@@ -292,34 +329,21 @@ class Parameters:
                 runtime_config_data,
             )
 
-            if not isinstance(runtime_config_data, dict):
-                resolved_values = (
-                    self.default.mie_model,
-                    self.default.medium_refractive_index,
-                    self.default.particle_refractive_index,
-                    self.default.core_refractive_index,
-                    self.default.shell_refractive_index,
-                    self.default.wavelength_nm,
-                    self.default.detector_numerical_aperture,
-                    self.default.detector_cache_numerical_aperture,
-                    self.default.detector_sampling,
-                )
-                logger.debug(
-                    "runtime_config_data is not a dict. Returning Default values=%r",
-                    resolved_values,
-                )
-                return resolved_values
+            runtime_config = self._refresh_runtime()
+
+            if isinstance(runtime_config_data, dict):
+                runtime_config.Default.load_dict(runtime_config_data)
 
             resolved_values = (
-                runtime_config_data.get("mie_model", self.default.mie_model),
-                runtime_config_data.get("medium_refractive_index", self.default.medium_refractive_index),
-                runtime_config_data.get("particle_refractive_index", self.default.particle_refractive_index),
-                runtime_config_data.get("core_refractive_index", self.default.core_refractive_index),
-                runtime_config_data.get("shell_refractive_index", self.default.shell_refractive_index),
-                runtime_config_data.get("wavelength_nm", self.default.wavelength_nm),
-                runtime_config_data.get("detector_numerical_aperture", self.default.detector_numerical_aperture),
-                runtime_config_data.get("detector_cache_numerical_aperture", self.default.detector_cache_numerical_aperture),
-                runtime_config_data.get("detector_sampling", self.default.detector_sampling),
+                runtime_config.get_str("particle_model.mie_model", default="Solid Sphere"),
+                runtime_config.get_float("optics.medium_refractive_index", default=1.333),
+                runtime_config.get_float("particle_model.particle_refractive_index", default=1.59),
+                runtime_config.get_float("particle_model.core_refractive_index", default=1.47),
+                runtime_config.get_float("particle_model.shell_refractive_index", default=1.46),
+                runtime_config.get_float("optics.wavelength_nm", default=700.0),
+                runtime_config.get_float("optics.detector_numerical_aperture", default=0.2),
+                runtime_config.get_float("optics.detector_cache_numerical_aperture", default=0.0),
+                runtime_config.get_int("optics.detector_sampling", default=600),
             )
 
             logger.debug(
@@ -327,7 +351,6 @@ class Parameters:
                 resolved_values,
             )
             return resolved_values
-
 
     def _register_table_default_population_callback(self) -> None:
         @dash.callback(
@@ -370,12 +393,15 @@ class Parameters:
                 logger.debug("No runtime config data available.")
                 return dash.no_update
 
+            runtime_config = self._refresh_runtime()
+            runtime_config.Default.load_dict(runtime_config_data)
+
             if resolved_mie_model == "Core/Shell Sphere":
                 core_diameters_nm = self._as_float_list_from_runtime_value(
-                    runtime_config_data.get("core_diameter_nm", runtime_config_data.get("core_diameter", "")),
+                    runtime_config.get_path("particle_model.core_diameter_nm", default=[]),
                 )
                 shell_thicknesses_nm = self._as_float_list_from_runtime_value(
-                    runtime_config_data.get("shell_thickness_nm", runtime_config_data.get("shell_thickness", "")),
+                    runtime_config.get_path("particle_model.shell_thickness_nm", default=[]),
                 )
 
                 row_count = max(3, len(core_diameters_nm), len(shell_thicknesses_nm))
@@ -410,7 +436,7 @@ class Parameters:
                 return rows
 
             particle_diameters_nm = self._as_float_list_from_runtime_value(
-                runtime_config_data.get("particle_diameter_nm", runtime_config_data.get("particle_diameter", "")),
+                runtime_config.get_path("particle_model.particle_diameter_nm", default=[]),
             )
 
             row_count = max(3, len(particle_diameters_nm))
@@ -432,7 +458,6 @@ class Parameters:
 
             logger.debug("Populated solid sphere table from runtime defaults rows=%r", rows)
             return rows
-
 
     def _register_post_compute_cleanup_callbacks(self) -> None:
         @dash.callback(
@@ -744,10 +769,7 @@ class Parameters:
                 resolved_detector_sampling,
             )
 
-            backend = BackEnd(
-                fcs_file_path="",
-                detector_column="",
-            )
+            backend = BackEnd()
 
             if resolved_mie_model == "Core/Shell Sphere":
                 logger.debug("compute_model running in Core/Shell Sphere mode.")

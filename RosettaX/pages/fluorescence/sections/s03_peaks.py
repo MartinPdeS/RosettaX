@@ -17,7 +17,22 @@ class Peaks:
     def __init__(self, page) -> None:
         self.page = page
         self.runtime_config = RuntimeConfig()
-        self.default = self.runtime_config.Default
+
+    def _refresh_runtime(self) -> RuntimeConfig:
+        self.runtime_config = RuntimeConfig()
+        return self.runtime_config
+
+    def _get_default_show_graphs(self) -> bool:
+        runtime_config = self._refresh_runtime()
+        return runtime_config.get_show_graphs(default=False)
+
+    def _get_default_peak_count(self) -> int:
+        runtime_config = self._refresh_runtime()
+        return runtime_config.get_int("calibration.peak_count", default=4)
+
+    def _get_default_n_bins_for_plots(self) -> int:
+        runtime_config = self._refresh_runtime()
+        return runtime_config.get_int("calibration.n_bins_for_plots", default=100)
 
     def get_layout(self) -> dbc.Card:
         return dbc.Card(
@@ -45,12 +60,14 @@ class Peaks:
         )
 
     def _build_graph_toggle_switch(self) -> dash.html.Div:
+        default_show_graphs = self._get_default_show_graphs()
+
         return dash.html.Div(
             [
                 dbc.Checklist(
                     id=self.page.ids.Fluorescence.graph_toggle_switch,
                     options=[{"label": "Show histogram", "value": "enabled"}],
-                    value=["enabled"] if self.default.show_graphs else [],
+                    value=["enabled"] if default_show_graphs else [],
                     switch=True,
                 ),
             ],
@@ -87,12 +104,14 @@ class Peaks:
         )
 
     def _build_peak_controls(self) -> dash.html.Div:
+        default_peak_count = self._get_default_peak_count()
+
         peak_count_input = dash.dcc.Input(
             id=self.page.ids.Fluorescence.peak_count_input,
             type="number",
             min=1,
             step=1,
-            value=self.default.peak_count,
+            value=default_peak_count,
             style={"width": "120px"},
         )
 
@@ -135,6 +154,8 @@ class Peaks:
         )
 
     def _build_nbins_input(self) -> dash.html.Div:
+        default_n_bins_for_plots = self._get_default_n_bins_for_plots()
+
         return dash.html.Div(
             [
                 dash.html.Div("Number of bins:"),
@@ -143,7 +164,7 @@ class Peaks:
                     type="number",
                     min=10,
                     step=10,
-                    value=self.default.n_bins_for_plots,
+                    value=default_n_bins_for_plots,
                     style={"width": "160px"},
                 ),
             ],
@@ -163,25 +184,13 @@ class Peaks:
                 runtime_config_data,
             )
 
-            if not isinstance(runtime_config_data, dict):
-                logger.debug(
-                    "Runtime config store is not a dict. Using defaults peak_count=%r nbins=%r",
-                    self.default.peak_count,
-                    self.default.n_bins_for_plots,
-                )
-                return (
-                    self.default.peak_count,
-                    self.default.n_bins_for_plots,
-                )
+            runtime_config = self._refresh_runtime()
 
-            peak_count_value = runtime_config_data.get(
-                "peak_count",
-                self.default.peak_count,
-            )
-            fluorescence_nbins_value = runtime_config_data.get(
-                "n_bins_for_plots",
-                self.default.n_bins_for_plots,
-            )
+            if isinstance(runtime_config_data, dict):
+                runtime_config.Default.load_dict(runtime_config_data)
+
+            peak_count_value = runtime_config.get_int("calibration.peak_count", default=4)
+            fluorescence_nbins_value = runtime_config.get_int("calibration.n_bins_for_plots", default=100)
 
             logger.debug(
                 "Runtime config resolved to peak_count=%r fluorescence_nbins=%r",
@@ -197,17 +206,12 @@ class Peaks:
             prevent_initial_call=False,
         )
         def sync_graph_toggle_from_runtime_store(runtime_config_data: Any) -> list[str]:
-            if not isinstance(runtime_config_data, dict):
-                logger.debug(
-                    "sync_graph_toggle_from_runtime_store received non-dict payload=%r. Using Default.show_graphs=%r",
-                    runtime_config_data,
-                    self.default.show_graphs,
-                )
-                return ["enabled"] if self.default.show_graphs else []
+            runtime_config = self._refresh_runtime()
 
-            resolved_show_graphs = bool(
-                runtime_config_data.get("show_graphs", self.default.show_graphs)
-            )
+            if isinstance(runtime_config_data, dict):
+                runtime_config.Default.load_dict(runtime_config_data)
+
+            resolved_show_graphs = runtime_config.get_show_graphs(default=False)
 
             logger.debug(
                 "sync_graph_toggle_from_runtime_store resolved_show_graphs=%r from runtime_config_data=%r",
