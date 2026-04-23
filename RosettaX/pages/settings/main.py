@@ -29,10 +29,6 @@ class SettingsPage:
     def layout(self) -> dash.html.Div:
         return dash.html.Div(
             [
-                dash.html.H1("Settings"),
-                dash.html.P(
-                    "Configure your RosettaX instance here. You can change the backend, manage your data, and adjust other settings."
-                ),
                 *[section._get_layout() for section in self.sections],
             ]
         )

@@ -10,6 +10,8 @@ class Ids:
     page_name = "settings"
 
     class Default:
+
+        form_store = "settings-default-form-store"
         mie_model = "Solid Sphere"
         medium_refractive_index = "medium_refractive_index"
         core_refractive_index = "core_refractive_index"

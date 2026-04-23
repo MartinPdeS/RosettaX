@@ -1,181 +1,229 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import annotations
-
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
+
+import numpy as np
 
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.utils import casting, directories
+from . import schema
 
+def _json_safe_scalar(value: Any) -> Any:
+    if isinstance(value, np.generic):
+        return value.item()
+    return value
+
+
+def _json_safe_value(value: Any) -> Any:
+    if isinstance(value, np.ndarray):
+        return value.tolist()
+
+    if isinstance(value, np.generic):
+        return value.item()
+
+    if isinstance(value, list):
+        return [_json_safe_value(item) for item in value]
+
+    if isinstance(value, tuple):
+        return [_json_safe_value(item) for item in value]
+
+    if isinstance(value, dict):
+        return {str(key): _json_safe_value(item) for key, item in value.items()}
+
+    return value
 
 def build_profile_options() -> list[dict[str, str]]:
-    profile_names = directories.list_profiles()
-    return [{"label": profile_name, "value": profile_name} for profile_name in profile_names]
+    return [{"label": file_name, "value": file_name} for file_name in directories.list_profiles()]
 
 
-def resolve_default_profile_value(profile_options: list[dict[str, str]]) -> str | None:
+def resolve_default_profile_value(profile_options: list[dict[str, str]]) -> Optional[str]:
     if not profile_options:
         return None
-    return str(profile_options[0]["value"])
+
+    for option in profile_options:
+        option_value = str(option.get("value") or "").strip()
+        if option_value in {"default_profile", "default_profile.json"}:
+            return option_value
+
+    return str(profile_options[0].get("value") or "")
 
 
-def get_saved_profile(profile_name: str) -> dict[str, Any] | None:
-    profile_path = Path(directories.profiles) / f"{profile_name}.json"
+def normalize_profile_filename(profile_name: str) -> str:
+    normalized_profile_name = str(profile_name or "").strip()
+
+    if not normalized_profile_name:
+        raise ValueError("Profile name cannot be empty.")
+
+    if not normalized_profile_name.endswith(".json"):
+        normalized_profile_name = f"{normalized_profile_name}.json"
+
+    return normalized_profile_name
+
+
+def get_saved_profile(profile_name: Optional[str]) -> Optional[dict[str, Any]]:
+    if not profile_name:
+        return None
+
+    normalized_profile_name = normalize_profile_filename(profile_name)
+    profile_path = Path(directories.profiles) / normalized_profile_name
+
     if not profile_path.exists():
         return None
 
-    runtime_config = RuntimeConfig.from_json_path(profile_path)
-    return runtime_config.to_dict()
+    return RuntimeConfig.from_json_path(profile_path).to_dict()
 
 
-def flatten_runtime_config(runtime_config: RuntimeConfig) -> dict[str, Any]:
+def build_form_field_ids(page) -> dict[str, str]:
     return {
-        "medium_refractive_index": runtime_config.get_float("optics.medium_refractive_index", default=1.334),
-        "core_refractive_index": runtime_config.get_float("particle_model.core_refractive_index", default=1.5),
-        "shell_refractive_index": runtime_config.get_float("particle_model.shell_refractive_index", default=1.5),
-        "shell_thickness_nm": runtime_config.get_path("particle_model.shell_thickness_nm", default=[]),
-        "core_diameter_nm": runtime_config.get_path("particle_model.core_diameter_nm", default=[]),
-        "particle_diameter_nm": runtime_config.get_path("particle_model.particle_diameter_nm", default=[]),
-        "particle_refractive_index": runtime_config.get_float("particle_model.particle_refractive_index", default=1.59),
-        "wavelength_nm": runtime_config.get_float("optics.wavelength_nm", default=488.0),
-        "max_events_for_analysis": runtime_config.get_int("calibration.max_events_for_analysis", default=100),
-        "n_bins_for_plots": runtime_config.get_int("calibration.n_bins_for_plots", default=100),
-        "peak_count": runtime_config.get_int("calibration.peak_count", default=4),
-        "mie_model": runtime_config.get_str("particle_model.mie_model", default="Solid Sphere"),
-        "mesf_values": runtime_config.get_path("calibration.mesf_values", default=[]),
-        "fluorescence_fcs_file_path": runtime_config.get_path("files.fluorescence_fcs_file_path", default=None),
-        "scattering_fcs_file_path": runtime_config.get_path("files.scattering_fcs_file_path", default=None),
-        "default_gating_channel": runtime_config.get_path("calibration.default_gating_channel", default=None),
-        "default_gating_threshold": runtime_config.get_path("calibration.default_gating_threshold", default=None),
-        "show_calibration_plot_by_default": runtime_config.get_bool(
-            "calibration.show_calibration_plot_by_default",
-            default=False,
-        ),
-        "histogram_scale": runtime_config.get_str("calibration.histogram_scale", default="log"),
-        "default_output_suffix": runtime_config.get_str("calibration.default_output_suffix", default="_calibrated"),
-        "operator_name": runtime_config.get_str("metadata.operator_name", default=""),
-        "instrument_name": runtime_config.get_str("metadata.instrument_name", default=""),
-        "theme_mode": runtime_config.get_theme_mode(default="dark"),
-        "show_graphs": runtime_config.get_show_graphs(default=False),
-        "default_marker_size": runtime_config.get_float("visualization.default_marker_size", default=8.0),
-        "default_line_width": runtime_config.get_float("visualization.default_line_width", default=2.0),
-        "show_grid_by_default": runtime_config.get_bool("visualization.show_grid_by_default", default=True),
+        field_name: getattr(page.ids.Default, field_name)
+        for field_name in schema.ordered_field_names()
     }
 
 
-def build_flat_runtime_payload_from_form_values(form_values: tuple[Any, ...]) -> dict[str, Any]:
-    if len(form_values) != 27:
-        raise ValueError(f"Expected 27 form values, received {len(form_values)}.")
+def _read_runtime_value(
+    *,
+    runtime_config: RuntimeConfig,
+    field_definition: schema.FieldDefinition,
+) -> Any:
+    value_kind = field_definition.value_kind
+    runtime_path = field_definition.runtime_path
+    default_value = field_definition.default
 
-    (
-        medium_refractive_index,
-        core_refractive_index,
-        shell_refractive_index,
-        shell_thickness_nm,
-        core_diameter_nm,
-        particle_diameter_nm,
-        particle_refractive_index,
-        wavelength_nm,
-        max_events_for_analysis,
-        n_bins_for_plots,
-        peak_count,
-        mie_model,
-        mesf_values,
-        fluorescence_fcs_file_path,
-        scattering_fcs_file_path,
-        default_gating_channel,
-        default_gating_threshold,
-        show_calibration_plot_by_default,
-        histogram_scale,
-        default_output_suffix,
-        operator_name,
-        instrument_name,
-        theme_mode,
-        show_graphs,
-        default_marker_size,
-        default_line_width,
-        show_grid_by_default,
-    ) = form_values
+    if value_kind == "float":
+        return _json_safe_scalar(runtime_config.get_float(runtime_path, default=default_value))
+
+    if value_kind == "int":
+        return _json_safe_scalar(runtime_config.get_int(runtime_path, default=default_value))
+
+    if value_kind == "float_list":
+        raw_value = runtime_config.get_path(runtime_path, default=default_value)
+        raw_value = _json_safe_value(raw_value)
+        return casting.format_float_list_for_input(raw_value)
+
+    if value_kind == "string":
+        raw_value = runtime_config.get_path(runtime_path, default=default_value)
+        raw_value = _json_safe_value(raw_value)
+        return casting.coerce_optional_string(raw_value) or ""
+
+    if value_kind == "yes_no_bool":
+        resolved_bool = runtime_config.get_bool(runtime_path, default=bool(default_value))
+        return "yes" if resolved_bool else "no"
+
+    if value_kind == "choice":
+        return str(runtime_config.get_str(runtime_path, default=str(default_value)))
+
+    raise ValueError(f"Unsupported value_kind: {value_kind!r}")
+
+
+def build_form_store_from_runtime_config(runtime_config: RuntimeConfig) -> dict[str, Any]:
+    return {
+        field_definition.name: _read_runtime_value(
+            runtime_config=runtime_config,
+            field_definition=field_definition,
+        )
+        for field_definition in schema.FIELD_DEFINITIONS
+    }
+
+
+def build_form_store_from_form_values(form_values: tuple[Any, ...]) -> dict[str, Any]:
+    ordered_field_names = schema.ordered_field_names()
+
+    if len(form_values) != len(ordered_field_names):
+        raise ValueError(
+            f"Expected {len(ordered_field_names)} form values, got {len(form_values)}."
+        )
 
     return {
-        "medium_refractive_index": casting.as_optional_float(medium_refractive_index),
-        "core_refractive_index": casting.as_optional_float(core_refractive_index),
-        "shell_refractive_index": casting.as_optional_float(shell_refractive_index),
-        "shell_thickness_nm": casting.parse_float_list(shell_thickness_nm),
-        "core_diameter_nm": casting.parse_float_list(core_diameter_nm),
-        "particle_diameter_nm": casting.parse_float_list(particle_diameter_nm),
-        "particle_refractive_index": casting.as_optional_float(particle_refractive_index),
-        "wavelength_nm": casting.as_optional_float(wavelength_nm),
-        "max_events_for_analysis": casting.as_optional_int(max_events_for_analysis),
-        "n_bins_for_plots": casting.as_optional_int(n_bins_for_plots),
-        "peak_count": casting.as_optional_int(peak_count),
-        "mie_model": casting.coerce_optional_string(mie_model),
-        "mesf_values": casting.parse_float_list(mesf_values),
-        "fluorescence_fcs_file_path": casting.coerce_optional_string(fluorescence_fcs_file_path),
-        "scattering_fcs_file_path": casting.coerce_optional_string(scattering_fcs_file_path),
-        "default_gating_channel": casting.coerce_optional_string(default_gating_channel),
-        "default_gating_threshold": casting.as_optional_float(default_gating_threshold),
-        "show_calibration_plot_by_default": str(show_calibration_plot_by_default).strip().lower() == "yes",
-        "histogram_scale": casting.coerce_optional_string(histogram_scale) or "log",
-        "default_output_suffix": casting.coerce_optional_string(default_output_suffix),
-        "operator_name": casting.coerce_optional_string(operator_name),
-        "instrument_name": casting.coerce_optional_string(instrument_name),
-        "theme_mode": casting.coerce_optional_string(theme_mode) or "dark",
-        "show_graphs": str(show_graphs).strip().lower() == "yes",
-        "default_marker_size": casting.as_optional_float(default_marker_size),
-        "default_line_width": casting.as_optional_float(default_line_width),
-        "show_grid_by_default": str(show_grid_by_default).strip().lower() == "yes",
+        field_name: _json_safe_value(value)
+        for field_name, value in zip(ordered_field_names, form_values, strict=True)
     }
+
+
+def build_output_values_from_form_store(form_store: dict[str, Any]) -> tuple[Any, ...]:
+    return tuple(
+        _json_safe_value(form_store.get(field_name))
+        for field_name in schema.ordered_field_names()
+    )
+
+
+def coerce_form_store_to_flat_runtime_payload(form_store_data: Any) -> dict[str, Any]:
+    if not isinstance(form_store_data, dict):
+        raise TypeError("form_store data must be a dictionary.")
+
+    return {
+        field_name: _json_safe_value(form_store_data.get(field_name))
+        for field_name in schema.ordered_field_names()
+    }
+
+
+def _set_nested_value(
+    nested_payload: dict[str, Any],
+    dotted_path: str,
+    value: Any,
+) -> None:
+    path_parts = [part for part in str(dotted_path).split(".") if part]
+    current_level = nested_payload
+
+    for path_part in path_parts[:-1]:
+        next_level = current_level.get(path_part)
+        if not isinstance(next_level, dict):
+            next_level = {}
+            current_level[path_part] = next_level
+        current_level = next_level
+
+    current_level[path_parts[-1]] = value
+
+
+def _coerce_field_value_for_save(
+    *,
+    field_definition: schema.FieldDefinition,
+    raw_value: Any,
+) -> Any:
+    value_kind = field_definition.value_kind
+
+    if value_kind == "float":
+        return casting.as_optional_float(raw_value)
+
+    if value_kind == "int":
+        return casting.as_optional_int(raw_value)
+
+    if value_kind == "float_list":
+        return casting.as_float_list(raw_value)
+
+    if value_kind == "string":
+        return casting.coerce_optional_string(raw_value)
+
+    if value_kind == "yes_no_bool":
+        return str(raw_value or "no").strip().lower() == "yes"
+
+    if value_kind == "choice":
+        return str(raw_value or field_definition.default).strip()
+
+    raise ValueError(f"Unsupported value_kind: {value_kind!r}")
 
 
 def build_nested_profile_payload(flat_runtime_payload: dict[str, Any]) -> dict[str, Any]:
-    return {
-        "optics": {
-            "medium_refractive_index": flat_runtime_payload.get("medium_refractive_index"),
-            "wavelength_nm": flat_runtime_payload.get("wavelength_nm"),
-        },
-        "particle_model": {
-            "core_refractive_index": flat_runtime_payload.get("core_refractive_index"),
-            "shell_refractive_index": flat_runtime_payload.get("shell_refractive_index"),
-            "shell_thickness_nm": flat_runtime_payload.get("shell_thickness_nm"),
-            "core_diameter_nm": flat_runtime_payload.get("core_diameter_nm"),
-            "particle_diameter_nm": flat_runtime_payload.get("particle_diameter_nm"),
-            "particle_refractive_index": flat_runtime_payload.get("particle_refractive_index"),
-            "mie_model": flat_runtime_payload.get("mie_model"),
-        },
-        "calibration": {
-            "mesf_values": flat_runtime_payload.get("mesf_values"),
-            "max_events_for_analysis": flat_runtime_payload.get("max_events_for_analysis"),
-            "n_bins_for_plots": flat_runtime_payload.get("n_bins_for_plots"),
-            "peak_count": flat_runtime_payload.get("peak_count"),
-            "default_gating_channel": flat_runtime_payload.get("default_gating_channel"),
-            "default_gating_threshold": flat_runtime_payload.get("default_gating_threshold"),
-            "show_calibration_plot_by_default": flat_runtime_payload.get("show_calibration_plot_by_default"),
-            "histogram_scale": flat_runtime_payload.get("histogram_scale"),
-            "default_output_suffix": flat_runtime_payload.get("default_output_suffix"),
-        },
-        "metadata": {
-            "operator_name": flat_runtime_payload.get("operator_name"),
-            "instrument_name": flat_runtime_payload.get("instrument_name"),
-        },
-        "files": {
-            "fluorescence_fcs_file_path": flat_runtime_payload.get("fluorescence_fcs_file_path"),
-            "scattering_fcs_file_path": flat_runtime_payload.get("scattering_fcs_file_path"),
-        },
-        "ui": {
-            "theme_mode": flat_runtime_payload.get("theme_mode"),
-            "show_graphs": flat_runtime_payload.get("show_graphs"),
-        },
-        "visualization": {
-            "default_marker_size": flat_runtime_payload.get("default_marker_size"),
-            "default_line_width": flat_runtime_payload.get("default_line_width"),
-            "show_grid_by_default": flat_runtime_payload.get("show_grid_by_default"),
-        },
-    }
+    nested_profile_payload: dict[str, Any] = {}
+
+    for field_definition in schema.FIELD_DEFINITIONS:
+        raw_value = flat_runtime_payload.get(field_definition.name)
+        coerced_value = _coerce_field_value_for_save(
+            field_definition=field_definition,
+            raw_value=raw_value,
+        )
+        _set_nested_value(
+            nested_payload=nested_profile_payload,
+            dotted_path=field_definition.runtime_path,
+            value=coerced_value,
+        )
+
+    return nested_profile_payload
 
 
 def save_profile(profile_name: str, nested_profile_payload: dict[str, Any]) -> None:
-    profile_path = Path(directories.profiles) / f"{profile_name}.json"
-    runtime_config = RuntimeConfig.from_dict(nested_profile_payload)
-    runtime_config.to_json_path(profile_path)
+    normalized_profile_name = normalize_profile_filename(profile_name)
+    profile_path = Path(directories.profiles) / normalized_profile_name
+    profile_path.parent.mkdir(parents=True, exist_ok=True)
+
+    RuntimeConfig.from_dict(nested_profile_payload).to_json_path(profile_path)

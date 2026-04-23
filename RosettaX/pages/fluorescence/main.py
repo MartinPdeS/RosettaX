@@ -38,7 +38,6 @@ class FluorescencePage:
                 dash.dcc.Store(id=self.ids.Fluorescence.hist_store, storage_type="session"),
                 dash.dcc.Store(id=self.ids.Fluorescence.source_channel_store, storage_type="session"),
                 dash.dcc.Store(id=self.ids.Fluorescence.peak_lines_store, storage_type="session"),
-                dash.html.H1("Fluorescent Calibration"),
                 dash.html.Br(),
                 *[section.get_layout() for section in self.sections],
             ]

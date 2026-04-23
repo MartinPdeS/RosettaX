@@ -1,6 +1,10 @@
+# -*- coding: utf-8 -*-
+
 import dash
 import dash_bootstrap_components as dbc
 from dash import html
+
+from RosettaX.utils import ui_forms
 
 
 class HelpPage:
@@ -32,19 +36,13 @@ class HelpPage:
         return dbc.Card(
             dbc.CardBody(
                 [
-                    html.H1(self.page_title, style={"marginBottom": "8px"}),
-                    html.P(
-                        "RosettaX is organized around three main tasks: building a fluorescence calibration, building a scattering calibration, and applying a saved calibration to one or more FCS files.",
-                        style={
-                            "fontSize": "1.02rem",
-                            "opacity": 0.9,
-                            "marginBottom": "12px",
-                            "maxWidth": "980px",
-                        },
-                    ),
-                    html.P(
-                        "Use this page when you want a concise map of the workflow, the expected inputs, and the most common failure modes.",
-                        style={"opacity": 0.85, "marginBottom": "0px"},
+                    ui_forms.build_section_intro(
+                        title=self.page_title,
+                        title_component="H2",
+                        description=(
+                            "RosettaX is organized around three main tasks: building a fluorescence calibration, "
+                            "building a scattering calibration, and applying a saved calibration to one or more FCS files."
+                        ),
                     ),
                 ]
             )

@@ -30,7 +30,7 @@
         "max_events_for_analysis": 10000,
         "n_bins_for_plots": 100,
         "peak_count": 4,
-        "default_gating_channel": null,
+        "default_gating_channel": "FSC LinH",
         "default_gating_threshold": null,
         "show_calibration_plot_by_default": false,
         "histogram_scale": "linear",

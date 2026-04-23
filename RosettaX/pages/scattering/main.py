@@ -12,7 +12,7 @@ class ScatterCalibrationPage:
         self.style = {
             "body_scroll": {"maxHeight": "80vh", "overflowY": "auto"},
             "graph": {"width": "100%", "height": "60vh"},
-            "row": {"display": "flex", "alignItems": "center", "gap": "10px", "marginTop": "8px"},
+            "row": {"display": "flex", "alignItems": "center", "gap": "10px"},
             "label": {"minWidth": "160px"},
             "card_body_scroll": {"maxHeight": "60vh", "overflowY": "auto"},
         }
@@ -38,7 +38,6 @@ class ScatterCalibrationPage:
                     storage_type="session",
                     data={"positions": [], "labels": []},
                 ),
-                dash.html.H1("Scattering Calibration"),
                 dash.html.Br(),
                 *[section.get_layout() for section in self.sections],
             ]

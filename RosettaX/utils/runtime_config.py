@@ -5,6 +5,7 @@ import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Optional
+import numpy as np
 
 from RosettaX.utils import directories
 
@@ -174,7 +175,12 @@ class RuntimeConfig:
         Return a deep copied payload safe to place into Dash stores.
         """
         runtime_config_dict = copy.deepcopy(self.data)
-        logger.debug("RuntimeConfig.to_dict returning keys=%r", list(runtime_config_dict.keys()))
+        runtime_config_dict = self._make_json_safe(runtime_config_dict)
+
+        logger.debug(
+            "RuntimeConfig.to_dict returning keys=%r",
+            list(runtime_config_dict.keys()),
+        )
         return runtime_config_dict
 
     def copy(self) -> "RuntimeConfig":
@@ -381,68 +387,36 @@ class RuntimeConfig:
         logger.debug("RuntimeConfig.__repr__ returning %r", representation)
         return representation
 
-    def to_json(self, *, indent: int = 4, sort_keys: bool = False) -> str:
-        """
-        Serialize the runtime configuration to a JSON string.
+    def to_json(self, *, indent: int = 2) -> str:
+        return json.dumps(self.to_dict(), indent=indent, ensure_ascii=False)
 
-        Parameters
-        ----------
-        indent : int, default=4
-            Indentation level used for pretty printing.
-        sort_keys : bool, default=False
-            Whether to sort dictionary keys in the serialized output.
-
-        Returns
-        -------
-        str
-            JSON string representation of the runtime configuration.
-        """
-        runtime_config_json = json.dumps(
-            self.to_dict(),
-            indent=indent,
-            sort_keys=sort_keys,
-            ensure_ascii=False,
-        )
-        logger.debug(
-            "RuntimeConfig.to_json returning JSON string with length=%r",
-            len(runtime_config_json),
-        )
-        return runtime_config_json
-
-    def to_json_path(
-        self,
-        json_path: Path | str,
-        *,
-        indent: int = 4,
-        sort_keys: bool = False,
-    ) -> Path:
-        """
-        Write the runtime configuration to a JSON file.
-
-        Parameters
-        ----------
-        json_path : Path | str
-            Destination JSON file path.
-        indent : int, default=4
-            Indentation level used for pretty printing.
-        sort_keys : bool, default=False
-            Whether to sort dictionary keys in the serialized output.
-
-        Returns
-        -------
-        Path
-            Resolved path to the written JSON file.
-        """
+    def to_json_path(self, json_path: Path | str, *, indent: int = 2) -> None:
         resolved_json_path = Path(json_path).expanduser().resolve()
         resolved_json_path.parent.mkdir(parents=True, exist_ok=True)
 
-        resolved_json_path.write_text(
-            self.to_json(indent=indent, sort_keys=sort_keys),
-            encoding="utf-8",
-        )
+        with resolved_json_path.open("w", encoding="utf-8") as file_handle:
+            json.dump(self.to_dict(), file_handle, indent=indent, ensure_ascii=False)
 
         logger.debug(
-            "RuntimeConfig.to_json_path wrote JSON to path=%r",
+            "RuntimeConfig.to_json_path wrote config to path=%r",
             str(resolved_json_path),
         )
-        return resolved_json_path
+
+    @staticmethod
+    def _make_json_safe(value: Any) -> Any:
+        if isinstance(value, np.ndarray):
+            return value.tolist()
+
+        if isinstance(value, np.generic):
+            return value.item()
+
+        if isinstance(value, dict):
+            return {
+                str(key): RuntimeConfig._make_json_safe(item)
+                for key, item in value.items()
+            }
+
+        if isinstance(value, (list, tuple)):
+            return [RuntimeConfig._make_json_safe(item) for item in value]
+
+        return value

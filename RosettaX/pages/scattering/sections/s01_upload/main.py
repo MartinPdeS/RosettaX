@@ -8,7 +8,7 @@ import dash
 import dash_bootstrap_components as dbc
 from dash import Input, Output, State, callback, dcc, html
 
-from RosettaX.utils import styling
+from RosettaX.utils import styling, ui_forms
 from RosettaX.utils.runtime_config import RuntimeConfig
 from . import services
 
@@ -30,7 +30,7 @@ class Upload:
         runtime_config = RuntimeConfig.from_default_profile()
         return runtime_config.get_path("files.scattering_fcs_file_path", default=None)
 
-    def get_layout(self) -> dbc.Card:
+    def get_layout(self) -> html.Div:
         initial_fcs_path = self._get_initial_scattering_fcs_file_path()
         initial_filename = Path(initial_fcs_path).name if initial_fcs_path else ""
 
@@ -40,6 +40,40 @@ class Upload:
             initial_filename,
         )
 
+        return html.Div(
+            [
+                self._build_hero_section(),
+                html.Div(style={"height": "16px"}),
+                self._build_upload_card(
+                    initial_fcs_path=initial_fcs_path,
+                    initial_filename=initial_filename,
+                ),
+            ]
+        )
+
+    def _build_hero_section(self) -> dbc.Card:
+        return dbc.Card(
+            dbc.CardBody(
+                [
+                    ui_forms.build_section_intro(
+                        title="Scattering calibration",
+                        title_component="H2",
+                        description=(
+                            "Start by uploading the FCS file used for the scattering calibration workflow. "
+                            "After upload, RosettaX will keep the selected file in session state and use it as "
+                            "the data source for detector selection, histogram inspection, peak finding, and model fitting."
+                        ),
+                    ),
+                ]
+            )
+        )
+
+    def _build_upload_card(
+        self,
+        *,
+        initial_fcs_path: Optional[str],
+        initial_filename: str,
+    ) -> dbc.Card:
         return dbc.Card(
             [
                 dbc.CardHeader("1. Upload FCS File"),

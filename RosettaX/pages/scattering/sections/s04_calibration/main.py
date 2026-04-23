@@ -30,6 +30,8 @@ class Calibration:
     """
 
     simulated_curve_point_count = 200
+    graph_height_px = 420
+    graph_min_width_px = 0
 
     def __init__(self, page) -> None:
         self.page = page
@@ -41,9 +43,18 @@ class Calibration:
                 dbc.CardHeader("4. Fit calibration"),
                 dbc.CardBody(
                     [
-                        dash.dcc.Store(id=self.page.ids.Calibration.graph_store, storage_type="session",),
-                        dash.dcc.Store(id=f"{self.page.ids.Calibration.graph_store}-model", storage_type="session",),
-                        dash.dcc.Store(id=self.page.ids.Calibration.calibration_store, storage_type="session",),
+                        dash.dcc.Store(
+                            id=self.page.ids.Calibration.graph_store,
+                            storage_type="session",
+                        ),
+                        dash.dcc.Store(
+                            id=f"{self.page.ids.Calibration.graph_store}-model",
+                            storage_type="session",
+                        ),
+                        dash.dcc.Store(
+                            id=self.page.ids.Calibration.calibration_store,
+                            storage_type="session",
+                        ),
                         self._build_action_block(),
                         dash.html.Br(),
                         self._build_graph_block(),
@@ -58,6 +69,20 @@ class Calibration:
                 ),
             ]
         )
+
+    def _graph_style(self) -> dict[str, Any]:
+        return {
+            **dict(self.page.style["graph"]),
+            "height": f"{self.graph_height_px}px",
+            "width": "100%",
+        }
+
+    def _graph_wrapper_style(self) -> dict[str, Any]:
+        return {
+            "flex": "1",
+            "minWidth": f"{self.graph_min_width_px}px",
+            "height": f"{self.graph_height_px}px",
+        }
 
     def _build_action_block(self) -> dash.html.Div:
         return dash.html.Div(
@@ -81,25 +106,21 @@ class Calibration:
                     [
                         dash.dcc.Graph(
                             id=self.page.ids.Calibration.graph_calibration,
-                            style=self.page.style["graph"],
+                            style=self._graph_style(),
+                            config={"responsive": True},
                         ),
                     ],
-                    style={
-                        "flex": "1",
-                        "minWidth": "0",
-                    },
+                    style=self._graph_wrapper_style(),
                 ),
                 dash.html.Div(
                     [
                         dash.dcc.Graph(
                             id=f"{self.page.ids.Calibration.graph_calibration}-model",
-                            style=self.page.style["graph"],
+                            style=self._graph_style(),
+                            config={"responsive": True},
                         ),
                     ],
-                    style={
-                        "flex": "1",
-                        "minWidth": "0",
-                    },
+                    style=self._graph_wrapper_style(),
                 ),
             ],
             style={
@@ -127,6 +148,13 @@ class Calibration:
             ],
             style={"display": "flex", "gap": "8px"},
         )
+
+    def _finalize_figure_size(self, figure: go.Figure) -> go.Figure:
+        figure.update_layout(
+            autosize=False,
+            height=self.graph_height_px,
+        )
+        return figure
 
     def register_callbacks(self) -> None:
         @dash.callback(
@@ -212,16 +240,20 @@ class Calibration:
             )
 
             if not stored_figure:
-                return _make_info_figure("Click Fit Calibration to generate the comparison graph.")
+                return self._finalize_figure_size(
+                    _make_info_figure("Click Fit Calibration to generate the comparison graph.")
+                )
 
             try:
-                return go.Figure(stored_figure)
+                return self._finalize_figure_size(go.Figure(stored_figure))
             except Exception:
                 logger.exception(
                     "Failed to reconstruct left graph from stored_figure=%r",
                     stored_figure,
                 )
-                return _make_info_figure("Failed to render comparison graph.")
+                return self._finalize_figure_size(
+                    _make_info_figure("Failed to render comparison graph.")
+                )
 
         @dash.callback(
             dash.Output(f"{self.page.ids.Calibration.graph_calibration}-model", "figure"),
@@ -235,13 +267,17 @@ class Calibration:
             )
 
             if not stored_figure:
-                return _make_info_figure("Click Fit Calibration to generate the simulated coupling graph.")
+                return self._finalize_figure_size(
+                    _make_info_figure("Click Fit Calibration to generate the simulated coupling graph.")
+                )
 
             try:
-                return go.Figure(stored_figure)
+                return self._finalize_figure_size(go.Figure(stored_figure))
             except Exception:
                 logger.exception(
                     "Failed to reconstruct right graph from stored_figure=%r",
                     stored_figure,
                 )
-                return _make_info_figure("Failed to render simulated coupling graph.")
+                return self._finalize_figure_size(
+                    _make_info_figure("Failed to render simulated coupling graph.")
+                )
