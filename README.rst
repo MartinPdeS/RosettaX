@@ -1,7 +1,9 @@
 RosettaX
 ========
 
-|logo|
+.. image:: https://raw.githubusercontent.com/MartinPdeS/RosettaX/master/RosettaX/assets/logo_light.png
+   :alt: RosettaX logo
+   :width: 520px
 
 .. list-table::
    :widths: 10 25 25
@@ -128,10 +130,6 @@ License
 
 Please refer to the repository license file for licensing information.
 
-.. |logo| image:: https://raw.githubusercontent.com/MartinPdeS/RosettaX/master/RosettaX/assets/logo_light.png
-   :alt: RosettaX logo
-   :width: 520px
-   :align: center
 
 .. |python| image:: https://img.shields.io/pypi/pyversions/rosettax.svg
    :alt: Python
