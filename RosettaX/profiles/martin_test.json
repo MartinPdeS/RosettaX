@@ -1,0 +1,56 @@
+{
+    "optics": {
+        "medium_refractive_index": 1.334,
+        "wavelength_nm": 488.0
+    },
+    "particle_model": {
+        "core_refractive_index": 1.5,
+        "shell_refractive_index": 1.5,
+        "shell_thickness_nm": [
+            20.0
+        ],
+        "core_diameter_nm": [
+            100.0
+        ],
+        "particle_diameter_nm": [
+            100.0,
+            200.0,
+            201.0
+        ],
+        "particle_refractive_index": 1.59,
+        "mie_model": "Solid Sphere"
+    },
+    "calibration": {
+        "mesf_values": [
+            1.0,
+            3.0,
+            4.0,
+            5.0
+        ],
+        "max_events_for_analysis": 10000,
+        "n_bins_for_plots": 100,
+        "peak_count": 4,
+        "default_gating_channel": null,
+        "default_gating_threshold": null,
+        "show_calibration_plot_by_default": false,
+        "histogram_scale": "linear",
+        "default_output_suffix": "_calibrated"
+    },
+    "metadata": {
+        "operator_name": null,
+        "instrument_name": null
+    },
+    "files": {
+        "fluorescence_fcs_file_path": null,
+        "scattering_fcs_file_path": null
+    },
+    "ui": {
+        "theme_mode": "dark",
+        "show_graphs": false
+    },
+    "visualization": {
+        "default_marker_size": 8.0,
+        "default_line_width": 2.0,
+        "show_grid_by_default": false
+    }
+}

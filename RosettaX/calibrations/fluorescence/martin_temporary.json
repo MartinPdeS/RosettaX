@@ -1,0 +1,15 @@
+{
+  "created_at": "2026-04-20T10:23:10",
+  "kind": "fluorescence",
+  "name": "martin_temporary",
+  "payload": {
+    "R_squared": 0.9353401587008972,
+    "intercept": -4.302093985640502,
+    "model": "log10(y)=slope*log10(x)+intercept; y=(10**intercept) * x**slope",
+    "prefactor": 4.987765355819715e-05,
+    "slope": 0.9285731315323954,
+    "x_definition": "Intensity [a.u.]",
+    "y_definition": "Intensity [calibrated units]"
+  },
+  "schema": "rosettax_calibration_v1"
+}

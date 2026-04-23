@@ -1,0 +1,50 @@
+{
+  "created_at": "2026-04-20T10:26:36",
+  "kind": "fluorescence",
+  "name": "martin_temporary_2",
+  "payload": {
+    "calibration_type": "fluorescence",
+    "created_at": "",
+    "export_notes": "",
+    "fit_metrics": {
+      "point_count": 3,
+      "r_squared": 0.9533217740955859
+    },
+    "fit_model": "log10(y)=slope*log10(x)+intercept; y=(10**intercept) * x**slope",
+    "gating_channel": null,
+    "gating_threshold": null,
+    "name": "",
+    "parameters": {
+      "intercept": -2.7879032359528466,
+      "prefactor": 0.001629659092382851,
+      "slope": 0.8456890755504396
+    },
+    "payload": {
+      "R_squared": 0.9533217740955859,
+      "intercept": -2.7879032359528466,
+      "model": "log10(y)=slope*log10(x)+intercept; y=(10**intercept) * x**slope",
+      "prefactor": 0.001629659092382851,
+      "slope": 0.8456890755504396,
+      "x_definition": "Intensity [a.u.]",
+      "y_definition": "Intensity [calibrated units]"
+    },
+    "reference_points": [
+      {
+        "measured_value": 2160,
+        "reference_value": 1
+      },
+      {
+        "measured_value": 5856,
+        "reference_value": 3
+      },
+      {
+        "measured_value": 11584,
+        "reference_value": 4
+      }
+    ],
+    "schema_version": "1.0",
+    "source_channel": "488Org(Peak)",
+    "source_file": "2lov3r31.fcs"
+  },
+  "schema": "rosettax_calibration_v1"
+}
