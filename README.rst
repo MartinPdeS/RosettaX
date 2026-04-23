@@ -3,7 +3,6 @@ RosettaX
 
 .. image:: https://raw.githubusercontent.com/MartinPdeS/RosettaX/master/RosettaX/assets/logo_light.png
    :alt: RosettaX logo
-   :width: 520px
 
 .. list-table::
    :widths: 10 25 25
