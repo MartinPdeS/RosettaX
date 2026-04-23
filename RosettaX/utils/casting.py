@@ -3,7 +3,7 @@ import numpy as np
 import re
 
 
-def _as_float(value: Any) -> Optional[float]:
+def as_float(value: Any) -> Optional[float]:
     """
     Parse a value into a finite float.
 
@@ -38,7 +38,7 @@ def _as_float(value: Any) -> Optional[float]:
     return None
 
 
-def _as_int(value: Any, default: int, min_value: int, max_value: int) -> int:
+def as_int(value: Any, default: int, min_value: int, max_value: int) -> int:
     """
     Parse a value into an int, falling back to a default and clamping within bounds.
 
@@ -71,7 +71,7 @@ def _as_int(value: Any, default: int, min_value: int, max_value: int) -> int:
     return v
 
 
-def _as_float_list(value: Any) -> np.ndarray:
+def as_float_list(value: Any) -> np.ndarray:
     """
     Parse a value into a 1D NumPy array of finite floats.
 
@@ -120,7 +120,7 @@ def _as_float_list(value: Any) -> np.ndarray:
     parsed_values: list[float] = []
 
     for raw_value in raw_values:
-        parsed_value = _as_float(raw_value)
+        parsed_value = as_float(raw_value)
         if parsed_value is None:
             continue
         parsed_values.append(float(parsed_value))
@@ -150,3 +150,44 @@ def as_optional_float(value: Any) -> Optional[float]:
         return float(value)
     except Exception:
         return None
+
+def as_optional_int(value: Any) -> Optional[int]:
+    try:
+        if value in (None, ""):
+            return None
+        return int(value)
+    except Exception:
+        return None
+
+
+def parse_float_list(value: Any) -> list[float]:
+    parsed_values = as_float_list(value)
+    return [float(item) for item in parsed_values.tolist()]
+
+def coerce_optional_number(value: Any) -> Optional[float]:
+    parsed_value = as_float(value)
+    if parsed_value is None:
+        return None
+    return float(parsed_value)
+
+def coerce_optional_integer(value: Any) -> Optional[int]:
+    parsed_value = as_float(value)
+    if parsed_value is None:
+        return None
+    return int(parsed_value)
+
+def coerce_optional_string(value: Any) -> Optional[str]:
+    if value is None:
+        return None
+    resolved_value = str(value).strip()
+    return resolved_value if resolved_value else None
+
+def format_float_list_for_input(value: Any) -> str:
+    parsed_values = as_float_list(value)
+
+    if parsed_values.size == 0:
+        return ""
+
+    return ", ".join(f"{float(item):.6g}" for item in parsed_values)
+
+

@@ -9,13 +9,8 @@ import uuid
 import numpy as np
 
 from RosettaX.utils.reader import FCSFile
-from RosettaX.utils.casting import _as_float, _as_int
-from RosettaX.utils.plottings import make_histogram_with_lines
+from RosettaX.utils import casting, plottings, peak_detection
 from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.utils.peak_detection import (
-    find_1d_signal_peaks,
-    inject_peak_positions_into_table,
-)
 
 
 logger = logging.getLogger(__name__)
@@ -236,10 +231,10 @@ class BackEnd:
         threshold_value: Optional[float] = None
 
         if isinstance(threshold_payload, dict):
-            threshold_value = _as_float(threshold_payload.get("threshold"))
+            threshold_value = casting.as_float(threshold_payload.get("threshold"))
 
         if threshold_value is None:
-            threshold_value = _as_float(threshold_input_value)
+            threshold_value = casting.as_float(threshold_input_value)
 
         if threshold_value is None:
             response = self.process_scattering(
@@ -250,7 +245,7 @@ class BackEnd:
                     "number_of_points": int(max_events),
                 }
             )
-            threshold_value = _as_float(response.get("threshold"))
+            threshold_value = casting.as_float(response.get("threshold"))
 
         if threshold_value is None:
             threshold_value = 0.0
@@ -307,14 +302,14 @@ class BackEnd:
         threshold_input_value: Any,
         max_events_for_plots: Any,
     ) -> dict[str, Any]:
-        max_events = _as_int(
+        max_events = casting.as_int(
             max_events_for_plots,
             default=self._get_calibration_max_events_for_analysis(),
             min_value=10_000,
             max_value=5_000_000,
         )
 
-        nbins = _as_int(
+        nbins = casting.as_int(
             fluorescence_nbins,
             default=self._get_calibration_n_bins_for_plots(),
             min_value=10,
@@ -340,7 +335,7 @@ class BackEnd:
             threshold=threshold_value,
         )
 
-        figure = make_histogram_with_lines(
+        figure = plottings.make_histogram_with_lines(
             values=fluorescence_values,
             overlay_values=gated_values,
             nbins=nbins,
@@ -364,14 +359,14 @@ class BackEnd:
         scattering_threshold_input_value: Any,
         table_data: Optional[list[dict[str, Any]]],
     ) -> FluorescencePeakResult:
-        max_events = _as_int(
+        max_events = casting.as_int(
             max_events_for_plots,
             default=self._get_calibration_max_events_for_analysis(),
             min_value=10_000,
             max_value=5_000_000,
         )
 
-        max_peaks = _as_int(
+        max_peaks = casting.as_int(
             fluorescence_peak_count,
             default=self._get_calibration_peak_count(),
             min_value=1,
@@ -396,13 +391,13 @@ class BackEnd:
 
         peak_positions: list[float] = []
         for raw_peak_position in peaks_payload.get("peak_positions", []) or []:
-            peak_position = _as_float(raw_peak_position)
+            peak_position = casting.as_float(raw_peak_position)
             if peak_position is not None:
                 peak_positions.append(float(peak_position))
 
         peak_labels = [f"{peak_position:.3g}" for peak_position in peak_positions]
 
-        updated_table_data = inject_peak_positions_into_table(
+        updated_table_data = peak_detection.inject_peak_positions_into_table(
             table_data=table_data,
             peak_positions=peak_positions,
             peak_column_id="col2",
@@ -512,7 +507,7 @@ class BackEnd:
         else:
             values = fluorescence_values[np.isfinite(fluorescence_values)]
 
-        peak_result = find_1d_signal_peaks(
+        peak_result = peak_detection.find_1d_signal_peaks(
             values=values,
             max_peaks=max_peaks,
             min_cluster_size=min_cluster_size,

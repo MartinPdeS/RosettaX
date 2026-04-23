@@ -1,16 +1,14 @@
 # -*- coding: utf-8 -*-
 
 import logging
-from pathlib import Path
 from typing import Any, Optional
-from urllib.parse import quote
 
 import dash
 import dash_bootstrap_components as dbc
 from dash import dcc, html
 
 from RosettaX.pages.sidebar.ids import SidebarIds
-from RosettaX.utils import directories
+from . import services
 
 
 logger = logging.getLogger(__name__)
@@ -23,9 +21,9 @@ class Sidebar:
     Responsibilities
     ----------------
     - Render the logo and main navigation.
+    - Show saved profile controls.
     - Show saved calibration files grouped by category.
     - Let the user navigate to the calibration page with a selected calibration.
-    - Show saved profiles and persist the selected profile.
     - Expose small utility actions such as refresh and open folder.
 
     Notes
@@ -39,11 +37,6 @@ class Sidebar:
         self.logo_src = "/assets/logo_light.png"
         self.logo_max_height_px = 156
         self.sidebar_width_px = 460
-
-        self._folder_display_order: list[tuple[str, str]] = [
-            ("fluorescence", "Fluorescence"),
-            ("scattering", "Scattering"),
-        ]
 
         logger.debug(
             "Initialized Sidebar with sidebar_width_px=%r logo_src=%r",
@@ -73,7 +66,7 @@ class Sidebar:
                 refresh_signal,
             )
 
-            saved_calibrations = self._list_saved_calibrations()
+            saved_calibrations = services.list_saved_calibrations()
 
             logger.debug(
                 "Loaded saved calibrations from disk with fluorescence=%d scattering=%d",
@@ -95,13 +88,7 @@ class Sidebar:
             del n_clicks
 
             try:
-                calibration_root_directory = Path(directories.fluorescence_calibration).resolve().parent
-                logger.debug(
-                    "Opening calibration root directory=%r",
-                    str(calibration_root_directory),
-                )
-                directories.open_directory(calibration_root_directory)
-                return f"Opened calibration folder: {calibration_root_directory}"
+                return services.open_saved_calibrations_root()
 
             except Exception as exc:
                 logger.exception("Failed to open calibration folder.")
@@ -114,50 +101,52 @@ class Sidebar:
         )
         def refresh_saved_profiles(n_clicks: Optional[int]):
             logger.debug("refresh_saved_profiles called with n_clicks=%r", n_clicks)
-            return self._build_saved_profile_options()
+            return services.build_saved_profile_options()
 
         @dash.callback(
             dash.Output(SidebarIds.selected_profile_store, "data"),
-            dash.Output(SidebarIds.saved_profiles_load_status, "children"),
-            dash.Input(SidebarIds.saved_profiles_dropdown, "value"),
-            prevent_initial_call=False,
+            dash.Input(SidebarIds.saved_profiles_load_button, "n_clicks"),
+            dash.State(SidebarIds.saved_profiles_dropdown, "value"),
+            prevent_initial_call=True,
         )
-        def load_selected_profile(selected_profile: Optional[str]):
-            logger.debug("load_selected_profile called with selected_profile=%r", selected_profile)
-
-            if not selected_profile:
-                logger.debug("No selected profile. Clearing selected profile store.")
-                return None, "No profile selected."
+        def load_selected_profile(
+            n_clicks: Optional[int],
+            selected_profile: Optional[str],
+        ):
+            logger.debug(
+                "load_selected_profile called with n_clicks=%r selected_profile=%r",
+                n_clicks,
+                selected_profile,
+            )
+            del n_clicks
 
             try:
-                selected_profile_name = str(selected_profile).strip()
-
-                if not selected_profile_name:
-                    logger.debug("Selected profile was empty after stripping.")
-                    return None, "No profile selected."
-
-                selected_profile_file_name = self._normalize_profile_filename(selected_profile_name)
-                resolved_profile_path = Path(directories.profiles).resolve() / selected_profile_file_name
-
+                resolved_profile_name, _status_message = services.resolve_selected_profile(selected_profile)
                 logger.debug(
-                    "Resolved selected profile path=%r from selected_profile=%r",
-                    str(resolved_profile_path),
-                    selected_profile,
+                    "Resolved selected profile to resolved_profile_name=%r",
+                    resolved_profile_name,
                 )
+                return resolved_profile_name
 
-                if not resolved_profile_path.exists():
-                    raise FileNotFoundError(f"Profile does not exist: {resolved_profile_path}")
-
-                logger.debug(
-                    "Selected profile exists. Storing selected_profile=%r",
-                    selected_profile_file_name,
-                )
-                return selected_profile_file_name, f"Selected profile: {selected_profile_file_name}"
-
-            except Exception as exc:
+            except Exception:
                 logger.exception("Failed to resolve selected profile=%r", selected_profile)
-                return dash.no_update, f"Could not select profile: {type(exc).__name__}: {exc}"
+                return dash.no_update
 
+        @dash.callback(
+            dash.Output(SidebarIds.saved_profiles_load_status, "children"),
+            dash.Input(SidebarIds.selected_profile_store, "data"),
+            prevent_initial_call=False,
+        )
+        def render_selected_profile_status(selected_profile: Any) -> str:
+            logger.debug(
+                "render_selected_profile_status called with selected_profile=%r",
+                selected_profile,
+            )
+
+            if not selected_profile:
+                return "No profile selected."
+
+            return f"Selected profile: {selected_profile}"
 
         @dash.callback(
             dash.Output(SidebarIds.saved_profiles_open_folder_status, "children"),
@@ -169,10 +158,7 @@ class Sidebar:
             del n_clicks
 
             try:
-                resolved_profile_directory = Path(directories.profiles).resolve()
-                logger.debug("Opening profile directory=%r", str(resolved_profile_directory))
-                directories.open_directory(resolved_profile_directory)
-                return f"Opened profile folder: {resolved_profile_directory}"
+                return services.open_profiles_directory()
 
             except Exception as exc:
                 logger.exception("Failed to open profile folder.")
@@ -185,14 +171,14 @@ class Sidebar:
         logger.debug("Building sidebar layout with sidebar=%r", sidebar)
 
         if sidebar is None:
-            sidebar = self._list_saved_calibrations()
+            sidebar = services.list_saved_calibrations()
 
         return html.Div(
             [
                 self._build_logo_section(),
                 self._build_navigation_section(),
-                self._build_saved_calibrations_section(sidebar),
                 self._build_saved_profiles_section(),
+                self._build_saved_calibrations_section(sidebar),
                 dcc.Store(
                     id=SidebarIds.saved_calibrations_refresh_store,
                     data=0,
@@ -214,68 +200,6 @@ class Sidebar:
                 "boxSizing": "border-box",
             },
         )
-
-    def _normalize_profile_filename(self, filename: str) -> str:
-        """
-        Normalize a profile file name to a `.json` file name.
-        """
-        normalized_filename = str(filename or "").strip()
-
-        if not normalized_filename:
-            raise ValueError("Profile filename cannot be empty.")
-
-        if not normalized_filename.endswith(".json"):
-            normalized_filename = f"{normalized_filename}.json"
-
-        return normalized_filename
-
-    def _list_saved_calibrations(self) -> dict[str, list[str]]:
-        """
-        List saved calibration files from disk.
-        """
-        logger.debug("Listing saved calibrations from disk.")
-
-        saved_calibrations: dict[str, list[str]] = {
-            "fluorescence": [],
-            "scattering": [],
-        }
-
-        folder_to_directory = {
-            "fluorescence": Path(directories.fluorescence_calibration),
-            "scattering": Path(directories.scattering_calibration),
-        }
-
-        for folder_name, directory_path in folder_to_directory.items():
-            try:
-                directory_path.mkdir(parents=True, exist_ok=True)
-
-                file_names = sorted(
-                    [
-                        path.name
-                        for path in directory_path.glob("*.json")
-                        if path.is_file()
-                    ],
-                    key=str.lower,
-                )
-
-                saved_calibrations[folder_name] = file_names
-
-                logger.debug(
-                    "Found %d calibration files in folder=%r directory=%r",
-                    len(file_names),
-                    folder_name,
-                    str(directory_path),
-                )
-
-            except Exception:
-                logger.exception(
-                    "Failed to list calibration files for folder=%r directory=%r",
-                    folder_name,
-                    str(directory_path),
-                )
-                saved_calibrations[folder_name] = []
-
-        return saved_calibrations
 
     def _build_logo_section(self) -> html.Div:
         """
@@ -327,6 +251,80 @@ class Sidebar:
             label,
             href=href,
             active="exact",
+        )
+
+    def _build_saved_profiles_section(self) -> dbc.Card:
+        """
+        Build the saved profiles card.
+        """
+        return dbc.Card(
+            [
+                dbc.CardHeader("Saved profiles"),
+                dbc.CardBody(
+                    [
+                        html.Div(
+                            [
+                                dbc.Button(
+                                    "Open folder",
+                                    id=SidebarIds.saved_profiles_open_folder_button,
+                                    size="sm",
+                                    color="secondary",
+                                ),
+                                dbc.Button(
+                                    "Refresh",
+                                    id=SidebarIds.saved_profiles_refresh_button,
+                                    size="sm",
+                                    color="secondary",
+                                ),
+                            ],
+                            style={
+                                "display": "flex",
+                                "gap": "8px",
+                                "marginBottom": "10px",
+                                "flexWrap": "wrap",
+                            },
+                        ),
+                        html.Div(
+                            [
+                                html.Div(
+                                    dcc.Dropdown(
+                                        id=SidebarIds.saved_profiles_dropdown,
+                                        options=services.build_saved_profile_options(),
+                                        value=None,
+                                        placeholder="Select a saved profile",
+                                        clearable=True,
+                                        persistence=True,
+                                        persistence_type="session",
+                                        maxHeight=220,
+                                    ),
+                                    style={"flex": "1"},
+                                ),
+                                dbc.Button(
+                                    "Load",
+                                    id=SidebarIds.saved_profiles_load_button,
+                                    size="sm",
+                                    color="primary",
+                                ),
+                            ],
+                            style={
+                                "display": "flex",
+                                "gap": "8px",
+                                "alignItems": "center",
+                            },
+                        ),
+                        html.Div(style={"height": "8px"}),
+                        html.Small(
+                            id=SidebarIds.saved_profiles_load_status,
+                            style={"opacity": 0.75},
+                        ),
+                        html.Div(style={"height": "8px"}),
+                        html.Small(
+                            id=SidebarIds.saved_profiles_open_folder_status,
+                            style={"opacity": 0.75},
+                        ),
+                    ]
+                ),
+            ]
         )
 
     def _build_saved_calibrations_section(
@@ -392,7 +390,7 @@ class Sidebar:
         """
         body_children: list[html.Div] = []
 
-        for folder_key, folder_label in self._folder_display_order:
+        for folder_key, folder_label in services.FOLDER_DISPLAY_ORDER:
             file_names = saved_calibrations.get(folder_key, [])
 
             logger.debug(
@@ -411,7 +409,7 @@ class Sidebar:
                 )
             else:
                 file_list = html.Div(
-                    "No calibration found.",
+                    services.build_saved_calibrations_empty_state(),
                     style={
                         "opacity": 0.7,
                         "fontStyle": "italic",
@@ -450,8 +448,7 @@ class Sidebar:
             file_name,
         )
 
-        selected_calibration_value = f"{folder}/{file_name}"
-        apply_href = f"/calibrate?selected_calibration={quote(selected_calibration_value, safe='')}"
+        apply_href = services.build_apply_href(folder, file_name)
 
         return html.Li(
             html.Div(
@@ -492,77 +489,6 @@ class Sidebar:
                 },
             )
         )
-
-    def _build_saved_profiles_section(self) -> dbc.Card:
-        """
-        Build the saved profiles card.
-        """
-        return dbc.Card(
-            [
-                dbc.CardHeader("Saved profiles"),
-                dbc.CardBody(
-                    [
-                        html.Div(
-                            [
-                                dbc.Button(
-                                    "Open folder",
-                                    id=SidebarIds.saved_profiles_open_folder_button,
-                                    size="sm",
-                                    color="secondary",
-                                ),
-                                dbc.Button(
-                                    "Refresh",
-                                    id=SidebarIds.saved_profiles_refresh_button,
-                                    size="sm",
-                                    color="secondary",
-                                ),
-                            ],
-                            style={
-                                "display": "flex",
-                                "gap": "8px",
-                                "marginBottom": "10px",
-                                "flexWrap": "wrap",
-                            },
-                        ),
-                        dcc.Dropdown(
-                            id=SidebarIds.saved_profiles_dropdown,
-                            options=self._build_saved_profile_options(),
-                            value=None,
-                            placeholder="Select a saved profile",
-                            clearable=True,
-                            persistence=True,
-                            persistence_type="session",
-                        ),
-                        html.Div(style={"height": "8px"}),
-                        html.Small(
-                            id=SidebarIds.saved_profiles_load_status,
-                            style={"opacity": 0.75},
-                        ),
-                        html.Div(style={"height": "8px"}),
-                        html.Small(
-                            id=SidebarIds.saved_profiles_open_folder_status,
-                            style={"opacity": 0.75},
-                        ),
-                    ]
-                ),
-            ]
-        )
-
-    def _build_saved_profile_options(self) -> list[dict[str, str]]:
-        """
-        Build saved profile dropdown options.
-        """
-        logger.debug("Building saved profile options from disk.")
-
-        try:
-            setting_files = directories.list_profiles()
-            options = [{"label": file_name, "value": file_name} for file_name in setting_files]
-            logger.debug("Built %d saved profile options.", len(options))
-            return options
-
-        except Exception:
-            logger.exception("Failed to build saved profile options.")
-            return []
 
 
 _sidebar_instance = Sidebar()

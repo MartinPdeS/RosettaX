@@ -1,3 +1,3 @@
-from .s01_default_values import DefaultProfile
-from .s02_create_profile import CreateProfile
-from .s03_delete_profile import DeleteProfile
+from .s01_default.main import DefaultProfile
+from .s02_create.main import CreateProfile
+from .s03_delete.main import DeleteProfile

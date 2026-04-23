@@ -5,7 +5,7 @@ from typing import Any, Optional
 import numpy as np
 
 from RosettaX.utils.clusterings import SigmaThresholdHDBSCAN
-from RosettaX.utils.casting import _as_float
+from RosettaX.utils.casting import as_float
 
 
 @dataclass(frozen=True)

@@ -265,14 +265,14 @@ class RuntimeConfig:
         """
         Convenience accessor for the application theme.
         """
-        theme_mode = self.get_str("app.theme_mode", default=default).lower()
+        theme_mode = self.get_str("ui.theme_mode", default=default).lower()
         return theme_mode if theme_mode in {"dark", "light"} else default
 
     def get_show_graphs(self, default: bool = True) -> bool:
         """
         Convenience accessor for graph visibility preference.
         """
-        return self.get_bool("app.show_graphs", default=default)
+        return self.get_bool("ui.show_graphs", default=default)
 
     def update(self, **kwargs: Any) -> None:
         """
@@ -380,3 +380,69 @@ class RuntimeConfig:
         representation = f"RuntimeConfig({self.data!r})"
         logger.debug("RuntimeConfig.__repr__ returning %r", representation)
         return representation
+
+    def to_json(self, *, indent: int = 4, sort_keys: bool = False) -> str:
+        """
+        Serialize the runtime configuration to a JSON string.
+
+        Parameters
+        ----------
+        indent : int, default=4
+            Indentation level used for pretty printing.
+        sort_keys : bool, default=False
+            Whether to sort dictionary keys in the serialized output.
+
+        Returns
+        -------
+        str
+            JSON string representation of the runtime configuration.
+        """
+        runtime_config_json = json.dumps(
+            self.to_dict(),
+            indent=indent,
+            sort_keys=sort_keys,
+            ensure_ascii=False,
+        )
+        logger.debug(
+            "RuntimeConfig.to_json returning JSON string with length=%r",
+            len(runtime_config_json),
+        )
+        return runtime_config_json
+
+    def to_json_path(
+        self,
+        json_path: Path | str,
+        *,
+        indent: int = 4,
+        sort_keys: bool = False,
+    ) -> Path:
+        """
+        Write the runtime configuration to a JSON file.
+
+        Parameters
+        ----------
+        json_path : Path | str
+            Destination JSON file path.
+        indent : int, default=4
+            Indentation level used for pretty printing.
+        sort_keys : bool, default=False
+            Whether to sort dictionary keys in the serialized output.
+
+        Returns
+        -------
+        Path
+            Resolved path to the written JSON file.
+        """
+        resolved_json_path = Path(json_path).expanduser().resolve()
+        resolved_json_path.parent.mkdir(parents=True, exist_ok=True)
+
+        resolved_json_path.write_text(
+            self.to_json(indent=indent, sort_keys=sort_keys),
+            encoding="utf-8",
+        )
+
+        logger.debug(
+            "RuntimeConfig.to_json_path wrote JSON to path=%r",
+            str(resolved_json_path),
+        )
+        return resolved_json_path

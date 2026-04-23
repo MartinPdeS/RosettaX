@@ -45,6 +45,10 @@ class Ids:
         wavelength_nm = f"{page_name}-wavelength-nm"
         show_graphs = f"{page_name}-show-graphs"
 
+        default_marker_size = f"{page_name}-default-marker-size"
+        default_line_width = f"{page_name}-default-line-width"
+        show_grid_by_default = f"{page_name}-show-grid-by-default"
+
     class NewProfile:
         profile_name = "new_profile_name"
         save_new_profile_button = "save_new_profile_button"

@@ -6,16 +6,20 @@
     "particle_model": {
         "core_refractive_index": 1.5,
         "shell_refractive_index": 1.5,
-        "shell_thickness_nm": [
-            20.0
-        ],
-        "core_diameter_nm": [
-            100.0
-        ],
+        "shell_thickness_nm": [],
+        "core_diameter_nm": [],
         "particle_diameter_nm": [
+            70.0,
             100.0,
-            200.0,
-            300.0
+            125.0,
+            150.0,
+            194.0,
+            203.0,
+            296.0,
+            400.0,
+            600.0,
+            799.0,
+            994.0
         ],
         "particle_refractive_index": 1.602,
         "mie_model": "Solid Sphere"
@@ -28,7 +32,7 @@
             5.0
         ],
         "max_events_for_analysis": 10000,
-        "n_bins_for_plots": 100,
+        "n_bins_for_plots": 300,
         "peak_count": 4,
         "default_gating_channel": null,
         "default_gating_threshold": null,
@@ -50,7 +54,7 @@
     },
     "visualization": {
         "default_marker_size": 8.0,
-        "default_line_width": 10.0,
-        "show_grid_by_default": false
+        "default_line_width": 2.0,
+        "show_grid_by_default": true
     }
 }

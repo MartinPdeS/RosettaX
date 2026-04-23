@@ -215,3 +215,31 @@ def _make_info_figure(message: str) -> go.Figure:
         separators=".,",
     )
     return fig
+
+
+def apply_default_visual_style(
+    fig,
+    *,
+    marker_size: float = 8.0,
+    line_width: float = 2.0,
+    show_grid: bool = True,
+):
+    for trace in fig.data:
+        marker = getattr(trace, "marker", None)
+        if marker is not None:
+            try:
+                marker.size = marker_size
+            except Exception:
+                pass
+
+        line = getattr(trace, "line", None)
+        if line is not None:
+            try:
+                line.width = line_width
+            except Exception:
+                pass
+
+    fig.update_xaxes(showgrid=show_grid)
+    fig.update_yaxes(showgrid=show_grid)
+
+    return fig
