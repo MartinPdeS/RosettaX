@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from typing import Any, Optional
+import logging
 
 import dash
 import dash_bootstrap_components as dbc
@@ -9,6 +10,8 @@ from dash import Input, Output, State, callback, dcc, html
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.utils import ui_forms
 from . import schema, services
+
+logger = logging.getLogger(__name__)
 
 
 class DefaultProfile:
@@ -21,17 +24,25 @@ class DefaultProfile:
     def _ordered_field_names(self) -> list[str]:
         return schema.ordered_field_names()
 
-    def _ordered_field_definitions(self) -> list[schema.FieldDefinition]:
-        return [schema.FIELD_DEFINITION_BY_NAME[name] for name in self._ordered_field_names()]
+    def _initial_form_store_data(self) -> dict[str, Any]:
+        runtime_config = RuntimeConfig.from_default_profile()
+        return services.build_form_store_from_runtime_config(runtime_config)
 
     def _get_layout(self):
-        runtime_config = RuntimeConfig.from_default_profile()
+        logger.debug("DefaultProfile._get_layout rebuilding settings page")
+
+        initial_form_store_data = self._initial_form_store_data()
 
         return html.Div(
             [
+                dcc.Store(
+                    id=self.page.ids.Default.form_store,
+                    storage_type="session",
+                    data=initial_form_store_data,
+                ),
                 self._build_hero_section(),
                 html.Div(style={"height": "16px"}),
-                self._build_defaults_card(runtime_config),
+                self._build_defaults_card(initial_form_store_data),
             ]
         )
 
@@ -52,28 +63,23 @@ class DefaultProfile:
             )
         )
 
-    def _build_defaults_card(self, runtime_config: RuntimeConfig) -> dbc.Card:
+    def _build_defaults_card(self, form_store_data: dict[str, Any]) -> dbc.Card:
         return dbc.Card(
             [
                 dbc.CardHeader("1. Default values"),
                 dbc.CardBody(
                     [
-                        dcc.Store(
-                            id=self.page.ids.Default.form_store,
-                            storage_type="session",
-                            data=services.build_form_store_from_runtime_config(runtime_config),
-                        ),
                         self._build_profile_controls_block(),
                         html.Hr(),
-                        self._build_section("fluorescence", runtime_config),
+                        self._build_section("fluorescence", form_store_data),
                         html.Hr(),
-                        self._build_section("scattering", runtime_config),
+                        self._build_section("scattering", form_store_data),
                         html.Hr(),
-                        self._build_section("calibration", runtime_config),
+                        self._build_section("calibration", form_store_data),
                         html.Hr(),
-                        self._build_section("visualization", runtime_config),
+                        self._build_section("visualization", form_store_data),
                         html.Hr(),
-                        self._build_section("miscellaneous", runtime_config),
+                        self._build_section("miscellaneous", form_store_data),
                         html.Div(style={"height": "12px"}),
                         self._build_save_block(),
                     ]
@@ -109,9 +115,8 @@ class DefaultProfile:
     def _build_section(
         self,
         section_key: str,
-        runtime_config: RuntimeConfig,
+        form_store_data: dict[str, Any],
     ) -> html.Div:
-        form_store_data = services.build_form_store_from_runtime_config(runtime_config)
         field_ids = self._field_ids()
         section_title = dict(schema.PROFILE_SECTION_ORDER)[section_key]
         section_field_names = schema.section_field_names(section_key)
@@ -214,6 +219,12 @@ class DefaultProfile:
             prevent_initial_call=True,
         )
         def load_profile_defaults(dropdown_value: Optional[str]):
+            logger.debug(
+                "load_profile_defaults triggered_id=%r dropdown_value=%r",
+                dash.ctx.triggered_id,
+                dropdown_value,
+            )
+
             if not dropdown_value:
                 return tuple([dash.no_update] * len(ordered_field_names)) + (dash.no_update,)
 
@@ -233,7 +244,6 @@ class DefaultProfile:
 
         @callback(
             Output(self.page.ids.Default.save_confirmation, "children"),
-            Output("runtime-config-store", "data"),
             Output(self.page.ids.Default.save_confirmation, "is_open"),
             Output(self.page.ids.Default.save_confirmation, "color"),
             Input(self.page.ids.Default.save_changes_button, "n_clicks"),
@@ -247,16 +257,15 @@ class DefaultProfile:
             form_store_data: Any,
         ):
             if dash.ctx.triggered_id != self.page.ids.Default.save_changes_button:
-                return dash.no_update, dash.no_update, dash.no_update, dash.no_update
+                return dash.no_update, dash.no_update, dash.no_update
 
             if not n_clicks:
-                return dash.no_update, dash.no_update, dash.no_update, dash.no_update
+                return dash.no_update, dash.no_update, dash.no_update
 
             try:
                 if not profile_target:
                     return (
                         "No target profile selected.",
-                        dash.no_update,
                         True,
                         "danger",
                     )
@@ -267,7 +276,6 @@ class DefaultProfile:
 
                 return (
                     f"Saved profile: {profile_target}",
-                    nested_profile_payload,
                     True,
                     "success",
                 )
@@ -275,7 +283,6 @@ class DefaultProfile:
             except Exception as exc:
                 return (
                     f"{type(exc).__name__}: {exc}",
-                    dash.no_update,
                     True,
                     "danger",
                 )

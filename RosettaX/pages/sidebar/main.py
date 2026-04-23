@@ -9,6 +9,7 @@ from dash import dcc, html
 
 from RosettaX.pages.sidebar.ids import SidebarIds
 from . import services
+from RosettaX.utils import styling
 
 
 logger = logging.getLogger(__name__)
@@ -37,12 +38,31 @@ class Sidebar:
         self.logo_src = "/assets/logo_light.png"
         self.logo_max_height_px = 156
         self.sidebar_width_px = 460
+        self.style = styling.PAGE
 
         logger.debug(
             "Initialized Sidebar with sidebar_width_px=%r logo_src=%r",
             self.sidebar_width_px,
             self.logo_src,
         )
+
+    def _get_default_profile_name(self, profile_options: list[dict[str, Any]]) -> Optional[str]:
+        """
+        Resolve the startup profile name shown in the sidebar.
+
+        At application startup, RosettaX loads ``default_profile`` automatically.
+        The sidebar should mirror that initial state if the profile exists.
+        """
+        option_values = [
+            option.get("value")
+            for option in profile_options
+            if isinstance(option, dict) and option.get("value")
+        ]
+
+        if "default_profile" in option_values:
+            return "default_profile"
+
+        return option_values[0] if option_values else None
 
     def register_callbacks(self) -> None:
         """
@@ -104,7 +124,61 @@ class Sidebar:
             return services.build_saved_profile_options()
 
         @dash.callback(
+            dash.Output(SidebarIds.saved_profiles_dropdown, "value"),
             dash.Output(SidebarIds.selected_profile_store, "data"),
+            dash.Input(SidebarIds.saved_profiles_dropdown, "options"),
+            dash.State(SidebarIds.saved_profiles_dropdown, "value"),
+            dash.State(SidebarIds.selected_profile_store, "data"),
+            prevent_initial_call=False,
+        )
+        def initialize_or_sync_selected_profile(
+            profile_options: Any,
+            dropdown_value: Optional[str],
+            selected_profile_store_data: Optional[str],
+        ):
+            logger.debug(
+                "initialize_or_sync_selected_profile called with dropdown_value=%r selected_profile_store_data=%r profile_options=%r",
+                dropdown_value,
+                selected_profile_store_data,
+                profile_options,
+            )
+
+            if not isinstance(profile_options, list) or not profile_options:
+                return None, None
+
+            option_values = {
+                option.get("value")
+                for option in profile_options
+                if isinstance(option, dict) and option.get("value")
+            }
+
+            if selected_profile_store_data in option_values:
+                if dropdown_value != selected_profile_store_data:
+                    logger.debug(
+                        "Syncing dropdown value from selected_profile_store_data=%r",
+                        selected_profile_store_data,
+                    )
+                    return selected_profile_store_data, selected_profile_store_data
+
+                return dash.no_update, dash.no_update
+
+            if dropdown_value in option_values:
+                logger.debug(
+                    "Syncing selected_profile_store from dropdown_value=%r",
+                    dropdown_value,
+                )
+                return dash.no_update, dropdown_value
+
+            resolved_default_profile = self._get_default_profile_name(profile_options)
+
+            logger.debug(
+                "Initializing sidebar selected profile to resolved_default_profile=%r",
+                resolved_default_profile,
+            )
+            return resolved_default_profile, resolved_default_profile
+
+        @dash.callback(
+            dash.Output(SidebarIds.selected_profile_store, "data", allow_duplicate=True),
             dash.Input(SidebarIds.saved_profiles_load_button, "n_clicks"),
             dash.State(SidebarIds.saved_profiles_dropdown, "value"),
             prevent_initial_call=True,
@@ -129,7 +203,7 @@ class Sidebar:
                 return resolved_profile_name
 
             except Exception:
-                logger.exception("Failed to resolve selected profile=%r", selected_profile)
+                logger.exception("Failed to resolve selected_profile=%r", selected_profile)
                 return dash.no_update
 
         @dash.callback(
@@ -173,11 +247,17 @@ class Sidebar:
         if sidebar is None:
             sidebar = services.list_saved_calibrations()
 
+        saved_profile_options = services.build_saved_profile_options()
+        initial_selected_profile = self._get_default_profile_name(saved_profile_options)
+
         return html.Div(
             [
                 self._build_logo_section(),
                 self._build_navigation_section(),
-                self._build_saved_profiles_section(),
+                self._build_saved_profiles_section(
+                    profile_options=saved_profile_options,
+                    selected_profile=initial_selected_profile,
+                ),
                 self._build_saved_calibrations_section(sidebar),
                 dcc.Store(
                     id=SidebarIds.saved_calibrations_refresh_store,
@@ -185,7 +265,7 @@ class Sidebar:
                 ),
                 dcc.Store(
                     id=SidebarIds.selected_profile_store,
-                    data=None,
+                    data=initial_selected_profile,
                     storage_type="session",
                 ),
             ],
@@ -253,7 +333,12 @@ class Sidebar:
             active="exact",
         )
 
-    def _build_saved_profiles_section(self) -> dbc.Card:
+    def _build_saved_profiles_section(
+        self,
+        *,
+        profile_options: list[dict[str, Any]],
+        selected_profile: Optional[str],
+    ) -> dbc.Card:
         """
         Build the saved profiles card.
         """
@@ -289,8 +374,8 @@ class Sidebar:
                                 html.Div(
                                     dcc.Dropdown(
                                         id=SidebarIds.saved_profiles_dropdown,
-                                        options=services.build_saved_profile_options(),
-                                        value=None,
+                                        options=profile_options,
+                                        value=selected_profile,
                                         placeholder="Select a saved profile",
                                         clearable=True,
                                         persistence=True,
@@ -454,13 +539,15 @@ class Sidebar:
             html.Div(
                 [
                     html.Div(
-                        dcc.Link(
+                        html.A(
                             file_name,
                             href=f"/calibration-json/{folder}/{file_name}",
-                            refresh=False,
+                            target="_blank",
+                            rel="noreferrer",
                             style={
                                 "overflowWrap": "anywhere",
                                 "wordBreak": "break-word",
+                                "textDecoration": "none",
                             },
                         ),
                         style={

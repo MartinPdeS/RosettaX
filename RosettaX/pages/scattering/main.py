@@ -3,19 +3,10 @@ import dash
 from RosettaX.pages.scattering.ids import Ids
 from RosettaX.pages.scattering import sections
 
-
 class ScatterCalibrationPage:
     def __init__(self) -> None:
         self.ids = Ids()
         self.backend = None
-
-        self.style = {
-            "body_scroll": {"maxHeight": "80vh", "overflowY": "auto"},
-            "graph": {"width": "100%", "height": "60vh"},
-            "row": {"display": "flex", "alignItems": "center", "gap": "10px"},
-            "label": {"minWidth": "160px"},
-            "card_body_scroll": {"maxHeight": "60vh", "overflowY": "auto"},
-        }
 
         self.sections = [
             sections.Upload(page=self),

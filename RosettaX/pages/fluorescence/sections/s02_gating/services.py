@@ -52,6 +52,8 @@ class RuntimeDefaults:
 class VisualizationDefaults:
     marker_size: float
     line_width: float
+    font_size: float
+    tick_size: float
     show_grid: bool
 
 
@@ -61,7 +63,7 @@ class GatingResult:
     scattering_threshold_store: Any = dash.no_update
     scattering_threshold_input_value: Any = dash.no_update
 
-    def to_tuple(self) -> tuple:
+    def to_tuple(self) -> tuple[Any, Any, Any]:
         return (
             self.figure,
             self.scattering_threshold_store,
@@ -112,14 +114,14 @@ def parse_limits(
     default_max_events: int,
     default_nbins: int,
 ) -> ParsedScatteringLimits:
-    max_events = casting.as_int(
+    resolved_max_events = casting.as_int(
         max_events_for_plots if max_events_for_plots is not None else default_max_events,
         default=default_max_events,
         min_value=1_000,
         max_value=5_000_000,
     )
 
-    nbins = casting.as_int(
+    resolved_nbins = casting.as_int(
         scattering_nbins,
         default=default_nbins,
         min_value=10,
@@ -127,8 +129,8 @@ def parse_limits(
     )
 
     return ParsedScatteringLimits(
-        max_events=max_events,
-        nbins=nbins,
+        max_events=resolved_max_events,
+        nbins=resolved_nbins,
     )
 
 
@@ -158,6 +160,8 @@ def resolve_visualization_defaults(runtime_config_data: Any) -> VisualizationDef
     return VisualizationDefaults(
         marker_size=runtime_config.get_float("visualization.default_marker_size", default=8.0),
         line_width=runtime_config.get_float("visualization.default_line_width", default=2.0),
+        font_size=runtime_config.get_float("visualization.default_font_size", default=14.0),
+        tick_size=runtime_config.get_float("visualization.default_tick_size", default=12.0),
         show_grid=runtime_config.get_bool("visualization.show_grid_by_default", default=True),
     )
 
@@ -198,10 +202,11 @@ def parse_callback_inputs(
     runtime_config = RuntimeConfig.from_dict(
         runtime_config_data if isinstance(runtime_config_data, dict) else None
     )
+
     default_max_events = runtime_config.get_int("calibration.max_events_for_analysis", default=10000)
     default_nbins = runtime_config.get_int("calibration.n_bins_for_plots", default=100)
 
-    parsed_limits = parse_limits(
+    parsed_scattering_limits = parse_limits(
         max_events_for_plots=max_events_for_plots,
         scattering_nbins=scattering_nbins,
         default_max_events=default_max_events,
@@ -222,8 +227,8 @@ def parse_callback_inputs(
         triggered_id=triggered_id,
         debug_enabled=debug_enabled,
         scattering_channel=scattering_channel_clean,
-        nbins=parsed_limits.nbins,
-        max_events=parsed_limits.max_events,
+        nbins=parsed_scattering_limits.nbins,
+        max_events=parsed_scattering_limits.max_events,
         yscale_selection=yscale_selection,
         manual_threshold=manual_threshold,
         stored_threshold=stored_threshold,
@@ -238,24 +243,24 @@ def resolve_threshold(
     scattering_channel: str,
     nbins: int,
     max_events: int,
-    manual_thr: Optional[float],
-    store_thr: Optional[float],
+    manual_threshold: Optional[float],
+    stored_threshold: Optional[float],
     logger: logging.Logger,
 ) -> tuple[float, Any]:
     logger.debug(
         "resolve_threshold called with must_estimate=%r scattering_channel=%r nbins=%r "
-        "max_events=%r manual_thr=%r store_thr=%r",
+        "max_events=%r manual_threshold=%r stored_threshold=%r",
         must_estimate,
         scattering_channel,
         nbins,
         max_events,
-        manual_thr,
-        store_thr,
+        manual_threshold,
+        stored_threshold,
     )
 
     if must_estimate:
         if page_backend is None:
-            logger.debug("resolve_threshold cannot estimate because backend is None.")
+            logger.debug("resolve_threshold cannot estimate because page_backend is None.")
             return 0.0, dash.no_update
 
         if not scattering_channel:
@@ -280,22 +285,22 @@ def resolve_threshold(
             )
             raise
 
-        threshold_value = casting.as_float(response.get("threshold")) or 0.0
+        resolved_threshold_value = casting.as_float(response.get("threshold")) or 0.0
 
         logger.debug(
             "resolve_threshold estimated threshold_value=%r from response=%r",
-            threshold_value,
+            resolved_threshold_value,
             response,
         )
-        return float(threshold_value), f"{float(threshold_value):.6g}"
+        return float(resolved_threshold_value), f"{float(resolved_threshold_value):.6g}"
 
-    if manual_thr is not None:
-        logger.debug("resolve_threshold using manual threshold=%r", manual_thr)
-        return float(manual_thr), dash.no_update
+    if manual_threshold is not None:
+        logger.debug("resolve_threshold using manual_threshold=%r", manual_threshold)
+        return float(manual_threshold), dash.no_update
 
-    if store_thr is not None:
-        logger.debug("resolve_threshold using stored threshold=%r", store_thr)
-        return float(store_thr), dash.no_update
+    if stored_threshold is not None:
+        logger.debug("resolve_threshold using stored_threshold=%r", stored_threshold)
+        return float(stored_threshold), dash.no_update
 
     logger.debug("resolve_threshold fell back to default threshold=0.0")
     return 0.0, dash.no_update
@@ -324,28 +329,55 @@ def build_scattering_histogram(
         threshold_value,
     )
 
+    visualization_defaults = resolve_visualization_defaults(runtime_config_data)
+
+    logger.debug(
+        "Resolved visualization defaults: marker_size=%r line_width=%r font_size=%r "
+        "tick_size=%r show_grid=%r",
+        visualization_defaults.marker_size,
+        visualization_defaults.line_width,
+        visualization_defaults.font_size,
+        visualization_defaults.tick_size,
+        visualization_defaults.show_grid,
+    )
+
     if not debug_enabled:
-        return plottings._make_info_figure("Debug graph is disabled.")
+        return plottings._make_info_figure(
+            "Debug graph is disabled.",
+            font_size=visualization_defaults.font_size,
+        )
 
     if page_backend is None:
-        return plottings._make_info_figure("Backend is not available.")
+        return plottings._make_info_figure(
+            "Backend is not available.",
+            font_size=visualization_defaults.font_size,
+        )
 
     file_path = getattr(page_backend, "file_path", None)
     if not file_path:
         file_path = getattr(page_backend, "fcs_file_path", None)
 
     if not scattering_channel:
-        return plottings._make_info_figure("Select a scattering detector first.")
+        return plottings._make_info_figure(
+            "Select a scattering detector first.",
+            font_size=visualization_defaults.font_size,
+        )
 
     if not file_path:
-        return plottings._make_info_figure("No FCS file is loaded.")
+        return plottings._make_info_figure(
+            "No FCS file is loaded.",
+            font_size=visualization_defaults.font_size,
+        )
 
-    use_log = isinstance(yscale_selection, list) and ("log" in yscale_selection)
-    visualization_defaults = resolve_visualization_defaults(runtime_config_data)
+    use_log_scale = isinstance(yscale_selection, list) and ("log" in yscale_selection)
 
     try:
         with FCSFile(str(file_path), writable=False) as fcs_file:
-            values = fcs_file.column_copy(scattering_channel, dtype=float, n=max_events)
+            scattering_values = fcs_file.column_copy(
+                scattering_channel,
+                dtype=float,
+                n=max_events,
+            )
     except Exception:
         logger.exception(
             "Failed to read scattering histogram values from file_path=%r channel=%r max_events=%r",
@@ -355,25 +387,35 @@ def build_scattering_histogram(
         )
         raise
 
-    if values is None or len(values) == 0:
-        return plottings._make_info_figure("No data available for the selected detector.")
+    if scattering_values is None or len(scattering_values) == 0:
+        return plottings._make_info_figure(
+            "No data available for the selected detector.",
+            font_size=visualization_defaults.font_size,
+        )
 
     figure = plottings.make_histogram_with_lines(
-        values=values,
+        values=scattering_values,
         nbins=nbins,
         xaxis_title="Scattering (a.u.)",
         line_positions=[float(threshold_value)],
         line_labels=[f"{float(threshold_value):.3g}"],
+        line_width=visualization_defaults.line_width,
+        font_size=visualization_defaults.font_size,
+        tick_size=visualization_defaults.tick_size,
     )
-    figure.update_yaxes(type="log" if use_log else "linear")
+
+    figure.update_yaxes(type="log" if use_log_scale else "linear")
     figure.update_layout(
         separators=".,",
         uirevision=f"fluorescence_gating|{file_path}|{scattering_channel}",
     )
+
     figure = plottings.apply_default_visual_style(
         figure,
         marker_size=visualization_defaults.marker_size,
         line_width=visualization_defaults.line_width,
+        font_size=visualization_defaults.font_size,
+        tick_size=visualization_defaults.tick_size,
         show_grid=visualization_defaults.show_grid,
     )
 
@@ -396,8 +438,8 @@ def run_gating_callback(
             scattering_channel=callback_inputs.scattering_channel,
             nbins=callback_inputs.nbins,
             max_events=callback_inputs.max_events,
-            manual_thr=callback_inputs.manual_threshold,
-            store_thr=callback_inputs.stored_threshold,
+            manual_threshold=callback_inputs.manual_threshold,
+            stored_threshold=callback_inputs.stored_threshold,
             logger=logger,
         )
 

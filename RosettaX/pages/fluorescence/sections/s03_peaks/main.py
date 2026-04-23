@@ -143,7 +143,7 @@ class Peaks:
         return dash.dcc.Loading(
             dash.dcc.Graph(
                 id=self.page.ids.Fluorescence.graph_hist,
-                style=self.page.style["graph"],
+                style=styling.PAGE["graph"],
             ),
             type="default",
         )

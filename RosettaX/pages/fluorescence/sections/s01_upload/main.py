@@ -108,7 +108,7 @@ class Upload:
                         ),
                         html.Div(id=self.page.ids.Upload.upload_filename),
                     ],
-                    style=self.page.style["body_scroll"],
+                    style=styling.PAGE["body_scroll"],
                 ),
             ]
         )

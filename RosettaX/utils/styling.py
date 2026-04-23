@@ -27,6 +27,14 @@ SIDEBAR = {
     "boxSizing": "border-box",
 }
 
+PAGE = {
+    "body_scroll": {"maxHeight": "80vh", "overflowY": "auto"},
+    "graph": {"width": "100%", "height": "60vh"},
+    "row": {"display": "flex", "alignItems": "center", "gap": "10px"},
+    "label": {"minWidth": "160px"},
+    "card_body_scroll": {"maxHeight": "60vh", "overflowY": "auto"},
+}
+
 CONTENT = {
     "marginLeft": f"460px",
     "padding": "16px",

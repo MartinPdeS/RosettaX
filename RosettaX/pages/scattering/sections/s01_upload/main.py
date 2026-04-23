@@ -98,7 +98,7 @@ class Upload:
                         ),
                         html.Div(id=self.page.ids.Upload.filename),
                     ],
-                    style=self.page.style["card_body_scroll"],
+                    style=styling.PAGE["card_body_scroll"],
                 ),
             ]
         )

@@ -7,7 +7,7 @@ import dash
 import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
 
-from RosettaX.utils.plottings import _make_info_figure
+from RosettaX.utils import plottings, styling
 from . import services
 
 logger = logging.getLogger(__name__)
@@ -72,7 +72,7 @@ class Calibration:
 
     def _graph_style(self) -> dict[str, Any]:
         return {
-            **dict(self.page.style["graph"]),
+            **dict(styling.PAGE["graph"]),
             "height": f"{self.graph_height_px}px",
             "width": "100%",
         }
@@ -241,7 +241,7 @@ class Calibration:
 
             if not stored_figure:
                 return self._finalize_figure_size(
-                    _make_info_figure("Click Fit Calibration to generate the comparison graph.")
+                    plottings._make_info_figure("Click Fit Calibration to generate the comparison graph.")
                 )
 
             try:
@@ -252,7 +252,7 @@ class Calibration:
                     stored_figure,
                 )
                 return self._finalize_figure_size(
-                    _make_info_figure("Failed to render comparison graph.")
+                    plottings._make_info_figure("Failed to render comparison graph.")
                 )
 
         @dash.callback(
@@ -268,7 +268,7 @@ class Calibration:
 
             if not stored_figure:
                 return self._finalize_figure_size(
-                    _make_info_figure("Click Fit Calibration to generate the simulated coupling graph.")
+                    plottings._make_info_figure("Click Fit Calibration to generate the simulated coupling graph.")
                 )
 
             try:
@@ -279,5 +279,5 @@ class Calibration:
                     stored_figure,
                 )
                 return self._finalize_figure_size(
-                    _make_info_figure("Failed to render simulated coupling graph.")
+                    plottings._make_info_figure("Failed to render simulated coupling graph.")
                 )

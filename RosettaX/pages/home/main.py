@@ -6,11 +6,6 @@ from dash import html
 class HomePage:
     def __init__(self) -> None:
         self.page_name = "home"
-        self.container_style = {
-            "paddingTop": "24px",
-            "paddingBottom": "48px",
-        }
-
         self.github_url = "https://github.com/MartinPdeS/RosettaX"
         self.pypi_url = "https://pypi.org/project/RosettaX/"
         self.anaconda_url = "https://anaconda.org/channels/martinpdes/packages/lightwave2d/overview"
@@ -30,7 +25,6 @@ class HomePage:
                 self._tips_row(),
             ],
             fluid=True,
-            style=self.container_style,
         )
 
     def _hero_section(self) -> dbc.Card:

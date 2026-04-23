@@ -2,16 +2,13 @@ import dash
 
 from RosettaX.pages.settings import sections
 from RosettaX.pages.settings.ids import Ids
-
+from RosettaX.utils import styling
 
 class SettingsPage:
     def __init__(self) -> None:
         self.ids = Ids()
 
-        self.style = {
-            "card_body_scroll": {"maxHeight": "60vh", "overflowY": "auto"},
-            "graph": {"width": "100%", "height": "45vh"},
-        }
+        self.style = styling.PAGE
 
         self.sections = [
             sections.DefaultProfile(page=self),

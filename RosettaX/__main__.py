@@ -12,6 +12,7 @@ from typing import Any, Optional
 import dash
 import dash_bootstrap_components as dbc
 from dash import Input, Output, dcc, html
+from flask import Response
 
 from RosettaX.pages.sidebar.main import SidebarIds, register_sidebar_callbacks, sidebar_html
 from RosettaX.utils import directories, styling
@@ -30,6 +31,28 @@ logger = logging.getLogger(__name__)
 logging.getLogger("RosettaX").setLevel(logging.DEBUG)
 
 
+def _resolve_calibration_file_path(folder: str, file_name: str) -> Path:
+    """
+    Resolve a calibration JSON file path safely within the allowed calibration folders.
+    """
+    normalized_folder = str(folder).strip().lower()
+
+    if normalized_folder == "fluorescence":
+        base_directory = Path(directories.fluorescence_calibration)
+    elif normalized_folder == "scattering":
+        base_directory = Path(directories.scattering_calibration)
+    else:
+        raise ValueError(f"Unsupported calibration folder: {folder}")
+
+    resolved_path = (base_directory / file_name).resolve()
+    resolved_base_directory = base_directory.resolve()
+
+    if resolved_base_directory not in resolved_path.parents:
+        raise ValueError("Invalid calibration file path.")
+
+    return resolved_path
+
+
 class RosettaXApplication:
     """
     Main Dash application for RosettaX.
@@ -37,21 +60,16 @@ class RosettaXApplication:
     Responsibilities
     ----------------
     - Instantiate the Dash app.
-    - Import and register all page modules.
-    - Register app-level callbacks.
+    - Import and register all Dash page modules.
+    - Register application-level callbacks.
+    - Register Flask routes that should not go through Dash page routing.
     - Build the global layout.
     - Start the server.
 
     Notes
     -----
-    This module must only manage application-level state.
-
-    It must not contain page-specific logic such as:
-    - fluorescence MESF default table construction
-    - scattering table defaults
-    - calibration-specific derived stores
-
-    Those belong inside their respective pages or sections.
+    This module only manages application-level behavior and shared state.
+    Page-specific logic must remain in the relevant page modules.
     """
 
     _theme_light = dbc.themes.FLATLY
@@ -90,13 +108,18 @@ class RosettaXApplication:
         self._register_pages()
         logger.debug("Registered Dash pages: %r", list(dash.page_registry.keys()))
 
+        self._register_server_routes()
         register_sidebar_callbacks()
         self._register_callbacks()
         self._set_layout()
 
     def _register_pages(self) -> None:
         """
-        Import all page modules after Dash app instantiation.
+        Import all Dash page modules after Dash app instantiation.
+
+        The calibration JSON viewer is intentionally not a Dash page anymore.
+        It is served through a Flask route so opening a calibration record does not
+        disturb the current Dash route or theme state.
         """
         page_modules = [
             "RosettaX.pages.home.main",
@@ -105,7 +128,6 @@ class RosettaXApplication:
             "RosettaX.pages.calibrate.main",
             "RosettaX.pages.settings.main",
             "RosettaX.pages.help.main",
-            "RosettaX.pages.calibration_json.main",
         ]
 
         logger.debug("Registering page modules")
@@ -118,6 +140,96 @@ class RosettaXApplication:
             except Exception:
                 logger.exception("Failed to import page module=%r", module_name)
                 raise
+
+    def _register_server_routes(self) -> None:
+        """
+        Register Flask routes that should bypass Dash page routing.
+        """
+        logger.debug("Registering Flask server routes")
+
+        @self.app.server.route("/calibration-json/<folder>/<path:file_name>")
+        def serve_calibration_json(folder: str, file_name: str):
+            logger.debug(
+                "serve_calibration_json called with folder=%r file_name=%r",
+                folder,
+                file_name,
+            )
+
+            try:
+                calibration_file_path = _resolve_calibration_file_path(folder, file_name)
+                calibration_record = json.loads(
+                    calibration_file_path.read_text(encoding="utf-8")
+                )
+
+                formatted_json = json.dumps(
+                    calibration_record,
+                    indent=4,
+                    ensure_ascii=False,
+                )
+
+                safe_title = f"{folder} / {file_name}"
+
+                html_document = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>{safe_title}</title>
+    <style>
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            margin: 24px;
+            background: #ffffff;
+            color: #111111;
+        }}
+        h2 {{
+            margin: 0 0 8px 0;
+        }}
+        .subtitle {{
+            opacity: 0.72;
+            margin-bottom: 18px;
+        }}
+        pre {{
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-family: Menlo, Monaco, Consolas, monospace;
+            font-size: 14px;
+            background: #f6f8fa;
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 0;
+        }}
+    </style>
+</head>
+<body>
+    <h2>Calibration JSON</h2>
+    <div class="subtitle">{safe_title}</div>
+    <pre>{formatted_json}</pre>
+</body>
+</html>
+"""
+                return Response(html_document, mimetype="text/html")
+
+            except Exception as exc:
+                logger.exception(
+                    "Failed to serve calibration JSON for folder=%r file_name=%r",
+                    folder,
+                    file_name,
+                )
+
+                error_document = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Could not open calibration</title>
+</head>
+<body>
+    <h2>Could not open calibration</h2>
+    <pre>{type(exc).__name__}: {exc}</pre>
+</body>
+</html>
+"""
+                return Response(error_document, mimetype="text/html", status=400)
 
     def _register_callbacks(self) -> None:
         """
@@ -186,23 +298,23 @@ class RosettaXApplication:
                 return dash.no_update
 
             try:
-                selected_profile_file_name = str(selected_profile_from_sidebar).strip()
+                selected_profile_name = str(selected_profile_from_sidebar).strip()
 
-                if not selected_profile_file_name:
-                    logger.debug("Selected profile file name is empty after stripping.")
+                if not selected_profile_name:
+                    logger.debug("Selected profile name is empty after stripping.")
                     return dash.no_update
 
-                runtime_config = RuntimeConfig.from_profile_name(selected_profile_file_name)
+                runtime_config = RuntimeConfig.from_profile_name(selected_profile_name)
 
                 logger.debug(
                     "Loaded runtime config payload from sidebar profile=%r",
-                    selected_profile_file_name,
+                    selected_profile_name,
                 )
                 return runtime_config.to_dict()
 
             except Exception:
                 logger.exception(
-                    "Failed to load runtime config from sidebar selected profile=%r",
+                    "Failed to load runtime config from sidebar selected_profile=%r",
                     selected_profile_from_sidebar,
                 )
                 return dash.no_update
@@ -335,22 +447,22 @@ class RosettaXApplication:
         )
 
     def _open_browser(self) -> None:
-        url = f"http://{self.host}:{self.port}/home"
-        logger.debug("Opening browser at url=%r", url)
-        webbrowser.open_new(url)
+        application_url = f"http://{self.host}:{self.port}/home"
+        logger.debug("Opening browser at application_url=%r", application_url)
+        webbrowser.open_new(application_url)
 
 
 def main(argv: Optional[list[str]] = None) -> None:
     logger.debug("Entering main with argv=%r", argv)
 
-    args = _parse_args(argv)
+    parsed_arguments = _parse_args(argv)
 
-    app = RosettaXApplication(
-        host=str(args.host),
-        port=int(args.port),
-        open_browser=not bool(args.no_browser),
+    application = RosettaXApplication(
+        host=str(parsed_arguments.host),
+        port=int(parsed_arguments.port),
+        open_browser=not bool(parsed_arguments.no_browser),
     )
-    app.run()
+    application.run()
 
 
 if __name__ == "__main__":

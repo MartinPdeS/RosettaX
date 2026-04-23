@@ -133,7 +133,7 @@ class Calibration:
                         dash.dcc.Loading(
                             dash.dcc.Graph(
                                 id=self.page.ids.Calibration.graph_calibration,
-                                style=self.page.style["graph"],
+                                style=styling.PAGE["graph"],
                             ),
                             type="default",
                         ),

@@ -7,10 +7,8 @@ import dash
 import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
 
-from RosettaX.utils import styling
+from RosettaX.utils import styling, casting, plottings
 from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.utils.plottings import add_vertical_lines, _make_info_figure
-from RosettaX.utils import casting
 from . import services
 
 logger = logging.getLogger(__name__)
@@ -163,7 +161,7 @@ class Scattering:
         return dash.dcc.Loading(
             dash.dcc.Graph(
                 id=self.page.ids.Scattering.graph_hist,
-                style=self.page.style["graph"],
+                style=styling.PAGE["graph"],
             ),
             type="default",
         )
@@ -334,17 +332,17 @@ class Scattering:
             )
 
             if not callback_inputs.graph_enabled:
-                return _make_info_figure("Histogram is hidden.")
+                return plottings._make_info_figure("Histogram is hidden.")
 
             uploaded_fcs_path_clean = services.clean_optional_string(uploaded_fcs_path)
             if not uploaded_fcs_path_clean:
-                return _make_info_figure("Upload an FCS file first.")
+                return plottings._make_info_figure("Upload an FCS file first.")
 
             if not callback_inputs.scattering_channel:
-                return _make_info_figure("Select a scattering detector first.")
+                return plottings._make_info_figure("Select a scattering detector first.")
 
             if self.page.backend is None:
-                return _make_info_figure("Backend is not initialized. Upload an FCS file again.")
+                return plottings._make_info_figure("Backend is not initialized. Upload an FCS file again.")
 
             try:
                 line_positions: list[float] = []
@@ -374,7 +372,7 @@ class Scattering:
                     peak_positions=line_positions,
                 )
 
-                figure = add_vertical_lines(
+                figure = plottings.add_vertical_lines(
                     fig=figure,
                     line_positions=line_positions,
                     line_labels=line_labels,
@@ -391,7 +389,7 @@ class Scattering:
                     callback_inputs.nbins,
                     callback_inputs.max_events,
                 )
-                return _make_info_figure(f"{type(exc).__name__}: {exc}")
+                return plottings._make_info_figure(f"{type(exc).__name__}: {exc}")
 
         @dash.callback(
             dash.Output(self.page.ids.Calibration.bead_table, "data", allow_duplicate=True),

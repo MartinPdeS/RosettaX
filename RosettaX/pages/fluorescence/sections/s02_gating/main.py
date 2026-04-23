@@ -5,7 +5,6 @@ import logging
 
 import dash
 import dash_bootstrap_components as dbc
-import plotly.graph_objs as go
 
 from RosettaX.utils import styling
 from RosettaX.utils.runtime_config import RuntimeConfig
@@ -177,7 +176,7 @@ class Gating:
         return dash.dcc.Loading(
             dash.dcc.Graph(
                 id=self.page.ids.Scattering.graph_hist,
-                style=self.page.style["graph"],
+                style=styling.PAGE["graph"],
             ),
             type="default",
         )

@@ -6,17 +6,7 @@ from dash import html
 
 from RosettaX.utils import ui_forms
 
-
 class HelpPage:
-    def __init__(self) -> None:
-        self.path = "/help"
-        self.name = "Help"
-        self.page_title = "Help"
-        self.container_style = {
-            "paddingTop": "24px",
-            "paddingBottom": "48px",
-        }
-
     def layout(self, **_kwargs) -> dbc.Container:
         return dbc.Container(
             [
@@ -29,7 +19,6 @@ class HelpPage:
                 self._diagnostics_card(),
             ],
             fluid=True,
-            style=self.container_style,
         )
 
     def _hero_section(self) -> dbc.Card:
@@ -37,7 +26,7 @@ class HelpPage:
             dbc.CardBody(
                 [
                     ui_forms.build_section_intro(
-                        title=self.page_title,
+                        title="Help",
                         title_component="H2",
                         description=(
                             "RosettaX is organized around three main tasks: building a fluorescence calibration, "

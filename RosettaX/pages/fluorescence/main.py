@@ -4,15 +4,9 @@ from typing import Self
 from RosettaX.pages.fluorescence.ids import Ids
 from RosettaX.pages.fluorescence import sections
 
-
 class FluorescencePage:
     def __init__(self) -> None:
         self.ids = Ids()
-
-        self.style = {
-            "body_scroll": {"maxHeight": "80vh", "overflowY": "auto"},
-            "graph": {"width": "100%", "height": "60vh"},
-        }
 
         self.sections = [
             sections.Upload(page=self),
