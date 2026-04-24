@@ -1,120 +1,40 @@
+# -*- coding: utf-8 -*-
+from RosettaX.pages.scattering.sections.s01_upload.ids import UploadSectionIds
+from RosettaX.pages.scattering.sections.s02_peaks.ids import PeakSectionIds
+from RosettaX.pages.scattering.sections.s03_parameters.ids import ParameterSectionIds
+from RosettaX.pages.scattering.sections.s04_calibration.ids import CalibrationSectionIds
+from RosettaX.pages.scattering.sections.s05_save.ids import SaveSectionIds
+
+
 PAGE_NAME = "scattering_calibration"
 
 
 class Ids:
+    """
+    Scattering calibration page IDs.
+
+    Each section owns its own ID factory. This keeps the page-level ID namespace
+    explicit while avoiding nested string-only classes.
+    """
+
     page_name = PAGE_NAME
 
-    class Upload:
-        filename = f"{PAGE_NAME}-upload_filename"
-        saved_as = f"{PAGE_NAME}-upload_saved_as"
-        fcs_path_store = f"{PAGE_NAME}-uploaded_fcs_path_store"
-        upload = f"{PAGE_NAME}-upload"
-        filename_store = f"{PAGE_NAME}-filename_store"
-        max_events_for_plots_input = f"{PAGE_NAME}-scattering_max_events_for_plots_input"
+    Upload = UploadSectionIds(
+        prefix=PAGE_NAME,
+    )
 
-    class Parameters:
-        mie_model_parameters_container = f"{PAGE_NAME}-mie_model_parameters_container"
-        mie_model = f"{PAGE_NAME}-mie_model"
-        particle_diameter = f"{PAGE_NAME}-particle_diameter"
-        particle_index = f"{PAGE_NAME}-particle_index"
-        medium_refractive_index = f"{PAGE_NAME}-medium_refractive_index"
-        custom_medium_refractive_index = f"{PAGE_NAME}-custom_medium_refractive_index"
-        core_refractive_index = f"{PAGE_NAME}-core_refractive_index"
-        core_diameter = f"{PAGE_NAME}-core_diameter"
-        shell_refractive_index = f"{PAGE_NAME}-shell_refractive_index"
-        shell_thickness = f"{PAGE_NAME}-shell_thickness"
-        particle_refractive_index_source = f"{PAGE_NAME}-particle-refractive-index-source"
-        particle_refractive_index_custom = f"{PAGE_NAME}-particle-refractive-index-custom"
-        core_refractive_index_source = f"{PAGE_NAME}-core-refractive-index-source"
-        core_refractive_index_custom = f"{PAGE_NAME}-core-refractive-index-custom"
-        medium_refractive_index_custom = f"{PAGE_NAME}-medium-refractive-index-custom"
-        medium_refractive_index_source = f"{PAGE_NAME}-medium-refractive-index-source"
-        shell_refractive_index_source = f"{PAGE_NAME}-shell-refractive-index-source"
-        shell_refractive_index_custom = f"{PAGE_NAME}-shell-refractive-index-custom"
-        collapse_example = f"{PAGE_NAME}-collapse_example"
-        solid_sphere_container = f"{PAGE_NAME}-solid_sphere_container"
-        core_shell_container = f"{PAGE_NAME}-core_shell_container"
-        optical_configuration_preset = f"{PAGE_NAME}-optical-configuration-preset"
-        wavelength_nm = f"{PAGE_NAME}-wavelength-nm"
-        detector_numerical_aperture = f"{PAGE_NAME}-detector-numerical-aperture"
-        detector_cache_numerical_aperture = f"{PAGE_NAME}-detector-cache-numerical-aperture"
-        detector_sampling = f"{PAGE_NAME}-detector-sampling"
-        homogeneous_geometry_store = f"{PAGE_NAME}-homogeneous-geometry-store"
-        core_shell_geometry_store = f"{PAGE_NAME}-core-shell-geometry-store"
-        detector_configuration_custom_values_container = f"{PAGE_NAME}-detector-configuration-custom-values-container"
-        detector_configuration_preset = f"{PAGE_NAME}-detector-configuration-preset-store"
-        optical_configuration_preview = "scattering_calibration-optical-configuration-preview"
-        blocker_bar_numerical_aperture = "scattering_calibration-blocker-bar-numerical-aperture"
-        detector_phi_angle_degree = "scattering_calibration-detector-phi-angle-degree"
-        detector_gamma_angle_degree = "scattering_calibration-detector-gamma-angle-degree"
-        detector_configuration_preset_options_refresh_interval = f"{PAGE_NAME}-detector-configuration-preset-options-refresh-interval"
-        detector_configuration_preset_refresh_button = f"{PAGE_NAME}-detector-configuration-preset-refresh-button"
+    Scattering = PeakSectionIds(
+        prefix=PAGE_NAME,
+    )
 
-    class Scattering:
-        detector_dropdown = f"{PAGE_NAME}-scattering_detector_dropdown"
-        debug_container = f"{PAGE_NAME}-scattering_debug_container"
-        debug_switch = f"{PAGE_NAME}-scattering_debug_switch"
-        nbins_input = f"{PAGE_NAME}-scattering_nbins_input"
-        graph_hist = f"{PAGE_NAME}-scattering_graph_hist"
-        yscale_switch = f"{PAGE_NAME}-scattering_yscale_switch"
-        peak_count_input = f"{PAGE_NAME}-scattering-peak-count-input"
-        find_peaks_btn = f"{PAGE_NAME}-scattering-find-peaks-btn"
-        graph_toggle_switch = f"{PAGE_NAME}-scattering-graph-toggle-switch"
-        graph_toggle_container = f"{PAGE_NAME}-scattering-graph-toggle-container"
-        peak_lines_store = f"{PAGE_NAME}-scattering-peak-lines-store"
-        process_dropdown = "scattering_calibration-process-dropdown"
-        automatic_peak_controls_container = "scattering_calibration-automatic-peak-controls-container"
-        manual_click_controls_container = "scattering_calibration-manual-click-controls-container"
-        clear_manual_peaks_btn = "scattering_calibration-clear-manual-peaks-button"
-        manual_click_status = "scattering_calibration-manual-click-status"
-        manual_2d_click_controls_container = "scattering_calibration-manual-2d-click-controls-container"
-        manual_2d_click_controls_container = (
-            "scattering_calibration-manual-2d-click-controls-container"
-        )
+    Parameters = ParameterSectionIds(
+        prefix=PAGE_NAME,
+    )
 
-        clear_manual_2d_peaks_btn = (
-            "scattering_calibration-clear-manual-2d-peaks-button"
-        )
+    Calibration = CalibrationSectionIds(
+        prefix=PAGE_NAME,
+    )
 
-        manual_2d_click_status = (
-            "scattering_calibration-manual-2d-click-status"
-        )
-        histogram_controls_container = (
-            "scattering_calibration-histogram-controls-container"
-        )
-
-    class Export:
-        run_calibration_btn = f"{PAGE_NAME}-run_calibration_btn"
-        file_name = f"{PAGE_NAME}-export_file_name"
-        result_out = f"{PAGE_NAME}-result_out"
-        save_export_btn = f"{PAGE_NAME}-save_export_btn"
-        interpolate_method = f"{PAGE_NAME}-interpolate_method"
-        interpolate_au = f"{PAGE_NAME}-interpolate_au"
-        interpolate_area = f"{PAGE_NAME}-interpolate_area"
-        interpolate_btn = f"{PAGE_NAME}-interpolate_btn"
-        collapse = f"{PAGE_NAME}-collapse_export"
-
-    class Calibration:
-        calibration_store = f"{PAGE_NAME}-calibration_store"
-        compute_model_btn = f"{PAGE_NAME}-compute-model-btn"
-        calibrate_btn = f"{PAGE_NAME}-calibrate-btn"
-        graph_store = f"{PAGE_NAME}-graph_store"
-        bead_table = f"{PAGE_NAME}-bead-table"
-        add_row_btn = f"{PAGE_NAME}-add-row-btn"
-        graph_calibration = f"{PAGE_NAME}-graph-calibration"
-        slope_out = f"{PAGE_NAME}-slope-out"
-        intercept_out = f"{PAGE_NAME}-intercept-out"
-        r_squared_out = f"{PAGE_NAME}-r-squared-out"
-        apply_status = f"{PAGE_NAME}-apply-status"
-
-    class Save:
-        channel_name = f"{PAGE_NAME}-channel-name"
-        file_name = f"{PAGE_NAME}-file-name"
-        save_btn = f"{PAGE_NAME}-save-btn"
-        save_out = f"{PAGE_NAME}-save-out"
-        add_mesf_btn = f"{PAGE_NAME}-add-mesf-btn"
-        save_calibration_btn = f"{PAGE_NAME}-save-calibration-btn"
-        export_mode = f"{PAGE_NAME}-export-mode"
-        export_filename = f"{PAGE_NAME}-export-filename"
-        export_file_btn = f"{PAGE_NAME}-export-file-btn"
-        export_download = f"{PAGE_NAME}-export-download"
+    Save = SaveSectionIds(
+        prefix=PAGE_NAME,
+    )

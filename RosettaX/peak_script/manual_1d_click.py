@@ -5,7 +5,6 @@ import logging
 
 import dash
 
-from RosettaX.utils import styling
 from .base import BasePeakProcess
 from .base import PeakProcessResult
 
@@ -51,7 +50,8 @@ class Manual1DClickProcess(BasePeakProcess):
                             },
                         ),
                         dash.dcc.Dropdown(
-                            id=self.build_detector_dropdown_id(
+                            id=ids.process_detector_dropdown(
+                                process_name=self.process_name,
                                 channel_name="primary",
                             ),
                             style={
@@ -72,12 +72,15 @@ class Manual1DClickProcess(BasePeakProcess):
                     [
                         dash.html.Button(
                             "Clear picked peaks",
-                            id=self.build_action_button_id(
+                            id=ids.process_action_button(
+                                process_name=self.process_name,
                                 action_name="clear",
                             ),
                             n_clicks=0,
                         ),
-                        self.build_status_component(),
+                        self.build_status_component(
+                            ids=ids,
+                        ),
                     ],
                     style={
                         "display": "flex",
@@ -85,7 +88,9 @@ class Manual1DClickProcess(BasePeakProcess):
                     },
                 ),
             ],
-            id=self.build_controls_container_id(),
+            id=ids.process_controls_container(
+                process_name=self.process_name,
+            ),
             style={"display": "none"},
         )
 

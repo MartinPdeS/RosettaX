@@ -12,11 +12,6 @@ from RosettaX.utils import plottings
 from RosettaX.utils.runtime_config import RuntimeConfig
 
 from RosettaX.peak_script import DEFAULT_PROCESS_NAME
-from RosettaX.peak_script import PEAK_SCRIPT_DETECTOR_DROPDOWN_TYPE
-from RosettaX.peak_script import PEAK_SCRIPT_CONTROLS_CONTAINER_TYPE
-from RosettaX.peak_script import PEAK_SCRIPT_ACTION_BUTTON_TYPE
-from RosettaX.peak_script import PEAK_SCRIPT_STATUS_TYPE
-from RosettaX.peak_script import PEAK_SCRIPT_SETTING_TYPE
 
 from . import services
 
@@ -55,13 +50,6 @@ class Peaks:
         Live session state must come from runtime-config-store inside callbacks.
         """
         return RuntimeConfig.from_default_profile()
-
-    def _get_default_peak_count(self) -> int:
-        runtime_config = self._get_default_runtime_config()
-        return runtime_config.get_int(
-            "calibration.peak_count",
-            default=3,
-        )
 
     def _get_default_show_graphs(self) -> bool:
         runtime_config = self._get_default_runtime_config()
@@ -260,73 +248,29 @@ class Peaks:
         self._register_process_visibility_callback()
         self._register_manual_process_graph_visibility_callback()
         self._register_graph_visibility_callback()
+        self._register_histogram_controls_visibility_callback()
         self._register_peak_context_reset_callback()
         self._register_graph_callback()
         self._register_manual_click_callback()
         self._register_process_action_callback()
-        self._register_histogram_controls_visibility_callback()
-
-    def _register_histogram_controls_visibility_callback(self) -> None:
-        @dash.callback(
-            dash.Output(
-                self.page.ids.Scattering.histogram_controls_container,
-                "style",
-            ),
-            dash.Input(self.page.ids.Scattering.process_dropdown, "value"),
-            prevent_initial_call=False,
-        )
-        def toggle_histogram_controls(
-            process_name: Any,
-        ) -> dict[str, Any]:
-            process = services.get_process_instance(
-                process_name=process_name,
-            )
-
-            if process is not None and process.graph_type == "1d_histogram":
-                return {
-                    "display": "flex",
-                    "alignItems": "center",
-                    "gap": "16px",
-                    "flexWrap": "wrap",
-                }
-
-            return {
-                "display": "none",
-            }
 
     def _register_peak_script_detector_dropdowns_callback(self) -> None:
         @dash.callback(
             dash.Output(
-                {
-                    "type": PEAK_SCRIPT_DETECTOR_DROPDOWN_TYPE,
-                    "process": dash.ALL,
-                    "channel": dash.ALL,
-                },
+                self.page.ids.Scattering.process_detector_dropdown_pattern(),
                 "options",
             ),
             dash.Output(
-                {
-                    "type": PEAK_SCRIPT_DETECTOR_DROPDOWN_TYPE,
-                    "process": dash.ALL,
-                    "channel": dash.ALL,
-                },
+                self.page.ids.Scattering.process_detector_dropdown_pattern(),
                 "value",
             ),
             dash.Input(self.page.ids.Upload.fcs_path_store, "data"),
             dash.State(
-                {
-                    "type": PEAK_SCRIPT_DETECTOR_DROPDOWN_TYPE,
-                    "process": dash.ALL,
-                    "channel": dash.ALL,
-                },
+                self.page.ids.Scattering.process_detector_dropdown_pattern(),
                 "id",
             ),
             dash.State(
-                {
-                    "type": PEAK_SCRIPT_DETECTOR_DROPDOWN_TYPE,
-                    "process": dash.ALL,
-                    "channel": dash.ALL,
-                },
+                self.page.ids.Scattering.process_detector_dropdown_pattern(),
                 "value",
             ),
             prevent_initial_call=False,
@@ -401,18 +345,12 @@ class Peaks:
     def _register_process_visibility_callback(self) -> None:
         @dash.callback(
             dash.Output(
-                {
-                    "type": PEAK_SCRIPT_CONTROLS_CONTAINER_TYPE,
-                    "process": dash.ALL,
-                },
+                self.page.ids.Scattering.process_controls_container_pattern(),
                 "style",
             ),
             dash.Input(self.page.ids.Scattering.process_dropdown, "value"),
             dash.State(
-                {
-                    "type": PEAK_SCRIPT_CONTROLS_CONTAINER_TYPE,
-                    "process": dash.ALL,
-                },
+                self.page.ids.Scattering.process_controls_container_pattern(),
                 "id",
             ),
             prevent_initial_call=False,
@@ -480,6 +418,34 @@ class Peaks:
 
             return {"display": "block"} if graph_enabled else {"display": "none"}
 
+    def _register_histogram_controls_visibility_callback(self) -> None:
+        @dash.callback(
+            dash.Output(
+                self.page.ids.Scattering.histogram_controls_container,
+                "style",
+            ),
+            dash.Input(self.page.ids.Scattering.process_dropdown, "value"),
+            prevent_initial_call=False,
+        )
+        def toggle_histogram_controls(
+            process_name: Any,
+        ) -> dict[str, Any]:
+            process = services.get_process_instance_for_name(
+                process_name=process_name,
+            )
+
+            if process is not None and process.graph_type == "1d_histogram":
+                return {
+                    "display": "flex",
+                    "alignItems": "center",
+                    "gap": "16px",
+                    "flexWrap": "wrap",
+                }
+
+            return {
+                "display": "none",
+            }
+
     def _register_peak_context_reset_callback(self) -> None:
         @dash.callback(
             dash.Output(
@@ -488,28 +454,18 @@ class Peaks:
                 allow_duplicate=True,
             ),
             dash.Output(
-                {
-                    "type": PEAK_SCRIPT_STATUS_TYPE,
-                    "process": dash.ALL,
-                },
+                self.page.ids.Scattering.process_status_pattern(),
                 "children",
                 allow_duplicate=True,
             ),
             dash.Input(self.page.ids.Upload.fcs_path_store, "data"),
             dash.Input(self.page.ids.Scattering.process_dropdown, "value"),
             dash.Input(
-                {
-                    "type": PEAK_SCRIPT_DETECTOR_DROPDOWN_TYPE,
-                    "process": dash.ALL,
-                    "channel": dash.ALL,
-                },
+                self.page.ids.Scattering.process_detector_dropdown_pattern(),
                 "value",
             ),
             dash.State(
-                {
-                    "type": PEAK_SCRIPT_STATUS_TYPE,
-                    "process": dash.ALL,
-                },
+                self.page.ids.Scattering.process_status_pattern(),
                 "id",
             ),
             prevent_initial_call=True,
@@ -545,36 +501,20 @@ class Peaks:
             dash.Input(self.page.ids.Scattering.nbins_input, "value"),
             dash.Input(self.page.ids.Scattering.peak_lines_store, "data"),
             dash.State(
-                {
-                    "type": PEAK_SCRIPT_DETECTOR_DROPDOWN_TYPE,
-                    "process": dash.ALL,
-                    "channel": dash.ALL,
-                },
+                self.page.ids.Scattering.process_detector_dropdown_pattern(),
                 "id",
             ),
             dash.Input(
-                {
-                    "type": PEAK_SCRIPT_DETECTOR_DROPDOWN_TYPE,
-                    "process": dash.ALL,
-                    "channel": dash.ALL,
-                },
+                self.page.ids.Scattering.process_detector_dropdown_pattern(),
                 "value",
             ),
             dash.Input(self.page.ids.Scattering.process_dropdown, "value"),
             dash.State(
-                {
-                    "type": PEAK_SCRIPT_SETTING_TYPE,
-                    "process": dash.ALL,
-                    "setting": dash.ALL,
-                },
+                self.page.ids.Scattering.process_setting_pattern(),
                 "id",
             ),
             dash.Input(
-                {
-                    "type": PEAK_SCRIPT_SETTING_TYPE,
-                    "process": dash.ALL,
-                    "setting": dash.ALL,
-                },
+                self.page.ids.Scattering.process_setting_pattern(),
                 "value",
             ),
             dash.State(
@@ -653,10 +593,7 @@ class Peaks:
                 allow_duplicate=True,
             ),
             dash.Output(
-                {
-                    "type": PEAK_SCRIPT_STATUS_TYPE,
-                    "process": dash.ALL,
-                },
+                self.page.ids.Scattering.process_status_pattern(),
                 "children",
                 allow_duplicate=True,
             ),
@@ -664,29 +601,18 @@ class Peaks:
             dash.State(self.page.ids.Scattering.process_dropdown, "value"),
             dash.State(self.page.ids.Upload.fcs_path_store, "data"),
             dash.State(
-                {
-                    "type": PEAK_SCRIPT_DETECTOR_DROPDOWN_TYPE,
-                    "process": dash.ALL,
-                    "channel": dash.ALL,
-                },
+                self.page.ids.Scattering.process_detector_dropdown_pattern(),
                 "id",
             ),
             dash.State(
-                {
-                    "type": PEAK_SCRIPT_DETECTOR_DROPDOWN_TYPE,
-                    "process": dash.ALL,
-                    "channel": dash.ALL,
-                },
+                self.page.ids.Scattering.process_detector_dropdown_pattern(),
                 "value",
             ),
             dash.State(self.page.ids.Scattering.peak_lines_store, "data"),
             dash.State(self.page.ids.Calibration.bead_table, "data"),
             dash.State(self.page.ids.Parameters.mie_model, "value"),
             dash.State(
-                {
-                    "type": PEAK_SCRIPT_STATUS_TYPE,
-                    "process": dash.ALL,
-                },
+                self.page.ids.Scattering.process_status_pattern(),
                 "id",
             ),
             prevent_initial_call=True,
@@ -751,45 +677,26 @@ class Peaks:
                 allow_duplicate=True,
             ),
             dash.Output(
-                {
-                    "type": PEAK_SCRIPT_STATUS_TYPE,
-                    "process": dash.ALL,
-                },
+                self.page.ids.Scattering.process_status_pattern(),
                 "children",
                 allow_duplicate=True,
             ),
             dash.Input(
-                {
-                    "type": PEAK_SCRIPT_ACTION_BUTTON_TYPE,
-                    "process": dash.ALL,
-                    "action": dash.ALL,
-                },
+                self.page.ids.Scattering.process_action_button_pattern(),
                 "n_clicks",
             ),
             dash.State(
-                {
-                    "type": PEAK_SCRIPT_ACTION_BUTTON_TYPE,
-                    "process": dash.ALL,
-                    "action": dash.ALL,
-                },
+                self.page.ids.Scattering.process_action_button_pattern(),
                 "id",
             ),
             dash.State(self.page.ids.Scattering.process_dropdown, "value"),
             dash.State(self.page.ids.Upload.fcs_path_store, "data"),
             dash.State(
-                {
-                    "type": PEAK_SCRIPT_DETECTOR_DROPDOWN_TYPE,
-                    "process": dash.ALL,
-                    "channel": dash.ALL,
-                },
+                self.page.ids.Scattering.process_detector_dropdown_pattern(),
                 "id",
             ),
             dash.State(
-                {
-                    "type": PEAK_SCRIPT_DETECTOR_DROPDOWN_TYPE,
-                    "process": dash.ALL,
-                    "channel": dash.ALL,
-                },
+                self.page.ids.Scattering.process_detector_dropdown_pattern(),
                 "value",
             ),
             dash.State(self.page.ids.Scattering.peak_count_input, "value"),
@@ -802,10 +709,7 @@ class Peaks:
             dash.State(self.page.ids.Parameters.mie_model, "value"),
             dash.State("runtime-config-store", "data"),
             dash.State(
-                {
-                    "type": PEAK_SCRIPT_STATUS_TYPE,
-                    "process": dash.ALL,
-                },
+                self.page.ids.Scattering.process_status_pattern(),
                 "id",
             ),
             prevent_initial_call=True,

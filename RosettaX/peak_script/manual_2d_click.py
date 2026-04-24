@@ -42,8 +42,6 @@ class Manual2DClickProcess(BasePeakProcess):
         *,
         ids: Any,
     ) -> dash.html.Div:
-        del ids
-
         return dash.html.Div(
             [
                 dash.html.Div(
@@ -56,7 +54,8 @@ class Manual2DClickProcess(BasePeakProcess):
                             },
                         ),
                         dash.dcc.Dropdown(
-                            id=self.build_detector_dropdown_id(
+                            id=ids.process_detector_dropdown(
+                                process_name=self.process_name,
                                 channel_name="x",
                             ),
                             style={
@@ -83,7 +82,8 @@ class Manual2DClickProcess(BasePeakProcess):
                             },
                         ),
                         dash.dcc.Dropdown(
-                            id=self.build_detector_dropdown_id(
+                            id=ids.process_detector_dropdown(
+                                process_name=self.process_name,
                                 channel_name="y",
                             ),
                             style={
@@ -103,7 +103,8 @@ class Manual2DClickProcess(BasePeakProcess):
                 dash.html.Div(
                     [
                         dbc.Checklist(
-                            id=self.build_setting_id(
+                            id=ids.process_setting(
+                                process_name=self.process_name,
                                 setting_name="x_log_scale",
                             ),
                             options=[
@@ -121,7 +122,8 @@ class Manual2DClickProcess(BasePeakProcess):
                             },
                         ),
                         dbc.Checklist(
-                            id=self.build_setting_id(
+                            id=ids.process_setting(
+                                process_name=self.process_name,
                                 setting_name="y_log_scale",
                             ),
                             options=[
@@ -146,12 +148,15 @@ class Manual2DClickProcess(BasePeakProcess):
                     [
                         dash.html.Button(
                             "Clear picked peaks",
-                            id=self.build_action_button_id(
+                            id=ids.process_action_button(
+                                process_name=self.process_name,
                                 action_name="clear",
                             ),
                             n_clicks=0,
                         ),
-                        self.build_status_component(),
+                        self.build_status_component(
+                            ids=ids,
+                        ),
                     ],
                     style={
                         "display": "flex",
@@ -159,7 +164,9 @@ class Manual2DClickProcess(BasePeakProcess):
                     },
                 ),
             ],
-            id=self.build_controls_container_id(),
+            id=ids.process_controls_container(
+                process_name=self.process_name,
+            ),
             style={"display": "none"},
         )
 

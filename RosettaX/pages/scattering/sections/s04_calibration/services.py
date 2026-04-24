@@ -51,11 +51,12 @@ class OpticalParameters:
     wavelength_nm: float
     detector_numerical_aperture: float
     detector_cache_numerical_aperture: float
+    blocker_bar_numerical_aperture: float
     detector_sampling: int
+    detector_phi_angle_degree: float
+    detector_gamma_angle_degree: float
     optical_power_watt: float = 1.0
     source_numerical_aperture: float = 0.1
-    detector_phi_offset_degree: float = 0.0
-    detector_gamma_offset_degree: float = 0.0
     polarization_angle_degree: float = 0.0
 
 
@@ -64,7 +65,9 @@ def resolve_mie_model(mie_model: Any) -> str:
     return "Core/Shell Sphere" if mie_model_string == "Core/Shell Sphere" else "Solid Sphere"
 
 
-def build_peak_detection_result_like_object(peak_positions: np.ndarray) -> PeakDetectionResultLike:
+def build_peak_detection_result_like_object(
+    peak_positions: np.ndarray,
+) -> PeakDetectionResultLike:
     return PeakDetectionResultLike(
         peak_positions=np.asarray(peak_positions, dtype=float),
     )
@@ -79,16 +82,25 @@ def parse_optical_parameters(
     wavelength_nm: Any,
     detector_numerical_aperture: Any,
     detector_cache_numerical_aperture: Any,
+    blocker_bar_numerical_aperture: Any,
     detector_sampling: Any,
+    detector_phi_angle_degree: Any,
+    detector_gamma_angle_degree: Any,
 ) -> OpticalParameters:
     return OpticalParameters(
         medium_refractive_index=casting.as_required_float(
             medium_refractive_index,
             "medium_refractive_index",
         ),
-        particle_refractive_index=casting.as_optional_float(particle_refractive_index),
-        core_refractive_index=casting.as_optional_float(core_refractive_index),
-        shell_refractive_index=casting.as_optional_float(shell_refractive_index),
+        particle_refractive_index=casting.as_optional_float(
+            particle_refractive_index,
+        ),
+        core_refractive_index=casting.as_optional_float(
+            core_refractive_index,
+        ),
+        shell_refractive_index=casting.as_optional_float(
+            shell_refractive_index,
+        ),
         wavelength_nm=casting.as_required_float(
             wavelength_nm,
             "wavelength_nm",
@@ -101,9 +113,21 @@ def parse_optical_parameters(
             detector_cache_numerical_aperture,
             "detector_cache_numerical_aperture",
         ),
+        blocker_bar_numerical_aperture=casting.as_required_float(
+            blocker_bar_numerical_aperture,
+            "blocker_bar_numerical_aperture",
+        ),
         detector_sampling=casting.as_required_int(
             detector_sampling,
             "detector_sampling",
+        ),
+        detector_phi_angle_degree=casting.as_required_float(
+            detector_phi_angle_degree,
+            "detector_phi_angle_degree",
+        ),
+        detector_gamma_angle_degree=casting.as_required_float(
+            detector_gamma_angle_degree,
+            "detector_gamma_angle_degree",
         ),
     )
 
@@ -201,7 +225,10 @@ def write_expected_coupling_into_sphere_table(
     expected_coupling_values: np.ndarray,
 ) -> list[dict[str, str]]:
     updated_rows = [dict(row) for row in rows]
-    expected_coupling_values = np.asarray(expected_coupling_values, dtype=float).reshape(-1)
+    expected_coupling_values = np.asarray(
+        expected_coupling_values,
+        dtype=float,
+    ).reshape(-1)
 
     for row in updated_rows:
         row["expected_coupling"] = ""
@@ -233,16 +260,28 @@ def build_model_comparison_figure(
 ) -> go.Figure:
     figure = go.Figure()
 
-    measured_peak_positions = np.asarray(measured_peak_positions, dtype=float).reshape(-1)
-    expected_coupling_values = np.asarray(expected_coupling_values, dtype=float).reshape(-1)
-    particle_diameters_nm = np.asarray(particle_diameters_nm, dtype=float).reshape(-1)
+    measured_peak_positions = np.asarray(
+        measured_peak_positions,
+        dtype=float,
+    ).reshape(-1)
+    expected_coupling_values = np.asarray(
+        expected_coupling_values,
+        dtype=float,
+    ).reshape(-1)
+    particle_diameters_nm = np.asarray(
+        particle_diameters_nm,
+        dtype=float,
+    ).reshape(-1)
 
     figure.add_trace(
         go.Scatter(
             x=measured_peak_positions,
             y=expected_coupling_values,
             mode="markers+text",
-            text=[f"{float(diameter):.6g} nm" for diameter in particle_diameters_nm],
+            text=[
+                f"{float(diameter):.6g} nm"
+                for diameter in particle_diameters_nm
+            ],
             textposition="top center",
             name="Reference points",
         )
@@ -271,12 +310,20 @@ def build_core_shell_placeholder_figure(
 ) -> go.Figure:
     figure = go.Figure()
 
+    outer_diameters_nm = np.asarray(
+        outer_diameters_nm,
+        dtype=float,
+    ).reshape(-1)
+
     figure.add_trace(
         go.Scatter(
             x=np.asarray(measured_peak_positions, dtype=float),
-            y=np.asarray(outer_diameters_nm, dtype=float),
+            y=outer_diameters_nm,
             mode="markers+text",
-            text=[f"{float(value):.6g} nm" for value in np.asarray(outer_diameters_nm, dtype=float)],
+            text=[
+                f"{float(value):.6g} nm"
+                for value in outer_diameters_nm
+            ],
             textposition="top center",
             name="Parsed rows",
         )
@@ -298,7 +345,10 @@ def build_dense_simulated_coupling_curve(
     optical_parameters: OpticalParameters,
     simulated_curve_point_count: int,
 ) -> tuple[np.ndarray, np.ndarray]:
-    particle_diameters_nm = np.asarray(particle_diameters_nm, dtype=float).reshape(-1)
+    particle_diameters_nm = np.asarray(
+        particle_diameters_nm,
+        dtype=float,
+    ).reshape(-1)
 
     if particle_diameters_nm.size == 0:
         return np.asarray([], dtype=float), np.asarray([], dtype=float)
@@ -324,15 +374,21 @@ def build_dense_simulated_coupling_curve(
         medium_refractive_index=optical_parameters.medium_refractive_index,
         particle_refractive_index=float(optical_parameters.particle_refractive_index),
         detector_cache_numerical_aperture=optical_parameters.detector_cache_numerical_aperture,
-        detector_phi_offset_degree=optical_parameters.detector_phi_offset_degree,
-        detector_gamma_offset_degree=optical_parameters.detector_gamma_offset_degree,
+        detector_phi_offset_degree=optical_parameters.detector_phi_angle_degree,
+        detector_gamma_offset_degree=optical_parameters.detector_gamma_angle_degree,
         polarization_angle_degree=optical_parameters.polarization_angle_degree,
         detector_sampling=optical_parameters.detector_sampling,
     )
 
     return (
-        np.asarray(dense_modeled_coupling_result.particle_diameters_nm, dtype=float).reshape(-1),
-        np.asarray(dense_modeled_coupling_result.expected_coupling_values, dtype=float).reshape(-1),
+        np.asarray(
+            dense_modeled_coupling_result.particle_diameters_nm,
+            dtype=float,
+        ).reshape(-1),
+        np.asarray(
+            dense_modeled_coupling_result.expected_coupling_values,
+            dtype=float,
+        ).reshape(-1),
     )
 
 
@@ -346,10 +402,22 @@ def build_simulated_coupling_vs_diameter_figure(
 ) -> go.Figure:
     figure = go.Figure()
 
-    point_x_values = np.asarray(particle_diameters_nm, dtype=float).reshape(-1)
-    point_y_values = np.asarray(expected_coupling_values, dtype=float).reshape(-1)
-    line_x_values = np.asarray(dense_particle_diameters_nm, dtype=float).reshape(-1)
-    line_y_values = np.asarray(dense_expected_coupling_values, dtype=float).reshape(-1)
+    point_x_values = np.asarray(
+        particle_diameters_nm,
+        dtype=float,
+    ).reshape(-1)
+    point_y_values = np.asarray(
+        expected_coupling_values,
+        dtype=float,
+    ).reshape(-1)
+    line_x_values = np.asarray(
+        dense_particle_diameters_nm,
+        dtype=float,
+    ).reshape(-1)
+    line_y_values = np.asarray(
+        dense_expected_coupling_values,
+        dtype=float,
+    ).reshape(-1)
 
     point_mask = np.isfinite(point_x_values) & np.isfinite(point_y_values) & (point_y_values > 0.0)
     line_mask = np.isfinite(line_x_values) & np.isfinite(line_y_values) & (line_y_values > 0.0)
@@ -388,7 +456,10 @@ def build_simulated_coupling_vs_diameter_figure(
                 y=point_y_values,
                 mode="markers",
                 name="Simulated points",
-                text=[f"{float(value):.6g} nm" for value in point_x_values],
+                text=[
+                    f"{float(value):.6g} nm"
+                    for value in point_x_values
+                ],
                 textposition="top center",
             )
         )
@@ -476,7 +547,9 @@ def run_solid_sphere_calibration(
     simulated_curve_point_count: int,
 ) -> CalibrationResult:
     if optical_parameters.particle_refractive_index is None:
-        raise ValueError("particle_refractive_index is required for Solid Sphere calibration.")
+        raise ValueError(
+            "particle_refractive_index is required for Solid Sphere calibration."
+        )
 
     scattering_backend = BackEnd(
         fcs_file_path=str(uploaded_fcs_path),
@@ -510,8 +583,8 @@ def run_solid_sphere_calibration(
         medium_refractive_index=optical_parameters.medium_refractive_index,
         particle_refractive_index=float(optical_parameters.particle_refractive_index),
         detector_cache_numerical_aperture=optical_parameters.detector_cache_numerical_aperture,
-        detector_phi_offset_degree=optical_parameters.detector_phi_offset_degree,
-        detector_gamma_offset_degree=optical_parameters.detector_gamma_offset_degree,
+        detector_phi_offset_degree=optical_parameters.detector_phi_angle_degree,
+        detector_gamma_offset_degree=optical_parameters.detector_gamma_angle_degree,
         polarization_angle_degree=optical_parameters.polarization_angle_degree,
         detector_sampling=optical_parameters.detector_sampling,
     )
@@ -562,7 +635,10 @@ def run_solid_sphere_calibration(
     calibration_payload = scattering_backend.build_calibration_payload(
         detector_column=str(detector_column),
         peak_detection_result=build_peak_detection_result_like_object(
-            peak_positions=np.asarray(parsed_sphere_rows["measured_peak_positions"], dtype=float),
+            peak_positions=np.asarray(
+                parsed_sphere_rows["measured_peak_positions"],
+                dtype=float,
+            ),
         ),
         modeled_coupling_result=modeled_coupling_result,
         fit_result=fit_result,
@@ -582,7 +658,10 @@ def run_solid_sphere_calibration(
             "source_numerical_aperture": optical_parameters.source_numerical_aperture,
             "detector_numerical_aperture": optical_parameters.detector_numerical_aperture,
             "detector_cache_numerical_aperture": optical_parameters.detector_cache_numerical_aperture,
+            "blocker_bar_numerical_aperture": optical_parameters.blocker_bar_numerical_aperture,
             "detector_sampling": optical_parameters.detector_sampling,
+            "detector_phi_angle_degree": optical_parameters.detector_phi_angle_degree,
+            "detector_gamma_angle_degree": optical_parameters.detector_gamma_angle_degree,
         }
     )
 
@@ -617,12 +696,16 @@ def run_scattering_calibration(
     wavelength_nm: Any,
     detector_numerical_aperture: Any,
     detector_cache_numerical_aperture: Any,
+    blocker_bar_numerical_aperture: Any,
     detector_sampling: Any,
+    detector_phi_angle_degree: Any,
+    detector_gamma_angle_degree: Any,
     simulated_curve_point_count: int,
     logger: logging.Logger,
 ) -> CalibrationResult:
     logger.debug(
-        "run_scattering_calibration called with uploaded_fcs_path=%r detector_column=%r mie_model=%r table_row_count=%r",
+        "run_scattering_calibration called with uploaded_fcs_path=%r "
+        "detector_column=%r mie_model=%r table_row_count=%r",
         uploaded_fcs_path,
         detector_column,
         mie_model,
@@ -647,7 +730,10 @@ def run_scattering_calibration(
             wavelength_nm=wavelength_nm,
             detector_numerical_aperture=detector_numerical_aperture,
             detector_cache_numerical_aperture=detector_cache_numerical_aperture,
+            blocker_bar_numerical_aperture=blocker_bar_numerical_aperture,
             detector_sampling=detector_sampling,
+            detector_phi_angle_degree=detector_phi_angle_degree,
+            detector_gamma_angle_degree=detector_gamma_angle_degree,
         )
 
         logger.debug(
@@ -657,9 +743,13 @@ def run_scattering_calibration(
 
         if resolved_mie_model == "Core/Shell Sphere":
             if optical_parameters.core_refractive_index is None:
-                raise ValueError("core_refractive_index is required for Core/Shell Sphere.")
+                raise ValueError(
+                    "core_refractive_index is required for Core/Shell Sphere."
+                )
             if optical_parameters.shell_refractive_index is None:
-                raise ValueError("shell_refractive_index is required for Core/Shell Sphere.")
+                raise ValueError(
+                    "shell_refractive_index is required for Core/Shell Sphere."
+                )
 
             return run_core_shell_calibration_placeholder(
                 current_table_rows=current_table_rows,

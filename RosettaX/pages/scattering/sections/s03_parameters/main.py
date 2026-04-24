@@ -19,27 +19,6 @@ logger = logging.getLogger(__name__)
 class Parameters:
     """
     Scattering parameter section.
-
-    Design
-    ------
-    The visible table is the source of truth for:
-    - particle geometry
-    - optional measured peak positions
-    - expected coupling values
-
-    This section:
-    - renders source configuration
-    - renders detector configuration
-    - loads detector presets dynamically from JSON files
-    - reloads detector presets manually with a button
-    - keeps detector values editable when Custom detector is selected
-    - hides manual detector values when a JSON backed detector preset is selected
-    - keeps wavelength independent from detector presets
-    - renders an interactive optical configuration preview
-    - switches the visible table schema when the particle type changes
-    - lets the user add rows
-    - keeps the table internally consistent
-    - computes expected coupling directly into the table
     """
 
     sphere_table_columns = services.sphere_table_columns
@@ -47,14 +26,10 @@ class Parameters:
 
     def __init__(self, page) -> None:
         self.page = page
+        self.ids = page.ids.Parameters
         logger.debug("Initialized Parameters section with page=%r", page)
 
     def _get_default_runtime_config(self) -> RuntimeConfig:
-        """
-        Use the default profile only for initial layout construction.
-
-        Live session state must come from runtime-config-store inside callbacks.
-        """
         return RuntimeConfig.from_default_profile()
 
     def _get_default_mie_model(self) -> str:
@@ -76,6 +51,13 @@ class Parameters:
         return runtime_config.get_float(
             "optics.detector_numerical_aperture",
             default=0.2,
+        )
+
+    def _get_default_detector_cache_numerical_aperture(self) -> float:
+        runtime_config = self._get_default_runtime_config()
+        return runtime_config.get_float(
+            "optics.detector_cache_numerical_aperture",
+            default=0.0,
         )
 
     def _get_default_blocker_bar_numerical_aperture(self) -> float:
@@ -152,7 +134,7 @@ class Parameters:
     def _build_collapse(self) -> dbc.Collapse:
         return dbc.Collapse(
             self._build_body(),
-            id=self.page.ids.Parameters.collapse_example,
+            id=self.ids.collapse_example,
             is_open=True,
         )
 
@@ -172,7 +154,7 @@ class Parameters:
     def _build_detector_configuration_preset_refresh_button(self) -> dash.html.Button:
         return dash.html.Button(
             "Reload detector presets",
-            id=self.page.ids.Parameters.detector_configuration_preset_refresh_button,
+            id=self.ids.detector_configuration_preset_refresh_button,
             n_clicks=0,
             style={
                 "marginLeft": "10px",
@@ -204,7 +186,7 @@ class Parameters:
             [
                 self._build_numeric_input_row(
                     label="Wavelength (nm):",
-                    component_id=self.page.ids.Parameters.wavelength_nm,
+                    component_id=self.ids.wavelength_nm,
                     placeholder="Wavelength (nm)",
                     value=self._get_default_wavelength_nm(),
                     min_value=1,
@@ -216,7 +198,7 @@ class Parameters:
                     dash.html.Div(
                         [
                             dash.dcc.Dropdown(
-                                id=self.page.ids.Parameters.detector_configuration_preset,
+                                id=self.ids.detector_configuration_preset,
                                 options=services.build_detector_preset_options(),
                                 value=services.CUSTOM_DETECTOR_PRESET_NAME,
                                 placeholder="Select detector preset",
@@ -239,7 +221,7 @@ class Parameters:
                     [
                         self._build_numeric_input_row(
                             label="Detector NA:",
-                            component_id=self.page.ids.Parameters.detector_numerical_aperture,
+                            component_id=self.ids.detector_numerical_aperture,
                             placeholder="Detector NA",
                             value=self._get_default_detector_numerical_aperture(),
                             min_value=0.0,
@@ -248,8 +230,18 @@ class Parameters:
                             width_px=220,
                         ),
                         self._build_numeric_input_row(
+                            label="Detector cache NA:",
+                            component_id=self.ids.detector_cache_numerical_aperture,
+                            placeholder="Detector cache NA",
+                            value=self._get_default_detector_cache_numerical_aperture(),
+                            min_value=0.0,
+                            max_value=1.5,
+                            step=0.001,
+                            width_px=220,
+                        ),
+                        self._build_numeric_input_row(
                             label="Blocker bar NA:",
-                            component_id=self.page.ids.Parameters.blocker_bar_numerical_aperture,
+                            component_id=self.ids.blocker_bar_numerical_aperture,
                             placeholder="Blocker bar NA",
                             value=self._get_default_blocker_bar_numerical_aperture(),
                             min_value=0.0,
@@ -259,7 +251,7 @@ class Parameters:
                         ),
                         self._build_numeric_input_row(
                             label="Detector sampling:",
-                            component_id=self.page.ids.Parameters.detector_sampling,
+                            component_id=self.ids.detector_sampling,
                             placeholder="Detector sampling",
                             value=self._get_default_detector_sampling(),
                             min_value=1,
@@ -268,7 +260,7 @@ class Parameters:
                         ),
                         self._build_numeric_input_row(
                             label="Detector phi angle (deg):",
-                            component_id=self.page.ids.Parameters.detector_phi_angle_degree,
+                            component_id=self.ids.detector_phi_angle_degree,
                             placeholder="Detector phi angle",
                             value=self._get_default_detector_phi_angle_degree(),
                             min_value=-360.0,
@@ -278,7 +270,7 @@ class Parameters:
                         ),
                         self._build_numeric_input_row(
                             label="Detector gamma angle (deg):",
-                            component_id=self.page.ids.Parameters.detector_gamma_angle_degree,
+                            component_id=self.ids.detector_gamma_angle_degree,
                             placeholder="Detector gamma angle",
                             value=self._get_default_detector_gamma_angle_degree(),
                             min_value=-360.0,
@@ -287,7 +279,7 @@ class Parameters:
                             width_px=220,
                         ),
                     ],
-                    id=self.page.ids.Parameters.detector_configuration_custom_values_container,
+                    id=self.ids.detector_configuration_custom_values_container,
                     style={"display": "block"},
                 ),
             ],
@@ -302,7 +294,7 @@ class Parameters:
             dbc.CardBody(
                 [
                     dash.dcc.Graph(
-                        id=self.page.ids.Parameters.optical_configuration_preview,
+                        id=self.ids.optical_configuration_preview,
                         figure=services.build_optical_configuration_preview_figure(
                             detector_numerical_aperture=self._get_default_detector_numerical_aperture(),
                             blocker_bar_numerical_aperture=self._get_default_blocker_bar_numerical_aperture(),
@@ -342,7 +334,7 @@ class Parameters:
                 self._inline_row(
                     "Particle type:",
                     dash.dcc.Dropdown(
-                        id=self.page.ids.Parameters.mie_model,
+                        id=self.ids.mie_model,
                         options=presets.MIE_MODEL_OPTIONS,
                         value=self._get_default_mie_model(),
                         clearable=False,
@@ -355,19 +347,19 @@ class Parameters:
                 ),
                 self._refractive_index_picker(
                     label="Medium refractive index:",
-                    preset_id=self.page.ids.Parameters.medium_refractive_index_source,
-                    value_id=self.page.ids.Parameters.medium_refractive_index_custom,
+                    preset_id=self.ids.medium_refractive_index_source,
+                    value_id=self.ids.medium_refractive_index_custom,
                     default_value=self._get_default_medium_refractive_index(),
                     preset_options=presets.MEDIUM_REFRACTIVE_INDEX_PRESETS,
                 ),
                 dash.html.Div(
                     self._build_solid_sphere_parameters_block(),
-                    id=self.page.ids.Parameters.solid_sphere_container,
+                    id=self.ids.solid_sphere_container,
                     style={"display": "block"},
                 ),
                 dash.html.Div(
                     self._build_core_shell_parameters_block(),
-                    id=self.page.ids.Parameters.core_shell_container,
+                    id=self.ids.core_shell_container,
                     style={"display": "none"},
                 ),
             ]
@@ -377,8 +369,8 @@ class Parameters:
         return [
             self._refractive_index_picker(
                 label="Particle refractive index:",
-                preset_id=self.page.ids.Parameters.particle_refractive_index_source,
-                value_id=self.page.ids.Parameters.particle_refractive_index_custom,
+                preset_id=self.ids.particle_refractive_index_source,
+                value_id=self.ids.particle_refractive_index_custom,
                 default_value=self._get_default_particle_refractive_index(),
                 preset_options=presets.PARTICLE_REFRACTIVE_INDEX_PRESETS,
             ),
@@ -388,15 +380,15 @@ class Parameters:
         return [
             self._refractive_index_picker(
                 label="Core refractive index:",
-                preset_id=self.page.ids.Parameters.core_refractive_index_source,
-                value_id=self.page.ids.Parameters.core_refractive_index_custom,
+                preset_id=self.ids.core_refractive_index_source,
+                value_id=self.ids.core_refractive_index_custom,
                 default_value=self._get_default_core_refractive_index(),
                 preset_options=presets.CORE_REFRACTIVE_INDEX_PRESETS,
             ),
             self._refractive_index_picker(
                 label="Shell refractive index:",
-                preset_id=self.page.ids.Parameters.shell_refractive_index_source,
-                value_id=self.page.ids.Parameters.shell_refractive_index_custom,
+                preset_id=self.ids.shell_refractive_index_source,
+                value_id=self.ids.shell_refractive_index_custom,
                 default_value=self._get_default_shell_refractive_index(),
                 preset_options=presets.SHELL_REFRACTIVE_INDEX_PRESETS,
             ),
@@ -479,17 +471,18 @@ class Parameters:
 
     def _register_runtime_sync_callbacks(self) -> None:
         @dash.callback(
-            dash.Output(self.page.ids.Parameters.mie_model, "value"),
-            dash.Output(self.page.ids.Parameters.medium_refractive_index_custom, "value"),
-            dash.Output(self.page.ids.Parameters.particle_refractive_index_custom, "value"),
-            dash.Output(self.page.ids.Parameters.core_refractive_index_custom, "value"),
-            dash.Output(self.page.ids.Parameters.shell_refractive_index_custom, "value"),
-            dash.Output(self.page.ids.Parameters.wavelength_nm, "value"),
-            dash.Output(self.page.ids.Parameters.detector_numerical_aperture, "value"),
-            dash.Output(self.page.ids.Parameters.blocker_bar_numerical_aperture, "value"),
-            dash.Output(self.page.ids.Parameters.detector_sampling, "value"),
-            dash.Output(self.page.ids.Parameters.detector_phi_angle_degree, "value"),
-            dash.Output(self.page.ids.Parameters.detector_gamma_angle_degree, "value"),
+            dash.Output(self.ids.mie_model, "value"),
+            dash.Output(self.ids.medium_refractive_index_custom, "value"),
+            dash.Output(self.ids.particle_refractive_index_custom, "value"),
+            dash.Output(self.ids.core_refractive_index_custom, "value"),
+            dash.Output(self.ids.shell_refractive_index_custom, "value"),
+            dash.Output(self.ids.wavelength_nm, "value"),
+            dash.Output(self.ids.detector_numerical_aperture, "value"),
+            dash.Output(self.ids.detector_cache_numerical_aperture, "value"),
+            dash.Output(self.ids.blocker_bar_numerical_aperture, "value"),
+            dash.Output(self.ids.detector_sampling, "value"),
+            dash.Output(self.ids.detector_phi_angle_degree, "value"),
+            dash.Output(self.ids.detector_gamma_angle_degree, "value"),
             dash.Input("runtime-config-store", "data"),
             prevent_initial_call=False,
         )
@@ -533,6 +526,10 @@ class Parameters:
                     default=0.2,
                 ),
                 runtime_config.get_float(
+                    "optics.detector_cache_numerical_aperture",
+                    default=0.0,
+                ),
+                runtime_config.get_float(
                     "optics.blocker_bar_numerical_aperture",
                     default=0.0,
                 ),
@@ -565,7 +562,7 @@ class Parameters:
                 allow_duplicate=True,
             ),
             dash.Input("runtime-config-store", "data"),
-            dash.State(self.page.ids.Parameters.mie_model, "value"),
+            dash.State(self.ids.mie_model, "value"),
             dash.State(self.page.ids.Calibration.bead_table, "data"),
             prevent_initial_call=True,
         )
@@ -632,9 +629,9 @@ class Parameters:
 
     def _register_visibility_callbacks(self) -> None:
         @dash.callback(
-            dash.Output(self.page.ids.Parameters.solid_sphere_container, "style"),
-            dash.Output(self.page.ids.Parameters.core_shell_container, "style"),
-            dash.Input(self.page.ids.Parameters.mie_model, "value"),
+            dash.Output(self.ids.solid_sphere_container, "style"),
+            dash.Output(self.ids.core_shell_container, "style"),
+            dash.Input(self.ids.mie_model, "value"),
             prevent_initial_call=False,
         )
         def toggle_parameter_blocks(
@@ -668,12 +665,12 @@ class Parameters:
 
         @dash.callback(
             dash.Output(
-                self.page.ids.Parameters.medium_refractive_index_custom,
+                self.ids.medium_refractive_index_custom,
                 "value",
                 allow_duplicate=True,
             ),
-            dash.Input(self.page.ids.Parameters.medium_refractive_index_source, "value"),
-            dash.State(self.page.ids.Parameters.medium_refractive_index_custom, "value"),
+            dash.Input(self.ids.medium_refractive_index_source, "value"),
+            dash.State(self.ids.medium_refractive_index_custom, "value"),
             prevent_initial_call=True,
         )
         def apply_medium_preset(preset_value: Any, current_value: Any) -> Any:
@@ -681,12 +678,12 @@ class Parameters:
 
         @dash.callback(
             dash.Output(
-                self.page.ids.Parameters.particle_refractive_index_custom,
+                self.ids.particle_refractive_index_custom,
                 "value",
                 allow_duplicate=True,
             ),
-            dash.Input(self.page.ids.Parameters.particle_refractive_index_source, "value"),
-            dash.State(self.page.ids.Parameters.particle_refractive_index_custom, "value"),
+            dash.Input(self.ids.particle_refractive_index_source, "value"),
+            dash.State(self.ids.particle_refractive_index_custom, "value"),
             prevent_initial_call=True,
         )
         def apply_particle_preset(preset_value: Any, current_value: Any) -> Any:
@@ -694,12 +691,12 @@ class Parameters:
 
         @dash.callback(
             dash.Output(
-                self.page.ids.Parameters.core_refractive_index_custom,
+                self.ids.core_refractive_index_custom,
                 "value",
                 allow_duplicate=True,
             ),
-            dash.Input(self.page.ids.Parameters.core_refractive_index_source, "value"),
-            dash.State(self.page.ids.Parameters.core_refractive_index_custom, "value"),
+            dash.Input(self.ids.core_refractive_index_source, "value"),
+            dash.State(self.ids.core_refractive_index_custom, "value"),
             prevent_initial_call=True,
         )
         def apply_core_preset(preset_value: Any, current_value: Any) -> Any:
@@ -707,12 +704,12 @@ class Parameters:
 
         @dash.callback(
             dash.Output(
-                self.page.ids.Parameters.shell_refractive_index_custom,
+                self.ids.shell_refractive_index_custom,
                 "value",
                 allow_duplicate=True,
             ),
-            dash.Input(self.page.ids.Parameters.shell_refractive_index_source, "value"),
-            dash.State(self.page.ids.Parameters.shell_refractive_index_custom, "value"),
+            dash.Input(self.ids.shell_refractive_index_source, "value"),
+            dash.State(self.ids.shell_refractive_index_custom, "value"),
             prevent_initial_call=True,
         )
         def apply_shell_preset(preset_value: Any, current_value: Any) -> Any:
@@ -721,11 +718,11 @@ class Parameters:
     def _register_detector_configuration_options_callback(self) -> None:
         @dash.callback(
             dash.Output(
-                self.page.ids.Parameters.detector_configuration_preset,
+                self.ids.detector_configuration_preset,
                 "options",
             ),
             dash.Input(
-                self.page.ids.Parameters.detector_configuration_preset_refresh_button,
+                self.ids.detector_configuration_preset_refresh_button,
                 "n_clicks",
             ),
             prevent_initial_call=False,
@@ -751,10 +748,10 @@ class Parameters:
     def _register_detector_configuration_callbacks(self) -> None:
         @dash.callback(
             dash.Output(
-                self.page.ids.Parameters.detector_configuration_custom_values_container,
+                self.ids.detector_configuration_custom_values_container,
                 "style",
             ),
-            dash.Input(self.page.ids.Parameters.detector_configuration_preset, "value"),
+            dash.Input(self.ids.detector_configuration_preset, "value"),
             prevent_initial_call=False,
         )
         def toggle_detector_configuration_custom_values(
@@ -771,51 +768,58 @@ class Parameters:
 
         @dash.callback(
             dash.Output(
-                self.page.ids.Parameters.detector_numerical_aperture,
+                self.ids.detector_numerical_aperture,
                 "value",
                 allow_duplicate=True,
             ),
             dash.Output(
-                self.page.ids.Parameters.blocker_bar_numerical_aperture,
+                self.ids.detector_cache_numerical_aperture,
                 "value",
                 allow_duplicate=True,
             ),
             dash.Output(
-                self.page.ids.Parameters.detector_sampling,
+                self.ids.blocker_bar_numerical_aperture,
                 "value",
                 allow_duplicate=True,
             ),
             dash.Output(
-                self.page.ids.Parameters.detector_phi_angle_degree,
+                self.ids.detector_sampling,
                 "value",
                 allow_duplicate=True,
             ),
             dash.Output(
-                self.page.ids.Parameters.detector_gamma_angle_degree,
+                self.ids.detector_phi_angle_degree,
                 "value",
                 allow_duplicate=True,
             ),
-            dash.Input(self.page.ids.Parameters.detector_configuration_preset, "value"),
+            dash.Output(
+                self.ids.detector_gamma_angle_degree,
+                "value",
+                allow_duplicate=True,
+            ),
+            dash.Input(self.ids.detector_configuration_preset, "value"),
             dash.Input(
-                self.page.ids.Parameters.detector_configuration_preset_refresh_button,
+                self.ids.detector_configuration_preset_refresh_button,
                 "n_clicks",
             ),
-            dash.State(self.page.ids.Parameters.detector_numerical_aperture, "value"),
-            dash.State(self.page.ids.Parameters.blocker_bar_numerical_aperture, "value"),
-            dash.State(self.page.ids.Parameters.detector_sampling, "value"),
-            dash.State(self.page.ids.Parameters.detector_phi_angle_degree, "value"),
-            dash.State(self.page.ids.Parameters.detector_gamma_angle_degree, "value"),
+            dash.State(self.ids.detector_numerical_aperture, "value"),
+            dash.State(self.ids.detector_cache_numerical_aperture, "value"),
+            dash.State(self.ids.blocker_bar_numerical_aperture, "value"),
+            dash.State(self.ids.detector_sampling, "value"),
+            dash.State(self.ids.detector_phi_angle_degree, "value"),
+            dash.State(self.ids.detector_gamma_angle_degree, "value"),
             prevent_initial_call=True,
         )
         def apply_detector_configuration_preset(
             preset_name: Any,
             n_clicks: int,
             current_detector_numerical_aperture: Any,
+            current_detector_cache_numerical_aperture: Any,
             current_blocker_bar_numerical_aperture: Any,
             current_detector_sampling: Any,
             current_detector_phi_angle_degree: Any,
             current_detector_gamma_angle_degree: Any,
-        ) -> tuple[Any, Any, Any, Any, Any]:
+        ) -> tuple[Any, Any, Any, Any, Any, Any]:
             logger.debug(
                 "apply_detector_configuration_preset called with preset_name=%r "
                 "n_clicks=%r current_values=%r",
@@ -823,6 +827,7 @@ class Parameters:
                 n_clicks,
                 (
                     current_detector_numerical_aperture,
+                    current_detector_cache_numerical_aperture,
                     current_blocker_bar_numerical_aperture,
                     current_detector_sampling,
                     current_detector_phi_angle_degree,
@@ -833,6 +838,7 @@ class Parameters:
             resolved_values = services.resolve_detector_configuration_values(
                 preset_name=preset_name,
                 current_detector_numerical_aperture=current_detector_numerical_aperture,
+                current_detector_cache_numerical_aperture=current_detector_cache_numerical_aperture,
                 current_blocker_bar_numerical_aperture=current_blocker_bar_numerical_aperture,
                 current_detector_sampling=current_detector_sampling,
                 current_detector_phi_angle_degree=current_detector_phi_angle_degree,
@@ -849,14 +855,14 @@ class Parameters:
     def _register_optical_configuration_preview_callback(self) -> None:
         @dash.callback(
             dash.Output(
-                self.page.ids.Parameters.optical_configuration_preview,
+                self.ids.optical_configuration_preview,
                 "figure",
             ),
-            dash.Input(self.page.ids.Parameters.detector_numerical_aperture, "value"),
-            dash.Input(self.page.ids.Parameters.blocker_bar_numerical_aperture, "value"),
-            dash.Input(self.page.ids.Parameters.medium_refractive_index_custom, "value"),
-            dash.Input(self.page.ids.Parameters.detector_phi_angle_degree, "value"),
-            dash.Input(self.page.ids.Parameters.detector_gamma_angle_degree, "value"),
+            dash.Input(self.ids.detector_numerical_aperture, "value"),
+            dash.Input(self.ids.blocker_bar_numerical_aperture, "value"),
+            dash.Input(self.ids.medium_refractive_index_custom, "value"),
+            dash.Input(self.ids.detector_phi_angle_degree, "value"),
+            dash.Input(self.ids.detector_gamma_angle_degree, "value"),
             prevent_initial_call=False,
         )
         def update_optical_configuration_preview(
@@ -894,7 +900,7 @@ class Parameters:
                 "data",
                 allow_duplicate=True,
             ),
-            dash.Input(self.page.ids.Parameters.mie_model, "value"),
+            dash.Input(self.ids.mie_model, "value"),
             dash.State(self.page.ids.Calibration.bead_table, "data"),
             prevent_initial_call=True,
         )
@@ -926,7 +932,7 @@ class Parameters:
                 allow_duplicate=True,
             ),
             dash.Input(self.page.ids.Calibration.add_row_btn, "n_clicks"),
-            dash.State(self.page.ids.Parameters.mie_model, "value"),
+            dash.State(self.ids.mie_model, "value"),
             dash.State(self.page.ids.Calibration.bead_table, "data"),
             prevent_initial_call=True,
         )
@@ -961,7 +967,7 @@ class Parameters:
                 allow_duplicate=True,
             ),
             dash.Input(self.page.ids.Calibration.bead_table, "data_timestamp"),
-            dash.State(self.page.ids.Parameters.mie_model, "value"),
+            dash.State(self.ids.mie_model, "value"),
             dash.State(self.page.ids.Calibration.bead_table, "data"),
             prevent_initial_call=True,
         )
@@ -1001,18 +1007,19 @@ class Parameters:
                 allow_duplicate=True,
             ),
             dash.Input(self.page.ids.Calibration.compute_model_btn, "n_clicks"),
-            dash.State(self.page.ids.Parameters.mie_model, "value"),
+            dash.State(self.ids.mie_model, "value"),
             dash.State(self.page.ids.Calibration.bead_table, "data"),
-            dash.State(self.page.ids.Parameters.medium_refractive_index_custom, "value"),
-            dash.State(self.page.ids.Parameters.particle_refractive_index_custom, "value"),
-            dash.State(self.page.ids.Parameters.core_refractive_index_custom, "value"),
-            dash.State(self.page.ids.Parameters.shell_refractive_index_custom, "value"),
-            dash.State(self.page.ids.Parameters.wavelength_nm, "value"),
-            dash.State(self.page.ids.Parameters.detector_numerical_aperture, "value"),
-            dash.State(self.page.ids.Parameters.blocker_bar_numerical_aperture, "value"),
-            dash.State(self.page.ids.Parameters.detector_sampling, "value"),
-            dash.State(self.page.ids.Parameters.detector_phi_angle_degree, "value"),
-            dash.State(self.page.ids.Parameters.detector_gamma_angle_degree, "value"),
+            dash.State(self.ids.medium_refractive_index_custom, "value"),
+            dash.State(self.ids.particle_refractive_index_custom, "value"),
+            dash.State(self.ids.core_refractive_index_custom, "value"),
+            dash.State(self.ids.shell_refractive_index_custom, "value"),
+            dash.State(self.ids.wavelength_nm, "value"),
+            dash.State(self.ids.detector_numerical_aperture, "value"),
+            dash.State(self.ids.detector_cache_numerical_aperture, "value"),
+            dash.State(self.ids.blocker_bar_numerical_aperture, "value"),
+            dash.State(self.ids.detector_sampling, "value"),
+            dash.State(self.ids.detector_phi_angle_degree, "value"),
+            dash.State(self.ids.detector_gamma_angle_degree, "value"),
             prevent_initial_call=True,
         )
         def compute_model(
@@ -1025,6 +1032,7 @@ class Parameters:
             shell_refractive_index: Any,
             wavelength_nm: Any,
             detector_numerical_aperture: Any,
+            detector_cache_numerical_aperture: Any,
             blocker_bar_numerical_aperture: Any,
             detector_sampling: Any,
             detector_phi_angle_degree: Any,
@@ -1034,9 +1042,9 @@ class Parameters:
                 "compute_model called with n_clicks=%r mie_model=%r row_count=%r "
                 "medium_refractive_index=%r particle_refractive_index=%r "
                 "core_refractive_index=%r shell_refractive_index=%r wavelength_nm=%r "
-                "detector_numerical_aperture=%r blocker_bar_numerical_aperture=%r "
-                "detector_sampling=%r detector_phi_angle_degree=%r "
-                "detector_gamma_angle_degree=%r",
+                "detector_numerical_aperture=%r detector_cache_numerical_aperture=%r "
+                "blocker_bar_numerical_aperture=%r detector_sampling=%r "
+                "detector_phi_angle_degree=%r detector_gamma_angle_degree=%r",
                 n_clicks,
                 mie_model,
                 None if current_rows is None else len(current_rows),
@@ -1046,6 +1054,7 @@ class Parameters:
                 shell_refractive_index,
                 wavelength_nm,
                 detector_numerical_aperture,
+                detector_cache_numerical_aperture,
                 blocker_bar_numerical_aperture,
                 detector_sampling,
                 detector_phi_angle_degree,
@@ -1073,6 +1082,7 @@ class Parameters:
                 shell_refractive_index=shell_refractive_index,
                 wavelength_nm=wavelength_nm,
                 detector_numerical_aperture=detector_numerical_aperture,
+                detector_cache_numerical_aperture=detector_cache_numerical_aperture,
                 blocker_bar_numerical_aperture=blocker_bar_numerical_aperture,
                 detector_sampling=detector_sampling,
                 detector_phi_angle_degree=detector_phi_angle_degree,

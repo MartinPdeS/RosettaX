@@ -2,12 +2,15 @@
 
 from dataclasses import dataclass
 from typing import Any, Optional
-from RosettaX.utils import service, directories
 import logging
 
 import dash
 
+from RosettaX.utils import service, directories
+
+
 logger = logging.getLogger(__name__)
+
 
 @dataclass(frozen=True)
 class SaveResult:
@@ -27,11 +30,18 @@ class SaveResult:
 
 @dataclass(frozen=True)
 class SaveInputs:
+    """
+    Parsed inputs required to save a calibration file.
+    """
+
     file_name: str
-    calib_payload: Optional[dict]
+    calib_payload: dict
 
 
 def normalize_file_name(file_name: Any) -> str:
+    """
+    Normalize the requested calibration file name.
+    """
     return str(file_name or "").strip()
 
 
@@ -40,18 +50,26 @@ def validate_save_inputs(
     file_name: Any,
     calib_payload: Optional[dict],
 ) -> tuple[Optional[SaveInputs], Optional[str]]:
+    """
+    Validate save inputs before writing a calibration file.
+    """
     if not isinstance(calib_payload, dict) or not calib_payload:
         return None, "No calibration payload available. Run the calibration first."
 
-    file_name_clean = normalize_file_name(file_name)
+    file_name_clean = normalize_file_name(
+        file_name,
+    )
 
     if not file_name_clean:
         return None, "Please provide a calibration name."
 
-    return SaveInputs(
-        file_name=file_name_clean,
-        calib_payload=calib_payload,
-    ), None
+    return (
+        SaveInputs(
+            file_name=file_name_clean,
+            calib_payload=calib_payload,
+        ),
+        None,
+    )
 
 
 def build_sidebar_refresh_payload(
@@ -59,6 +77,9 @@ def build_sidebar_refresh_payload(
     saved_folder: Any,
     saved_filename: Any,
 ) -> dict[str, Any]:
+    """
+    Build the sidebar refresh payload after saving a calibration.
+    """
     return {
         "refresh": True,
         "folder": str(saved_folder),
@@ -66,28 +87,36 @@ def build_sidebar_refresh_payload(
         "kind": "scattering",
     }
 
-def action_save_calibration(self, *, inputs: SaveInputs) -> SaveResult:
+
+def action_save_calibration(
+    *,
+    inputs: SaveInputs,
+) -> SaveResult:
     """
     Save the current calibration payload to disk.
     """
     logger.debug(
-        "_action_save_calibration called with file_name=%r payload_keys=%r",
+        "action_save_calibration called with file_name=%r payload_keys=%r",
         inputs.file_name,
-        list(inputs.calib_payload.keys()) if isinstance(inputs.calib_payload, dict) else None,
+        list(inputs.calib_payload.keys())
+        if isinstance(inputs.calib_payload, dict)
+        else None,
     )
 
     try:
         saved = service.save_calibration_to_file(
             name=inputs.file_name,
-            payload=dict(inputs.calib_payload or {}),
+            payload=dict(inputs.calib_payload),
             calibration_kind="scattering",
             output_directory=directories.scattering_calibration,
         )
     except Exception:
         logger.exception(
-            "_action_save_calibration failed for file_name=%r payload_keys=%r",
+            "action_save_calibration failed for file_name=%r payload_keys=%r",
             inputs.file_name,
-            list(inputs.calib_payload.keys()) if isinstance(inputs.calib_payload, dict) else None,
+            list(inputs.calib_payload.keys())
+            if isinstance(inputs.calib_payload, dict)
+            else None,
         )
         raise
 
@@ -103,6 +132,9 @@ def action_save_calibration(self, *, inputs: SaveInputs) -> SaveResult:
     )
 
     return SaveResult(
-        save_out=f'Saved calibration "{inputs.file_name}" as {saved.folder}/{saved.filename}',
+        save_out=(
+            f'Saved calibration "{inputs.file_name}" '
+            f"as {saved.folder}/{saved.filename}"
+        ),
         sidebar_refresh_store=sidebar_refresh_payload,
     )

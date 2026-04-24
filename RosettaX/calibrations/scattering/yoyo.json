@@ -1,0 +1,104 @@
+{
+  "created_at": "2026-04-25T01:14:17",
+  "kind": "scattering",
+  "name": "yoyo",
+  "payload": {
+    "created_at": "",
+    "kind": "scattering",
+    "name": "",
+    "payload": {
+      "calibration_type": "scattering",
+      "created_at": "",
+      "expected_coupling_values": [
+        3.4202923642216475e-07,
+        2.3762812761701356e-05,
+        0.00028064752646993516
+      ],
+      "export_notes": "",
+      "fit_metrics": {
+        "point_count": 3,
+        "r_squared": 0.9541346813312647
+      },
+      "fit_model": "log10(expected_coupling)=slope*log10(measured_peak_position)+intercept",
+      "model_metadata": {
+        "detector_cache_numerical_aperture": 0,
+        "detector_gamma_offset_degree": 0,
+        "detector_numerical_aperture": 0.2,
+        "detector_phi_offset_degree": 0,
+        "detector_sampling": 600,
+        "medium_refractive_index": 1.334,
+        "optical_power_watt": 1,
+        "particle_refractive_index": 1.602,
+        "polarization_angle_degree": 0,
+        "source_numerical_aperture": 0.1,
+        "wavelength_nm": 488
+      },
+      "name": "",
+      "parameters": {
+        "blocker_bar_numerical_aperture": 0,
+        "core_refractive_index": 1.5,
+        "detector_cache_numerical_aperture": 0,
+        "detector_gamma_angle_degree": 0,
+        "detector_numerical_aperture": 0.2,
+        "detector_phi_angle_degree": 0,
+        "detector_sampling": 600,
+        "intercept": -49.75215330162839,
+        "medium_refractive_index": 1.334,
+        "mie_model": "Solid Sphere",
+        "optical_power_watt": 1,
+        "particle_diameter_nm": [
+          100,
+          200,
+          300
+        ],
+        "particle_refractive_index": 1.602,
+        "prefactor": 1.7694842377444345e-50,
+        "shell_refractive_index": 1.5,
+        "slope": 10.125257607420503,
+        "source_numerical_aperture": 0.1,
+        "wavelength_nm": 488
+      },
+      "particle_diameters_nm": [
+        100,
+        200,
+        300
+      ],
+      "payload": {
+        "R_squared": 0.9541346813312647,
+        "intercept": -49.75215330162839,
+        "model": "log10(expected_coupling)=slope*log10(measured_peak_position)+intercept",
+        "prefactor": 1.7694842377444345e-50,
+        "slope": 10.125257607420503,
+        "x_definition": "SSC LogH peak position [a.u.]",
+        "y_definition": "Expected coupling"
+      },
+      "peak_positions": [
+        18597.9,
+        30944,
+        34268
+      ],
+      "reference_points": [
+        {
+          "expected_coupling_value": 3.4202923642216475e-07,
+          "measured_peak_position": 18597.9,
+          "particle_diameter_nm": 100
+        },
+        {
+          "expected_coupling_value": 2.3762812761701356e-05,
+          "measured_peak_position": 30944,
+          "particle_diameter_nm": 200
+        },
+        {
+          "expected_coupling_value": 0.00028064752646993516,
+          "measured_peak_position": 34268,
+          "particle_diameter_nm": 300
+        }
+      ],
+      "schema_version": "1.0",
+      "source_channel": "SSC LogH",
+      "source_file": "tmpcz6kw_yl.fcs"
+    },
+    "schema": "rosettax_calibration_v1"
+  },
+  "schema": "rosettax_calibration_v1"
+}

@@ -12,16 +12,30 @@ class PeakSectionIds:
     ID factory for the scattering peak detection section.
 
     Static IDs are strings.
-    Dynamic IDs are dicts used by Dash pattern matching callbacks.
+    Dynamic IDs are dictionaries used by Dash pattern matching callbacks.
+
+    The static detector_dropdown property is kept for compatibility with older
+    sections that still expect page.ids.Scattering.detector_dropdown to be a
+    string ID.
     """
 
     prefix: str
 
-    detector_dropdown_type: str = "peak-script-detector-dropdown"
-    controls_container_type: str = "peak-script-controls-container"
-    action_button_type: str = "peak-script-action-button"
-    status_type: str = "peak-script-status"
-    setting_type: str = "peak-script-setting"
+    process_detector_dropdown_type: str = "peak-script-detector-dropdown"
+    process_controls_container_type: str = "peak-script-controls-container"
+    process_action_button_type: str = "peak-script-action-button"
+    process_status_type: str = "peak-script-status"
+    process_setting_type: str = "peak-script-setting"
+
+    @property
+    def detector_dropdown(self) -> str:
+        """
+        Legacy static detector dropdown ID.
+
+        Keep this because other sections still reference:
+            page.ids.Scattering.detector_dropdown
+        """
+        return f"{self.prefix}-detector-dropdown"
 
     @property
     def process_dropdown(self) -> str:
@@ -59,91 +73,91 @@ class PeakSectionIds:
     def peak_lines_store(self) -> str:
         return f"{self.prefix}-peak-lines-store"
 
-    def detector_dropdown(
+    def process_detector_dropdown(
         self,
         *,
         process_name: str,
         channel_name: str,
     ) -> dict[str, str]:
         return {
-            "type": self.detector_dropdown_type,
+            "type": self.process_detector_dropdown_type,
             "process": process_name,
             "channel": channel_name,
         }
 
-    def detector_dropdown_pattern(self) -> dict[str, Any]:
+    def process_detector_dropdown_pattern(self) -> dict[str, Any]:
         return {
-            "type": self.detector_dropdown_type,
+            "type": self.process_detector_dropdown_type,
             "process": dash.ALL,
             "channel": dash.ALL,
         }
 
-    def controls_container(
+    def process_controls_container(
         self,
         *,
         process_name: str,
     ) -> dict[str, str]:
         return {
-            "type": self.controls_container_type,
+            "type": self.process_controls_container_type,
             "process": process_name,
         }
 
-    def controls_container_pattern(self) -> dict[str, Any]:
+    def process_controls_container_pattern(self) -> dict[str, Any]:
         return {
-            "type": self.controls_container_type,
+            "type": self.process_controls_container_type,
             "process": dash.ALL,
         }
 
-    def action_button(
+    def process_action_button(
         self,
         *,
         process_name: str,
         action_name: str,
     ) -> dict[str, str]:
         return {
-            "type": self.action_button_type,
+            "type": self.process_action_button_type,
             "process": process_name,
             "action": action_name,
         }
 
-    def action_button_pattern(self) -> dict[str, Any]:
+    def process_action_button_pattern(self) -> dict[str, Any]:
         return {
-            "type": self.action_button_type,
+            "type": self.process_action_button_type,
             "process": dash.ALL,
             "action": dash.ALL,
         }
 
-    def status(
+    def process_status(
         self,
         *,
         process_name: str,
     ) -> dict[str, str]:
         return {
-            "type": self.status_type,
+            "type": self.process_status_type,
             "process": process_name,
         }
 
-    def status_pattern(self) -> dict[str, Any]:
+    def process_status_pattern(self) -> dict[str, Any]:
         return {
-            "type": self.status_type,
+            "type": self.process_status_type,
             "process": dash.ALL,
         }
 
-    def setting(
+    def process_setting(
         self,
         *,
         process_name: str,
         setting_name: str,
     ) -> dict[str, str]:
         return {
-            "type": self.setting_type,
+            "type": self.process_setting_type,
             "process": process_name,
             "setting": setting_name,
         }
 
-    def setting_pattern(self) -> dict[str, Any]:
+    def process_setting_pattern(self) -> dict[str, Any]:
         return {
-            "type": self.setting_type,
+            "type": self.process_setting_type,
             "process": dash.ALL,
             "setting": dash.ALL,
         }

@@ -7,11 +7,6 @@ import logging
 
 from .base import BasePeakProcess
 from .base import PeakProcessResult
-from .base import PEAK_SCRIPT_DETECTOR_DROPDOWN_TYPE
-from .base import PEAK_SCRIPT_CONTROLS_CONTAINER_TYPE
-from .base import PEAK_SCRIPT_ACTION_BUTTON_TYPE
-from .base import PEAK_SCRIPT_STATUS_TYPE
-from .base import PEAK_SCRIPT_SETTING_TYPE
 
 
 logger = logging.getLogger(__name__)

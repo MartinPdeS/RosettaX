@@ -47,7 +47,8 @@ class Automatic1DPeaksProcess(BasePeakProcess):
                             },
                         ),
                         dash.dcc.Dropdown(
-                            id=self.build_detector_dropdown_id(
+                            id=ids.process_detector_dropdown(
+                                process_name=self.process_name,
                                 channel_name="primary",
                             ),
                             style={
@@ -87,7 +88,8 @@ class Automatic1DPeaksProcess(BasePeakProcess):
                         ),
                         dash.html.Button(
                             "Find peaks",
-                            id=self.build_action_button_id(
+                            id=ids.process_action_button(
+                                process_name=self.process_name,
                                 action_name="run",
                             ),
                             n_clicks=0,
@@ -95,7 +97,9 @@ class Automatic1DPeaksProcess(BasePeakProcess):
                                 "marginLeft": "16px",
                             },
                         ),
-                        self.build_status_component(),
+                        self.build_status_component(
+                            ids=ids,
+                        ),
                     ],
                     style={
                         "display": "flex",
@@ -103,7 +107,9 @@ class Automatic1DPeaksProcess(BasePeakProcess):
                     },
                 ),
             ],
-            id=self.build_controls_container_id(),
+            id=ids.process_controls_container(
+                process_name=self.process_name,
+            ),
             style={"display": "none"},
         )
 
