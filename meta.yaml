@@ -17,20 +17,16 @@ channels:
 
 requirements:
   host:
-    - python >=3.8
+    - python >=3.10
     - setuptools >=40.8.0
     - wheel
     - setuptools-scm >=8.0
     - pip
-    - martinpdes::mpsplots
   run:
     - numpy
     - pandas
-    - pydantic
     - martinpdes::mpsplots
     - martinpdes::pymiesim
-    - logging
-    - scipy
 
 
 about:

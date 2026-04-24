@@ -24,15 +24,11 @@ keywords = ["flow-cytometre", "calibration", "physics", "data-analysis"]
 
 dependencies = [
     "PyMieSim",
-    "logging",
-    "pydantic",
     "numpy",
     "MPSPlots",
-    "Dash >=2.0",
+    "dash >=2.0",
     "dash-bootstrap-components",
     "plotly",
-    "scipy",
-    "web-browser",
     "hdbscan"
 ]
 
