@@ -443,7 +443,7 @@ class RosettaXApplication:
         self.app.run(
             host=self.host,
             port=self.port,
-            debug=False,
+            debug=True,
         )
 
     def _open_browser(self) -> None:

@@ -5,8 +5,11 @@ from typing import Any, Optional
 import numpy as np
 
 from RosettaX.pages.scattering.backend import BackEnd
-from RosettaX.utils.casting import as_optional_float, as_required_float, as_required_int
-from . import services
+from RosettaX.utils.casting import as_optional_float
+from RosettaX.utils.casting import as_required_float
+from RosettaX.utils.casting import as_required_int
+
+from .parameter_table import normalize_table_rows
 
 
 def compute_model_for_rows(
@@ -19,8 +22,10 @@ def compute_model_for_rows(
     shell_refractive_index: Any,
     wavelength_nm: Any,
     detector_numerical_aperture: Any,
-    detector_cache_numerical_aperture: Any,
+    blocker_bar_numerical_aperture: Any,
     detector_sampling: Any,
+    detector_phi_angle_degree: Any,
+    detector_gamma_angle_degree: Any,
     logger: Any,
 ) -> list[dict[str, str]]:
     resolved_rows = [dict(row) for row in (current_rows or [])]
@@ -41,32 +46,49 @@ def compute_model_for_rows(
             detector_numerical_aperture,
             "detector_numerical_aperture",
         )
-        resolved_detector_cache_numerical_aperture = as_required_float(
-            detector_cache_numerical_aperture,
-            "detector_cache_numerical_aperture",
+        resolved_blocker_bar_numerical_aperture = as_required_float(
+            blocker_bar_numerical_aperture,
+            "blocker_bar_numerical_aperture",
         )
         resolved_detector_sampling = as_required_int(
             detector_sampling,
             "detector_sampling",
         )
+        resolved_detector_phi_angle_degree = as_required_float(
+            detector_phi_angle_degree,
+            "detector_phi_angle_degree",
+        )
+        resolved_detector_gamma_angle_degree = as_required_float(
+            detector_gamma_angle_degree,
+            "detector_gamma_angle_degree",
+        )
     except Exception:
-        logger.exception("compute_model_for_rows aborted because optical parameters are invalid.")
-        return services.normalize_table_rows(
+        logger.exception(
+            "compute_model_for_rows aborted because optical parameters are invalid."
+        )
+        return normalize_table_rows(
             mie_model=mie_model,
             current_rows=resolved_rows,
         )
 
     logger.debug(
-        "compute_model_for_rows resolved optical parameters medium_refractive_index=%r wavelength_nm=%r detector_numerical_aperture=%r detector_cache_numerical_aperture=%r detector_sampling=%r",
+        "compute_model_for_rows resolved optical parameters "
+        "medium_refractive_index=%r wavelength_nm=%r "
+        "detector_numerical_aperture=%r blocker_bar_numerical_aperture=%r "
+        "detector_sampling=%r detector_phi_angle_degree=%r "
+        "detector_gamma_angle_degree=%r",
         resolved_medium_refractive_index,
         resolved_wavelength_nm,
         resolved_detector_numerical_aperture,
-        resolved_detector_cache_numerical_aperture,
+        resolved_blocker_bar_numerical_aperture,
         resolved_detector_sampling,
+        resolved_detector_phi_angle_degree,
+        resolved_detector_gamma_angle_degree,
     )
 
     if mie_model == "Core/Shell Sphere":
         logger.debug("compute_model_for_rows running in Core/Shell Sphere mode.")
+
         try:
             _resolved_core_refractive_index = as_required_float(
                 core_refractive_index,
@@ -77,8 +99,10 @@ def compute_model_for_rows(
                 "shell_refractive_index",
             )
         except Exception:
-            logger.exception("compute_model_for_rows aborted because core/shell refractive indices are invalid.")
-            return services.normalize_table_rows(
+            logger.exception(
+                "compute_model_for_rows aborted because core/shell refractive indices are invalid."
+            )
+            return normalize_table_rows(
                 mie_model=mie_model,
                 current_rows=resolved_rows,
             )
@@ -86,13 +110,14 @@ def compute_model_for_rows(
         valid_row_indices: list[int] = []
         outer_diameters_nm: list[float] = []
 
-        updated_rows = services.normalize_table_rows(
+        updated_rows = normalize_table_rows(
             mie_model=mie_model,
             current_rows=resolved_rows,
         )
 
         for row_index, row in enumerate(updated_rows):
             outer_diameter_nm = as_optional_float(row.get("outer_diameter_nm"))
+
             if outer_diameter_nm is None or outer_diameter_nm <= 0.0:
                 updated_rows[row_index]["expected_coupling"] = ""
                 continue
@@ -101,7 +126,8 @@ def compute_model_for_rows(
             outer_diameters_nm.append(float(outer_diameter_nm))
 
         logger.debug(
-            "compute_model_for_rows core-shell valid_row_indices=%r outer_diameters_nm=%r",
+            "compute_model_for_rows core-shell valid_row_indices=%r "
+            "outer_diameters_nm=%r",
             valid_row_indices,
             outer_diameters_nm,
         )
@@ -119,14 +145,16 @@ def compute_model_for_rows(
                 detector_numerical_aperture=resolved_detector_numerical_aperture,
                 medium_refractive_index=resolved_medium_refractive_index,
                 particle_refractive_index=resolved_shell_refractive_index,
-                detector_cache_numerical_aperture=resolved_detector_cache_numerical_aperture,
-                detector_phi_offset_degree=0.0,
-                detector_gamma_offset_degree=0.0,
+                detector_cache_numerical_aperture=resolved_blocker_bar_numerical_aperture,
+                detector_phi_offset_degree=resolved_detector_phi_angle_degree,
+                detector_gamma_offset_degree=resolved_detector_gamma_angle_degree,
                 polarization_angle_degree=0.0,
                 detector_sampling=resolved_detector_sampling,
             )
         except Exception:
-            logger.exception("compute_model_for_rows failed during core-shell outer-diameter approximation.")
+            logger.exception(
+                "compute_model_for_rows failed during core-shell outer-diameter approximation."
+            )
             return updated_rows
 
         for row_index, expected_coupling in zip(
@@ -134,9 +162,14 @@ def compute_model_for_rows(
             modeled_coupling_result.expected_coupling_values,
             strict=False,
         ):
-            updated_rows[row_index]["expected_coupling"] = f"{float(expected_coupling):.6g}"
+            updated_rows[row_index]["expected_coupling"] = (
+                f"{float(expected_coupling):.6g}"
+            )
 
-        logger.debug("compute_model_for_rows returning updated core-shell rows=%r", updated_rows)
+        logger.debug(
+            "compute_model_for_rows returning updated core-shell rows=%r",
+            updated_rows,
+        )
         return updated_rows
 
     logger.debug("compute_model_for_rows running in Solid Sphere mode.")
@@ -147,8 +180,10 @@ def compute_model_for_rows(
             "particle_refractive_index",
         )
     except Exception:
-        logger.exception("compute_model_for_rows aborted because particle refractive index is invalid.")
-        return services.normalize_table_rows(
+        logger.exception(
+            "compute_model_for_rows aborted because particle refractive index is invalid."
+        )
+        return normalize_table_rows(
             mie_model=mie_model,
             current_rows=resolved_rows,
         )
@@ -156,13 +191,14 @@ def compute_model_for_rows(
     valid_row_indices: list[int] = []
     particle_diameters_nm: list[float] = []
 
-    updated_rows = services.normalize_table_rows(
+    updated_rows = normalize_table_rows(
         mie_model=mie_model,
         current_rows=resolved_rows,
     )
 
     for row_index, row in enumerate(updated_rows):
         particle_diameter_nm = as_optional_float(row.get("particle_diameter_nm"))
+
         if particle_diameter_nm is None or particle_diameter_nm <= 0.0:
             updated_rows[row_index]["expected_coupling"] = ""
             continue
@@ -171,7 +207,8 @@ def compute_model_for_rows(
         particle_diameters_nm.append(float(particle_diameter_nm))
 
     logger.debug(
-        "compute_model_for_rows solid-sphere valid_row_indices=%r particle_diameters_nm=%r",
+        "compute_model_for_rows solid-sphere valid_row_indices=%r "
+        "particle_diameters_nm=%r",
         valid_row_indices,
         particle_diameters_nm,
     )
@@ -189,14 +226,16 @@ def compute_model_for_rows(
             detector_numerical_aperture=resolved_detector_numerical_aperture,
             medium_refractive_index=resolved_medium_refractive_index,
             particle_refractive_index=resolved_particle_refractive_index,
-            detector_cache_numerical_aperture=resolved_detector_cache_numerical_aperture,
-            detector_phi_offset_degree=0.0,
-            detector_gamma_offset_degree=0.0,
+            detector_cache_numerical_aperture=resolved_blocker_bar_numerical_aperture,
+            detector_phi_offset_degree=resolved_detector_phi_angle_degree,
+            detector_gamma_offset_degree=resolved_detector_gamma_angle_degree,
             polarization_angle_degree=0.0,
             detector_sampling=resolved_detector_sampling,
         )
     except Exception:
-        logger.exception("compute_model_for_rows failed during solid-sphere coupling computation.")
+        logger.exception(
+            "compute_model_for_rows failed during solid-sphere coupling computation."
+        )
         return updated_rows
 
     for row_index, expected_coupling in zip(
@@ -204,7 +243,12 @@ def compute_model_for_rows(
         modeled_coupling_result.expected_coupling_values,
         strict=False,
     ):
-        updated_rows[row_index]["expected_coupling"] = f"{float(expected_coupling):.6g}"
+        updated_rows[row_index]["expected_coupling"] = (
+            f"{float(expected_coupling):.6g}"
+        )
 
-    logger.debug("compute_model_for_rows returning updated solid-sphere rows=%r", updated_rows)
+    logger.debug(
+        "compute_model_for_rows returning updated solid-sphere rows=%r",
+        updated_rows,
+    )
     return updated_rows

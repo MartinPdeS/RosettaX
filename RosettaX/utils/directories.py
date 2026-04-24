@@ -32,6 +32,8 @@ default_profile = profiles / "default_profile.json"
 
 calibration_directory = root / "calibrations"
 
+detectors = root / "presets/detector"
+
 fluorescence_calibration = calibration_directory / "fluorescence"
 
 scattering_calibration = calibration_directory / "scattering"

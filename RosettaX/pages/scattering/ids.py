@@ -41,6 +41,16 @@ class Ids:
         detector_sampling = f"{PAGE_NAME}-detector-sampling"
         homogeneous_geometry_store = f"{PAGE_NAME}-homogeneous-geometry-store"
         core_shell_geometry_store = f"{PAGE_NAME}-core-shell-geometry-store"
+        detector_configuration_custom_values_container = f"{PAGE_NAME}-detector-configuration-custom-values-container"
+        detector_configuration_preset = f"{PAGE_NAME}-detector-configuration-preset-store"
+        optical_configuration_preview = "scattering_calibration-optical-configuration-preview"
+        blocker_bar_numerical_aperture = "scattering_calibration-blocker-bar-numerical-aperture"
+        detector_phi_angle_degree = "scattering_calibration-detector-phi-angle-degree"
+        detector_gamma_angle_degree = "scattering_calibration-detector-gamma-angle-degree"
+        detector_configuration_preset_options_refresh_interval = f"{PAGE_NAME}-detector-configuration-preset-options-refresh-interval"
+        detector_configuration_preset_refresh_button = f"{PAGE_NAME}-detector-configuration-preset-refresh-button"
+
+
 
     class Scattering:
         detector_dropdown = f"{PAGE_NAME}-scattering_detector_dropdown"

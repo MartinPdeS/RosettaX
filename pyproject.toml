@@ -42,6 +42,11 @@ write_to = "RosettaX/_version.py"
 version_scheme = "only-version"
 local_scheme = "no-local-version"
 
+[tool.setuptools.package-data]
+RosettaX = [
+    "presets/detector/*.json",
+]
+
 [project.optional-dependencies]
 testing = [
     "pytest >=7.4,<9.0",
