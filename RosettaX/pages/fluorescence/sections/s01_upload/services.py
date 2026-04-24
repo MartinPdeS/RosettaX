@@ -58,16 +58,38 @@ def build_loaded_filename_text(stored_filename: Any) -> str:
     return f"Loaded file: {cleaned_filename}"
 
 
-def write_upload_to_tempfile(*, contents: str, filename: str) -> str:
-    _, encoded_content = contents.split(",", 1)
+def write_upload_to_tempfile(
+    *,
+    contents: str,
+    filename: str,
+) -> str:
+    """
+    Decode Dash upload contents and write them to a temporary file.
+
+    The uploaded suffix is preserved so FCS readers that rely on file extension
+    continue to behave normally.
+    """
+    try:
+        _, encoded_content = contents.split(",", 1)
+    except ValueError as exception:
+        raise ValueError("Upload contents must contain a base64 payload.") from exception
+
     raw_bytes = base64.b64decode(encoded_content)
 
     file_suffix = Path(filename).suffix or ".bin"
     temporary_directory = Path(tempfile.gettempdir()) / "rosettax_uploads"
-    temporary_directory.mkdir(parents=True, exist_ok=True)
+    temporary_directory.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
 
-    temporary_file_path = temporary_directory / f"{next(tempfile._get_candidate_names())}{file_suffix}"
-    temporary_file_path.write_bytes(raw_bytes)
+    with tempfile.NamedTemporaryFile(
+        delete=False,
+        suffix=file_suffix,
+        dir=temporary_directory,
+    ) as temporary_file:
+        temporary_file.write(raw_bytes)
+        temporary_file_path = Path(temporary_file.name)
 
     return str(temporary_file_path)
 
@@ -157,7 +179,9 @@ def initialize_backend(
     logger: logging.Logger,
 ) -> bool:
     try:
-        page.backend = BackEnd(selected_fcs_path)
+        page.backend = BackEnd(
+            selected_fcs_path,
+        )
         logger.debug(
             "Initialized fluorescence backend for selected_fcs_path=%r",
             selected_fcs_path,
@@ -168,6 +192,7 @@ def initialize_backend(
             "Failed to initialize fluorescence backend for selected_fcs_path=%r",
             selected_fcs_path,
         )
+        page.backend = None
         return False
 
 
@@ -176,12 +201,15 @@ def extract_channel_options(
     selected_fcs_path: str,
     logger: logging.Logger,
 ):
-    channels = service.build_channel_options_from_file(selected_fcs_path)
+    channels = service.build_channel_options_from_file(
+        selected_fcs_path,
+    )
 
     logger.debug(
         "Extracted channel options successfully for selected_fcs_path=%r",
         selected_fcs_path,
     )
+
     return channels
 
 
@@ -196,10 +224,16 @@ def resolve_detector_values(
     fluorescence_detector_options = list(channels.secondary_options or [])
 
     preferred_scattering_detector = clean_optional_string(
-        runtime_config.get_path("page_defaults.fluorescence.scattering_detector", default=None)
+        runtime_config.get_path(
+            "page_defaults.fluorescence.scattering_detector",
+            default=None,
+        )
     )
     preferred_fluorescence_detector = clean_optional_string(
-        runtime_config.get_path("page_defaults.fluorescence.fluorescence_detector", default=None)
+        runtime_config.get_path(
+            "page_defaults.fluorescence.fluorescence_detector",
+            default=None,
+        )
     )
 
     scattering_detector_value = pick_dropdown_value(
@@ -207,6 +241,7 @@ def resolve_detector_values(
         current_value=current_scattering_detector_value,
         options=scattering_detector_options,
     )
+
     if scattering_detector_value is None:
         scattering_detector_value = pick_dropdown_value(
             preferred_value=None,
@@ -219,6 +254,7 @@ def resolve_detector_values(
         current_value=current_fluorescence_detector_value,
         options=fluorescence_detector_options,
     )
+
     if fluorescence_detector_value is None:
         fluorescence_detector_value = pick_dropdown_value(
             preferred_value=None,
@@ -246,7 +282,9 @@ def build_upload_state(
     runtime_config_data: Optional[dict[str, Any]],
     logger: logging.Logger,
 ) -> UploadState:
-    runtime_config = RuntimeConfig.from_dict(runtime_config_data)
+    runtime_config = RuntimeConfig.from_dict(
+        runtime_config_data,
+    )
 
     try:
         selected_fcs_path, display_filename = resolve_selected_file(
@@ -262,10 +300,16 @@ def build_upload_state(
             filename,
             stored_fcs_path,
         )
-        return build_empty_upload_state(runtime_config=runtime_config)
+        page.backend = None
+        return build_empty_upload_state(
+            runtime_config=runtime_config,
+        )
 
     if not selected_fcs_path:
-        return build_empty_upload_state(runtime_config=runtime_config)
+        page.backend = None
+        return build_empty_upload_state(
+            runtime_config=runtime_config,
+        )
 
     if not initialize_backend(
         page=page,

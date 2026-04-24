@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from typing import Any, Optional
 import logging
 
@@ -7,7 +9,7 @@ import plotly.graph_objs as go
 
 from RosettaX.utils import styling
 from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.pages.fluorescence.backend import BackEnd
+from . import registry
 from . import services
 
 
@@ -15,28 +17,48 @@ logger = logging.getLogger(__name__)
 
 
 class Peaks:
+    """
+    Fluorescence peak section.
+
+    This section reuses the same peak scripts as the scattering peak section.
+    It adapts the selected fluorescence peak x coordinate into column ``col2``
+    of the fluorescence calibration table.
+    """
+
     def __init__(self, page) -> None:
         self.page = page
+        self.ids = page.ids.Fluorescence
+        self.scripts = registry.load_peak_scripts()
+        self.script_map = registry.build_script_map(
+            self.scripts,
+        )
+        self.default_script_name = registry.get_default_script_name(
+            self.scripts,
+        )
+
+        logger.debug(
+            "Initialized fluorescence Peaks section with shared scripts=%r default_script_name=%r",
+            list(self.script_map),
+            self.default_script_name,
+        )
 
     def _get_default_runtime_config(self) -> RuntimeConfig:
-        """
-        Use the default profile only for initial layout construction.
-
-        Live session state must come from runtime-config-store inside callbacks.
-        """
         return RuntimeConfig.from_default_profile()
 
     def _get_default_show_graphs(self) -> bool:
         runtime_config = self._get_default_runtime_config()
-        return runtime_config.get_show_graphs(default=False)
 
-    def _get_default_peak_count(self) -> int:
-        runtime_config = self._get_default_runtime_config()
-        return runtime_config.get_int("calibration.peak_count", default=4)
+        return runtime_config.get_show_graphs(
+            default=False,
+        )
 
     def _get_default_n_bins_for_plots(self) -> int:
         runtime_config = self._get_default_runtime_config()
-        return runtime_config.get_int("calibration.n_bins_for_plots", default=100)
+
+        return runtime_config.get_int(
+            "calibration.n_bins_for_plots",
+            default=100,
+        )
 
     def get_layout(self) -> dbc.Card:
         return dbc.Card(
@@ -47,15 +69,18 @@ class Peaks:
         )
 
     def build_header(self) -> dbc.CardHeader:
-        return dbc.CardHeader("3. Fluorescence channel after thresholding")
+        return dbc.CardHeader("3. Fluorescence channel")
 
     def build_body(self) -> dbc.CardBody:
         return dbc.CardBody(
             [
+                self._build_stores(),
                 dash.html.Br(),
-                self._build_detector_dropdown(),
+                self._build_process_dropdown(),
                 dash.html.Br(),
-                self._build_peak_controls(),
+                self._build_script_controls(),
+                dash.html.Br(),
+                self._build_script_status(),
                 dash.html.Br(),
                 self._build_graph_toggle_switch(),
                 dash.html.Br(),
@@ -63,16 +88,88 @@ class Peaks:
             ]
         )
 
-    def _build_graph_toggle_switch(self) -> dash.html.Div:
-        default_show_graphs = self._get_default_show_graphs()
+    def _build_stores(self) -> dash.html.Div:
+        return dash.html.Div(
+            [
+                dash.dcc.Store(
+                    id=self.ids.peak_lines_store,
+                    data=services.clear_peak_lines_payload(),
+                    storage_type="session",
+                ),
+                dash.dcc.Store(
+                    id=self.ids.source_channel_store,
+                    data=None,
+                    storage_type="session",
+                ),
+                dash.dcc.Store(
+                    id=self.ids.hist_store,
+                    data=None,
+                    storage_type="session",
+                ),
+            ]
+        )
 
+    def _build_process_dropdown(self) -> dash.html.Div:
+        return dash.html.Div(
+            [
+                dash.html.Div("Peak detection script:"),
+                dash.dcc.Dropdown(
+                    id=self.ids.process_dropdown,
+                    options=[
+                        script.get_process_option()
+                        for script in self.scripts
+                    ],
+                    value=self.default_script_name,
+                    clearable=False,
+                    searchable=False,
+                    persistence=True,
+                    persistence_type="session",
+                    style={
+                        "width": "500px",
+                    },
+                ),
+            ],
+            style=styling.CARD,
+        )
+
+    def _build_script_controls(self) -> dash.html.Div:
+        return dash.html.Div(
+            [
+                services.build_controls_for_script(
+                    script=script,
+                    ids=self.ids,
+                )
+                for script in self.scripts
+            ]
+        )
+
+    def _build_script_status(self) -> dash.html.Div:
+        return dash.html.Div(
+            id=self.ids.script_status,
+            style={
+                "opacity": 0.8,
+            },
+        )
+
+    def _build_graph_toggle_switch(self) -> dash.html.Div:
         return dash.html.Div(
             [
                 dbc.Checklist(
-                    id=self.page.ids.Fluorescence.graph_toggle_switch,
-                    options=[{"label": "Show histogram", "value": "enabled"}],
-                    value=["enabled"] if default_show_graphs else [],
+                    id=self.ids.graph_toggle_switch,
+                    options=[
+                        {
+                            "label": "Show graph",
+                            "value": "enabled",
+                        }
+                    ],
+                    value=[
+                        "enabled"
+                    ]
+                    if self._get_default_show_graphs()
+                    else [],
                     switch=True,
+                    persistence=True,
+                    persistence_type="session",
                 ),
             ],
             style=styling.CARD,
@@ -83,421 +180,681 @@ class Peaks:
             [
                 dash.html.Br(),
                 self._build_histogram_graph(),
-                dash.html.Br(),
-                self._build_yscale_switch(),
-                dash.html.Br(),
-                self._build_nbins_input(),
-            ],
-            id=self.page.ids.Fluorescence.graph_toggle_container,
-            style={"display": "none"},
-        )
-
-    def _build_detector_dropdown(self) -> dash.html.Div:
-        return dash.html.Div(
-            [
-                dash.html.Div("Fluorescence detector:"),
-                dash.dcc.Dropdown(
-                    id=self.page.ids.Fluorescence.detector_dropdown,
-                    style={"width": "500px"},
-                    optionHeight=50,
-                    maxHeight=500,
-                    searchable=True,
+                dash.html.Div(
+                    [
+                        dash.html.Br(),
+                        self._build_xscale_switch(),
+                        dash.html.Br(),
+                        self._build_yscale_switch(),
+                        dash.html.Br(),
+                        self._build_nbins_input(),
+                    ],
+                    id=self.ids.histogram_controls_container,
                 ),
             ],
-            style=styling.CARD,
-        )
-
-    def _build_peak_controls(self) -> dash.html.Div:
-        default_peak_count = self._get_default_peak_count()
-
-        peak_count_input = dash.dcc.Input(
-            id=self.page.ids.Fluorescence.peak_count_input,
-            type="number",
-            min=1,
-            step=1,
-            value=default_peak_count,
-            style={"width": "120px"},
-        )
-
-        peak_count_row = dash.html.Div(
-            [
-                dash.html.Div("Number of peaks to look for:", style={"marginRight": "8px"}),
-                peak_count_input,
-            ],
-            style={"display": "flex", "alignItems": "center"},
-        )
-
-        find_peaks_button = dash.html.Button(
-            "Find peaks",
-            id=self.page.ids.Fluorescence.find_peaks_btn,
-            n_clicks=0,
-            style={"marginLeft": "16px"},
-        )
-
-        return dash.html.Div(
-            [peak_count_row, find_peaks_button],
-            style={"display": "flex", "alignItems": "center"},
+            id=self.ids.graph_toggle_container,
+            style={
+                "display": "none",
+            },
         )
 
     def _build_histogram_graph(self) -> dash.dcc.Loading:
         return dash.dcc.Loading(
             dash.dcc.Graph(
-                id=self.page.ids.Fluorescence.graph_hist,
+                id=self.ids.graph_hist,
                 style=styling.PAGE["graph"],
             ),
             type="default",
         )
 
+    def _build_xscale_switch(self) -> dbc.Checklist:
+        return dbc.Checklist(
+            id=self.ids.xscale_switch,
+            options=[
+                {
+                    "label": "Log scale x",
+                    "value": "log",
+                }
+            ],
+            value=[],
+            switch=True,
+            persistence=True,
+            persistence_type="session",
+        )
+
     def _build_yscale_switch(self) -> dbc.Checklist:
         runtime_config = self._get_default_runtime_config()
-        histogram_scale = runtime_config.get_str("calibration.histogram_scale", default="log")
+        histogram_scale = runtime_config.get_str(
+            "calibration.histogram_scale",
+            default="log",
+        )
 
         return dbc.Checklist(
-            id=self.page.ids.Fluorescence.yscale_switch,
-            options=[{"label": "Log scale (counts)", "value": "log"}],
-            value=["log"] if histogram_scale == "log" else [],
+            id=self.ids.yscale_switch,
+            options=[
+                {
+                    "label": "Log scale y",
+                    "value": "log",
+                }
+            ],
+            value=[
+                "log"
+            ]
+            if histogram_scale == "log"
+            else [],
             switch=True,
-            style={"display": "block"},
+            persistence=True,
+            persistence_type="session",
         )
 
     def _build_nbins_input(self) -> dash.html.Div:
-        default_n_bins_for_plots = self._get_default_n_bins_for_plots()
-
         return dash.html.Div(
             [
                 dash.html.Div("Number of bins:"),
                 dash.dcc.Input(
-                    id=self.page.ids.Fluorescence.nbins_input,
+                    id=self.ids.nbins_input,
                     type="number",
                     min=10,
                     step=10,
-                    value=default_n_bins_for_plots,
-                    style={"width": "160px"},
+                    value=self._get_default_n_bins_for_plots(),
+                    style={
+                        "width": "160px",
+                    },
+                    persistence=True,
+                    persistence_type="session",
                 ),
             ],
             style=styling.CARD,
         )
 
     def register_callbacks(self) -> None:
+        logger.debug("Registering fluorescence Peaks callbacks.")
+        self._register_runtime_sync_callbacks()
+        self._register_script_visibility_callback()
+        self._register_detector_dropdown_population_callback()
+        self._register_graph_visibility_callbacks()
+        self._register_context_reset_callback()
+        self._register_source_channel_lock_callback()
+        self._register_graph_store_callback()
+        self._register_graph_render_callback()
+        self._register_graph_click_callback()
+        self._register_script_action_callback()
+
+    def _get_script(self, selected_process_name: Any) -> Any:
+        return self.script_map.get(
+            services.clean_optional_string(selected_process_name),
+        )
+
+    def _is_selected_script_two_dimensional(self, selected_process_name: Any) -> bool:
+        script = self._get_script(
+            selected_process_name,
+        )
+
+        if script is None:
+            return False
+
+        return services.script_uses_two_dimensional_graph(
+            script,
+        )
+
+    def _register_runtime_sync_callbacks(self) -> None:
         @dash.callback(
-            dash.Output(self.page.ids.Fluorescence.peak_count_input, "value"),
-            dash.Output(self.page.ids.Fluorescence.nbins_input, "value"),
+            dash.Output(self.ids.nbins_input, "value"),
+            dash.Output(self.ids.yscale_switch, "value"),
+            dash.Output(self.ids.graph_toggle_switch, "value"),
             dash.Input("runtime-config-store", "data"),
             prevent_initial_call=False,
         )
-        def sync_controls_from_runtime_store(runtime_config_data: Any) -> tuple[Any, Any]:
-            logger.debug(
-                "sync_controls_from_runtime_store called with runtime_config_data=%r",
-                runtime_config_data,
-            )
-
+        def sync_controls_from_runtime_store(
+            runtime_config_data: Any,
+        ) -> tuple[Any, list[str], list[str]]:
             runtime_config = RuntimeConfig.from_dict(
                 runtime_config_data if isinstance(runtime_config_data, dict) else None
             )
 
-            peak_count_value = runtime_config.get_int("calibration.peak_count", default=4)
-            fluorescence_nbins_value = runtime_config.get_int("calibration.n_bins_for_plots", default=100)
-
-            logger.debug(
-                "Runtime config resolved to peak_count=%r fluorescence_nbins=%r",
-                peak_count_value,
-                fluorescence_nbins_value,
+            nbins_value = runtime_config.get_int(
+                "calibration.n_bins_for_plots",
+                default=100,
+            )
+            histogram_scale = runtime_config.get_str(
+                "calibration.histogram_scale",
+                default="log",
+            )
+            show_graphs = runtime_config.get_show_graphs(
+                default=False,
             )
 
-            return peak_count_value, fluorescence_nbins_value
+            return (
+                nbins_value,
+                ["log"] if histogram_scale == "log" else [],
+                ["enabled"] if show_graphs else [],
+            )
 
+    def _register_script_visibility_callback(self) -> None:
         @dash.callback(
-            dash.Output(self.page.ids.Fluorescence.yscale_switch, "value"),
-            dash.Input("runtime-config-store", "data"),
+            dash.Output(
+                self.ids.controls_container_pattern(),
+                "style",
+            ),
+            dash.Input(self.ids.process_dropdown, "value"),
             prevent_initial_call=False,
         )
-        def sync_fluorescence_yscale_from_runtime_store(runtime_config_data: Any) -> list[str]:
-            logger.debug(
-                "sync_fluorescence_yscale_from_runtime_store called with runtime_config_data=%r",
-                runtime_config_data,
-            )
+        def toggle_script_controls(
+            selected_process_name: Any,
+        ) -> list[dict[str, Any]]:
+            return [
+                services.build_visibility_style_for_script(
+                    script=script,
+                    selected_process_name=selected_process_name,
+                )
+                for script in self.scripts
+            ]
 
-            runtime_config = RuntimeConfig.from_dict(
-                runtime_config_data if isinstance(runtime_config_data, dict) else None
-            )
-            histogram_scale = runtime_config.get_str("calibration.histogram_scale", default="log")
-
-            logger.debug(
-                "sync_fluorescence_yscale_from_runtime_store resolved histogram_scale=%r",
-                histogram_scale,
-            )
-
-            return ["log"] if histogram_scale == "log" else []
-
+    def _register_detector_dropdown_population_callback(self) -> None:
         @dash.callback(
-            dash.Output(self.page.ids.Fluorescence.graph_toggle_switch, "value"),
-            dash.Input("runtime-config-store", "data"),
-            prevent_initial_call=False,
-        )
-        def sync_graph_toggle_from_runtime_store(runtime_config_data: Any) -> list[str]:
-            runtime_config = RuntimeConfig.from_dict(
-                runtime_config_data if isinstance(runtime_config_data, dict) else None
-            )
-            resolved_show_graphs = runtime_config.get_show_graphs(default=False)
-
-            logger.debug(
-                "sync_graph_toggle_from_runtime_store resolved_show_graphs=%r from runtime_config_data=%r",
-                resolved_show_graphs,
-                runtime_config_data,
-            )
-
-            return ["enabled"] if resolved_show_graphs else []
-
-        @dash.callback(
-            dash.Output(self.page.ids.Fluorescence.graph_toggle_container, "style"),
-            dash.Input(self.page.ids.Fluorescence.graph_toggle_switch, "value"),
-            prevent_initial_call=False,
-        )
-        def toggle_fluorescence_graph_container(graph_toggle_value: Any) -> dict:
-            graph_enabled = services.is_enabled(graph_toggle_value)
-
-            logger.debug(
-                "toggle_fluorescence_graph_container called with graph_toggle_value=%r resolved graph_enabled=%r",
-                graph_toggle_value,
-                graph_enabled,
-            )
-
-            return {"display": "block"} if graph_enabled else {"display": "none"}
-
-        @dash.callback(
-            dash.Output(self.page.ids.Fluorescence.peak_lines_store, "data", allow_duplicate=True),
-            dash.Input(self.page.ids.Fluorescence.detector_dropdown, "value"),
+            dash.Output(
+                self.ids.detector_dropdown_pattern(),
+                "options",
+            ),
+            dash.Output(
+                self.ids.detector_dropdown_pattern(),
+                "value",
+            ),
             dash.Input(self.page.ids.Upload.uploaded_fcs_path_store, "data"),
-            dash.Input(self.page.ids.Scattering.detector_dropdown, "value"),
-            prevent_initial_call=True,
+            dash.State(
+                self.ids.detector_dropdown_pattern(),
+                "id",
+            ),
+            dash.State(
+                self.ids.detector_dropdown_pattern(),
+                "value",
+            ),
+            prevent_initial_call=False,
         )
-        def clear_peak_lines_on_context_change(
-            fluorescence_channel: Any,
-            fcs_path: Any,
-            scattering_channel: Any,
-        ) -> dict:
-            logger.debug(
-                "clear_peak_lines_on_context_change called with fluorescence_channel=%r fcs_path=%r scattering_channel=%r",
-                fluorescence_channel,
-                fcs_path,
-                scattering_channel,
-            )
-
-            return services.clear_peak_lines_payload()
-
-        @dash.callback(
-            dash.Output(self.page.ids.Fluorescence.source_channel_store, "data", allow_duplicate=True),
-            dash.Input(self.page.ids.Fluorescence.detector_dropdown, "value"),
-            dash.State(self.page.ids.Fluorescence.source_channel_store, "data"),
-            prevent_initial_call=True,
-        )
-        def lock_fluorescence_source_channel(
-            fluorescence_channel: Optional[str],
-            current_locked: Optional[str],
-        ) -> Optional[str]:
-            return services.lock_source_channel(
-                fluorescence_channel=fluorescence_channel,
-                current_locked=current_locked,
+        def populate_script_detector_dropdowns(
+            uploaded_fcs_path: Any,
+            detector_dropdown_ids: list[dict[str, Any]],
+            current_detector_values: list[Any],
+        ) -> tuple[list[list[dict[str, Any]]], list[Any]]:
+            options = services.build_fluorescence_detector_options(
+                uploaded_fcs_path=uploaded_fcs_path,
                 logger=logger,
             )
 
-        @dash.callback(
-            dash.Output(self.page.ids.Fluorescence.hist_store, "data", allow_duplicate=True),
-            dash.Input(self.page.ids.Fluorescence.graph_toggle_switch, "value"),
-            dash.Input(self.page.ids.Upload.uploaded_fcs_path_store, "data"),
-            dash.Input(self.page.ids.Scattering.detector_dropdown, "value"),
-            dash.Input(self.page.ids.Fluorescence.detector_dropdown, "value"),
-            dash.Input(self.page.ids.Fluorescence.nbins_input, "value"),
-            dash.Input(self.page.ids.Scattering.threshold_store, "data"),
-            dash.Input(self.page.ids.Scattering.threshold_input, "value"),
-            dash.State(self.page.ids.Upload.max_events_for_plots_input, "value", allow_optional=True),
-            prevent_initial_call=True,
-        )
-        def refresh_fluorescence_hist_store(
-            graph_toggle_value: Any,
-            fcs_path: Optional[str],
-            scattering_channel: Optional[str],
-            fluorescence_channel: Optional[str],
-            fluorescence_nbins: Any,
-            threshold_payload: Optional[dict],
-            threshold_input_value: Any,
-            max_events_for_plots: Any,
-        ) -> Any:
-            should_refresh, fcs_path_clean, scattering_channel_clean, fluorescence_channel_clean = (
-                services.should_refresh_histogram_store(
-                    graph_toggle_value=graph_toggle_value,
-                    fcs_path=fcs_path,
-                    scattering_channel=scattering_channel,
-                    fluorescence_channel=fluorescence_channel,
-                    logger=logger,
-                )
+            values = services.resolve_detector_dropdown_values(
+                detector_dropdown_ids=detector_dropdown_ids,
+                current_detector_values=current_detector_values,
+                options=options,
+                logger=logger,
             )
 
-            logger.debug(
-                "refresh_fluorescence_hist_store called with should_refresh=%r fcs_path=%r scattering_channel=%r fluorescence_channel=%r fluorescence_nbins=%r threshold_payload=%r threshold_input_value=%r max_events_for_plots=%r",
-                should_refresh,
-                fcs_path_clean,
-                scattering_channel_clean,
-                fluorescence_channel_clean,
-                fluorescence_nbins,
-                threshold_payload,
-                threshold_input_value,
-                max_events_for_plots,
+            return (
+                [
+                    options
+                    for _ in detector_dropdown_ids
+                ],
+                values,
+            )
+
+    def _register_graph_visibility_callbacks(self) -> None:
+        @dash.callback(
+            dash.Output(self.ids.graph_toggle_container, "style"),
+            dash.Input(self.ids.graph_toggle_switch, "value"),
+            prevent_initial_call=False,
+        )
+        def toggle_graph_container(
+            graph_toggle_value: Any,
+        ) -> dict[str, str]:
+            return {
+                "display": "block",
+            } if services.is_enabled(graph_toggle_value) else {
+                "display": "none",
+            }
+
+        @dash.callback(
+            dash.Output(
+                self.ids.graph_toggle_switch,
+                "value",
+                allow_duplicate=True,
+            ),
+            dash.Input(self.ids.process_dropdown, "value"),
+            dash.State(self.ids.graph_toggle_switch, "value"),
+            prevent_initial_call=True,
+        )
+        def force_graph_visibility_for_selected_script(
+            selected_process_name: Any,
+            current_graph_toggle_value: Any,
+        ) -> Any:
+            script = self._get_script(
+                selected_process_name,
+            )
+
+            if script is None:
+                return dash.no_update
+
+            if services.script_should_force_graph_visible(script):
+                return ["enabled"]
+
+            return current_graph_toggle_value
+
+    def _register_context_reset_callback(self) -> None:
+        @dash.callback(
+            dash.Output(
+                self.ids.peak_lines_store,
+                "data",
+                allow_duplicate=True,
+            ),
+            dash.Output(
+                self.ids.script_status,
+                "children",
+                allow_duplicate=True,
+            ),
+            dash.Input(self.ids.process_dropdown, "value"),
+            dash.Input(self.page.ids.Upload.uploaded_fcs_path_store, "data"),
+            dash.Input(
+                self.ids.detector_dropdown_pattern(),
+                "value",
+            ),
+            prevent_initial_call=True,
+        )
+        def clear_peak_lines_on_context_change(
+            selected_process_name: Any,
+            fcs_path: Any,
+            detector_dropdown_values: list[Any],
+        ) -> tuple[dict[str, list[Any]], str]:
+            del selected_process_name
+            del fcs_path
+            del detector_dropdown_values
+
+            return (
+                services.clear_peak_lines_payload(),
+                "",
+            )
+
+    def _register_source_channel_lock_callback(self) -> None:
+        @dash.callback(
+            dash.Output(
+                self.ids.source_channel_store,
+                "data",
+                allow_duplicate=True,
+            ),
+            dash.Input(self.ids.process_dropdown, "value"),
+            dash.Input(
+                self.ids.detector_dropdown_pattern(),
+                "value",
+            ),
+            dash.State(
+                self.ids.detector_dropdown_pattern(),
+                "id",
+            ),
+            dash.State(self.ids.source_channel_store, "data"),
+            prevent_initial_call=True,
+        )
+        def lock_source_channel(
+            selected_process_name: Any,
+            detector_dropdown_values: list[Any],
+            detector_dropdown_ids: list[dict[str, Any]],
+            current_locked: Optional[str],
+        ) -> Any:
+            fluorescence_channel = services.resolve_primary_channel(
+                selected_process_name=selected_process_name,
+                detector_dropdown_ids=detector_dropdown_ids,
+                detector_dropdown_values=detector_dropdown_values,
+            )
+
+            if not fluorescence_channel:
+                return dash.no_update
+
+            if isinstance(current_locked, str) and current_locked.strip():
+                return dash.no_update
+
+            return fluorescence_channel
+
+    def _register_graph_store_callback(self) -> None:
+        @dash.callback(
+            dash.Output(
+                self.ids.hist_store,
+                "data",
+                allow_duplicate=True,
+            ),
+            dash.Input(self.ids.graph_toggle_switch, "value"),
+            dash.Input(self.page.ids.Upload.uploaded_fcs_path_store, "data"),
+            dash.Input(self.ids.process_dropdown, "value"),
+            dash.Input(
+                self.ids.detector_dropdown_pattern(),
+                "value",
+            ),
+            dash.Input(self.ids.nbins_input, "value"),
+            dash.State(
+                self.ids.detector_dropdown_pattern(),
+                "id",
+            ),
+            dash.State(
+                self.page.ids.Upload.max_events_for_plots_input,
+                "value",
+                allow_optional=True,
+            ),
+            prevent_initial_call=True,
+        )
+        def refresh_graph_store(
+            graph_toggle_value: Any,
+            fcs_path: Any,
+            selected_process_name: Any,
+            detector_dropdown_values: list[Any],
+            nbins: Any,
+            detector_dropdown_ids: list[dict[str, Any]],
+            max_events_for_plots: Any,
+        ) -> Any:
+            script = self._get_script(
+                selected_process_name,
+            )
+
+            if script is None:
+                return dash.no_update
+
+            channel_values = services.resolve_detector_channel_values(
+                selected_process_name=selected_process_name,
+                detector_dropdown_ids=detector_dropdown_ids,
+                detector_dropdown_values=detector_dropdown_values,
+            )
+
+            should_refresh, fcs_path_clean = services.should_refresh_graph_store(
+                graph_toggle_value=graph_toggle_value,
+                fcs_path=fcs_path,
+                channel_values=channel_values,
+                logger=logger,
             )
 
             if not should_refresh:
                 return dash.no_update
 
-            try:
-                backend = BackEnd(fcs_path_clean)
-                figure_dict = backend.build_fluorescence_histogram_figure_dict(
-                    scattering_channel=scattering_channel_clean,
-                    fluorescence_channel=fluorescence_channel_clean,
-                    fluorescence_nbins=fluorescence_nbins,
-                    threshold_payload=threshold_payload,
-                    threshold_input_value=threshold_input_value,
+            if services.script_uses_two_dimensional_graph(script):
+                x_channel = channel_values.get("x")
+                y_channel = channel_values.get("y")
+
+                if not x_channel or not y_channel:
+                    return dash.no_update
+
+                return services.build_fluorescence_2d_figure_dict(
+                    fcs_path=fcs_path_clean,
+                    x_channel=x_channel,
+                    y_channel=y_channel,
+                    nbins=nbins,
                     max_events_for_plots=max_events_for_plots,
                 )
-            except Exception:
-                logger.exception(
-                    "Failed to build fluorescence histogram figure dict for "
-                    "fcs_path=%r scattering_channel=%r fluorescence_channel=%r "
-                    "fluorescence_nbins=%r threshold_payload=%r threshold_input_value=%r "
-                    "max_events_for_plots=%r",
-                    fcs_path_clean,
-                    scattering_channel_clean,
-                    fluorescence_channel_clean,
-                    fluorescence_nbins,
-                    threshold_payload,
-                    threshold_input_value,
-                    max_events_for_plots,
-                )
-                raise
 
-            if isinstance(figure_dict, dict):
-                logger.debug(
-                    "Fluorescence histogram figure dict built successfully with top level keys=%r",
-                    list(figure_dict.keys()),
-                )
-            else:
-                logger.debug(
-                    "Fluorescence histogram figure built successfully with non-dict type=%s",
-                    type(figure_dict).__name__,
-                )
+            fluorescence_channel = services.resolve_primary_channel(
+                selected_process_name=selected_process_name,
+                detector_dropdown_ids=detector_dropdown_ids,
+                detector_dropdown_values=detector_dropdown_values,
+            )
 
-            return figure_dict
+            if not fluorescence_channel:
+                return dash.no_update
 
+            return services.build_fluorescence_1d_figure_dict(
+                fcs_path=fcs_path_clean,
+                fluorescence_channel=fluorescence_channel,
+                nbins=nbins,
+                max_events_for_plots=max_events_for_plots,
+            )
+
+    def _register_graph_render_callback(self) -> None:
         @dash.callback(
-            dash.Output(self.page.ids.Fluorescence.graph_hist, "figure"),
-            dash.Input(self.page.ids.Fluorescence.graph_toggle_switch, "value"),
-            dash.Input(self.page.ids.Fluorescence.yscale_switch, "value"),
-            dash.Input(self.page.ids.Fluorescence.hist_store, "data"),
-            dash.Input(self.page.ids.Fluorescence.peak_lines_store, "data"),
+            dash.Output(self.ids.graph_hist, "figure"),
+            dash.Input(self.ids.graph_toggle_switch, "value"),
+            dash.Input(self.ids.yscale_switch, "value"),
+            dash.Input(self.ids.xscale_switch, "value"),
+            dash.Input(self.ids.hist_store, "data"),
+            dash.Input(self.ids.peak_lines_store, "data"),
+            dash.Input(self.ids.process_dropdown, "value"),
+            prevent_initial_call=False,
         )
-        def update_fluorescence_yscale(
+        def update_graph(
             graph_toggle_value: Any,
             yscale_selection: Any,
+            xscale_selection: Any,
             stored_figure: Any,
             peak_lines: Any,
+            selected_process_name: Any,
         ) -> go.Figure:
-            return services.rebuild_fluorescence_histogram_figure(
+            return services.rebuild_fluorescence_graph_figure(
                 graph_toggle_value=graph_toggle_value,
                 yscale_selection=yscale_selection,
+                xscale_selection=xscale_selection,
                 stored_figure=stored_figure,
                 peak_lines=peak_lines,
+                is_two_dimensional=self._is_selected_script_two_dimensional(
+                    selected_process_name,
+                ),
                 logger=logger,
             )
 
+    def _register_graph_click_callback(self) -> None:
         @dash.callback(
-            dash.Output(self.page.ids.Calibration.bead_table, "data", allow_duplicate=True),
-            dash.Output(self.page.ids.Fluorescence.peak_lines_store, "data", allow_duplicate=True),
-            dash.Input(self.page.ids.Fluorescence.find_peaks_btn, "n_clicks"),
-            dash.State(self.page.ids.Upload.uploaded_fcs_path_store, "data"),
-            dash.State(self.page.ids.Scattering.detector_dropdown, "value"),
-            dash.State(self.page.ids.Fluorescence.detector_dropdown, "value"),
-            dash.State(self.page.ids.Fluorescence.peak_count_input, "value"),
-            dash.State(self.page.ids.Upload.max_events_for_plots_input, "value", allow_optional=True),
-            dash.State(self.page.ids.Scattering.threshold_store, "data"),
-            dash.State(self.page.ids.Scattering.threshold_input, "value"),
+            dash.Output(
+                self.page.ids.Calibration.bead_table,
+                "data",
+                allow_duplicate=True,
+            ),
+            dash.Output(
+                self.ids.peak_lines_store,
+                "data",
+                allow_duplicate=True,
+            ),
+            dash.Output(
+                self.ids.script_status,
+                "children",
+                allow_duplicate=True,
+            ),
+            dash.Input(self.ids.graph_hist, "clickData"),
+            dash.State(self.ids.process_dropdown, "value"),
+            dash.State(self.ids.peak_lines_store, "data"),
             dash.State(self.page.ids.Calibration.bead_table, "data"),
             prevent_initial_call=True,
         )
-        def find_peaks_and_update_table(
-            n_clicks: int,
-            fcs_path: Optional[str],
-            scattering_channel: Optional[str],
-            fluorescence_channel: Optional[str],
-            fluorescence_peak_count: Any,
+        def handle_graph_click(
+            click_data: Any,
+            selected_process_name: Any,
+            existing_peak_lines_payload: Any,
+            table_data: Any,
+        ) -> tuple[Any, Any, Any]:
+            script = self._get_script(
+                selected_process_name,
+            )
+
+            if script is None:
+                return dash.no_update, dash.no_update, dash.no_update
+
+            if not services.script_uses_manual_click(script):
+                return dash.no_update, dash.no_update, dash.no_update
+
+            clicked_x_position = services.extract_x_position_from_click_data(
+                click_data,
+            )
+
+            if clicked_x_position is None:
+                return dash.no_update, dash.no_update, dash.no_update
+
+            existing_x_positions = services.extract_x_positions_from_peak_payload(
+                existing_peak_lines_payload,
+            )
+            next_x_positions = sorted(
+                [
+                    *existing_x_positions,
+                    float(clicked_x_position),
+                ]
+            )
+
+            peak_payload = services.build_peak_payload_from_x_positions(
+                x_positions=next_x_positions,
+                prefix="Manual peak",
+            )
+            table_rows = services.write_x_positions_to_calibration_table(
+                table_data=table_data,
+                x_positions=next_x_positions,
+            )
+
+            return (
+                table_rows,
+                peak_payload,
+                (
+                    f"Added peak at x={float(clicked_x_position):.6g}. "
+                    f"{len(next_x_positions)} peak(s) selected."
+                ),
+            )
+
+    def _register_script_action_callback(self) -> None:
+        @dash.callback(
+            dash.Output(
+                self.page.ids.Calibration.bead_table,
+                "data",
+                allow_duplicate=True,
+            ),
+            dash.Output(
+                self.ids.peak_lines_store,
+                "data",
+                allow_duplicate=True,
+            ),
+            dash.Output(
+                self.ids.script_status,
+                "children",
+                allow_duplicate=True,
+            ),
+            dash.Input(
+                self.ids.action_button_pattern(),
+                "n_clicks",
+            ),
+            dash.Input(
+                self.ids.find_peaks_btn,
+                "n_clicks",
+                allow_optional=True,
+            ),
+            dash.Input(
+                self.ids.clear_manual_peaks_btn,
+                "n_clicks",
+                allow_optional=True,
+            ),
+            dash.Input(
+                self.ids.clear_manual_2d_peaks_btn,
+                "n_clicks",
+                allow_optional=True,
+            ),
+            dash.State(self.ids.process_dropdown, "value"),
+            dash.State(self.page.ids.Upload.uploaded_fcs_path_store, "data"),
+            dash.State(
+                self.ids.detector_dropdown_pattern(),
+                "id",
+            ),
+            dash.State(
+                self.ids.detector_dropdown_pattern(),
+                "value",
+            ),
+            dash.State(
+                self.ids.setting_pattern(),
+                "id",
+            ),
+            dash.State(
+                self.ids.setting_pattern(),
+                "value",
+            ),
+            dash.State(
+                self.ids.peak_count_input,
+                "value",
+                allow_optional=True,
+            ),
+            dash.State(
+                self.page.ids.Upload.max_events_for_plots_input,
+                "value",
+                allow_optional=True,
+            ),
+            dash.State(self.page.ids.Calibration.bead_table, "data"),
+            prevent_initial_call=True,
+        )
+        def handle_script_action(
+            pattern_action_n_clicks: list[Any],
+            legacy_find_peaks_n_clicks: Any,
+            legacy_clear_manual_peaks_n_clicks: Any,
+            legacy_clear_manual_2d_peaks_n_clicks: Any,
+            selected_process_name: Any,
+            fcs_path: Any,
+            detector_dropdown_ids: list[dict[str, Any]],
+            detector_dropdown_values: list[Any],
+            setting_ids: list[dict[str, Any]],
+            setting_values: list[Any],
+            legacy_peak_count: Any,
             max_events_for_plots: Any,
-            scattering_threshold_payload: Optional[dict],
-            scattering_threshold_input_value: Any,
-            table_data: Optional[list[dict]],
-        ) -> tuple[Any, Any]:
-            logger.debug(
-                "find_peaks_and_update_table called with n_clicks=%r fcs_path=%r scattering_channel=%r fluorescence_channel=%r fluorescence_peak_count=%r max_events_for_plots=%r scattering_threshold_payload=%r scattering_threshold_input_value=%r table_rows=%r",
-                n_clicks,
+            table_data: Any,
+        ) -> tuple[Any, Any, Any]:
+            del pattern_action_n_clicks
+            del legacy_find_peaks_n_clicks
+            del legacy_clear_manual_peaks_n_clicks
+            del legacy_clear_manual_2d_peaks_n_clicks
+
+            triggered_id = dash.callback_context.triggered_id
+
+            action_name = None
+
+            if isinstance(triggered_id, dict):
+                if triggered_id.get("process") != selected_process_name:
+                    return dash.no_update, dash.no_update, dash.no_update
+
+                action_name = triggered_id.get("action")
+
+            elif triggered_id == self.ids.find_peaks_btn:
+                action_name = "find_peaks"
+
+            elif triggered_id in {
+                self.ids.clear_manual_peaks_btn,
+                self.ids.clear_manual_2d_peaks_btn,
+            }:
+                action_name = "clear_peaks"
+
+            else:
+                return dash.no_update, dash.no_update, dash.no_update
+
+            if action_name == "clear_peaks":
+                return (
+                    services.clear_measured_peak_positions_from_table(
+                        table_data=table_data,
+                    ),
+                    services.clear_peak_lines_payload(),
+                    "Cleared fluorescence peaks.",
+                )
+
+            if action_name != "find_peaks":
+                return dash.no_update, dash.no_update, dash.no_update
+
+            fcs_path_clean = services.clean_optional_string(
                 fcs_path,
-                scattering_channel,
-                fluorescence_channel,
-                fluorescence_peak_count,
-                max_events_for_plots,
-                scattering_threshold_payload,
-                scattering_threshold_input_value,
-                None if table_data is None else len(table_data),
+            )
+            fluorescence_channel = services.resolve_primary_channel(
+                selected_process_name=selected_process_name,
+                detector_dropdown_ids=detector_dropdown_ids,
+                detector_dropdown_values=detector_dropdown_values,
             )
 
-            if not n_clicks:
-                logger.debug("Find peaks button has not been clicked. Returning dash.no_update.")
-                return dash.no_update, dash.no_update
-
-            fcs_path_clean = services.clean_optional_string(fcs_path)
-            scattering_channel_clean = services.clean_optional_string(scattering_channel)
-            fluorescence_channel_clean = services.clean_optional_string(fluorescence_channel)
-
-            if not fcs_path_clean or not scattering_channel_clean or not fluorescence_channel_clean:
-                logger.debug(
-                    "Missing required input for peak finding. "
-                    "fcs_path_clean=%r scattering_channel_clean=%r fluorescence_channel_clean=%r. "
-                    "Returning dash.no_update.",
-                    fcs_path_clean,
-                    scattering_channel_clean,
-                    fluorescence_channel_clean,
+            if not fcs_path_clean or not fluorescence_channel:
+                return (
+                    dash.no_update,
+                    dash.no_update,
+                    "Select an FCS file and a fluorescence detector first.",
                 )
-                return dash.no_update, dash.no_update
 
-            try:
-                backend = BackEnd(fcs_path_clean)
-                result = backend.find_fluorescence_peaks_and_prepare_outputs(
-                    scattering_channel=scattering_channel_clean,
-                    fluorescence_channel=fluorescence_channel_clean,
-                    fluorescence_peak_count=fluorescence_peak_count,
-                    max_events_for_plots=max_events_for_plots,
-                    scattering_threshold_payload=scattering_threshold_payload,
-                    scattering_threshold_input_value=scattering_threshold_input_value,
-                    table_data=table_data,
-                )
-            except Exception:
-                logger.exception(
-                    "Failed to find fluorescence peaks for "
-                    "fcs_path=%r scattering_channel=%r fluorescence_channel=%r "
-                    "fluorescence_peak_count=%r max_events_for_plots=%r "
-                    "scattering_threshold_payload=%r scattering_threshold_input_value=%r "
-                    "table_data_length=%r",
-                    fcs_path_clean,
-                    scattering_channel_clean,
-                    fluorescence_channel_clean,
-                    fluorescence_peak_count,
-                    max_events_for_plots,
-                    scattering_threshold_payload,
-                    scattering_threshold_input_value,
-                    None if table_data is None else len(table_data),
-                )
-                raise
-
-            logger.debug(
-                "Peak finding succeeded. Updated table rows=%r peak_lines_payload=%r",
-                None if result.updated_table_data is None else len(result.updated_table_data),
-                result.peak_lines_payload,
+            peak_count = services.resolve_setting_value(
+                selected_process_name=selected_process_name,
+                setting_name="peak_count",
+                setting_ids=setting_ids,
+                setting_values=setting_values,
+                fallback_value=legacy_peak_count,
             )
 
-            return result.updated_table_data, result.peak_lines_payload
+            table_rows, peak_payload, status = services.run_automatic_peak_finding(
+                fcs_path=fcs_path_clean,
+                fluorescence_channel=fluorescence_channel,
+                peak_count=peak_count,
+                max_events_for_plots=max_events_for_plots,
+                table_data=table_data,
+            )
+
+            return table_rows, peak_payload, status
