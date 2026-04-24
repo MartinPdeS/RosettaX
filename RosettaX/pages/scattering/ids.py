@@ -50,8 +50,6 @@ class Ids:
         detector_configuration_preset_options_refresh_interval = f"{PAGE_NAME}-detector-configuration-preset-options-refresh-interval"
         detector_configuration_preset_refresh_button = f"{PAGE_NAME}-detector-configuration-preset-refresh-button"
 
-
-
     class Scattering:
         detector_dropdown = f"{PAGE_NAME}-scattering_detector_dropdown"
         debug_container = f"{PAGE_NAME}-scattering_debug_container"
@@ -64,6 +62,26 @@ class Ids:
         graph_toggle_switch = f"{PAGE_NAME}-scattering-graph-toggle-switch"
         graph_toggle_container = f"{PAGE_NAME}-scattering-graph-toggle-container"
         peak_lines_store = f"{PAGE_NAME}-scattering-peak-lines-store"
+        process_dropdown = "scattering_calibration-process-dropdown"
+        automatic_peak_controls_container = "scattering_calibration-automatic-peak-controls-container"
+        manual_click_controls_container = "scattering_calibration-manual-click-controls-container"
+        clear_manual_peaks_btn = "scattering_calibration-clear-manual-peaks-button"
+        manual_click_status = "scattering_calibration-manual-click-status"
+        manual_2d_click_controls_container = "scattering_calibration-manual-2d-click-controls-container"
+        manual_2d_click_controls_container = (
+            "scattering_calibration-manual-2d-click-controls-container"
+        )
+
+        clear_manual_2d_peaks_btn = (
+            "scattering_calibration-clear-manual-2d-peaks-button"
+        )
+
+        manual_2d_click_status = (
+            "scattering_calibration-manual-2d-click-status"
+        )
+        histogram_controls_container = (
+            "scattering_calibration-histogram-controls-container"
+        )
 
     class Export:
         run_calibration_btn = f"{PAGE_NAME}-run_calibration_btn"

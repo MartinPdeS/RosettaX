@@ -10,7 +10,7 @@ class ScatterCalibrationPage:
 
         self.sections = [
             sections.Upload(page=self),
-            sections.Scattering(page=self),
+            sections.Peaks(page=self),
             sections.Parameters(page=self),
             sections.Calibration(page=self),
             sections.Save(page=self),
