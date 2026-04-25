@@ -6,13 +6,7 @@ import logging
 import dash
 import plotly.graph_objs as go
 
-from RosettaX.peak_script.registry import get_peak_process_instances
-from RosettaX.peak_script.registry import get_process_instance
-from RosettaX.peak_script.registry import resolve_process_name
-from RosettaX.peak_workflow.detectors import populate_peak_script_detector_dropdowns
-from RosettaX.peak_workflow.detectors import resolve_detector_channels_for_process
-from RosettaX.peak_workflow.graphing import build_peak_workflow_graph_figure
-from RosettaX.peak_workflow.graphing import is_enabled
+from RosettaX import peak_workflow
 from RosettaX.utils import casting
 from RosettaX.utils import plottings
 from RosettaX.utils.runtime_config import RuntimeConfig
@@ -101,7 +95,7 @@ class PeakWorkflowCallbacks:
                 page_state=page_state,
             )
 
-            return populate_peak_script_detector_dropdowns(
+            return peak_workflow.detectors.populate_peak_script_detector_dropdowns(
                 uploaded_fcs_path=uploaded_fcs_path,
                 detector_dropdown_ids=detector_dropdown_ids,
                 current_detector_values=current_detector_values,
@@ -159,7 +153,7 @@ class PeakWorkflowCallbacks:
             process_name: Any,
             process_container_ids: list[dict[str, Any]],
         ) -> list[dict[str, Any]]:
-            resolved_process_name = resolve_process_name(
+            resolved_process_name = peak_workflow.scripts.registry.resolve_process_name(
                 process_name,
             )
 
@@ -168,7 +162,7 @@ class PeakWorkflowCallbacks:
             for process_container_id in process_container_ids or []:
                 process_name_from_id = process_container_id.get("process")
 
-                process = get_process_instance(
+                process = peak_workflow.scripts.registry.get_process_instance(
                     process_name=process_name_from_id,
                 )
 
@@ -203,11 +197,11 @@ class PeakWorkflowCallbacks:
             process_name: Any,
             current_graph_toggle_value: Any,
         ) -> Any:
-            resolved_process_name = resolve_process_name(
+            resolved_process_name = peak_workflow.scripts.registry.resolve_process_name(
                 process_name,
             )
 
-            process = get_process_instance(
+            process = peak_workflow.scripts.registry.get_process_instance(
                 process_name=resolved_process_name,
             )
 
@@ -227,7 +221,7 @@ class PeakWorkflowCallbacks:
         def toggle_graph_container(
             graph_toggle_value: Any,
         ) -> dict[str, str]:
-            graph_enabled = is_enabled(
+            graph_enabled = peak_workflow.graphing.is_enabled(
                 graph_toggle_value,
             )
 
@@ -252,7 +246,7 @@ class PeakWorkflowCallbacks:
         def toggle_histogram_controls(
             process_name: Any,
         ) -> dict[str, Any]:
-            process = get_process_instance(
+            process = peak_workflow.scripts.registry.get_process_instance(
                 process_name=process_name,
             )
 
@@ -331,7 +325,7 @@ class PeakWorkflowCallbacks:
             )
 
             try:
-                return build_peak_workflow_graph_figure(
+                return peak_workflow.graphing.build_peak_workflow_graph_figure(
                     backend=backend,
                     uploaded_fcs_path=uploaded_fcs_path,
                     process_name=process_name,
@@ -542,7 +536,7 @@ class PeakWorkflowCallbacks:
 
         status_children = self.build_status_children(
             status_component_ids=status_component_ids,
-            target_process_name=resolve_process_name(process_name),
+            target_process_name=peak_workflow.scripts.registry.resolve_process_name(process_name),
             status="",
         )
 
@@ -564,11 +558,11 @@ class PeakWorkflowCallbacks:
         mie_model: Any,
         status_component_ids: list[dict[str, Any]],
     ) -> tuple[Any, Any, list[Any]]:
-        resolved_process_name = resolve_process_name(
+        resolved_process_name = peak_workflow.scripts.registry.resolve_process_name(
             process_name,
         )
 
-        process = get_process_instance(
+        process = peak_workflow.scripts.registry.get_process_instance(
             process_name=resolved_process_name,
         )
 
@@ -581,7 +575,7 @@ class PeakWorkflowCallbacks:
             page_state=page_state,
         )
 
-        detector_channels = resolve_detector_channels_for_process(
+        detector_channels = peak_workflow.detectors.resolve_detector_channels_for_process(
             detector_dropdown_ids=detector_dropdown_ids,
             detector_dropdown_values=detector_dropdown_values,
             process_name=resolved_process_name,
@@ -672,7 +666,7 @@ class PeakWorkflowCallbacks:
         target_process_name = triggered_action_id.get("process")
         action_name = triggered_action_id.get("action")
 
-        process = get_process_instance(
+        process = peak_workflow.scripts.registry.get_process_instance(
             process_name=target_process_name,
         )
 
@@ -685,7 +679,7 @@ class PeakWorkflowCallbacks:
             page_state=page_state,
         )
 
-        detector_channels = resolve_detector_channels_for_process(
+        detector_channels = peak_workflow.detectors.resolve_detector_channels_for_process(
             detector_dropdown_ids=detector_dropdown_ids,
             detector_dropdown_values=detector_dropdown_values,
             process_name=target_process_name,
@@ -920,4 +914,4 @@ def get_peak_processes() -> list[Any]:
     """
     Return shared peak process instances.
     """
-    return get_peak_process_instances()
+    return peak_workflow.scripts.registry.get_peak_process_instances()

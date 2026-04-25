@@ -54,16 +54,24 @@ class PeakSectionIds:
         return f"{self.prefix}-histogram-controls-container"
 
     @property
-    def graph_hist(self) -> str:
-        return f"{self.prefix}-graph-hist"
+    def nbins_control_container(self) -> str:
+        return f"{self.prefix}-fluorescence-nbins-control-container"
 
     @property
     def nbins_input(self) -> str:
         return f"{self.prefix}-nbins-input"
 
     @property
+    def graph_hist(self) -> str:
+        return f"{self.prefix}-scattering-histogram-graph"
+
+    @property
+    def xscale_switch(self) -> str:
+        return f"{self.prefix}-scattering-xscale-switch"
+
+    @property
     def yscale_switch(self) -> str:
-        return f"{self.prefix}-yscale-switch"
+        return f"{self.prefix}-scattering-yscale-switch"
 
     @property
     def peak_count_input(self) -> str:

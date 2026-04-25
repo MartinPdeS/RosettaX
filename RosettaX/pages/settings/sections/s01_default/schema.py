@@ -3,8 +3,7 @@
 from dataclasses import dataclass
 from typing import Any, Optional
 
-from RosettaX.peak_script.registry import build_peak_process_options
-from RosettaX.peak_script.registry import DEFAULT_PROCESS_NAME
+from RosettaX.peak_workflow.scripts import registry
 
 
 @dataclass(frozen=True)
@@ -32,15 +31,15 @@ def build_peak_process_dropdown_options() -> list[dict[str, Any]]:
     list[dict[str, Any]]
         Peak process dropdown options.
     """
-    options = build_peak_process_options()
+    options = registry.build_peak_process_options()
 
     if options:
         return options
 
     return [
         {
-            "label": DEFAULT_PROCESS_NAME,
-            "value": DEFAULT_PROCESS_NAME,
+            "label": registry.DEFAULT_PROCESS_NAME,
+            "value": registry.DEFAULT_PROCESS_NAME,
         }
     ]
 
@@ -99,7 +98,7 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         component_kind="dropdown",
         value_kind="choice",
         runtime_path="calibration.default_fluorescence_peak_process",
-        default=DEFAULT_PROCESS_NAME,
+        default=registry.DEFAULT_PROCESS_NAME,
         options=PEAK_PROCESS_OPTIONS,
     ),
     FieldDefinition(
@@ -211,7 +210,7 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         component_kind="dropdown",
         value_kind="choice",
         runtime_path="calibration.default_scattering_peak_process",
-        default=DEFAULT_PROCESS_NAME,
+        default=registry.DEFAULT_PROCESS_NAME,
         options=PEAK_PROCESS_OPTIONS,
     ),
     FieldDefinition(

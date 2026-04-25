@@ -3,16 +3,13 @@
 from typing import Any
 import logging
 
-import dash
 import dash_bootstrap_components as dbc
 
-from RosettaX.peak_script.registry import DEFAULT_PROCESS_NAME
-from RosettaX.peak_script.registry import get_peak_process_instances
+from RosettaX.peak_workflow.adapters import ScatteringPeakWorkflowAdapter
 from RosettaX.peak_workflow.callbacks import PeakWorkflowCallbacks
-from RosettaX.peak_workflow import layout as peak_layout
+from RosettaX.peak_workflow.callbacks import get_peak_processes
+from RosettaX.peak_workflow.layouts import build_peak_workflow_layout
 from RosettaX.utils.runtime_config import RuntimeConfig
-
-from .adapters import ScatteringPeakWorkflowAdapter
 
 
 logger = logging.getLogger(__name__)
@@ -22,12 +19,15 @@ class Peaks:
     """
     Render and manage scattering peak detection.
 
-    This section now delegates the generic peak workflow to
-    RosettaX.peak_workflow. Only scattering specific behavior remains in the
+    This section delegates the generic peak workflow to
+    RosettaX.peak_workflow. Scattering specific behavior is implemented in
     ScatteringPeakWorkflowAdapter.
     """
 
-    def __init__(self, page) -> None:
+    def __init__(
+        self,
+        page: Any,
+    ) -> None:
         self.page = page
         self.ids = page.ids.Scattering
         self.adapter = ScatteringPeakWorkflowAdapter()
@@ -40,53 +40,12 @@ class Peaks:
     def _get_default_runtime_config(self) -> RuntimeConfig:
         """
         Return the default runtime config used for initial layout values.
-
-        Returns
-        -------
-        RuntimeConfig
-            Default runtime config.
         """
         return RuntimeConfig.from_default_profile()
-
-    def _get_default_peak_process(self) -> str:
-        """
-        Return the preferred scattering peak process from the default profile.
-
-        Returns
-        -------
-        str
-            Peak process name.
-        """
-        runtime_config = self._get_default_runtime_config()
-
-        return runtime_config.get_str(
-            "calibration.default_scattering_peak_process",
-            default=DEFAULT_PROCESS_NAME,
-        )
-
-    def _get_default_show_graphs(self) -> bool:
-        """
-        Return whether graphs should be shown by default.
-
-        Returns
-        -------
-        bool
-            True if graphs should be shown.
-        """
-        runtime_config = self._get_default_runtime_config()
-
-        return runtime_config.get_show_graphs(
-            default=True,
-        )
 
     def _get_default_n_bins_for_plots(self) -> int:
         """
         Return the default number of histogram bins.
-
-        Returns
-        -------
-        int
-            Number of bins.
         """
         runtime_config = self._get_default_runtime_config()
 
@@ -95,30 +54,37 @@ class Peaks:
             default=100,
         )
 
-    def _get_default_histogram_scale(self) -> str:
+    def _get_default_xscale(self) -> str:
         """
-        Return the default histogram scale.
-
-        Returns
-        -------
-        str
-            Histogram scale.
+        Return the default x axis scale.
         """
         runtime_config = self._get_default_runtime_config()
 
         return runtime_config.get_str(
-            "calibration.histogram_scale",
-            default="log",
+            "calibration.histogram_xscale",
+            default=runtime_config.get_str(
+                "calibration.xscale",
+                default="linear",
+            ),
+        )
+
+    def _get_default_yscale(self) -> str:
+        """
+        Return the default y axis scale.
+        """
+        runtime_config = self._get_default_runtime_config()
+
+        return runtime_config.get_str(
+            "calibration.histogram_yscale",
+            default=runtime_config.get_str(
+                "calibration.histogram_scale",
+                default="log",
+            ),
         )
 
     def get_layout(self) -> dbc.Card:
         """
         Build the scattering peak section layout.
-
-        Returns
-        -------
-        dbc.Card
-            Section layout.
         """
         logger.debug("Building Scattering Peaks layout.")
 
@@ -132,11 +98,6 @@ class Peaks:
     def _build_header(self) -> dbc.CardHeader:
         """
         Build the card header.
-
-        Returns
-        -------
-        dbc.CardHeader
-            Header.
         """
         return dbc.CardHeader(
             "2. Scattering peak detection",
@@ -145,42 +106,26 @@ class Peaks:
     def _build_body(self) -> dbc.CardBody:
         """
         Build the card body.
-
-        Returns
-        -------
-        dbc.CardBody
-            Body.
         """
         return dbc.CardBody(
-            [
-                peak_layout.build_process_selector(
-                    ids=self.ids,
-                    default_process_name=self._get_default_peak_process(),
-                ),
-                dash.html.Br(),
-                peak_layout.build_process_controls(
-                    ids=self.ids,
-                    processes=get_peak_process_instances(),
-                ),
-                dash.html.Br(),
-                peak_layout.build_graph_toggle_switch(
-                    ids=self.ids,
-                    show_graphs=self._get_default_show_graphs(),
-                ),
-                dash.html.Br(),
-                peak_layout.build_graph_controls_container(
-                    ids=self.ids,
-                    histogram_scale=self._get_default_histogram_scale(),
-                    nbins=self._get_default_n_bins_for_plots(),
-                ),
-            ]
+            build_peak_workflow_layout(
+                ids=self.ids,
+                processes=get_peak_processes(),
+                process_dropdown_label="Peak process",
+                graph_title="Scattering peak detection graph",
+                number_of_bins=self._get_default_n_bins_for_plots(),
+                xscale=self._get_default_xscale(),
+                yscale=self._get_default_yscale(),
+            )
         )
 
     def register_callbacks(self) -> None:
         """
         Register scattering peak workflow callbacks.
         """
-        logger.debug("Registering Scattering Peaks callbacks through shared workflow.")
+        logger.debug(
+            "Registering Scattering Peaks callbacks through shared workflow."
+        )
 
         PeakWorkflowCallbacks(
             page=self.page,
@@ -188,7 +133,45 @@ class Peaks:
             adapter=self.adapter,
             table_id=self.page.ids.Calibration.bead_table,
             page_state_store_id=self.page.ids.State.page_state_store,
-            max_events_input_id=self.page.ids.Upload.max_events_for_plots_input,
+            max_events_input_id=self._get_max_events_input_id(),
             runtime_config_store_id="runtime-config-store",
-            mie_model_input_id=self.page.ids.Parameters.mie_model,
+            mie_model_input_id=self._get_mie_model_input_id(),
         ).register()
+
+    def _get_max_events_input_id(self) -> Any:
+        """
+        Return the optional max events input ID.
+        """
+        upload_ids = getattr(
+            self.page.ids,
+            "Upload",
+            None,
+        )
+
+        if upload_ids is None:
+            return None
+
+        return getattr(
+            upload_ids,
+            "max_events_for_plots_input",
+            None,
+        )
+
+    def _get_mie_model_input_id(self) -> Any:
+        """
+        Return the optional Mie model input ID.
+        """
+        parameter_ids = getattr(
+            self.page.ids,
+            "Parameters",
+            None,
+        )
+
+        if parameter_ids is None:
+            return None
+
+        return getattr(
+            parameter_ids,
+            "mie_model",
+            None,
+        )

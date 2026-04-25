@@ -165,6 +165,31 @@ class BackEnd:
 
         return signal
 
+    def column_copy(
+        self,
+        detector_column: str,
+        *,
+        dtype: Any = float,
+        n: Optional[int] = None,
+    ) -> np.ndarray:
+        """
+        Return an owned copy of a detector column.
+
+        This method matches the interface expected by the shared peak workflow
+        graph code. It delegates to ``load_signal`` so all FCS reading remains
+        centralized in the backend.
+        """
+        values = self.load_signal(
+            detector_column=detector_column,
+            max_events_for_analysis=n,
+            require_positive_values=False,
+        )
+
+        return np.asarray(
+            values,
+            dtype=dtype,
+        ).copy()
+
     def build_histogram(
         self,
         *,

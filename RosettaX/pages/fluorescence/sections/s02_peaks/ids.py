@@ -9,22 +9,22 @@ from dash import ALL
 @dataclass(frozen=True)
 class PeakSectionIds:
     """
-    ID factory for the fluorescence peak section.
+    ID factory for the scattering peak section.
 
-    The public method names intentionally match the scattering peak ID API
-    because fluorescence and scattering use the same peak scripts.
+    The public method names intentionally match the fluorescence peak ID API
+    because fluorescence and scattering use the same peak workflow callbacks.
 
-    The pattern matching type values are fluorescence specific to avoid Dash
-    callback collisions with the scattering page.
+    The pattern matching type values are scattering specific to avoid Dash
+    callback collisions with the fluorescence page.
     """
 
     prefix: str
 
-    detector_dropdown_type: str = "fluorescence-peak-script-detector-dropdown"
-    controls_container_type: str = "fluorescence-peak-script-controls-container"
-    action_button_type: str = "fluorescence-peak-script-action-button"
-    status_type: str = "fluorescence-peak-script-status"
-    setting_type: str = "fluorescence-peak-script-setting"
+    detector_dropdown_type: str = "scattering-peak-script-detector-dropdown"
+    controls_container_type: str = "scattering-peak-script-controls-container"
+    action_button_type: str = "scattering-peak-script-action-button"
+    status_type: str = "scattering-peak-script-status"
+    setting_type: str = "scattering-peak-script-setting"
 
     @property
     def process_detector_dropdown_type(self) -> str:
@@ -36,51 +36,55 @@ class PeakSectionIds:
 
     @property
     def process_dropdown(self) -> str:
-        return f"{self.prefix}-fluorescence-process-dropdown"
-
-    @property
-    def peak_count_input(self) -> str:
-        return f"{self.prefix}-fluorescence-peak-count-input"
+        return f"{self.prefix}-scattering-process-dropdown"
 
     @property
     def graph_toggle_switch(self) -> str:
-        return f"{self.prefix}-fluorescence-graph-toggle-switch"
+        return f"{self.prefix}-scattering-graph-toggle-switch"
 
     @property
     def graph_toggle_container(self) -> str:
-        return f"{self.prefix}-fluorescence-graph-toggle-container"
+        return f"{self.prefix}-scattering-graph-toggle-container"
 
     @property
     def histogram_controls_container(self) -> str:
-        return f"{self.prefix}-fluorescence-histogram-controls-container"
+        return f"{self.prefix}-scattering-histogram-controls-container"
 
     @property
     def graph_hist(self) -> str:
-        return f"{self.prefix}-fluorescence-histogram-graph"
+        return f"{self.prefix}-scattering-histogram-graph"
+
+    @property
+    def xscale_switch(self) -> str:
+        return f"{self.prefix}-scattering-xscale-switch"
 
     @property
     def yscale_switch(self) -> str:
-        return f"{self.prefix}-fluorescence-yscale-switch"
+        return f"{self.prefix}-scattering-yscale-switch"
 
     @property
     def nbins_input(self) -> str:
-        return f"{self.prefix}-fluorescence-nbins-input"
+        return f"{self.prefix}-scattering-nbins-input"
 
     @property
     def peak_lines_store(self) -> str:
-        return f"{self.prefix}-fluorescence-peak-lines-store"
+        return f"{self.prefix}-scattering-peak-lines-store"
 
     @property
     def source_channel_store(self) -> str:
-        return f"{self.prefix}-fluorescence-source-channel-store"
+        return f"{self.prefix}-scattering-source-channel-store"
+
+    @property
+    def nbins_control_container(self) -> str:
+        return f"{self.prefix}-fluorescence-nbins-control-container"
 
     @property
     def hist_store(self) -> str:
-        return f"{self.prefix}-fluorescence-histogram-store"
+        return f"{self.prefix}-scattering-histogram-store"
 
     @property
     def script_status(self) -> str:
-        return f"{self.prefix}-fluorescence-peak-script-status-global"
+        return f"{self.prefix}-scattering-peak-script-status-global"
 
     def process_detector_dropdown(
         self,

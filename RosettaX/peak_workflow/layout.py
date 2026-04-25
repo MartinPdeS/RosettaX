@@ -5,7 +5,7 @@ from typing import Any
 import dash
 import dash_bootstrap_components as dbc
 
-from RosettaX.peak_script.registry import build_peak_process_options
+from .scripts.registry import build_peak_process_options
 from RosettaX.utils import styling, graph_config
 
 

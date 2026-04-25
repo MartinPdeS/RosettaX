@@ -2,16 +2,16 @@
 
 from typing import Any
 
-from RosettaX.peak_script.registry import DEFAULT_PROCESS_NAME
-from RosettaX.peak_script.registry import build_peak_process_options
-from RosettaX.peak_script.registry import build_script_map
-from RosettaX.peak_script.registry import clean_optional_string
-from RosettaX.peak_script.registry import find_script_class_in_module
-from RosettaX.peak_script.registry import get_default_script_name
-from RosettaX.peak_script.registry import get_peak_process_instances
-from RosettaX.peak_script.registry import get_process_instance
-from RosettaX.peak_script.registry import load_peak_scripts
-from RosettaX.peak_script.registry import resolve_process_name
+from .registry import DEFAULT_PROCESS_NAME
+from .registry import build_peak_process_options
+from .registry import build_script_map
+from .registry import clean_optional_string
+from .registry import find_script_class_in_module
+from .registry import get_default_script_name
+from .registry import get_peak_process_instances
+from .registry import get_process_instance
+from .registry import load_peak_scripts
+from .registry import resolve_process_name
 
 
 def resolve_detector_channel_state(

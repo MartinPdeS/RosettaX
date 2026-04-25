@@ -3,8 +3,8 @@
 from typing import Any, Optional
 import logging
 
-from RosettaX.peak_script.registry import resolve_detector_channel_state
-from RosettaX.peak_script.registry import resolve_process_name
+from ..scripts.registry import resolve_detector_channel_state
+from ..scripts.registry import resolve_process_name
 from RosettaX.utils.reader import FCSFile
 
 
