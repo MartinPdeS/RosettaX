@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
-
-from typing import Any, Optional, Sequence
 import logging
+from typing import Any, Optional, Sequence
 
 import dash
 import dash_bootstrap_components as dbc
 
-from RosettaX.utils.runtime_config import RuntimeConfig
+from RosettaX.pages.scattering.state import ScatteringPageState
 from RosettaX.utils import styling
+from RosettaX.utils.runtime_config import RuntimeConfig
 
-from . import services
 from . import presets
+from . import services
 
 
 logger = logging.getLogger(__name__)
@@ -19,6 +19,12 @@ logger = logging.getLogger(__name__)
 class Parameters:
     """
     Scattering parameter section.
+
+    State ownership
+    ---------------
+    The visual input components still hold their local Dash values, but the
+    parameter set used for model computation is now copied into the scattering
+    page state after Compute Expected Coupling is clicked.
     """
 
     sphere_table_columns = services.sphere_table_columns
@@ -27,6 +33,7 @@ class Parameters:
     def __init__(self, page) -> None:
         self.page = page
         self.ids = page.ids.Parameters
+
         logger.debug("Initialized Parameters section with page=%r", page)
 
     def _get_default_runtime_config(self) -> RuntimeConfig:
@@ -34,6 +41,7 @@ class Parameters:
 
     def _get_default_mie_model(self) -> str:
         runtime_config = self._get_default_runtime_config()
+
         return runtime_config.get_str(
             "particle_model.mie_model",
             default="Solid Sphere",
@@ -41,6 +49,7 @@ class Parameters:
 
     def _get_default_wavelength_nm(self) -> float:
         runtime_config = self._get_default_runtime_config()
+
         return runtime_config.get_float(
             "optics.wavelength_nm",
             default=700.0,
@@ -48,6 +57,7 @@ class Parameters:
 
     def _get_default_detector_numerical_aperture(self) -> float:
         runtime_config = self._get_default_runtime_config()
+
         return runtime_config.get_float(
             "optics.detector_numerical_aperture",
             default=0.2,
@@ -55,6 +65,7 @@ class Parameters:
 
     def _get_default_detector_cache_numerical_aperture(self) -> float:
         runtime_config = self._get_default_runtime_config()
+
         return runtime_config.get_float(
             "optics.detector_cache_numerical_aperture",
             default=0.0,
@@ -62,6 +73,7 @@ class Parameters:
 
     def _get_default_blocker_bar_numerical_aperture(self) -> float:
         runtime_config = self._get_default_runtime_config()
+
         return runtime_config.get_float(
             "optics.blocker_bar_numerical_aperture",
             default=0.0,
@@ -69,6 +81,7 @@ class Parameters:
 
     def _get_default_detector_sampling(self) -> int:
         runtime_config = self._get_default_runtime_config()
+
         return runtime_config.get_int(
             "optics.detector_sampling",
             default=600,
@@ -76,6 +89,7 @@ class Parameters:
 
     def _get_default_detector_phi_angle_degree(self) -> float:
         runtime_config = self._get_default_runtime_config()
+
         return runtime_config.get_float(
             "optics.detector_phi_angle_degree",
             default=0.0,
@@ -83,6 +97,7 @@ class Parameters:
 
     def _get_default_detector_gamma_angle_degree(self) -> float:
         runtime_config = self._get_default_runtime_config()
+
         return runtime_config.get_float(
             "optics.detector_gamma_angle_degree",
             default=0.0,
@@ -90,6 +105,7 @@ class Parameters:
 
     def _get_default_medium_refractive_index(self) -> float:
         runtime_config = self._get_default_runtime_config()
+
         return runtime_config.get_float(
             "optics.medium_refractive_index",
             default=1.333,
@@ -97,6 +113,7 @@ class Parameters:
 
     def _get_default_particle_refractive_index(self) -> float:
         runtime_config = self._get_default_runtime_config()
+
         return runtime_config.get_float(
             "particle_model.particle_refractive_index",
             default=1.59,
@@ -104,6 +121,7 @@ class Parameters:
 
     def _get_default_core_refractive_index(self) -> float:
         runtime_config = self._get_default_runtime_config()
+
         return runtime_config.get_float(
             "particle_model.core_refractive_index",
             default=1.47,
@@ -111,6 +129,7 @@ class Parameters:
 
     def _get_default_shell_refractive_index(self) -> float:
         runtime_config = self._get_default_runtime_config()
+
         return runtime_config.get_float(
             "particle_model.shell_refractive_index",
             default=1.46,
@@ -118,6 +137,7 @@ class Parameters:
 
     def get_layout(self) -> dbc.Card:
         logger.debug("Building Parameters layout.")
+
         return dbc.Card(
             [
                 self._build_header(),
@@ -458,6 +478,7 @@ class Parameters:
 
     def register_callbacks(self) -> None:
         logger.debug("Registering Parameters callbacks.")
+
         self._register_visibility_callbacks()
         self._register_refractive_index_callbacks()
         self._register_detector_configuration_options_callback()
@@ -486,7 +507,9 @@ class Parameters:
             dash.Input("runtime-config-store", "data"),
             prevent_initial_call=False,
         )
-        def sync_parameters_from_runtime_config(runtime_config_data: Any):
+        def sync_parameters_from_runtime_config(
+            runtime_config_data: Any,
+        ) -> tuple[Any, ...]:
             logger.debug(
                 "sync_parameters_from_runtime_config called with runtime_config_data=%r",
                 runtime_config_data,
@@ -590,6 +613,7 @@ class Parameters:
                 rows=normalized_current_rows,
             ):
                 logger.debug("Table already contains user data. Leaving it unchanged.")
+
                 return dash.no_update
 
             runtime_config = RuntimeConfig.from_dict(
@@ -625,6 +649,7 @@ class Parameters:
         )
         def clear_table_selection_after_compute(_n_clicks: int) -> tuple[None, list]:
             logger.debug("Clearing bead table selection after Compute Expected Coupling.")
+
             return None, []
 
     def _register_visibility_callbacks(self) -> None:
@@ -909,7 +934,11 @@ class Parameters:
             current_rows: Optional[list[dict[str, Any]]],
         ) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
             resolved_mie_model = services.resolve_mie_model(mie_model)
-            next_columns = services.get_table_columns_for_model(resolved_mie_model)
+
+            next_columns = services.get_table_columns_for_model(
+                resolved_mie_model,
+            )
+
             next_rows = services.remap_table_rows_to_model(
                 mie_model=resolved_mie_model,
                 current_rows=current_rows,
@@ -950,7 +979,12 @@ class Parameters:
 
             resolved_mie_model = services.resolve_mie_model(mie_model)
             next_rows = [dict(row) for row in (rows or [])]
-            next_rows.append(services.build_empty_row_for_model(resolved_mie_model))
+
+            next_rows.append(
+                services.build_empty_row_for_model(
+                    resolved_mie_model,
+                )
+            )
 
             logger.debug(
                 "add_row returning resolved_mie_model=%r new_row_count=%d",
@@ -1006,6 +1040,11 @@ class Parameters:
                 "data",
                 allow_duplicate=True,
             ),
+            dash.Output(
+                self.page.ids.State.page_state_store,
+                "data",
+                allow_duplicate=True,
+            ),
             dash.Input(self.page.ids.Calibration.compute_model_btn, "n_clicks"),
             dash.State(self.ids.mie_model, "value"),
             dash.State(self.page.ids.Calibration.bead_table, "data"),
@@ -1020,6 +1059,7 @@ class Parameters:
             dash.State(self.ids.detector_sampling, "value"),
             dash.State(self.ids.detector_phi_angle_degree, "value"),
             dash.State(self.ids.detector_gamma_angle_degree, "value"),
+            dash.State(self.page.ids.State.page_state_store, "data"),
             prevent_initial_call=True,
         )
         def compute_model(
@@ -1037,7 +1077,8 @@ class Parameters:
             detector_sampling: Any,
             detector_phi_angle_degree: Any,
             detector_gamma_angle_degree: Any,
-        ) -> list[dict[str, str]]:
+            page_state_payload: Any,
+        ) -> tuple[list[dict[str, str]], dict[str, Any]]:
             logger.debug(
                 "compute_model called with n_clicks=%r mie_model=%r row_count=%r "
                 "medium_refractive_index=%r particle_refractive_index=%r "
@@ -1063,17 +1104,43 @@ class Parameters:
 
             resolved_mie_model = services.resolve_mie_model(mie_model)
 
+            scattering_parameters_payload = self._build_scattering_parameters_payload(
+                mie_model=resolved_mie_model,
+                medium_refractive_index=medium_refractive_index,
+                particle_refractive_index=particle_refractive_index,
+                core_refractive_index=core_refractive_index,
+                shell_refractive_index=shell_refractive_index,
+                wavelength_nm=wavelength_nm,
+                detector_numerical_aperture=detector_numerical_aperture,
+                detector_cache_numerical_aperture=detector_cache_numerical_aperture,
+                blocker_bar_numerical_aperture=blocker_bar_numerical_aperture,
+                detector_sampling=detector_sampling,
+                detector_phi_angle_degree=detector_phi_angle_degree,
+                detector_gamma_angle_degree=detector_gamma_angle_degree,
+            )
+
+            page_state = ScatteringPageState.from_dict(
+                page_state_payload if isinstance(page_state_payload, dict) else None
+            )
+
+            page_state = page_state.update(
+                scattering_parameters_payload=scattering_parameters_payload,
+            )
+
             if not current_rows:
                 logger.debug(
                     "compute_model found no rows. Returning empty rows for model=%r",
                     resolved_mie_model,
                 )
-                return services.build_empty_rows_for_model(
+
+                empty_rows = services.build_empty_rows_for_model(
                     resolved_mie_model,
                     row_count=3,
                 )
 
-            return services.compute_model_for_rows(
+                return empty_rows, page_state.to_dict()
+
+            computed_rows = services.compute_model_for_rows(
                 mie_model=resolved_mie_model,
                 current_rows=current_rows,
                 medium_refractive_index=medium_refractive_index,
@@ -1089,6 +1156,85 @@ class Parameters:
                 detector_gamma_angle_degree=detector_gamma_angle_degree,
                 logger=logger,
             )
+
+            return computed_rows, page_state.to_dict()
+
+    def _build_scattering_parameters_payload(
+        self,
+        *,
+        mie_model: Any,
+        medium_refractive_index: Any,
+        particle_refractive_index: Any,
+        core_refractive_index: Any,
+        shell_refractive_index: Any,
+        wavelength_nm: Any,
+        detector_numerical_aperture: Any,
+        detector_cache_numerical_aperture: Any,
+        blocker_bar_numerical_aperture: Any,
+        detector_sampling: Any,
+        detector_phi_angle_degree: Any,
+        detector_gamma_angle_degree: Any,
+    ) -> dict[str, Any]:
+        """
+        Build the serializable parameter payload stored in page state.
+
+        Parameters
+        ----------
+        mie_model:
+            Selected Mie model.
+
+        medium_refractive_index:
+            Medium refractive index.
+
+        particle_refractive_index:
+            Solid particle refractive index.
+
+        core_refractive_index:
+            Core refractive index.
+
+        shell_refractive_index:
+            Shell refractive index.
+
+        wavelength_nm:
+            Optical wavelength in nanometers.
+
+        detector_numerical_aperture:
+            Detector numerical aperture.
+
+        detector_cache_numerical_aperture:
+            Detector cache numerical aperture.
+
+        blocker_bar_numerical_aperture:
+            Blocker bar numerical aperture.
+
+        detector_sampling:
+            Detector angular sampling.
+
+        detector_phi_angle_degree:
+            Detector phi angle in degrees.
+
+        detector_gamma_angle_degree:
+            Detector gamma angle in degrees.
+
+        Returns
+        -------
+        dict[str, Any]
+            Serializable scattering parameter payload.
+        """
+        return {
+            "mie_model": mie_model,
+            "medium_refractive_index": medium_refractive_index,
+            "particle_refractive_index": particle_refractive_index,
+            "core_refractive_index": core_refractive_index,
+            "shell_refractive_index": shell_refractive_index,
+            "wavelength_nm": wavelength_nm,
+            "detector_numerical_aperture": detector_numerical_aperture,
+            "detector_cache_numerical_aperture": detector_cache_numerical_aperture,
+            "blocker_bar_numerical_aperture": blocker_bar_numerical_aperture,
+            "detector_sampling": detector_sampling,
+            "detector_phi_angle_degree": detector_phi_angle_degree,
+            "detector_gamma_angle_degree": detector_gamma_angle_degree,
+        }
 
     def _build_numeric_input_row(
         self,

@@ -1,14 +1,18 @@
 # -*- coding: utf-8 -*-
 
 from typing import Any
+
 import logging
 
 import dash
 import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
 
+from RosettaX.pages.scattering.state import ScatteringPageState
 from RosettaX.utils import plottings, styling
+
 from . import services
+
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +37,11 @@ class Calibration:
     - A 1D process uses its ``primary`` detector channel.
     - A 2D process uses its ``x`` detector channel, because the calibration table
       stores the clicked x coordinate.
+
+    State ownership
+    ---------------
+    Calibration graph payloads and calibration payloads are stored in the page
+    state store. This section no longer creates local graph or calibration stores.
     """
 
     simulated_curve_point_count = 200
@@ -42,6 +51,7 @@ class Calibration:
     def __init__(self, page) -> None:
         self.page = page
         self.ids = page.ids.Calibration
+
         logger.debug("Initialized Calibration section with page=%r", page)
 
     def get_layout(self) -> dbc.Card:
@@ -58,7 +68,6 @@ class Calibration:
     def _build_body(self) -> dbc.CardBody:
         return dbc.CardBody(
             [
-                self._build_stores(),
                 self._build_action_block(),
                 dash.html.Br(),
                 self._build_graph_block(),
@@ -70,24 +79,6 @@ class Calibration:
                     style={
                         "marginTop": "8px",
                     },
-                ),
-            ]
-        )
-
-    def _build_stores(self) -> dash.html.Div:
-        return dash.html.Div(
-            [
-                dash.dcc.Store(
-                    id=self.ids.graph_store,
-                    storage_type="session",
-                ),
-                dash.dcc.Store(
-                    id=self.ids.model_graph_store,
-                    storage_type="session",
-                ),
-                dash.dcc.Store(
-                    id=self.ids.calibration_store,
-                    storage_type="session",
                 ),
             ]
         )
@@ -205,6 +196,7 @@ class Calibration:
             autosize=False,
             height=self.graph_height_px,
         )
+
         return figure
 
     def _resolve_calibration_detector_column(
@@ -267,15 +259,18 @@ class Calibration:
 
     def register_callbacks(self) -> None:
         logger.debug("Registering Calibration callbacks.")
+
         self._register_fit_calibration_callback()
         self._register_left_graph_callback()
         self._register_right_graph_callback()
 
     def _register_fit_calibration_callback(self) -> None:
         @dash.callback(
-            dash.Output(self.ids.graph_store, "data"),
-            dash.Output(self.ids.model_graph_store, "data"),
-            dash.Output(self.ids.calibration_store, "data"),
+            dash.Output(
+                self.page.ids.State.page_state_store,
+                "data",
+                allow_duplicate=True,
+            ),
             dash.Output(
                 self.ids.bead_table,
                 "data",
@@ -286,7 +281,7 @@ class Calibration:
             dash.Output(self.ids.r_squared_out, "children"),
             dash.Output(self.ids.apply_status, "children"),
             dash.Input(self.ids.calibrate_btn, "n_clicks"),
-            dash.State(self.page.ids.Upload.fcs_path_store, "data"),
+            dash.State(self.page.ids.State.page_state_store, "data"),
             dash.State(self.page.ids.Scattering.process_dropdown, "value"),
             dash.State(
                 self.page.ids.Scattering.process_detector_dropdown_pattern(),
@@ -313,7 +308,7 @@ class Calibration:
         )
         def fit_scattering_calibration(
             n_clicks: int,
-            uploaded_fcs_path: Any,
+            page_state_payload: Any,
             selected_peak_process_name: Any,
             detector_dropdown_ids: list[dict[str, Any]],
             detector_dropdown_values: list[Any],
@@ -330,7 +325,13 @@ class Calibration:
             detector_sampling: Any,
             detector_phi_angle_degree: Any,
             detector_gamma_angle_degree: Any,
-        ) -> tuple:
+        ) -> tuple[Any, Any, Any, Any, Any, Any]:
+            del n_clicks
+
+            page_state = ScatteringPageState.from_dict(
+                page_state_payload if isinstance(page_state_payload, dict) else None
+            )
+
             detector_column = self._resolve_calibration_detector_column(
                 selected_peak_process_name=selected_peak_process_name,
                 detector_dropdown_ids=detector_dropdown_ids,
@@ -338,12 +339,11 @@ class Calibration:
             )
 
             logger.debug(
-                "fit_scattering_calibration called with n_clicks=%r "
-                "uploaded_fcs_path=%r selected_peak_process_name=%r "
-                "detector_dropdown_ids=%r detector_dropdown_values=%r "
-                "resolved_detector_column=%r mie_model=%r table_row_count=%r",
-                n_clicks,
-                uploaded_fcs_path,
+                "fit_scattering_calibration called with uploaded_fcs_path=%r "
+                "selected_peak_process_name=%r detector_dropdown_ids=%r "
+                "detector_dropdown_values=%r resolved_detector_column=%r "
+                "mie_model=%r table_row_count=%r",
+                page_state.uploaded_fcs_path,
                 selected_peak_process_name,
                 detector_dropdown_ids,
                 detector_dropdown_values,
@@ -352,10 +352,8 @@ class Calibration:
                 None if bead_table_data is None else len(bead_table_data),
             )
 
-            del n_clicks
-
             result = services.run_scattering_calibration(
-                uploaded_fcs_path=uploaded_fcs_path,
+                uploaded_fcs_path=page_state.uploaded_fcs_path,
                 detector_column=detector_column,
                 mie_model=mie_model,
                 bead_table_data=bead_table_data,
@@ -374,15 +372,45 @@ class Calibration:
                 logger=logger,
             )
 
-            return result.to_tuple()
+            (
+                calibration_graph_payload,
+                calibration_model_graph_payload,
+                calibration_payload,
+                bead_table_data,
+                slope_text,
+                intercept_text,
+                r_squared_text,
+                apply_status,
+            ) = result.to_tuple()
+
+            page_state = page_state.update(
+                calibration_graph_payload=calibration_graph_payload,
+                calibration_model_graph_payload=calibration_model_graph_payload,
+                calibration_payload=calibration_payload,
+            )
+
+            return (
+                page_state.to_dict(),
+                bead_table_data,
+                slope_text,
+                intercept_text,
+                r_squared_text,
+                apply_status,
+            )
 
     def _register_left_graph_callback(self) -> None:
         @dash.callback(
             dash.Output(self.ids.graph_calibration, "figure"),
-            dash.Input(self.ids.graph_store, "data"),
+            dash.Input(self.page.ids.State.page_state_store, "data"),
             prevent_initial_call=False,
         )
-        def update_left_graph(stored_figure: Any) -> go.Figure:
+        def update_left_graph(page_state_payload: Any) -> go.Figure:
+            page_state = ScatteringPageState.from_dict(
+                page_state_payload if isinstance(page_state_payload, dict) else None
+            )
+
+            stored_figure = page_state.calibration_graph_payload
+
             logger.debug(
                 "update_left_graph called with stored_figure_type=%s",
                 type(stored_figure).__name__,
@@ -399,11 +427,13 @@ class Calibration:
                 return self._finalize_figure_size(
                     go.Figure(stored_figure)
                 )
+
             except Exception:
                 logger.exception(
                     "Failed to reconstruct left graph from stored_figure=%r",
                     stored_figure,
                 )
+
                 return self._finalize_figure_size(
                     plottings._make_info_figure(
                         "Failed to render comparison graph."
@@ -413,10 +443,16 @@ class Calibration:
     def _register_right_graph_callback(self) -> None:
         @dash.callback(
             dash.Output(self.ids.graph_model, "figure"),
-            dash.Input(self.ids.model_graph_store, "data"),
+            dash.Input(self.page.ids.State.page_state_store, "data"),
             prevent_initial_call=False,
         )
-        def update_right_graph(stored_figure: Any) -> go.Figure:
+        def update_right_graph(page_state_payload: Any) -> go.Figure:
+            page_state = ScatteringPageState.from_dict(
+                page_state_payload if isinstance(page_state_payload, dict) else None
+            )
+
+            stored_figure = page_state.calibration_model_graph_payload
+
             logger.debug(
                 "update_right_graph called with stored_figure_type=%s",
                 type(stored_figure).__name__,
@@ -433,11 +469,13 @@ class Calibration:
                 return self._finalize_figure_size(
                     go.Figure(stored_figure)
                 )
+
             except Exception:
                 logger.exception(
                     "Failed to reconstruct right graph from stored_figure=%r",
                     stored_figure,
                 )
+
                 return self._finalize_figure_size(
                     plottings._make_info_figure(
                         "Failed to render simulated coupling graph."

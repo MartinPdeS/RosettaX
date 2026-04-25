@@ -1,10 +1,23 @@
-import dash
+# -*- coding: utf-8 -*-
+
 from typing import Self
 
-from RosettaX.pages.fluorescence.ids import Ids
-from RosettaX.pages.fluorescence import sections
+import dash
+
+from . import sections
+from .ids import Ids
+from .state import FluorescencePageState
+
 
 class FluorescencePage:
+    """
+    Fluorescence calibration page.
+
+    The page owns one serialized page state store. Individual sections should
+    progressively migrate away from section specific stores and use the page
+    state as the single source of truth.
+    """
+
     def __init__(self) -> None:
         self.ids = Ids()
 
@@ -18,19 +31,35 @@ class FluorescencePage:
         self.backend = None
 
     def register_callbacks(self) -> Self:
+        """
+        Register all section callbacks.
+
+        Returns
+        -------
+        Self
+            Current page instance.
+        """
         for section in self.sections:
             section.register_callbacks()
+
         return self
 
     def layout(self) -> dash.html.Div:
+        """
+        Build the fluorescence page layout.
+
+        Returns
+        -------
+        dash.html.Div
+            Page layout.
+        """
         return dash.html.Div(
             [
-                dash.dcc.Store(id=self.ids.Upload.uploaded_fcs_path_store, storage_type="session"),
-                dash.dcc.Store(id=self.ids.Calibration.calibration_store, storage_type="session"),
-                dash.dcc.Store(id=self.ids.Scattering.threshold_store, storage_type="session"),
-                dash.dcc.Store(id=self.ids.Fluorescence.hist_store, storage_type="session"),
-                dash.dcc.Store(id=self.ids.Fluorescence.source_channel_store, storage_type="session"),
-                dash.dcc.Store(id=self.ids.Fluorescence.peak_lines_store, storage_type="session"),
+                dash.dcc.Store(
+                    id=self.ids.State.page_state_store,
+                    data=FluorescencePageState.empty().to_dict(),
+                    storage_type="session",
+                ),
                 dash.html.Br(),
                 *[section.get_layout() for section in self.sections],
             ]

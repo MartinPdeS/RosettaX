@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 import logging
 from pathlib import Path
 from typing import Any, Optional
@@ -7,6 +6,7 @@ from typing import Any, Optional
 import dash_bootstrap_components as dbc
 from dash import Input, Output, State, callback, dcc, html
 
+from RosettaX.pages.scattering.state import ScatteringPageState
 from RosettaX.utils import styling, ui_forms
 from RosettaX.utils.runtime_config import RuntimeConfig
 from . import services
@@ -22,21 +22,22 @@ class Upload:
     Responsibilities
     ----------------
     - Render the upload area.
-    - Store the uploaded FCS path in session state.
-    - Store the uploaded filename in session state.
+    - Save the uploaded FCS path into page state.
+    - Save the uploaded filename into page state.
     - Synchronize the uploaded path into runtime-config-store.
     """
 
     def __init__(self, page) -> None:
         self.page = page
         self.ids = page.ids.Upload
+
         logger.debug("Initialized Upload section with page=%r", page)
 
     def _get_initial_scattering_fcs_file_path(self) -> Optional[str]:
         """
         Use the default profile only for initial layout construction.
 
-        Live session state must come from runtime-config-store inside callbacks.
+        Live session state must come from the page state store inside callbacks.
         """
         runtime_config = RuntimeConfig.from_default_profile()
 
@@ -60,7 +61,6 @@ class Upload:
                 self._build_hero_section(),
                 html.Div(style={"height": "16px"}),
                 self._build_upload_card(
-                    initial_fcs_path=initial_fcs_path,
                     initial_filename=initial_filename,
                 ),
             ]
@@ -86,7 +86,6 @@ class Upload:
     def _build_upload_card(
         self,
         *,
-        initial_fcs_path: Optional[str],
         initial_filename: str,
     ) -> dbc.Card:
         return dbc.Card(
@@ -94,16 +93,6 @@ class Upload:
                 dbc.CardHeader("1. Upload FCS File"),
                 dbc.CardBody(
                     [
-                        dcc.Store(
-                            id=self.ids.fcs_path_store,
-                            data=initial_fcs_path,
-                            storage_type="session",
-                        ),
-                        dcc.Store(
-                            id=self.ids.filename_store,
-                            data=initial_filename,
-                            storage_type="session",
-                        ),
                         dcc.Upload(
                             id=self.ids.upload,
                             children=html.Div(
@@ -118,6 +107,7 @@ class Upload:
                         ),
                         html.Div(
                             id=self.ids.filename,
+                            children=self._format_filename(initial_filename),
                         ),
                     ],
                     style=styling.PAGE["card_body_scroll"],
@@ -130,44 +120,48 @@ class Upload:
         Register callbacks for the upload section.
         """
         logger.debug("Registering Upload section callbacks.")
+
         self._register_filename_display_callback()
         self._register_upload_callback()
 
     def _register_filename_display_callback(self) -> None:
         @callback(
             Output(self.ids.filename, "children"),
-            Input(self.ids.filename_store, "data"),
+            Input(self.page.ids.State.page_state_store, "data"),
         )
-        def show_filename(stored_filename: Any) -> str:
+        def show_filename(page_state_payload: Any) -> str:
             logger.debug(
-                "show_filename called with stored_filename=%r",
-                stored_filename,
+                "show_filename called with page_state_payload_type=%s",
+                type(page_state_payload).__name__,
             )
 
-            if not stored_filename:
-                return ""
+            page_state = ScatteringPageState.from_dict(
+                page_state_payload if isinstance(page_state_payload, dict) else None
+            )
 
-            return f"Loaded file: {stored_filename}"
+            return self._format_filename(page_state.uploaded_filename)
 
     def _register_upload_callback(self) -> None:
         @callback(
-            Output(self.ids.fcs_path_store, "data"),
-            Output(self.ids.filename_store, "data"),
+            Output(self.page.ids.State.page_state_store, "data"),
             Output("runtime-config-store", "data", allow_duplicate=True),
             Input(self.ids.upload, "contents"),
             State(self.ids.upload, "filename"),
+            State(self.page.ids.State.page_state_store, "data"),
             State("runtime-config-store", "data"),
             prevent_initial_call=True,
         )
         def handle_upload(
             contents: Any,
             filename: Any,
+            page_state_payload: Any,
             runtime_config_data: Any,
-        ) -> tuple[Any, Any, Any]:
+        ) -> tuple[Any, Any]:
             logger.debug(
-                "handle_upload called with contents_type=%s filename=%r runtime_config_data_type=%s",
+                "handle_upload called with contents_type=%s filename=%r page_state_payload_type=%s runtime_config_data_type=%s",
                 type(contents).__name__,
                 filename,
+                type(page_state_payload).__name__,
                 type(runtime_config_data).__name__,
             )
 
@@ -180,6 +174,15 @@ class Upload:
                 else None,
             )
 
+            page_state = ScatteringPageState.from_dict(
+                page_state_payload if isinstance(page_state_payload, dict) else None
+            )
+
+            page_state = page_state.update(
+                uploaded_fcs_path=upload_state.uploaded_fcs_path,
+                uploaded_filename=upload_state.uploaded_filename,
+            )
+
             logger.debug(
                 "handle_upload returning uploaded_fcs_path=%r uploaded_filename=%r",
                 upload_state.uploaded_fcs_path,
@@ -187,7 +190,25 @@ class Upload:
             )
 
             return (
-                upload_state.uploaded_fcs_path,
-                upload_state.uploaded_filename,
+                page_state.to_dict(),
                 upload_state.runtime_config_data,
             )
+
+    def _format_filename(self, filename: Optional[str]) -> str:
+        """
+        Format the uploaded filename for display.
+
+        Parameters
+        ----------
+        filename:
+            Uploaded filename.
+
+        Returns
+        -------
+        str
+            Display text.
+        """
+        if not filename:
+            return ""
+
+        return f"Loaded file: {filename}"

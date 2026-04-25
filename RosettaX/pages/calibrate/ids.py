@@ -6,6 +6,9 @@ class Ids:
     class Page:
         location = f"{page_name}-location"
 
+    class State:
+        page_state_store = f"{page_name}-page-state-store"
+
     class Stores:
         selected_calibration_path_store = f"{page_name}-selected-calibration-path-store"
         uploaded_fcs_path_store = f"{page_name}-uploaded-fcs-path-store"

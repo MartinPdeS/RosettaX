@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
-
-from typing import Any, Optional
 import logging
+from typing import Any, Optional
 
 import dash
 import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
 
-from RosettaX.utils import styling
-from RosettaX.utils import plottings
-from RosettaX.utils.runtime_config import RuntimeConfig
-
+from RosettaX.pages.scattering.state import ScatteringPageState
 from RosettaX.peak_script import DEFAULT_PROCESS_NAME
+from RosettaX.utils import plottings, styling
+from RosettaX.utils.runtime_config import RuntimeConfig
 
 from . import services
 
@@ -37,28 +35,38 @@ class Peaks:
 
     Adding a new process should only require adding a new file under
     RosettaX/peak_script.
+
+    State ownership
+    ---------------
+    Uploaded FCS path and peak line payloads are stored in the page state store.
+    This section no longer reads or writes section specific Dash stores for
+    those values.
     """
 
     def __init__(self, page) -> None:
         self.page = page
-        logger.debug("Initialized Scattering section with page=%r", page)
+
+        logger.debug("Initialized Scattering Peaks section with page=%r", page)
 
     def _get_default_runtime_config(self) -> RuntimeConfig:
         """
         Use the default profile only for initial layout construction.
 
-        Live session state must come from runtime-config-store inside callbacks.
+        Live session state must come from runtime-config-store and page state
+        inside callbacks.
         """
         return RuntimeConfig.from_default_profile()
 
     def _get_default_show_graphs(self) -> bool:
         runtime_config = self._get_default_runtime_config()
+
         return runtime_config.get_show_graphs(
             default=True,
         )
 
     def _get_default_n_bins_for_plots(self) -> int:
         runtime_config = self._get_default_runtime_config()
+
         return runtime_config.get_int(
             "calibration.n_bins_for_plots",
             default=100,
@@ -66,13 +74,15 @@ class Peaks:
 
     def _get_default_histogram_scale(self) -> str:
         runtime_config = self._get_default_runtime_config()
+
         return runtime_config.get_str(
             "calibration.histogram_scale",
             default="log",
         )
 
     def get_layout(self) -> dbc.Card:
-        logger.debug("Building Scattering layout.")
+        logger.debug("Building Scattering Peaks layout.")
+
         return dbc.Card(
             [
                 self._build_header(),
@@ -242,7 +252,8 @@ class Peaks:
         )
 
     def register_callbacks(self) -> None:
-        logger.debug("Registering Scattering callbacks.")
+        logger.debug("Registering Scattering Peaks callbacks.")
+
         self._register_peak_script_detector_dropdowns_callback()
         self._register_runtime_sync_callback()
         self._register_process_visibility_callback()
@@ -264,7 +275,7 @@ class Peaks:
                 self.page.ids.Scattering.process_detector_dropdown_pattern(),
                 "value",
             ),
-            dash.Input(self.page.ids.Upload.fcs_path_store, "data"),
+            dash.Input(self.page.ids.State.page_state_store, "data"),
             dash.State(
                 self.page.ids.Scattering.process_detector_dropdown_pattern(),
                 "id",
@@ -276,21 +287,25 @@ class Peaks:
             prevent_initial_call=False,
         )
         def populate_peak_script_detector_dropdowns(
-            uploaded_fcs_path: Any,
+            page_state_payload: Any,
             detector_dropdown_ids: list[dict[str, Any]],
             current_detector_values: list[Any],
         ) -> tuple[list[list[dict[str, Any]]], list[Any]]:
+            page_state = ScatteringPageState.from_dict(
+                page_state_payload if isinstance(page_state_payload, dict) else None
+            )
+
             logger.debug(
                 "populate_peak_script_detector_dropdowns called with "
                 "uploaded_fcs_path=%r detector_dropdown_ids=%r "
                 "current_detector_values=%r",
-                uploaded_fcs_path,
+                page_state.uploaded_fcs_path,
                 detector_dropdown_ids,
                 current_detector_values,
             )
 
             return services.populate_peak_script_detector_dropdowns(
-                uploaded_fcs_path=uploaded_fcs_path,
+                uploaded_fcs_path=page_state.uploaded_fcs_path,
                 detector_dropdown_ids=detector_dropdown_ids,
                 current_detector_values=current_detector_values,
                 logger=logger,
@@ -449,7 +464,7 @@ class Peaks:
     def _register_peak_context_reset_callback(self) -> None:
         @dash.callback(
             dash.Output(
-                self.page.ids.Scattering.peak_lines_store,
+                self.page.ids.State.page_state_store,
                 "data",
                 allow_duplicate=True,
             ),
@@ -458,12 +473,12 @@ class Peaks:
                 "children",
                 allow_duplicate=True,
             ),
-            dash.Input(self.page.ids.Upload.fcs_path_store, "data"),
             dash.Input(self.page.ids.Scattering.process_dropdown, "value"),
             dash.Input(
                 self.page.ids.Scattering.process_detector_dropdown_pattern(),
                 "value",
             ),
+            dash.State(self.page.ids.State.page_state_store, "data"),
             dash.State(
                 self.page.ids.Scattering.process_status_pattern(),
                 "id",
@@ -471,21 +486,29 @@ class Peaks:
             prevent_initial_call=True,
         )
         def clear_peak_lines_on_context_change(
-            uploaded_fcs_path: Any,
             process_name: Any,
             detector_dropdown_values: list[Any],
+            page_state_payload: Any,
             status_component_ids: list[dict[str, Any]],
-        ) -> tuple[dict[str, list[Any]], list[str]]:
+        ) -> tuple[dict[str, Any], list[str]]:
+            page_state = ScatteringPageState.from_dict(
+                page_state_payload if isinstance(page_state_payload, dict) else None
+            )
+
             logger.debug(
                 "clear_peak_lines_on_context_change called with uploaded_fcs_path=%r "
                 "process_name=%r detector_dropdown_values=%r",
-                uploaded_fcs_path,
+                page_state.uploaded_fcs_path,
                 process_name,
                 detector_dropdown_values,
             )
 
+            page_state = page_state.update(
+                peak_lines_payload=services.build_empty_peak_lines_payload(),
+            )
+
             return (
-                services.build_empty_peak_lines_payload(),
+                page_state.to_dict(),
                 [
                     ""
                     for _ in (status_component_ids or [])
@@ -497,9 +520,8 @@ class Peaks:
             dash.Output(self.page.ids.Scattering.graph_hist, "figure"),
             dash.Input(self.page.ids.Scattering.graph_toggle_switch, "value"),
             dash.Input(self.page.ids.Scattering.yscale_switch, "value"),
-            dash.Input(self.page.ids.Upload.fcs_path_store, "data"),
+            dash.Input(self.page.ids.State.page_state_store, "data"),
             dash.Input(self.page.ids.Scattering.nbins_input, "value"),
-            dash.Input(self.page.ids.Scattering.peak_lines_store, "data"),
             dash.State(
                 self.page.ids.Scattering.process_detector_dropdown_pattern(),
                 "id",
@@ -528,9 +550,8 @@ class Peaks:
         def update_scattering_graph(
             graph_toggle_value: Any,
             yscale_selection: Any,
-            uploaded_fcs_path: Any,
+            page_state_payload: Any,
             scattering_nbins: Any,
-            peak_lines: Any,
             detector_dropdown_ids: list[dict[str, Any]],
             detector_dropdown_values: list[Any],
             process_name: Any,
@@ -539,17 +560,22 @@ class Peaks:
             max_events_for_plots: Any,
             runtime_config_data: Any,
         ) -> go.Figure:
+            page_state = ScatteringPageState.from_dict(
+                page_state_payload if isinstance(page_state_payload, dict) else None
+            )
+
             logger.debug(
                 "update_scattering_graph called with graph_toggle_value=%r "
                 "yscale_selection=%r uploaded_fcs_path=%r scattering_nbins=%r "
-                "peak_lines=%r detector_dropdown_ids=%r detector_dropdown_values=%r "
-                "process_name=%r process_setting_ids=%r process_setting_values=%r "
+                "peak_lines_payload=%r detector_dropdown_ids=%r "
+                "detector_dropdown_values=%r process_name=%r "
+                "process_setting_ids=%r process_setting_values=%r "
                 "max_events_for_plots=%r",
                 graph_toggle_value,
                 yscale_selection,
-                uploaded_fcs_path,
+                page_state.uploaded_fcs_path,
                 scattering_nbins,
-                peak_lines,
+                page_state.peak_lines_payload,
                 detector_dropdown_ids,
                 detector_dropdown_values,
                 process_name,
@@ -561,7 +587,7 @@ class Peaks:
             try:
                 return services.build_scattering_graph_figure(
                     backend=self.page.backend,
-                    uploaded_fcs_path=uploaded_fcs_path,
+                    uploaded_fcs_path=page_state.uploaded_fcs_path,
                     process_name=process_name,
                     detector_dropdown_ids=detector_dropdown_ids,
                     detector_dropdown_values=detector_dropdown_values,
@@ -570,12 +596,14 @@ class Peaks:
                     graph_toggle_value=graph_toggle_value,
                     yscale_selection=yscale_selection,
                     scattering_nbins=scattering_nbins,
-                    peak_lines_payload=peak_lines,
+                    peak_lines_payload=page_state.peak_lines_payload,
                     max_events_for_plots=max_events_for_plots,
                     runtime_config_data=runtime_config_data,
                 )
+
             except Exception as exc:
                 logger.exception("Failed to build scattering graph.")
+
                 return plottings._make_info_figure(
                     f"{type(exc).__name__}: {exc}"
                 )
@@ -588,7 +616,7 @@ class Peaks:
                 allow_duplicate=True,
             ),
             dash.Output(
-                self.page.ids.Scattering.peak_lines_store,
+                self.page.ids.State.page_state_store,
                 "data",
                 allow_duplicate=True,
             ),
@@ -599,7 +627,7 @@ class Peaks:
             ),
             dash.Input(self.page.ids.Scattering.graph_hist, "clickData"),
             dash.State(self.page.ids.Scattering.process_dropdown, "value"),
-            dash.State(self.page.ids.Upload.fcs_path_store, "data"),
+            dash.State(self.page.ids.State.page_state_store, "data"),
             dash.State(
                 self.page.ids.Scattering.process_detector_dropdown_pattern(),
                 "id",
@@ -608,7 +636,6 @@ class Peaks:
                 self.page.ids.Scattering.process_detector_dropdown_pattern(),
                 "value",
             ),
-            dash.State(self.page.ids.Scattering.peak_lines_store, "data"),
             dash.State(self.page.ids.Calibration.bead_table, "data"),
             dash.State(self.page.ids.Parameters.mie_model, "value"),
             dash.State(
@@ -620,34 +647,39 @@ class Peaks:
         def add_manual_peak_from_graph_click(
             click_data: Any,
             process_name: Any,
-            uploaded_fcs_path: Any,
+            page_state_payload: Any,
             detector_dropdown_ids: list[dict[str, Any]],
             detector_dropdown_values: list[Any],
-            peak_lines: Any,
             table_data: Optional[list[dict[str, Any]]],
             mie_model: Any,
             status_component_ids: list[dict[str, Any]],
         ) -> tuple[Any, Any, list[Any]]:
+            page_state = ScatteringPageState.from_dict(
+                page_state_payload if isinstance(page_state_payload, dict) else None
+            )
+
             logger.debug(
                 "add_manual_peak_from_graph_click called with click_data=%r "
                 "process_name=%r uploaded_fcs_path=%r detector_dropdown_ids=%r "
-                "detector_dropdown_values=%r table_rows=%r mie_model=%r",
+                "detector_dropdown_values=%r table_rows=%r mie_model=%r "
+                "peak_lines_payload=%r",
                 click_data,
                 process_name,
-                uploaded_fcs_path,
+                page_state.uploaded_fcs_path,
                 detector_dropdown_ids,
                 detector_dropdown_values,
                 None if table_data is None else len(table_data),
                 mie_model,
+                page_state.peak_lines_payload,
             )
 
             table_result, peak_lines_result, status = services.resolve_manual_peak_click(
                 click_data=click_data,
                 process_name=process_name,
-                uploaded_fcs_path=uploaded_fcs_path,
+                uploaded_fcs_path=page_state.uploaded_fcs_path,
                 detector_dropdown_ids=detector_dropdown_ids,
                 detector_dropdown_values=detector_dropdown_values,
-                peak_lines_payload=peak_lines,
+                peak_lines_payload=page_state.peak_lines_payload,
                 table_data=table_data,
                 mie_model=mie_model,
                 logger=logger,
@@ -662,7 +694,11 @@ class Peaks:
             if table_result is None:
                 return dash.no_update, dash.no_update, status_children
 
-            return table_result, peak_lines_result, status_children
+            page_state = page_state.update(
+                peak_lines_payload=peak_lines_result,
+            )
+
+            return table_result, page_state.to_dict(), status_children
 
     def _register_process_action_callback(self) -> None:
         @dash.callback(
@@ -672,7 +708,7 @@ class Peaks:
                 allow_duplicate=True,
             ),
             dash.Output(
-                self.page.ids.Scattering.peak_lines_store,
+                self.page.ids.State.page_state_store,
                 "data",
                 allow_duplicate=True,
             ),
@@ -690,7 +726,7 @@ class Peaks:
                 "id",
             ),
             dash.State(self.page.ids.Scattering.process_dropdown, "value"),
-            dash.State(self.page.ids.Upload.fcs_path_store, "data"),
+            dash.State(self.page.ids.State.page_state_store, "data"),
             dash.State(
                 self.page.ids.Scattering.process_detector_dropdown_pattern(),
                 "id",
@@ -718,7 +754,7 @@ class Peaks:
             action_clicks: list[Any],
             action_ids: list[dict[str, Any]],
             process_name: Any,
-            uploaded_fcs_path: Optional[str],
+            page_state_payload: Any,
             detector_dropdown_ids: list[dict[str, Any]],
             detector_dropdown_values: list[Any],
             peak_count: Any,
@@ -733,13 +769,17 @@ class Peaks:
 
             triggered_action_id = dash.ctx.triggered_id
 
+            page_state = ScatteringPageState.from_dict(
+                page_state_payload if isinstance(page_state_payload, dict) else None
+            )
+
             logger.debug(
                 "run_process_action called with triggered_action_id=%r "
                 "process_name=%r uploaded_fcs_path=%r detector_dropdown_ids=%r "
                 "detector_dropdown_values=%r peak_count=%r max_events_for_plots=%r",
                 triggered_action_id,
                 process_name,
-                uploaded_fcs_path,
+                page_state.uploaded_fcs_path,
                 detector_dropdown_ids,
                 detector_dropdown_values,
                 peak_count,
@@ -751,7 +791,7 @@ class Peaks:
                     triggered_action_id=triggered_action_id,
                     backend=self.page.backend,
                     process_name=process_name,
-                    uploaded_fcs_path=uploaded_fcs_path,
+                    uploaded_fcs_path=page_state.uploaded_fcs_path,
                     detector_dropdown_ids=detector_dropdown_ids,
                     detector_dropdown_values=detector_dropdown_values,
                     peak_count=peak_count,
@@ -772,4 +812,8 @@ class Peaks:
             if table_result is None:
                 return dash.no_update, dash.no_update, status_children
 
-            return table_result, peak_lines_result, status_children
+            page_state = page_state.update(
+                peak_lines_payload=peak_lines_result,
+            )
+
+            return table_result, page_state.to_dict(), status_children

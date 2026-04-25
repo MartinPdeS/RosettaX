@@ -8,16 +8,11 @@ from RosettaX.pages.scattering.sections.s05_save.ids import SaveSectionIds
 
 PAGE_NAME = "scattering_calibration"
 
-
 class Ids:
-    """
-    Scattering calibration page IDs.
-
-    Each section owns its own ID factory. This keeps the page-level ID namespace
-    explicit while avoiding nested string-only classes.
-    """
-
     page_name = PAGE_NAME
+
+    class State:
+        page_state_store = f"{PAGE_NAME}-page-state-store"
 
     Upload = UploadSectionIds(
         prefix=PAGE_NAME,

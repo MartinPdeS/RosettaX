@@ -7,8 +7,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
 
-import dash
-
 from RosettaX.pages.scattering.backend import BackEnd
 from RosettaX.utils.runtime_config import RuntimeConfig
 
@@ -19,12 +17,15 @@ logger = logging.getLogger(__name__)
 @dataclass(frozen=True)
 class UploadState:
     """
-    Container for the upload callback outputs.
+    Container for the scattering upload service result.
+
+    This object is intentionally independent from Dash. The callback decides how
+    to map this result into page state, runtime config state, or UI outputs.
     """
 
-    uploaded_fcs_path: Any = dash.no_update
-    uploaded_filename: Any = dash.no_update
-    runtime_config_data: Any = dash.no_update
+    uploaded_fcs_path: Optional[str]
+    uploaded_filename: Optional[str]
+    runtime_config_data: dict[str, Any]
 
 
 def write_upload_to_tempfile(
@@ -47,6 +48,11 @@ def write_upload_to_tempfile(
     -------
     str
         Path to the written temporary file.
+
+    Raises
+    ------
+    ValueError
+        If the upload contents do not contain a base64 payload.
     """
     logger.debug(
         "write_upload_to_tempfile called with filename=%r contents_type=%s",
@@ -63,6 +69,7 @@ def write_upload_to_tempfile(
 
     file_suffix = Path(filename).suffix or ".bin"
     temporary_directory = Path(tempfile.gettempdir()) / "rosettax_uploads"
+
     temporary_directory.mkdir(
         parents=True,
         exist_ok=True,
@@ -93,23 +100,46 @@ def build_upload_state(
     runtime_config_data: Optional[dict[str, Any]],
 ) -> UploadState:
     """
-    Build the upload state after a Dash upload event.
+    Build the scattering upload state after a Dash upload event.
 
-    This writes the uploaded FCS file to a temporary location, updates the runtime
-    config, and initializes the scattering backend.
+    This service writes the uploaded FCS file to a temporary location, updates
+    the runtime config payload, and initializes the scattering backend.
+
+    Parameters
+    ----------
+    page:
+        Scattering page instance. Currently used to attach the initialized
+        backend instance.
+
+    contents:
+        Dash upload contents string.
+
+    filename:
+        Uploaded filename.
+
+    runtime_config_data:
+        Serialized runtime config payload.
+
+    Returns
+    -------
+    UploadState
+        Upload result containing the temporary FCS path, filename, and updated
+        runtime config payload.
     """
     logger.debug(
-        "build_upload_state called with has_contents=%r filename=%r",
+        "build_upload_state called with has_contents=%r filename=%r runtime_config_data_type=%s",
         bool(contents),
         filename,
+        type(runtime_config_data).__name__,
     )
 
     runtime_config = RuntimeConfig.from_dict(
-        runtime_config_data,
+        runtime_config_data if isinstance(runtime_config_data, dict) else None,
     )
 
     if not contents or not filename:
-        logger.debug("No upload payload provided. Returning empty UploadState.")
+        logger.debug("No upload payload provided. Clearing scattering backend.")
+
         page.backend = None
 
         return UploadState(

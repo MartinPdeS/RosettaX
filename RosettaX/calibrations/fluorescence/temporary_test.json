@@ -1,0 +1,46 @@
+{
+  "created_at": "2026-04-25T12:24:27",
+  "kind": "fluorescence",
+  "name": "temporary_test",
+  "payload": {
+    "calibration_type": "fluorescence",
+    "created_at": "",
+    "export_notes": "",
+    "fit_metrics": {
+      "point_count": 2,
+      "r_squared": 1
+    },
+    "fit_model": "log10(y)=slope*log10(x)+intercept; y=(10**intercept) * x**slope",
+    "gating_channel": null,
+    "gating_threshold": null,
+    "name": "",
+    "parameters": {
+      "intercept": -0.5838620919766576,
+      "prefactor": 0.26069812523298286,
+      "slope": 0.21598193102772079
+    },
+    "payload": {
+      "R_squared": 1,
+      "intercept": -0.5838620919766576,
+      "model": "log10(y)=slope*log10(x)+intercept; y=(10**intercept) * x**slope",
+      "prefactor": 0.26069812523298286,
+      "slope": 0.21598193102772079,
+      "x_definition": "Intensity [a.u.]",
+      "y_definition": "Intensity [calibrated units]"
+    },
+    "reference_points": [
+      {
+        "measured_value": 505,
+        "reference_value": 1
+      },
+      {
+        "measured_value": 81728,
+        "reference_value": 3
+      }
+    ],
+    "schema_version": "1.0",
+    "source_channel": "405SALS(Peak)",
+    "source_file": "tmplm2i35w7.fcs"
+  },
+  "schema": "rosettax_calibration_v1"
+}

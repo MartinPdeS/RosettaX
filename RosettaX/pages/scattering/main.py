@@ -1,9 +1,20 @@
+# -*- coding: utf-8 -*-
 import dash
 
-from RosettaX.pages.scattering.ids import Ids
-from RosettaX.pages.scattering import sections
+from . import sections
+from .ids import Ids
+from .state import ScatteringPageState
+
 
 class ScatterCalibrationPage:
+    """
+    Scattering calibration page.
+
+    The page owns one serialized page state store. Individual sections should
+    progressively migrate away from section-specific stores and use the page
+    state as the single source of truth.
+    """
+
     def __init__(self) -> None:
         self.ids = Ids()
         self.backend = None
@@ -17,17 +28,34 @@ class ScatterCalibrationPage:
         ]
 
     def register_callbacks(self) -> "ScatterCalibrationPage":
+        """
+        Register all section callbacks.
+
+        Returns
+        -------
+        ScatterCalibrationPage
+            Current page instance.
+        """
         for section in self.sections:
             section.register_callbacks()
+
         return self
 
     def layout(self) -> dash.html.Div:
+        """
+        Build the scattering calibration page layout.
+
+        Returns
+        -------
+        dash.html.Div
+            Page layout.
+        """
         return dash.html.Div(
             [
                 dash.dcc.Store(
-                    id=self.ids.Scattering.peak_lines_store,
+                    id=self.ids.State.page_state_store,
+                    data=ScatteringPageState.empty().to_dict(),
                     storage_type="session",
-                    data={"positions": [], "labels": []},
                 ),
                 dash.html.Br(),
                 *[section.get_layout() for section in self.sections],
