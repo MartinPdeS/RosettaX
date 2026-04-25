@@ -314,3 +314,55 @@ def get_default_script_name(
         return None
 
     return str(scripts[0].process_name)
+
+
+def resolve_detector_channel_state(
+    *,
+    detector_dropdown_ids: list[dict[str, Any]],
+    detector_dropdown_values: list[Any],
+    process_name: Any,
+) -> dict[str, Any]:
+    """
+    Resolve detector dropdown values for one selected peak process.
+
+    Parameters
+    ----------
+    detector_dropdown_ids:
+        Pattern matched detector dropdown IDs.
+
+    detector_dropdown_values:
+        Pattern matched detector dropdown values.
+
+    process_name:
+        Selected peak process name.
+
+    Returns
+    -------
+    dict[str, Any]
+        Mapping from required process channel name to selected detector column.
+    """
+    resolved_process_name = resolve_process_name(
+        process_name,
+    )
+
+    detector_channel_state: dict[str, Any] = {}
+
+    for detector_dropdown_id, detector_dropdown_value in zip(
+        detector_dropdown_ids or [],
+        detector_dropdown_values or [],
+        strict=False,
+    ):
+        if not isinstance(detector_dropdown_id, dict):
+            continue
+
+        if detector_dropdown_id.get("process") != resolved_process_name:
+            continue
+
+        channel_name = detector_dropdown_id.get("channel")
+
+        if not channel_name:
+            continue
+
+        detector_channel_state[str(channel_name)] = detector_dropdown_value
+
+    return detector_channel_state

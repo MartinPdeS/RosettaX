@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
 
+from typing import Any
 import logging
-from typing import Any, Optional
 
 import dash
 import dash_bootstrap_components as dbc
-import plotly.graph_objs as go
 
-from RosettaX.pages.scattering.state import ScatteringPageState
-from RosettaX.peak_script import DEFAULT_PROCESS_NAME
-from RosettaX.utils import plottings, styling
+from RosettaX.peak_script.registry import DEFAULT_PROCESS_NAME
+from RosettaX.peak_script.registry import get_peak_process_instances
+from RosettaX.peak_workflow.callbacks import PeakWorkflowCallbacks
+from RosettaX.peak_workflow import layout as peak_layout
 from RosettaX.utils.runtime_config import RuntimeConfig
 
-from . import services
+from .adapters import ScatteringPeakWorkflowAdapter
 
 
 logger = logging.getLogger(__name__)
@@ -22,291 +22,31 @@ class Peaks:
     """
     Render and manage scattering peak detection.
 
-    Design
-    ------
-    This section discovers peak process scripts dynamically from
-    RosettaX/peak_script.
-
-    Mutation model
-    --------------
-    This section uses a single reducer style mutation callback for all peak
-    workflow state changes.
-
-    That callback handles:
-    - process changes
-    - detector dropdown changes
-    - manual graph clicks
-    - automatic process action buttons
-
-    This avoids callback races where one callback writes peak lines while another
-    callback clears them immediately afterward.
+    This section now delegates the generic peak workflow to
+    RosettaX.peak_workflow. Only scattering specific behavior remains in the
+    ScatteringPeakWorkflowAdapter.
     """
 
     def __init__(self, page) -> None:
         self.page = page
+        self.ids = page.ids.Scattering
+        self.adapter = ScatteringPeakWorkflowAdapter()
 
-        logger.debug("Initialized Scattering Peaks section with page=%r", page)
+        logger.debug(
+            "Initialized Scattering Peaks section with page=%r",
+            page,
+        )
 
     def _get_default_runtime_config(self) -> RuntimeConfig:
         """
-        Use the default profile only for initial layout construction.
+        Return the default runtime config used for initial layout values.
 
-        Live session state must come from runtime-config-store and page state
-        inside callbacks.
+        Returns
+        -------
+        RuntimeConfig
+            Default runtime config.
         """
         return RuntimeConfig.from_default_profile()
-
-    def _get_default_show_graphs(self) -> bool:
-        runtime_config = self._get_default_runtime_config()
-
-        return runtime_config.get_show_graphs(
-            default=True,
-        )
-
-    def _get_default_n_bins_for_plots(self) -> int:
-        runtime_config = self._get_default_runtime_config()
-
-        return runtime_config.get_int(
-            "calibration.n_bins_for_plots",
-            default=100,
-        )
-
-    def _get_default_histogram_scale(self) -> str:
-        runtime_config = self._get_default_runtime_config()
-
-        return runtime_config.get_str(
-            "calibration.histogram_scale",
-            default="log",
-        )
-
-    def get_layout(self) -> dbc.Card:
-        logger.debug("Building Scattering Peaks layout.")
-
-        return dbc.Card(
-            [
-                self._build_header(),
-                self._build_body(),
-            ]
-        )
-
-    def _build_header(self) -> dbc.CardHeader:
-        return dbc.CardHeader("2. Scattering peak detection")
-
-    def _build_body(self) -> dbc.CardBody:
-        return dbc.CardBody(
-            [
-                self._build_process_selector(),
-                dash.html.Br(),
-                self._build_process_controls(),
-                dash.html.Br(),
-                self._build_graph_toggle_switch(),
-                dash.html.Br(),
-                self._build_graph_controls_container(),
-            ]
-        )
-
-    def _build_process_selector(self) -> dash.html.Div:
-        return dash.html.Div(
-            [
-                dash.html.Div(
-                    "Peak detection process:",
-                    style={
-                        "marginBottom": "6px",
-                        "fontWeight": 500,
-                    },
-                ),
-                dash.dcc.Dropdown(
-                    id=self.page.ids.Scattering.process_dropdown,
-                    options=services.build_process_options(),
-                    value=self._get_default_peak_process(),
-                    clearable=False,
-                    searchable=False,
-                    persistence=True,
-                    persistence_type="session",
-                    style={
-                        "width": "500px",
-                    },
-                ),
-            ],
-            style=styling.CARD,
-        )
-
-    def _build_process_controls(self) -> dash.html.Div:
-        return dash.html.Div(
-            [
-                process.build_controls(
-                    ids=self.page.ids.Scattering,
-                )
-                for process in services.get_peak_processes()
-            ]
-        )
-
-    def _build_graph_toggle_switch(self) -> dash.html.Div:
-        return dash.html.Div(
-            [
-                dbc.Checklist(
-                    id=self.page.ids.Scattering.graph_toggle_switch,
-                    options=[
-                        {
-                            "label": "Show graph",
-                            "value": "enabled",
-                        }
-                    ],
-                    value=["enabled"] if self._get_default_show_graphs() else [],
-                    switch=True,
-                    persistence=True,
-                    persistence_type="session",
-                ),
-            ],
-            style=styling.CARD,
-        )
-
-    def _build_graph_controls_container(self) -> dash.html.Div:
-        return dash.html.Div(
-            [
-                self._build_graph(),
-                dash.html.Br(),
-                dash.html.Div(
-                    [
-                        self._build_yscale_switch(),
-                        self._build_nbins_input(),
-                    ],
-                    id=self.page.ids.Scattering.histogram_controls_container,
-                    style={
-                        "display": "flex",
-                        "alignItems": "center",
-                        "gap": "16px",
-                        "flexWrap": "wrap",
-                    },
-                ),
-            ],
-            id=self.page.ids.Scattering.graph_toggle_container,
-            style={
-                "display": "none",
-            },
-        )
-
-    def _build_graph(self) -> dash.dcc.Loading:
-        return dash.dcc.Loading(
-            dash.dcc.Graph(
-                id=self.page.ids.Scattering.graph_hist,
-                style=styling.PAGE["graph"],
-                config={
-                    "displayModeBar": True,
-                    "scrollZoom": True,
-                    "doubleClick": "reset",
-                    "responsive": True,
-                },
-            ),
-            type="default",
-        )
-
-    def _build_yscale_switch(self) -> dbc.Checklist:
-        histogram_scale = self._get_default_histogram_scale()
-
-        return dbc.Checklist(
-            id=self.page.ids.Scattering.yscale_switch,
-            options=[
-                {
-                    "label": "Log scale",
-                    "value": "log",
-                }
-            ],
-            value=["log"] if histogram_scale == "log" else [],
-            switch=True,
-            style={
-                "display": "block",
-            },
-            persistence=True,
-            persistence_type="session",
-        )
-
-    def _build_nbins_input(self) -> dash.html.Div:
-        return dash.html.Div(
-            [
-                dash.html.Div(
-                    "Number of bins:",
-                    style={
-                        "marginRight": "8px",
-                    },
-                ),
-                dash.dcc.Input(
-                    id=self.page.ids.Scattering.nbins_input,
-                    type="number",
-                    min=10,
-                    step=10,
-                    value=self._get_default_n_bins_for_plots(),
-                    style={
-                        "width": "160px",
-                    },
-                    debounce=True,
-                    persistence=True,
-                    persistence_type="session",
-                ),
-            ],
-            style={
-                "display": "flex",
-                "alignItems": "center",
-            },
-        )
-
-    def register_callbacks(self) -> None:
-        logger.debug("Registering Scattering Peaks callbacks.")
-
-        self._register_peak_script_detector_dropdowns_callback()
-        self._register_runtime_sync_callback()
-        self._register_process_visibility_callback()
-        self._register_manual_process_graph_visibility_callback()
-        self._register_graph_visibility_callback()
-        self._register_histogram_controls_visibility_callback()
-        self._register_graph_callback()
-        self._register_peak_workflow_mutation_callback()
-
-    def _register_peak_script_detector_dropdowns_callback(self) -> None:
-        @dash.callback(
-            dash.Output(
-                self.page.ids.Scattering.process_detector_dropdown_pattern(),
-                "options",
-            ),
-            dash.Output(
-                self.page.ids.Scattering.process_detector_dropdown_pattern(),
-                "value",
-            ),
-            dash.Input(self.page.ids.State.page_state_store, "data"),
-            dash.State(
-                self.page.ids.Scattering.process_detector_dropdown_pattern(),
-                "id",
-            ),
-            dash.State(
-                self.page.ids.Scattering.process_detector_dropdown_pattern(),
-                "value",
-            ),
-            prevent_initial_call=False,
-        )
-        def populate_peak_script_detector_dropdowns(
-            page_state_payload: Any,
-            detector_dropdown_ids: list[dict[str, Any]],
-            current_detector_values: list[Any],
-        ) -> tuple[list[list[dict[str, Any]]], list[Any]]:
-            page_state = ScatteringPageState.from_dict(
-                page_state_payload if isinstance(page_state_payload, dict) else None
-            )
-
-            logger.debug(
-                "populate_peak_script_detector_dropdowns called with "
-                "uploaded_fcs_path=%r detector_dropdown_ids=%r "
-                "current_detector_values=%r",
-                page_state.uploaded_fcs_path,
-                detector_dropdown_ids,
-                current_detector_values,
-            )
-
-            return services.populate_peak_script_detector_dropdowns(
-                uploaded_fcs_path=page_state.uploaded_fcs_path,
-                detector_dropdown_ids=detector_dropdown_ids,
-                current_detector_values=current_detector_values,
-                logger=logger,
-            )
 
     def _get_default_peak_process(self) -> str:
         """
@@ -324,576 +64,131 @@ class Peaks:
             default=DEFAULT_PROCESS_NAME,
         )
 
+    def _get_default_show_graphs(self) -> bool:
+        """
+        Return whether graphs should be shown by default.
 
-    def _register_runtime_sync_callback(self) -> None:
-        @dash.callback(
-            dash.Output(self.page.ids.Scattering.peak_count_input, "value"),
-            dash.Output(self.page.ids.Scattering.nbins_input, "value"),
-            dash.Output(self.page.ids.Scattering.graph_toggle_switch, "value"),
-            dash.Output(self.page.ids.Scattering.yscale_switch, "value"),
-            dash.Input("runtime-config-store", "data"),
-            prevent_initial_call=False,
+        Returns
+        -------
+        bool
+            True if graphs should be shown.
+        """
+        runtime_config = self._get_default_runtime_config()
+
+        return runtime_config.get_show_graphs(
+            default=True,
         )
-        def sync_controls_from_runtime_store(
-            runtime_config_data: Any,
-        ) -> tuple[Any, Any, Any, Any]:
-            logger.debug(
-                "sync_controls_from_runtime_store called with runtime_config_data=%r",
-                runtime_config_data,
-            )
 
-            runtime_config = RuntimeConfig.from_dict(
-                runtime_config_data if isinstance(runtime_config_data, dict) else None
-            )
+    def _get_default_n_bins_for_plots(self) -> int:
+        """
+        Return the default number of histogram bins.
 
-            histogram_scale = runtime_config.get_str(
-                "calibration.histogram_scale",
-                default="log",
-            )
+        Returns
+        -------
+        int
+            Number of bins.
+        """
+        runtime_config = self._get_default_runtime_config()
 
-            resolved_values = (
-                runtime_config.get_int(
-                    "calibration.peak_count",
-                    default=3,
+        return runtime_config.get_int(
+            "calibration.n_bins_for_plots",
+            default=100,
+        )
+
+    def _get_default_histogram_scale(self) -> str:
+        """
+        Return the default histogram scale.
+
+        Returns
+        -------
+        str
+            Histogram scale.
+        """
+        runtime_config = self._get_default_runtime_config()
+
+        return runtime_config.get_str(
+            "calibration.histogram_scale",
+            default="log",
+        )
+
+    def get_layout(self) -> dbc.Card:
+        """
+        Build the scattering peak section layout.
+
+        Returns
+        -------
+        dbc.Card
+            Section layout.
+        """
+        logger.debug("Building Scattering Peaks layout.")
+
+        return dbc.Card(
+            [
+                self._build_header(),
+                self._build_body(),
+            ]
+        )
+
+    def _build_header(self) -> dbc.CardHeader:
+        """
+        Build the card header.
+
+        Returns
+        -------
+        dbc.CardHeader
+            Header.
+        """
+        return dbc.CardHeader(
+            "2. Scattering peak detection",
+        )
+
+    def _build_body(self) -> dbc.CardBody:
+        """
+        Build the card body.
+
+        Returns
+        -------
+        dbc.CardBody
+            Body.
+        """
+        return dbc.CardBody(
+            [
+                peak_layout.build_process_selector(
+                    ids=self.ids,
+                    default_process_name=self._get_default_peak_process(),
                 ),
-                runtime_config.get_int(
-                    "calibration.n_bins_for_plots",
-                    default=100,
+                dash.html.Br(),
+                peak_layout.build_process_controls(
+                    ids=self.ids,
+                    processes=get_peak_process_instances(),
                 ),
-                ["enabled"] if runtime_config.get_show_graphs(default=True) else [],
-                ["log"] if histogram_scale == "log" else [],
-            )
-
-            logger.debug(
-                "sync_controls_from_runtime_store returning resolved_values=%r",
-                resolved_values,
-            )
-
-            return resolved_values
-
-    def _register_process_visibility_callback(self) -> None:
-        @dash.callback(
-            dash.Output(
-                self.page.ids.Scattering.process_controls_container_pattern(),
-                "style",
-            ),
-            dash.Input(self.page.ids.Scattering.process_dropdown, "value"),
-            dash.State(
-                self.page.ids.Scattering.process_controls_container_pattern(),
-                "id",
-            ),
-            prevent_initial_call=False,
-        )
-        def toggle_process_controls(
-            process_name: Any,
-            process_container_ids: list[dict[str, Any]],
-        ) -> list[dict[str, Any]]:
-            logger.debug(
-                "toggle_process_controls called with process_name=%r "
-                "process_container_ids=%r",
-                process_name,
-                process_container_ids,
-            )
-
-            return services.build_process_visibility_styles(
-                process_name=process_name,
-                process_container_ids=process_container_ids,
-            )
-
-    def _register_manual_process_graph_visibility_callback(self) -> None:
-        @dash.callback(
-            dash.Output(
-                self.page.ids.Scattering.graph_toggle_switch,
-                "value",
-                allow_duplicate=True,
-            ),
-            dash.Input(self.page.ids.Scattering.process_dropdown, "value"),
-            dash.State(self.page.ids.Scattering.graph_toggle_switch, "value"),
-            prevent_initial_call=True,
-        )
-        def force_graph_visible_for_manual_process(
-            process_name: Any,
-            current_graph_toggle_value: Any,
-        ) -> Any:
-            logger.debug(
-                "force_graph_visible_for_manual_process called with "
-                "process_name=%r current_graph_toggle_value=%r",
-                process_name,
-                current_graph_toggle_value,
-            )
-
-            return services.resolve_graph_toggle_for_process(
-                process_name=process_name,
-                current_graph_toggle_value=current_graph_toggle_value,
-            )
-
-    def _register_graph_visibility_callback(self) -> None:
-        @dash.callback(
-            dash.Output(self.page.ids.Scattering.graph_toggle_container, "style"),
-            dash.Input(self.page.ids.Scattering.graph_toggle_switch, "value"),
-            prevent_initial_call=False,
-        )
-        def toggle_scattering_graph_container(
-            graph_toggle_value: Any,
-        ) -> dict[str, str]:
-            graph_enabled = services.is_enabled(graph_toggle_value)
-
-            logger.debug(
-                "toggle_scattering_graph_container called with graph_toggle_value=%r "
-                "graph_enabled=%r",
-                graph_toggle_value,
-                graph_enabled,
-            )
-
-            return {"display": "block"} if graph_enabled else {"display": "none"}
-
-    def _register_histogram_controls_visibility_callback(self) -> None:
-        @dash.callback(
-            dash.Output(
-                self.page.ids.Scattering.histogram_controls_container,
-                "style",
-            ),
-            dash.Input(self.page.ids.Scattering.process_dropdown, "value"),
-            prevent_initial_call=False,
-        )
-        def toggle_histogram_controls(
-            process_name: Any,
-        ) -> dict[str, Any]:
-            process = services.get_process_instance_for_name(
-                process_name=process_name,
-            )
-
-            if process is not None and process.graph_type == "1d_histogram":
-                return {
-                    "display": "flex",
-                    "alignItems": "center",
-                    "gap": "16px",
-                    "flexWrap": "wrap",
-                }
-
-            return {
-                "display": "none",
-            }
-
-    def _register_graph_callback(self) -> None:
-        @dash.callback(
-            dash.Output(self.page.ids.Scattering.graph_hist, "figure"),
-            dash.Input(self.page.ids.Scattering.graph_toggle_switch, "value"),
-            dash.Input(self.page.ids.Scattering.yscale_switch, "value"),
-            dash.Input(self.page.ids.State.page_state_store, "data"),
-            dash.Input(self.page.ids.Scattering.nbins_input, "value"),
-            dash.State(
-                self.page.ids.Scattering.process_detector_dropdown_pattern(),
-                "id",
-            ),
-            dash.Input(
-                self.page.ids.Scattering.process_detector_dropdown_pattern(),
-                "value",
-            ),
-            dash.Input(self.page.ids.Scattering.process_dropdown, "value"),
-            dash.State(
-                self.page.ids.Scattering.process_setting_pattern(),
-                "id",
-            ),
-            dash.Input(
-                self.page.ids.Scattering.process_setting_pattern(),
-                "value",
-            ),
-            dash.State(
-                self.page.ids.Upload.max_events_for_plots_input,
-                "value",
-                allow_optional=True,
-            ),
-            dash.State("runtime-config-store", "data"),
-            prevent_initial_call=False,
-        )
-        def update_scattering_graph(
-            graph_toggle_value: Any,
-            yscale_selection: Any,
-            page_state_payload: Any,
-            scattering_nbins: Any,
-            detector_dropdown_ids: list[dict[str, Any]],
-            detector_dropdown_values: list[Any],
-            process_name: Any,
-            process_setting_ids: list[dict[str, Any]],
-            process_setting_values: list[Any],
-            max_events_for_plots: Any,
-            runtime_config_data: Any,
-        ) -> go.Figure:
-            page_state = ScatteringPageState.from_dict(
-                page_state_payload if isinstance(page_state_payload, dict) else None
-            )
-
-            logger.debug(
-                "update_scattering_graph called with graph_toggle_value=%r "
-                "yscale_selection=%r uploaded_fcs_path=%r scattering_nbins=%r "
-                "peak_lines_payload=%r detector_dropdown_ids=%r "
-                "detector_dropdown_values=%r process_name=%r "
-                "process_setting_ids=%r process_setting_values=%r "
-                "max_events_for_plots=%r",
-                graph_toggle_value,
-                yscale_selection,
-                page_state.uploaded_fcs_path,
-                scattering_nbins,
-                page_state.peak_lines_payload,
-                detector_dropdown_ids,
-                detector_dropdown_values,
-                process_name,
-                process_setting_ids,
-                process_setting_values,
-                max_events_for_plots,
-            )
-
-            try:
-                return services.build_scattering_graph_figure(
-                    backend=self.page.backend,
-                    uploaded_fcs_path=page_state.uploaded_fcs_path,
-                    process_name=process_name,
-                    detector_dropdown_ids=detector_dropdown_ids,
-                    detector_dropdown_values=detector_dropdown_values,
-                    process_setting_ids=process_setting_ids,
-                    process_setting_values=process_setting_values,
-                    graph_toggle_value=graph_toggle_value,
-                    yscale_selection=yscale_selection,
-                    scattering_nbins=scattering_nbins,
-                    peak_lines_payload=page_state.peak_lines_payload,
-                    max_events_for_plots=max_events_for_plots,
-                    runtime_config_data=runtime_config_data,
-                )
-
-            except Exception as exc:
-                logger.exception("Failed to build scattering graph.")
-
-                return plottings._make_info_figure(
-                    f"{type(exc).__name__}: {exc}"
-                )
-
-    def _register_peak_workflow_mutation_callback(self) -> None:
-        @dash.callback(
-            dash.Output(
-                self.page.ids.State.page_state_store,
-                "data",
-                allow_duplicate=True,
-            ),
-            dash.Output(
-                self.page.ids.Calibration.bead_table,
-                "data",
-                allow_duplicate=True,
-            ),
-            dash.Output(
-                self.page.ids.Scattering.process_status_pattern(),
-                "children",
-                allow_duplicate=True,
-            ),
-            dash.Input(self.page.ids.Scattering.process_dropdown, "value"),
-            dash.Input(
-                self.page.ids.Scattering.process_detector_dropdown_pattern(),
-                "value",
-            ),
-            dash.Input(
-                self.page.ids.Scattering.process_action_button_pattern(),
-                "n_clicks",
-            ),
-            dash.Input(self.page.ids.Scattering.graph_hist, "clickData"),
-            dash.State(self.page.ids.State.page_state_store, "data"),
-            dash.State(
-                self.page.ids.Scattering.process_detector_dropdown_pattern(),
-                "id",
-            ),
-            dash.State(
-                self.page.ids.Scattering.process_action_button_pattern(),
-                "id",
-            ),
-            dash.State(self.page.ids.Scattering.peak_count_input, "value"),
-            dash.State(
-                self.page.ids.Upload.max_events_for_plots_input,
-                "value",
-                allow_optional=True,
-            ),
-            dash.State(self.page.ids.Calibration.bead_table, "data"),
-            dash.State(self.page.ids.Parameters.mie_model, "value"),
-            dash.State("runtime-config-store", "data"),
-            dash.State(
-                self.page.ids.Scattering.process_status_pattern(),
-                "id",
-            ),
-            prevent_initial_call=True,
-        )
-        def reduce_peak_workflow_event(
-            process_name: Any,
-            detector_dropdown_values: list[Any],
-            action_clicks: list[Any],
-            click_data: Any,
-            page_state_payload: Any,
-            detector_dropdown_ids: list[dict[str, Any]],
-            action_ids: list[dict[str, Any]],
-            peak_count: Any,
-            max_events_for_plots: Any,
-            table_data: Optional[list[dict[str, Any]]],
-            mie_model: Any,
-            runtime_config_data: Any,
-            status_component_ids: list[dict[str, Any]],
-        ) -> tuple[Any, Any, list[Any]]:
-            del action_clicks
-            del action_ids
-
-            triggered_id = dash.ctx.triggered_id
-
-            page_state = ScatteringPageState.from_dict(
-                page_state_payload if isinstance(page_state_payload, dict) else None
-            )
-
-            logger.debug(
-                "reduce_peak_workflow_event called with triggered_id=%r "
-                "process_name=%r uploaded_fcs_path=%r detector_dropdown_ids=%r "
-                "detector_dropdown_values=%r peak_lines_payload=%r",
-                triggered_id,
-                process_name,
-                page_state.uploaded_fcs_path,
-                detector_dropdown_ids,
-                detector_dropdown_values,
-                page_state.peak_lines_payload,
-            )
-
-            if triggered_id == self.page.ids.Scattering.process_dropdown:
-                return self._clear_peak_context(
-                    page_state=page_state,
-                    process_name=process_name,
-                    status_component_ids=status_component_ids,
-                )
-
-            if self._trigger_is_detector_dropdown_change(triggered_id):
-                return self._clear_peak_context(
-                    page_state=page_state,
-                    process_name=process_name,
-                    status_component_ids=status_component_ids,
-                )
-
-            if triggered_id == self.page.ids.Scattering.graph_hist:
-                return self._handle_manual_graph_click(
-                    click_data=click_data,
-                    process_name=process_name,
-                    page_state=page_state,
-                    detector_dropdown_ids=detector_dropdown_ids,
-                    detector_dropdown_values=detector_dropdown_values,
-                    table_data=table_data,
-                    mie_model=mie_model,
-                    status_component_ids=status_component_ids,
-                )
-
-            if self._trigger_is_action_button(triggered_id):
-                return self._handle_process_action(
-                    triggered_action_id=triggered_id,
-                    process_name=process_name,
-                    page_state=page_state,
-                    detector_dropdown_ids=detector_dropdown_ids,
-                    detector_dropdown_values=detector_dropdown_values,
-                    peak_count=peak_count,
-                    max_events_for_plots=max_events_for_plots,
-                    table_data=table_data,
-                    mie_model=mie_model,
-                    runtime_config_data=runtime_config_data,
-                    status_component_ids=status_component_ids,
-                )
-
-            logger.debug(
-                "reduce_peak_workflow_event ignored unsupported triggered_id=%r",
-                triggered_id,
-            )
-
-            return (
-                dash.no_update,
-                dash.no_update,
-                dash.no_update,
-            )
-
-    def _trigger_is_detector_dropdown_change(self, triggered_id: Any) -> bool:
-        if not isinstance(triggered_id, dict):
-            return False
-
-        return triggered_id.get("type") == self.page.ids.Scattering.process_detector_dropdown_type
-
-    def _trigger_is_action_button(self, triggered_id: Any) -> bool:
-        if not isinstance(triggered_id, dict):
-            return False
-
-        return triggered_id.get("type") == self.page.ids.Scattering.process_action_button_type
-
-    def _clear_peak_context(
-        self,
-        *,
-        page_state: ScatteringPageState,
-        process_name: Any,
-        status_component_ids: list[dict[str, Any]],
-    ) -> tuple[dict[str, Any], Any, list[Any]]:
-        logger.debug(
-            "_clear_peak_context called with process_name=%r uploaded_fcs_path=%r",
-            process_name,
-            page_state.uploaded_fcs_path,
+                dash.html.Br(),
+                peak_layout.build_graph_toggle_switch(
+                    ids=self.ids,
+                    show_graphs=self._get_default_show_graphs(),
+                ),
+                dash.html.Br(),
+                peak_layout.build_graph_controls_container(
+                    ids=self.ids,
+                    histogram_scale=self._get_default_histogram_scale(),
+                    nbins=self._get_default_n_bins_for_plots(),
+                ),
+            ]
         )
 
-        page_state = page_state.update(
-            peak_lines_payload=services.build_empty_peak_lines_payload(),
-        )
+    def register_callbacks(self) -> None:
+        """
+        Register scattering peak workflow callbacks.
+        """
+        logger.debug("Registering Scattering Peaks callbacks through shared workflow.")
 
-        status_children = services.build_status_children(
-            status_component_ids=status_component_ids,
-            target_process_name=services.resolve_process_name(process_name),
-            status="",
-        )
-
-        return (
-            page_state.to_dict(),
-            dash.no_update,
-            status_children,
-        )
-
-    def _handle_manual_graph_click(
-        self,
-        *,
-        click_data: Any,
-        process_name: Any,
-        page_state: ScatteringPageState,
-        detector_dropdown_ids: list[dict[str, Any]],
-        detector_dropdown_values: list[Any],
-        table_data: Optional[list[dict[str, Any]]],
-        mie_model: Any,
-        status_component_ids: list[dict[str, Any]],
-    ) -> tuple[Any, Any, list[Any]]:
-        logger.debug(
-            "_handle_manual_graph_click called with click_data=%r process_name=%r "
-            "uploaded_fcs_path=%r detector_dropdown_ids=%r detector_dropdown_values=%r "
-            "table_rows=%r mie_model=%r peak_lines_payload=%r",
-            click_data,
-            process_name,
-            page_state.uploaded_fcs_path,
-            detector_dropdown_ids,
-            detector_dropdown_values,
-            None if table_data is None else len(table_data),
-            mie_model,
-            page_state.peak_lines_payload,
-        )
-
-        table_result, peak_lines_result, status = services.resolve_manual_peak_click(
-            click_data=click_data,
-            process_name=process_name,
-            uploaded_fcs_path=page_state.uploaded_fcs_path,
-            detector_dropdown_ids=detector_dropdown_ids,
-            detector_dropdown_values=detector_dropdown_values,
-            peak_lines_payload=page_state.peak_lines_payload,
-            table_data=table_data,
-            mie_model=mie_model,
-            logger=logger,
-        )
-
-        target_process_name = services.resolve_process_name(
-            process_name,
-        )
-
-        status_children = services.build_status_children(
-            status_component_ids=status_component_ids,
-            target_process_name=target_process_name,
-            status=status,
-        )
-
-        logger.debug(
-            "_handle_manual_graph_click returned table_result_type=%s "
-            "peak_lines_result=%r status=%r",
-            type(table_result).__name__,
-            peak_lines_result,
-            status,
-        )
-
-        if table_result is None:
-            return (
-                dash.no_update,
-                dash.no_update,
-                status_children,
-            )
-
-        page_state = page_state.update(
-            peak_lines_payload=peak_lines_result,
-        )
-
-        return (
-            page_state.to_dict(),
-            table_result,
-            status_children,
-        )
-
-    def _handle_process_action(
-        self,
-        *,
-        triggered_action_id: Any,
-        process_name: Any,
-        page_state: ScatteringPageState,
-        detector_dropdown_ids: list[dict[str, Any]],
-        detector_dropdown_values: list[Any],
-        peak_count: Any,
-        max_events_for_plots: Any,
-        table_data: Optional[list[dict[str, Any]]],
-        mie_model: Any,
-        runtime_config_data: Any,
-        status_component_ids: list[dict[str, Any]],
-    ) -> tuple[Any, Any, list[Any]]:
-        logger.debug(
-            "_handle_process_action called with triggered_action_id=%r "
-            "process_name=%r uploaded_fcs_path=%r detector_dropdown_ids=%r "
-            "detector_dropdown_values=%r peak_count=%r max_events_for_plots=%r",
-            triggered_action_id,
-            process_name,
-            page_state.uploaded_fcs_path,
-            detector_dropdown_ids,
-            detector_dropdown_values,
-            peak_count,
-            max_events_for_plots,
-        )
-
-        table_result, peak_lines_result, status, target_process_name = (
-            services.resolve_process_action(
-                triggered_action_id=triggered_action_id,
-                backend=self.page.backend,
-                process_name=process_name,
-                uploaded_fcs_path=page_state.uploaded_fcs_path,
-                detector_dropdown_ids=detector_dropdown_ids,
-                detector_dropdown_values=detector_dropdown_values,
-                peak_count=peak_count,
-                max_events_for_plots=max_events_for_plots,
-                table_data=table_data,
-                mie_model=mie_model,
-                runtime_config_data=runtime_config_data,
-                logger=logger,
-            )
-        )
-
-        status_children = services.build_status_children(
-            status_component_ids=status_component_ids,
-            target_process_name=target_process_name,
-            status=status,
-        )
-
-        logger.debug(
-            "_handle_process_action returned table_result_type=%s "
-            "peak_lines_result=%r status=%r target_process_name=%r",
-            type(table_result).__name__,
-            peak_lines_result,
-            status,
-            target_process_name,
-        )
-
-        if table_result is None:
-            return (
-                dash.no_update,
-                dash.no_update,
-                status_children,
-            )
-
-        page_state = page_state.update(
-            peak_lines_payload=peak_lines_result,
-        )
-
-        return (
-            page_state.to_dict(),
-            table_result,
-            status_children,
-        )
+        PeakWorkflowCallbacks(
+            page=self.page,
+            ids=self.ids,
+            adapter=self.adapter,
+            table_id=self.page.ids.Calibration.bead_table,
+            page_state_store_id=self.page.ids.State.page_state_store,
+            max_events_input_id=self.page.ids.Upload.max_events_for_plots_input,
+            runtime_config_store_id="runtime-config-store",
+            mie_model_input_id=self.page.ids.Parameters.mie_model,
+        ).register()

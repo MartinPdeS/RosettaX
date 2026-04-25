@@ -9,7 +9,7 @@ import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
 
 from RosettaX.pages.scattering.state import ScatteringPageState
-from RosettaX.utils import plottings, styling
+from RosettaX.utils import plottings, styling, graph_config
 
 from . import services
 
@@ -122,10 +122,8 @@ class Calibration:
                     [
                         dash.dcc.Graph(
                             id=self.ids.graph_calibration,
-                            style=self._graph_style(),
-                            config={
-                                "responsive": True,
-                            },
+                            style=graph_config.PLOTLY_GRAPH_STYLE,
+                            config=graph_config.PLOTLY_GRAPH_CONFIG,
                         ),
                     ],
                     style=self._graph_wrapper_style(),
@@ -134,10 +132,9 @@ class Calibration:
                     [
                         dash.dcc.Graph(
                             id=self.ids.graph_model,
-                            style=self._graph_style(),
-                            config={
-                                "responsive": True,
-                            },
+                            style=graph_config.PLOTLY_GRAPH_STYLE,
+                            config=graph_config.PLOTLY_GRAPH_CONFIG,
+
                         ),
                     ],
                     style=self._graph_wrapper_style(),

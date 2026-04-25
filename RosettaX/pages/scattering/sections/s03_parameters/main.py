@@ -6,7 +6,7 @@ import dash
 import dash_bootstrap_components as dbc
 
 from RosettaX.pages.scattering.state import ScatteringPageState
-from RosettaX.utils import styling
+from RosettaX.utils import styling, graph_config
 from RosettaX.utils.runtime_config import RuntimeConfig
 
 from . import presets
@@ -322,18 +322,9 @@ class Parameters:
                             detector_phi_angle_degree=self._get_default_detector_phi_angle_degree(),
                             detector_gamma_angle_degree=self._get_default_detector_gamma_angle_degree(),
                         ),
-                        config={
-                            "displayModeBar": False,
-                            "scrollZoom": True,
-                            "doubleClick": "reset",
-                            "responsive": True,
-                        },
+                        style={**graph_config.PLOTLY_GRAPH_STYLE, "height": "30vh"},
+                        config=graph_config.PLOTLY_GRAPH_CONFIG,
                         className="optical-configuration-preview-graph",
-                        style={
-                            "height": "380px",
-                            "width": "100%",
-                            "touchAction": "auto",
-                        },
                     ),
                 ],
                 style={
