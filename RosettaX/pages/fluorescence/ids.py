@@ -2,10 +2,27 @@
 
 PAGE_NAME = "fluorescent_calibration"
 
-from .sections.s01_upload.ids import UploadSectionIds
-from .sections.s02_peaks.ids import PeakSectionIds
 from .sections.s03_calibration.ids import CalibrationSectionIds
-from .sections.s04_save.ids import SaveSectionIds
+from RosettaX.workflow.upload.ids import UploadIds as UploadSectionIds
+from RosettaX.workflow.save.ids import SaveIds as SaveSectionIds
+from RosettaX.workflow.peak.ids import PeakIds
+
+
+
+class PeakSectionIds(PeakIds):
+    """
+    Fluorescence peak section IDs.
+    """
+
+    def __init__(
+        self,
+        *,
+        prefix: str,
+    ) -> None:
+        super().__init__(
+            prefix=prefix,
+            namespace="fluorescence",
+        )
 
 
 class Ids:

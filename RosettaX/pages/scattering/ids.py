@@ -1,9 +1,25 @@
 # -*- coding: utf-8 -*-
-from RosettaX.pages.scattering.sections.s01_upload.ids import UploadSectionIds
-from RosettaX.pages.scattering.sections.s02_peaks.ids import PeakSectionIds
+from RosettaX.workflow.upload.ids import UploadIds as UploadSectionIds
+from RosettaX.workflow.save.ids import SaveIds as SaveSectionIds
 from RosettaX.pages.scattering.sections.s03_parameters.ids import ParameterSectionIds
 from RosettaX.pages.scattering.sections.s04_calibration.ids import CalibrationSectionIds
-from RosettaX.pages.scattering.sections.s05_save.ids import SaveSectionIds
+from RosettaX.workflow.peak.ids import PeakIds
+
+
+class PeakSectionIds(PeakIds):
+    """
+    Scattering peak section IDs.
+    """
+
+    def __init__(
+        self,
+        *,
+        prefix: str,
+    ) -> None:
+        super().__init__(
+            prefix=prefix,
+            namespace="scattering",
+        )
 
 
 PAGE_NAME = "scattering_calibration"

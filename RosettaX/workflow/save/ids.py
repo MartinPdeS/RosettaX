@@ -4,9 +4,12 @@ from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
-class SaveSectionIds:
+class SaveIds:
     """
-    ID factory for the scattering save section.
+    Shared ID factory for reusable save sections.
+
+    The generated IDs are page specific through the prefix, while the Python API
+    remains identical for fluorescence and scattering save sections.
     """
 
     prefix: str
