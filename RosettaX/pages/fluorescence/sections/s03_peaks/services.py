@@ -7,13 +7,15 @@ import logging
 import numpy as np
 import plotly.graph_objs as go
 
-from RosettaX.peak_script import DEFAULT_PROCESS_NAME
+from RosettaX.peak_script.registry import build_peak_process_options
+from RosettaX.peak_script.registry import get_peak_process_instances
+from RosettaX.peak_script.registry import get_process_instance
+from RosettaX.peak_script.registry import resolve_process_name as resolve_shared_process_name
 from RosettaX.pages.scattering.sections.s02_peaks import services as scattering_peak_services
 from RosettaX.utils import casting
-from RosettaX.utils.reader import FCSFile
 from RosettaX.utils import plottings
-
-from . import registry
+from RosettaX.utils.reader import FCSFile
+from RosettaX.utils.runtime_config import RuntimeConfig
 
 
 logger = logging.getLogger(__name__)
@@ -61,6 +63,9 @@ class FluorescencePeakGraphBackendAdapter:
         dtype: Any = float,
         n: Optional[int] = None,
     ) -> np.ndarray:
+        """
+        Return a copy of a detector column from the FCS file.
+        """
         with FCSFile(self.fcs_file_path, writable=False) as fcs_file:
             values = fcs_file.column_copy(
                 str(detector_column),
@@ -68,7 +73,10 @@ class FluorescencePeakGraphBackendAdapter:
                 n=n,
             )
 
-        return np.asarray(values, dtype=dtype)
+        return np.asarray(
+            values,
+            dtype=dtype,
+        )
 
     def build_histogram(
         self,
@@ -77,6 +85,9 @@ class FluorescencePeakGraphBackendAdapter:
         n_bins_for_plots: Any,
         max_events_for_analysis: Any,
     ) -> FluorescenceHistogramResult:
+        """
+        Build a histogram for a fluorescence detector column.
+        """
         resolved_nbins = casting.as_int(
             n_bins_for_plots,
             default=100,
@@ -97,12 +108,17 @@ class FluorescencePeakGraphBackendAdapter:
             n=resolved_max_events,
         )
 
-        values = np.asarray(values, dtype=float)
+        values = np.asarray(
+            values,
+            dtype=float,
+        )
+
         values = values[np.isfinite(values)]
 
         if values.size == 0:
             counts = np.asarray([], dtype=float)
             bin_edges = np.asarray([], dtype=float)
+
         else:
             counts, bin_edges = np.histogram(
                 values,
@@ -111,8 +127,14 @@ class FluorescencePeakGraphBackendAdapter:
 
         return FluorescenceHistogramResult(
             values=values,
-            counts=np.asarray(counts, dtype=float),
-            bin_edges=np.asarray(bin_edges, dtype=float),
+            counts=np.asarray(
+                counts,
+                dtype=float,
+            ),
+            bin_edges=np.asarray(
+                bin_edges,
+                dtype=float,
+            ),
         )
 
     def build_histogram_figure(
@@ -123,9 +145,23 @@ class FluorescencePeakGraphBackendAdapter:
         use_log_counts: bool,
         peak_positions: Optional[list[float]] = None,
     ) -> go.Figure:
-        values = np.asarray(histogram_result.values, dtype=float)
-        counts = np.asarray(histogram_result.counts, dtype=float)
-        bin_edges = np.asarray(histogram_result.bin_edges, dtype=float)
+        """
+        Build a fluorescence histogram figure.
+        """
+        values = np.asarray(
+            histogram_result.values,
+            dtype=float,
+        )
+
+        counts = np.asarray(
+            histogram_result.counts,
+            dtype=float,
+        )
+
+        bin_edges = np.asarray(
+            histogram_result.bin_edges,
+            dtype=float,
+        )
 
         figure = go.Figure()
 
@@ -141,6 +177,7 @@ class FluorescencePeakGraphBackendAdapter:
                     name=str(detector_column),
                 )
             )
+
         else:
             figure.add_trace(
                 go.Histogram(
@@ -184,6 +221,12 @@ class FluorescencePeakGraphBackendAdapter:
         max_events_for_analysis: Any,
         debug: bool = False,
     ) -> FluorescencePeakDetectionResult:
+        """
+        Find fluorescence peak positions.
+
+        The method name intentionally matches the scattering backend API used by
+        shared peak scripts.
+        """
         del debug
 
         resolved_peak_count = casting.as_int(
@@ -213,49 +256,66 @@ class FluorescencePeakGraphBackendAdapter:
         )
 
         return FluorescencePeakDetectionResult(
-            peak_positions=np.asarray(peak_positions, dtype=float),
+            peak_positions=np.asarray(
+                peak_positions,
+                dtype=float,
+            ),
         )
 
 
 def get_peak_processes() -> list[Any]:
-    return registry.load_peak_scripts()
+    """
+    Return dynamically discovered peak process instances.
+    """
+    return get_peak_process_instances()
 
 
 def build_process_options() -> list[dict[str, str]]:
-    return [
-        process.get_process_option()
-        for process in get_peak_processes()
-    ]
+    """
+    Build peak detection process dropdown options from discovered peak scripts.
+    """
+    options = build_peak_process_options()
+
+    logger.debug(
+        "Built peak process options option_count=%d options=%r",
+        len(options),
+        options,
+    )
+
+    return options
 
 
 def resolve_process_name(process_name: Any) -> str:
-    process_name_clean = clean_optional_string(process_name)
-
-    if process_name_clean:
-        return process_name_clean
-
-    return DEFAULT_PROCESS_NAME
+    """
+    Resolve the selected peak process name using the shared peak script registry.
+    """
+    return resolve_shared_process_name(
+        process_name,
+    )
 
 
 def get_process_instance_for_name(process_name: Any) -> Any:
-    resolved_process_name = resolve_process_name(process_name)
-
-    for process in get_peak_processes():
-        if getattr(process, "process_name", None) == resolved_process_name:
-            return process
-
-    for process in get_peak_processes():
-        if process.get_process_option().get("value") == resolved_process_name:
-            return process
-
-    return None
+    """
+    Return a discovered peak process instance for a selected process name.
+    """
+    return get_process_instance(
+        process_name=process_name,
+    )
 
 
 def is_enabled(value: Any) -> bool:
-    return scattering_peak_services.is_enabled(value)
+    """
+    Return whether a checklist like value means enabled.
+    """
+    return scattering_peak_services.is_enabled(
+        value,
+    )
 
 
 def clean_optional_string(value: Any) -> str:
+    """
+    Normalize an optional string value.
+    """
     if value is None:
         return ""
 
@@ -271,6 +331,9 @@ def clean_optional_string(value: Any) -> str:
 
 
 def build_empty_peak_lines_payload() -> dict[str, list[Any]]:
+    """
+    Build an empty peak line payload.
+    """
     return scattering_peak_services.build_empty_peak_lines_payload()
 
 
@@ -281,6 +344,9 @@ def populate_peak_script_detector_dropdowns(
     current_detector_values: list[Any],
     logger: logging.Logger,
 ) -> tuple[list[list[dict[str, Any]]], list[Any]]:
+    """
+    Populate peak script detector dropdowns.
+    """
     return scattering_peak_services.populate_peak_script_detector_dropdowns(
         uploaded_fcs_path=uploaded_fcs_path,
         detector_dropdown_ids=detector_dropdown_ids,
@@ -294,6 +360,9 @@ def build_process_visibility_styles(
     process_name: Any,
     process_container_ids: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
+    """
+    Build process visibility styles.
+    """
     return scattering_peak_services.build_process_visibility_styles(
         process_name=process_name,
         process_container_ids=process_container_ids,
@@ -305,6 +374,9 @@ def resolve_graph_toggle_for_process(
     process_name: Any,
     current_graph_toggle_value: Any,
 ) -> Any:
+    """
+    Resolve graph visibility when the selected process changes.
+    """
     return scattering_peak_services.resolve_graph_toggle_for_process(
         process_name=process_name,
         current_graph_toggle_value=current_graph_toggle_value,
@@ -322,7 +394,9 @@ def build_fluorescence_graph_backend(
     if fallback_backend is not None and hasattr(fallback_backend, "build_histogram"):
         return fallback_backend
 
-    uploaded_fcs_path_clean = clean_optional_string(uploaded_fcs_path)
+    uploaded_fcs_path_clean = clean_optional_string(
+        uploaded_fcs_path,
+    )
 
     if not uploaded_fcs_path_clean:
         return fallback_backend
@@ -347,13 +421,10 @@ def build_fluorescence_graph_figure(
     peak_lines_payload: Any,
     max_events_for_plots: Any,
     runtime_config_data: Any,
-):
+) -> go.Figure:
     """
-    Build the fluorescence graph using the exact same graph pipeline as
-    scattering peaks.
+    Build the fluorescence graph using the same graph pipeline as scattering.
 
-    Important
-    ---------
     The peak_lines_payload is passed through unchanged. This is required for 2D
     manual workflows because the shared graph renderer expects the original
     process payload structure.
@@ -386,86 +457,14 @@ def build_status_children(
     target_process_name: Any,
     status: str,
 ) -> list[Any]:
+    """
+    Build status children for process specific status components.
+    """
     return scattering_peak_services.build_status_children(
         status_component_ids=status_component_ids,
         target_process_name=target_process_name,
         status=status,
     )
-
-
-def extract_x_positions_from_peak_lines_payload(
-    peak_lines_payload: Any,
-) -> list[float]:
-    """
-    Extract x positions from any peak payload produced by the shared peak scripts.
-
-    This function is only used for fluorescence table writing. The graph still
-    receives the original payload unchanged.
-    """
-    if not isinstance(peak_lines_payload, dict):
-        return []
-
-    candidate_values = (
-        peak_lines_payload.get("x_positions")
-        or peak_lines_payload.get("positions")
-        or []
-    )
-
-    if not candidate_values and isinstance(peak_lines_payload.get("points"), list):
-        candidate_values = [
-            point.get("x")
-            for point in peak_lines_payload["points"]
-            if isinstance(point, dict)
-        ]
-
-    x_positions: list[float] = []
-
-    for value in candidate_values:
-        try:
-            x_positions.append(float(value))
-        except Exception:
-            continue
-
-    return x_positions
-
-
-def write_x_positions_to_fluorescence_table(
-    *,
-    table_data: Optional[list[dict[str, Any]]],
-    x_positions: list[float],
-) -> list[dict[str, Any]]:
-    rows = [
-        dict(row)
-        for row in (table_data or [])
-    ]
-
-    while len(rows) < len(x_positions):
-        rows.append(
-            {
-                "col1": "",
-                "col2": "",
-            }
-        )
-
-    for index, x_position in enumerate(x_positions):
-        rows[index]["col2"] = f"{float(x_position):.6g}"
-
-    return rows
-
-
-def clear_fluorescence_table_peak_positions(
-    *,
-    table_data: Optional[list[dict[str, Any]]],
-) -> list[dict[str, Any]]:
-    rows = [
-        dict(row)
-        for row in (table_data or [])
-    ]
-
-    for row in rows:
-        row["col2"] = ""
-
-    return rows
 
 
 def resolve_manual_peak_click(
@@ -480,40 +479,395 @@ def resolve_manual_peak_click(
     logger: logging.Logger,
 ) -> tuple[Optional[list[dict[str, Any]]], Any, str]:
     """
-    Resolve a manual graph click using the exact same click behavior as
-    scattering peaks.
+    Resolve a manual graph click for the fluorescence page.
 
-    The returned peak payload is intentionally not converted. It must remain the
-    original shared payload so the shared graph renderer can draw 2D annotations
-    exactly as it does in scattering.
+    The selected peak script owns the click semantics. This service only maps
+    the script result into the fluorescence calibration table schema.
+
+    Important
+    ---------
+    The table is updated from ``result.new_peak_positions`` only. It is not
+    updated from the cumulative ``result.peak_lines_payload``.
     """
-    table_result, peak_lines_result, status = scattering_peak_services.resolve_manual_peak_click(
-        click_data=click_data,
-        process_name=process_name,
-        uploaded_fcs_path=uploaded_fcs_path,
+    resolved_process_name = resolve_process_name(
+        process_name,
+    )
+
+    process = get_process_instance_for_name(
+        resolved_process_name,
+    )
+
+    if process is None:
+        return None, None, f"Unknown peak process: {resolved_process_name}"
+
+    if not getattr(process, "supports_manual_click", False):
+        return None, None, f"Process {resolved_process_name} does not support manual clicks."
+
+    if not clean_optional_string(uploaded_fcs_path):
+        return None, None, "Upload an FCS file first."
+
+    detector_channels = scattering_peak_services.resolve_detector_channels_for_process(
         detector_dropdown_ids=detector_dropdown_ids,
         detector_dropdown_values=detector_dropdown_values,
-        peak_lines_payload=peak_lines_payload,
-        table_data=None,
-        mie_model="Solid Sphere",
-        logger=logger,
+        process_name=resolved_process_name,
     )
 
-    del table_result
-
-    if peak_lines_result is None:
-        return None, None, status
-
-    x_positions = extract_x_positions_from_peak_lines_payload(
-        peak_lines_result,
+    missing_channels = build_missing_detector_channel_names(
+        process=process,
+        detector_channels=detector_channels,
     )
 
-    fluorescence_table_data = write_x_positions_to_fluorescence_table(
+    if missing_channels:
+        missing_channels_text = ", ".join(missing_channels)
+
+        return (
+            None,
+            None,
+            f"Upload an FCS file and select {missing_channels_text} detector channel first.",
+        )
+
+    result = process.add_clicked_peak(
+        click_data=click_data,
+        existing_peak_lines_payload=peak_lines_payload,
+    )
+
+    if result is None:
+        return None, None, "No valid peak was selected."
+
+    table_result = apply_peak_process_result_to_fluorescence_table(
         table_data=table_data,
+        result=result,
+    )
+
+    return (
+        table_result,
+        result.peak_lines_payload,
+        result.status,
+    )
+
+
+def resolve_process_action(
+    *,
+    triggered_action_id: Any,
+    backend: Any,
+    process_name: Any,
+    uploaded_fcs_path: Optional[str],
+    detector_dropdown_ids: list[dict[str, Any]],
+    detector_dropdown_values: list[Any],
+    peak_count: Any,
+    max_events_for_plots: Any,
+    table_data: Optional[list[dict[str, Any]]],
+    runtime_config_data: Any,
+    logger: logging.Logger,
+) -> tuple[Optional[list[dict[str, Any]]], Any, str, str]:
+    """
+    Resolve a process action for the fluorescence page.
+
+    The selected peak script owns action semantics. This service only maps the
+    script result into the fluorescence calibration table schema.
+    """
+    target_process_name = resolve_process_name(
+        process_name,
+    )
+
+    process = get_process_instance_for_name(
+        target_process_name,
+    )
+
+    if process is None:
+        return None, None, f"Unknown peak process: {target_process_name}", target_process_name
+
+    action_name = extract_action_name(
+        triggered_action_id,
+    )
+
+    if action_name in {"clear", "clear_peaks"}:
+        result = process.clear_peaks()
+
+        table_result = apply_peak_process_result_to_fluorescence_table(
+            table_data=table_data,
+            result=result,
+        )
+
+        return (
+            table_result,
+            result.peak_lines_payload,
+            result.status,
+            target_process_name,
+        )
+
+    if not getattr(process, "supports_automatic_action", False):
+        return (
+            None,
+            None,
+            f"Process {target_process_name} does not support automatic actions.",
+            target_process_name,
+        )
+
+    graph_backend = build_fluorescence_graph_backend(
+        uploaded_fcs_path=uploaded_fcs_path,
+        fallback_backend=backend,
+    )
+
+    if graph_backend is None:
+        return (
+            None,
+            None,
+            "Backend is not initialized.",
+            target_process_name,
+        )
+
+    if not clean_optional_string(uploaded_fcs_path):
+        return (
+            None,
+            None,
+            "Upload an FCS file first.",
+            target_process_name,
+        )
+
+    detector_channels = scattering_peak_services.resolve_detector_channels_for_process(
+        detector_dropdown_ids=detector_dropdown_ids,
+        detector_dropdown_values=detector_dropdown_values,
+        process_name=target_process_name,
+    )
+
+    missing_channels = build_missing_detector_channel_names(
+        process=process,
+        detector_channels=detector_channels,
+    )
+
+    if missing_channels:
+        missing_channels_text = ", ".join(missing_channels)
+
+        return (
+            None,
+            None,
+            f"Upload an FCS file and select {missing_channels_text} detector channel first.",
+            target_process_name,
+        )
+
+    runtime_config = RuntimeConfig.from_dict(
+        runtime_config_data if isinstance(runtime_config_data, dict) else None
+    )
+
+    resolved_max_events_for_analysis = casting.as_int(
+        max_events_for_plots,
+        default=runtime_config.get_int(
+            "calibration.max_events_for_analysis",
+            default=10000,
+        ),
+        min_value=1,
+        max_value=5_000_000,
+    )
+
+    result = process.run_automatic_action(
+        backend=graph_backend,
+        detector_channels=detector_channels,
+        peak_count=peak_count,
+        max_events_for_analysis=resolved_max_events_for_analysis,
+    )
+
+    if result is None:
+        return (
+            None,
+            None,
+            "No peak result was produced.",
+            target_process_name,
+        )
+
+    table_result = apply_peak_process_result_to_fluorescence_table(
+        table_data=table_data,
+        result=result,
+    )
+
+    return (
+        table_result,
+        result.peak_lines_payload,
+        result.status,
+        target_process_name,
+    )
+
+
+def apply_peak_process_result_to_fluorescence_table(
+    *,
+    table_data: Optional[list[dict[str, Any]]],
+    result: Any,
+) -> list[dict[str, Any]]:
+    """
+    Apply a peak process result to the fluorescence calibration table.
+
+    The table update uses the result delta, not the cumulative graph payload.
+    """
+    rows = [
+        dict(row)
+        for row in (table_data or [])
+    ]
+
+    if getattr(result, "clear_existing_table_peaks", False):
+        rows = clear_fluorescence_table_peak_positions(
+            table_data=rows,
+        )
+
+    new_peak_positions = getattr(
+        result,
+        "new_peak_positions",
+        None,
+    )
+
+    if new_peak_positions is None:
+        new_peak_positions = []
+
+    x_positions = extract_x_positions_from_new_peak_positions(
+        new_peak_positions,
+    )
+
+    if not x_positions:
+        return rows
+
+    return append_x_positions_to_fluorescence_table(
+        table_data=rows,
         x_positions=x_positions,
     )
 
-    return fluorescence_table_data, peak_lines_result, status
+
+def extract_x_positions_from_new_peak_positions(
+    new_peak_positions: Any,
+) -> list[float]:
+    """
+    Extract fluorescence table x positions from result.new_peak_positions.
+
+    Supported item shapes:
+    - float or int
+    - string convertible to float
+    - dict with key "x"
+    """
+    if not isinstance(new_peak_positions, list):
+        return []
+
+    x_positions: list[float] = []
+
+    for item in new_peak_positions:
+        try:
+            if isinstance(item, dict):
+                x_positions.append(
+                    float(item["x"]),
+                )
+
+            else:
+                x_positions.append(
+                    float(item),
+                )
+
+        except Exception:
+            logger.debug(
+                "Ignoring invalid new peak position item=%r",
+                item,
+            )
+
+    return x_positions
+
+
+def append_x_positions_to_fluorescence_table(
+    *,
+    table_data: Optional[list[dict[str, Any]]],
+    x_positions: list[float],
+) -> list[dict[str, Any]]:
+    """
+    Append x positions into the fluorescence calibration table.
+
+    Existing measured peak positions in col2 are preserved. New values fill
+    empty col2 rows first, then append new rows as needed.
+    """
+    rows = [
+        dict(row)
+        for row in (table_data or [])
+    ]
+
+    for x_position in x_positions:
+        formatted_position = f"{float(x_position):.6g}"
+        row_index = find_first_empty_value_row_index(
+            rows=rows,
+            column_name="col2",
+        )
+
+        if row_index is None:
+            rows.append(
+                {
+                    "col1": "",
+                    "col2": formatted_position,
+                }
+            )
+
+        else:
+            rows[row_index]["col2"] = formatted_position
+
+    return rows
+
+
+def find_first_empty_value_row_index(
+    *,
+    rows: list[dict[str, Any]],
+    column_name: str,
+) -> Optional[int]:
+    """
+    Find the first row index where column_name is empty.
+    """
+    for row_index, row in enumerate(rows):
+        if row.get(column_name) in ("", None):
+            return row_index
+
+    return None
+
+
+def clear_fluorescence_table_peak_positions(
+    *,
+    table_data: Optional[list[dict[str, Any]]],
+) -> list[dict[str, Any]]:
+    """
+    Clear fluorescence measured peak positions from the calibration table.
+    """
+    rows = [
+        dict(row)
+        for row in (table_data or [])
+    ]
+
+    for row in rows:
+        row["col2"] = ""
+
+    return rows
+
+
+def build_missing_detector_channel_names(
+    *,
+    process: Any,
+    detector_channels: dict[str, Any],
+) -> list[str]:
+    """
+    Return detector channel names required by process but not selected.
+    """
+    missing_channels: list[str] = []
+
+    for channel_name in process.get_required_detector_channels():
+        channel_value = detector_channels.get(channel_name)
+
+        if channel_value in ("", None):
+            missing_channels.append(
+                str(channel_name),
+            )
+
+    return missing_channels
+
+
+def extract_action_name(triggered_action_id: Any) -> str:
+    """
+    Extract action name from a pattern matched action button id.
+    """
+    if isinstance(triggered_action_id, dict):
+        return clean_optional_string(
+            triggered_action_id.get("action"),
+        )
+
+    return ""
 
 
 def estimate_histogram_peak_positions(
@@ -522,7 +876,14 @@ def estimate_histogram_peak_positions(
     peak_count: int,
     nbins: int,
 ) -> list[float]:
-    values = np.asarray(values, dtype=float)
+    """
+    Estimate peak positions from a one dimensional histogram.
+    """
+    values = np.asarray(
+        values,
+        dtype=float,
+    )
+
     values = values[np.isfinite(values)]
 
     if values.size == 0:
@@ -543,7 +904,9 @@ def estimate_histogram_peak_positions(
             candidate_indices.append(index)
 
     if not candidate_indices:
-        candidate_indices = list(np.argsort(counts)[-int(peak_count):])
+        candidate_indices = list(
+            np.argsort(counts)[-int(peak_count):]
+        )
 
     candidate_indices = sorted(
         candidate_indices,
@@ -551,7 +914,10 @@ def estimate_histogram_peak_positions(
         reverse=True,
     )
 
-    selected_indices = sorted(candidate_indices[: int(peak_count)])
+    selected_indices = sorted(
+        candidate_indices[: int(peak_count)]
+    )
+
     centers = 0.5 * (edges[:-1] + edges[1:])
 
     return [
@@ -559,85 +925,3 @@ def estimate_histogram_peak_positions(
         for index in selected_indices
         if 0 <= index < centers.size
     ]
-
-
-def resolve_process_action(
-    *,
-    triggered_action_id: Any,
-    backend: Any,
-    process_name: Any,
-    uploaded_fcs_path: Optional[str],
-    detector_dropdown_ids: list[dict[str, Any]],
-    detector_dropdown_values: list[Any],
-    peak_count: Any,
-    max_events_for_plots: Any,
-    table_data: Optional[list[dict[str, Any]]],
-    runtime_config_data: Any,
-    logger: logging.Logger,
-) -> tuple[Optional[list[dict[str, Any]]], Any, str, str]:
-    """
-    Resolve a process action using the same process behavior as scattering peaks.
-
-    The returned peak payload is intentionally not converted. Only the table
-    update is adapted for fluorescence.
-    """
-    graph_backend = build_fluorescence_graph_backend(
-        uploaded_fcs_path=uploaded_fcs_path,
-        fallback_backend=backend,
-    )
-
-    table_result, peak_lines_result, status, target_process_name = (
-        scattering_peak_services.resolve_process_action(
-            triggered_action_id=triggered_action_id,
-            backend=graph_backend,
-            process_name=process_name,
-            uploaded_fcs_path=uploaded_fcs_path,
-            detector_dropdown_ids=detector_dropdown_ids,
-            detector_dropdown_values=detector_dropdown_values,
-            peak_count=peak_count,
-            max_events_for_plots=max_events_for_plots,
-            table_data=None,
-            mie_model="Solid Sphere",
-            runtime_config_data=runtime_config_data,
-            logger=logger,
-        )
-    )
-
-    del table_result
-
-    if triggered_action_id is None:
-        return None, None, status, target_process_name
-
-    if isinstance(triggered_action_id, dict):
-        action_name = clean_optional_string(triggered_action_id.get("action"))
-    else:
-        action_name = ""
-
-    if action_name == "clear_peaks":
-        return (
-            clear_fluorescence_table_peak_positions(
-                table_data=table_data,
-            ),
-            build_empty_peak_lines_payload(),
-            status or "Cleared fluorescence peaks.",
-            target_process_name,
-        )
-
-    if peak_lines_result is None:
-        return None, None, status, target_process_name
-
-    x_positions = extract_x_positions_from_peak_lines_payload(
-        peak_lines_result,
-    )
-
-    fluorescence_table_data = write_x_positions_to_fluorescence_table(
-        table_data=table_data,
-        x_positions=x_positions,
-    )
-
-    return (
-        fluorescence_table_data,
-        peak_lines_result,
-        status,
-        target_process_name,
-    )

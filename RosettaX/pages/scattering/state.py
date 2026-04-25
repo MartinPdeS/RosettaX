@@ -10,7 +10,7 @@ class ScatteringPageState:
     Single source of truth for the scattering calibration page.
 
     This state object is serialized into one Dash dcc.Store and progressively
-    replaces scattered section-specific stores.
+    replaces scattered section specific stores.
     """
 
     uploaded_fcs_path: Optional[str] = None

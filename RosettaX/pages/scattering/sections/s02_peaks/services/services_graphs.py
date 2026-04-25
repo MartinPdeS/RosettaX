@@ -7,12 +7,12 @@ import logging
 import numpy as np
 import plotly.graph_objs as go
 
+from RosettaX.peak_script.registry import get_process_instance
+from RosettaX.peak_script.registry import resolve_process_name
 from RosettaX.utils import casting
 from RosettaX.utils import plottings
 from RosettaX.utils.reader import FCSFile
 from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.peak_script import get_process_instance
-from RosettaX.peak_script import resolve_process_name
 
 from .services_common import clean_optional_string
 from .services_common import is_enabled
@@ -131,7 +131,10 @@ def build_scattering_graph_figure(
     """
     Build the graph for the selected peak process.
     """
-    resolved_process_name = resolve_process_name(process_name)
+    resolved_process_name = resolve_process_name(
+        process_name,
+    )
+
     process = get_process_instance(
         process_name=resolved_process_name,
     )
@@ -229,8 +232,13 @@ def validate_scattering_context_1d(
     """
     Validate context required by 1D plotting.
     """
-    uploaded_fcs_path_clean = clean_optional_string(uploaded_fcs_path)
-    scattering_channel_clean = clean_optional_string(scattering_channel)
+    uploaded_fcs_path_clean = clean_optional_string(
+        uploaded_fcs_path,
+    )
+
+    scattering_channel_clean = clean_optional_string(
+        scattering_channel,
+    )
 
     if not uploaded_fcs_path_clean:
         return None
@@ -253,9 +261,17 @@ def validate_scattering_context_2d(
     """
     Validate context required by 2D plotting.
     """
-    uploaded_fcs_path_clean = clean_optional_string(uploaded_fcs_path)
-    x_channel_clean = clean_optional_string(x_channel)
-    y_channel_clean = clean_optional_string(y_channel)
+    uploaded_fcs_path_clean = clean_optional_string(
+        uploaded_fcs_path,
+    )
+
+    x_channel_clean = clean_optional_string(
+        x_channel,
+    )
+
+    y_channel_clean = clean_optional_string(
+        y_channel,
+    )
 
     if not uploaded_fcs_path_clean:
         return None
@@ -302,7 +318,7 @@ def build_scattering_1d_histogram_figure(
         )
 
     line_positions, line_labels = parse_1d_peak_lines_payload(
-        peak_lines_payload
+        peak_lines_payload,
     )
 
     histogram_result = backend.build_histogram(
@@ -316,7 +332,7 @@ def build_scattering_1d_histogram_figure(
         detector_column=context.scattering_channel,
         use_log_counts=isinstance(yscale_selection, list)
         and ("log" in yscale_selection),
-        peak_positions=line_positions,
+        peak_positions=None,
     )
 
     figure = plottings.add_vertical_lines(
@@ -364,6 +380,7 @@ def build_scattering_2d_figure(
             y_channel=context.y_channel,
             max_events=max_events,
         )
+
     except Exception as exc:
         logger.exception(
             "Failed to read 2D channel values for uploaded_fcs_path=%r "
@@ -372,7 +389,10 @@ def build_scattering_2d_figure(
             context.x_channel,
             context.y_channel,
         )
-        return plottings._make_info_figure(f"{type(exc).__name__}: {exc}")
+
+        return plottings._make_info_figure(
+            f"{type(exc).__name__}: {exc}"
+        )
 
     if x_log_scale or y_log_scale:
         x_values, y_values = filter_values_for_log_axes(
@@ -435,7 +455,10 @@ def filter_values_for_log_axes(
     """
     Remove non positive values for axes displayed on a log scale.
     """
-    valid_mask = np.ones_like(x_values, dtype=bool)
+    valid_mask = np.ones_like(
+        x_values,
+        dtype=bool,
+    )
 
     if x_log_scale:
         valid_mask &= x_values > 0.0
@@ -484,7 +507,10 @@ def read_2d_channel_values(
             dtype=float,
         ).reshape(-1)
 
-    event_count = min(x_values.size, y_values.size)
+    event_count = min(
+        x_values.size,
+        y_values.size,
+    )
 
     x_values = x_values[:event_count]
     y_values = y_values[:event_count]
@@ -503,7 +529,7 @@ def add_2d_peak_vertical_lines_to_figure(
     Add vertical lines for picked 2D peaks.
     """
     points, labels = parse_2d_peak_lines_payload(
-        peak_lines_payload
+        peak_lines_payload,
     )
 
     if not points:
@@ -539,7 +565,10 @@ def parse_1d_peak_lines_payload(
 
     for value in peak_lines_payload.get("positions") or []:
         try:
-            line_positions.append(float(value))
+            line_positions.append(
+                float(value),
+            )
+
         except Exception:
             logger.debug(
                 "Ignoring non numeric 1D peak line position value=%r",
@@ -547,7 +576,9 @@ def parse_1d_peak_lines_payload(
             )
 
     for value in peak_lines_payload.get("labels") or []:
-        line_labels.append(str(value))
+        line_labels.append(
+            str(value),
+        )
 
     if len(line_labels) < len(line_positions):
         line_labels = [
@@ -588,6 +619,7 @@ def parse_2d_peak_lines_payload(
                         "y": float(raw_point["y"]),
                     }
                 )
+
             except Exception:
                 logger.debug(
                     "Ignoring invalid 2D point=%r",

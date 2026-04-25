@@ -3,15 +3,16 @@
 from typing import Any, Optional
 import logging
 
+from RosettaX.peak_script.registry import get_process_instance
+from RosettaX.peak_script.registry import resolve_process_name
 from RosettaX.utils import casting
 from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.peak_script import get_process_instance
-from RosettaX.peak_script import resolve_process_name
 
 from .services_common import clean_optional_string
 from .services_common import resolve_mie_model
-from .services_graphs import build_empty_peak_lines_payload
 from .services_detectors import resolve_detector_channels_for_process
+from .services_graphs import build_empty_peak_lines_payload
+from .services_tables import clear_measured_positions_from_table
 from .services_tables import write_measured_positions_into_table
 
 
@@ -29,13 +30,37 @@ def resolve_manual_peak_click(
 ) -> tuple[Any, dict[str, list[Any]], str]:
     """
     Resolve a manual graph click into calibration table data and peak markers.
+
+    The selected peak process owns the click semantics. This service only maps
+    the process result delta into the scattering calibration table schema.
+
+    Important
+    ---------
+    The table is updated from ``result.new_peak_positions`` only. It is not
+    updated from the cumulative ``result.peak_positions``.
     """
-    resolved_process_name = resolve_process_name(process_name)
+    resolved_process_name = resolve_process_name(
+        process_name,
+    )
+
     process = get_process_instance(
         process_name=resolved_process_name,
     )
 
-    if process is None or not process.supports_manual_click:
+    if process is None:
+        logger.debug(
+            "resolve_manual_peak_click found no process for process_name=%r.",
+            resolved_process_name,
+        )
+
+        return None, build_empty_peak_lines_payload(), ""
+
+    if not process.supports_manual_click:
+        logger.debug(
+            "Process %r does not support manual clicks.",
+            resolved_process_name,
+        )
+
         return None, build_empty_peak_lines_payload(), ""
 
     detector_channels = resolve_detector_channels_for_process(
@@ -49,8 +74,14 @@ def resolve_manual_peak_click(
         uploaded_fcs_path=uploaded_fcs_path,
         detector_channels=detector_channels,
     ):
-        return None, build_empty_peak_lines_payload(), (
-            "Upload a file and select the required detector channel(s) first."
+        return (
+            None,
+            build_empty_peak_lines_payload(),
+            build_missing_context_message(
+                process=process,
+                uploaded_fcs_path=uploaded_fcs_path,
+                detector_channels=detector_channels,
+            ),
         )
 
     manual_result = process.add_clicked_peak(
@@ -61,9 +92,9 @@ def resolve_manual_peak_click(
     if manual_result is None:
         return None, build_empty_peak_lines_payload(), ""
 
-    updated_table_data = write_measured_positions_into_table(
+    updated_table_data = apply_peak_process_result_to_scattering_table(
         table_data=table_data,
-        peak_positions=manual_result.peak_positions,
+        result=manual_result,
         mie_model=resolve_mie_model(mie_model),
         logger=logger,
     )
@@ -109,6 +140,11 @@ def resolve_process_action(
     )
 
     if process is None:
+        logger.debug(
+            "resolve_process_action found no process for target_process_name=%r.",
+            target_process_name,
+        )
+
         return None, build_empty_peak_lines_payload(), "", ""
 
     detector_channels = resolve_detector_channels_for_process(
@@ -129,9 +165,9 @@ def resolve_process_action(
     if action_name == "clear" and process.supports_clear:
         clear_result = process.clear_peaks()
 
-        updated_table_data = write_measured_positions_into_table(
+        updated_table_data = apply_peak_process_result_to_scattering_table(
             table_data=table_data,
-            peak_positions=clear_result.peak_positions,
+            result=clear_result,
             mie_model=resolve_mie_model(mie_model),
             logger=logger,
         )
@@ -152,7 +188,11 @@ def resolve_process_action(
             return (
                 None,
                 build_empty_peak_lines_payload(),
-                "Upload a file and select the required detector channel(s) first.",
+                build_missing_context_message(
+                    process=process,
+                    uploaded_fcs_path=uploaded_fcs_path,
+                    detector_channels=detector_channels,
+                ),
                 process.process_name,
             )
 
@@ -190,9 +230,9 @@ def resolve_process_action(
         if automatic_result is None:
             return None, build_empty_peak_lines_payload(), "", process.process_name
 
-        updated_table_data = write_measured_positions_into_table(
+        updated_table_data = apply_peak_process_result_to_scattering_table(
             table_data=table_data,
-            peak_positions=automatic_result.peak_positions,
+            result=automatic_result,
             mie_model=resolve_mie_model(mie_model),
             logger=logger,
         )
@@ -204,7 +244,57 @@ def resolve_process_action(
             process.process_name,
         )
 
+    logger.debug(
+        "Ignoring unsupported process action action_name=%r process=%r.",
+        action_name,
+        process.process_name,
+    )
+
     return None, build_empty_peak_lines_payload(), "", process.process_name
+
+
+def apply_peak_process_result_to_scattering_table(
+    *,
+    table_data: Optional[list[dict[str, Any]]],
+    result: Any,
+    mie_model: str,
+    logger: logging.Logger,
+) -> list[dict[str, Any]]:
+    """
+    Apply a peak process result to the scattering calibration table.
+
+    The table update uses only the process result delta:
+
+        result.new_peak_positions
+
+    It does not use:
+
+        result.peak_positions
+
+    because peak_positions is cumulative and would duplicate table entries on
+    repeated manual clicks.
+    """
+    if getattr(result, "clear_existing_table_peaks", False):
+        return clear_measured_positions_from_table(
+            table_data=table_data,
+            mie_model=mie_model,
+        )
+
+    new_peak_positions = getattr(
+        result,
+        "new_peak_positions",
+        None,
+    )
+
+    if new_peak_positions is None:
+        new_peak_positions = []
+
+    return write_measured_positions_into_table(
+        table_data=table_data,
+        peak_positions=new_peak_positions,
+        mie_model=mie_model,
+        logger=logger,
+    )
 
 
 def context_is_valid_for_process(
@@ -226,6 +316,39 @@ def context_is_valid_for_process(
     return True
 
 
+def build_missing_context_message(
+    *,
+    process: Any,
+    uploaded_fcs_path: Any,
+    detector_channels: dict[str, Any],
+) -> str:
+    """
+    Build a precise missing context message for a process.
+    """
+    if not clean_optional_string(uploaded_fcs_path):
+        return "Upload an FCS file first."
+
+    missing_channel_names: list[str] = []
+
+    for channel_name in process.get_required_detector_channels():
+        if not clean_optional_string(detector_channels.get(channel_name)):
+            missing_channel_names.append(
+                str(channel_name),
+            )
+
+    if not missing_channel_names:
+        return "Upload an FCS file and select the required detector channel(s) first."
+
+    if len(missing_channel_names) == 1:
+        return f"Select the {missing_channel_names[0]} detector channel first."
+
+    missing_channel_text = " and ".join(
+        missing_channel_names,
+    )
+
+    return f"Select the {missing_channel_text} detector channels first."
+
+
 def build_status_children(
     *,
     status_component_ids: list[dict[str, Any]],
@@ -240,6 +363,7 @@ def build_status_children(
     for status_component_id in status_component_ids or []:
         if status_component_id.get("process") == target_process_name:
             children.append(status)
+
         else:
             children.append("")
 

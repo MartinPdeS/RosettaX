@@ -11,11 +11,40 @@ logger = logging.getLogger(__name__)
 
 
 PEAK_SCRIPT_PACKAGE_NAME = "RosettaX.peak_script"
+DEFAULT_PROCESS_NAME = "automatic_1d"
+
+
+def clean_optional_string(value: Any) -> str:
+    """
+    Normalize an optional string value.
+
+    Parameters
+    ----------
+    value:
+        Raw value.
+
+    Returns
+    -------
+    str
+        Cleaned string value.
+    """
+    if value is None:
+        return ""
+
+    cleaned_value = str(value).strip()
+
+    if not cleaned_value:
+        return ""
+
+    if cleaned_value.lower() == "none":
+        return ""
+
+    return cleaned_value
 
 
 def load_peak_scripts() -> list[Any]:
     """
-    Load the shared peak scripts used by the scattering peak section.
+    Load all shared peak scripts.
 
     A valid script class is any concrete class in RosettaX.peak_script that has:
     - process_name
@@ -23,17 +52,22 @@ def load_peak_scripts() -> list[Any]:
     - get_required_detector_channels
     - build_controls
 
-    This intentionally avoids a fluorescence specific script folder.
+    Returns
+    -------
+    list[Any]
+        Instantiated peak script objects.
     """
     try:
         package = importlib.import_module(
             PEAK_SCRIPT_PACKAGE_NAME,
         )
+
     except Exception:
         logger.exception(
-            "Failed to import shared peak script package %r.",
+            "Failed to import peak script package %r.",
             PEAK_SCRIPT_PACKAGE_NAME,
         )
+
         return []
 
     scripts: list[Any] = []
@@ -44,7 +78,7 @@ def load_peak_scripts() -> list[Any]:
         if module_name.startswith("_"):
             continue
 
-        if module_name in {"base", "__init__"}:
+        if module_name in {"base", "__init__", "registry"}:
             continue
 
         full_module_name = f"{PEAK_SCRIPT_PACKAGE_NAME}.{module_name}"
@@ -53,11 +87,13 @@ def load_peak_scripts() -> list[Any]:
             module = importlib.import_module(
                 full_module_name,
             )
+
         except Exception:
             logger.exception(
-                "Failed to import shared peak script module %r.",
+                "Failed to import peak script module %r.",
                 full_module_name,
             )
+
             continue
 
         script_class = find_script_class_in_module(
@@ -69,12 +105,14 @@ def load_peak_scripts() -> list[Any]:
                 "No valid peak script class found in module %r.",
                 full_module_name,
             )
+
             continue
 
         try:
             scripts.append(
                 script_class(),
             )
+
         except Exception:
             logger.exception(
                 "Failed to instantiate peak script class %r from module %r.",
@@ -83,7 +121,7 @@ def load_peak_scripts() -> list[Any]:
             )
 
     logger.debug(
-        "Loaded %d shared peak scripts for fluorescence section: %r",
+        "Loaded %d peak scripts: %r",
         len(scripts),
         [
             getattr(script, "process_name", None)
@@ -100,6 +138,16 @@ def find_script_class_in_module(
 ) -> type | None:
     """
     Find the first concrete peak script class in a module.
+
+    Parameters
+    ----------
+    module:
+        Imported Python module.
+
+    Returns
+    -------
+    type | None
+        Peak script class if one is found.
     """
     candidates: list[type] = []
 
@@ -137,11 +185,33 @@ def find_script_class_in_module(
     return candidates[0]
 
 
+def get_peak_process_instances() -> list[Any]:
+    """
+    Return dynamically discovered peak process instances.
+
+    Returns
+    -------
+    list[Any]
+        Instantiated peak process objects.
+    """
+    return load_peak_scripts()
+
+
 def build_script_map(
     scripts: list[Any],
 ) -> dict[str, Any]:
     """
     Build a script lookup by process name.
+
+    Parameters
+    ----------
+    scripts:
+        Peak script instances.
+
+    Returns
+    -------
+    dict[str, Any]
+        Mapping from process name to script instance.
     """
     return {
         str(script.process_name): script
@@ -149,11 +219,96 @@ def build_script_map(
     }
 
 
+def resolve_process_name(process_name: Any) -> str:
+    """
+    Resolve a process name to a valid non empty string.
+
+    Parameters
+    ----------
+    process_name:
+        Raw process name.
+
+    Returns
+    -------
+    str
+        Resolved process name.
+    """
+    process_name_clean = clean_optional_string(
+        process_name,
+    )
+
+    if process_name_clean:
+        return process_name_clean
+
+    return DEFAULT_PROCESS_NAME
+
+
+def get_process_instance(
+    *,
+    process_name: Any,
+) -> Any:
+    """
+    Return a discovered peak process instance for a selected process name.
+
+    Parameters
+    ----------
+    process_name:
+        Selected process name.
+
+    Returns
+    -------
+    Any
+        Matching peak process instance, or None.
+    """
+    resolved_process_name = resolve_process_name(
+        process_name,
+    )
+
+    scripts = get_peak_process_instances()
+
+    for script in scripts:
+        if getattr(script, "process_name", None) == resolved_process_name:
+            return script
+
+    for script in scripts:
+        option = script.get_process_option()
+
+        if option.get("value") == resolved_process_name:
+            return script
+
+    return None
+
+
+def build_peak_process_options() -> list[dict[str, str]]:
+    """
+    Build peak process dropdown options from discovered peak scripts.
+
+    Returns
+    -------
+    list[dict[str, str]]
+        Dropdown options.
+    """
+    return [
+        script.get_process_option()
+        for script in get_peak_process_instances()
+    ]
+
+
 def get_default_script_name(
     scripts: list[Any],
 ) -> str | None:
     """
     Return the first available script name.
+
+    Parameters
+    ----------
+    scripts:
+        Peak script instances.
+
+    Returns
+    -------
+    str | None
+        Default script name.
     """
     if not scripts:
         return None

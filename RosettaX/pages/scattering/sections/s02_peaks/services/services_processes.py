@@ -3,10 +3,10 @@
 from typing import Any
 import logging
 
-from RosettaX.peak_script import build_peak_process_options
-from RosettaX.peak_script import get_peak_process_instances
-from RosettaX.peak_script import get_process_instance
-from RosettaX.peak_script import resolve_process_name
+from RosettaX.peak_script.registry import build_peak_process_options
+from RosettaX.peak_script.registry import get_peak_process_instances
+from RosettaX.peak_script.registry import get_process_instance
+from RosettaX.peak_script.registry import resolve_process_name
 
 
 logger = logging.getLogger(__name__)
@@ -15,6 +15,11 @@ logger = logging.getLogger(__name__)
 def get_peak_processes() -> list[Any]:
     """
     Return dynamically discovered peak process instances.
+
+    Returns
+    -------
+    list[Any]
+        Peak process instances.
     """
     return get_peak_process_instances()
 
@@ -25,6 +30,16 @@ def get_process_instance_for_name(
 ) -> Any:
     """
     Return a discovered peak process instance for a selected process name.
+
+    Parameters
+    ----------
+    process_name:
+        Selected process name.
+
+    Returns
+    -------
+    Any
+        Matching peak process instance, or None.
     """
     return get_process_instance(
         process_name=process_name,
@@ -34,6 +49,11 @@ def get_process_instance_for_name(
 def build_process_options() -> list[dict[str, str]]:
     """
     Build peak detection process dropdown options from discovered peak scripts.
+
+    Returns
+    -------
+    list[dict[str, str]]
+        Dropdown options.
     """
     options = build_peak_process_options()
 
@@ -53,8 +73,24 @@ def build_process_visibility_styles(
 ) -> list[dict[str, Any]]:
     """
     Build visibility styles for every rendered process container.
+
+    Parameters
+    ----------
+    process_name:
+        Selected process name.
+
+    process_container_ids:
+        Pattern matched process container ids.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        CSS style dictionaries.
     """
-    resolved_process_name = resolve_process_name(process_name)
+    resolved_process_name = resolve_process_name(
+        process_name,
+    )
+
     styles: list[dict[str, Any]] = []
 
     for process_container_id in process_container_ids or []:
@@ -65,7 +101,12 @@ def build_process_visibility_styles(
         )
 
         if process is None:
-            styles.append({"display": "none"})
+            styles.append(
+                {
+                    "display": "none",
+                }
+            )
+
             continue
 
         styles.append(
@@ -93,8 +134,24 @@ def resolve_graph_toggle_for_process(
 ) -> Any:
     """
     Resolve graph visibility when the selected process changes.
+
+    Parameters
+    ----------
+    process_name:
+        Selected process name.
+
+    current_graph_toggle_value:
+        Current graph toggle value.
+
+    Returns
+    -------
+    Any
+        Resolved graph toggle value.
     """
-    resolved_process_name = resolve_process_name(process_name)
+    resolved_process_name = resolve_process_name(
+        process_name,
+    )
+
     process = get_process_instance(
         process_name=resolved_process_name,
     )
@@ -106,6 +163,7 @@ def resolve_graph_toggle_for_process(
             "Forcing graph visible for process_name=%r",
             resolved_process_name,
         )
+
         return ["enabled"]
 
     return current_graph_toggle_value

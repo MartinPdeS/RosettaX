@@ -7,8 +7,10 @@ from typing import Any, Optional
 import dash_bootstrap_components as dbc
 from dash import Input, Output, State, callback, dcc, html
 
+from RosettaX.pages.fluorescence.state import FluorescencePageState
 from RosettaX.utils import styling, ui_forms
 from RosettaX.utils.runtime_config import RuntimeConfig
+
 from . import services
 
 
@@ -22,15 +24,14 @@ class Upload:
     Responsibilities
     ----------------
     - Render the fluorescence calibration upload area.
-    - Store the uploaded FCS path in session state.
-    - Store the uploaded filename in session state.
+    - Store the uploaded FCS path in the page state store.
+    - Store the uploaded filename in the page state store.
+    - Clear fluorescence peak annotations after a new upload.
     - Synchronize the uploaded path into runtime-config-store.
 
     Notes
     -----
-    This section does not populate detector dropdowns anymore.
-
-    Detector selection is now owned by the active peak script in s03_peaks.
+    Detector selection is owned by the active peak script in s03_peaks.
     """
 
     def __init__(self, page) -> None:
@@ -43,7 +44,7 @@ class Upload:
         """
         Use the default profile only for initial layout construction.
 
-        Live session state must come from runtime-config-store inside callbacks.
+        Live session state must come from the page state store inside callbacks.
         """
         runtime_config = RuntimeConfig.from_default_profile()
 
@@ -52,7 +53,7 @@ class Upload:
             default=None,
         )
 
-    def get_layout(self):
+    def get_layout(self) -> html.Div:
         initial_fcs_path = self._get_initial_fluorescence_fcs_file_path()
         initial_filename = Path(initial_fcs_path).name if initial_fcs_path else ""
 
@@ -67,7 +68,6 @@ class Upload:
                 self._build_hero_section(),
                 html.Div(style={"height": "16px"}),
                 self._build_upload_card(
-                    initial_fcs_path=initial_fcs_path,
                     initial_filename=initial_filename,
                 ),
             ]
@@ -106,7 +106,6 @@ class Upload:
     def _build_upload_card(
         self,
         *,
-        initial_fcs_path: Optional[str],
         initial_filename: str,
     ) -> dbc.Card:
         return dbc.Card(
@@ -114,16 +113,6 @@ class Upload:
                 dbc.CardHeader("1. Upload FCS File"),
                 dbc.CardBody(
                     [
-                        dcc.Store(
-                            id=self.ids.uploaded_fcs_path_store,
-                            data=initial_fcs_path,
-                            storage_type="session",
-                        ),
-                        dcc.Store(
-                            id=self.ids.uploaded_fcs_filename_store,
-                            data=initial_filename,
-                            storage_type="session",
-                        ),
                         dcc.Upload(
                             id=self.ids.upload,
                             children=html.Div(
@@ -138,6 +127,9 @@ class Upload:
                         ),
                         html.Div(
                             id=self.ids.upload_filename,
+                            children=services.build_loaded_filename_text(
+                                initial_filename,
+                            ),
                         ),
                     ],
                     style=styling.PAGE["body_scroll"],
@@ -145,7 +137,7 @@ class Upload:
             ]
         )
 
-    def register_callbacks(self):
+    def register_callbacks(self) -> None:
         """
         Register callbacks for the fluorescence upload section.
         """
@@ -157,58 +149,86 @@ class Upload:
     def _register_filename_display_callback(self) -> None:
         @callback(
             Output(self.ids.upload_filename, "children"),
-            Input(self.ids.uploaded_fcs_filename_store, "data"),
+            Input(self.page.ids.State.page_state_store, "data"),
         )
-        def show_filename(stored_filename: Any) -> str:
+        def show_filename(page_state_payload: Any) -> str:
+            page_state = FluorescencePageState.from_dict(
+                page_state_payload if isinstance(page_state_payload, dict) else None
+            )
+
             logger.debug(
-                "show_filename called with stored_filename=%r",
-                stored_filename,
+                "show_filename called with uploaded_filename=%r",
+                page_state.uploaded_filename,
             )
 
             return services.build_loaded_filename_text(
-                stored_filename,
+                page_state.uploaded_filename,
             )
 
     def _register_upload_callback(self) -> None:
         @callback(
-            Output(self.ids.uploaded_fcs_path_store, "data"),
-            Output(self.ids.uploaded_fcs_filename_store, "data"),
-            Output("runtime-config-store", "data", allow_duplicate=True),
+            Output(
+                self.page.ids.State.page_state_store,
+                "data",
+                allow_duplicate=True,
+            ),
+            Output(
+                "runtime-config-store",
+                "data",
+                allow_duplicate=True,
+            ),
             Input(self.ids.upload, "contents"),
-            Input(self.ids.uploaded_fcs_path_store, "data"),
             State(self.ids.upload, "filename"),
-            State(self.ids.uploaded_fcs_filename_store, "data"),
+            State(self.page.ids.State.page_state_store, "data"),
             State("runtime-config-store", "data"),
-            prevent_initial_call="initial_duplicate",
+            prevent_initial_call=True,
         )
         def handle_upload(
             contents: Any,
-            stored_fcs_path: Any,
             filename: Any,
-            stored_filename: Any,
+            page_state_payload: Any,
             runtime_config_data: Any,
-        ) -> tuple[Any, Any, Any]:
+        ) -> tuple[Any, Any]:
             logger.debug(
-                "handle_upload called with contents_type=%s stored_fcs_path=%r "
-                "filename=%r stored_filename=%r",
+                "handle_upload called with contents_type=%s filename=%r "
+                "page_state_payload_type=%s runtime_config_data_type=%s",
                 type(contents).__name__,
-                stored_fcs_path,
                 filename,
-                stored_filename,
+                type(page_state_payload).__name__,
+                type(runtime_config_data).__name__,
+            )
+
+            current_page_state = FluorescencePageState.from_dict(
+                page_state_payload if isinstance(page_state_payload, dict) else None
             )
 
             upload_state = services.build_upload_state(
                 page=self.page,
                 contents=services.clean_optional_string(contents),
-                stored_fcs_path=services.clean_optional_string(stored_fcs_path),
+                stored_fcs_path=services.clean_optional_string(
+                    current_page_state.uploaded_fcs_path,
+                ),
                 filename=services.clean_optional_string(filename),
-                stored_filename=services.clean_optional_string(stored_filename),
+                stored_filename=services.clean_optional_string(
+                    current_page_state.uploaded_filename,
+                ),
                 current_scattering_detector_value=None,
                 current_fluorescence_detector_value=None,
                 runtime_config_data=runtime_config_data
                 if isinstance(runtime_config_data, dict)
                 else None,
                 logger=logger,
+            )
+
+            next_page_state = current_page_state.update(
+                uploaded_fcs_path=upload_state.uploaded_fcs_path,
+                uploaded_filename=upload_state.uploaded_filename,
+                fluorescence_peak_lines_payload={
+                    "positions": [],
+                    "labels": [],
+                },
+                fluorescence_histogram_payload=None,
+                fluorescence_source_channel=None,
             )
 
             logger.debug(
@@ -218,7 +238,6 @@ class Upload:
             )
 
             return (
-                upload_state.uploaded_fcs_path,
-                upload_state.uploaded_filename,
+                next_page_state.to_dict(),
                 upload_state.runtime_config_data,
             )

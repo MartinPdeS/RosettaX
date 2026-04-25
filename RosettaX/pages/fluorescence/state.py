@@ -18,6 +18,7 @@ class FluorescencePageState:
     """
 
     uploaded_fcs_path: Optional[str] = None
+    uploaded_filename: Optional[str] = None
 
     calibration_payload: Optional[dict[str, Any]] = None
 
@@ -25,7 +26,7 @@ class FluorescencePageState:
 
     fluorescence_histogram_payload: Optional[dict[str, Any]] = None
     fluorescence_source_channel: Optional[str] = None
-    fluorescence_peak_lines: Optional[list[float]] = None
+    fluorescence_peak_lines_payload: Optional[dict[str, Any]] = None
 
     status_message: str = ""
 
@@ -39,7 +40,12 @@ class FluorescencePageState:
         FluorescencePageState
             Empty page state.
         """
-        return cls()
+        return cls(
+            fluorescence_peak_lines_payload={
+                "positions": [],
+                "labels": [],
+            },
+        )
 
     @classmethod
     def from_dict(cls, payload: Optional[dict[str, Any]]) -> "FluorescencePageState":
@@ -70,7 +76,17 @@ class FluorescencePageState:
             if key in valid_keys
         }
 
-        return cls(**clean_payload)
+        state = cls(**clean_payload)
+
+        if state.fluorescence_peak_lines_payload is None:
+            state = state.update(
+                fluorescence_peak_lines_payload={
+                    "positions": [],
+                    "labels": [],
+                }
+            )
+
+        return state
 
     def to_dict(self) -> dict[str, Any]:
         """

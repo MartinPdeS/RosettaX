@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 import logging
 from typing import Any, Optional
 
@@ -26,21 +27,19 @@ class Peaks:
     This section discovers peak process scripts dynamically from
     RosettaX/peak_script.
 
-    Each process script owns:
-    - its detector channel dropdowns
-    - its local control UI
-    - its action buttons
-    - its graph click behavior when relevant
-    - its optional process specific settings
+    Mutation model
+    --------------
+    This section uses a single reducer style mutation callback for all peak
+    workflow state changes.
 
-    Adding a new process should only require adding a new file under
-    RosettaX/peak_script.
+    That callback handles:
+    - process changes
+    - detector dropdown changes
+    - manual graph clicks
+    - automatic process action buttons
 
-    State ownership
-    ---------------
-    Uploaded FCS path and peak line payloads are stored in the page state store.
-    This section no longer reads or writes section specific Dash stores for
-    those values.
+    This avoids callback races where one callback writes peak lines while another
+    callback clears them immediately afterward.
     """
 
     def __init__(self, page) -> None:
@@ -260,10 +259,8 @@ class Peaks:
         self._register_manual_process_graph_visibility_callback()
         self._register_graph_visibility_callback()
         self._register_histogram_controls_visibility_callback()
-        self._register_peak_context_reset_callback()
         self._register_graph_callback()
-        self._register_manual_click_callback()
-        self._register_process_action_callback()
+        self._register_peak_workflow_mutation_callback()
 
     def _register_peak_script_detector_dropdowns_callback(self) -> None:
         @dash.callback(
@@ -461,60 +458,6 @@ class Peaks:
                 "display": "none",
             }
 
-    def _register_peak_context_reset_callback(self) -> None:
-        @dash.callback(
-            dash.Output(
-                self.page.ids.State.page_state_store,
-                "data",
-                allow_duplicate=True,
-            ),
-            dash.Output(
-                self.page.ids.Scattering.process_status_pattern(),
-                "children",
-                allow_duplicate=True,
-            ),
-            dash.Input(self.page.ids.Scattering.process_dropdown, "value"),
-            dash.Input(
-                self.page.ids.Scattering.process_detector_dropdown_pattern(),
-                "value",
-            ),
-            dash.State(self.page.ids.State.page_state_store, "data"),
-            dash.State(
-                self.page.ids.Scattering.process_status_pattern(),
-                "id",
-            ),
-            prevent_initial_call=True,
-        )
-        def clear_peak_lines_on_context_change(
-            process_name: Any,
-            detector_dropdown_values: list[Any],
-            page_state_payload: Any,
-            status_component_ids: list[dict[str, Any]],
-        ) -> tuple[dict[str, Any], list[str]]:
-            page_state = ScatteringPageState.from_dict(
-                page_state_payload if isinstance(page_state_payload, dict) else None
-            )
-
-            logger.debug(
-                "clear_peak_lines_on_context_change called with uploaded_fcs_path=%r "
-                "process_name=%r detector_dropdown_values=%r",
-                page_state.uploaded_fcs_path,
-                process_name,
-                detector_dropdown_values,
-            )
-
-            page_state = page_state.update(
-                peak_lines_payload=services.build_empty_peak_lines_payload(),
-            )
-
-            return (
-                page_state.to_dict(),
-                [
-                    ""
-                    for _ in (status_component_ids or [])
-                ],
-            )
-
     def _register_graph_callback(self) -> None:
         @dash.callback(
             dash.Output(self.page.ids.Scattering.graph_hist, "figure"),
@@ -608,15 +551,15 @@ class Peaks:
                     f"{type(exc).__name__}: {exc}"
                 )
 
-    def _register_manual_click_callback(self) -> None:
+    def _register_peak_workflow_mutation_callback(self) -> None:
         @dash.callback(
             dash.Output(
-                self.page.ids.Calibration.bead_table,
+                self.page.ids.State.page_state_store,
                 "data",
                 allow_duplicate=True,
             ),
             dash.Output(
-                self.page.ids.State.page_state_store,
+                self.page.ids.Calibration.bead_table,
                 "data",
                 allow_duplicate=True,
             ),
@@ -625,115 +568,24 @@ class Peaks:
                 "children",
                 allow_duplicate=True,
             ),
-            dash.Input(self.page.ids.Scattering.graph_hist, "clickData"),
-            dash.State(self.page.ids.Scattering.process_dropdown, "value"),
-            dash.State(self.page.ids.State.page_state_store, "data"),
-            dash.State(
-                self.page.ids.Scattering.process_detector_dropdown_pattern(),
-                "id",
-            ),
-            dash.State(
+            dash.Input(self.page.ids.Scattering.process_dropdown, "value"),
+            dash.Input(
                 self.page.ids.Scattering.process_detector_dropdown_pattern(),
                 "value",
-            ),
-            dash.State(self.page.ids.Calibration.bead_table, "data"),
-            dash.State(self.page.ids.Parameters.mie_model, "value"),
-            dash.State(
-                self.page.ids.Scattering.process_status_pattern(),
-                "id",
-            ),
-            prevent_initial_call=True,
-        )
-        def add_manual_peak_from_graph_click(
-            click_data: Any,
-            process_name: Any,
-            page_state_payload: Any,
-            detector_dropdown_ids: list[dict[str, Any]],
-            detector_dropdown_values: list[Any],
-            table_data: Optional[list[dict[str, Any]]],
-            mie_model: Any,
-            status_component_ids: list[dict[str, Any]],
-        ) -> tuple[Any, Any, list[Any]]:
-            page_state = ScatteringPageState.from_dict(
-                page_state_payload if isinstance(page_state_payload, dict) else None
-            )
-
-            logger.debug(
-                "add_manual_peak_from_graph_click called with click_data=%r "
-                "process_name=%r uploaded_fcs_path=%r detector_dropdown_ids=%r "
-                "detector_dropdown_values=%r table_rows=%r mie_model=%r "
-                "peak_lines_payload=%r",
-                click_data,
-                process_name,
-                page_state.uploaded_fcs_path,
-                detector_dropdown_ids,
-                detector_dropdown_values,
-                None if table_data is None else len(table_data),
-                mie_model,
-                page_state.peak_lines_payload,
-            )
-
-            table_result, peak_lines_result, status = services.resolve_manual_peak_click(
-                click_data=click_data,
-                process_name=process_name,
-                uploaded_fcs_path=page_state.uploaded_fcs_path,
-                detector_dropdown_ids=detector_dropdown_ids,
-                detector_dropdown_values=detector_dropdown_values,
-                peak_lines_payload=page_state.peak_lines_payload,
-                table_data=table_data,
-                mie_model=mie_model,
-                logger=logger,
-            )
-
-            status_children = services.build_status_children(
-                status_component_ids=status_component_ids,
-                target_process_name=services.resolve_process_name(process_name),
-                status=status,
-            )
-
-            if table_result is None:
-                return dash.no_update, dash.no_update, status_children
-
-            page_state = page_state.update(
-                peak_lines_payload=peak_lines_result,
-            )
-
-            return table_result, page_state.to_dict(), status_children
-
-    def _register_process_action_callback(self) -> None:
-        @dash.callback(
-            dash.Output(
-                self.page.ids.Calibration.bead_table,
-                "data",
-                allow_duplicate=True,
-            ),
-            dash.Output(
-                self.page.ids.State.page_state_store,
-                "data",
-                allow_duplicate=True,
-            ),
-            dash.Output(
-                self.page.ids.Scattering.process_status_pattern(),
-                "children",
-                allow_duplicate=True,
             ),
             dash.Input(
                 self.page.ids.Scattering.process_action_button_pattern(),
                 "n_clicks",
             ),
-            dash.State(
-                self.page.ids.Scattering.process_action_button_pattern(),
-                "id",
-            ),
-            dash.State(self.page.ids.Scattering.process_dropdown, "value"),
+            dash.Input(self.page.ids.Scattering.graph_hist, "clickData"),
             dash.State(self.page.ids.State.page_state_store, "data"),
             dash.State(
                 self.page.ids.Scattering.process_detector_dropdown_pattern(),
                 "id",
             ),
             dash.State(
-                self.page.ids.Scattering.process_detector_dropdown_pattern(),
-                "value",
+                self.page.ids.Scattering.process_action_button_pattern(),
+                "id",
             ),
             dash.State(self.page.ids.Scattering.peak_count_input, "value"),
             dash.State(
@@ -750,13 +602,14 @@ class Peaks:
             ),
             prevent_initial_call=True,
         )
-        def run_process_action(
-            action_clicks: list[Any],
-            action_ids: list[dict[str, Any]],
+        def reduce_peak_workflow_event(
             process_name: Any,
+            detector_dropdown_values: list[Any],
+            action_clicks: list[Any],
+            click_data: Any,
             page_state_payload: Any,
             detector_dropdown_ids: list[dict[str, Any]],
-            detector_dropdown_values: list[Any],
+            action_ids: list[dict[str, Any]],
             peak_count: Any,
             max_events_for_plots: Any,
             table_data: Optional[list[dict[str, Any]]],
@@ -767,31 +620,55 @@ class Peaks:
             del action_clicks
             del action_ids
 
-            triggered_action_id = dash.ctx.triggered_id
+            triggered_id = dash.ctx.triggered_id
 
             page_state = ScatteringPageState.from_dict(
                 page_state_payload if isinstance(page_state_payload, dict) else None
             )
 
             logger.debug(
-                "run_process_action called with triggered_action_id=%r "
+                "reduce_peak_workflow_event called with triggered_id=%r "
                 "process_name=%r uploaded_fcs_path=%r detector_dropdown_ids=%r "
-                "detector_dropdown_values=%r peak_count=%r max_events_for_plots=%r",
-                triggered_action_id,
+                "detector_dropdown_values=%r peak_lines_payload=%r",
+                triggered_id,
                 process_name,
                 page_state.uploaded_fcs_path,
                 detector_dropdown_ids,
                 detector_dropdown_values,
-                peak_count,
-                max_events_for_plots,
+                page_state.peak_lines_payload,
             )
 
-            table_result, peak_lines_result, status, target_process_name = (
-                services.resolve_process_action(
-                    triggered_action_id=triggered_action_id,
-                    backend=self.page.backend,
+            if triggered_id == self.page.ids.Scattering.process_dropdown:
+                return self._clear_peak_context(
+                    page_state=page_state,
                     process_name=process_name,
-                    uploaded_fcs_path=page_state.uploaded_fcs_path,
+                    status_component_ids=status_component_ids,
+                )
+
+            if self._trigger_is_detector_dropdown_change(triggered_id):
+                return self._clear_peak_context(
+                    page_state=page_state,
+                    process_name=process_name,
+                    status_component_ids=status_component_ids,
+                )
+
+            if triggered_id == self.page.ids.Scattering.graph_hist:
+                return self._handle_manual_graph_click(
+                    click_data=click_data,
+                    process_name=process_name,
+                    page_state=page_state,
+                    detector_dropdown_ids=detector_dropdown_ids,
+                    detector_dropdown_values=detector_dropdown_values,
+                    table_data=table_data,
+                    mie_model=mie_model,
+                    status_component_ids=status_component_ids,
+                )
+
+            if self._trigger_is_action_button(triggered_id):
+                return self._handle_process_action(
+                    triggered_action_id=triggered_id,
+                    process_name=process_name,
+                    page_state=page_state,
                     detector_dropdown_ids=detector_dropdown_ids,
                     detector_dropdown_values=detector_dropdown_values,
                     peak_count=peak_count,
@@ -799,21 +676,207 @@ class Peaks:
                     table_data=table_data,
                     mie_model=mie_model,
                     runtime_config_data=runtime_config_data,
-                    logger=logger,
+                    status_component_ids=status_component_ids,
                 )
+
+            logger.debug(
+                "reduce_peak_workflow_event ignored unsupported triggered_id=%r",
+                triggered_id,
             )
 
-            status_children = services.build_status_children(
-                status_component_ids=status_component_ids,
-                target_process_name=target_process_name,
-                status=status,
+            return (
+                dash.no_update,
+                dash.no_update,
+                dash.no_update,
             )
 
-            if table_result is None:
-                return dash.no_update, dash.no_update, status_children
+    def _trigger_is_detector_dropdown_change(self, triggered_id: Any) -> bool:
+        if not isinstance(triggered_id, dict):
+            return False
 
-            page_state = page_state.update(
-                peak_lines_payload=peak_lines_result,
+        return triggered_id.get("type") == self.page.ids.Scattering.process_detector_dropdown_type
+
+    def _trigger_is_action_button(self, triggered_id: Any) -> bool:
+        if not isinstance(triggered_id, dict):
+            return False
+
+        return triggered_id.get("type") == self.page.ids.Scattering.process_action_button_type
+
+    def _clear_peak_context(
+        self,
+        *,
+        page_state: ScatteringPageState,
+        process_name: Any,
+        status_component_ids: list[dict[str, Any]],
+    ) -> tuple[dict[str, Any], Any, list[Any]]:
+        logger.debug(
+            "_clear_peak_context called with process_name=%r uploaded_fcs_path=%r",
+            process_name,
+            page_state.uploaded_fcs_path,
+        )
+
+        page_state = page_state.update(
+            peak_lines_payload=services.build_empty_peak_lines_payload(),
+        )
+
+        status_children = services.build_status_children(
+            status_component_ids=status_component_ids,
+            target_process_name=services.resolve_process_name(process_name),
+            status="",
+        )
+
+        return (
+            page_state.to_dict(),
+            dash.no_update,
+            status_children,
+        )
+
+    def _handle_manual_graph_click(
+        self,
+        *,
+        click_data: Any,
+        process_name: Any,
+        page_state: ScatteringPageState,
+        detector_dropdown_ids: list[dict[str, Any]],
+        detector_dropdown_values: list[Any],
+        table_data: Optional[list[dict[str, Any]]],
+        mie_model: Any,
+        status_component_ids: list[dict[str, Any]],
+    ) -> tuple[Any, Any, list[Any]]:
+        logger.debug(
+            "_handle_manual_graph_click called with click_data=%r process_name=%r "
+            "uploaded_fcs_path=%r detector_dropdown_ids=%r detector_dropdown_values=%r "
+            "table_rows=%r mie_model=%r peak_lines_payload=%r",
+            click_data,
+            process_name,
+            page_state.uploaded_fcs_path,
+            detector_dropdown_ids,
+            detector_dropdown_values,
+            None if table_data is None else len(table_data),
+            mie_model,
+            page_state.peak_lines_payload,
+        )
+
+        table_result, peak_lines_result, status = services.resolve_manual_peak_click(
+            click_data=click_data,
+            process_name=process_name,
+            uploaded_fcs_path=page_state.uploaded_fcs_path,
+            detector_dropdown_ids=detector_dropdown_ids,
+            detector_dropdown_values=detector_dropdown_values,
+            peak_lines_payload=page_state.peak_lines_payload,
+            table_data=table_data,
+            mie_model=mie_model,
+            logger=logger,
+        )
+
+        target_process_name = services.resolve_process_name(
+            process_name,
+        )
+
+        status_children = services.build_status_children(
+            status_component_ids=status_component_ids,
+            target_process_name=target_process_name,
+            status=status,
+        )
+
+        logger.debug(
+            "_handle_manual_graph_click returned table_result_type=%s "
+            "peak_lines_result=%r status=%r",
+            type(table_result).__name__,
+            peak_lines_result,
+            status,
+        )
+
+        if table_result is None:
+            return (
+                dash.no_update,
+                dash.no_update,
+                status_children,
             )
 
-            return table_result, page_state.to_dict(), status_children
+        page_state = page_state.update(
+            peak_lines_payload=peak_lines_result,
+        )
+
+        return (
+            page_state.to_dict(),
+            table_result,
+            status_children,
+        )
+
+    def _handle_process_action(
+        self,
+        *,
+        triggered_action_id: Any,
+        process_name: Any,
+        page_state: ScatteringPageState,
+        detector_dropdown_ids: list[dict[str, Any]],
+        detector_dropdown_values: list[Any],
+        peak_count: Any,
+        max_events_for_plots: Any,
+        table_data: Optional[list[dict[str, Any]]],
+        mie_model: Any,
+        runtime_config_data: Any,
+        status_component_ids: list[dict[str, Any]],
+    ) -> tuple[Any, Any, list[Any]]:
+        logger.debug(
+            "_handle_process_action called with triggered_action_id=%r "
+            "process_name=%r uploaded_fcs_path=%r detector_dropdown_ids=%r "
+            "detector_dropdown_values=%r peak_count=%r max_events_for_plots=%r",
+            triggered_action_id,
+            process_name,
+            page_state.uploaded_fcs_path,
+            detector_dropdown_ids,
+            detector_dropdown_values,
+            peak_count,
+            max_events_for_plots,
+        )
+
+        table_result, peak_lines_result, status, target_process_name = (
+            services.resolve_process_action(
+                triggered_action_id=triggered_action_id,
+                backend=self.page.backend,
+                process_name=process_name,
+                uploaded_fcs_path=page_state.uploaded_fcs_path,
+                detector_dropdown_ids=detector_dropdown_ids,
+                detector_dropdown_values=detector_dropdown_values,
+                peak_count=peak_count,
+                max_events_for_plots=max_events_for_plots,
+                table_data=table_data,
+                mie_model=mie_model,
+                runtime_config_data=runtime_config_data,
+                logger=logger,
+            )
+        )
+
+        status_children = services.build_status_children(
+            status_component_ids=status_component_ids,
+            target_process_name=target_process_name,
+            status=status,
+        )
+
+        logger.debug(
+            "_handle_process_action returned table_result_type=%s "
+            "peak_lines_result=%r status=%r target_process_name=%r",
+            type(table_result).__name__,
+            peak_lines_result,
+            status,
+            target_process_name,
+        )
+
+        if table_result is None:
+            return (
+                dash.no_update,
+                dash.no_update,
+                status_children,
+            )
+
+        page_state = page_state.update(
+            peak_lines_payload=peak_lines_result,
+        )
+
+        return (
+            page_state.to_dict(),
+            table_result,
+            status_children,
+        )

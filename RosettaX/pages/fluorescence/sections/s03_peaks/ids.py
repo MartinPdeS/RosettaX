@@ -14,7 +14,7 @@ class PeakSectionIds:
     The public method names intentionally match the scattering peak ID API
     because fluorescence and scattering use the same peak scripts.
 
-    The pattern-matching ``type`` values are fluorescence-specific to avoid Dash
+    The pattern matching type values are fluorescence specific to avoid Dash
     callback collisions with the scattering page.
     """
 
@@ -25,6 +25,14 @@ class PeakSectionIds:
     action_button_type: str = "fluorescence-peak-script-action-button"
     status_type: str = "fluorescence-peak-script-status"
     setting_type: str = "fluorescence-peak-script-setting"
+
+    @property
+    def process_detector_dropdown_type(self) -> str:
+        return self.detector_dropdown_type
+
+    @property
+    def process_action_button_type(self) -> str:
+        return self.action_button_type
 
     @property
     def process_dropdown(self) -> str:
