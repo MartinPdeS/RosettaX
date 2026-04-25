@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 import logging
 from typing import Any, Optional, Sequence
 
@@ -6,7 +7,8 @@ import dash
 import dash_bootstrap_components as dbc
 
 from RosettaX.pages.scattering.state import ScatteringPageState
-from RosettaX.utils import styling, graph_config
+from RosettaX.pages.sidebar.ids import SidebarIds
+from RosettaX.utils import graph_config, styling
 from RosettaX.utils.runtime_config import RuntimeConfig
 
 from . import presets
@@ -23,18 +25,30 @@ class Parameters:
     State ownership
     ---------------
     The visual input components still hold their local Dash values, but the
-    parameter set used for model computation is now copied into the scattering
-    page state after Compute Expected Coupling is clicked.
+    parameter set used for model computation is copied into the scattering page
+    state after Compute Expected Coupling is clicked.
+
+    Profile loading
+    ---------------
+    When a profile is explicitly loaded from the sidebar, the reference table is
+    rebuilt from the profile values even if the table already contains user
+    data.
     """
 
     sphere_table_columns = services.sphere_table_columns
     core_shell_table_columns = services.core_shell_table_columns
 
-    def __init__(self, page) -> None:
+    def __init__(
+        self,
+        page: Any,
+    ) -> None:
         self.page = page
         self.ids = page.ids.Parameters
 
-        logger.debug("Initialized Parameters section with page=%r", page)
+        logger.debug(
+            "Initialized Parameters section with page=%r",
+            page,
+        )
 
     def _get_default_runtime_config(self) -> RuntimeConfig:
         return RuntimeConfig.from_default_profile()
@@ -171,16 +185,6 @@ class Parameters:
             ]
         )
 
-    def _build_detector_configuration_preset_refresh_button(self) -> dash.html.Button:
-        return dash.html.Button(
-            "Reload detector presets",
-            id=self.ids.detector_configuration_preset_refresh_button,
-            n_clicks=0,
-            style={
-                "marginLeft": "10px",
-            },
-        )
-
     def _build_optical_configuration_section(self) -> dash.html.Div:
         return dash.html.Div(
             [
@@ -215,24 +219,17 @@ class Parameters:
                 ),
                 self._inline_row(
                     "Detector preset:",
-                    dash.html.Div(
-                        [
-                            dash.dcc.Dropdown(
-                                id=self.ids.detector_configuration_preset,
-                                options=services.build_detector_preset_options(),
-                                value=services.CUSTOM_DETECTOR_PRESET_NAME,
-                                placeholder="Select detector preset",
-                                clearable=False,
-                                searchable=False,
-                                persistence=True,
-                                persistence_type="session",
-                                style={"width": "320px"},
-                            ),
-                            self._build_detector_configuration_preset_refresh_button(),
-                        ],
+                    dash.dcc.Dropdown(
+                        id=self.ids.detector_configuration_preset,
+                        options=services.build_detector_preset_options(),
+                        value=services.CUSTOM_DETECTOR_PRESET_NAME,
+                        placeholder="Select detector preset",
+                        clearable=False,
+                        searchable=False,
+                        persistence=True,
+                        persistence_type="session",
                         style={
-                            "display": "flex",
-                            "alignItems": "center",
+                            "width": "320px",
                         },
                     ),
                     margin_top=True,
@@ -300,7 +297,9 @@ class Parameters:
                         ),
                     ],
                     id=self.ids.detector_configuration_custom_values_container,
-                    style={"display": "block"},
+                    style={
+                        "display": "block",
+                    },
                 ),
             ],
             style={
@@ -322,7 +321,10 @@ class Parameters:
                             detector_phi_angle_degree=self._get_default_detector_phi_angle_degree(),
                             detector_gamma_angle_degree=self._get_default_detector_gamma_angle_degree(),
                         ),
-                        style={**graph_config.PLOTLY_GRAPH_STYLE, "height": "30vh"},
+                        style={
+                            **graph_config.PLOTLY_GRAPH_STYLE,
+                            "height": "30vh",
+                        },
                         config=graph_config.PLOTLY_GRAPH_CONFIG,
                         className="optical-configuration-preview-graph",
                     ),
@@ -352,7 +354,9 @@ class Parameters:
                         searchable=False,
                         persistence=True,
                         persistence_type="session",
-                        style={"width": "220px"},
+                        style={
+                            "width": "220px",
+                        },
                     ),
                     margin_top=False,
                 ),
@@ -366,12 +370,16 @@ class Parameters:
                 dash.html.Div(
                     self._build_solid_sphere_parameters_block(),
                     id=self.ids.solid_sphere_container,
-                    style={"display": "block"},
+                    style={
+                        "display": "block",
+                    },
                 ),
                 dash.html.Div(
                     self._build_core_shell_parameters_block(),
                     id=self.ids.core_shell_container,
-                    style={"display": "none"},
+                    style={
+                        "display": "none",
+                    },
                 ),
             ]
         )
@@ -472,7 +480,6 @@ class Parameters:
 
         self._register_visibility_callbacks()
         self._register_refractive_index_callbacks()
-        self._register_detector_configuration_options_callback()
         self._register_detector_configuration_callbacks()
         self._register_optical_configuration_preview_callback()
         self._register_table_callbacks()
@@ -572,43 +579,76 @@ class Parameters:
         @dash.callback(
             dash.Output(
                 self.page.ids.Calibration.bead_table,
+                "columns",
+                allow_duplicate=True,
+            ),
+            dash.Output(
+                self.page.ids.Calibration.bead_table,
                 "data",
                 allow_duplicate=True,
             ),
             dash.Input("runtime-config-store", "data"),
+            dash.Input(SidebarIds.profile_load_event_store, "data"),
             dash.State(self.ids.mie_model, "value"),
             dash.State(self.page.ids.Calibration.bead_table, "data"),
             prevent_initial_call=True,
         )
         def populate_table_from_runtime_defaults_callback(
             runtime_config_data: Any,
+            profile_load_event_data: Any,
             mie_model: Any,
             current_rows: Optional[list[dict[str, Any]]],
-        ) -> Any:
-            resolved_mie_model = services.resolve_mie_model(mie_model)
+        ) -> tuple[Any, Any]:
+            profile_was_explicitly_loaded = (
+                isinstance(profile_load_event_data, dict)
+                and bool(profile_load_event_data.get("profile_name"))
+                and dash.ctx.triggered_id == SidebarIds.profile_load_event_store
+            )
+
+            runtime_config = RuntimeConfig.from_dict(
+                runtime_config_data if isinstance(runtime_config_data, dict) else None
+            )
+
+            resolved_mie_model = services.resolve_mie_model(
+                runtime_config.get_str(
+                    "particle_model.mie_model",
+                    default=mie_model or "Solid Sphere",
+                )
+            )
+
             normalized_current_rows = services.normalize_table_rows(
                 mie_model=resolved_mie_model,
                 current_rows=current_rows,
             )
 
             logger.debug(
-                "populate_table_from_runtime_defaults called with resolved_mie_model=%r "
-                "runtime_config_data=%r current_rows=%r",
+                "populate_table_from_runtime_defaults called with triggered_id=%r "
+                "profile_was_explicitly_loaded=%r resolved_mie_model=%r "
+                "runtime_config_data=%r current_rows=%r profile_load_event_data=%r",
+                dash.ctx.triggered_id,
+                profile_was_explicitly_loaded,
                 resolved_mie_model,
                 runtime_config_data,
                 normalized_current_rows,
+                profile_load_event_data,
             )
 
-            if not services.table_is_effectively_empty(
-                mie_model=resolved_mie_model,
-                rows=normalized_current_rows,
+            if (
+                not profile_was_explicitly_loaded
+                and not services.table_is_effectively_empty(
+                    mie_model=resolved_mie_model,
+                    rows=normalized_current_rows,
+                )
             ):
-                logger.debug("Table already contains user data. Leaving it unchanged.")
+                logger.debug(
+                    "Table already contains user data and no profile load event occurred. "
+                    "Leaving it unchanged."
+                )
 
-                return dash.no_update
+                return dash.no_update, dash.no_update
 
-            runtime_config = RuntimeConfig.from_dict(
-                runtime_config_data if isinstance(runtime_config_data, dict) else None
+            columns = services.get_table_columns_for_model(
+                resolved_mie_model,
             )
 
             rows = services.populate_table_from_runtime_defaults(
@@ -627,9 +667,15 @@ class Parameters:
                 ),
             )
 
-            logger.debug("Populated table from runtime defaults rows=%r", rows)
+            logger.debug(
+                "Populated scattering table from runtime defaults. "
+                "resolved_mie_model=%r columns=%r rows=%r",
+                resolved_mie_model,
+                columns,
+                rows,
+            )
 
-            return rows
+            return columns, rows
 
     def _register_post_compute_cleanup_callbacks(self) -> None:
         @dash.callback(
@@ -638,7 +684,9 @@ class Parameters:
             dash.Input(self.page.ids.Calibration.compute_model_btn, "n_clicks"),
             prevent_initial_call=True,
         )
-        def clear_table_selection_after_compute(_n_clicks: int) -> tuple[None, list]:
+        def clear_table_selection_after_compute(
+            _n_clicks: int,
+        ) -> tuple[None, list]:
             logger.debug("Clearing bead table selection after Compute Expected Coupling.")
 
             return None, []
@@ -653,7 +701,9 @@ class Parameters:
         def toggle_parameter_blocks(
             mie_model_value: Optional[str],
         ) -> tuple[dict[str, str], dict[str, str]]:
-            resolved_mie_model = services.resolve_mie_model(mie_model_value)
+            resolved_mie_model = services.resolve_mie_model(
+                mie_model_value,
+            )
 
             logger.debug(
                 "toggle_parameter_blocks called with mie_model_value=%r resolved_mie_model=%r",
@@ -662,12 +712,23 @@ class Parameters:
             )
 
             if resolved_mie_model == "Core/Shell Sphere":
-                return {"display": "none"}, {"display": "block"}
+                return {
+                    "display": "none",
+                }, {
+                    "display": "block",
+                }
 
-            return {"display": "block"}, {"display": "none"}
+            return {
+                "display": "block",
+            }, {
+                "display": "none",
+            }
 
     def _register_refractive_index_callbacks(self) -> None:
-        def apply_preset_value(preset_value: Any, current_value: Any) -> Any:
+        def apply_preset_value(
+            preset_value: Any,
+            current_value: Any,
+        ) -> Any:
             logger.debug(
                 "apply_preset_value called with preset_value=%r current_value=%r",
                 preset_value,
@@ -689,8 +750,14 @@ class Parameters:
             dash.State(self.ids.medium_refractive_index_custom, "value"),
             prevent_initial_call=True,
         )
-        def apply_medium_preset(preset_value: Any, current_value: Any) -> Any:
-            return apply_preset_value(preset_value, current_value)
+        def apply_medium_preset(
+            preset_value: Any,
+            current_value: Any,
+        ) -> Any:
+            return apply_preset_value(
+                preset_value,
+                current_value,
+            )
 
         @dash.callback(
             dash.Output(
@@ -702,8 +769,14 @@ class Parameters:
             dash.State(self.ids.particle_refractive_index_custom, "value"),
             prevent_initial_call=True,
         )
-        def apply_particle_preset(preset_value: Any, current_value: Any) -> Any:
-            return apply_preset_value(preset_value, current_value)
+        def apply_particle_preset(
+            preset_value: Any,
+            current_value: Any,
+        ) -> Any:
+            return apply_preset_value(
+                preset_value,
+                current_value,
+            )
 
         @dash.callback(
             dash.Output(
@@ -715,8 +788,14 @@ class Parameters:
             dash.State(self.ids.core_refractive_index_custom, "value"),
             prevent_initial_call=True,
         )
-        def apply_core_preset(preset_value: Any, current_value: Any) -> Any:
-            return apply_preset_value(preset_value, current_value)
+        def apply_core_preset(
+            preset_value: Any,
+            current_value: Any,
+        ) -> Any:
+            return apply_preset_value(
+                preset_value,
+                current_value,
+            )
 
         @dash.callback(
             dash.Output(
@@ -728,38 +807,14 @@ class Parameters:
             dash.State(self.ids.shell_refractive_index_custom, "value"),
             prevent_initial_call=True,
         )
-        def apply_shell_preset(preset_value: Any, current_value: Any) -> Any:
-            return apply_preset_value(preset_value, current_value)
-
-    def _register_detector_configuration_options_callback(self) -> None:
-        @dash.callback(
-            dash.Output(
-                self.ids.detector_configuration_preset,
-                "options",
-            ),
-            dash.Input(
-                self.ids.detector_configuration_preset_refresh_button,
-                "n_clicks",
-            ),
-            prevent_initial_call=False,
-        )
-        def refresh_detector_configuration_preset_options(
-            n_clicks: int,
-        ) -> list[dict[str, str]]:
-            logger.debug(
-                "refresh_detector_configuration_preset_options called with n_clicks=%r",
-                n_clicks,
+        def apply_shell_preset(
+            preset_value: Any,
+            current_value: Any,
+        ) -> Any:
+            return apply_preset_value(
+                preset_value,
+                current_value,
             )
-
-            options = services.build_detector_preset_options()
-
-            logger.debug(
-                "refresh_detector_configuration_preset_options returning option_count=%d options=%r",
-                len(options),
-                options,
-            )
-
-            return options
 
     def _register_detector_configuration_callbacks(self) -> None:
         @dash.callback(
@@ -814,10 +869,6 @@ class Parameters:
                 allow_duplicate=True,
             ),
             dash.Input(self.ids.detector_configuration_preset, "value"),
-            dash.Input(
-                self.ids.detector_configuration_preset_refresh_button,
-                "n_clicks",
-            ),
             dash.State(self.ids.detector_numerical_aperture, "value"),
             dash.State(self.ids.detector_cache_numerical_aperture, "value"),
             dash.State(self.ids.blocker_bar_numerical_aperture, "value"),
@@ -828,7 +879,6 @@ class Parameters:
         )
         def apply_detector_configuration_preset(
             preset_name: Any,
-            n_clicks: int,
             current_detector_numerical_aperture: Any,
             current_detector_cache_numerical_aperture: Any,
             current_blocker_bar_numerical_aperture: Any,
@@ -837,10 +887,8 @@ class Parameters:
             current_detector_gamma_angle_degree: Any,
         ) -> tuple[Any, Any, Any, Any, Any, Any]:
             logger.debug(
-                "apply_detector_configuration_preset called with preset_name=%r "
-                "n_clicks=%r current_values=%r",
+                "apply_detector_configuration_preset called with preset_name=%r current_values=%r",
                 preset_name,
-                n_clicks,
                 (
                     current_detector_numerical_aperture,
                     current_detector_cache_numerical_aperture,
@@ -924,7 +972,9 @@ class Parameters:
             mie_model: Any,
             current_rows: Optional[list[dict[str, Any]]],
         ) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
-            resolved_mie_model = services.resolve_mie_model(mie_model)
+            resolved_mie_model = services.resolve_mie_model(
+                mie_model,
+            )
 
             next_columns = services.get_table_columns_for_model(
                 resolved_mie_model,
@@ -968,8 +1018,14 @@ class Parameters:
                 None if rows is None else len(rows),
             )
 
-            resolved_mie_model = services.resolve_mie_model(mie_model)
-            next_rows = [dict(row) for row in (rows or [])]
+            resolved_mie_model = services.resolve_mie_model(
+                mie_model,
+            )
+
+            next_rows = [
+                dict(row)
+                for row in (rows or [])
+            ]
 
             next_rows.append(
                 services.build_empty_row_for_model(
@@ -1009,7 +1065,9 @@ class Parameters:
                 None if current_rows is None else len(current_rows),
             )
 
-            resolved_mie_model = services.resolve_mie_model(mie_model)
+            resolved_mie_model = services.resolve_mie_model(
+                mie_model,
+            )
 
             normalized_rows = services.normalize_table_rows(
                 mie_model=resolved_mie_model,
@@ -1093,7 +1151,9 @@ class Parameters:
                 detector_gamma_angle_degree,
             )
 
-            resolved_mie_model = services.resolve_mie_model(mie_model)
+            resolved_mie_model = services.resolve_mie_model(
+                mie_model,
+            )
 
             scattering_parameters_payload = self._build_scattering_parameters_payload(
                 mie_model=resolved_mie_model,
@@ -1168,49 +1228,6 @@ class Parameters:
     ) -> dict[str, Any]:
         """
         Build the serializable parameter payload stored in page state.
-
-        Parameters
-        ----------
-        mie_model:
-            Selected Mie model.
-
-        medium_refractive_index:
-            Medium refractive index.
-
-        particle_refractive_index:
-            Solid particle refractive index.
-
-        core_refractive_index:
-            Core refractive index.
-
-        shell_refractive_index:
-            Shell refractive index.
-
-        wavelength_nm:
-            Optical wavelength in nanometers.
-
-        detector_numerical_aperture:
-            Detector numerical aperture.
-
-        detector_cache_numerical_aperture:
-            Detector cache numerical aperture.
-
-        blocker_bar_numerical_aperture:
-            Blocker bar numerical aperture.
-
-        detector_sampling:
-            Detector angular sampling.
-
-        detector_phi_angle_degree:
-            Detector phi angle in degrees.
-
-        detector_gamma_angle_degree:
-            Detector gamma angle in degrees.
-
-        Returns
-        -------
-        dict[str, Any]
-            Serializable scattering parameter payload.
         """
         return {
             "mie_model": mie_model,
@@ -1252,7 +1269,9 @@ class Parameters:
                 debounce=True,
                 persistence=True,
                 persistence_type="session",
-                style={"width": f"{width_px}px"},
+                style={
+                    "width": f"{width_px}px",
+                },
             ),
         )
 
@@ -1325,7 +1344,10 @@ class Parameters:
         }
 
         if not margin_top:
-            row_style.pop("marginTop", None)
+            row_style.pop(
+                "marginTop",
+                None,
+            )
 
         label_style = {
             "width": "260px",
@@ -1341,8 +1363,14 @@ class Parameters:
 
         return dash.html.Div(
             [
-                dash.html.Div(label, style=label_style),
-                dash.html.Div(control, style=control_wrapper_style),
+                dash.html.Div(
+                    label,
+                    style=label_style,
+                ),
+                dash.html.Div(
+                    control,
+                    style=control_wrapper_style,
+                ),
             ],
             style=row_style,
         )

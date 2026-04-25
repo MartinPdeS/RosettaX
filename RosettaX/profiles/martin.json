@@ -8,9 +8,11 @@
     ],
     "peak_count": 4,
     "histogram_scale": "log",
+    "default_fluorescence_peak_process": "2D manual click",
+    "default_scattering_peak_process": "1D automatic peaks",
     "default_gating_channel": null,
     "default_gating_threshold": null,
-    "max_events_for_analysis": 100,
+    "max_events_for_analysis": 10000,
     "n_bins_for_plots": 100,
     "show_calibration_plot_by_default": false,
     "default_output_suffix": "_calibrated"
@@ -22,7 +24,7 @@
   "particle_model": {
     "core_refractive_index": 1.5,
     "shell_refractive_index": 1.5,
-    "particle_refractive_index": 1.59,
+    "particle_refractive_index": 1.602,
     "shell_thickness_nm": [
       20.0
     ],
@@ -32,7 +34,7 @@
     "particle_diameter_nm": [
       100.0,
       200.0,
-      201.0
+      300.0
     ],
     "mie_model": "Solid Sphere"
   },
@@ -41,18 +43,18 @@
     "instrument_name": null
   },
   "visualization": {
-    "default_marker_size": 8.0,
-    "default_line_width": 2.0,
-    "default_font_size": 14.0,
+    "default_marker_size": 10.0,
+    "default_line_width": 3.0,
+    "default_font_size": 24.0,
     "default_tick_size": 12.0,
-    "show_grid_by_default": true
+    "show_grid_by_default": false
   },
   "files": {
     "fluorescence_fcs_file_path": null,
     "scattering_fcs_file_path": null
   },
   "ui": {
-    "theme_mode": "dark",
+    "theme_mode": "light",
     "show_graphs": false
   }
 }

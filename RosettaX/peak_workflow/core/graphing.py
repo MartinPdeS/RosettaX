@@ -167,6 +167,11 @@ def build_peak_workflow_graph_figure(
         type="log" if scale_selection_is_log(yscale_selection) else "linear",
     )
 
+    apply_runtime_visualization_settings(
+        figure=figure,
+        runtime_config_data=runtime_config_data,
+    )
+
     return figure
 
 
@@ -486,6 +491,212 @@ def add_manual_2d_peak_annotations(
     )
 
     return figure
+
+
+def apply_runtime_visualization_settings(
+    *,
+    figure: go.Figure,
+    runtime_config_data: Any,
+) -> None:
+    """
+    Apply profile visualization settings to a peak workflow figure.
+
+    Supported profile keys:
+
+    - visualization.default_marker_size
+    - visualization.default_line_width
+    - visualization.default_font_size
+    - visualization.default_tick_size
+    - visualization.show_grid_by_default
+    """
+    default_marker_size = get_nested_config_float(
+        runtime_config_data=runtime_config_data,
+        path="visualization.default_marker_size",
+        default=10.0,
+    )
+
+    default_line_width = get_nested_config_float(
+        runtime_config_data=runtime_config_data,
+        path="visualization.default_line_width",
+        default=3.0,
+    )
+
+    default_font_size = get_nested_config_float(
+        runtime_config_data=runtime_config_data,
+        path="visualization.default_font_size",
+        default=34.0,
+    )
+
+    default_tick_size = get_nested_config_float(
+        runtime_config_data=runtime_config_data,
+        path="visualization.default_tick_size",
+        default=18.0,
+    )
+
+    show_grid_by_default = get_nested_config_bool(
+        runtime_config_data=runtime_config_data,
+        path="visualization.show_grid_by_default",
+        default=False,
+    )
+
+    figure.update_layout(
+        font={
+            "size": default_font_size,
+        },
+        legend={
+            "font": {
+                "size": default_tick_size,
+            },
+        },
+    )
+
+    figure.update_xaxes(
+        tickfont={
+            "size": default_tick_size,
+        },
+        title_font={
+            "size": default_font_size,
+        },
+        showgrid=show_grid_by_default,
+    )
+
+    figure.update_yaxes(
+        tickfont={
+            "size": default_tick_size,
+        },
+        title_font={
+            "size": default_font_size,
+        },
+        showgrid=show_grid_by_default,
+    )
+
+    for trace in figure.data:
+        apply_trace_visualization_settings(
+            trace=trace,
+            default_marker_size=default_marker_size,
+            default_line_width=default_line_width,
+        )
+
+    for shape in figure.layout.shapes or []:
+        if hasattr(shape, "line"):
+            shape.line.width = default_line_width
+
+
+def apply_trace_visualization_settings(
+    *,
+    trace: Any,
+    default_marker_size: float,
+    default_line_width: float,
+) -> None:
+    """
+    Apply marker and line defaults to one Plotly trace.
+    """
+    trace_type = getattr(
+        trace,
+        "type",
+        "",
+    )
+
+    if trace_type in (
+        "scatter",
+        "scattergl",
+    ):
+        if hasattr(trace, "marker"):
+            trace.marker.size = default_marker_size
+
+        if hasattr(trace, "line"):
+            trace.line.width = default_line_width
+
+    if trace_type == "bar":
+        if hasattr(trace, "marker"):
+            trace.marker.line.width = default_line_width
+
+    if trace_type == "histogram":
+        if hasattr(trace, "marker"):
+            trace.marker.line.width = default_line_width
+
+
+def get_nested_config_float(
+    *,
+    runtime_config_data: Any,
+    path: str,
+    default: float,
+) -> float:
+    """
+    Return a float from a nested runtime config dictionary.
+    """
+    value = get_nested_config_value(
+        runtime_config_data=runtime_config_data,
+        path=path,
+        default=default,
+    )
+
+    try:
+        value_float = float(value)
+
+    except (TypeError, ValueError):
+        return float(default)
+
+    if not np.isfinite(value_float):
+        return float(default)
+
+    return value_float
+
+
+def get_nested_config_bool(
+    *,
+    runtime_config_data: Any,
+    path: str,
+    default: bool,
+) -> bool:
+    """
+    Return a bool from a nested runtime config dictionary.
+    """
+    value = get_nested_config_value(
+        runtime_config_data=runtime_config_data,
+        path=path,
+        default=default,
+    )
+
+    if isinstance(value, bool):
+        return value
+
+    if isinstance(value, str):
+        return value.strip().lower() in (
+            "true",
+            "1",
+            "yes",
+            "on",
+            "enabled",
+        )
+
+    return bool(value)
+
+
+def get_nested_config_value(
+    *,
+    runtime_config_data: Any,
+    path: str,
+    default: Any,
+) -> Any:
+    """
+    Return a value from a nested dictionary using a dot separated path.
+    """
+    if not isinstance(runtime_config_data, dict):
+        return default
+
+    current_value: Any = runtime_config_data
+
+    for key in path.split("."):
+        if not isinstance(current_value, dict):
+            return default
+
+        if key not in current_value:
+            return default
+
+        current_value = current_value[key]
+
+    return current_value
 
 
 def get_missing_detector_channel_names(

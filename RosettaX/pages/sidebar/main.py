@@ -6,6 +6,7 @@ from typing import Any, Optional
 import dash
 import dash_bootstrap_components as dbc
 from dash import dcc, html
+from datetime import datetime, timezone
 
 from RosettaX.pages.sidebar.ids import SidebarIds
 from . import services
@@ -179,6 +180,7 @@ class Sidebar:
 
         @dash.callback(
             dash.Output(SidebarIds.selected_profile_store, "data", allow_duplicate=True),
+            dash.Output(SidebarIds.profile_load_event_store, "data"),
             dash.Input(SidebarIds.saved_profiles_load_button, "n_clicks"),
             dash.State(SidebarIds.saved_profiles_dropdown, "value"),
             prevent_initial_call=True,
@@ -192,19 +194,37 @@ class Sidebar:
                 n_clicks,
                 selected_profile,
             )
-            del n_clicks
+
+            if not n_clicks:
+                return dash.no_update, dash.no_update
 
             try:
-                resolved_profile_name, _status_message = services.resolve_selected_profile(selected_profile)
-                logger.debug(
-                    "Resolved selected profile to resolved_profile_name=%r",
-                    resolved_profile_name,
+                resolved_profile_name, status_message = services.resolve_selected_profile(
+                    selected_profile,
                 )
-                return resolved_profile_name
+
+                profile_load_event = {
+                    "profile_name": resolved_profile_name,
+                    "n_clicks": int(n_clicks),
+                    "loaded_at": datetime.now(timezone.utc).isoformat(),
+                    "status": status_message,
+                }
+
+                logger.debug(
+                    "Resolved selected profile to resolved_profile_name=%r profile_load_event=%r",
+                    resolved_profile_name,
+                    profile_load_event,
+                )
+
+                return resolved_profile_name, profile_load_event
 
             except Exception:
-                logger.exception("Failed to resolve selected_profile=%r", selected_profile)
-                return dash.no_update
+                logger.exception(
+                    "Failed to resolve selected_profile=%r",
+                    selected_profile,
+                )
+
+                return dash.no_update, dash.no_update
 
         @dash.callback(
             dash.Output(SidebarIds.saved_profiles_load_status, "children"),
@@ -266,6 +286,11 @@ class Sidebar:
                 dcc.Store(
                     id=SidebarIds.selected_profile_store,
                     data=initial_selected_profile,
+                    storage_type="session",
+                ),
+                dcc.Store(
+                    id=SidebarIds.profile_load_event_store,
+                    data=None,
                     storage_type="session",
                 ),
             ],

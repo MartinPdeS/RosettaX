@@ -15,3 +15,4 @@ class SidebarIds:
     selected_profile_store = f"{prefix}-selected-profile-store"
     saved_profiles_load_status = f"{prefix}-saved-profiles-load-status"
     saved_profiles_load_button = f"{prefix}-saved-profiles-load-button"
+    profile_load_event_store: str = "sidebar-profile-load-event-store"
