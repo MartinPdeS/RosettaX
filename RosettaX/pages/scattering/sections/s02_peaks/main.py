@@ -118,7 +118,7 @@ class Peaks:
                 dash.dcc.Dropdown(
                     id=self.page.ids.Scattering.process_dropdown,
                     options=services.build_process_options(),
-                    value=DEFAULT_PROCESS_NAME,
+                    value=self._get_default_peak_process(),
                     clearable=False,
                     searchable=False,
                     persistence=True,
@@ -307,6 +307,23 @@ class Peaks:
                 current_detector_values=current_detector_values,
                 logger=logger,
             )
+
+    def _get_default_peak_process(self) -> str:
+        """
+        Return the preferred scattering peak process from the default profile.
+
+        Returns
+        -------
+        str
+            Peak process name.
+        """
+        runtime_config = self._get_default_runtime_config()
+
+        return runtime_config.get_str(
+            "calibration.default_scattering_peak_process",
+            default=DEFAULT_PROCESS_NAME,
+        )
+
 
     def _register_runtime_sync_callback(self) -> None:
         @dash.callback(

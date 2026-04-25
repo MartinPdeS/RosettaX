@@ -3,6 +3,9 @@
 from dataclasses import dataclass
 from typing import Any, Optional
 
+from RosettaX.peak_script.registry import build_peak_process_options
+from RosettaX.peak_script.registry import DEFAULT_PROCESS_NAME
+
 
 @dataclass(frozen=True)
 class FieldDefinition:
@@ -20,6 +23,28 @@ class FieldDefinition:
     options: Optional[list[dict[str, Any]]] = None
 
 
+def build_peak_process_dropdown_options() -> list[dict[str, Any]]:
+    """
+    Build dropdown options for preferred peak process selection.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Peak process dropdown options.
+    """
+    options = build_peak_process_options()
+
+    if options:
+        return options
+
+    return [
+        {
+            "label": DEFAULT_PROCESS_NAME,
+            "value": DEFAULT_PROCESS_NAME,
+        }
+    ]
+
+
 PROFILE_SECTION_ORDER: list[tuple[str, str]] = [
     ("fluorescence", "Fluorescence"),
     ("scattering", "Scattering"),
@@ -27,6 +52,9 @@ PROFILE_SECTION_ORDER: list[tuple[str, str]] = [
     ("visualization", "Visualization"),
     ("miscellaneous", "Miscellaneous"),
 ]
+
+
+PEAK_PROCESS_OPTIONS = build_peak_process_dropdown_options()
 
 
 FIELD_DEFINITIONS: list[FieldDefinition] = [
@@ -63,6 +91,16 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
             {"label": "Linear", "value": "linear"},
             {"label": "Log", "value": "log"},
         ],
+    ),
+    FieldDefinition(
+        name="default_fluorescence_peak_process",
+        section="fluorescence",
+        label="Preferred fluorescence peak script:",
+        component_kind="dropdown",
+        value_kind="choice",
+        runtime_path="calibration.default_fluorescence_peak_process",
+        default=DEFAULT_PROCESS_NAME,
+        options=PEAK_PROCESS_OPTIONS,
     ),
     FieldDefinition(
         name="medium_refractive_index",
@@ -165,6 +203,16 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
             {"label": "Solid Sphere", "value": "Solid Sphere"},
             {"label": "Core/Shell Sphere", "value": "Core/Shell Sphere"},
         ],
+    ),
+    FieldDefinition(
+        name="default_scattering_peak_process",
+        section="scattering",
+        label="Preferred scattering peak script:",
+        component_kind="dropdown",
+        value_kind="choice",
+        runtime_path="calibration.default_scattering_peak_process",
+        default=DEFAULT_PROCESS_NAME,
+        options=PEAK_PROCESS_OPTIONS,
     ),
     FieldDefinition(
         name="default_gating_channel",
@@ -355,13 +403,21 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
 
 
 FIELD_DEFINITION_BY_NAME: dict[str, FieldDefinition] = {
-    field.name: field for field in FIELD_DEFINITIONS
+    field.name: field
+    for field in FIELD_DEFINITIONS
 }
 
 
 def ordered_field_names() -> list[str]:
-    return [field.name for field in FIELD_DEFINITIONS]
+    return [
+        field.name
+        for field in FIELD_DEFINITIONS
+    ]
 
 
 def section_field_names(section_key: str) -> list[str]:
-    return [field.name for field in FIELD_DEFINITIONS if field.section == section_key]
+    return [
+        field.name
+        for field in FIELD_DEFINITIONS
+        if field.section == section_key
+    ]

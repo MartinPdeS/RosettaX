@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
 
+PAGE_NAME = "settings"
+
+
 class Ids:
     """
     ID namespace for the settings page.
@@ -9,75 +12,96 @@ class Ids:
     consistent across layout and callback definitions.
     """
 
-    page_name = "settings"
+    page_name = PAGE_NAME
 
     @classmethod
     def _build(cls, suffix: str) -> str:
+        """
+        Build a page scoped component ID.
+
+        Parameters
+        ----------
+        suffix:
+            Component ID suffix.
+
+        Returns
+        -------
+        str
+            Fully scoped component ID.
+        """
         return f"{cls.page_name}-{suffix}"
+
+    class State:
+        """
+        IDs for page level state stores.
+        """
+
+        page_state_store = f"{PAGE_NAME}-page-state-store"
 
     class Default:
         """
         IDs for the default values and profile editing section.
+
+        Every field name here must match a field name in
+        settings.sections.s01_default.schema.FIELD_DEFINITIONS.
         """
 
-        form_store = "settings-default-form-store"
+        values_profile_dropdown = f"{PAGE_NAME}-values-profile-dropdown"
+        save_changes_button = f"{PAGE_NAME}-save-changes-button"
+        save_confirmation = f"{PAGE_NAME}-save-confirmation"
 
-        mie_model = "settings-mie-model"
+        mesf_values = f"{PAGE_NAME}-mesf-values"
+        peak_count = f"{PAGE_NAME}-peak-count"
+        histogram_scale = f"{PAGE_NAME}-histogram-scale"
+        default_fluorescence_peak_process = f"{PAGE_NAME}-default-fluorescence-peak-process"
 
-        medium_refractive_index = "settings-medium-refractive-index"
-        core_refractive_index = "settings-core-refractive-index"
-        shell_refractive_index = "settings-shell-refractive-index"
+        medium_refractive_index = f"{PAGE_NAME}-medium-refractive-index"
+        core_refractive_index = f"{PAGE_NAME}-core-refractive-index"
+        shell_refractive_index = f"{PAGE_NAME}-shell-refractive-index"
+        particle_refractive_index = f"{PAGE_NAME}-particle-refractive-index"
+        wavelength_nm = f"{PAGE_NAME}-wavelength-nm"
 
-        shell_thickness_nm = "settings-shell-thickness-nm"
-        core_diameter_nm = "settings-core-diameter-nm"
-        particle_diameter_nm = "settings-particle-diameter-nm"
+        shell_thickness_nm = f"{PAGE_NAME}-shell-thickness-nm"
+        core_diameter_nm = f"{PAGE_NAME}-core-diameter-nm"
+        particle_diameter_nm = f"{PAGE_NAME}-particle-diameter-nm"
+        mie_model = f"{PAGE_NAME}-mie-model"
 
-        particle_refractive_index = "settings-particle-refractive-index"
+        default_scattering_peak_process = f"{PAGE_NAME}-default-scattering-peak-process"
+        default_gating_channel = f"{PAGE_NAME}-default-gating-channel"
+        default_gating_threshold = f"{PAGE_NAME}-default-gating-threshold"
 
-        max_events_for_analysis = "settings-max-events-for-analysis"
-        n_bins_for_plots = "settings-n-bins-for-plots"
-        peak_count = "settings-peak-count"
+        max_events_for_analysis = f"{PAGE_NAME}-max-events-for-analysis"
+        n_bins_for_plots = f"{PAGE_NAME}-n-bins-for-plots"
+        show_calibration_plot_by_default = f"{PAGE_NAME}-show-calibration-plot-by-default"
+        default_output_suffix = f"{PAGE_NAME}-default-output-suffix"
+        operator_name = f"{PAGE_NAME}-operator-name"
+        instrument_name = f"{PAGE_NAME}-instrument-name"
 
-        mesf_values = "settings-mesf-values"
+        default_marker_size = f"{PAGE_NAME}-default-marker-size"
+        default_line_width = f"{PAGE_NAME}-default-line-width"
+        default_font_size = f"{PAGE_NAME}-default-font-size"
+        default_tick_size = f"{PAGE_NAME}-default-tick-size"
+        show_grid_by_default = f"{PAGE_NAME}-show-grid-by-default"
 
-        fluorescence_fcs_file_path = "settings-fluorescence-fcs-file-path"
-        scattering_fcs_file_path = "settings-scattering-fcs-file-path"
-
-        save_changes_button = "settings-save-changes-button"
-        save_confirmation = "settings-save-confirmation"
-        values_profile_dropdown = "settings-values-profile-dropdown"
-
-        default_gating_channel = "settings-default-gating-channel"
-        default_gating_threshold = "settings-default-gating-threshold"
-        show_calibration_plot_by_default = "settings-show-calibration-plot-by-default"
-        histogram_scale = "settings-histogram-scale"
-        default_output_suffix = "settings-default-output-suffix"
-        operator_name = "settings-operator-name"
-        instrument_name = "settings-instrument-name"
-        theme_mode = "settings-theme-mode"
-        wavelength_nm = "settings-wavelength-nm"
-        show_graphs = "settings-show-graphs"
-
-        default_marker_size = "settings-default-marker-size"
-        default_line_width = "settings-default-line-width"
-        default_font_size = "settings-default-font-size"
-        default_tick_size = "settings-default-tick-size"
-        show_grid_by_default = "settings-show-grid-by-default"
+        fluorescence_fcs_file_path = f"{PAGE_NAME}-fluorescence-fcs-file-path"
+        scattering_fcs_file_path = f"{PAGE_NAME}-scattering-fcs-file-path"
+        theme_mode = f"{PAGE_NAME}-theme-mode"
+        show_graphs = f"{PAGE_NAME}-show-graphs"
 
     class NewProfile:
         """
         IDs for the new profile creation section.
         """
 
-        new_profile_name = "settings-new-profile-name"
-        save_new_profile_button = "settings-save-new-profile-button"
-        new_profile_status = "settings-new-profile-status"
+        new_profile_name = f"{PAGE_NAME}-new-profile-name"
+        save_new_profile_button = f"{PAGE_NAME}-save-new-profile-button"
+        new_profile_status = f"{PAGE_NAME}-new-profile-status"
 
     class DeleteProfile:
         """
         IDs for the profile deletion section.
         """
 
-        delete_profile_name = "settings-delete-profile-name"
-        delete_profile_button = "settings-delete-profile-button"
-        delete_profile_status = "settings-delete-profile-status"
+        delete_profile_name = f"{PAGE_NAME}-delete-profile-name"
+        delete_profile_button = f"{PAGE_NAME}-delete-profile-button"
+        delete_profile_status = f"{PAGE_NAME}-delete-profile-status"

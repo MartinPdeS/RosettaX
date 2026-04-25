@@ -2,11 +2,10 @@
 
 PAGE_NAME = "fluorescent_calibration"
 
-from RosettaX.pages.fluorescence.sections.s01_upload.ids import UploadSectionIds
-from RosettaX.pages.fluorescence.sections.s02_gating.ids import GatingSectionIds
-from RosettaX.pages.fluorescence.sections.s03_peaks.ids import PeakSectionIds
-from RosettaX.pages.fluorescence.sections.s04_calibration.ids import CalibrationSectionIds
-from RosettaX.pages.fluorescence.sections.s05_save.ids import SaveSectionIds
+from .sections.s01_upload.ids import UploadSectionIds
+from .sections.s02_peaks.ids import PeakSectionIds
+from .sections.s03_calibration.ids import CalibrationSectionIds
+from .sections.s04_save.ids import SaveSectionIds
 
 
 class Ids:
@@ -23,10 +22,6 @@ class Ids:
         page_state_store = f"{PAGE_NAME}-page-state-store"
 
     Upload = UploadSectionIds(
-        prefix=PAGE_NAME,
-    )
-
-    Scattering = GatingSectionIds(
         prefix=PAGE_NAME,
     )
 

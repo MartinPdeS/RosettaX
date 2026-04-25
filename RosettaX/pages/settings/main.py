@@ -1,13 +1,22 @@
+# -*- coding: utf-8 -*-
+
 import dash
 
-from RosettaX.pages.settings import sections
-from RosettaX.pages.settings.ids import Ids
+from . import sections
+from .ids import Ids
+from .state import SettingsPageState
 from RosettaX.utils import styling
 
+
 class SettingsPage:
+    """
+    Settings page.
+
+    This page owns one SettingsPageState store shared by all settings sections.
+    """
+
     def __init__(self) -> None:
         self.ids = Ids()
-
         self.style = styling.PAGE
 
         self.sections = [
@@ -21,18 +30,28 @@ class SettingsPage:
     def register_callbacks(self) -> "SettingsPage":
         for section in self.sections:
             section.register_callbacks()
+
         return self
 
     def layout(self) -> dash.html.Div:
         return dash.html.Div(
             [
-                *[section._get_layout() for section in self.sections],
+                dash.dcc.Store(
+                    id=self.ids.State.page_state_store,
+                    storage_type="session",
+                    data=SettingsPageState.empty().to_dict(),
+                ),
+                *[
+                    section._get_layout()
+                    for section in self.sections
+                ],
             ]
         )
 
 
 _page = SettingsPage().register_callbacks()
 layout = _page.layout
+
 
 dash.register_page(
     __name__,

@@ -5,18 +5,30 @@ import logging
 
 import dash
 import dash_bootstrap_components as dbc
-from dash import Input, Output, State, callback, dcc, html
+from dash import Input, Output, State, callback, html
 
+from RosettaX.pages.settings.state import SettingsPageState
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.utils import ui_forms
-from . import schema, services
+
+from . import schema
+from . import services
+
 
 logger = logging.getLogger(__name__)
 
 
 class DefaultProfile:
+    """
+    Default profile settings section.
+
+    The editable form values are mirrored into SettingsPageState instead of a
+    section-local dcc.Store.
+    """
+
     def __init__(self, page) -> None:
         self.page = page
+        self.ids = page.ids.Default
 
     def _field_ids(self) -> dict[str, str]:
         return services.build_form_field_ids(self.page)
@@ -26,23 +38,23 @@ class DefaultProfile:
 
     def _initial_form_store_data(self) -> dict[str, Any]:
         runtime_config = RuntimeConfig.from_default_profile()
-        return services.build_form_store_from_runtime_config(runtime_config)
+
+        return services.build_form_store_from_runtime_config(
+            runtime_config,
+        )
 
     def _get_layout(self):
-        logger.debug("DefaultProfile._get_layout rebuilding settings page")
+        logger.debug("DefaultProfile._get_layout rebuilding settings page.")
 
         initial_form_store_data = self._initial_form_store_data()
 
         return html.Div(
             [
-                dcc.Store(
-                    id=self.page.ids.Default.form_store,
-                    storage_type="session",
-                    data=initial_form_store_data,
-                ),
                 self._build_hero_section(),
                 html.Div(style={"height": "16px"}),
-                self._build_defaults_card(initial_form_store_data),
+                self._build_defaults_card(
+                    initial_form_store_data,
+                ),
             ]
         )
 
@@ -63,7 +75,10 @@ class DefaultProfile:
             )
         )
 
-    def _build_defaults_card(self, form_store_data: dict[str, Any]) -> dbc.Card:
+    def _build_defaults_card(
+        self,
+        form_store_data: dict[str, Any],
+    ) -> dbc.Card:
         return dbc.Card(
             [
                 dbc.CardHeader("1. Default values"),
@@ -90,7 +105,9 @@ class DefaultProfile:
 
     def _build_profile_controls_block(self) -> html.Div:
         profile_options = services.build_profile_options()
-        default_profile_value = services.resolve_default_profile_value(profile_options)
+        default_profile_value = services.resolve_default_profile_value(
+            profile_options,
+        )
 
         return html.Div(
             [
@@ -101,12 +118,14 @@ class DefaultProfile:
                 ui_forms.build_labeled_row(
                     label="Saved profile:",
                     component=ui_forms.persistent_dropdown(
-                        id=self.page.ids.Default.values_profile_dropdown,
+                        id=self.ids.values_profile_dropdown,
                         options=profile_options,
                         value=default_profile_value,
                         placeholder="Select profile",
                         clearable=False,
-                        style={"width": "100%"},
+                        style={
+                            "width": "100%",
+                        },
                     ),
                 ),
             ]
@@ -123,7 +142,9 @@ class DefaultProfile:
 
         return html.Div(
             [
-                ui_forms.build_section_intro(title=section_title),
+                ui_forms.build_section_intro(
+                    title=section_title,
+                ),
                 *[
                     ui_forms.build_labeled_row(
                         label=schema.FIELD_DEFINITION_BY_NAME[field_name].label,
@@ -145,7 +166,9 @@ class DefaultProfile:
         component_id: str,
         value: Any,
     ):
-        common_style = {"width": "100%"}
+        common_style = {
+            "width": "100%",
+        }
 
         if field_definition.component_kind == "text":
             return ui_forms.persistent_input(
@@ -178,22 +201,27 @@ class DefaultProfile:
                 style=common_style,
             )
 
-        raise ValueError(f"Unsupported component_kind: {field_definition.component_kind!r}")
+        raise ValueError(
+            f"Unsupported component_kind: {field_definition.component_kind!r}"
+        )
 
     def _build_save_block(self) -> html.Div:
         return html.Div(
             [
                 dbc.Button(
                     "Save changes",
-                    id=self.page.ids.Default.save_changes_button,
+                    id=self.ids.save_changes_button,
                     color="primary",
                     n_clicks=0,
                 ),
                 dbc.Alert(
                     "",
-                    id=self.page.ids.Default.save_confirmation,
+                    id=self.ids.save_confirmation,
                     color="success",
                     is_open=False,
+                    style={
+                        "marginTop": "10px",
+                    },
                 ),
             ]
         )
@@ -214,11 +242,19 @@ class DefaultProfile:
 
         @callback(
             *form_value_outputs,
-            Output(self.page.ids.Default.form_store, "data", allow_duplicate=True),
-            Input(self.page.ids.Default.values_profile_dropdown, "value"),
+            Output(
+                self.page.ids.State.page_state_store,
+                "data",
+                allow_duplicate=True,
+            ),
+            Input(self.ids.values_profile_dropdown, "value"),
+            State(self.page.ids.State.page_state_store, "data"),
             prevent_initial_call=True,
         )
-        def load_profile_defaults(dropdown_value: Optional[str]):
+        def load_profile_defaults(
+            dropdown_value: Optional[str],
+            page_state_payload: Any,
+        ):
             logger.debug(
                 "load_profile_defaults triggered_id=%r dropdown_value=%r",
                 dash.ctx.triggered_id,
@@ -226,71 +262,161 @@ class DefaultProfile:
             )
 
             if not dropdown_value:
-                return tuple([dash.no_update] * len(ordered_field_names)) + (dash.no_update,)
+                return tuple(
+                    [dash.no_update] * len(ordered_field_names)
+                ) + (dash.no_update,)
 
-            saved_profile = services.get_saved_profile(dropdown_value) or {}
-            runtime_config = RuntimeConfig.from_dict(saved_profile)
-            form_store_data = services.build_form_store_from_runtime_config(runtime_config)
+            saved_profile = services.get_saved_profile(
+                dropdown_value,
+            ) or {}
 
-            return services.build_output_values_from_form_store(form_store_data) + (form_store_data,)
+            runtime_config = RuntimeConfig.from_dict(
+                saved_profile,
+            )
+
+            form_store_data = services.build_form_store_from_runtime_config(
+                runtime_config,
+            )
+
+            page_state = SettingsPageState.from_dict(
+                page_state_payload if isinstance(page_state_payload, dict) else None
+            )
+
+            page_state = page_state.update(
+                selected_profile=dropdown_value,
+                form_data=form_store_data,
+                status_message="",
+            )
+
+            return services.build_output_values_from_form_store(
+                form_store_data,
+            ) + (page_state.to_dict(),)
 
         @callback(
-            Output(self.page.ids.Default.form_store, "data"),
+            Output(self.page.ids.State.page_state_store, "data"),
+            Input(self.ids.values_profile_dropdown, "value"),
             *form_value_inputs,
+            State(self.page.ids.State.page_state_store, "data"),
             prevent_initial_call=False,
         )
-        def sync_form_store(*form_values):
-            return services.build_form_store_from_form_values(form_values)
+        def sync_page_state(
+            selected_profile: Optional[str],
+            *callback_values: Any,
+        ):
+            page_state_payload = callback_values[-1]
+            form_values = callback_values[:-1]
+
+            form_store_data = services.build_form_store_from_form_values(
+                form_values,
+            )
+
+            page_state = SettingsPageState.from_dict(
+                page_state_payload if isinstance(page_state_payload, dict) else None
+            )
+
+            page_state = page_state.update(
+                selected_profile=selected_profile,
+                form_data=form_store_data,
+            )
+
+            return page_state.to_dict()
 
         @callback(
-            Output(self.page.ids.Default.save_confirmation, "children"),
-            Output(self.page.ids.Default.save_confirmation, "is_open"),
-            Output(self.page.ids.Default.save_confirmation, "color"),
-            Input(self.page.ids.Default.save_changes_button, "n_clicks"),
-            State(self.page.ids.Default.values_profile_dropdown, "value"),
-            State(self.page.ids.Default.form_store, "data"),
+            Output(self.ids.save_confirmation, "children"),
+            Output(self.ids.save_confirmation, "is_open"),
+            Output(self.ids.save_confirmation, "color"),
+            Output(
+                self.page.ids.State.page_state_store,
+                "data",
+                allow_duplicate=True,
+            ),
+            Input(self.ids.save_changes_button, "n_clicks"),
+            State(self.page.ids.State.page_state_store, "data"),
             prevent_initial_call=True,
         )
         def edit_settings(
             n_clicks: Any,
-            profile_target: Optional[str],
-            form_store_data: Any,
+            page_state_payload: Any,
         ):
-            if dash.ctx.triggered_id != self.page.ids.Default.save_changes_button:
-                return dash.no_update, dash.no_update, dash.no_update
+            if dash.ctx.triggered_id != self.ids.save_changes_button:
+                return dash.no_update, dash.no_update, dash.no_update, dash.no_update
 
             if not n_clicks:
-                return dash.no_update, dash.no_update, dash.no_update
+                return dash.no_update, dash.no_update, dash.no_update, dash.no_update
+
+            page_state = SettingsPageState.from_dict(
+                page_state_payload if isinstance(page_state_payload, dict) else None
+            )
 
             try:
-                if not profile_target:
-                    return (
-                        "No target profile selected.",
-                        True,
-                        "danger",
+                if not page_state.selected_profile:
+                    status_message = "No target profile selected."
+
+                    page_state = page_state.update(
+                        status_message=status_message,
                     )
 
-                flat_runtime_payload = services.coerce_form_store_to_flat_runtime_payload(form_store_data)
-                nested_profile_payload = services.build_nested_profile_payload(flat_runtime_payload)
-                services.save_profile(profile_target, nested_profile_payload)
+                    return (
+                        status_message,
+                        True,
+                        "danger",
+                        page_state.to_dict(),
+                    )
+
+                flat_runtime_payload = services.coerce_form_store_to_flat_runtime_payload(
+                    page_state.form_data or {},
+                )
+
+                nested_profile_payload = services.build_nested_profile_payload(
+                    flat_runtime_payload,
+                )
+
+                services.save_profile(
+                    page_state.selected_profile,
+                    nested_profile_payload,
+                )
+
+                status_message = f"Saved profile: {page_state.selected_profile}"
+
+                page_state = page_state.update(
+                    status_message=status_message,
+                )
 
                 return (
-                    f"Saved profile: {profile_target}",
+                    status_message,
                     True,
                     "success",
+                    page_state.to_dict(),
                 )
 
             except Exception as exc:
+                logger.exception("Failed to save settings profile.")
+
+                status_message = f"{type(exc).__name__}: {exc}"
+
+                page_state = page_state.update(
+                    status_message=status_message,
+                )
+
                 return (
-                    f"{type(exc).__name__}: {exc}",
+                    status_message,
                     True,
                     "danger",
+                    page_state.to_dict(),
                 )
 
         @callback(
-            Output(self.page.ids.Default.save_confirmation, "children", allow_duplicate=True),
-            Output(self.page.ids.Default.save_confirmation, "is_open", allow_duplicate=True),
-            Input(self.page.ids.Default.values_profile_dropdown, "value"),
+            Output(
+                self.ids.save_confirmation,
+                "children",
+                allow_duplicate=True,
+            ),
+            Output(
+                self.ids.save_confirmation,
+                "is_open",
+                allow_duplicate=True,
+            ),
+            Input(self.ids.values_profile_dropdown, "value"),
             *form_value_inputs,
             prevent_initial_call=True,
         )

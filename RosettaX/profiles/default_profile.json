@@ -8,6 +8,8 @@
     ],
     "peak_count": 4,
     "histogram_scale": "log",
+    "default_fluorescence_peak_process": "2D manual click",
+    "default_scattering_peak_process": "1D automatic peaks",
     "default_gating_channel": null,
     "default_gating_threshold": null,
     "max_events_for_analysis": 10000,
