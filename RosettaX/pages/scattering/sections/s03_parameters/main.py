@@ -8,7 +8,7 @@ import dash_bootstrap_components as dbc
 
 from RosettaX.pages.scattering.state import ScatteringPageState
 from RosettaX.pages.sidebar.ids import SidebarIds
-from RosettaX.utils import graph_config, styling
+from RosettaX.utils import graph_config
 from RosettaX.utils.runtime_config import RuntimeConfig
 
 from . import presets
@@ -24,9 +24,16 @@ class Parameters:
 
     State ownership
     ---------------
-    The visual input components still hold their local Dash values, but the
-    parameter set used for model computation is copied into the scattering page
-    state after Compute Expected Coupling is clicked.
+    The visual input components hold their local Dash values. The parameter set
+    used for model computation is copied into the scattering page state after
+    Compute Expected Coupling is clicked.
+
+    Layout ownership
+    ----------------
+    This section renders only optical and particle parameters. The calibration
+    reference table and Compute Expected Coupling button are rendered in the
+    calibration section, but the table and model callbacks remain registered
+    here because they still depend on the parameter controls.
 
     Profile loading
     ---------------
@@ -178,10 +185,6 @@ class Parameters:
                 self._build_optical_configuration_section(),
                 dash.html.Hr(),
                 self._build_particle_configuration_section(),
-                dash.html.Hr(),
-                self._build_reference_table_section(),
-                dash.html.Div(style={"height": "12px"}),
-                self._build_compute_model_block(),
             ]
         )
 
@@ -412,68 +415,6 @@ class Parameters:
                 preset_options=presets.SHELL_REFRACTIVE_INDEX_PRESETS,
             ),
         ]
-
-    def _build_reference_table_section(self) -> dash.html.Div:
-        return dash.html.Div(
-            [
-                dash.html.H5("Calibration reference table"),
-                dash.html.Div(
-                    "The table is the source of truth. Edit the particle geometry directly here. "
-                    "Measured peak positions are optional at this stage. "
-                    "First click Compute Expected Coupling to fill the model column. "
-                    "Then click Fit Calibration in the next section to generate the graphs and calibration.",
-                    style={
-                        "marginBottom": "10px",
-                        "opacity": 0.8,
-                    },
-                ),
-                dash.dash_table.DataTable(
-                    id=self.page.ids.Calibration.bead_table,
-                    columns=self.sphere_table_columns,
-                    data=services.build_empty_rows_for_model(
-                        "Solid Sphere",
-                        row_count=3,
-                    ),
-                    **styling.DATATABLE,
-                ),
-                dash.html.Div(
-                    [
-                        dash.html.Button(
-                            "Add row",
-                            id=self.page.ids.Calibration.add_row_btn,
-                            n_clicks=0,
-                        )
-                    ],
-                    style={
-                        "marginTop": "10px",
-                    },
-                ),
-            ]
-        )
-
-    def _build_compute_model_block(self) -> dash.html.Div:
-        return dash.html.Div(
-            [
-                self._build_compute_model_button(),
-                dash.html.Div(
-                    "This step only fills the expected coupling column in the table.",
-                    style={
-                        "marginTop": "8px",
-                        "opacity": 0.75,
-                    },
-                ),
-            ]
-        )
-
-    def _build_compute_model_button(self) -> dash.html.Button:
-        return dash.html.Button(
-            "Compute Expected Coupling",
-            id=self.page.ids.Calibration.compute_model_btn,
-            n_clicks=0,
-            style={
-                "marginTop": "12px",
-            },
-        )
 
     def register_callbacks(self) -> None:
         logger.debug("Registering Parameters callbacks.")

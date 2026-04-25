@@ -9,6 +9,7 @@ import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
 
 from RosettaX.pages.scattering.state import ScatteringPageState
+from RosettaX.pages.scattering.sections.s03_parameters import services as parameter_services
 from RosettaX.utils import plottings, styling, graph_config
 
 from . import services
@@ -23,7 +24,9 @@ class Calibration:
 
     Responsibilities
     ----------------
-    - Render the calibration action area.
+    - Render the calibration reference table.
+    - Render the expected coupling computation action.
+    - Render the calibration fit action area.
     - Display the calibration graphs.
     - Delegate the calibration workflow to the service layer.
     - Resolve the calibration detector channel from the selected peak process.
@@ -48,11 +51,17 @@ class Calibration:
     graph_height_px = 420
     graph_min_width_px = 0
 
+    sphere_table_columns = parameter_services.sphere_table_columns
+    core_shell_table_columns = parameter_services.core_shell_table_columns
+
     def __init__(self, page) -> None:
         self.page = page
         self.ids = page.ids.Calibration
 
-        logger.debug("Initialized Calibration section with page=%r", page)
+        logger.debug(
+            "Initialized Calibration section with page=%r",
+            page,
+        )
 
     def get_layout(self) -> dbc.Card:
         return dbc.Card(
@@ -68,6 +77,14 @@ class Calibration:
     def _build_body(self) -> dbc.CardBody:
         return dbc.CardBody(
             [
+                self._build_reference_table_section(),
+                dash.html.Div(
+                    style={
+                        "height": "12px",
+                    },
+                ),
+                self._build_compute_model_block(),
+                dash.html.Hr(),
                 self._build_action_block(),
                 dash.html.Br(),
                 self._build_graph_block(),
@@ -81,6 +98,68 @@ class Calibration:
                     },
                 ),
             ]
+        )
+
+    def _build_reference_table_section(self) -> dash.html.Div:
+        return dash.html.Div(
+            [
+                dash.html.H5("Calibration reference table"),
+                dash.html.Div(
+                    "The table is the source of truth. Edit the particle geometry directly here. "
+                    "Measured peak positions are optional at this stage. "
+                    "First click Compute Expected Coupling to fill the model column. "
+                    "Then click Fit Calibration to generate the graphs and calibration.",
+                    style={
+                        "marginBottom": "10px",
+                        "opacity": 0.8,
+                    },
+                ),
+                dash.dash_table.DataTable(
+                    id=self.ids.bead_table,
+                    columns=self.sphere_table_columns,
+                    data=parameter_services.build_empty_rows_for_model(
+                        "Solid Sphere",
+                        row_count=3,
+                    ),
+                    **styling.DATATABLE,
+                ),
+                dash.html.Div(
+                    [
+                        dash.html.Button(
+                            "Add row",
+                            id=self.ids.add_row_btn,
+                            n_clicks=0,
+                        )
+                    ],
+                    style={
+                        "marginTop": "10px",
+                    },
+                ),
+            ]
+        )
+
+    def _build_compute_model_block(self) -> dash.html.Div:
+        return dash.html.Div(
+            [
+                self._build_compute_model_button(),
+                dash.html.Div(
+                    "This step fills the expected coupling column in the table using the current optical and particle parameters.",
+                    style={
+                        "marginTop": "8px",
+                        "opacity": 0.75,
+                    },
+                ),
+            ]
+        )
+
+    def _build_compute_model_button(self) -> dash.html.Button:
+        return dash.html.Button(
+            "Compute Expected Coupling",
+            id=self.ids.compute_model_btn,
+            n_clicks=0,
+            style={
+                "marginTop": "12px",
+            },
         )
 
     def _graph_style(self) -> dict[str, Any]:
@@ -134,7 +213,6 @@ class Calibration:
                             id=self.ids.graph_model,
                             style=graph_config.PLOTLY_GRAPH_STYLE,
                             config=graph_config.PLOTLY_GRAPH_CONFIG,
-
                         ),
                     ],
                     style=self._graph_wrapper_style(),
