@@ -140,6 +140,12 @@ class DefaultProfile:
         section_title = dict(schema.PROFILE_SECTION_ORDER)[section_key]
         section_field_names = schema.section_field_names(section_key)
 
+        logger.debug(
+            "Settings section %r field names: %r",
+            section_key,
+            section_field_names,
+        )
+
         return html.Div(
             [
                 ui_forms.build_section_intro(

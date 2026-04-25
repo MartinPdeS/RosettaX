@@ -15,12 +15,19 @@ def register_runtime_sync_callbacks(
     """
     Register runtime configuration synchronization callbacks.
 
-    This callback is not called on initial page render. That is intentional:
-    Dash component session persistence should be allowed to restore the user's
-    last selections for Show graph, Log x, Log y, and Bins.
+    This callback synchronizes the shared peak workflow graph controls from the
+    runtime profile.
 
-    The callback still updates these controls if the runtime config store changes
-    later during the session.
+    It intentionally does not run on initial page render. Dash session
+    persistence should restore user choices for:
+
+    - Show graph
+    - Log x
+    - Log y
+    - Bins
+
+    The callback still runs when a new profile is loaded and the runtime config
+    store changes during the session.
     """
 
     @dash.callback(
@@ -38,20 +45,23 @@ def register_runtime_sync_callbacks(
             runtime_config_data if isinstance(runtime_config_data, dict) else None
         )
 
-        xscale = runtime_config.get_str(
-            "calibration.histogram_xscale",
-            default=runtime_config.get_str(
-                "calibration.xscale",
+        histogram_xscale = normalize_axis_scale(
+            runtime_config.get_str(
+                "calibration.histogram_xscale",
                 default="linear",
             ),
+            default="linear",
         )
 
-        yscale = runtime_config.get_str(
-            "calibration.histogram_yscale",
-            default=runtime_config.get_str(
-                "calibration.histogram_scale",
-                default="log",
+        histogram_yscale = normalize_axis_scale(
+            runtime_config.get_str(
+                "calibration.histogram_yscale",
+                default=runtime_config.get_str(
+                    "calibration.histogram_scale",
+                    default="log",
+                ),
             ),
+            default="log",
         )
 
         return (
@@ -60,6 +70,30 @@ def register_runtime_sync_callbacks(
                 default=100,
             ),
             ["enabled"] if runtime_config.get_show_graphs(default=True) else [],
-            ["log"] if xscale == "log" else [],
-            ["log"] if yscale == "log" else [],
+            ["log"] if histogram_xscale == "log" else [],
+            ["log"] if histogram_yscale == "log" else [],
         )
+
+
+def normalize_axis_scale(
+    value: Any,
+    *,
+    default: str,
+) -> str:
+    """
+    Normalize an axis scale value.
+
+    Accepted values are:
+
+    - linear
+    - log
+    """
+    value_string = str(value or "").strip().lower()
+
+    if value_string in (
+        "linear",
+        "log",
+    ):
+        return value_string
+
+    return default

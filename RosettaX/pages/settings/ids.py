@@ -52,7 +52,11 @@ class Ids:
 
         mesf_values = f"{PAGE_NAME}-mesf-values"
         peak_count = f"{PAGE_NAME}-peak-count"
+
         histogram_scale = f"{PAGE_NAME}-histogram-scale"
+        histogram_xscale = f"{PAGE_NAME}-histogram-xscale"
+        histogram_yscale = f"{PAGE_NAME}-histogram-yscale"
+
         default_fluorescence_peak_process = f"{PAGE_NAME}-default-fluorescence-peak-process"
 
         medium_refractive_index = f"{PAGE_NAME}-medium-refractive-index"

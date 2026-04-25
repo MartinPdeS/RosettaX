@@ -2,9 +2,11 @@
 
 from dataclasses import dataclass
 from typing import Any, Optional
+import logging
 
 from RosettaX.peak_workflow.scripts import registry
 
+logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class FieldDefinition:
@@ -56,6 +58,30 @@ PROFILE_SECTION_ORDER: list[tuple[str, str]] = [
 PEAK_PROCESS_OPTIONS = build_peak_process_dropdown_options()
 
 
+AXIS_SCALE_OPTIONS: list[dict[str, str]] = [
+    {
+        "label": "Linear",
+        "value": "linear",
+    },
+    {
+        "label": "Log",
+        "value": "log",
+    },
+]
+
+
+YES_NO_OPTIONS: list[dict[str, str]] = [
+    {
+        "label": "Yes",
+        "value": "yes",
+    },
+    {
+        "label": "No",
+        "value": "no",
+    },
+]
+
+
 FIELD_DEFINITIONS: list[FieldDefinition] = [
     FieldDefinition(
         name="mesf_values",
@@ -79,17 +105,24 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         step=1,
     ),
     FieldDefinition(
-        name="histogram_scale",
-        section="fluorescence",
-        label="Histogram scale:",
+        name="histogram_xscale",
+        section="calibration",
+        label="Peak graph x scale:",
         component_kind="dropdown",
         value_kind="choice",
-        runtime_path="calibration.histogram_scale",
+        runtime_path="calibration.histogram_xscale",
+        default="linear",
+        options=AXIS_SCALE_OPTIONS,
+    ),
+    FieldDefinition(
+        name="histogram_yscale",
+        section="calibration",
+        label="Peak graph y scale:",
+        component_kind="dropdown",
+        value_kind="choice",
+        runtime_path="calibration.histogram_yscale",
         default="log",
-        options=[
-            {"label": "Linear", "value": "linear"},
-            {"label": "Log", "value": "log"},
-        ],
+        options=AXIS_SCALE_OPTIONS,
     ),
     FieldDefinition(
         name="default_fluorescence_peak_process",
@@ -199,8 +232,14 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         runtime_path="particle_model.mie_model",
         default="Solid Sphere",
         options=[
-            {"label": "Solid Sphere", "value": "Solid Sphere"},
-            {"label": "Core/Shell Sphere", "value": "Core/Shell Sphere"},
+            {
+                "label": "Solid Sphere",
+                "value": "Solid Sphere",
+            },
+            {
+                "label": "Core/Shell Sphere",
+                "value": "Core/Shell Sphere",
+            },
         ],
     ),
     FieldDefinition(
@@ -238,7 +277,7 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         component_kind="number",
         value_kind="int",
         runtime_path="calibration.max_events_for_analysis",
-        default=100,
+        default=10000,
         min_value=1,
         step=1,
     ),
@@ -261,10 +300,7 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         value_kind="yes_no_bool",
         runtime_path="calibration.show_calibration_plot_by_default",
         default=False,
-        options=[
-            {"label": "Yes", "value": "yes"},
-            {"label": "No", "value": "no"},
-        ],
+        options=YES_NO_OPTIONS,
     ),
     FieldDefinition(
         name="default_output_suffix",
@@ -317,11 +353,11 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
     ),
     FieldDefinition(
         name="default_font_size",
-        runtime_path="visualization.default_font_size",
         section="visualization",
         label="Default font size:",
         component_kind="number",
         value_kind="float",
+        runtime_path="visualization.default_font_size",
         default=14.0,
         min_value=1,
         max_value=100,
@@ -330,13 +366,13 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
     ),
     FieldDefinition(
         name="default_tick_size",
-        runtime_path="visualization.default_tick_size",
         section="visualization",
         label="Default tick size:",
         component_kind="number",
         value_kind="float",
-        min_value=1,
+        runtime_path="visualization.default_tick_size",
         default=12.0,
+        min_value=1,
         max_value=100,
         step=1,
         placeholder="e.g. 12",
@@ -349,10 +385,7 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         value_kind="yes_no_bool",
         runtime_path="visualization.show_grid_by_default",
         default=True,
-        options=[
-            {"label": "Yes", "value": "yes"},
-            {"label": "No", "value": "no"},
-        ],
+        options=YES_NO_OPTIONS,
     ),
     FieldDefinition(
         name="fluorescence_fcs_file_path",
@@ -381,8 +414,14 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         runtime_path="ui.theme_mode",
         default="dark",
         options=[
-            {"label": "Dark", "value": "dark"},
-            {"label": "Light", "value": "light"},
+            {
+                "label": "Dark",
+                "value": "dark",
+            },
+            {
+                "label": "Light",
+                "value": "light",
+            },
         ],
     ),
     FieldDefinition(
@@ -393,10 +432,7 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         value_kind="yes_no_bool",
         runtime_path="ui.show_graphs",
         default=False,
-        options=[
-            {"label": "Yes", "value": "yes"},
-            {"label": "No", "value": "no"},
-        ],
+        options=YES_NO_OPTIONS,
     ),
 ]
 
@@ -414,7 +450,9 @@ def ordered_field_names() -> list[str]:
     ]
 
 
-def section_field_names(section_key: str) -> list[str]:
+def section_field_names(
+    section_key: str,
+) -> list[str]:
     return [
         field.name
         for field in FIELD_DEFINITIONS
