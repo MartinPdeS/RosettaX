@@ -147,7 +147,7 @@ class Manual2DClickProcess(BasePeakProcess):
                 dash.html.Div(
                     [
                         dash.html.Button(
-                            "Clear picked peaks",
+                            "Clear",
                             id=ids.process_action_button(
                                 process_name=self.process_name,
                                 action_name="clear",
