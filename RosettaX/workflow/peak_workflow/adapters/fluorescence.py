@@ -8,7 +8,7 @@ import dash
 import numpy as np
 import plotly.graph_objs as go
 
-from RosettaX.peak_workflow.adapters.base import BasePeakWorkflowAdapter
+from RosettaX.workflow.peak_workflow.adapters.base import BasePeakWorkflowAdapter
 from RosettaX.utils import casting
 from RosettaX.utils import plottings
 from RosettaX.utils.reader import FCSFile
@@ -63,7 +63,10 @@ class FluorescencePeakGraphBackendAdapter:
         """
         Return an owned copy of a detector column.
         """
-        with FCSFile(self.fcs_file_path, writable=False) as fcs_file:
+        with FCSFile(
+            self.fcs_file_path,
+            writable=False,
+        ) as fcs_file:
             values = fcs_file.column_copy(
                 str(detector_column),
                 dtype=dtype,
@@ -110,13 +113,21 @@ class FluorescencePeakGraphBackendAdapter:
             dtype=float,
         )
 
-        values = values[np.isfinite(values)]
+        values = values[
+            np.isfinite(values)
+        ]
 
         if values.size == 0:
             return FluorescenceHistogramResult(
                 values=values,
-                counts=np.asarray([], dtype=float),
-                bin_edges=np.asarray([], dtype=float),
+                counts=np.asarray(
+                    [],
+                    dtype=float,
+                ),
+                bin_edges=np.asarray(
+                    [],
+                    dtype=float,
+                ),
             )
 
         counts, bin_edges = np.histogram(
@@ -165,8 +176,12 @@ class FluorescencePeakGraphBackendAdapter:
         figure = go.Figure()
 
         if counts.size > 0 and bin_edges.size == counts.size + 1:
-            bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
-            bin_widths = np.diff(bin_edges)
+            bin_centers = 0.5 * (
+                bin_edges[:-1] + bin_edges[1:]
+            )
+            bin_widths = np.diff(
+                bin_edges,
+            )
 
             figure.add_trace(
                 go.Bar(
@@ -208,7 +223,9 @@ class FluorescencePeakGraphBackendAdapter:
                 line_positions=resolved_peak_positions,
                 line_labels=[
                     f"Peak {index + 1}"
-                    for index in range(len(resolved_peak_positions))
+                    for index in range(
+                        len(resolved_peak_positions),
+                    )
                 ],
             )
 
@@ -304,6 +321,25 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
         "peak",
     )
 
+    automatic_peak_position_names: tuple[str, ...] = (
+        "peak_positions",
+        "detected_peak_positions",
+        "automatic_peak_positions",
+        "new_peak_positions",
+        "x_positions",
+        "x_values",
+        "new_x_positions",
+    )
+
+    manual_peak_position_names: tuple[str, ...] = (
+        "clicked_x",
+        "clicked_x_position",
+        "clicked_point",
+        "new_point",
+        "manual_x",
+        "manual_x_position",
+    )
+
     def get_backend(
         self,
         *,
@@ -313,12 +349,18 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
         """
         Return a backend compatible with the shared peak workflow.
         """
-        if hasattr(page, "get_fluorescence_backend"):
+        if hasattr(
+            page,
+            "get_fluorescence_backend",
+        ):
             return page.get_fluorescence_backend(
                 uploaded_fcs_path=uploaded_fcs_path,
             )
 
-        if hasattr(page, "get_backend"):
+        if hasattr(
+            page,
+            "get_backend",
+        ):
             return page.get_backend(
                 uploaded_fcs_path=uploaded_fcs_path,
             )
@@ -329,7 +371,10 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
             None,
         )
 
-        if backend is not None and hasattr(backend, "build_histogram"):
+        if backend is not None and hasattr(
+            backend,
+            "build_histogram",
+        ):
             return backend
 
         uploaded_fcs_path_clean = str(
@@ -352,14 +397,18 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
         logger: logging.Logger,
     ) -> Any:
         """
-        Append only x axis peak values to the fluorescence calibration table.
+        Append x axis peak values to the fluorescence calibration table.
 
         Manual graph clicks append exactly one scalar x value. Automatic peak
-        detection appends one scalar x value per detected peak.
+        detection appends one scalar x value for every detected peak.
         """
         del context
 
-        if getattr(result, "clear_existing_table_peaks", False):
+        if getattr(
+            result,
+            "clear_existing_table_peaks",
+            False,
+        ):
             return self.clear_fluorescence_peak_column(
                 table_data=table_data,
             )
@@ -375,6 +424,12 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
 
             return dash.no_update
 
+        logger.debug(
+            "Appending fluorescence peak x values to table: count=%d values=%r",
+            len(x_values_to_append),
+            x_values_to_append,
+        )
+
         return self.append_x_values_to_fluorescence_table(
             table_data=table_data,
             x_values=x_values_to_append,
@@ -388,41 +443,18 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
         """
         Extract x values to append to the table.
 
-        Priority:
-        1. newly clicked/manual values
-        2. automatic peak values
-        3. latest x value from peak line payload
-
-        Any dictionary shaped value is reduced to its x component.
+        Priority
+        --------
+        1. automatic peak arrays, keeping all detected peak values
+        2. manual click values, keeping only the latest click
+        3. peak line payload arrays, keeping all available values
         """
         if result is None:
             return []
 
-        newly_added_value = self.extract_first_existing_attribute_or_key(
-            source=result,
-            names=(
-                "new_peak_positions",
-                "new_x_positions",
-                "clicked_x",
-                "clicked_x_position",
-                "clicked_point",
-                "new_point",
-            ),
-        )
-
-        if newly_added_value is not None:
-            return self.extract_x_scalars_from_any_value(
-                value=newly_added_value,
-                keep_only_latest=True,
-            )
-
         automatic_value = self.extract_first_existing_attribute_or_key(
             source=result,
-            names=(
-                "peak_positions",
-                "x_positions",
-                "x_values",
-            ),
+            names=self.automatic_peak_position_names,
         )
 
         if automatic_value is not None:
@@ -431,28 +463,42 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
                 keep_only_latest=False,
             )
 
+        manual_value = self.extract_first_existing_attribute_or_key(
+            source=result,
+            names=self.manual_peak_position_names,
+        )
+
+        if manual_value is not None:
+            return self.extract_x_scalars_from_any_value(
+                value=manual_value,
+                keep_only_latest=True,
+            )
+
         peak_lines_payload = getattr(
             result,
             "peak_lines_payload",
             None,
         )
 
-        if peak_lines_payload is None and isinstance(result, dict):
+        if peak_lines_payload is None and isinstance(
+            result,
+            dict,
+        ):
             peak_lines_payload = result.get(
                 "peak_lines_payload",
             )
 
-        if isinstance(peak_lines_payload, dict):
-            latest_x_value = self.extract_latest_x_value_from_peak_lines_payload(
+        if isinstance(
+            peak_lines_payload,
+            dict,
+        ):
+            x_values = self.extract_x_values_from_peak_lines_payload(
                 peak_lines_payload=peak_lines_payload,
+                keep_only_latest=False,
             )
 
-            if latest_x_value is not None:
-                return [
-                    self.normalize_single_x_value_for_table(
-                        value=latest_x_value,
-                    )
-                ]
+            if x_values:
+                return x_values
 
         return []
 
@@ -475,7 +521,10 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
             if value is not None:
                 return value
 
-        if isinstance(source, dict):
+        if isinstance(
+            source,
+            dict,
+        ):
             for name in names:
                 value = source.get(
                     name,
@@ -537,7 +586,10 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
         if value is None:
             return []
 
-        if isinstance(value, dict):
+        if isinstance(
+            value,
+            dict,
+        ):
             for key in (
                 "x",
                 "clicked_x",
@@ -545,15 +597,25 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
                 "x_position",
                 "position",
                 "value",
+                "peak_position",
             ):
                 if key in value:
                     return [
                         value[key],
                     ]
 
+            for key in self.automatic_peak_position_names:
+                if key in value:
+                    return self.collect_raw_x_values(
+                        value=value[key],
+                    )
+
             return []
 
-        if isinstance(value, np.ndarray):
+        if isinstance(
+            value,
+            np.ndarray,
+        ):
             if value.ndim == 0:
                 return [
                     value.item(),
@@ -561,7 +623,9 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
 
             raw_x_values: list[Any] = []
 
-            for item in value.reshape(-1).tolist():
+            for item in value.reshape(
+                -1,
+            ).tolist():
                 raw_x_values.extend(
                     self.collect_raw_x_values(
                         value=item,
@@ -570,12 +634,18 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
 
             return raw_x_values
 
-        if isinstance(value, np.generic):
+        if isinstance(
+            value,
+            np.generic,
+        ):
             return [
                 value.item(),
             ]
 
-        if isinstance(value, (list, tuple)):
+        if isinstance(
+            value,
+            (list, tuple),
+        ):
             raw_x_values = []
 
             for item in value:
@@ -591,25 +661,28 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
             value,
         ]
 
-    def extract_latest_x_value_from_peak_lines_payload(
+    def extract_x_values_from_peak_lines_payload(
         self,
         *,
         peak_lines_payload: dict[str, Any],
-    ) -> Any:
+        keep_only_latest: bool,
+    ) -> list[Any]:
         """
-        Extract only the latest x value from a peak line payload.
+        Extract x values from a peak line payload.
         """
+        candidate_values: list[Any] = []
+
         points = peak_lines_payload.get(
             "points",
         )
 
-        if isinstance(points, list) and points:
-            latest_point = points[-1]
-
-            if isinstance(latest_point, dict):
-                return self.extract_single_x_value_from_mapping(
-                    mapping=latest_point,
-                )
+        if isinstance(
+            points,
+            list,
+        ):
+            candidate_values.extend(
+                points,
+            )
 
         for key in (
             "new_peak_positions",
@@ -623,13 +696,35 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
             if key not in peak_lines_payload:
                 continue
 
-            x_values = self.extract_x_scalars_from_any_value(
-                value=peak_lines_payload.get(key),
-                keep_only_latest=True,
+            candidate_values.append(
+                peak_lines_payload.get(
+                    key,
+                )
             )
 
-            if x_values:
-                return x_values[-1]
+        if not candidate_values:
+            return []
+
+        return self.extract_x_scalars_from_any_value(
+            value=candidate_values,
+            keep_only_latest=keep_only_latest,
+        )
+
+    def extract_latest_x_value_from_peak_lines_payload(
+        self,
+        *,
+        peak_lines_payload: dict[str, Any],
+    ) -> Any:
+        """
+        Extract only the latest x value from a peak line payload.
+        """
+        x_values = self.extract_x_values_from_peak_lines_payload(
+            peak_lines_payload=peak_lines_payload,
+            keep_only_latest=True,
+        )
+
+        if x_values:
+            return x_values[-1]
 
         return None
 
@@ -648,6 +743,7 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
             "x_position",
             "position",
             "value",
+            "peak_position",
         ):
             if key in mapping:
                 return mapping[key]
@@ -719,7 +815,10 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
         Dictionaries are explicitly reduced to their x component. This prevents
         values like {"x": ..., "y": ...} from being written into ``col2``.
         """
-        if isinstance(value, dict):
+        if isinstance(
+            value,
+            dict,
+        ):
             extracted_x_value = self.extract_single_x_value_from_mapping(
                 mapping=value,
             )
@@ -731,7 +830,10 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
                 value=extracted_x_value,
             )
 
-        if isinstance(value, np.ndarray):
+        if isinstance(
+            value,
+            np.ndarray,
+        ):
             if value.ndim == 0:
                 return self.normalize_single_x_value_for_table(
                     value=value.item(),
@@ -744,12 +846,18 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
 
             return ""
 
-        if isinstance(value, np.generic):
+        if isinstance(
+            value,
+            np.generic,
+        ):
             return self.normalize_single_x_value_for_table(
                 value=value.item(),
             )
 
-        if isinstance(value, (list, tuple)):
+        if isinstance(
+            value,
+            (list, tuple),
+        ):
             if not value:
                 return ""
 
@@ -761,10 +869,15 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
             value=value,
         )
 
-        if isinstance(normalized_value, (str, int, float, bool)):
+        if isinstance(
+            normalized_value,
+            (str, int, float, bool),
+        ):
             return normalized_value
 
-        return str(normalized_value)
+        return str(
+            normalized_value,
+        )
 
     def clear_fluorescence_peak_column(
         self,
@@ -805,7 +918,9 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
         """
         Return the first row where the target column is empty.
         """
-        for row_index, row in enumerate(rows):
+        for row_index, row in enumerate(
+            rows,
+        ):
             value = row.get(
                 column_name,
                 "",
@@ -814,7 +929,10 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
             if value is None:
                 return row_index
 
-            if isinstance(value, str) and not value.strip():
+            if isinstance(
+                value,
+                str,
+            ) and not value.strip():
                 return row_index
 
         return None
@@ -843,7 +961,9 @@ def estimate_histogram_peak_positions(
         dtype=float,
     )
 
-    values = values[np.isfinite(values)]
+    values = values[
+        np.isfinite(values)
+    ]
 
     if values.size == 0:
         return []
@@ -900,7 +1020,9 @@ def estimate_histogram_peak_positions(
         candidate_indices[: int(peak_count)]
     )
 
-    bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
+    bin_centers = 0.5 * (
+        bin_edges[:-1] + bin_edges[1:]
+    )
 
     return [
         float(bin_centers[index])
@@ -968,7 +1090,10 @@ def find_local_maxima_indices(
 
     maxima_indices: list[int] = []
 
-    for index in range(1, values.size - 1):
+    for index in range(
+        1,
+        values.size - 1,
+    ):
         if values[index] >= values[index - 1] and values[index] >= values[index + 1]:
             maxima_indices.append(
                 index,

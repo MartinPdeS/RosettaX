@@ -8,7 +8,7 @@ from .mutation import register_mutation_callbacks
 from .runtime_sync import register_runtime_sync_callbacks
 from .visibility import register_visibility_callbacks
 
-from RosettaX.peak_workflow.scripts import registry
+from RosettaX.workflow.peak_workflow.scripts import registry
 
 
 class PeakWorkflowCallbacks:

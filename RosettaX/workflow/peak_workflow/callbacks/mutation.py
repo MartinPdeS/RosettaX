@@ -5,8 +5,8 @@ import logging
 
 import dash
 
-from RosettaX.peak_workflow.core import detectors
-from RosettaX.peak_workflow.scripts import registry
+from RosettaX.workflow.peak_workflow.core import detectors
+from RosettaX.workflow.peak_workflow.scripts import registry
 from RosettaX.utils import casting
 from RosettaX.utils.runtime_config import RuntimeConfig
 

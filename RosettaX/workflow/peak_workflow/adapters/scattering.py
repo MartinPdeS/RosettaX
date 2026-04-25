@@ -7,7 +7,7 @@ import dash
 import numpy as np
 
 from RosettaX.pages.scattering.backend import BackEnd
-from RosettaX.peak_workflow.adapters.base import BasePeakWorkflowAdapter
+from RosettaX.workflow.peak_workflow.adapters.base import BasePeakWorkflowAdapter
 
 
 logger = logging.getLogger(__name__)
@@ -60,6 +60,25 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
         "model",
     )
 
+    automatic_peak_position_names: tuple[str, ...] = (
+        "peak_positions",
+        "detected_peak_positions",
+        "automatic_peak_positions",
+        "new_peak_positions",
+        "x_positions",
+        "x_values",
+        "new_x_positions",
+    )
+
+    manual_peak_position_names: tuple[str, ...] = (
+        "clicked_x",
+        "clicked_x_position",
+        "clicked_point",
+        "new_point",
+        "manual_x",
+        "manual_x_position",
+    )
+
     def get_backend(
         self,
         *,
@@ -69,12 +88,18 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
         """
         Return a backend compatible with the shared peak workflow.
         """
-        if hasattr(page, "get_scattering_backend"):
+        if hasattr(
+            page,
+            "get_scattering_backend",
+        ):
             return page.get_scattering_backend(
                 uploaded_fcs_path=uploaded_fcs_path,
             )
 
-        if hasattr(page, "get_backend"):
+        if hasattr(
+            page,
+            "get_backend",
+        ):
             return page.get_backend(
                 uploaded_fcs_path=uploaded_fcs_path,
             )
@@ -124,7 +149,7 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
         logger: logging.Logger,
     ) -> Any:
         """
-        Append only x axis peak values to the scattering calibration table.
+        Append x axis peak values to the scattering calibration table.
 
         Manual graph clicks append exactly one scalar x value. Automatic peak
         detection appends one scalar x value per detected peak.
@@ -133,7 +158,11 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
             context.get("mie_model"),
         )
 
-        if getattr(result, "clear_existing_table_peaks", False):
+        if getattr(
+            result,
+            "clear_existing_table_peaks",
+            False,
+        ):
             return self.clear_scattering_peak_column(
                 table_data=table_data,
                 mie_model=mie_model,
@@ -150,6 +179,12 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
 
             return dash.no_update
 
+        logger.debug(
+            "Appending scattering peak x values to table: count=%d values=%r",
+            len(x_values_to_append),
+            x_values_to_append,
+        )
+
         return self.append_x_values_to_scattering_table(
             table_data=table_data,
             x_values=x_values_to_append,
@@ -164,41 +199,18 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
         """
         Extract x values to append to the table.
 
-        Priority:
-        1. newly clicked/manual values
-        2. automatic peak values
-        3. latest x value from peak line payload
-
-        Any dictionary shaped value is reduced to its x component.
+        Priority
+        --------
+        1. automatic peak arrays, keeping all detected peak values
+        2. manual click values, keeping only the latest click
+        3. peak line payload arrays, keeping all available values
         """
         if result is None:
             return []
 
-        newly_added_value = self.extract_first_existing_attribute_or_key(
-            source=result,
-            names=(
-                "new_peak_positions",
-                "new_x_positions",
-                "clicked_x",
-                "clicked_x_position",
-                "clicked_point",
-                "new_point",
-            ),
-        )
-
-        if newly_added_value is not None:
-            return self.extract_x_scalars_from_any_value(
-                value=newly_added_value,
-                keep_only_latest=True,
-            )
-
         automatic_value = self.extract_first_existing_attribute_or_key(
             source=result,
-            names=(
-                "peak_positions",
-                "x_positions",
-                "x_values",
-            ),
+            names=self.automatic_peak_position_names,
         )
 
         if automatic_value is not None:
@@ -207,28 +219,42 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
                 keep_only_latest=False,
             )
 
+        manual_value = self.extract_first_existing_attribute_or_key(
+            source=result,
+            names=self.manual_peak_position_names,
+        )
+
+        if manual_value is not None:
+            return self.extract_x_scalars_from_any_value(
+                value=manual_value,
+                keep_only_latest=True,
+            )
+
         peak_lines_payload = getattr(
             result,
             "peak_lines_payload",
             None,
         )
 
-        if peak_lines_payload is None and isinstance(result, dict):
+        if peak_lines_payload is None and isinstance(
+            result,
+            dict,
+        ):
             peak_lines_payload = result.get(
                 "peak_lines_payload",
             )
 
-        if isinstance(peak_lines_payload, dict):
-            latest_x_value = self.extract_latest_x_value_from_peak_lines_payload(
+        if isinstance(
+            peak_lines_payload,
+            dict,
+        ):
+            x_values = self.extract_x_values_from_peak_lines_payload(
                 peak_lines_payload=peak_lines_payload,
+                keep_only_latest=False,
             )
 
-            if latest_x_value is not None:
-                return [
-                    self.normalize_single_x_value_for_table(
-                        value=latest_x_value,
-                    )
-                ]
+            if x_values:
+                return x_values
 
         return []
 
@@ -251,7 +277,10 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
             if value is not None:
                 return value
 
-        if isinstance(source, dict):
+        if isinstance(
+            source,
+            dict,
+        ):
             for name in names:
                 value = source.get(
                     name,
@@ -271,12 +300,6 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
     ) -> list[Any]:
         """
         Extract only scalar x values from an arbitrary payload.
-
-        Examples
-        --------
-        {"x": 12.3, "y": 45.6} -> [12.3]
-        [{"x": 1, "y": 2}, {"x": 3, "y": 4}] -> [1, 3]
-        np.array([1, 2, 3]) -> [1, 2, 3]
         """
         raw_x_values = self.collect_raw_x_values(
             value=value,
@@ -313,7 +336,10 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
         if value is None:
             return []
 
-        if isinstance(value, dict):
+        if isinstance(
+            value,
+            dict,
+        ):
             for key in (
                 "x",
                 "clicked_x",
@@ -321,15 +347,25 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
                 "x_position",
                 "position",
                 "value",
+                "peak_position",
             ):
                 if key in value:
                     return [
                         value[key],
                     ]
 
+            for key in self.automatic_peak_position_names:
+                if key in value:
+                    return self.collect_raw_x_values(
+                        value=value[key],
+                    )
+
             return []
 
-        if isinstance(value, np.ndarray):
+        if isinstance(
+            value,
+            np.ndarray,
+        ):
             if value.ndim == 0:
                 return [
                     value.item(),
@@ -337,7 +373,9 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
 
             raw_x_values: list[Any] = []
 
-            for item in value.reshape(-1).tolist():
+            for item in value.reshape(
+                -1,
+            ).tolist():
                 raw_x_values.extend(
                     self.collect_raw_x_values(
                         value=item,
@@ -346,12 +384,18 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
 
             return raw_x_values
 
-        if isinstance(value, np.generic):
+        if isinstance(
+            value,
+            np.generic,
+        ):
             return [
                 value.item(),
             ]
 
-        if isinstance(value, (list, tuple)):
+        if isinstance(
+            value,
+            (list, tuple),
+        ):
             raw_x_values = []
 
             for item in value:
@@ -367,25 +411,28 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
             value,
         ]
 
-    def extract_latest_x_value_from_peak_lines_payload(
+    def extract_x_values_from_peak_lines_payload(
         self,
         *,
         peak_lines_payload: dict[str, Any],
-    ) -> Any:
+        keep_only_latest: bool,
+    ) -> list[Any]:
         """
-        Extract only the latest x value from a peak line payload.
+        Extract x values from a peak line payload.
         """
+        candidate_values: list[Any] = []
+
         points = peak_lines_payload.get(
             "points",
         )
 
-        if isinstance(points, list) and points:
-            latest_point = points[-1]
-
-            if isinstance(latest_point, dict):
-                return self.extract_single_x_value_from_mapping(
-                    mapping=latest_point,
-                )
+        if isinstance(
+            points,
+            list,
+        ):
+            candidate_values.extend(
+                points,
+            )
 
         for key in (
             "new_peak_positions",
@@ -399,13 +446,35 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
             if key not in peak_lines_payload:
                 continue
 
-            x_values = self.extract_x_scalars_from_any_value(
-                value=peak_lines_payload.get(key),
-                keep_only_latest=True,
+            candidate_values.append(
+                peak_lines_payload.get(
+                    key,
+                )
             )
 
-            if x_values:
-                return x_values[-1]
+        if not candidate_values:
+            return []
+
+        return self.extract_x_scalars_from_any_value(
+            value=candidate_values,
+            keep_only_latest=keep_only_latest,
+        )
+
+    def extract_latest_x_value_from_peak_lines_payload(
+        self,
+        *,
+        peak_lines_payload: dict[str, Any],
+    ) -> Any:
+        """
+        Extract only the latest x value from a peak line payload.
+        """
+        x_values = self.extract_x_values_from_peak_lines_payload(
+            peak_lines_payload=peak_lines_payload,
+            keep_only_latest=True,
+        )
+
+        if x_values:
+            return x_values[-1]
 
         return None
 
@@ -424,6 +493,7 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
             "x_position",
             "position",
             "value",
+            "peak_position",
         ):
             if key in mapping:
                 return mapping[key]
@@ -490,6 +560,7 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
                 empty_row_index = len(rows) - 1
 
             rows[empty_row_index][target_column_name] = x_value
+
             self.ensure_row_matches_mie_model(
                 row=rows[empty_row_index],
                 mie_model=mie_model,
@@ -511,7 +582,10 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
         values like {"x": ..., "y": ...} from being written into
         ``measured_peak_position``.
         """
-        if isinstance(value, dict):
+        if isinstance(
+            value,
+            dict,
+        ):
             extracted_x_value = self.extract_single_x_value_from_mapping(
                 mapping=value,
             )
@@ -523,7 +597,10 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
                 value=extracted_x_value,
             )
 
-        if isinstance(value, np.ndarray):
+        if isinstance(
+            value,
+            np.ndarray,
+        ):
             if value.ndim == 0:
                 return self.normalize_single_x_value_for_table(
                     value=value.item(),
@@ -531,17 +608,25 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
 
             if value.size == 1:
                 return self.normalize_single_x_value_for_table(
-                    value=value.reshape(-1)[0],
+                    value=value.reshape(
+                        -1,
+                    )[0],
                 )
 
             return ""
 
-        if isinstance(value, np.generic):
+        if isinstance(
+            value,
+            np.generic,
+        ):
             return self.normalize_single_x_value_for_table(
                 value=value.item(),
             )
 
-        if isinstance(value, (list, tuple)):
+        if isinstance(
+            value,
+            (list, tuple),
+        ):
             if not value:
                 return ""
 
@@ -553,10 +638,15 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
             value=value,
         )
 
-        if isinstance(normalized_value, (str, int, float, bool)):
+        if isinstance(
+            normalized_value,
+            (str, int, float, bool),
+        ):
             return normalized_value
 
-        return str(normalized_value)
+        return str(
+            normalized_value,
+        )
 
     def clear_scattering_peak_column(
         self,
@@ -589,6 +679,7 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
 
         for row in rows:
             row[target_column_name] = ""
+
             self.ensure_row_matches_mie_model(
                 row=row,
                 mie_model=mie_model,
@@ -630,7 +721,9 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
         """
         Return the first row where the target column is empty.
         """
-        for row_index, row in enumerate(rows):
+        for row_index, row in enumerate(
+            rows,
+        ):
             value = row.get(
                 column_name,
                 "",
@@ -639,7 +732,10 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
             if value is None:
                 return row_index
 
-            if isinstance(value, str) and not value.strip():
+            if isinstance(
+                value,
+                str,
+            ) and not value.strip():
                 return row_index
 
         return None
@@ -698,7 +794,9 @@ def ensure_minimum_row_count(
         for row in rows
     ]
 
-    while len(next_rows) < int(minimum_row_count):
+    while len(next_rows) < int(
+        minimum_row_count,
+    ):
         next_rows.append(
             build_empty_table_row(
                 mie_model=mie_model,

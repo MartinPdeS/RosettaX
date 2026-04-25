@@ -10,7 +10,7 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 
-PEAK_SCRIPT_PACKAGE_NAME = "RosettaX.peak_workflow.scripts"
+PEAK_SCRIPT_PACKAGE_NAME = "RosettaX.workflow.peak_workflow.scripts"
 DEFAULT_PROCESS_NAME = "automatic_1d"
 
 

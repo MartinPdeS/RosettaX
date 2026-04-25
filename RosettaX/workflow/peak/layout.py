@@ -6,8 +6,8 @@ from typing import Any
 import dash
 import dash_bootstrap_components as dbc
 
-from RosettaX.peak_workflow.callbacks import get_peak_processes
-from RosettaX.peak_workflow.layouts import build_peak_workflow_layout
+from RosettaX.workflow.peak_workflow.callbacks import get_peak_processes
+from RosettaX.workflow.peak_workflow.layouts import build_peak_workflow_layout
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.peak.models import PeakConfig
 

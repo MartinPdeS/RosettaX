@@ -6,8 +6,8 @@ import inspect
 import numpy as np
 import plotly.graph_objs as go
 
-from RosettaX.peak_workflow.core import detectors
-from RosettaX.peak_workflow.scripts import registry
+from RosettaX.workflow.peak_workflow.core import detectors
+from RosettaX.workflow.peak_workflow.scripts import registry
 from RosettaX.utils import casting
 from RosettaX.utils import plottings
 from RosettaX.utils.runtime_config import RuntimeConfig

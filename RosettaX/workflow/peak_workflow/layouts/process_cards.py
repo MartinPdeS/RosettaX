@@ -5,7 +5,7 @@ from typing import Any
 import dash_bootstrap_components as dbc
 from dash import dcc, html
 
-from RosettaX.peak_workflow.layouts import controls
+from RosettaX.workflow.peak_workflow.layouts import controls
 
 
 def build_peak_process_selector(

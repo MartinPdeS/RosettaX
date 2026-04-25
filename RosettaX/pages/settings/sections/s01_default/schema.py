@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Any, Optional
 import logging
 
-from RosettaX.peak_workflow.scripts import registry
+from RosettaX.workflow.peak_workflow.scripts import registry
 
 logger = logging.getLogger(__name__)
 
