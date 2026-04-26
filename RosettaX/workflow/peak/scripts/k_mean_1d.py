@@ -12,26 +12,27 @@ from RosettaX.utils.io import column_copy
 logger = logging.getLogger(__name__)
 
 
-class QuantileGatedKMeans2DPeakProcess(BasePeakProcess):
+class QuantileGatedKMeans1DPeakProcess(BasePeakProcess):
     """
-    Quantile gated 2D K means peak registration.
+    Quantile gated 1D K means peak registration.
 
-    The process gates events on both axes using lower and upper quantiles, then
-    runs K means on the remaining two dimensional cloud.
+    The process gates events on one detector axis using lower and upper
+    quantiles, then runs K means on the remaining one dimensional values.
 
-    The table receives only the x coordinate of each detected center through the
-    page adapter. The graph receives the full 2D centers, the gate thresholds,
-    and grouped event coordinates for colored cluster rendering.
+    The table receives the detected cluster centers. The graph receives peak
+    positions, gate thresholds, cluster sizes, and optional grouped values that
+    can be rendered with different colors if the graph layer supports grouped
+    traces.
     """
 
-    process_name = "Quantile gated K-means 2D peaks"
-    process_label = "Quantile gated K-means 2D peaks"
+    process_name = "Gated K-means 1D"
+    process_label = "Gated K-means 1D peaks"
     description = (
-        "Gate events on both axes using quantiles, then run K-means on the "
-        "remaining 2D event coordinates."
+        "Gate events on one detector axis using quantiles, then run K-means on "
+        "the remaining 1D values."
     )
-    graph_type = "2d_scatter"
-    sort_order = 50
+    graph_type = "1d_histogram"
+    sort_order = 45
 
     supports_manual_click = False
     supports_clear = True
@@ -44,7 +45,6 @@ class QuantileGatedKMeans2DPeakProcess(BasePeakProcess):
         """
         return [
             "x_axis",
-            "y_axis",
         ]
 
     def get_detector_channel_labels(self) -> dict[str, str]:
@@ -52,8 +52,7 @@ class QuantileGatedKMeans2DPeakProcess(BasePeakProcess):
         Return user visible detector labels.
         """
         return {
-            "x_axis": "X axis channel",
-            "y_axis": "Y axis channel",
+            "x_axis": "Signal channel",
         }
 
     def get_settings(self) -> list[dict[str, Any]]:
@@ -65,7 +64,7 @@ class QuantileGatedKMeans2DPeakProcess(BasePeakProcess):
                 "name": "cluster_count",
                 "label": "Cluster count",
                 "kind": "integer",
-                "default_value": 2,
+                "default_value": 3,
                 "min_value": 1,
                 "max_value": 20,
                 "step": 1,
@@ -81,36 +80,18 @@ class QuantileGatedKMeans2DPeakProcess(BasePeakProcess):
             },
             {
                 "name": "x_axis_lower_gate_quantile",
-                "label": "X axis lower gate quantile",
+                "label": "Lower gate quantile",
                 "kind": "float",
-                "default_value": 0.0,
+                "default_value": 0.001,
                 "min_value": 0.0,
                 "max_value": 0.499,
                 "step": 0.001,
             },
             {
                 "name": "x_axis_upper_gate_quantile",
-                "label": "X axis upper gate quantile",
+                "label": "Upper gate quantile",
                 "kind": "float",
-                "default_value": 1.0,
-                "min_value": 0.501,
-                "max_value": 1.0,
-                "step": 0.001,
-            },
-            {
-                "name": "y_axis_lower_gate_quantile",
-                "label": "Y axis lower gate quantile",
-                "kind": "float",
-                "default_value": 0.0,
-                "min_value": 0.0,
-                "max_value": 0.499,
-                "step": 0.001,
-            },
-            {
-                "name": "y_axis_upper_gate_quantile",
-                "label": "Y axis upper gate quantile",
-                "kind": "float",
-                "default_value": 1.0,
+                "default_value": 0.999,
                 "min_value": 0.501,
                 "max_value": 1.0,
                 "step": 0.001,
@@ -158,7 +139,7 @@ class QuantileGatedKMeans2DPeakProcess(BasePeakProcess):
             },
             {
                 "name": "maximum_group_values_per_cluster",
-                "label": "Max grouped points per cluster",
+                "label": "Max grouped values per cluster",
                 "kind": "integer",
                 "default_value": 5000,
                 "min_value": 10,
@@ -179,7 +160,7 @@ class QuantileGatedKMeans2DPeakProcess(BasePeakProcess):
         **_kwargs: Any,
     ) -> Optional[PeakProcessResult]:
         """
-        Run quantile gated K means.
+        Run quantile gated 1D K means.
         """
         del peak_count
 
@@ -196,29 +177,16 @@ class QuantileGatedKMeans2DPeakProcess(BasePeakProcess):
             "x_axis",
         )
 
-        y_axis_column = detector_channels.get(
-            "y_axis",
-        )
-
         if not str(x_axis_column or "").strip():
             return PeakProcessResult(
                 peak_positions=[],
                 peak_lines_payload=self.build_empty_peak_lines_payload(),
-                status="Select an x axis channel first.",
+                status="Select a signal channel first.",
                 new_peak_positions=[],
                 clear_existing_table_peaks=False,
             )
 
-        if not str(y_axis_column or "").strip():
-            return PeakProcessResult(
-                peak_positions=[],
-                peak_lines_payload=self.build_empty_peak_lines_payload(),
-                status="Select a y axis channel first.",
-                new_peak_positions=[],
-                clear_existing_table_peaks=False,
-            )
-
-        settings = QuantileGatedKMeansSettings.from_process_settings(
+        settings = QuantileGatedKMeans1DSettings.from_process_settings(
             process_settings=process_settings,
         )
 
@@ -241,34 +209,21 @@ class QuantileGatedKMeans2DPeakProcess(BasePeakProcess):
             dtype=float,
         )
 
-        y_axis_values = np.asarray(
-            column_copy(
-                fcs_file_path=backend.fcs_file_path,
-                detector_column=str(y_axis_column),
-                dtype=float,
-                n=maximum_events,
-            ),
-            dtype=float,
-        )
-
-        result = compute_quantile_gated_kmeans_peaks(
+        result = compute_quantile_gated_kmeans_1d_peaks(
             x_axis_values=x_axis_values,
-            y_axis_values=y_axis_values,
             settings=settings,
         )
 
-        peak_positions = deduplicate_2d_peak_positions(
+        peak_positions = deduplicate_1d_peak_positions(
             peak_positions=result.peak_positions,
         )
 
         peak_lines_payload = self.build_peak_lines_payload(
             peak_positions=peak_positions,
             cluster_sizes=result.cluster_sizes,
-            grouped_points=result.grouped_points,
             x_axis_lower_gate=result.x_axis_lower_gate,
             x_axis_upper_gate=result.x_axis_upper_gate,
-            y_axis_lower_gate=result.y_axis_lower_gate,
-            y_axis_upper_gate=result.y_axis_upper_gate,
+            grouped_values=result.grouped_values,
             include_group_values=settings.include_group_values,
             maximum_group_values_per_cluster=settings.maximum_group_values_per_cluster,
         )
@@ -276,15 +231,13 @@ class QuantileGatedKMeans2DPeakProcess(BasePeakProcess):
         status = (
             f"Quantile gated K means found {len(peak_positions)} cluster center(s) "
             f"from {result.gated_event_count} gated event(s). "
-            f"X gate=[{result.x_axis_lower_gate:.6g}, {result.x_axis_upper_gate:.6g}], "
-            f"Y gate=[{result.y_axis_lower_gate:.6g}, {result.y_axis_upper_gate:.6g}]."
+            f"Gate=[{result.x_axis_lower_gate:.6g}, {result.x_axis_upper_gate:.6g}]."
         )
 
         logger.debug(
-            "Quantile gated K means completed with x_axis_column=%r y_axis_column=%r "
+            "Quantile gated 1D K means completed with x_axis_column=%r "
             "settings=%r gated_event_count=%r peak_positions=%r",
             x_axis_column,
-            y_axis_column,
             settings,
             result.gated_event_count,
             peak_positions,
@@ -317,47 +270,30 @@ class QuantileGatedKMeans2DPeakProcess(BasePeakProcess):
         return {
             "positions": [],
             "x_positions": [],
-            "y_positions": [],
             "points": [],
             "labels": [],
             "cluster_sizes": [],
-            "group_points": [],
+            "group_values": [],
             "group_labels": [],
-            "x_axis_lower_gate": 0.0,
-            "x_axis_upper_gate": 0.0,
-            "y_axis_lower_gate": 0.0,
-            "y_axis_upper_gate": 0.0,
         }
 
     def build_peak_lines_payload(
         self,
         *,
-        peak_positions: list[dict[str, float]],
+        peak_positions: list[float],
         cluster_sizes: list[int],
-        grouped_points: list[dict[str, np.ndarray]],
         x_axis_lower_gate: float,
         x_axis_upper_gate: float,
-        y_axis_lower_gate: float,
-        y_axis_upper_gate: float,
+        grouped_values: list[np.ndarray],
         include_group_values: bool,
         maximum_group_values_per_cluster: int,
     ) -> dict[str, Any]:
         """
         Build graph annotation payload.
 
-        ``group_points`` and ``group_labels`` are included so the graph builder
+        ``group_values`` and ``group_labels`` are included so the graph builder
         can render each K means cluster with a different color.
         """
-        x_positions = [
-            float(position["x"])
-            for position in peak_positions
-        ]
-
-        y_positions = [
-            float(position["y"])
-            for position in peak_positions
-        ]
-
         labels = [
             f"K means cluster {index + 1} | n={cluster_sizes[index]}"
             if index < len(cluster_sizes)
@@ -366,13 +302,17 @@ class QuantileGatedKMeans2DPeakProcess(BasePeakProcess):
         ]
 
         payload = {
-            "positions": x_positions,
-            "x_positions": x_positions,
-            "y_positions": y_positions,
+            "positions": [
+                float(position)
+                for position in peak_positions
+            ],
+            "x_positions": [
+                float(position)
+                for position in peak_positions
+            ],
             "points": [
                 {
-                    "x": float(position["x"]),
-                    "y": float(position["y"]),
+                    "x": float(position),
                 }
                 for position in peak_positions
             ],
@@ -383,29 +323,26 @@ class QuantileGatedKMeans2DPeakProcess(BasePeakProcess):
             ],
             "x_axis_lower_gate": float(x_axis_lower_gate),
             "x_axis_upper_gate": float(x_axis_upper_gate),
-            "y_axis_lower_gate": float(y_axis_lower_gate),
-            "y_axis_upper_gate": float(y_axis_upper_gate),
-            "group_points": [],
+            "group_values": [],
             "group_labels": [],
         }
 
         if include_group_values:
-            payload["group_points"] = [
-                downsample_points(
-                    x_values=grouped_points[index]["x_values"],
-                    y_values=grouped_points[index]["y_values"],
+            payload["group_values"] = [
+                downsample_values(
+                    values=grouped_values[index],
                     maximum_size=maximum_group_values_per_cluster,
-                )
-                for index in range(len(grouped_points))
+                ).tolist()
+                for index in range(len(grouped_values))
             ]
             payload["group_labels"] = labels
 
         return payload
 
 
-class QuantileGatedKMeansSettings:
+class QuantileGatedKMeans1DSettings:
     """
-    Settings for quantile gated 2D K means.
+    Settings for quantile gated 1D K means.
     """
 
     def __init__(
@@ -415,8 +352,6 @@ class QuantileGatedKMeansSettings:
         minimum_cluster_size: int,
         x_axis_lower_gate_quantile: float,
         x_axis_upper_gate_quantile: float,
-        y_axis_lower_gate_quantile: float,
-        y_axis_upper_gate_quantile: float,
         maximum_iterations: int,
         use_log_transform: bool,
         include_group_values: bool,
@@ -426,8 +361,6 @@ class QuantileGatedKMeansSettings:
         self.minimum_cluster_size = minimum_cluster_size
         self.x_axis_lower_gate_quantile = x_axis_lower_gate_quantile
         self.x_axis_upper_gate_quantile = x_axis_upper_gate_quantile
-        self.y_axis_lower_gate_quantile = y_axis_lower_gate_quantile
-        self.y_axis_upper_gate_quantile = y_axis_upper_gate_quantile
         self.maximum_iterations = maximum_iterations
         self.use_log_transform = use_log_transform
         self.include_group_values = include_group_values
@@ -438,14 +371,14 @@ class QuantileGatedKMeansSettings:
         cls,
         *,
         process_settings: dict[str, Any],
-    ) -> "QuantileGatedKMeansSettings":
+    ) -> "QuantileGatedKMeans1DSettings":
         """
         Build settings from Dash process settings.
         """
         x_axis_lower_gate_quantile = resolve_float_setting(
             settings=process_settings,
             name="x_axis_lower_gate_quantile",
-            default=0.0,
+            default=0.001,
             minimum=0.0,
             maximum=0.499,
         )
@@ -453,40 +386,20 @@ class QuantileGatedKMeansSettings:
         x_axis_upper_gate_quantile = resolve_float_setting(
             settings=process_settings,
             name="x_axis_upper_gate_quantile",
-            default=1.0,
-            minimum=0.501,
-            maximum=1.0,
-        )
-
-        y_axis_lower_gate_quantile = resolve_float_setting(
-            settings=process_settings,
-            name="y_axis_lower_gate_quantile",
-            default=0.0,
-            minimum=0.0,
-            maximum=0.499,
-        )
-
-        y_axis_upper_gate_quantile = resolve_float_setting(
-            settings=process_settings,
-            name="y_axis_upper_gate_quantile",
-            default=1.0,
+            default=0.999,
             minimum=0.501,
             maximum=1.0,
         )
 
         if x_axis_lower_gate_quantile >= x_axis_upper_gate_quantile:
-            x_axis_lower_gate_quantile = 0.0
-            x_axis_upper_gate_quantile = 1.0
-
-        if y_axis_lower_gate_quantile >= y_axis_upper_gate_quantile:
-            y_axis_lower_gate_quantile = 0.0
-            y_axis_upper_gate_quantile = 1.0
+            x_axis_lower_gate_quantile = 0.001
+            x_axis_upper_gate_quantile = 0.999
 
         return cls(
             cluster_count=resolve_integer_setting(
                 settings=process_settings,
                 name="cluster_count",
-                default=2,
+                default=3,
                 minimum=1,
                 maximum=20,
             ),
@@ -499,8 +412,6 @@ class QuantileGatedKMeansSettings:
             ),
             x_axis_lower_gate_quantile=x_axis_lower_gate_quantile,
             x_axis_upper_gate_quantile=x_axis_upper_gate_quantile,
-            y_axis_lower_gate_quantile=y_axis_lower_gate_quantile,
-            y_axis_upper_gate_quantile=y_axis_upper_gate_quantile,
             maximum_iterations=resolve_integer_setting(
                 settings=process_settings,
                 name="maximum_iterations",
@@ -532,13 +443,11 @@ class QuantileGatedKMeansSettings:
         Return a compact debug representation.
         """
         return (
-            "QuantileGatedKMeansSettings("
+            "QuantileGatedKMeans1DSettings("
             f"cluster_count={self.cluster_count!r}, "
             f"minimum_cluster_size={self.minimum_cluster_size!r}, "
             f"x_axis_lower_gate_quantile={self.x_axis_lower_gate_quantile!r}, "
             f"x_axis_upper_gate_quantile={self.x_axis_upper_gate_quantile!r}, "
-            f"y_axis_lower_gate_quantile={self.y_axis_lower_gate_quantile!r}, "
-            f"y_axis_upper_gate_quantile={self.y_axis_upper_gate_quantile!r}, "
             f"maximum_iterations={self.maximum_iterations!r}, "
             f"use_log_transform={self.use_log_transform!r}, "
             f"include_group_values={self.include_group_values!r}, "
@@ -546,94 +455,77 @@ class QuantileGatedKMeansSettings:
         )
 
 
-class QuantileGatedKMeansResult:
+class QuantileGatedKMeans1DResult:
     """
-    Result from quantile gated 2D K means.
+    Result from quantile gated 1D K means.
     """
 
     def __init__(
         self,
         *,
-        peak_positions: list[dict[str, float]],
+        peak_positions: list[float],
         cluster_sizes: list[int],
-        grouped_points: list[dict[str, np.ndarray]],
+        grouped_values: list[np.ndarray],
         x_axis_lower_gate: float,
         x_axis_upper_gate: float,
-        y_axis_lower_gate: float,
-        y_axis_upper_gate: float,
         gated_event_count: int,
     ) -> None:
         self.peak_positions = peak_positions
         self.cluster_sizes = cluster_sizes
-        self.grouped_points = grouped_points
+        self.grouped_values = grouped_values
         self.x_axis_lower_gate = x_axis_lower_gate
         self.x_axis_upper_gate = x_axis_upper_gate
-        self.y_axis_lower_gate = y_axis_lower_gate
-        self.y_axis_upper_gate = y_axis_upper_gate
         self.gated_event_count = gated_event_count
 
 
-def compute_quantile_gated_kmeans_peaks(
+def compute_quantile_gated_kmeans_1d_peaks(
     *,
     x_axis_values: Any,
-    y_axis_values: Any,
-    settings: QuantileGatedKMeansSettings,
-) -> QuantileGatedKMeansResult:
+    settings: QuantileGatedKMeans1DSettings,
+) -> QuantileGatedKMeans1DResult:
     """
-    Compute K means centers after x and y quantile gating.
+    Compute K means centers after 1D quantile gating.
     """
-    x_axis_values, y_axis_values = prepare_axis_values(
+    original_x_axis_values, transformed_x_axis_values = prepare_axis_values(
         x_axis_values=x_axis_values,
-        y_axis_values=y_axis_values,
         use_log_transform=settings.use_log_transform,
     )
 
-    if x_axis_values.size == 0:
-        return build_empty_quantile_gated_kmeans_result()
+    if original_x_axis_values.size == 0:
+        return build_empty_quantile_gated_kmeans_1d_result()
 
     x_axis_lower_gate, x_axis_upper_gate = compute_quantile_gate(
-        values=x_axis_values,
+        values=original_x_axis_values,
         lower_quantile=settings.x_axis_lower_gate_quantile,
         upper_quantile=settings.x_axis_upper_gate_quantile,
     )
 
-    y_axis_lower_gate, y_axis_upper_gate = compute_quantile_gate(
-        values=y_axis_values,
-        lower_quantile=settings.y_axis_lower_gate_quantile,
-        upper_quantile=settings.y_axis_upper_gate_quantile,
-    )
-
     gate_mask = (
-        (x_axis_values >= x_axis_lower_gate)
-        & (x_axis_values <= x_axis_upper_gate)
-        & (y_axis_values >= y_axis_lower_gate)
-        & (y_axis_values <= y_axis_upper_gate)
+        (original_x_axis_values >= x_axis_lower_gate)
+        & (original_x_axis_values <= x_axis_upper_gate)
     )
 
-    gated_x_axis_values = x_axis_values[
+    gated_original_x_axis_values = original_x_axis_values[
         gate_mask
     ]
 
-    gated_y_axis_values = y_axis_values[
+    gated_transformed_x_axis_values = transformed_x_axis_values[
         gate_mask
     ]
 
-    if gated_x_axis_values.size == 0:
-        return QuantileGatedKMeansResult(
+    if gated_original_x_axis_values.size == 0:
+        return QuantileGatedKMeans1DResult(
             peak_positions=[],
             cluster_sizes=[],
-            grouped_points=[],
+            grouped_values=[],
             x_axis_lower_gate=float(x_axis_lower_gate),
             x_axis_upper_gate=float(x_axis_upper_gate),
-            y_axis_lower_gate=float(y_axis_lower_gate),
-            y_axis_upper_gate=float(y_axis_upper_gate),
             gated_event_count=0,
         )
 
-    feature_matrix = build_feature_matrix(
-        x_axis_values=gated_x_axis_values,
-        y_axis_values=gated_y_axis_values,
-        use_log_transform=settings.use_log_transform,
+    feature_matrix = gated_transformed_x_axis_values.reshape(
+        -1,
+        1,
     )
 
     standardized_feature_matrix, feature_center, feature_scale = standardize_feature_matrix(
@@ -646,15 +538,13 @@ def compute_quantile_gated_kmeans_peaks(
     )
 
     if resolved_cluster_count <= 0:
-        return QuantileGatedKMeansResult(
+        return QuantileGatedKMeans1DResult(
             peak_positions=[],
             cluster_sizes=[],
-            grouped_points=[],
+            grouped_values=[],
             x_axis_lower_gate=float(x_axis_lower_gate),
             x_axis_upper_gate=float(x_axis_upper_gate),
-            y_axis_lower_gate=float(y_axis_lower_gate),
-            y_axis_upper_gate=float(y_axis_upper_gate),
-            gated_event_count=int(gated_x_axis_values.size),
+            gated_event_count=int(gated_original_x_axis_values.size),
         )
 
     labels, centers = run_kmeans(
@@ -663,62 +553,73 @@ def compute_quantile_gated_kmeans_peaks(
         maximum_iterations=settings.maximum_iterations,
     )
 
-    peak_positions, cluster_sizes, grouped_points = convert_kmeans_centers_to_peak_positions(
+    peak_positions, cluster_sizes, grouped_values = convert_kmeans_centers_to_peak_positions(
         labels=labels,
         centers=centers,
         feature_center=feature_center,
         feature_scale=feature_scale,
-        gated_x_axis_values=gated_x_axis_values,
-        gated_y_axis_values=gated_y_axis_values,
+        gated_original_x_axis_values=gated_original_x_axis_values,
         use_log_transform=settings.use_log_transform,
         minimum_cluster_size=settings.minimum_cluster_size,
     )
 
-    peak_positions, cluster_sizes, grouped_points = sort_peak_positions_by_x_axis(
+    peak_positions, cluster_sizes, grouped_values = sort_peak_positions_by_value(
         peak_positions=peak_positions,
         cluster_sizes=cluster_sizes,
-        grouped_points=grouped_points,
+        grouped_values=grouped_values,
     )
 
-    return QuantileGatedKMeansResult(
+    return QuantileGatedKMeans1DResult(
         peak_positions=peak_positions,
         cluster_sizes=cluster_sizes,
-        grouped_points=grouped_points,
+        grouped_values=grouped_values,
         x_axis_lower_gate=float(x_axis_lower_gate),
         x_axis_upper_gate=float(x_axis_upper_gate),
-        y_axis_lower_gate=float(y_axis_lower_gate),
-        y_axis_upper_gate=float(y_axis_upper_gate),
-        gated_event_count=int(gated_x_axis_values.size),
+        gated_event_count=int(gated_original_x_axis_values.size),
     )
 
 
 def prepare_axis_values(
     *,
     x_axis_values: Any,
-    y_axis_values: Any,
     use_log_transform: bool,
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Convert event coordinates to finite NumPy arrays.
+
+    Returns
+    -------
+    tuple[np.ndarray, np.ndarray]
+        Original finite values and transformed values used for clustering.
     """
-    x_axis_values = np.asarray(
+    original_x_axis_values = np.asarray(
         x_axis_values,
         dtype=float,
     )
 
-    y_axis_values = np.asarray(
-        y_axis_values,
-        dtype=float,
+    finite_mask = np.isfinite(
+        original_x_axis_values,
     )
 
-    finite_mask = np.isfinite(x_axis_values) & np.isfinite(y_axis_values)
+    if use_log_transform:
+        finite_mask = finite_mask & (
+            original_x_axis_values > 0.0
+        )
+
+    original_x_axis_values = original_x_axis_values[
+        finite_mask
+    ]
 
     if use_log_transform:
-        finite_mask = finite_mask & (x_axis_values > 0.0) & (y_axis_values > 0.0)
+        transformed_x_axis_values = np.log10(
+            original_x_axis_values,
+        )
+    else:
+        transformed_x_axis_values = original_x_axis_values.copy()
 
     return (
-        x_axis_values[finite_mask],
-        y_axis_values[finite_mask],
+        original_x_axis_values,
+        transformed_x_axis_values,
     )
 
 
@@ -754,35 +655,6 @@ def compute_quantile_gate(
     return (
         float(lower_gate),
         float(upper_gate),
-    )
-
-
-def build_feature_matrix(
-    *,
-    x_axis_values: np.ndarray,
-    y_axis_values: np.ndarray,
-    use_log_transform: bool,
-) -> np.ndarray:
-    """
-    Build the two dimensional feature matrix.
-    """
-    if use_log_transform:
-        return np.column_stack(
-            [
-                np.log10(
-                    x_axis_values,
-                ),
-                np.log10(
-                    y_axis_values,
-                ),
-            ]
-        )
-
-    return np.column_stack(
-        [
-            x_axis_values,
-            y_axis_values,
-        ]
     )
 
 
@@ -836,7 +708,9 @@ def run_kmeans(
     )
 
     if feature_matrix.ndim != 2:
-        raise ValueError("feature_matrix must be two dimensional.")
+        raise ValueError(
+            "feature_matrix must be two dimensional."
+        )
 
     if feature_matrix.shape[0] == 0:
         return (
@@ -880,7 +754,10 @@ def run_kmeans(
                     axis=0,
                 )
 
-        if np.array_equal(next_labels, labels) and np.allclose(
+        if np.array_equal(
+            next_labels,
+            labels,
+        ) and np.allclose(
             next_centers,
             centers,
             rtol=1e-7,
@@ -902,7 +779,7 @@ def initialize_kmeans_centers(
     cluster_count: int,
 ) -> np.ndarray:
     """
-    Initialize K means centers deterministically along the x feature axis.
+    Initialize K means centers deterministically along the 1D feature axis.
     """
     initialization_axis = feature_matrix[:, 0]
 
@@ -938,17 +815,16 @@ def convert_kmeans_centers_to_peak_positions(
     centers: np.ndarray,
     feature_center: np.ndarray,
     feature_scale: np.ndarray,
-    gated_x_axis_values: np.ndarray,
-    gated_y_axis_values: np.ndarray,
+    gated_original_x_axis_values: np.ndarray,
     use_log_transform: bool,
     minimum_cluster_size: int,
-) -> tuple[list[dict[str, float]], list[int], list[dict[str, np.ndarray]]]:
+) -> tuple[list[float], list[int], list[np.ndarray]]:
     """
     Convert standardized K means centers back to data coordinates.
     """
-    peak_positions: list[dict[str, float]] = []
+    peak_positions: list[float] = []
     cluster_sizes: list[int] = []
-    grouped_points: list[dict[str, np.ndarray]] = []
+    grouped_values: list[np.ndarray] = []
 
     for cluster_index in range(centers.shape[0]):
         cluster_mask = labels == cluster_index
@@ -972,161 +848,106 @@ def convert_kmeans_centers_to_peak_positions(
             center_x = float(
                 10.0 ** center_feature[0],
             )
-
-            center_y = float(
-                10.0 ** center_feature[1],
-            )
-
         else:
             center_x = float(
                 center_feature[0],
             )
 
-            center_y = float(
-                center_feature[1],
-            )
-
-        if not np.isfinite(center_x) or not np.isfinite(center_y):
+        if not np.isfinite(center_x):
             continue
 
         peak_positions.append(
-            {
-                "x": center_x,
-                "y": center_y,
-            }
+            center_x,
         )
 
         cluster_sizes.append(
             cluster_size,
         )
 
-        grouped_points.append(
-            {
-                "x_values": np.asarray(
-                    gated_x_axis_values[cluster_mask],
-                    dtype=float,
-                ),
-                "y_values": np.asarray(
-                    gated_y_axis_values[cluster_mask],
-                    dtype=float,
-                ),
-            }
+        grouped_values.append(
+            np.asarray(
+                gated_original_x_axis_values[cluster_mask],
+                dtype=float,
+            )
         )
 
     return (
         peak_positions,
         cluster_sizes,
-        grouped_points,
+        grouped_values,
     )
 
 
-def sort_peak_positions_by_x_axis(
+def sort_peak_positions_by_value(
     *,
-    peak_positions: list[dict[str, float]],
+    peak_positions: list[float],
     cluster_sizes: list[int],
-    grouped_points: list[dict[str, np.ndarray]],
-) -> tuple[list[dict[str, float]], list[int], list[dict[str, np.ndarray]]]:
+    grouped_values: list[np.ndarray],
+) -> tuple[list[float], list[int], list[np.ndarray]]:
     """
-    Sort peak positions by increasing x coordinate.
+    Sort peak positions by increasing value.
     """
     order = np.argsort(
-        [
-            position["x"]
-            for position in peak_positions
-        ]
+        peak_positions,
     )
 
     return (
         [
-            peak_positions[int(index)]
+            float(peak_positions[int(index)])
             for index in order
         ],
         [
-            cluster_sizes[int(index)]
+            int(cluster_sizes[int(index)])
             for index in order
         ],
         [
-            grouped_points[int(index)]
+            grouped_values[int(index)]
             for index in order
         ],
     )
 
 
-def downsample_points(
+def downsample_values(
     *,
-    x_values: Any,
-    y_values: Any,
+    values: Any,
     maximum_size: int,
-) -> dict[str, list[float]]:
+) -> np.ndarray:
     """
-    Deterministically downsample 2D points for graph payloads.
+    Deterministically downsample values for graph payloads.
     """
-    x_values = np.asarray(
-        x_values,
+    values = np.asarray(
+        values,
         dtype=float,
-    ).reshape(-1)
-
-    y_values = np.asarray(
-        y_values,
-        dtype=float,
-    ).reshape(-1)
-
-    common_size = min(
-        x_values.size,
-        y_values.size,
     )
 
-    x_values = x_values[
-        :common_size
+    values = values[
+        np.isfinite(values)
     ]
 
-    y_values = y_values[
-        :common_size
+    if values.size <= int(maximum_size):
+        return values
+
+    indices = np.linspace(
+        0,
+        values.size - 1,
+        int(maximum_size),
+    ).astype(int)
+
+    return values[
+        indices
     ]
 
-    finite_mask = np.isfinite(x_values) & np.isfinite(y_values)
 
-    x_values = x_values[
-        finite_mask
-    ]
-
-    y_values = y_values[
-        finite_mask
-    ]
-
-    if x_values.size > int(maximum_size):
-        indices = np.linspace(
-            0,
-            x_values.size - 1,
-            int(maximum_size),
-        ).astype(int)
-
-        x_values = x_values[
-            indices
-        ]
-
-        y_values = y_values[
-            indices
-        ]
-
-    return {
-        "x_values": x_values.tolist(),
-        "y_values": y_values.tolist(),
-    }
-
-
-def build_empty_quantile_gated_kmeans_result() -> QuantileGatedKMeansResult:
+def build_empty_quantile_gated_kmeans_1d_result() -> QuantileGatedKMeans1DResult:
     """
     Build an empty result.
     """
-    return QuantileGatedKMeansResult(
+    return QuantileGatedKMeans1DResult(
         peak_positions=[],
         cluster_sizes=[],
-        grouped_points=[],
+        grouped_values=[],
         x_axis_lower_gate=0.0,
         x_axis_upper_gate=0.0,
-        y_axis_lower_gate=0.0,
-        y_axis_upper_gate=0.0,
         gated_event_count=0,
     )
 
@@ -1172,10 +993,16 @@ def resolve_float_setting(
         )
 
     except (TypeError, ValueError):
-        resolved_value = float(default)
+        resolved_value = float(
+            default,
+        )
 
-    if not np.isfinite(resolved_value):
-        resolved_value = float(default)
+    if not np.isfinite(
+        resolved_value,
+    ):
+        resolved_value = float(
+            default,
+        )
 
     resolved_value = max(
         float(minimum),
@@ -1201,10 +1028,14 @@ def resolve_integer_value(
     Resolve a bounded integer value.
     """
     try:
-        resolved_value = int(value)
+        resolved_value = int(
+            value,
+        )
 
     except (TypeError, ValueError):
-        resolved_value = int(default)
+        resolved_value = int(
+            default,
+        )
 
     resolved_value = max(
         int(minimum),
@@ -1234,12 +1065,16 @@ def resolve_yes_no_setting(
     )
 
     if value is None:
-        return bool(default)
+        return bool(
+            default,
+        )
 
     if isinstance(value, bool):
         return value
 
-    return str(value).strip().lower() in (
+    return str(
+        value,
+    ).strip().lower() in (
         "yes",
         "true",
         "1",
@@ -1248,42 +1083,34 @@ def resolve_yes_no_setting(
     )
 
 
-def deduplicate_2d_peak_positions(
+def deduplicate_1d_peak_positions(
     *,
-    peak_positions: list[dict[str, float]],
+    peak_positions: list[float],
     decimal_places: int = 12,
-) -> list[dict[str, float]]:
+) -> list[float]:
     """
-    Remove duplicate 2D peak positions while preserving order.
+    Remove duplicate 1D peak positions while preserving order.
     """
-    unique_peak_positions: list[dict[str, float]] = []
-    seen_keys: set[tuple[float, float]] = set()
+    unique_peak_positions: list[float] = []
+    seen_keys: set[float] = set()
 
     for peak_position in peak_positions:
         try:
             x_value = float(
-                peak_position["x"],
+                peak_position,
             )
 
-            y_value = float(
-                peak_position["y"],
-            )
-
-        except (KeyError, TypeError, ValueError):
+        except (TypeError, ValueError):
             continue
 
-        if not np.isfinite(x_value) or not np.isfinite(y_value):
+        if not np.isfinite(
+            x_value,
+        ):
             continue
 
-        key = (
-            round(
-                x_value,
-                int(decimal_places),
-            ),
-            round(
-                y_value,
-                int(decimal_places),
-            ),
+        key = round(
+            x_value,
+            int(decimal_places),
         )
 
         if key in seen_keys:
@@ -1294,13 +1121,10 @@ def deduplicate_2d_peak_positions(
         )
 
         unique_peak_positions.append(
-            {
-                "x": x_value,
-                "y": y_value,
-            }
+            x_value,
         )
 
     return unique_peak_positions
 
 
-PROCESS = QuantileGatedKMeans2DPeakProcess()
+PROCESS = QuantileGatedKMeans1DPeakProcess()

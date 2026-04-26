@@ -6,8 +6,7 @@ from typing import Any, Optional
 import dash
 import dash_bootstrap_components as dbc
 
-from .base import BasePeakProcess
-from .base import PeakProcessResult
+from .base import BasePeakProcess, PeakProcessResult
 
 
 logger = logging.getLogger(__name__)
@@ -24,8 +23,8 @@ class Manual1DClickProcess(BasePeakProcess):
     table receives only the current click delta through new_peak_positions.
     """
 
-    process_name = "1D manual click"
-    process_label = "1D manual click"
+    process_name = "Manual 1D"
+    process_label = "Manual 1D"
     graph_type = "1d_histogram"
     sort_order = 10
 

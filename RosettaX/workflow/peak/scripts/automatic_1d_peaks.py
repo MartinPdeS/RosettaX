@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import json
 import logging
 from typing import Any, Optional
 
@@ -7,9 +8,9 @@ import dash
 import dash_bootstrap_components as dbc
 import numpy as np
 
-from .base import BasePeakProcess
-from .base import PeakProcessResult
+from .base import BasePeakProcess, PeakProcessResult
 from RosettaX.utils.io import column_copy
+
 
 logger = logging.getLogger(__name__)
 
@@ -28,8 +29,8 @@ class Automatic1DPeaksProcess(BasePeakProcess):
     and maps the detected centers back to the original scale.
     """
 
-    process_name = "1D automatic peaks"
-    process_label = "1D automatic peaks"
+    process_name = "Automatic 1D"
+    process_label = "Automatic 1D"
     graph_type = "1d_histogram"
     sort_order = 20
 
@@ -84,9 +85,22 @@ class Automatic1DPeaksProcess(BasePeakProcess):
                     ids=ids,
                     label="Detector channel",
                     channel_name="primary",
+                    tooltip_text=(
+                        "Detector signal used to build the 1D histogram. "
+                        "Choose the channel where the calibration populations are most clearly separated. "
+                        "For bead calibration, this is usually the fluorescence or scattering channel being calibrated."
+                    ),
                 ),
                 self._build_vertical_spacer(height_px=16),
-                self._build_peak_count_block(ids=ids),
+                self._build_peak_count_block(
+                    ids=ids,
+                    tooltip_text=(
+                        "Maximum number of peaks to return. "
+                        "Use the expected number of calibration populations. "
+                        "If this value is too high, weak shoulders or noise maxima may be returned. "
+                        "If it is too low, true populations may be omitted."
+                    ),
+                ),
                 self._build_vertical_spacer(height_px=16),
                 self._build_action_row(ids=ids),
             ],
@@ -130,6 +144,7 @@ class Automatic1DPeaksProcess(BasePeakProcess):
         ids: Any,
         label: str,
         channel_name: str,
+        tooltip_text: str = "",
     ) -> dash.html.Div:
         """
         Build one full-width detector dropdown block.
@@ -145,25 +160,33 @@ class Automatic1DPeaksProcess(BasePeakProcess):
         channel_name:
             Logical detector channel name.
 
+        tooltip_text:
+            Text displayed on hover.
+
         Returns
         -------
         dash.html.Div
             Detector dropdown block.
         """
+        dropdown_id = ids.process_detector_dropdown(
+            process_name=self.process_name,
+            channel_name=channel_name,
+        )
+
+        tooltip_target_id = self._build_tooltip_target_id(
+            component_id=dropdown_id,
+            suffix="help",
+        )
+
         return dash.html.Div(
             [
-                dash.html.Div(
-                    label,
-                    style={
-                        "marginBottom": "6px",
-                        "fontWeight": 500,
-                    },
+                self._build_label_with_tooltip(
+                    label=label,
+                    tooltip_text=tooltip_text,
+                    tooltip_target_id=tooltip_target_id,
                 ),
                 dash.dcc.Dropdown(
-                    id=ids.process_detector_dropdown(
-                        process_name=self.process_name,
-                        channel_name=channel_name,
-                    ),
+                    id=dropdown_id,
                     placeholder="Select detector channel",
                     optionHeight=self.dropdown_option_height_px,
                     maxHeight=self.dropdown_menu_max_height_px,
@@ -187,6 +210,7 @@ class Automatic1DPeaksProcess(BasePeakProcess):
         self,
         *,
         ids: Any,
+        tooltip_text: str = "",
     ) -> dash.html.Div:
         """
         Build the peak count input block.
@@ -196,19 +220,25 @@ class Automatic1DPeaksProcess(BasePeakProcess):
         ids:
             Peak section id factory.
 
+        tooltip_text:
+            Text displayed on hover.
+
         Returns
         -------
         dash.html.Div
             Peak count input block.
         """
+        tooltip_target_id = self._build_tooltip_target_id(
+            component_id=ids.peak_count_input,
+            suffix="help",
+        )
+
         return dash.html.Div(
             [
-                dash.html.Div(
-                    "Number of peaks to look for",
-                    style={
-                        "marginBottom": "6px",
-                        "fontWeight": 500,
-                    },
+                self._build_label_with_tooltip(
+                    label="Number of peaks to look for",
+                    tooltip_text=tooltip_text,
+                    tooltip_target_id=tooltip_target_id,
                 ),
                 dash.dcc.Input(
                     id=ids.peak_count_input,
@@ -229,6 +259,124 @@ class Automatic1DPeaksProcess(BasePeakProcess):
                 "display": "block",
             },
         )
+
+    def _build_label_with_tooltip(
+        self,
+        *,
+        label: str,
+        tooltip_text: str,
+        tooltip_target_id: str,
+    ) -> dash.html.Div:
+        """
+        Build a label with an optional hover tooltip.
+
+        Parameters
+        ----------
+        label:
+            Label text.
+
+        tooltip_text:
+            Tooltip content.
+
+        tooltip_target_id:
+            HTML id attached to the help marker.
+
+        Returns
+        -------
+        dash.html.Div
+            Label row.
+        """
+        tooltip_text = str(
+            tooltip_text or "",
+        ).strip()
+
+        children: list[Any] = [
+            dash.html.Div(
+                label,
+                style={
+                    "fontWeight": 500,
+                },
+            )
+        ]
+
+        if tooltip_text:
+            children.extend(
+                [
+                    dash.html.Span(
+                        "ⓘ",
+                        id=tooltip_target_id,
+                        style={
+                            "marginLeft": "6px",
+                            "cursor": "help",
+                            "fontSize": "0.82rem",
+                            "opacity": 0.75,
+                            "userSelect": "none",
+                        },
+                    ),
+                    dbc.Tooltip(
+                        tooltip_text,
+                        target=tooltip_target_id,
+                        placement="top",
+                    ),
+                ]
+            )
+
+        return dash.html.Div(
+            children,
+            style={
+                "display": "flex",
+                "alignItems": "center",
+                "marginBottom": "6px",
+            },
+        )
+
+    def _build_tooltip_target_id(
+        self,
+        *,
+        component_id: Any,
+        suffix: str,
+    ) -> str:
+        """
+        Build a string tooltip target id from a Dash component id.
+
+        Parameters
+        ----------
+        component_id:
+            Source component id.
+
+        suffix:
+            Extra suffix appended to the tooltip id.
+
+        Returns
+        -------
+        str
+            String id safe for dbc.Tooltip target lookup.
+        """
+        if isinstance(component_id, dict):
+            base_identifier = json.dumps(
+                component_id,
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+
+        else:
+            base_identifier = str(
+                component_id,
+            )
+
+        safe_identifier = (
+            base_identifier
+            .replace("{", "")
+            .replace("}", "")
+            .replace('"', "")
+            .replace(":", "-")
+            .replace(",", "-")
+            .replace(" ", "-")
+            .replace(".", "-")
+            .replace("/", "-")
+        )
+
+        return f"{safe_identifier}-{suffix}"
 
     def _build_action_row(
         self,
@@ -1034,6 +1182,23 @@ class Automatic1DPeaksProcess(BasePeakProcess):
                 f"Peak {index + 1}"
                 for index in range(len(peak_positions))
             ],
+            "x_positions": [],
+            "y_positions": [],
+            "points": [],
+        }
+
+    def build_empty_peak_lines_payload(self) -> dict[str, list[Any]]:
+        """
+        Build an empty graph annotation payload.
+
+        Returns
+        -------
+        dict[str, list[Any]]
+            Empty payload.
+        """
+        return {
+            "positions": [],
+            "labels": [],
             "x_positions": [],
             "y_positions": [],
             "points": [],

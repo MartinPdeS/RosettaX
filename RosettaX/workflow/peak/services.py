@@ -6,10 +6,7 @@ import logging
 import dash
 
 from RosettaX.utils import service
-from RosettaX.workflow.save.models import SaveConfig
-from RosettaX.workflow.save.models import SaveInputs
-from RosettaX.workflow.save.models import SaveResult
-
+from .models import SaveConfig, SaveInputs, SaveResult
 
 def validate_save_inputs(
     *,

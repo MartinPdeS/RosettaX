@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import json
 import logging
 from typing import Any, Optional
 
@@ -25,6 +26,7 @@ class PeakLayout:
     - Build process specific controls.
     - Build detector dropdowns with optional process supplied labels.
     - Build process settings.
+    - Build setting tooltips.
     - Build graph controls.
     - Build graph container.
     - Build workflow stores.
@@ -404,6 +406,19 @@ class PeakLayout:
                 )
             )
 
+            setting_help = str(
+                self._get_setting_value(
+                    setting=setting,
+                    name="help",
+                    default=self._get_setting_value(
+                        setting=setting,
+                        name="description",
+                        default="",
+                    ),
+                )
+                or ""
+            )
+
             setting_default_value = self._get_setting_value(
                 setting=setting,
                 name="default_value",
@@ -450,6 +465,7 @@ class PeakLayout:
                     self._build_integer_setting_control(
                         input_id=setting_id,
                         label=setting_label,
+                        tooltip_text=setting_help,
                         value=int(
                             setting_default_value
                             if setting_default_value is not None
@@ -479,6 +495,7 @@ class PeakLayout:
                     self._build_float_setting_control(
                         input_id=setting_id,
                         label=setting_label,
+                        tooltip_text=setting_help,
                         value=float(
                             setting_default_value
                             if setting_default_value is not None
@@ -504,6 +521,7 @@ class PeakLayout:
                     self._build_text_setting_control(
                         input_id=setting_id,
                         label=setting_label,
+                        tooltip_text=setting_help,
                         value=str(setting_default_value or ""),
                         placeholder=str(
                             self._get_setting_value(
@@ -527,6 +545,7 @@ class PeakLayout:
                     self._build_select_setting_control(
                         dropdown_id=setting_id,
                         label=setting_label,
+                        tooltip_text=setting_help,
                         options=self._normalize_dropdown_options(
                             options=setting_options,
                         ),
@@ -543,6 +562,63 @@ class PeakLayout:
                 continue
 
         return setting_controls
+
+    def _build_setting_label(
+        self,
+        *,
+        label: str,
+        tooltip_text: str,
+        target_id: str,
+    ) -> html.Div:
+        """
+        Build a setting label with an optional hover tooltip.
+        """
+        tooltip_text = str(
+            tooltip_text or "",
+        ).strip()
+
+        label_children: list[Any] = [
+            dbc.Label(
+                label,
+                style={
+                    "marginBottom": "0px",
+                    "fontSize": "0.85rem",
+                },
+            )
+        ]
+
+        if tooltip_text:
+            tooltip_target_id = f"{target_id}-help"
+
+            label_children.extend(
+                [
+                    html.Span(
+                        "ⓘ",
+                        id=tooltip_target_id,
+                        style={
+                            "marginLeft": "6px",
+                            "cursor": "help",
+                            "fontSize": "0.82rem",
+                            "opacity": 0.75,
+                            "userSelect": "none",
+                        },
+                    ),
+                    dbc.Tooltip(
+                        tooltip_text,
+                        target=tooltip_target_id,
+                        placement="top",
+                    ),
+                ]
+            )
+
+        return html.Div(
+            label_children,
+            style={
+                "display": "flex",
+                "alignItems": "center",
+                "marginBottom": "4px",
+            },
+        )
 
     def _build_graph_toggle_control(
         self,
@@ -697,7 +773,7 @@ class PeakLayout:
                         "responsive": True,
                     },
                     style={
-                        "height": "720px",
+                        "height": "850px",
                         "width": "100%",
                     },
                 )
@@ -748,6 +824,7 @@ class PeakLayout:
         *,
         input_id: Any,
         label: str,
+        tooltip_text: str = "",
         value: int,
         minimum: int = 1,
         maximum: int = 50,
@@ -756,14 +833,16 @@ class PeakLayout:
         """
         Build an integer process setting input.
         """
+        target_id = self._stringify_component_id(
+            component_id=input_id,
+        )
+
         return html.Div(
             [
-                dbc.Label(
-                    label,
-                    style={
-                        "marginBottom": "4px",
-                        "fontSize": "0.85rem",
-                    },
+                self._build_setting_label(
+                    label=label,
+                    tooltip_text=tooltip_text,
+                    target_id=target_id,
                 ),
                 dbc.Input(
                     id=input_id,
@@ -787,6 +866,7 @@ class PeakLayout:
         *,
         input_id: Any,
         label: str,
+        tooltip_text: str = "",
         value: float,
         minimum: Optional[float] = None,
         maximum: Optional[float] = None,
@@ -795,6 +875,10 @@ class PeakLayout:
         """
         Build a floating point process setting input.
         """
+        target_id = self._stringify_component_id(
+            component_id=input_id,
+        )
+
         input_kwargs: dict[str, Any] = {
             "id": input_id,
             "type": "number",
@@ -813,12 +897,10 @@ class PeakLayout:
 
         return html.Div(
             [
-                dbc.Label(
-                    label,
-                    style={
-                        "marginBottom": "4px",
-                        "fontSize": "0.85rem",
-                    },
+                self._build_setting_label(
+                    label=label,
+                    tooltip_text=tooltip_text,
+                    target_id=target_id,
                 ),
                 dbc.Input(
                     **input_kwargs,
@@ -834,20 +916,23 @@ class PeakLayout:
         *,
         input_id: Any,
         label: str,
+        tooltip_text: str = "",
         value: str = "",
         placeholder: str = "",
     ) -> html.Div:
         """
         Build a text process setting input.
         """
+        target_id = self._stringify_component_id(
+            component_id=input_id,
+        )
+
         return html.Div(
             [
-                dbc.Label(
-                    label,
-                    style={
-                        "marginBottom": "4px",
-                        "fontSize": "0.85rem",
-                    },
+                self._build_setting_label(
+                    label=label,
+                    tooltip_text=tooltip_text,
+                    target_id=target_id,
                 ),
                 dbc.Input(
                     id=input_id,
@@ -869,6 +954,7 @@ class PeakLayout:
         *,
         dropdown_id: Any,
         label: str,
+        tooltip_text: str = "",
         options: list[dict[str, Any]],
         value: Any = None,
         placeholder: str = "Select value",
@@ -876,14 +962,16 @@ class PeakLayout:
         """
         Build a dropdown process setting input.
         """
+        target_id = self._stringify_component_id(
+            component_id=dropdown_id,
+        )
+
         return html.Div(
             [
-                dbc.Label(
-                    label,
-                    style={
-                        "marginBottom": "4px",
-                        "fontSize": "0.85rem",
-                    },
+                self._build_setting_label(
+                    label=label,
+                    tooltip_text=tooltip_text,
+                    target_id=target_id,
                 ),
                 dcc.Dropdown(
                     id=dropdown_id,
@@ -1031,7 +1119,14 @@ class PeakLayout:
         """
         Return the user visible process label.
         """
-        for attribute_name in ("label", "process_label", "display_name", "title", "name", "process_name"):
+        for attribute_name in (
+            "label",
+            "process_label",
+            "display_name",
+            "title",
+            "name",
+            "process_name",
+        ):
             value = getattr(
                 process,
                 attribute_name,
@@ -1205,3 +1300,22 @@ class PeakLayout:
             )
 
         return normalized_options
+
+    def _stringify_component_id(
+        self,
+        *,
+        component_id: Any,
+    ) -> str:
+        """
+        Convert a Dash component id into a string safe for tooltip targets.
+        """
+        if isinstance(component_id, dict):
+            return json.dumps(
+                component_id,
+                sort_keys=True,
+                separators=(",", ":"),
+            ).replace("{", "").replace("}", "").replace('"', "").replace(":", "-").replace(",", "-")
+
+        return str(
+            component_id,
+        )

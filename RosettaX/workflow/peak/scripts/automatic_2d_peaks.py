@@ -43,6 +43,15 @@ class Automatic2DPeakProcess(BasePeakProcess):
             "y",
         ]
 
+    def get_detector_channel_labels(self) -> dict[str, str]:
+        """
+        Return user visible detector labels.
+        """
+        return {
+            "x": "X axis channel",
+            "y": "Y axis channel",
+        }
+
     def get_settings(self) -> list[dict[str, Any]]:
         """
         Return configurable process settings.
@@ -56,6 +65,12 @@ class Automatic2DPeakProcess(BasePeakProcess):
                 "min_value": 1,
                 "max_value": 100,
                 "step": 1,
+                "help": (
+                    "Maximum number of 2D density peaks returned by the detector. "
+                    "Use the expected number of calibration populations. Increase it "
+                    "when you expect more populations. Decrease it when weak shoulders "
+                    "or noise maxima are being returned."
+                ),
             },
             {
                 "name": "histogram_bins",
@@ -65,6 +80,11 @@ class Automatic2DPeakProcess(BasePeakProcess):
                 "min_value": 20,
                 "max_value": 1000,
                 "step": 10,
+                "help": (
+                    "Number of bins used on each axis to build the 2D density histogram. "
+                    "More bins improve spatial resolution but make the density map noisier. "
+                    "Fewer bins make the density map smoother but can merge nearby populations."
+                ),
             },
             {
                 "name": "smoothing_window",
@@ -74,6 +94,11 @@ class Automatic2DPeakProcess(BasePeakProcess):
                 "min_value": 1,
                 "max_value": 31,
                 "step": 2,
+                "help": (
+                    "Square moving average window applied to the 2D histogram before "
+                    "local maxima detection. Increase it to suppress noisy isolated bins. "
+                    "Decrease it when nearby populations are being merged or shifted."
+                ),
             },
             {
                 "name": "minimum_separation_bins",
@@ -83,6 +108,12 @@ class Automatic2DPeakProcess(BasePeakProcess):
                 "min_value": 1,
                 "max_value": 100,
                 "step": 1,
+                "help": (
+                    "Minimum Euclidean separation between accepted 2D peaks, expressed "
+                    "in histogram bin units. If two candidate peaks are closer than this, "
+                    "only the stronger one is kept. Increase it to merge nearby shoulders. "
+                    "Decrease it to allow close populations."
+                ),
             },
         ]
 
@@ -99,6 +130,15 @@ class Automatic2DPeakProcess(BasePeakProcess):
         """
         Run automatic 2D peak detection.
         """
+        if backend is None or not hasattr(backend, "fcs_file_path"):
+            return PeakProcessResult(
+                peak_positions=[],
+                peak_lines_payload=self.build_empty_peak_lines_payload(),
+                status="The backend does not expose fcs_file_path.",
+                new_peak_positions=[],
+                clear_existing_table_peaks=False,
+            )
+
         x_detector_column = detector_channels.get(
             "x",
         )
@@ -238,6 +278,9 @@ class Automatic2DPeakProcess(BasePeakProcess):
             except (KeyError, TypeError, ValueError):
                 continue
 
+            if not np.isfinite(x_value) or not np.isfinite(y_value):
+                continue
+
             key = (
                 round(
                     x_value,
@@ -276,6 +319,18 @@ class Automatic2DPeakProcess(BasePeakProcess):
             new_peak_positions=[],
             clear_existing_table_peaks=True,
         )
+
+    def build_empty_peak_lines_payload(self) -> dict[str, list[Any]]:
+        """
+        Build an empty graph annotation payload.
+        """
+        return {
+            "positions": [],
+            "x_positions": [],
+            "y_positions": [],
+            "points": [],
+            "labels": [],
+        }
 
     def build_peak_lines_payload(
         self,
