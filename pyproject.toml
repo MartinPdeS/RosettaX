@@ -9,7 +9,7 @@ description = "Interactive fluorescence and scattering calibration workflows for
 license = "MIT"
 readme = "README.rst"
 requires-python = ">=3.10"
-authors = [{ name="Martin  / Victor / Edwin", email="martin.poinsinet.de.sivry@gmail.com"}]
+authors = [{ name="Martin Poinsinet de Sivry-Houle", email="martin.poinsinet.de.sivry@gmail.com"}]
 classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
