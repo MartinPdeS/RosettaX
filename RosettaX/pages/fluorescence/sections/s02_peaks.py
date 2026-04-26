@@ -20,6 +20,15 @@ class Peaks:
     ----------------
     - Provide the fluorescence peak workflow layout.
     - Register the reusable peak workflow callbacks.
+    - Write detected peak positions into the fluorescence reference table owned
+      by the dedicated table section.
+
+    Notes
+    -----
+    This section does not render the calibration table. The table is rendered by
+    the dedicated fluorescence table section, but the reusable peak workflow
+    still receives its component ID so it can write detected peak positions into
+    it.
     """
 
     def __init__(

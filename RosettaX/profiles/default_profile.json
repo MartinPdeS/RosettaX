@@ -44,7 +44,7 @@
     "instrument_name": null
   },
   "visualization": {
-    "default_marker_size": 10.0,
+    "default_marker_size": 13.0,
     "default_line_width": 3.0,
     "default_font_size": 20.0,
     "default_tick_size": 12.0,

@@ -2,7 +2,7 @@
 
 PAGE_NAME = "fluorescent_calibration"
 
-from .sections.s03_calibration.ids import CalibrationSectionIds
+from .sections.s04_calibration.ids import CalibrationSectionIds
 from RosettaX.workflow.upload.ids import UploadIds as UploadSectionIds
 from RosettaX.workflow.save.ids import SaveIds as SaveSectionIds
 from RosettaX.workflow.peak.ids import PeakIds

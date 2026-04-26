@@ -18,17 +18,16 @@ class PeakLayout:
     """
     Reusable layout builder for fluorescence and scattering peak sections.
 
-    The layout includes:
-    - the section card,
-    - the process selector,
-    - one card per registered peak process,
-    - histogram display controls,
-    - histogram graph container,
-    - workflow stores,
-    - shared script status output.
-
-    This class intentionally owns all peak layout construction logic so the
-    peak workflow layout is defined in one place.
+    Responsibilities
+    ----------------
+    - Build the peak workflow section card.
+    - Build the process selector.
+    - Build process specific controls.
+    - Build detector dropdowns with optional process supplied labels.
+    - Build process settings.
+    - Build graph controls.
+    - Build graph container.
+    - Build workflow stores.
     """
 
     def __init__(
@@ -336,19 +335,32 @@ class PeakLayout:
             process=process,
         )
 
-        return [
-            self._build_detector_dropdown_control(
-                dropdown_id=self.ids.process_detector_dropdown(
-                    process_name=process_name,
-                    channel_name=channel_name,
-                ),
-                label=f"{channel_name} detector",
-                placeholder=f"Select {channel_name} detector",
+        channel_labels = self._get_detector_channel_labels(
+            process=process,
+        )
+
+        detector_controls: list[Any] = []
+
+        for channel_name in self._get_required_detector_channels(
+            process=process,
+        ):
+            label = channel_labels.get(
+                channel_name,
+                f"{channel_name.replace('_', ' ').title()} channel",
             )
-            for channel_name in self._get_required_detector_channels(
-                process=process,
+
+            detector_controls.append(
+                self._build_detector_dropdown_control(
+                    dropdown_id=self.ids.process_detector_dropdown(
+                        process_name=process_name,
+                        channel_name=channel_name,
+                    ),
+                    label=label,
+                    placeholder=f"Select {label.lower()}",
+                )
             )
-        ]
+
+        return detector_controls
 
     def _build_setting_controls(
         self,
@@ -595,8 +607,6 @@ class PeakLayout:
     ) -> html.Div:
         """
         Build the histogram bin count control.
-
-        The wrapper has its own ID so it can be hidden for scatter plots.
         """
         return html.Div(
             id=container_id,
@@ -640,9 +650,6 @@ class PeakLayout:
     ) -> html.Div:
         """
         Build the graph scale and histogram controls.
-
-        The bin control is wrapped separately so visibility callbacks can hide it
-        for two dimensional scatter plots while keeping log x and log y visible.
         """
         return html.Div(
             id=container_id,
@@ -690,7 +697,7 @@ class PeakLayout:
                         "responsive": True,
                     },
                     style={
-                        "height": "520px",
+                        "height": "720px",
                         "width": "100%",
                     },
                 )
@@ -818,7 +825,7 @@ class PeakLayout:
                 ),
             ],
             style={
-                "width": "130px",
+                "width": "150px",
             },
         )
 
@@ -1024,7 +1031,7 @@ class PeakLayout:
         """
         Return the user visible process label.
         """
-        for attribute_name in ("label", "display_name", "title", "name"):
+        for attribute_name in ("label", "process_label", "display_name", "title", "name", "process_name"):
             value = getattr(
                 process,
                 attribute_name,
@@ -1065,10 +1072,7 @@ class PeakLayout:
         """
         Return required detector channel names for a process.
         """
-        if hasattr(
-            process,
-            "get_required_detector_channels",
-        ):
+        if hasattr(process, "get_required_detector_channels"):
             channel_names = process.get_required_detector_channels()
 
             if channel_names is None:
@@ -1093,6 +1097,37 @@ class PeakLayout:
             for channel_name in channel_names
         ]
 
+    def _get_detector_channel_labels(
+        self,
+        *,
+        process: Any,
+    ) -> dict[str, str]:
+        """
+        Return user visible detector channel labels for a process.
+        """
+        if hasattr(process, "get_detector_channel_labels"):
+            labels = process.get_detector_channel_labels()
+
+            if isinstance(labels, dict):
+                return {
+                    str(key): str(value)
+                    for key, value in labels.items()
+                }
+
+        labels = getattr(
+            process,
+            "detector_channel_labels",
+            None,
+        )
+
+        if isinstance(labels, dict):
+            return {
+                str(key): str(value)
+                for key, value in labels.items()
+            }
+
+        return {}
+
     def _get_process_settings(
         self,
         *,
@@ -1101,10 +1136,7 @@ class PeakLayout:
         """
         Return process setting declarations.
         """
-        if hasattr(
-            process,
-            "get_settings",
-        ):
+        if hasattr(process, "get_settings"):
             settings = process.get_settings()
 
             if settings is None:

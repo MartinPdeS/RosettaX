@@ -4,7 +4,6 @@ from typing import Any
 
 import dash
 
-from ..core import graphing
 from .. import registry
 
 
@@ -19,7 +18,7 @@ def register_visibility_callbacks(
         ids=ids,
     )
 
-    register_manual_process_graph_visibility_callback(
+    register_force_graph_visible_callback(
         ids=ids,
     )
 
@@ -36,6 +35,33 @@ def register_visibility_callbacks(
     )
 
 
+def graph_toggle_is_enabled(
+    graph_toggle_value: Any,
+) -> bool:
+    """
+    Return whether the graph toggle value means that the graph is visible.
+    """
+    if isinstance(
+        graph_toggle_value,
+        str,
+    ):
+        return graph_toggle_value == "enabled"
+
+    if isinstance(
+        graph_toggle_value,
+        (list, tuple, set),
+    ):
+        return "enabled" in graph_toggle_value
+
+    if isinstance(
+        graph_toggle_value,
+        bool,
+    ):
+        return graph_toggle_value
+
+    return False
+
+
 def register_process_visibility_callback(
     *,
     ids: Any,
@@ -49,7 +75,10 @@ def register_process_visibility_callback(
             ids.process_controls_container_pattern(),
             "style",
         ),
-        dash.Input(ids.process_dropdown, "value"),
+        dash.Input(
+            ids.process_dropdown,
+            "value",
+        ),
         dash.State(
             ids.process_controls_container_pattern(),
             "id",
@@ -67,7 +96,20 @@ def register_process_visibility_callback(
         styles: list[dict[str, Any]] = []
 
         for process_container_id in process_container_ids or []:
-            process_name_from_id = process_container_id.get("process")
+            if not isinstance(
+                process_container_id,
+                dict,
+            ):
+                styles.append(
+                    {
+                        "display": "none",
+                    }
+                )
+                continue
+
+            process_name_from_id = process_container_id.get(
+                "process",
+            )
 
             process = registry.get_process_instance(
                 process_name=process_name_from_id,
@@ -90,12 +132,15 @@ def register_process_visibility_callback(
         return styles
 
 
-def register_manual_process_graph_visibility_callback(
+def register_force_graph_visible_callback(
     *,
     ids: Any,
 ) -> None:
     """
-    Force the graph visible when the selected process requires graph clicks.
+    Force the graph visible when the selected process requires a graph.
+
+    This applies to manual click processes and to any script that sets
+    force_graph_visible=True.
     """
 
     @dash.callback(
@@ -104,11 +149,17 @@ def register_manual_process_graph_visibility_callback(
             "value",
             allow_duplicate=True,
         ),
-        dash.Input(ids.process_dropdown, "value"),
-        dash.State(ids.graph_toggle_switch, "value"),
+        dash.Input(
+            ids.process_dropdown,
+            "value",
+        ),
+        dash.State(
+            ids.graph_toggle_switch,
+            "value",
+        ),
         prevent_initial_call=True,
     )
-    def force_graph_visible_for_manual_process(
+    def force_graph_visible_for_selected_process(
         process_name: Any,
         current_graph_toggle_value: Any,
     ) -> Any:
@@ -120,10 +171,15 @@ def register_manual_process_graph_visibility_callback(
             process_name=resolved_process_name,
         )
 
-        if process is not None and process.should_force_graph_visible(
+        if process is None:
+            return current_graph_toggle_value
+
+        if process.should_force_graph_visible(
             selected_process_name=resolved_process_name,
         ):
-            return ["enabled"]
+            return [
+                "enabled",
+            ]
 
         return current_graph_toggle_value
 
@@ -137,18 +193,22 @@ def register_graph_visibility_callback(
     """
 
     @dash.callback(
-        dash.Output(ids.graph_toggle_container, "style"),
-        dash.Input(ids.graph_toggle_switch, "value"),
+        dash.Output(
+            ids.graph_toggle_container,
+            "style",
+        ),
+        dash.Input(
+            ids.graph_toggle_switch,
+            "value",
+        ),
         prevent_initial_call=False,
     )
     def toggle_graph_container(
         graph_toggle_value: Any,
     ) -> dict[str, str]:
-        graph_enabled = graphing.is_enabled(
+        if graph_toggle_is_enabled(
             graph_toggle_value,
-        )
-
-        if graph_enabled:
+        ):
             return {
                 "display": "block",
             }
@@ -175,14 +235,21 @@ def register_graph_controls_visibility_callback(
             ids.histogram_controls_container,
             "style",
         ),
-        dash.Input(ids.process_dropdown, "value"),
+        dash.Input(
+            ids.process_dropdown,
+            "value",
+        ),
         prevent_initial_call=False,
     )
     def toggle_graph_controls(
         process_name: Any,
     ) -> dict[str, Any]:
+        resolved_process_name = registry.resolve_process_name(
+            process_name,
+        )
+
         process = registry.get_process_instance(
-            process_name=process_name,
+            process_name=resolved_process_name,
         )
 
         if process is None:
@@ -220,8 +287,7 @@ def register_bins_visibility_callback(
     Hide the Bins control for scatter plots.
 
     The bin count only applies to one dimensional histogram processes. For two
-    dimensional manual scatter selection, only log x and log y should remain
-    visible.
+    dimensional scatter selection, only log x and log y remain visible.
     """
 
     @dash.callback(
@@ -229,14 +295,21 @@ def register_bins_visibility_callback(
             ids.nbins_control_container,
             "style",
         ),
-        dash.Input(ids.process_dropdown, "value"),
+        dash.Input(
+            ids.process_dropdown,
+            "value",
+        ),
         prevent_initial_call=False,
     )
     def toggle_bins_control(
         process_name: Any,
     ) -> dict[str, Any]:
+        resolved_process_name = registry.resolve_process_name(
+            process_name,
+        )
+
         process = registry.get_process_instance(
-            process_name=process_name,
+            process_name=resolved_process_name,
         )
 
         if process is None:

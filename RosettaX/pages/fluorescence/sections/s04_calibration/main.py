@@ -8,11 +8,9 @@ import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
 
 from RosettaX.pages.fluorescence.state import FluorescencePageState
-from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.utils import styling
 from RosettaX.utils import graph_config
 
-from . import services
+from .. import services
 
 
 logger = logging.getLogger(__name__)
@@ -24,27 +22,23 @@ class Calibration:
 
     Responsibilities
     ----------------
-    - Render the bead calibration table.
-    - Fit the fluorescence calibration from bead specifications.
+    - Render the fluorescence calibration action controls.
     - Resolve the active fluorescence detector from the selected peak script.
+    - Fit the fluorescence calibration from the dedicated reference table.
     - Display the calibration graph and fit coefficients.
     - Store the calibration payload for the save section.
+
+    Table ownership
+    ---------------
+    This section does not render or mutate the bead table. The bead table is
+    owned by the dedicated reference table section. This section only reads
+    ``self.ids.bead_table`` during calibration.
     """
 
-    bead_table_columns = [
-        {
-            "name": "Intensity [calibrated units]",
-            "id": "col1",
-            "editable": True,
-        },
-        {
-            "name": "Intensity [a.u.]",
-            "id": "col2",
-            "editable": True,
-        },
-    ]
-
-    def __init__(self, page) -> None:
+    def __init__(
+        self,
+        page: Any,
+    ) -> None:
         self.page = page
         self.ids = page.ids.Calibration
 
@@ -53,41 +47,9 @@ class Calibration:
             page,
         )
 
-    def _get_default_runtime_config(self) -> RuntimeConfig:
-        """
-        Return the default runtime configuration.
-
-        Returns
-        -------
-        RuntimeConfig
-            Default runtime configuration.
-        """
-        return RuntimeConfig.from_default_profile()
-
-    def _get_default_mesf_values(self) -> Any:
-        """
-        Return default MESF values from the runtime configuration.
-
-        Returns
-        -------
-        Any
-            Default MESF values.
-        """
-        runtime_config = self._get_default_runtime_config()
-
-        return runtime_config.get_path(
-            "calibration.mesf_values",
-            default=[],
-        )
-
     def get_layout(self) -> dbc.Card:
         """
         Build the calibration section layout.
-
-        Returns
-        -------
-        dbc.Card
-            Calibration section layout.
         """
         logger.debug("Building calibration section layout.")
 
@@ -98,25 +60,23 @@ class Calibration:
             ]
         )
 
+    def _get_layout(self) -> dbc.Card:
+        """
+        Compatibility alias for older section loading code.
+        """
+        return self.get_layout()
+
     def _build_header(self) -> dbc.CardHeader:
         """
         Build the card header.
-
-        Returns
-        -------
-        dbc.CardHeader
-            Header.
         """
-        return dbc.CardHeader("4. Calibration")
+        return dbc.CardHeader(
+            "5. Calibration",
+        )
 
     def _build_collapse(self) -> dbc.Collapse:
         """
         Build the collapsible section body.
-
-        Returns
-        -------
-        dbc.Collapse
-            Collapse component.
         """
         return dbc.Collapse(
             self._build_body(),
@@ -127,18 +87,11 @@ class Calibration:
     def _build_body(self) -> dbc.CardBody:
         """
         Build the card body.
-
-        Returns
-        -------
-        dbc.CardBody
-            Card body.
         """
         return dbc.CardBody(
             [
                 self._build_graph_store(),
                 self._build_calibration_store(),
-                self._build_bead_specifications_block(),
-                dash.html.Br(),
                 self._build_actions_block(),
                 dash.html.Hr(),
                 self._build_graph_block(),
@@ -152,11 +105,6 @@ class Calibration:
     def _build_graph_store(self) -> dash.dcc.Store:
         """
         Build the graph store.
-
-        Returns
-        -------
-        dash.dcc.Store
-            Graph store.
         """
         return dash.dcc.Store(
             id=self.ids.graph_store,
@@ -166,92 +114,15 @@ class Calibration:
     def _build_calibration_store(self) -> dash.dcc.Store:
         """
         Build the calibration store.
-
-        Returns
-        -------
-        dash.dcc.Store
-            Calibration store.
         """
         return dash.dcc.Store(
             id=self.ids.calibration_store,
             storage_type="session",
         )
 
-    def _build_bead_specifications_block(self) -> dash.html.Div:
-        """
-        Build the bead specification table block.
-
-        Returns
-        -------
-        dash.html.Div
-            Bead specification block.
-        """
-        return dash.html.Div(
-            [
-                dash.html.H5("Bead specifications"),
-                self._build_bead_table(),
-                self._build_add_row_button_row(),
-            ]
-        )
-
-    def _build_bead_table(self) -> dash.dash_table.DataTable:
-        """
-        Build the bead calibration table.
-
-        Returns
-        -------
-        dash.dash_table.DataTable
-            Bead table.
-        """
-        default_mesf_values = self._get_default_mesf_values()
-
-        bead_rows = services.build_bead_rows_from_mesf_values(
-            default_mesf_values,
-        )
-
-        logger.debug(
-            "Building bead table with default_mesf_values=%r resulting rows=%r",
-            default_mesf_values,
-            bead_rows,
-        )
-
-        return dash.dash_table.DataTable(
-            id=self.ids.bead_table,
-            columns=self.bead_table_columns,
-            data=bead_rows,
-            **styling.DATATABLE,
-        )
-
-    def _build_add_row_button_row(self) -> dash.html.Div:
-        """
-        Build the add row button row.
-
-        Returns
-        -------
-        dash.html.Div
-            Add row controls.
-        """
-        return dash.html.Div(
-            [
-                dash.html.Button(
-                    "Add Row",
-                    id=self.ids.add_row_btn,
-                    n_clicks=0,
-                )
-            ],
-            style={
-                "marginTop": "10px",
-            },
-        )
-
     def _build_actions_block(self) -> dash.html.Div:
         """
         Build calibration action controls.
-
-        Returns
-        -------
-        dash.html.Div
-            Action controls.
         """
         return dash.html.Div(
             [
@@ -260,17 +131,22 @@ class Calibration:
                     id=self.ids.calibrate_btn,
                     n_clicks=0,
                 ),
+                dash.html.Div(
+                    (
+                        "This step reads the MESF values and measured peak "
+                        "positions from the calibration reference table."
+                    ),
+                    style={
+                        "marginTop": "8px",
+                        "opacity": 0.75,
+                    },
+                ),
             ]
         )
 
     def _build_graph_block(self) -> dash.html.Div:
         """
         Build calibration graph block.
-
-        Returns
-        -------
-        dash.html.Div
-            Graph block.
         """
         return dash.html.Div(
             [
@@ -296,11 +172,6 @@ class Calibration:
     def _build_fit_outputs_block(self) -> dash.html.Div:
         """
         Build fit output display block.
-
-        Returns
-        -------
-        dash.html.Div
-            Fit output block.
         """
         return dash.html.Div(
             [
@@ -326,19 +197,6 @@ class Calibration:
     ) -> dash.html.Div:
         """
         Build one fit output row.
-
-        Parameters
-        ----------
-        label:
-            Output label.
-
-        output_id:
-            Dash component ID.
-
-        Returns
-        -------
-        dash.html.Div
-            Output row.
         """
         return dash.html.Div(
             [
@@ -357,17 +215,38 @@ class Calibration:
     def _build_status_block(self) -> dash.html.Div:
         """
         Build the status output.
-
-        Returns
-        -------
-        dash.html.Div
-            Status output.
         """
         return dash.html.Div(
             id=self.ids.apply_status,
             style={
                 "marginTop": "8px",
             },
+        )
+
+    def _get_fluorescence_detector_dropdown_pattern(self) -> Any:
+        """
+        Return the pattern matching ID for fluorescence detector dropdowns.
+
+        This supports both the newer reusable peak workflow naming and older
+        aliases if they still exist in the page IDs.
+        """
+        fluorescence_ids = self.page.ids.Fluorescence
+
+        if hasattr(
+            fluorescence_ids,
+            "process_detector_dropdown_pattern",
+        ):
+            return fluorescence_ids.process_detector_dropdown_pattern()
+
+        if hasattr(
+            fluorescence_ids,
+            "detector_dropdown_pattern",
+        ):
+            return fluorescence_ids.detector_dropdown_pattern()
+
+        raise AttributeError(
+            "Fluorescence IDs must expose process_detector_dropdown_pattern() "
+            "or detector_dropdown_pattern()."
         )
 
     def _resolve_active_fluorescence_channel(
@@ -383,24 +262,9 @@ class Calibration:
         Resolution order
         ----------------
         - primary, for 1D processes.
-        - x, for 2D processes, because the calibration table stores x.
+        - x_axis, for 2D processes using the newer generic axis naming.
+        - x, for older 2D processes.
         - first available channel value.
-
-        Parameters
-        ----------
-        selected_process_name:
-            Selected peak process name.
-
-        detector_dropdown_ids:
-            Pattern matched detector dropdown IDs.
-
-        detector_dropdown_values:
-            Pattern matched detector dropdown values.
-
-        Returns
-        -------
-        Optional[str]
-            Resolved detector column.
         """
         selected_process_name_clean = (
             ""
@@ -441,6 +305,9 @@ class Calibration:
         if "primary" in channel_values:
             return channel_values["primary"]
 
+        if "x_axis" in channel_values:
+            return channel_values["x_axis"]
+
         if "x" in channel_values:
             return channel_values["x"]
 
@@ -455,33 +322,14 @@ class Calibration:
         """
         logger.debug("Registering calibration callbacks.")
 
-        self._register_runtime_table_sync_callback()
         self._register_graph_render_callback()
-        self._register_add_row_callback()
         self._register_calibration_workflow_callback()
 
-    def _register_runtime_table_sync_callback(self) -> None:
-        @dash.callback(
-            dash.Output(self.ids.bead_table, "data"),
-            dash.Input("runtime-config-store", "data"),
-            prevent_initial_call=False,
-        )
-        def sync_bead_table_from_runtime_store(
-            runtime_config_data: Any,
-        ) -> list[dict[str, str]]:
-            resolved_rows = services.resolve_bead_rows_from_runtime_store(
-                runtime_config_data,
-            )
-
-            logger.debug(
-                "sync_bead_table_from_runtime_store returning row_count=%r rows=%r",
-                len(resolved_rows),
-                resolved_rows,
-            )
-
-            return resolved_rows
-
     def _register_graph_render_callback(self) -> None:
+        """
+        Register the graph rendering callback.
+        """
+
         @dash.callback(
             dash.Output(self.ids.graph_calibration, "figure"),
             dash.Input(self.ids.graph_store, "data"),
@@ -502,43 +350,11 @@ class Calibration:
                 logger=logger,
             )
 
-    def _register_add_row_callback(self) -> None:
-        @dash.callback(
-            dash.Output(
-                self.ids.bead_table,
-                "data",
-                allow_duplicate=True,
-            ),
-            dash.Input(self.ids.add_row_btn, "n_clicks"),
-            dash.State(self.ids.bead_table, "data"),
-            dash.State(self.ids.bead_table, "columns"),
-            prevent_initial_call=True,
-        )
-        def add_row(
-            n_clicks: int,
-            rows: list[dict[str, Any]],
-            columns: list[dict[str, Any]],
-        ) -> list[dict[str, str]]:
-            logger.debug(
-                "add_row called with n_clicks=%r existing_row_count=%r columns=%r",
-                n_clicks,
-                None if rows is None else len(rows),
-                columns,
-            )
-
-            next_rows = services.add_empty_row(
-                rows=rows,
-                columns=columns,
-            )
-
-            logger.debug(
-                "add_row returning next_row_count=%r",
-                len(next_rows),
-            )
-
-            return next_rows
-
     def _register_calibration_workflow_callback(self) -> None:
+        """
+        Register the calibration workflow callback.
+        """
+
         @dash.callback(
             dash.Output(self.ids.graph_store, "data"),
             dash.Output(self.ids.calibration_store, "data"),
@@ -550,8 +366,8 @@ class Calibration:
             dash.State(self.page.ids.State.page_state_store, "data"),
             dash.State(self.ids.bead_table, "data"),
             dash.State(self.page.ids.Fluorescence.process_dropdown, "value"),
-            dash.State(self.page.ids.Fluorescence.detector_dropdown_pattern(), "id"),
-            dash.State(self.page.ids.Fluorescence.detector_dropdown_pattern(), "value"),
+            dash.State(self._get_fluorescence_detector_dropdown_pattern(), "id"),
+            dash.State(self._get_fluorescence_detector_dropdown_pattern(), "value"),
             prevent_initial_call=True,
         )
         def calibrate_and_apply(

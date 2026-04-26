@@ -6,8 +6,6 @@ from typing import Any, Optional, Sequence
 import dash
 import dash_bootstrap_components as dbc
 
-from RosettaX.pages.scattering.state import ScatteringPageState
-from RosettaX.pages.sidebar.ids import SidebarIds
 from RosettaX.utils import graph_config
 from RosettaX.utils.runtime_config import RuntimeConfig
 
@@ -22,28 +20,22 @@ class Parameters:
     """
     Scattering parameter section.
 
-    State ownership
-    ---------------
-    The visual input components hold their local Dash values. The parameter set
-    used for model computation is copied into the scattering page state after
-    Compute Expected Coupling is clicked.
-
-    Layout ownership
+    Responsibilities
     ----------------
-    This section renders only optical and particle parameters. The calibration
-    reference table and Compute Expected Coupling button are rendered in the
-    calibration section, but the table and model callbacks remain registered
-    here because they still depend on the parameter controls.
+    - Render optical configuration controls.
+    - Render particle configuration controls.
+    - Render detector preset controls.
+    - Render the optical configuration preview.
+    - Synchronize parameter controls from the runtime configuration store.
 
-    Profile loading
-    ---------------
-    When a profile is explicitly loaded from the sidebar, the reference table is
-    rebuilt from the profile values even if the table already contains user
-    data.
+    Ownership
+    ---------
+    This section owns only the visual parameter inputs.
+
+    The calibration reference table, add row button, table normalization,
+    runtime table population, expected coupling computation, and table selection
+    cleanup are owned by the dedicated reference table section.
     """
-
-    sphere_table_columns = services.sphere_table_columns
-    core_shell_table_columns = services.core_shell_table_columns
 
     def __init__(
         self,
@@ -423,10 +415,6 @@ class Parameters:
         self._register_refractive_index_callbacks()
         self._register_detector_configuration_callbacks()
         self._register_optical_configuration_preview_callback()
-        self._register_table_callbacks()
-        self._register_compute_model_callback()
-        self._register_post_compute_cleanup_callbacks()
-        self._register_table_default_population_callback()
         self._register_runtime_sync_callbacks()
 
     def _register_runtime_sync_callbacks(self) -> None:
@@ -516,122 +504,6 @@ class Parameters:
 
             return resolved_values
 
-    def _register_table_default_population_callback(self) -> None:
-        @dash.callback(
-            dash.Output(
-                self.page.ids.Calibration.bead_table,
-                "columns",
-                allow_duplicate=True,
-            ),
-            dash.Output(
-                self.page.ids.Calibration.bead_table,
-                "data",
-                allow_duplicate=True,
-            ),
-            dash.Input("runtime-config-store", "data"),
-            dash.Input(SidebarIds.profile_load_event_store, "data"),
-            dash.State(self.ids.mie_model, "value"),
-            dash.State(self.page.ids.Calibration.bead_table, "data"),
-            prevent_initial_call=True,
-        )
-        def populate_table_from_runtime_defaults_callback(
-            runtime_config_data: Any,
-            profile_load_event_data: Any,
-            mie_model: Any,
-            current_rows: Optional[list[dict[str, Any]]],
-        ) -> tuple[Any, Any]:
-            profile_was_explicitly_loaded = (
-                isinstance(profile_load_event_data, dict)
-                and bool(profile_load_event_data.get("profile_name"))
-                and dash.ctx.triggered_id == SidebarIds.profile_load_event_store
-            )
-
-            runtime_config = RuntimeConfig.from_dict(
-                runtime_config_data if isinstance(runtime_config_data, dict) else None
-            )
-
-            resolved_mie_model = services.resolve_mie_model(
-                runtime_config.get_str(
-                    "particle_model.mie_model",
-                    default=mie_model or "Solid Sphere",
-                )
-            )
-
-            normalized_current_rows = services.normalize_table_rows(
-                mie_model=resolved_mie_model,
-                current_rows=current_rows,
-            )
-
-            logger.debug(
-                "populate_table_from_runtime_defaults called with triggered_id=%r "
-                "profile_was_explicitly_loaded=%r resolved_mie_model=%r "
-                "runtime_config_data=%r current_rows=%r profile_load_event_data=%r",
-                dash.ctx.triggered_id,
-                profile_was_explicitly_loaded,
-                resolved_mie_model,
-                runtime_config_data,
-                normalized_current_rows,
-                profile_load_event_data,
-            )
-
-            if (
-                not profile_was_explicitly_loaded
-                and not services.table_is_effectively_empty(
-                    mie_model=resolved_mie_model,
-                    rows=normalized_current_rows,
-                )
-            ):
-                logger.debug(
-                    "Table already contains user data and no profile load event occurred. "
-                    "Leaving it unchanged."
-                )
-
-                return dash.no_update, dash.no_update
-
-            columns = services.get_table_columns_for_model(
-                resolved_mie_model,
-            )
-
-            rows = services.populate_table_from_runtime_defaults(
-                mie_model=resolved_mie_model,
-                runtime_particle_diameters_nm=runtime_config.get_path(
-                    "particle_model.particle_diameter_nm",
-                    default=[],
-                ),
-                runtime_core_diameters_nm=runtime_config.get_path(
-                    "particle_model.core_diameter_nm",
-                    default=[],
-                ),
-                runtime_shell_thicknesses_nm=runtime_config.get_path(
-                    "particle_model.shell_thickness_nm",
-                    default=[],
-                ),
-            )
-
-            logger.debug(
-                "Populated scattering table from runtime defaults. "
-                "resolved_mie_model=%r columns=%r rows=%r",
-                resolved_mie_model,
-                columns,
-                rows,
-            )
-
-            return columns, rows
-
-    def _register_post_compute_cleanup_callbacks(self) -> None:
-        @dash.callback(
-            dash.Output(self.page.ids.Calibration.bead_table, "active_cell"),
-            dash.Output(self.page.ids.Calibration.bead_table, "selected_cells"),
-            dash.Input(self.page.ids.Calibration.compute_model_btn, "n_clicks"),
-            prevent_initial_call=True,
-        )
-        def clear_table_selection_after_compute(
-            _n_clicks: int,
-        ) -> tuple[None, list]:
-            logger.debug("Clearing bead table selection after Compute Expected Coupling.")
-
-            return None, []
-
     def _register_visibility_callbacks(self) -> None:
         @dash.callback(
             dash.Output(self.ids.solid_sphere_container, "style"),
@@ -647,7 +519,8 @@ class Parameters:
             )
 
             logger.debug(
-                "toggle_parameter_blocks called with mie_model_value=%r resolved_mie_model=%r",
+                "toggle_parameter_blocks called with mie_model_value=%r "
+                "resolved_mie_model=%r",
                 mie_model_value,
                 resolved_mie_model,
             )
@@ -828,7 +701,8 @@ class Parameters:
             current_detector_gamma_angle_degree: Any,
         ) -> tuple[Any, Any, Any, Any, Any, Any]:
             logger.debug(
-                "apply_detector_configuration_preset called with preset_name=%r current_values=%r",
+                "apply_detector_configuration_preset called with preset_name=%r "
+                "current_values=%r",
                 preset_name,
                 (
                     current_detector_numerical_aperture,
@@ -896,294 +770,6 @@ class Parameters:
                 detector_phi_angle_degree=detector_phi_angle_degree,
                 detector_gamma_angle_degree=detector_gamma_angle_degree,
             )
-
-    def _register_table_callbacks(self) -> None:
-        @dash.callback(
-            dash.Output(self.page.ids.Calibration.bead_table, "columns"),
-            dash.Output(
-                self.page.ids.Calibration.bead_table,
-                "data",
-                allow_duplicate=True,
-            ),
-            dash.Input(self.ids.mie_model, "value"),
-            dash.State(self.page.ids.Calibration.bead_table, "data"),
-            prevent_initial_call=True,
-        )
-        def sync_table_schema_from_model(
-            mie_model: Any,
-            current_rows: Optional[list[dict[str, Any]]],
-        ) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
-            resolved_mie_model = services.resolve_mie_model(
-                mie_model,
-            )
-
-            next_columns = services.get_table_columns_for_model(
-                resolved_mie_model,
-            )
-
-            next_rows = services.remap_table_rows_to_model(
-                mie_model=resolved_mie_model,
-                current_rows=current_rows,
-            )
-
-            logger.debug(
-                "sync_table_schema_from_model returning resolved_mie_model=%r "
-                "column_count=%d row_count=%d",
-                resolved_mie_model,
-                len(next_columns),
-                len(next_rows),
-            )
-
-            return next_columns, next_rows
-
-        @dash.callback(
-            dash.Output(
-                self.page.ids.Calibration.bead_table,
-                "data",
-                allow_duplicate=True,
-            ),
-            dash.Input(self.page.ids.Calibration.add_row_btn, "n_clicks"),
-            dash.State(self.ids.mie_model, "value"),
-            dash.State(self.page.ids.Calibration.bead_table, "data"),
-            prevent_initial_call=True,
-        )
-        def add_row(
-            n_clicks: int,
-            mie_model: Any,
-            rows: Optional[list[dict[str, Any]]],
-        ) -> list[dict[str, str]]:
-            logger.debug(
-                "add_row called with n_clicks=%r mie_model=%r row_count=%r",
-                n_clicks,
-                mie_model,
-                None if rows is None else len(rows),
-            )
-
-            resolved_mie_model = services.resolve_mie_model(
-                mie_model,
-            )
-
-            next_rows = [
-                dict(row)
-                for row in (rows or [])
-            ]
-
-            next_rows.append(
-                services.build_empty_row_for_model(
-                    resolved_mie_model,
-                )
-            )
-
-            logger.debug(
-                "add_row returning resolved_mie_model=%r new_row_count=%d",
-                resolved_mie_model,
-                len(next_rows),
-            )
-
-            return next_rows
-
-        @dash.callback(
-            dash.Output(
-                self.page.ids.Calibration.bead_table,
-                "data",
-                allow_duplicate=True,
-            ),
-            dash.Input(self.page.ids.Calibration.bead_table, "data_timestamp"),
-            dash.State(self.ids.mie_model, "value"),
-            dash.State(self.page.ids.Calibration.bead_table, "data"),
-            prevent_initial_call=True,
-        )
-        def normalize_table_after_user_edit(
-            data_timestamp: Any,
-            mie_model: Any,
-            current_rows: Optional[list[dict[str, Any]]],
-        ) -> list[dict[str, str]]:
-            logger.debug(
-                "normalize_table_after_user_edit called with data_timestamp=%r "
-                "mie_model=%r row_count=%r",
-                data_timestamp,
-                mie_model,
-                None if current_rows is None else len(current_rows),
-            )
-
-            resolved_mie_model = services.resolve_mie_model(
-                mie_model,
-            )
-
-            normalized_rows = services.normalize_table_rows(
-                mie_model=resolved_mie_model,
-                current_rows=current_rows,
-            )
-
-            logger.debug(
-                "normalize_table_after_user_edit returning resolved_mie_model=%r row_count=%d",
-                resolved_mie_model,
-                len(normalized_rows),
-            )
-
-            return normalized_rows
-
-    def _register_compute_model_callback(self) -> None:
-        @dash.callback(
-            dash.Output(
-                self.page.ids.Calibration.bead_table,
-                "data",
-                allow_duplicate=True,
-            ),
-            dash.Output(
-                self.page.ids.State.page_state_store,
-                "data",
-                allow_duplicate=True,
-            ),
-            dash.Input(self.page.ids.Calibration.compute_model_btn, "n_clicks"),
-            dash.State(self.ids.mie_model, "value"),
-            dash.State(self.page.ids.Calibration.bead_table, "data"),
-            dash.State(self.ids.medium_refractive_index_custom, "value"),
-            dash.State(self.ids.particle_refractive_index_custom, "value"),
-            dash.State(self.ids.core_refractive_index_custom, "value"),
-            dash.State(self.ids.shell_refractive_index_custom, "value"),
-            dash.State(self.ids.wavelength_nm, "value"),
-            dash.State(self.ids.detector_numerical_aperture, "value"),
-            dash.State(self.ids.detector_cache_numerical_aperture, "value"),
-            dash.State(self.ids.blocker_bar_numerical_aperture, "value"),
-            dash.State(self.ids.detector_sampling, "value"),
-            dash.State(self.ids.detector_phi_angle_degree, "value"),
-            dash.State(self.ids.detector_gamma_angle_degree, "value"),
-            dash.State(self.page.ids.State.page_state_store, "data"),
-            prevent_initial_call=True,
-        )
-        def compute_model(
-            n_clicks: int,
-            mie_model: Any,
-            current_rows: Optional[list[dict[str, Any]]],
-            medium_refractive_index: Any,
-            particle_refractive_index: Any,
-            core_refractive_index: Any,
-            shell_refractive_index: Any,
-            wavelength_nm: Any,
-            detector_numerical_aperture: Any,
-            detector_cache_numerical_aperture: Any,
-            blocker_bar_numerical_aperture: Any,
-            detector_sampling: Any,
-            detector_phi_angle_degree: Any,
-            detector_gamma_angle_degree: Any,
-            page_state_payload: Any,
-        ) -> tuple[list[dict[str, str]], dict[str, Any]]:
-            logger.debug(
-                "compute_model called with n_clicks=%r mie_model=%r row_count=%r "
-                "medium_refractive_index=%r particle_refractive_index=%r "
-                "core_refractive_index=%r shell_refractive_index=%r wavelength_nm=%r "
-                "detector_numerical_aperture=%r detector_cache_numerical_aperture=%r "
-                "blocker_bar_numerical_aperture=%r detector_sampling=%r "
-                "detector_phi_angle_degree=%r detector_gamma_angle_degree=%r",
-                n_clicks,
-                mie_model,
-                None if current_rows is None else len(current_rows),
-                medium_refractive_index,
-                particle_refractive_index,
-                core_refractive_index,
-                shell_refractive_index,
-                wavelength_nm,
-                detector_numerical_aperture,
-                detector_cache_numerical_aperture,
-                blocker_bar_numerical_aperture,
-                detector_sampling,
-                detector_phi_angle_degree,
-                detector_gamma_angle_degree,
-            )
-
-            resolved_mie_model = services.resolve_mie_model(
-                mie_model,
-            )
-
-            scattering_parameters_payload = self._build_scattering_parameters_payload(
-                mie_model=resolved_mie_model,
-                medium_refractive_index=medium_refractive_index,
-                particle_refractive_index=particle_refractive_index,
-                core_refractive_index=core_refractive_index,
-                shell_refractive_index=shell_refractive_index,
-                wavelength_nm=wavelength_nm,
-                detector_numerical_aperture=detector_numerical_aperture,
-                detector_cache_numerical_aperture=detector_cache_numerical_aperture,
-                blocker_bar_numerical_aperture=blocker_bar_numerical_aperture,
-                detector_sampling=detector_sampling,
-                detector_phi_angle_degree=detector_phi_angle_degree,
-                detector_gamma_angle_degree=detector_gamma_angle_degree,
-            )
-
-            page_state = ScatteringPageState.from_dict(
-                page_state_payload if isinstance(page_state_payload, dict) else None
-            )
-
-            page_state = page_state.update(
-                scattering_parameters_payload=scattering_parameters_payload,
-            )
-
-            if not current_rows:
-                logger.debug(
-                    "compute_model found no rows. Returning empty rows for model=%r",
-                    resolved_mie_model,
-                )
-
-                empty_rows = services.build_empty_rows_for_model(
-                    resolved_mie_model,
-                    row_count=3,
-                )
-
-                return empty_rows, page_state.to_dict()
-
-            computed_rows = services.compute_model_for_rows(
-                mie_model=resolved_mie_model,
-                current_rows=current_rows,
-                medium_refractive_index=medium_refractive_index,
-                particle_refractive_index=particle_refractive_index,
-                core_refractive_index=core_refractive_index,
-                shell_refractive_index=shell_refractive_index,
-                wavelength_nm=wavelength_nm,
-                detector_numerical_aperture=detector_numerical_aperture,
-                detector_cache_numerical_aperture=detector_cache_numerical_aperture,
-                blocker_bar_numerical_aperture=blocker_bar_numerical_aperture,
-                detector_sampling=detector_sampling,
-                detector_phi_angle_degree=detector_phi_angle_degree,
-                detector_gamma_angle_degree=detector_gamma_angle_degree,
-                logger=logger,
-            )
-
-            return computed_rows, page_state.to_dict()
-
-    def _build_scattering_parameters_payload(
-        self,
-        *,
-        mie_model: Any,
-        medium_refractive_index: Any,
-        particle_refractive_index: Any,
-        core_refractive_index: Any,
-        shell_refractive_index: Any,
-        wavelength_nm: Any,
-        detector_numerical_aperture: Any,
-        detector_cache_numerical_aperture: Any,
-        blocker_bar_numerical_aperture: Any,
-        detector_sampling: Any,
-        detector_phi_angle_degree: Any,
-        detector_gamma_angle_degree: Any,
-    ) -> dict[str, Any]:
-        """
-        Build the serializable parameter payload stored in page state.
-        """
-        return {
-            "mie_model": mie_model,
-            "medium_refractive_index": medium_refractive_index,
-            "particle_refractive_index": particle_refractive_index,
-            "core_refractive_index": core_refractive_index,
-            "shell_refractive_index": shell_refractive_index,
-            "wavelength_nm": wavelength_nm,
-            "detector_numerical_aperture": detector_numerical_aperture,
-            "detector_cache_numerical_aperture": detector_cache_numerical_aperture,
-            "blocker_bar_numerical_aperture": blocker_bar_numerical_aperture,
-            "detector_sampling": detector_sampling,
-            "detector_phi_angle_degree": detector_phi_angle_degree,
-            "detector_gamma_angle_degree": detector_gamma_angle_degree,
-        }
 
     def _build_numeric_input_row(
         self,

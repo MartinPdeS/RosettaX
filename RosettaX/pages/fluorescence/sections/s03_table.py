@@ -1,0 +1,416 @@
+# -*- coding: utf-8 -*-
+
+from typing import Any, Optional
+import logging
+
+import dash
+import dash_bootstrap_components as dbc
+
+from RosettaX.pages.sidebar.ids import SidebarIds
+from RosettaX.utils import styling
+from RosettaX.utils.runtime_config import RuntimeConfig
+
+from . import services
+
+
+logger = logging.getLogger(__name__)
+
+
+class ReferenceTable:
+    """
+    Fluorescence calibration reference table section.
+
+    Responsibilities
+    ----------------
+    - Render the fluorescence calibration reference table.
+    - Render the add row button.
+    - Populate the table from the default runtime profile at layout creation.
+    - Rebuild the table from runtime profile values when a sidebar profile is loaded.
+    - Preserve user edited rows during ordinary runtime store updates.
+    - Own the add row callback.
+    - Keep the existing table ID used by peak detection and calibration callbacks.
+
+    Ownership rule
+    --------------
+    This section is the only section allowed to render the bead table and the
+    only section allowed to use add_row_btn to update bead_table.data.
+    """
+
+    bead_table_columns: list[dict[str, Any]] = [
+        {
+            "name": "Intensity [calibrated units]",
+            "id": "col1",
+            "editable": True,
+        },
+        {
+            "name": "Intensity [a.u.]",
+            "id": "col2",
+            "editable": True,
+        },
+    ]
+
+    calibrated_intensity_column_name = "col1"
+    measured_intensity_column_name = "col2"
+
+    def __init__(
+        self,
+        page: Any,
+    ) -> None:
+        self.page = page
+        self.ids = page.ids.Calibration
+
+        logger.debug(
+            "Initialized Fluorescence ReferenceTable section with page=%r",
+            page,
+        )
+
+    def get_layout(self) -> dbc.Card:
+        """
+        Build the fluorescence reference table layout.
+        """
+        logger.debug("Building Fluorescence ReferenceTable layout.")
+
+        return dbc.Card(
+            [
+                self._build_header(),
+                self._build_body(),
+            ]
+        )
+
+    def _get_layout(self) -> dbc.Card:
+        """
+        Compatibility alias for older section loading code.
+        """
+        return self.get_layout()
+
+    def _build_header(self) -> dbc.CardHeader:
+        """
+        Build the section header.
+        """
+        return dbc.CardHeader(
+            "4. Calibration reference table",
+        )
+
+    def _build_body(self) -> dbc.CardBody:
+        """
+        Build the section body.
+        """
+        return dbc.CardBody(
+            [
+                self._build_description(),
+                self._build_bead_table(),
+                self._build_add_row_button_row(),
+            ]
+        )
+
+    def _build_description(self) -> dash.html.Div:
+        """
+        Build the table description.
+        """
+        return dash.html.Div(
+            (
+                "Enter the calibrated intensity values and use the fluorescence "
+                "peak detection section to fill the measured peak positions. "
+                "This table is the source of truth for the fluorescence "
+                "calibration fit."
+            ),
+            style={
+                "marginBottom": "10px",
+                "opacity": 0.8,
+            },
+        )
+
+    def _build_bead_table(self) -> dash.dash_table.DataTable:
+        """
+        Build the bead calibration table using the default runtime profile.
+        """
+        default_rows = self._build_default_bead_rows()
+
+        logger.debug(
+            "Building fluorescence reference table with default row_count=%r rows=%r",
+            len(default_rows),
+            default_rows,
+        )
+
+        return dash.dash_table.DataTable(
+            id=self.ids.bead_table,
+            columns=self.bead_table_columns,
+            data=default_rows,
+            **styling.DATATABLE,
+        )
+
+    def _build_add_row_button_row(self) -> dash.html.Div:
+        """
+        Build the add row button row.
+        """
+        return dash.html.Div(
+            [
+                dash.html.Button(
+                    "Add Row",
+                    id=self.ids.add_row_btn,
+                    n_clicks=0,
+                )
+            ],
+            style={
+                "marginTop": "10px",
+            },
+        )
+
+    def _build_default_bead_rows(self) -> list[dict[str, str]]:
+        """
+        Build initial table rows from the default runtime profile.
+        """
+        runtime_config = RuntimeConfig.from_default_profile()
+
+        return build_bead_rows_from_runtime_config(
+            runtime_config=runtime_config,
+        )
+
+    def register_callbacks(self) -> None:
+        """
+        Register reference table callbacks.
+        """
+        logger.debug("Registering fluorescence reference table callbacks.")
+
+        self._register_runtime_table_sync_callback()
+        self._register_add_row_callback()
+
+    def _register_runtime_table_sync_callback(self) -> None:
+        """
+        Register runtime config to table synchronization.
+
+        If a sidebar profile has been loaded, the table is always rebuilt from
+        the new runtime profile. Existing user edited rows are intentionally
+        discarded in that case.
+
+        If no profile load is involved, the table is only populated when it is
+        effectively empty.
+        """
+
+        @dash.callback(
+            dash.Output(
+                self.ids.bead_table,
+                "data",
+                allow_duplicate=True,
+            ),
+            dash.Input("runtime-config-store", "data"),
+            dash.Input(SidebarIds.profile_load_event_store, "data"),
+            dash.State(self.ids.bead_table, "data"),
+            prevent_initial_call=True,
+        )
+        def sync_bead_table_from_runtime_store(
+            runtime_config_data: Any,
+            profile_load_event_data: Any,
+            current_rows: Optional[list[dict[str, Any]]],
+        ) -> Any:
+            if not isinstance(runtime_config_data, dict):
+                logger.debug(
+                    "sync_bead_table_from_runtime_store received no runtime config. "
+                    "Keeping current table data."
+                )
+
+                return dash.no_update
+
+            profile_load_was_requested = (
+                isinstance(profile_load_event_data, dict)
+                and bool(profile_load_event_data.get("profile_name"))
+            )
+
+            normalized_current_rows = normalize_fluorescence_table_rows(
+                rows=current_rows,
+            )
+
+            logger.debug(
+                "sync_bead_table_from_runtime_store called with triggered_id=%r "
+                "profile_load_was_requested=%r profile_load_event_data=%r "
+                "current_rows=%r",
+                dash.ctx.triggered_id,
+                profile_load_was_requested,
+                profile_load_event_data,
+                normalized_current_rows,
+            )
+
+            if not profile_load_was_requested:
+                table_has_user_data = not fluorescence_table_is_effectively_empty(
+                    rows=normalized_current_rows,
+                )
+
+                if table_has_user_data:
+                    logger.debug(
+                        "Fluorescence reference table already contains user data "
+                        "and no profile load was requested. Leaving it unchanged."
+                    )
+
+                    return dash.no_update
+
+            runtime_config = RuntimeConfig.from_dict(
+                runtime_config_data,
+            )
+
+            resolved_rows = build_bead_rows_from_runtime_config(
+                runtime_config=runtime_config,
+            )
+
+            logger.debug(
+                "Rebuilt fluorescence reference table from runtime config. "
+                "profile_load_was_requested=%r row_count=%r rows=%r",
+                profile_load_was_requested,
+                len(resolved_rows),
+                resolved_rows,
+            )
+
+            return resolved_rows
+
+    def _register_add_row_callback(self) -> None:
+        """
+        Register the add row callback.
+        """
+
+        @dash.callback(
+            dash.Output(
+                self.ids.bead_table,
+                "data",
+                allow_duplicate=True,
+            ),
+            dash.Input(self.ids.add_row_btn, "n_clicks"),
+            dash.State(self.ids.bead_table, "data"),
+            dash.State(self.ids.bead_table, "columns"),
+            prevent_initial_call=True,
+        )
+        def add_row(
+            n_clicks: int,
+            rows: list[dict[str, Any]],
+            columns: list[dict[str, Any]],
+        ) -> list[dict[str, str]]:
+            logger.debug(
+                "add_row called with n_clicks=%r existing_row_count=%r columns=%r",
+                n_clicks,
+                None if rows is None else len(rows),
+                columns,
+            )
+
+            next_rows = services.add_empty_row(
+                rows=rows,
+                columns=columns,
+            )
+
+            logger.debug(
+                "add_row returning next_row_count=%r",
+                len(next_rows),
+            )
+
+            return next_rows
+
+
+def build_bead_rows_from_runtime_config(
+    *,
+    runtime_config: RuntimeConfig,
+) -> list[dict[str, str]]:
+    """
+    Build fluorescence calibration table rows from a runtime configuration.
+    """
+    mesf_values = runtime_config.get_path(
+        "calibration.mesf_values",
+        default=[],
+    )
+
+    rows = services.build_bead_rows_from_mesf_values(
+        mesf_values,
+    )
+
+    if not rows:
+        rows = [
+            {
+                "col1": "",
+                "col2": "",
+            }
+            for _ in range(3)
+        ]
+
+    logger.debug(
+        "Built fluorescence reference table rows from runtime config. "
+        "mesf_values=%r rows=%r",
+        mesf_values,
+        rows,
+    )
+
+    return rows
+
+
+def normalize_fluorescence_table_rows(
+    *,
+    rows: Any,
+) -> list[dict[str, Any]]:
+    """
+    Normalize arbitrary table data into a list of dictionary rows.
+    """
+    if not isinstance(rows, list):
+        return []
+
+    normalized_rows: list[dict[str, Any]] = []
+
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+
+        normalized_rows.append(
+            {
+                str(key): value
+                for key, value in row.items()
+            }
+        )
+
+    return normalized_rows
+
+
+def fluorescence_table_is_effectively_empty(
+    *,
+    rows: list[dict[str, Any]],
+) -> bool:
+    """
+    Return whether the fluorescence table contains no useful user data.
+
+    Both calibrated values and measured peak values are considered user data.
+    """
+    if not rows:
+        return True
+
+    for row in rows:
+        calibrated_value = row.get(
+            "col1",
+            "",
+        )
+
+        measured_value = row.get(
+            "col2",
+            "",
+        )
+
+        if value_is_not_empty(
+            calibrated_value,
+        ):
+            return False
+
+        if value_is_not_empty(
+            measured_value,
+        ):
+            return False
+
+    return True
+
+
+def value_is_not_empty(
+    value: Any,
+) -> bool:
+    """
+    Return whether a table cell value should be considered populated.
+    """
+    if value is None:
+        return False
+
+    if isinstance(value, str):
+        return bool(
+            value.strip()
+        )
+
+    return True

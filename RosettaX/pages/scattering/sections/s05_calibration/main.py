@@ -9,8 +9,8 @@ import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
 
 from RosettaX.pages.scattering.state import ScatteringPageState
-from RosettaX.pages.scattering.sections.s03_parameters import services as parameter_services
-from RosettaX.utils import plottings, styling, graph_config
+from RosettaX.utils import plottings
+from RosettaX.utils import graph_config
 
 from . import services
 
@@ -20,50 +20,43 @@ logger = logging.getLogger(__name__)
 
 class Calibration:
     """
-    Scattering calibration section.
+    Scattering calibration fit section.
 
     Responsibilities
     ----------------
-    - Render the calibration reference table.
-    - Render the expected coupling computation action.
     - Render the calibration fit action area.
     - Display the calibration graphs.
     - Delegate the calibration workflow to the service layer.
     - Resolve the calibration detector channel from the selected peak process.
+    - Store calibration graph payloads and calibration payload in page state.
 
-    Notes
-    -----
-    The scattering peak section no longer owns a static detector dropdown.
-    Detector dropdowns are now owned by peak scripts and use pattern matching IDs.
-
-    For calibration:
-    - A 1D process uses its ``primary`` detector channel.
-    - A 2D process uses its ``x`` detector channel, because the calibration table
-      stores the clicked x coordinate.
-
-    State ownership
+    Table ownership
     ---------------
-    Calibration graph payloads and calibration payloads are stored in the page
-    state store. This section no longer creates local graph or calibration stores.
+    This section does not render the reference table and does not compute
+    expected coupling. The dedicated reference table section owns those actions.
+    This section only reads the table during fitting.
     """
 
     simulated_curve_point_count = 200
     graph_height_px = 420
     graph_min_width_px = 0
 
-    sphere_table_columns = parameter_services.sphere_table_columns
-    core_shell_table_columns = parameter_services.core_shell_table_columns
-
-    def __init__(self, page) -> None:
+    def __init__(
+        self,
+        page: Any,
+    ) -> None:
         self.page = page
         self.ids = page.ids.Calibration
 
         logger.debug(
-            "Initialized Calibration section with page=%r",
+            "Initialized Scattering Calibration section with page=%r",
             page,
         )
 
     def get_layout(self) -> dbc.Card:
+        """
+        Build the scattering calibration layout.
+        """
         return dbc.Card(
             [
                 self._build_header(),
@@ -71,20 +64,26 @@ class Calibration:
             ]
         )
 
+    def _get_layout(self) -> dbc.Card:
+        """
+        Compatibility alias for older section loading code.
+        """
+        return self.get_layout()
+
     def _build_header(self) -> dbc.CardHeader:
-        return dbc.CardHeader("4. Fit calibration")
+        """
+        Build the section header.
+        """
+        return dbc.CardHeader(
+            "5. Fit calibration",
+        )
 
     def _build_body(self) -> dbc.CardBody:
+        """
+        Build the section body.
+        """
         return dbc.CardBody(
             [
-                self._build_reference_table_section(),
-                dash.html.Div(
-                    style={
-                        "height": "12px",
-                    },
-                ),
-                self._build_compute_model_block(),
-                dash.html.Hr(),
                 self._build_action_block(),
                 dash.html.Br(),
                 self._build_graph_block(),
@@ -100,76 +99,10 @@ class Calibration:
             ]
         )
 
-    def _build_reference_table_section(self) -> dash.html.Div:
-        return dash.html.Div(
-            [
-                dash.html.H5("Calibration reference table"),
-                dash.html.Div(
-                    "The table is the source of truth. Edit the particle geometry directly here. "
-                    "Measured peak positions are optional at this stage. "
-                    "First click Compute Expected Coupling to fill the model column. "
-                    "Then click Fit Calibration to generate the graphs and calibration.",
-                    style={
-                        "marginBottom": "10px",
-                        "opacity": 0.8,
-                    },
-                ),
-                dash.dash_table.DataTable(
-                    id=self.ids.bead_table,
-                    columns=self.sphere_table_columns,
-                    data=parameter_services.build_empty_rows_for_model(
-                        "Solid Sphere",
-                        row_count=3,
-                    ),
-                    **styling.DATATABLE,
-                ),
-                dash.html.Div(
-                    [
-                        dash.html.Button(
-                            "Add row",
-                            id=self.ids.add_row_btn,
-                            n_clicks=0,
-                        )
-                    ],
-                    style={
-                        "marginTop": "10px",
-                    },
-                ),
-            ]
-        )
-
-    def _build_compute_model_block(self) -> dash.html.Div:
-        return dash.html.Div(
-            [
-                self._build_compute_model_button(),
-                dash.html.Div(
-                    "This step fills the expected coupling column in the table using the current optical and particle parameters.",
-                    style={
-                        "marginTop": "8px",
-                        "opacity": 0.75,
-                    },
-                ),
-            ]
-        )
-
-    def _build_compute_model_button(self) -> dash.html.Button:
-        return dash.html.Button(
-            "Compute Expected Coupling",
-            id=self.ids.compute_model_btn,
-            n_clicks=0,
-            style={
-                "marginTop": "12px",
-            },
-        )
-
-    def _graph_style(self) -> dict[str, Any]:
-        return {
-            **dict(styling.PAGE["graph"]),
-            "height": f"{self.graph_height_px}px",
-            "width": "100%",
-        }
-
     def _graph_wrapper_style(self) -> dict[str, Any]:
+        """
+        Build a graph wrapper style dictionary.
+        """
         return {
             "flex": "1",
             "minWidth": f"{self.graph_min_width_px}px",
@@ -177,6 +110,9 @@ class Calibration:
         }
 
     def _build_action_block(self) -> dash.html.Div:
+        """
+        Build the calibration fit action block.
+        """
         return dash.html.Div(
             [
                 dash.html.Button(
@@ -185,7 +121,11 @@ class Calibration:
                     n_clicks=0,
                 ),
                 dash.html.Div(
-                    "This step uses the measured peak positions and expected coupling values currently present in the table.",
+                    (
+                        "This step uses the measured peak positions and "
+                        "expected coupling values currently present in the "
+                        "calibration reference table."
+                    ),
                     style={
                         "marginTop": "8px",
                         "opacity": 0.75,
@@ -195,6 +135,9 @@ class Calibration:
         )
 
     def _build_graph_block(self) -> dash.html.Div:
+        """
+        Build the calibration graph block.
+        """
         return dash.html.Div(
             [
                 dash.html.Div(
@@ -227,6 +170,9 @@ class Calibration:
         )
 
     def _build_fit_outputs_block(self) -> dash.html.Div:
+        """
+        Build the fit outputs block.
+        """
         return dash.html.Div(
             [
                 self._build_output_row(
@@ -249,6 +195,9 @@ class Calibration:
         label: str,
         output_id: str,
     ) -> dash.html.Div:
+        """
+        Build one fit output row.
+        """
         return dash.html.Div(
             [
                 dash.html.Div(label),
@@ -267,6 +216,9 @@ class Calibration:
         self,
         figure: go.Figure,
     ) -> go.Figure:
+        """
+        Apply the section graph height.
+        """
         figure.update_layout(
             autosize=False,
             height=self.graph_height_px,
@@ -284,13 +236,12 @@ class Calibration:
         """
         Resolve the detector column used for the calibration payload.
 
-        The detector is selected in the active peak script controls.
-
         Resolution order
         ----------------
         - primary: used by 1D peak scripts.
-        - x: used by 2D peak scripts because the calibration table stores the
-          clicked x coordinate.
+        - scattering_axis: used by newer 2D scripts with semantic channel names.
+        - x_axis: used by newer generic 2D scripts.
+        - x: used by older 2D scripts.
         """
         selected_peak_process_name_string = (
             ""
@@ -319,7 +270,8 @@ class Calibration:
             channel_values[str(channel_name)] = detector_dropdown_value
 
         logger.debug(
-            "Resolved calibration channel_values=%r for selected_peak_process_name=%r",
+            "Resolved scattering calibration channel_values=%r "
+            "for selected_peak_process_name=%r",
             channel_values,
             selected_peak_process_name_string,
         )
@@ -327,19 +279,32 @@ class Calibration:
         if "primary" in channel_values:
             return channel_values["primary"]
 
+        if "scattering_axis" in channel_values:
+            return channel_values["scattering_axis"]
+
+        if "x_axis" in channel_values:
+            return channel_values["x_axis"]
+
         if "x" in channel_values:
             return channel_values["x"]
 
         return None
 
     def register_callbacks(self) -> None:
-        logger.debug("Registering Calibration callbacks.")
+        """
+        Register calibration callbacks.
+        """
+        logger.debug("Registering Scattering Calibration callbacks.")
 
         self._register_fit_calibration_callback()
         self._register_left_graph_callback()
         self._register_right_graph_callback()
 
     def _register_fit_calibration_callback(self) -> None:
+        """
+        Register the scattering calibration fit callback.
+        """
+
         @dash.callback(
             dash.Output(
                 self.page.ids.State.page_state_store,
@@ -415,13 +380,10 @@ class Calibration:
 
             logger.debug(
                 "fit_scattering_calibration called with uploaded_fcs_path=%r "
-                "selected_peak_process_name=%r detector_dropdown_ids=%r "
-                "detector_dropdown_values=%r resolved_detector_column=%r "
+                "selected_peak_process_name=%r resolved_detector_column=%r "
                 "mie_model=%r table_row_count=%r",
                 page_state.uploaded_fcs_path,
                 selected_peak_process_name,
-                detector_dropdown_ids,
-                detector_dropdown_values,
                 detector_column,
                 mie_model,
                 None if bead_table_data is None else len(bead_table_data),
@@ -474,12 +436,18 @@ class Calibration:
             )
 
     def _register_left_graph_callback(self) -> None:
+        """
+        Register left graph reconstruction callback.
+        """
+
         @dash.callback(
             dash.Output(self.ids.graph_calibration, "figure"),
             dash.Input(self.page.ids.State.page_state_store, "data"),
             prevent_initial_call=False,
         )
-        def update_left_graph(page_state_payload: Any) -> go.Figure:
+        def update_left_graph(
+            page_state_payload: Any,
+        ) -> go.Figure:
             page_state = ScatteringPageState.from_dict(
                 page_state_payload if isinstance(page_state_payload, dict) else None
             )
@@ -516,12 +484,18 @@ class Calibration:
                 )
 
     def _register_right_graph_callback(self) -> None:
+        """
+        Register right graph reconstruction callback.
+        """
+
         @dash.callback(
             dash.Output(self.ids.graph_model, "figure"),
             dash.Input(self.page.ids.State.page_state_store, "data"),
             prevent_initial_call=False,
         )
-        def update_right_graph(page_state_payload: Any) -> go.Figure:
+        def update_right_graph(
+            page_state_payload: Any,
+        ) -> go.Figure:
             page_state = ScatteringPageState.from_dict(
                 page_state_payload if isinstance(page_state_payload, dict) else None
             )

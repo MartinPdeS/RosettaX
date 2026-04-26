@@ -2,7 +2,7 @@
 from RosettaX.workflow.upload.ids import UploadIds as UploadSectionIds
 from RosettaX.workflow.save.ids import SaveIds as SaveSectionIds
 from RosettaX.pages.scattering.sections.s03_parameters.ids import ParameterSectionIds
-from RosettaX.pages.scattering.sections.s04_calibration.ids import CalibrationSectionIds
+from RosettaX.pages.scattering.sections.s05_calibration.ids import CalibrationSectionIds
 from RosettaX.workflow.peak.ids import PeakIds
 
 

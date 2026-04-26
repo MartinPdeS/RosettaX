@@ -24,6 +24,7 @@ class FluorescencePage:
         self.sections = [
             sections.Upload(page=self),
             sections.Peaks(page=self),
+            sections.ReferenceTable(page=self),
             sections.Calibration(page=self),
             sections.Save(page=self),
         ]

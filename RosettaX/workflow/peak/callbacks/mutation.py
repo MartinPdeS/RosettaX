@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from typing import Any, Optional
-import logging
 import inspect
+import logging
+import time
+import uuid
+
 import dash
 
 from ..core import detectors
@@ -206,9 +209,6 @@ def unpack_mutation_state_values(
 ) -> dict[str, Any]:
     """
     Unpack optional mutation callback state values.
-
-    The callback state list is dynamic because fluorescence and scattering do
-    not necessarily expose the same controls.
     """
     state_value_index = 0
 
@@ -296,15 +296,24 @@ def clear_peak_context(
     """
     Clear peak line context after process or detector changes.
     """
+    resolved_process_name = registry.resolve_process_name(
+        process_name,
+    )
+
     page_state = adapter.clear_peak_lines_payload(
         page_state=page_state,
     )
 
+    page_state = touch_peak_graph_revision(
+        adapter=adapter,
+        page_state=page_state,
+        reason="clear_peak_context",
+        process_name=resolved_process_name,
+    )
+
     status_children = build_status_children(
         status_component_ids=status_component_ids,
-        target_process_name=registry.resolve_process_name(
-            process_name,
-        ),
+        target_process_name=resolved_process_name,
         status="",
     )
 
@@ -392,6 +401,13 @@ def handle_manual_graph_click(
         peak_lines_payload=result.peak_lines_payload,
     )
 
+    page_state = touch_peak_graph_revision(
+        adapter=adapter,
+        page_state=page_state,
+        reason="manual_graph_click",
+        process_name=resolved_process_name,
+    )
+
     table_result = adapter.apply_peak_process_result_to_table(
         table_data=table_data,
         result=result,
@@ -442,7 +458,10 @@ def handle_process_action(
             status_component_ids=status_component_ids,
         )
 
-    target_process_name = triggered_action_id.get("process")
+    target_process_name = registry.resolve_process_name(
+        triggered_action_id.get("process"),
+    )
+
     action_name = triggered_action_id.get("action")
 
     process = registry.get_process_instance(
@@ -518,6 +537,13 @@ def handle_clear_action(
         peak_lines_payload=result.peak_lines_payload,
     )
 
+    page_state = touch_peak_graph_revision(
+        adapter=adapter,
+        page_state=page_state,
+        reason="clear_action",
+        process_name=target_process_name,
+    )
+
     table_result = adapter.apply_peak_process_result_to_table(
         table_data=table_data,
         result=result,
@@ -560,10 +586,6 @@ def handle_run_action(
 ) -> tuple[Any, Any, list[Any]]:
     """
     Handle an automatic run action.
-
-    Process settings from the Dash controls are passed to the script through
-    ``process_settings``. Legacy scripts that still expect ``peak_count`` also
-    receive that value when their signature supports it.
     """
     if not context_is_valid_for_process(
         process=process,
@@ -621,17 +643,6 @@ def handle_run_action(
         uploaded_fcs_path=uploaded_fcs_path,
     )
 
-    logger.debug(
-        "Running automatic peak process with target_process_name=%r "
-        "detector_channels=%r process_settings=%r resolved_peak_count=%r "
-        "resolved_max_events=%r",
-        target_process_name,
-        detector_channels,
-        process_settings,
-        resolved_peak_count,
-        resolved_max_events,
-    )
-
     result = call_run_automatic_action_with_supported_arguments(
         process=process,
         backend=backend,
@@ -653,6 +664,14 @@ def handle_run_action(
         peak_lines_payload=result.peak_lines_payload,
     )
 
+    page_state = touch_peak_graph_revision(
+        adapter=adapter,
+        page_state=page_state,
+        reason="run_action",
+        process_name=target_process_name,
+        process_settings=process_settings,
+    )
+
     table_result = adapter.apply_peak_process_result_to_table(
         table_data=table_data,
         result=result,
@@ -667,6 +686,14 @@ def handle_run_action(
         status_component_ids=status_component_ids,
         target_process_name=target_process_name,
         status=result.status,
+    )
+
+    logger.debug(
+        "Completed run action for process=%r with peak_graph_revision=%r.",
+        target_process_name,
+        adapter.get_page_state_payload(
+            page_state=page_state,
+        ).get("peak_graph_revision"),
     )
 
     return (
@@ -688,19 +715,19 @@ def call_run_automatic_action_with_supported_arguments(
     runtime_config_data: Any,
 ) -> Any:
     """
-    Call ``run_automatic_action`` with only the keyword arguments supported by
-    the selected process.
+    Call ``process.run_automatic_action`` with only the arguments supported by
+    that process.
 
-    This keeps older 1D scripts compatible while allowing newer scripts to use
-    the full process_settings dictionary.
+    This keeps old peak scripts working while allowing newer scripts to use
+    richer context such as ``process_settings`` and ``runtime_config_data``.
     """
-    run_automatic_action = getattr(
+    method = getattr(
         process,
         "run_automatic_action",
         None,
     )
 
-    if not callable(run_automatic_action):
+    if not callable(method):
         logger.debug(
             "Process %r does not implement run_automatic_action.",
             getattr(process, "process_name", process),
@@ -712,7 +739,6 @@ def call_run_automatic_action_with_supported_arguments(
         "backend": backend,
         "detector_channels": detector_channels,
         "process_settings": process_settings,
-        "settings": process_settings,
         "peak_count": peak_count,
         "max_events_for_analysis": max_events_for_analysis,
         "max_events_for_plots": max_events_for_plots,
@@ -720,7 +746,7 @@ def call_run_automatic_action_with_supported_arguments(
     }
 
     signature = inspect.signature(
-        run_automatic_action,
+        method,
     )
 
     accepts_arbitrary_keywords = any(
@@ -729,7 +755,12 @@ def call_run_automatic_action_with_supported_arguments(
     )
 
     if accepts_arbitrary_keywords:
-        return run_automatic_action(
+        logger.debug(
+            "Calling automatic process %r with all candidate arguments.",
+            getattr(process, "process_name", process),
+        )
+
+        return method(
             **candidate_arguments,
         )
 
@@ -739,8 +770,46 @@ def call_run_automatic_action_with_supported_arguments(
         if argument_name in signature.parameters
     }
 
-    return run_automatic_action(
+    logger.debug(
+        "Calling automatic process %r with supported arguments=%r.",
+        getattr(process, "process_name", process),
+        list(supported_arguments.keys()),
+    )
+
+    return method(
         **supported_arguments,
+    )
+
+
+def touch_peak_graph_revision(
+    *,
+    adapter: Any,
+    page_state: Any,
+    reason: str,
+    process_name: Any,
+    process_settings: Optional[dict[str, Any]] = None,
+) -> Any:
+    """
+    Force downstream graph callbacks to rebuild after a peak workflow mutation.
+
+    Dash compares store data structurally. A revision token makes every run,
+    clear, or manual click produce a distinct page state payload even if the
+    peak positions or gates are numerically identical.
+    """
+    payload = adapter.get_page_state_payload(
+        page_state=page_state,
+    )
+
+    payload["peak_graph_revision"] = {
+        "id": uuid.uuid4().hex,
+        "timestamp": time.time(),
+        "reason": str(reason),
+        "process_name": str(process_name or ""),
+        "process_settings": dict(process_settings or {}),
+    }
+
+    return adapter.build_page_state(
+        payload=payload,
     )
 
 
@@ -762,7 +831,11 @@ def build_process_settings(
     for process_setting_id, process_setting_value in zip(
         process_setting_ids or [],
         process_setting_values or [],
+        strict=False,
     ):
+        if not isinstance(process_setting_id, dict):
+            continue
+
         if process_setting_id.get("process") != resolved_process_name:
             continue
 
