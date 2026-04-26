@@ -9,11 +9,11 @@ from typing import Optional
 
 import dash
 
-from RosettaX.application.callbacks import register_application_callbacks
-from RosettaX.application.layout import build_application_layout
-from RosettaX.application.pages import register_pages
-from RosettaX.application.routes import register_server_routes
-from RosettaX.pages.sidebar.main import register_sidebar_callbacks
+from .callbacks import register_application_callbacks
+from .layout import build_application_layout
+from .pages import register_pages
+from .routes import register_server_routes
+from RosettaX.pages.p00_sidebar.main import register_sidebar_callbacks
 from RosettaX.utils.parser import _parse_args
 
 

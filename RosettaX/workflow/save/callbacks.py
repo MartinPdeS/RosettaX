@@ -5,10 +5,10 @@ import logging
 
 import dash
 
-from RosettaX.pages.sidebar.ids import SidebarIds
-from RosettaX.workflow.save import services
-from RosettaX.workflow.save.adapters import SaveAdapter
-from RosettaX.workflow.save.models import SaveConfig
+from RosettaX.pages.p00_sidebar.ids import SidebarIds
+from . import services
+from .adapters import SaveAdapter
+from .models import SaveConfig
 
 
 def register_save_callbacks(

@@ -8,12 +8,12 @@ logger = logging.getLogger(__name__)
 
 
 PAGE_MODULES: list[str] = [
-    "RosettaX.pages.home.main",
-    "RosettaX.pages.fluorescence.main",
-    "RosettaX.pages.scattering.main",
-    "RosettaX.pages.calibrate.main",
-    "RosettaX.pages.settings.main",
-    "RosettaX.pages.help.main",
+    "RosettaX.pages.p01_home.main",
+    "RosettaX.pages.p02_fluorescence.main",
+    "RosettaX.pages.p03_scattering.main",
+    "RosettaX.pages.p04_calibrate.main",
+    "RosettaX.pages.p05_settings.main",
+    "RosettaX.pages.p06_help.main",
 ]
 
 

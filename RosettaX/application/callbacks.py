@@ -4,14 +4,10 @@ import logging
 from typing import Any, Optional
 
 import dash
-from dash import Dash
-from dash import Input
-from dash import Output
+from dash import Dash, Input, Output
 
-from RosettaX.application.layout import THEME_DARK
-from RosettaX.application.layout import THEME_LIGHT
-from RosettaX.pages.sidebar.main import SidebarIds
-from RosettaX.pages.sidebar.main import sidebar_html
+from RosettaX.application.layout import THEME_DARK, THEME_LIGHT
+from RosettaX.pages.p00_sidebar.main import SidebarIds, sidebar_html
 from RosettaX.utils.runtime_config import RuntimeConfig
 
 
