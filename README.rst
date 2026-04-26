@@ -253,7 +253,7 @@ RosettaX is developed by `Martin Poinsinet de Sivry Houle <https://github.com/Ma
 
 For collaboration, questions, or feedback:
 
-`martin.poinsinet.de.sivry@gmail.ca <mailto:martin.poinsinet.de.sivry@gmail.ca?subject=RosettaX>`_
+`martin.poinsinet.de.sivry@gmail.com <mailto:martin.poinsinet.de.sivry@gmail.com?subject=RosettaX>`_
 
 
 License
