@@ -8,7 +8,6 @@ from . import sections
 from .ids import Ids
 from .state import FluorescencePageState
 
-
 class FluorescencePage:
     """
     Fluorescence calibration page.
@@ -20,6 +19,7 @@ class FluorescencePage:
 
     def __init__(self) -> None:
         self.ids = Ids()
+        self.backend = None
 
         self.sections = [
             sections.Upload(page=self),
@@ -28,8 +28,6 @@ class FluorescencePage:
             sections.Calibration(page=self),
             sections.Save(page=self),
         ]
-
-        self.backend = None
 
     def register_callbacks(self) -> Self:
         """

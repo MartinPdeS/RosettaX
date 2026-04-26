@@ -6,7 +6,6 @@ import logging
 import dash
 import numpy as np
 
-from RosettaX.pages.scattering.backend import BackEnd
 from .base import BasePeakWorkflowAdapter
 
 
@@ -17,17 +16,24 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
     """
     Adapter for the scattering calibration peak workflow.
 
-    This adapter appends only scalar x axis values into the scattering
-    calibration table. It never writes y values, point dictionaries, lists, or
-    full payload objects into the table.
-    """
+    Responsibilities
+    ----------------
+    - Retrieve the page-owned scattering backend.
+    - Convert automatic or manual peak workflow results into scalar x values.
+    - Append scalar x values into the scattering calibration table.
+    - Clear the measured peak column when requested.
 
-    uploaded_fcs_path_keys: tuple[str, ...] = (
-        "uploaded_fcs_path",
-        "uploaded_fcs_file_path",
-        "scattering_uploaded_fcs_path",
-        "fcs_path",
-    )
+    Non responsibilities
+    --------------------
+    - This adapter does not create backends.
+    - This adapter does not store or resolve FCS file paths.
+    - This adapter does not read FCS files directly.
+    - This adapter does not perform peak detection itself.
+
+    The scattering page owns the uploaded file context and the backend lifecycle.
+    The shared peak workflow only consumes a backend-like object already exposed by
+    the page.
+    """
 
     peak_lines_payload_keys: tuple[str, ...] = (
         "scattering_peak_lines_payload",
@@ -60,7 +66,6 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
         "model",
     )
 
-
     automatic_peak_position_names: tuple[str, ...] = (
         "new_peak_positions",
         "new_x_positions",
@@ -84,62 +89,19 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
         self,
         *,
         page: Any,
-        uploaded_fcs_path: Any,
+        uploaded_fcs_path: Any = None,
     ) -> Any:
         """
-        Return a backend compatible with the shared peak workflow.
+        Return the page-owned backend compatible with the shared peak workflow.
+
+        ``uploaded_fcs_path`` is accepted only for interface compatibility with
+        ``BasePeakWorkflowAdapter``. It is intentionally not used here.
         """
-        if hasattr(
-            page,
-            "get_scattering_backend",
-        ):
-            return page.get_scattering_backend(
-                uploaded_fcs_path=uploaded_fcs_path,
-            )
+        from RosettaX.pages.scattering.backend import BackEnd
 
-        if hasattr(
-            page,
-            "get_backend",
-        ):
-            return page.get_backend(
-                uploaded_fcs_path=uploaded_fcs_path,
-            )
-
-        backend = getattr(
-            page,
-            "backend",
-            None,
-        )
-
-        if backend is not None:
-            return backend
-
-        uploaded_fcs_path_clean = str(
-            uploaded_fcs_path or "",
-        ).strip()
-
-        if not uploaded_fcs_path_clean:
-            return None
-
-        try:
-            page.backend = BackEnd(
-                fcs_file_path=uploaded_fcs_path_clean,
-            )
-
-            logger.debug(
-                "Rebuilt scattering backend from uploaded_fcs_path=%r",
-                uploaded_fcs_path_clean,
-            )
-
-            return page.backend
-
-        except Exception:
-            logger.exception(
-                "Failed to rebuild scattering backend from uploaded_fcs_path=%r",
-                uploaded_fcs_path_clean,
-            )
-
-            return None
+        backend = BackEnd()
+        backend.fcs_file_path = uploaded_fcs_path
+        return backend
 
     def apply_peak_process_result_to_table(
         self,
@@ -202,9 +164,9 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
 
         Priority
         --------
-        1. automatic peak arrays, keeping all detected peak values
-        2. manual click values, keeping only the latest click
-        3. peak line payload arrays, keeping all available values
+        1. Automatic peak arrays, keeping all detected peak values.
+        2. Manual click values, keeping only the latest click.
+        3. Peak line payload arrays, keeping all available values.
         """
         if result is None:
             return []

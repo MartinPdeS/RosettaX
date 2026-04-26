@@ -1,301 +1,40 @@
 # -*- coding: utf-8 -*-
 
-from dataclasses import dataclass
 from typing import Any, Optional
 import logging
 
 import dash
 import numpy as np
-import plotly.graph_objs as go
 
 from .base import BasePeakWorkflowAdapter
-from RosettaX.utils import casting
-from RosettaX.utils import plottings
-from RosettaX.utils.reader import FCSFile
 
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass(frozen=True)
-class FluorescencePeakDetectionResult:
-    """
-    Minimal peak detection result compatible with shared peak scripts.
-    """
-
-    peak_positions: np.ndarray
-
-
-@dataclass(frozen=True)
-class FluorescenceHistogramResult:
-    """
-    Histogram result compatible with the shared peak graph workflow.
-    """
-
-    values: np.ndarray
-    counts: np.ndarray
-    bin_edges: np.ndarray
-
-
-class FluorescencePeakGraphBackendAdapter:
-    """
-    Backend adapter exposing the methods expected by shared peak scripts.
-
-    The shared peak scripts use the scattering backend API. This adapter exposes
-    the same method names for fluorescence FCS files.
-    """
-
-    def __init__(
-        self,
-        *,
-        fcs_file_path: str,
-    ) -> None:
-        self.fcs_file_path = str(fcs_file_path)
-        self.file_path = str(fcs_file_path)
-
-    def column_copy(
-        self,
-        detector_column: str,
-        *,
-        dtype: Any = float,
-        n: Optional[int] = None,
-    ) -> np.ndarray:
-        """
-        Return an owned copy of a detector column.
-        """
-        with FCSFile(
-            self.fcs_file_path,
-            writable=False,
-        ) as fcs_file:
-            values = fcs_file.column_copy(
-                str(detector_column),
-                dtype=dtype,
-                n=n,
-            )
-
-        return np.asarray(
-            values,
-            dtype=dtype,
-        )
-
-    def build_histogram(
-        self,
-        *,
-        detector_column: str,
-        n_bins_for_plots: Any,
-        max_events_for_analysis: Any,
-    ) -> FluorescenceHistogramResult:
-        """
-        Build a fluorescence histogram.
-        """
-        resolved_number_of_bins = casting.as_int(
-            n_bins_for_plots,
-            default=100,
-            min_value=10,
-            max_value=5000,
-        )
-
-        resolved_max_events_for_analysis = casting.as_int(
-            max_events_for_analysis,
-            default=10000,
-            min_value=1,
-            max_value=5_000_000,
-        )
-
-        values = self.column_copy(
-            str(detector_column),
-            dtype=float,
-            n=resolved_max_events_for_analysis,
-        )
-
-        values = np.asarray(
-            values,
-            dtype=float,
-        )
-
-        values = values[
-            np.isfinite(values)
-        ]
-
-        if values.size == 0:
-            return FluorescenceHistogramResult(
-                values=values,
-                counts=np.asarray(
-                    [],
-                    dtype=float,
-                ),
-                bin_edges=np.asarray(
-                    [],
-                    dtype=float,
-                ),
-            )
-
-        counts, bin_edges = np.histogram(
-            values,
-            bins=int(resolved_number_of_bins),
-        )
-
-        return FluorescenceHistogramResult(
-            values=values,
-            counts=np.asarray(
-                counts,
-                dtype=float,
-            ),
-            bin_edges=np.asarray(
-                bin_edges,
-                dtype=float,
-            ),
-        )
-
-    def build_histogram_figure(
-        self,
-        *,
-        histogram_result: FluorescenceHistogramResult,
-        detector_column: str,
-        use_log_counts: bool,
-        peak_positions: Optional[list[float]] = None,
-    ) -> go.Figure:
-        """
-        Build a fluorescence histogram figure.
-        """
-        values = np.asarray(
-            histogram_result.values,
-            dtype=float,
-        )
-
-        counts = np.asarray(
-            histogram_result.counts,
-            dtype=float,
-        )
-
-        bin_edges = np.asarray(
-            histogram_result.bin_edges,
-            dtype=float,
-        )
-
-        figure = go.Figure()
-
-        if counts.size > 0 and bin_edges.size == counts.size + 1:
-            bin_centers = 0.5 * (
-                bin_edges[:-1] + bin_edges[1:]
-            )
-            bin_widths = np.diff(
-                bin_edges,
-            )
-
-            figure.add_trace(
-                go.Bar(
-                    x=bin_centers,
-                    y=counts,
-                    width=bin_widths,
-                    name=str(detector_column),
-                )
-            )
-
-        else:
-            figure.add_trace(
-                go.Histogram(
-                    x=values,
-                    name=str(detector_column),
-                )
-            )
-
-        figure.update_layout(
-            xaxis_title=f"{detector_column} [a.u.]",
-            yaxis_title="Counts",
-            separators=".,",
-            hovermode="closest",
-            uirevision=f"fluorescence_peak_histogram|{self.fcs_file_path}|{detector_column}",
-        )
-
-        figure.update_yaxes(
-            type="log" if use_log_counts else "linear",
-        )
-
-        resolved_peak_positions = [
-            float(value)
-            for value in (peak_positions or [])
-        ]
-
-        if resolved_peak_positions:
-            figure = plottings.add_vertical_lines(
-                fig=figure,
-                line_positions=resolved_peak_positions,
-                line_labels=[
-                    f"Peak {index + 1}"
-                    for index in range(
-                        len(resolved_peak_positions),
-                    )
-                ],
-            )
-
-        return figure
-
-    def find_scattering_peaks(
-        self,
-        *,
-        detector_column: str,
-        max_peaks: Any,
-        max_events_for_analysis: Any,
-        debug: bool = False,
-    ) -> FluorescencePeakDetectionResult:
-        """
-        Find fluorescence peak positions.
-
-        The method name intentionally matches the scattering backend API used by
-        shared peak scripts.
-        """
-        del debug
-
-        resolved_peak_count = casting.as_int(
-            max_peaks,
-            default=3,
-            min_value=1,
-            max_value=100,
-        )
-
-        resolved_max_events_for_analysis = casting.as_int(
-            max_events_for_analysis,
-            default=10000,
-            min_value=1,
-            max_value=5_000_000,
-        )
-
-        values = self.column_copy(
-            str(detector_column),
-            dtype=float,
-            n=resolved_max_events_for_analysis,
-        )
-
-        peak_positions = estimate_histogram_peak_positions(
-            values=values,
-            peak_count=resolved_peak_count,
-            number_of_bins=512,
-        )
-
-        return FluorescencePeakDetectionResult(
-            peak_positions=np.asarray(
-                peak_positions,
-                dtype=float,
-            ),
-        )
 
 
 class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
     """
     Adapter for the fluorescence calibration peak workflow.
 
-    This adapter appends only scalar x axis values into the fluorescence
-    calibration table. It never writes y values, point dictionaries, lists, or
-    full payload objects into the table.
-    """
+    Responsibilities
+    ----------------
+    - Retrieve the page-owned fluorescence backend.
+    - Convert automatic or manual peak workflow results into scalar x values.
+    - Append scalar x values into the fluorescence calibration table.
+    - Clear the measured fluorescence peak column when requested.
 
-    uploaded_fcs_path_keys: tuple[str, ...] = (
-        "uploaded_fcs_path",
-        "uploaded_fcs_file_path",
-        "fluorescence_uploaded_fcs_path",
-        "fcs_path",
-    )
+    Non responsibilities
+    --------------------
+    - This adapter does not create backends.
+    - This adapter does not store or resolve FCS file paths.
+    - This adapter does not read FCS files directly.
+    - This adapter does not build histograms.
+    - This adapter does not perform peak detection itself.
+
+    The fluorescence page owns the uploaded file context and the backend lifecycle.
+    The shared peak workflow only consumes a backend-like object already exposed by
+    the page.
+    """
 
     peak_lines_payload_keys: tuple[str, ...] = (
         "fluorescence_peak_lines_payload",
@@ -344,49 +83,25 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
         self,
         *,
         page: Any,
-        uploaded_fcs_path: Any,
+        uploaded_fcs_path: Any = None,
     ) -> Any:
         """
-        Return a backend compatible with the shared peak workflow.
+        Return the page-owned backend compatible with the shared peak workflow.
+
+        ``uploaded_fcs_path`` is accepted only for interface compatibility with
+        ``BasePeakWorkflowAdapter``. It is intentionally not used here.
         """
-        if hasattr(
-            page,
-            "get_fluorescence_backend",
-        ):
-            return page.get_fluorescence_backend(
-                uploaded_fcs_path=uploaded_fcs_path,
-            )
+        if hasattr(page, "get_scattering_backend"):
+            backend = page.get_scattering_backend()
 
-        if hasattr(
-            page,
-            "get_backend",
-        ):
-            return page.get_backend(
-                uploaded_fcs_path=uploaded_fcs_path,
-            )
+            if backend is not None:
+                return backend
 
-        backend = getattr(
-            page,
-            "backend",
-            None,
-        )
+        from RosettaX.pages.fluorescence.backend import BackEnd
 
-        if backend is not None and hasattr(
-            backend,
-            "build_histogram",
-        ):
-            return backend
-
-        uploaded_fcs_path_clean = str(
-            uploaded_fcs_path or "",
-        ).strip()
-
-        if not uploaded_fcs_path_clean:
-            return None
-
-        return FluorescencePeakGraphBackendAdapter(
-            fcs_file_path=uploaded_fcs_path_clean,
-        )
+        backend = BackEnd()
+        backend.fcs_file_path = uploaded_fcs_path
+        return backend
 
     def apply_peak_process_result_to_table(
         self,
@@ -445,9 +160,9 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
 
         Priority
         --------
-        1. automatic peak arrays, keeping all detected peak values
-        2. manual click values, keeping only the latest click
-        3. peak line payload arrays, keeping all available values
+        1. Automatic peak arrays, keeping all detected peak values.
+        2. Manual click values, keeping only the latest click.
+        3. Peak line payload arrays, keeping all available values.
         """
         if result is None:
             return []
@@ -509,7 +224,7 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
         names: tuple[str, ...],
     ) -> Any:
         """
-        Return the first non None value found as an attribute or dict key.
+        Return the first non None value found as an attribute or dictionary key.
         """
         for name in names:
             value = getattr(
@@ -547,9 +262,11 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
 
         Examples
         --------
-        {"x": 12.3, "y": 45.6} -> [12.3]
-        [{"x": 1, "y": 2}, {"x": 3, "y": 4}] -> [1, 3]
-        np.array([1, 2, 3]) -> [1, 2, 3]
+        ``{"x": 12.3, "y": 45.6}`` becomes ``[12.3]``.
+
+        ``[{"x": 1, "y": 2}, {"x": 3, "y": 4}]`` becomes ``[1, 3]``.
+
+        ``np.array([1, 2, 3])`` becomes ``[1, 2, 3]``.
         """
         raw_x_values = self.collect_raw_x_values(
             value=value,
@@ -760,7 +477,7 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
         Append x values to the next empty fluorescence table rows.
 
         Existing filled rows are preserved. New rows are created when there is no
-        empty ``col2`` cell left.
+        empty fluorescence intensity cell left.
         """
         rows = self.normalize_table_data(
             table_data=table_data,
@@ -813,7 +530,8 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
         Convert one x value to a Dash DataTable scalar.
 
         Dictionaries are explicitly reduced to their x component. This prevents
-        values like {"x": ..., "y": ...} from being written into ``col2``.
+        values like ``{"x": ..., "y": ...}`` from being written into the
+        fluorescence intensity column.
         """
         if isinstance(
             value,
@@ -841,7 +559,9 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
 
             if value.size == 1:
                 return self.normalize_single_x_value_for_table(
-                    value=value.reshape(-1)[0],
+                    value=value.reshape(
+                        -1,
+                    )[0],
                 )
 
             return ""
@@ -945,158 +665,3 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
             "col1": "",
             "col2": "",
         }
-
-
-def estimate_histogram_peak_positions(
-    *,
-    values: np.ndarray,
-    peak_count: int,
-    number_of_bins: int,
-) -> list[float]:
-    """
-    Estimate peak positions from a one dimensional histogram.
-    """
-    values = np.asarray(
-        values,
-        dtype=float,
-    )
-
-    values = values[
-        np.isfinite(values)
-    ]
-
-    if values.size == 0:
-        return []
-
-    lower_quantile, upper_quantile = np.quantile(
-        values,
-        [
-            0.001,
-            0.999,
-        ],
-    )
-
-    values = values[
-        (values >= lower_quantile)
-        & (values <= upper_quantile)
-    ]
-
-    if values.size == 0:
-        return []
-
-    counts, bin_edges = np.histogram(
-        values,
-        bins=int(number_of_bins),
-    )
-
-    if counts.size == 0:
-        return []
-
-    smoothed_counts = smooth_counts(
-        counts=np.asarray(
-            counts,
-            dtype=float,
-        ),
-        window_size=7,
-    )
-
-    candidate_indices = find_local_maxima_indices(
-        values=smoothed_counts,
-    )
-
-    if not candidate_indices:
-        candidate_indices = [
-            int(index)
-            for index in np.argsort(smoothed_counts)[-int(peak_count):]
-        ]
-
-    candidate_indices = sorted(
-        candidate_indices,
-        key=lambda index: smoothed_counts[index],
-        reverse=True,
-    )
-
-    selected_indices = sorted(
-        candidate_indices[: int(peak_count)]
-    )
-
-    bin_centers = 0.5 * (
-        bin_edges[:-1] + bin_edges[1:]
-    )
-
-    return [
-        float(bin_centers[index])
-        for index in selected_indices
-        if 0 <= index < bin_centers.size
-    ]
-
-
-def smooth_counts(
-    *,
-    counts: np.ndarray,
-    window_size: int,
-) -> np.ndarray:
-    """
-    Smooth histogram counts using a moving average.
-    """
-    counts = np.asarray(
-        counts,
-        dtype=float,
-    )
-
-    if counts.size < 3:
-        return counts
-
-    resolved_window_size = max(
-        3,
-        int(window_size),
-    )
-
-    if resolved_window_size % 2 == 0:
-        resolved_window_size += 1
-
-    if counts.size < resolved_window_size:
-        resolved_window_size = counts.size
-
-        if resolved_window_size % 2 == 0:
-            resolved_window_size -= 1
-
-    if resolved_window_size < 3:
-        return counts
-
-    kernel = np.ones(
-        resolved_window_size,
-        dtype=float,
-    ) / float(resolved_window_size)
-
-    return np.convolve(
-        counts,
-        kernel,
-        mode="same",
-    )
-
-
-def find_local_maxima_indices(
-    *,
-    values: np.ndarray,
-) -> list[int]:
-    """
-    Find local maxima indices in a one dimensional signal.
-    """
-    values = np.asarray(
-        values,
-        dtype=float,
-    )
-
-    maxima_indices: list[int] = []
-
-    for index in range(
-        1,
-        values.size - 1,
-    ):
-        if values[index] >= values[index - 1] and values[index] >= values[index + 1]:
-            maxima_indices.append(
-                index,
-            )
-
-    return maxima_indices

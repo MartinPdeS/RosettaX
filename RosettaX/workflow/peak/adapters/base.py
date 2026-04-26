@@ -217,31 +217,6 @@ class BasePeakWorkflowAdapter:
             payload=payload,
         )
 
-    def get_backend(
-        self,
-        *,
-        page: Any,
-        uploaded_fcs_path: Any,
-    ) -> Any:
-        """
-        Return a backend instance for the page.
-        """
-        if hasattr(page, "get_backend"):
-            return page.get_backend(
-                uploaded_fcs_path=uploaded_fcs_path,
-            )
-
-        backend = getattr(
-            page,
-            "backend",
-            None,
-        )
-
-        if backend is not None:
-            return backend
-
-        return None
-
     def apply_peak_process_result_to_table(
         self,
         *,

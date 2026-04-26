@@ -1,9 +1,131 @@
 # -*- coding: utf-8 -*-
 
-from typing import Optional
+from typing import Optional, Any
+import logging
+from dataclasses import dataclass
 
 import numpy as np
 import plotly.graph_objs as go
+from RosettaX.utils.io import load_signal
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class HistogramResult:
+    values: np.ndarray
+    counts: np.ndarray
+    edges: np.ndarray
+    centers: np.ndarray
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "values": self.values.tolist(),
+            "counts": self.counts.tolist(),
+            "edges": self.edges.tolist(),
+            "centers": self.centers.tolist(),
+        }
+
+
+def build_histogram(
+    fcs_file_path: str,
+    detector_column: str,
+    n_bins_for_plots: int,
+    max_events_for_analysis: Optional[int] = None,
+) -> HistogramResult:
+    """
+    Build a 1D histogram from the detector signal.
+    """
+    resolved_detector_column = str(detector_column).strip()
+
+    logger.debug(
+        "build_histogram called with detector_column=%r n_bins_for_plots=%r max_events_for_analysis=%r",
+        resolved_detector_column,
+        n_bins_for_plots,
+        max_events_for_analysis,
+    )
+
+    values = load_signal(
+        fcs_file_path=fcs_file_path,
+        detector_column=resolved_detector_column,
+        max_events_for_analysis=max_events_for_analysis,
+        require_positive_values=False,
+    )
+
+    if values.size == 0:
+        raise ValueError("No signal values available to build histogram.")
+
+    counts, edges = np.histogram(values, bins=int(n_bins_for_plots))
+    centers = 0.5 * (edges[:-1] + edges[1:])
+
+    histogram_result = HistogramResult(
+        values=np.asarray(values, dtype=float),
+        counts=np.asarray(counts, dtype=float),
+        edges=np.asarray(edges, dtype=float),
+        centers=np.asarray(centers, dtype=float),
+    )
+
+    logger.debug(
+        "build_histogram returning detector_column=%r n_values=%r n_bins=%r nonzero_bins=%r",
+        resolved_detector_column,
+        histogram_result.values.size,
+        histogram_result.counts.size,
+        int(np.count_nonzero(histogram_result.counts)),
+    )
+
+    return histogram_result
+
+
+def build_histogram_figure(
+    detector_column: str,
+    histogram_result: HistogramResult,
+    use_log_counts: bool = False,
+    peak_positions: Optional[np.ndarray] = None,
+) -> go.Figure:
+    """
+    Build a Plotly histogram figure.
+    """
+    resolved_detector_column = str(detector_column).strip()
+
+    logger.debug(
+        "build_histogram_figure called with detector_column=%r use_log_counts=%r peak_count=%r",
+        resolved_detector_column,
+        use_log_counts,
+        0 if peak_positions is None else len(np.asarray(peak_positions).reshape(-1)),
+    )
+
+    figure = go.Figure()
+
+    figure.add_trace(
+        go.Bar(
+            x=histogram_result.centers,
+            y=histogram_result.counts,
+            name="signal",
+        )
+    )
+
+    for peak_position in np.asarray(
+        peak_positions if peak_positions is not None else [],
+        dtype=float,
+    ):
+        figure.add_vline(
+            x=float(peak_position),
+            line_width=2,
+            line_dash="dash",
+        )
+
+    figure.update_layout(
+        xaxis_title=f"{resolved_detector_column} [a.u.]",
+        yaxis_title="Count",
+        hovermode="closest",
+        separators=".,",
+        bargap=0.0,
+    )
+    figure.update_yaxes(type="log" if bool(use_log_counts) else "linear")
+
+    return figure
+
+
 
 
 def make_histogram_with_lines(

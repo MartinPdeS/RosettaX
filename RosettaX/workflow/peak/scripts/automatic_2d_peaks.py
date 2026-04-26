@@ -7,6 +7,7 @@ import numpy as np
 
 from .base import BasePeakProcess
 from .base import PeakProcessResult
+from RosettaX.utils.io import column_copy
 
 
 logger = logging.getLogger(__name__)
@@ -115,18 +116,6 @@ class Automatic2DPeakProcess(BasePeakProcess):
                 clear_existing_table_peaks=False,
             )
 
-        if not hasattr(
-            backend,
-            "column_copy",
-        ):
-            return PeakProcessResult(
-                peak_positions=[],
-                peak_lines_payload=self.build_empty_peak_lines_payload(),
-                status="The backend does not expose column_copy.",
-                new_peak_positions=[],
-                clear_existing_table_peaks=False,
-            )
-
         peak_count = resolve_integer_setting(
             settings=process_settings,
             name="peak_count",
@@ -168,14 +157,16 @@ class Automatic2DPeakProcess(BasePeakProcess):
             maximum=5_000_000,
         )
 
-        x_values = backend.column_copy(
-            str(x_detector_column),
+        x_values = column_copy(
+            fcs_file_path=backend.fcs_file_path,
+            detector_column=str(x_detector_column),
             dtype=float,
             n=max_events,
         )
 
-        y_values = backend.column_copy(
-            str(y_detector_column),
+        y_values = column_copy(
+            fcs_file_path=backend.fcs_file_path,
+            detector_column=str(y_detector_column),
             dtype=float,
             n=max_events,
         )

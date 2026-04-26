@@ -198,63 +198,63 @@ def resolve_default_dropdown_value(
     return None
 
 
-def build_channel_options_from_file(
-    file_path: str,
-    *,
-    preferred_scatter: Optional[str] = None,
-    preferred_secondary: Optional[str] = None,
-) -> ChannelOptions:
-    """
-    Derive detector options from an FCS file.
+# def build_channel_options_from_file(
+#     file_path: str,
+#     *,
+#     preferred_scatter: Optional[str] = None,
+#     preferred_secondary: Optional[str] = None,
+# ) -> ChannelOptions:
+#     """
+#     Derive detector options from an FCS file.
 
-    Parameters
-    ----------
-    file_path : str
-        FCS file path.
-    preferred_scatter : Optional[str]
-        Preferred scattering detector if present.
-    preferred_secondary : Optional[str]
-        Preferred secondary detector if present.
+#     Parameters
+#     ----------
+#     file_path : str
+#         FCS file path.
+#     preferred_scatter : Optional[str]
+#         Preferred scattering detector if present.
+#     preferred_secondary : Optional[str]
+#         Preferred secondary detector if present.
 
-    Returns
-    -------
-    ChannelOptions
-        Dropdown options and default values.
-    """
-    detector_column_names = get_detector_column_names_from_file(file_path)
+#     Returns
+#     -------
+#     ChannelOptions
+#         Dropdown options and default values.
+#     """
+#     detector_column_names = get_detector_column_names_from_file(file_path)
 
-    scatter_options: list[dict[str, str]] = []
-    secondary_options: list[dict[str, str]] = []
+#     scatter_options: list[dict[str, str]] = []
+#     secondary_options: list[dict[str, str]] = []
 
-    for detector_column_name in detector_column_names:
-        if is_invalid_detector_channel(detector_column_name):
-            continue
+#     for detector_column_name in detector_column_names:
+#         if is_invalid_detector_channel(detector_column_name):
+#             continue
 
-        detector_option = {
-            "label": str(detector_column_name),
-            "value": str(detector_column_name),
-        }
+#         detector_option = {
+#             "label": str(detector_column_name),
+#             "value": str(detector_column_name),
+#         }
 
-        if is_scatter_channel(detector_column_name):
-            scatter_options.append(detector_option)
-        else:
-            secondary_options.append(detector_option)
+#         if is_scatter_channel(detector_column_name):
+#             scatter_options.append(detector_option)
+#         else:
+#             secondary_options.append(detector_option)
 
-    scatter_value = resolve_default_dropdown_value(
-        options=scatter_options,
-        preferred_value=preferred_scatter,
-    )
-    secondary_value = resolve_default_dropdown_value(
-        options=secondary_options,
-        preferred_value=preferred_secondary,
-    )
+#     scatter_value = resolve_default_dropdown_value(
+#         options=scatter_options,
+#         preferred_value=preferred_scatter,
+#     )
+#     secondary_value = resolve_default_dropdown_value(
+#         options=secondary_options,
+#         preferred_value=preferred_secondary,
+#     )
 
-    return ChannelOptions(
-        scatter_options=scatter_options,
-        secondary_options=secondary_options,
-        scatter_value=scatter_value,
-        secondary_value=secondary_value,
-    )
+#     return ChannelOptions(
+#         scatter_options=scatter_options,
+#         secondary_options=secondary_options,
+#         scatter_value=scatter_value,
+#         secondary_value=secondary_value,
+#     )
 
 
 def save_calibration_to_file(

@@ -7,6 +7,7 @@ import numpy as np
 
 from .base import BasePeakProcess
 from .base import PeakProcessResult
+from RosettaX.utils.io import column_copy
 
 
 logger = logging.getLogger(__name__)
@@ -159,7 +160,7 @@ class QuantileGatedKMeans2DPeakProcess(BasePeakProcess):
         """
         del peak_count
 
-        if backend is None or not hasattr(backend, "column_copy"):
+        if backend is None:
             return PeakProcessResult(
                 peak_positions=[],
                 peak_lines_payload=self.build_empty_peak_lines_payload(),
@@ -208,8 +209,9 @@ class QuantileGatedKMeans2DPeakProcess(BasePeakProcess):
         )
 
         x_axis_values = np.asarray(
-            backend.column_copy(
-                str(x_axis_column),
+            column_copy(
+                fcs_file_path=backend.fcs_file_path,
+                detector_column=str(x_axis_column),
                 dtype=float,
                 n=maximum_events,
             ),
@@ -217,8 +219,9 @@ class QuantileGatedKMeans2DPeakProcess(BasePeakProcess):
         )
 
         y_axis_values = np.asarray(
-            backend.column_copy(
-                str(y_axis_column),
+            column_copy(
+                fcs_file_path=backend.fcs_file_path,
+                detector_column=str(y_axis_column),
                 dtype=float,
                 n=maximum_events,
             ),

@@ -4,12 +4,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
 import logging
+import time
 
 import numpy as np
 import plotly.graph_objs as go
-
-from RosettaX.utils.peak_detection import PeakDetectionResult, find_1d_signal_peaks
-from RosettaX.utils.reader import FCSFile
 
 from PyMieSim.units import ureg
 from PyMieSim.experiment.detector_set import PhotodiodeSet
@@ -23,28 +21,19 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
-class HistogramResult:
-    values: np.ndarray
-    counts: np.ndarray
-    edges: np.ndarray
-    centers: np.ndarray
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "values": self.values.tolist(),
-            "counts": self.counts.tolist(),
-            "edges": self.edges.tolist(),
-            "centers": self.centers.tolist(),
-        }
-
-
-@dataclass(frozen=True)
 class ModeledCouplingResult:
+    """
+    Container for modeled scattering coupling values.
+    """
+
     particle_diameters_nm: np.ndarray
     expected_coupling_values: np.ndarray
     model_metadata: dict[str, Any]
 
     def to_dict(self) -> dict[str, Any]:
+        """
+        Convert the modeled coupling result to a JSON safe dictionary.
+        """
         return {
             "particle_diameters_nm": self.particle_diameters_nm.tolist(),
             "expected_coupling_values": self.expected_coupling_values.tolist(),
@@ -54,6 +43,10 @@ class ModeledCouplingResult:
 
 @dataclass(frozen=True)
 class ScatteringCalibrationFitResult:
+    """
+    Container for the scattering calibration fit.
+    """
+
     slope: float
     intercept: float
     prefactor: float
@@ -66,6 +59,9 @@ class ScatteringCalibrationFitResult:
     fitted_expected_coupling_values_log10: np.ndarray
 
     def to_dict(self) -> dict[str, Any]:
+        """
+        Convert the fit result to a JSON safe dictionary.
+        """
         return {
             "slope": float(self.slope),
             "intercept": float(self.intercept),
@@ -82,259 +78,33 @@ class ScatteringCalibrationFitResult:
 
 class BackEnd:
     """
-    Numerical backend for scattering histogram construction, peak detection,
-    modeled coupling computation, and calibration fitting.
+    Numerical backend for the scattering calibration page.
 
-    Design
-    ------
-    This backend is file bound, not detector bound.
+    Responsibilities
+    ----------------
+    - Read detector columns from the uploaded FCS file.
+    - Build signal histograms.
+    - Build histogram figures.
+    - Compute modeled scattering coupling values with PyMieSim.
+    - Fit measured peak positions to modeled coupling values.
+    - Build calibration fit figures.
+    - Build serialized scattering calibration payloads.
 
-    The FCS file is the stable context owned by the upload section.
-    The selected detector column is UI state and is therefore passed explicitly
-    to the methods that need it.
+    Non responsibilities
+    --------------------
+    - This backend does not perform peak detection.
+    - This backend does not execute peak scripts.
+    - This backend does not own manual peak selection behavior.
+
+    Peak detection and manual peak selection are owned by the shared peak workflow
+    layer. The scattering backend only consumes the resulting peak positions.
     """
 
-    def __init__(
-        self,
-        *,
-        fcs_file_path: str,
-    ) -> None:
-        self.fcs_file_path = str(fcs_file_path)
+    def __init__(self) -> None:
 
         logger.debug(
             "Initialized Scattering BackEnd with fcs_file_path=%r",
-            self.fcs_file_path,
         )
-
-    def get_column_names(self) -> list[str]:
-        logger.debug("get_column_names called for fcs_file_path=%r", self.fcs_file_path)
-
-        with FCSFile(self.fcs_file_path, writable=False) as fcs_file:
-            detectors = fcs_file.text["Detectors"]
-            parameter_count = int(fcs_file.text["Keywords"]["$PAR"])
-
-            column_names = [
-                str(detectors[index].get("N", f"P{index}"))
-                for index in range(1, parameter_count + 1)
-            ]
-
-        logger.debug("get_column_names returning n_columns=%r", len(column_names))
-        return column_names
-
-    def load_signal(
-        self,
-        *,
-        detector_column: str,
-        max_events_for_analysis: Optional[int] = None,
-        require_positive_values: bool = False,
-    ) -> np.ndarray:
-        """
-        Load a detector signal from the FCS file.
-        """
-        resolved_detector_column = str(detector_column).strip()
-
-        if not resolved_detector_column:
-            raise ValueError("detector_column must be a non empty string.")
-
-        logger.debug(
-            "load_signal called with detector_column=%r max_events_for_analysis=%r require_positive_values=%r",
-            resolved_detector_column,
-            max_events_for_analysis,
-            require_positive_values,
-        )
-
-        with FCSFile(self.fcs_file_path, writable=False) as fcs_file:
-            signal = fcs_file.column_copy(resolved_detector_column, dtype=float)
-
-        signal = np.asarray(signal, dtype=float).reshape(-1)
-        signal = signal[np.isfinite(signal)]
-
-        if require_positive_values:
-            signal = signal[signal > 0.0]
-
-        if max_events_for_analysis is not None:
-            signal = signal[: int(max_events_for_analysis)]
-
-        logger.debug(
-            "load_signal returning detector_column=%r n_values=%r min=%r max=%r",
-            resolved_detector_column,
-            signal.size,
-            None if signal.size == 0 else float(np.min(signal)),
-            None if signal.size == 0 else float(np.max(signal)),
-        )
-
-        return signal
-
-    def column_copy(
-        self,
-        detector_column: str,
-        *,
-        dtype: Any = float,
-        n: Optional[int] = None,
-    ) -> np.ndarray:
-        """
-        Return an owned copy of a detector column.
-
-        This method matches the interface expected by the shared peak workflow
-        graph code. It delegates to ``load_signal`` so all FCS reading remains
-        centralized in the backend.
-        """
-        values = self.load_signal(
-            detector_column=detector_column,
-            max_events_for_analysis=n,
-            require_positive_values=False,
-        )
-
-        return np.asarray(
-            values,
-            dtype=dtype,
-        ).copy()
-
-    def build_histogram(
-        self,
-        *,
-        detector_column: str,
-        n_bins_for_plots: int,
-        max_events_for_analysis: Optional[int] = None,
-    ) -> HistogramResult:
-        """
-        Build a 1D histogram from the detector signal.
-        """
-        resolved_detector_column = str(detector_column).strip()
-
-        logger.debug(
-            "build_histogram called with detector_column=%r n_bins_for_plots=%r max_events_for_analysis=%r",
-            resolved_detector_column,
-            n_bins_for_plots,
-            max_events_for_analysis,
-        )
-
-        values = self.load_signal(
-            detector_column=resolved_detector_column,
-            max_events_for_analysis=max_events_for_analysis,
-            require_positive_values=False,
-        )
-
-        if values.size == 0:
-            raise ValueError("No signal values available to build histogram.")
-
-        counts, edges = np.histogram(values, bins=int(n_bins_for_plots))
-        centers = 0.5 * (edges[:-1] + edges[1:])
-
-        histogram_result = HistogramResult(
-            values=np.asarray(values, dtype=float),
-            counts=np.asarray(counts, dtype=float),
-            edges=np.asarray(edges, dtype=float),
-            centers=np.asarray(centers, dtype=float),
-        )
-
-        logger.debug(
-            "build_histogram returning detector_column=%r n_values=%r n_bins=%r nonzero_bins=%r",
-            resolved_detector_column,
-            histogram_result.values.size,
-            histogram_result.counts.size,
-            int(np.count_nonzero(histogram_result.counts)),
-        )
-
-        return histogram_result
-
-    def build_histogram_figure(
-        self,
-        *,
-        detector_column: str,
-        histogram_result: HistogramResult,
-        use_log_counts: bool = False,
-        peak_positions: Optional[np.ndarray] = None,
-    ) -> go.Figure:
-        """
-        Build a Plotly histogram figure.
-        """
-        resolved_detector_column = str(detector_column).strip()
-
-        logger.debug(
-            "build_histogram_figure called with detector_column=%r use_log_counts=%r peak_count=%r",
-            resolved_detector_column,
-            use_log_counts,
-            0 if peak_positions is None else len(np.asarray(peak_positions).reshape(-1)),
-        )
-
-        figure = go.Figure()
-
-        figure.add_trace(
-            go.Bar(
-                x=histogram_result.centers,
-                y=histogram_result.counts,
-                name="signal",
-            )
-        )
-
-        for peak_position in np.asarray(
-            peak_positions if peak_positions is not None else [],
-            dtype=float,
-        ):
-            figure.add_vline(
-                x=float(peak_position),
-                line_width=2,
-                line_dash="dash",
-            )
-
-        figure.update_layout(
-            xaxis_title=f"{resolved_detector_column} [a.u.]",
-            yaxis_title="Count",
-            hovermode="closest",
-            separators=".,",
-            bargap=0.0,
-        )
-        figure.update_yaxes(type="log" if bool(use_log_counts) else "linear")
-
-        return figure
-
-    def find_scattering_peaks(
-        self,
-        *,
-        detector_column: str,
-        max_peaks: int,
-        min_cluster_size: int = 100,
-        threshold: float = 0.0,
-        max_events_for_analysis: Optional[int] = None,
-        debug: bool = False,
-    ) -> PeakDetectionResult:
-        """
-        Detect peaks in the 1D detector signal.
-        """
-        resolved_detector_column = str(detector_column).strip()
-
-        logger.debug(
-            "find_scattering_peaks called with detector_column=%r max_peaks=%r min_cluster_size=%r threshold=%r max_events_for_analysis=%r debug=%r",
-            resolved_detector_column,
-            max_peaks,
-            min_cluster_size,
-            threshold,
-            max_events_for_analysis,
-            debug,
-        )
-
-        values = self.load_signal(
-            detector_column=resolved_detector_column,
-            max_events_for_analysis=max_events_for_analysis,
-            require_positive_values=False,
-        )
-
-        peak_detection_result = find_1d_signal_peaks(
-            values=values,
-            max_peaks=max_peaks,
-            min_cluster_size=min_cluster_size,
-            threshold=threshold,
-            debug=debug,
-        )
-
-        logger.debug(
-            "find_scattering_peaks returning detector_column=%r peak_positions=%r",
-            resolved_detector_column,
-            peak_detection_result.peak_positions.tolist(),
-        )
-
-        return peak_detection_result
 
     @staticmethod
     def compute_modeled_coupling_from_diameters(
@@ -354,8 +124,6 @@ class BackEnd:
         """
         Compute modeled coupling values for a list of particle diameters.
         """
-        import time
-
         logger.debug(
             "compute_modeled_coupling_from_diameters called with particle_diameters_nm=%r wavelength_nm=%r source_numerical_aperture=%r optical_power_watt=%r detector_numerical_aperture=%r medium_refractive_index=%r particle_refractive_index=%r detector_cache_numerical_aperture=%r detector_phi_offset_degree=%r detector_gamma_offset_degree=%r polarization_angle_degree=%r detector_sampling=%r",
             np.asarray(particle_diameters_nm).tolist(),
@@ -372,9 +140,10 @@ class BackEnd:
             detector_sampling,
         )
 
-        particle_diameters_nm = np.asarray(particle_diameters_nm, dtype=float).reshape(-1)
-        particle_diameters_nm = particle_diameters_nm[np.isfinite(particle_diameters_nm)]
-        particle_diameters_nm = particle_diameters_nm[particle_diameters_nm > 0.0]
+        particle_diameters_nm = BackEnd._sanitize_positive_float_array(
+            particle_diameters_nm,
+            require_positive_values=True,
+        )
 
         logger.debug("Sanitized particle_diameters_nm=%r", particle_diameters_nm.tolist())
 
@@ -392,13 +161,15 @@ class BackEnd:
             resolved_detector_cache_numerical_aperture,
         )
 
-        def _run_coupling(simulation_sampling: int) -> np.ndarray:
+        def run_coupling_simulation(simulation_sampling: int) -> np.ndarray:
             logger.debug("Building PolarizationSet with sampling=%r.", simulation_sampling)
+
             polarization_set = PolarizationSet(
                 angles=[float(polarization_angle_degree)] * ureg.degree,
             )
 
             logger.debug("Building GaussianSet.")
+
             source_set = GaussianSet(
                 wavelength=[float(wavelength_nm)] * ureg.nanometer,
                 polarization=polarization_set,
@@ -407,6 +178,7 @@ class BackEnd:
             )
 
             logger.debug("Building SphereSet.")
+
             scatterer_set = SphereSet(
                 diameter=particle_diameters_nm * ureg.nanometer,
                 material=[complex(float(particle_refractive_index), 0.0)],
@@ -414,6 +186,7 @@ class BackEnd:
             )
 
             logger.debug("Building PhotodiodeSet.")
+
             detector_set = PhotodiodeSet(
                 numerical_aperture=[float(detector_numerical_aperture)],
                 cache_numerical_aperture=[resolved_detector_cache_numerical_aperture],
@@ -423,6 +196,7 @@ class BackEnd:
             )
 
             logger.debug("Building Setup.")
+
             experiment = Setup(
                 scatterer_set=scatterer_set,
                 source_set=source_set,
@@ -433,6 +207,7 @@ class BackEnd:
                 "Calling experiment.get('coupling', as_numpy=True) with sampling=%r.",
                 simulation_sampling,
             )
+
             start_time = time.perf_counter()
             coupling_values = experiment.get("coupling", as_numpy=True)
             elapsed_time = time.perf_counter() - start_time
@@ -445,6 +220,7 @@ class BackEnd:
             )
 
             coupling_values = np.asarray(coupling_values).squeeze()
+
             logger.debug(
                 "Coupling after squeeze type=%s shape=%r dtype=%r",
                 type(coupling_values).__name__,
@@ -464,7 +240,7 @@ class BackEnd:
             return coupling_values
 
         try:
-            coupling_values = _run_coupling(int(detector_sampling))
+            coupling_values = run_coupling_simulation(int(detector_sampling))
         except Exception:
             logger.exception(
                 "Primary coupling computation failed with detector_sampling=%r. Retrying with a smaller sampling value.",
@@ -472,10 +248,11 @@ class BackEnd:
             )
 
             fallback_sampling = max(50, min(200, int(detector_sampling)))
+
             if fallback_sampling == int(detector_sampling):
                 fallback_sampling = 100
 
-            coupling_values = _run_coupling(fallback_sampling)
+            coupling_values = run_coupling_simulation(fallback_sampling)
 
         if coupling_values.size != particle_diameters_nm.size:
             raise ValueError(
@@ -527,9 +304,10 @@ class BackEnd:
             modeled_coupling_result.expected_coupling_values.tolist(),
         )
 
-        measured_peak_positions = np.asarray(measured_peak_positions, dtype=float).reshape(-1)
-        measured_peak_positions = measured_peak_positions[np.isfinite(measured_peak_positions)]
-        measured_peak_positions = measured_peak_positions[measured_peak_positions > 0.0]
+        measured_peak_positions = self._sanitize_positive_float_array(
+            measured_peak_positions,
+            require_positive_values=True,
+        )
 
         particle_diameters_nm = np.asarray(
             modeled_coupling_result.particle_diameters_nm,
@@ -547,7 +325,8 @@ class BackEnd:
 
         if measured_peak_positions.size != expected_coupling_values.size:
             raise ValueError(
-                "The number of measured peak positions must match the number of modeled coupling values."
+                "The number of measured peak positions must match the number of modeled coupling values. "
+                f"Got {measured_peak_positions.size} measured peaks and {expected_coupling_values.size} modeled values."
             )
 
         if measured_peak_positions.size < 2:
@@ -655,23 +434,30 @@ class BackEnd:
         self,
         *,
         detector_column: str,
-        peak_detection_result: PeakDetectionResult,
+        peak_detection_result: Any,
         modeled_coupling_result: ModeledCouplingResult,
         fit_result: ScatteringCalibrationFitResult,
         notes: str = "",
     ) -> dict[str, Any]:
         """
-        Build the serialized calibration payload.
+        Build the serialized scattering calibration payload.
+
+        ``peak_detection_result`` is intentionally typed as ``Any`` because peak
+        detection is owned by the shared peak workflow layer. The object only needs
+        to expose peak positions either through ``peak_positions`` or through a
+        dictionary key named ``peak_positions``.
         """
         resolved_detector_column = str(detector_column).strip()
+        peak_positions = self._extract_peak_positions_from_result(peak_detection_result)
 
         logger.debug(
-            "build_calibration_payload called with detector_column=%r n_reference_points=%r",
+            "build_calibration_payload called with detector_column=%r n_reference_points=%r n_peak_positions=%r",
             resolved_detector_column,
             fit_result.measured_peak_positions.size,
+            peak_positions.size,
         )
 
-        reference_points = []
+        reference_points: list[dict[str, float]] = []
 
         for measured_peak_position, particle_diameter_nm, expected_coupling_value in zip(
             fit_result.measured_peak_positions,
@@ -697,7 +483,6 @@ class BackEnd:
                 "calibration_type": "scattering",
                 "created_at": "",
                 "name": "",
-                "source_file": Path(self.fcs_file_path).name,
                 "source_channel": resolved_detector_column,
                 "fit_model": "log10(expected_coupling)=slope*log10(measured_peak_position)+intercept",
                 "fit_metrics": {
@@ -709,7 +494,7 @@ class BackEnd:
                     "intercept": float(fit_result.intercept),
                     "prefactor": float(fit_result.prefactor),
                 },
-                "peak_positions": peak_detection_result.peak_positions.tolist(),
+                "peak_positions": peak_positions.tolist(),
                 "particle_diameters_nm": fit_result.particle_diameters_nm.tolist(),
                 "expected_coupling_values": fit_result.expected_coupling_values.tolist(),
                 "model_metadata": modeled_coupling_result.model_metadata,
@@ -736,6 +521,9 @@ class BackEnd:
 
     @staticmethod
     def parse_particle_diameter_list(particle_diameter_list_text: str) -> np.ndarray:
+        """
+        Parse a comma or semicolon separated particle diameter list.
+        """
         if particle_diameter_list_text is None:
             return np.asarray([], dtype=float)
 
@@ -753,7 +541,64 @@ class BackEnd:
         return np.asarray(particle_diameters_nm, dtype=float)
 
     @staticmethod
-    def _compute_r_squared(*, y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    def _extract_peak_positions_from_result(peak_detection_result: Any) -> np.ndarray:
+        """
+        Extract peak positions from a shared peak workflow result.
+
+        Supported forms
+        ---------------
+        - Object with ``peak_positions`` attribute.
+        - Dictionary with ``peak_positions`` key.
+        - Raw array like object.
+        """
+        if peak_detection_result is None:
+            return np.asarray([], dtype=float)
+
+        if isinstance(peak_detection_result, dict):
+            raw_peak_positions = peak_detection_result.get("peak_positions", [])
+        elif hasattr(peak_detection_result, "peak_positions"):
+            raw_peak_positions = peak_detection_result.peak_positions
+        else:
+            raw_peak_positions = peak_detection_result
+
+        return BackEnd._sanitize_positive_float_array(
+            raw_peak_positions,
+            require_positive_values=False,
+        )
+
+    @staticmethod
+    def _sanitize_positive_float_array(
+        values: Any,
+        *,
+        require_positive_values: bool,
+    ) -> np.ndarray:
+        """
+        Convert input values to a finite float array.
+
+        Parameters
+        ----------
+        values:
+            Input array like object.
+        require_positive_values:
+            If true, remove values smaller than or equal to zero.
+        """
+        values = np.asarray(values, dtype=float).reshape(-1)
+        values = values[np.isfinite(values)]
+
+        if require_positive_values:
+            values = values[values > 0.0]
+
+        return values
+
+    @staticmethod
+    def _compute_r_squared(
+        *,
+        y_true: np.ndarray,
+        y_pred: np.ndarray,
+    ) -> float:
+        """
+        Compute the coefficient of determination.
+        """
         y_true = np.asarray(y_true, dtype=float)
         y_pred = np.asarray(y_pred, dtype=float)
 

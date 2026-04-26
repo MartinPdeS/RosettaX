@@ -638,10 +638,13 @@ def handle_run_action(
         max_value=5_000_000,
     )
 
-    backend = adapter.get_backend(
-        page=page,
-        uploaded_fcs_path=uploaded_fcs_path,
-    )
+    if hasattr(adapter, "get_backend"):
+        backend = adapter.get_backend(
+            page=page,
+            uploaded_fcs_path=uploaded_fcs_path,
+        )
+    else:
+        backend = None
 
     result = call_run_automatic_action_with_supported_arguments(
         process=process,

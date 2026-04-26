@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "RosettaX"
 dynamic = ["version"]
-description = "A package for Flow-cytometer calibration."
+description = "Interactive fluorescence and scattering calibration workflows for flow cytometry."
 license = "MIT"
 readme = "README.rst"
 requires-python = ">=3.10"
@@ -20,7 +20,13 @@ classifiers = [
     "Intended Audience :: Science/Research"
 ]
 
-keywords = ["flow-cytometre", "calibration", "physics", "data-analysis"]
+keywords = [
+    "flow-cytometry",
+    "calibration",
+    "scattering",
+    "fluorescence",
+    "data-analysis",
+]
 
 dependencies = [
     "PyMieSim",
@@ -38,6 +44,15 @@ rosettax = "RosettaX.__main__:main"
 Homepage = "https://github.com/MartinPdeS/RosettaX"
 Documentation = "https://martinpdes.github.io/RosettaX/"
 Repository = "https://github.com/MartinPdeS/RosettaX.git"
+
+[tool.setuptools.package-data]
+RosettaX = [
+    "assets/*",
+    "presets/**/*.json",
+    "profiles/**/*.json",
+    "calibrations/**/*.json",
+    "data/**/*",
+]
 
 [tool.setuptools_scm]
 write_to = "RosettaX/_version.py"

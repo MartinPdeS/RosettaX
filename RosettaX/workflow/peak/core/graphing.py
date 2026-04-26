@@ -9,13 +9,11 @@ import plotly.graph_objs as go
 
 from . import detectors
 from .. import registry
-from RosettaX.utils import casting
-from RosettaX.utils import plottings
+from RosettaX.utils import casting, plottings
 from RosettaX.utils.runtime_config import RuntimeConfig
-
+from RosettaX.utils.io import column_copy
 
 logger = logging.getLogger(__name__)
-
 
 
 def is_enabled(
@@ -480,7 +478,8 @@ class PeakWorkflowGraphBuilder:
                 "Select a detector channel first.",
             )
 
-        histogram_result = self.backend.build_histogram(
+        histogram_result = plottings.build_histogram(
+            fcs_file_path=self.backend.fcs_file_path,
             detector_column=detector_column,
             n_bins_for_plots=self._resolve_number_of_bins(),
             max_events_for_analysis=self._resolve_max_events_for_plots(),
@@ -488,48 +487,15 @@ class PeakWorkflowGraphBuilder:
 
         peak_positions = self._extract_x_positions_from_peak_lines_payload()
 
-        if hasattr(self.backend, "build_histogram_figure"):
-            return self.backend.build_histogram_figure(
-                histogram_result=histogram_result,
-                detector_column=detector_column,
-                use_log_counts=scale_selection_is_log(
-                    self.yscale_selection,
-                ),
-                peak_positions=peak_positions,
-            )
 
-        values = np.asarray(
-            getattr(histogram_result, "values", []),
-            dtype=float,
+        return plottings.build_histogram_figure(
+            histogram_result=histogram_result,
+            detector_column=detector_column,
+            use_log_counts=scale_selection_is_log(
+                self.yscale_selection,
+            ),
+            peak_positions=peak_positions,
         )
-
-        figure = go.Figure()
-
-        figure.add_trace(
-            go.Histogram(
-                x=values,
-                nbinsx=int(self._resolve_number_of_bins()),
-                name=str(detector_column),
-            )
-        )
-
-        if peak_positions:
-            figure = plottings.add_vertical_lines(
-                fig=figure,
-                line_positions=peak_positions,
-                line_labels=[
-                    f"Peak {index + 1}"
-                    for index in range(len(peak_positions))
-                ],
-            )
-
-        figure.update_layout(
-            xaxis_title=f"{detector_column} [a.u.]",
-            yaxis_title="Counts",
-            hovermode="closest",
-        )
-
-        return figure
 
     def _build_default_2d_scatter_figure(self) -> go.Figure:
         """
@@ -559,14 +525,11 @@ class PeakWorkflowGraphBuilder:
                 "Select both detector channels first.",
             )
 
-        if not hasattr(self.backend, "column_copy"):
-            return plottings._make_info_figure(
-                "The backend does not expose column_copy.",
-            )
 
         x_values = np.asarray(
-            self.backend.column_copy(
-                str(x_detector_column),
+            column_copy(
+                fcs_file_path=self.backend.fcs_file_path,
+                detector_column=str(x_detector_column),
                 dtype=float,
                 n=self._resolve_max_events_for_plots(),
             ),
@@ -574,8 +537,9 @@ class PeakWorkflowGraphBuilder:
         )
 
         y_values = np.asarray(
-            self.backend.column_copy(
-                str(y_detector_column),
+            column_copy(
+                fcs_file_path=self.backend.fcs_file_path,
+                detector_column=str(y_detector_column),
                 dtype=float,
                 n=self._resolve_max_events_for_plots(),
             ),

@@ -7,7 +7,8 @@
       5.0
     ],
     "peak_count": 4,
-    "histogram_scale": "log",
+    "histogram_xscale": "linear",
+    "histogram_yscale": "log",
     "default_fluorescence_peak_process": "2D manual click",
     "default_scattering_peak_process": "1D automatic peaks",
     "default_gating_channel": null,
@@ -54,7 +55,7 @@
     "scattering_fcs_file_path": null
   },
   "ui": {
-    "theme_mode": "light",
+    "theme_mode": "dark",
     "show_graphs": false
   }
 }

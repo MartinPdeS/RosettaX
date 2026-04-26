@@ -794,9 +794,8 @@ def run_solid_sphere_calibration(
             "particle_refractive_index is required for Solid Sphere calibration."
         )
 
-    scattering_backend = BackEnd(
-        fcs_file_path=str(uploaded_fcs_path),
-    )
+    scattering_backend = BackEnd()
+    scattering_backend.fcs_file_path = uploaded_fcs_path
 
     parsed_sphere_rows = parse_sphere_rows_for_fit(
         rows=current_table_rows,

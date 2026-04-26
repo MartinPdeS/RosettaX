@@ -101,10 +101,13 @@ def register_graph_callbacks(
             page_state=page_state,
         )
 
-        backend = adapter.get_backend(
-            page=page,
-            uploaded_fcs_path=uploaded_fcs_path,
-        )
+        if hasattr(adapter, "get_backend"):
+            backend = adapter.get_backend(
+                page=page,
+                uploaded_fcs_path=uploaded_fcs_path,
+            )
+        else:
+            backend = None
 
         try:
             return graphing.build_peak_workflow_graph_figure(

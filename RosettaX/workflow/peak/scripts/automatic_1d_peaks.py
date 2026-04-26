@@ -9,7 +9,7 @@ import numpy as np
 
 from .base import BasePeakProcess
 from .base import PeakProcessResult
-
+from RosettaX.utils.io import column_copy
 
 logger = logging.getLogger(__name__)
 
@@ -430,28 +430,11 @@ class Automatic1DPeaksProcess(BasePeakProcess):
         np.ndarray
             Detector values.
         """
-        if hasattr(backend, "column_copy"):
-            values = backend.column_copy(
-                detector_column,
-                dtype=float,
-                n=int(max_events_for_analysis),
-            )
-
-            return np.asarray(
-                values,
-                dtype=float,
-            ).reshape(-1)
-
-        histogram_result = backend.build_histogram(
-            detector_column=detector_column,
-            n_bins_for_plots=self.default_histogram_bin_count,
-            max_events_for_analysis=int(max_events_for_analysis),
-        )
-
-        values = getattr(
-            histogram_result,
-            "values",
-            [],
+        values = column_copy(
+            fcs_file_path=backend.fcs_file_path,
+            detector_column=str(detector_column),
+            dtype=float,
+            n=int(max_events_for_analysis),
         )
 
         return np.asarray(

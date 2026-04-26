@@ -7,7 +7,7 @@ import numpy as np
 
 from .base import BasePeakProcess
 from .base import PeakProcessResult
-
+from RosettaX.utils.io import column_copy
 
 logger = logging.getLogger(__name__)
 
@@ -107,11 +107,11 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
         """
         Run automatic fluorescence guided scatter peak detection.
         """
-        if backend is None or not hasattr(backend, "column_copy"):
+        if backend is None:
             return PeakProcessResult(
                 peak_positions=[],
                 peak_lines_payload=self.build_empty_peak_lines_payload(),
-                status="The backend does not expose column_copy.",
+                status="The backend is not available.",
                 clear_existing_table_peaks=False,
             )
 
@@ -174,8 +174,9 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
         )
 
         scattering_values = np.asarray(
-            backend.column_copy(
-                str(scattering_column),
+            column_copy(
+                fcs_file_path=backend.fcs_file_path,
+                detector_column=str(scattering_column),
                 dtype=float,
                 n=resolved_max_events_for_analysis,
             ),
@@ -183,8 +184,9 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
         )
 
         green_fluorescence_values = np.asarray(
-            backend.column_copy(
-                str(green_fluorescence_column),
+            column_copy(
+                fcs_file_path=backend.fcs_file_path,
+                detector_column=str(green_fluorescence_column),
                 dtype=float,
                 n=resolved_max_events_for_analysis,
             ),
