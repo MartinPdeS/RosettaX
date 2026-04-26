@@ -9,7 +9,7 @@ import dash_bootstrap_components as dbc
 from RosettaX.workflow.peak_workflow.callbacks import get_peak_processes
 from RosettaX.workflow.peak_workflow.layouts import build_peak_workflow_layout
 from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.workflow.peak.models import PeakConfig
+from RosettaX.workflow.peak_workflow.models import PeakConfig
 
 
 logger = logging.getLogger(__name__)

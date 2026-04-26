@@ -4,7 +4,7 @@ from typing import Any
 import logging
 
 from RosettaX.workflow.peak_workflow.callbacks import PeakWorkflowCallbacks
-from RosettaX.workflow.peak.models import PeakConfig
+from RosettaX.workflow.peak_workflow.models import PeakConfig
 
 
 def register_peak_callbacks(

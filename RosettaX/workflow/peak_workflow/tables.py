@@ -9,45 +9,49 @@ import numpy as np
 def append_positions_to_table_column(
     *,
     table_data: Optional[list[dict[str, Any]]],
-    peak_positions: list[Any],
+    peak_positions: Any,
     column_name: str,
     empty_row_factory: Callable[[], dict[str, Any]],
     logger: logging.Logger,
 ) -> list[dict[str, Any]]:
     """
-    Append peak positions to a Dash DataTable column.
+    Append numeric peak positions to the next empty cells of a Dash DataTable
+    column.
 
-    Dash DataTable cells must contain JSON safe scalar values. This function
-    therefore converts NumPy scalars, zero dimensional arrays, and single item
-    arrays into Python scalar values before writing them into rows.
+    Existing rows are preserved. New rows are created only when there are more
+    peak positions than empty cells.
     """
-    rows = [
-        normalize_table_row(
-            row=row,
-        )
-        for row in (table_data or [])
-    ]
+    rows = normalize_table_rows(
+        table_data=table_data,
+    )
 
-    normalized_peak_positions = normalize_peak_positions(
+    numeric_peak_positions = coerce_peak_positions_to_float_list(
         peak_positions=peak_positions,
         logger=logger,
     )
 
-    for peak_position in normalized_peak_positions:
-        target_row_index = find_first_empty_row_index(
+    if not rows:
+        rows.append(
+            normalize_table_row(
+                row=empty_row_factory(),
+            )
+        )
+
+    for peak_position in numeric_peak_positions:
+        row_index = find_first_empty_row_index(
             rows=rows,
             column_name=column_name,
         )
 
-        if target_row_index is None:
+        if row_index is None:
             rows.append(
                 normalize_table_row(
                     row=empty_row_factory(),
                 )
             )
-            target_row_index = len(rows) - 1
+            row_index = len(rows) - 1
 
-        rows[target_row_index][column_name] = peak_position
+        rows[row_index][column_name] = float(peak_position)
 
     return rows
 
@@ -56,21 +60,62 @@ def clear_table_column(
     *,
     table_data: Optional[list[dict[str, Any]]],
     column_name: str,
+    empty_row_factory: Callable[[], dict[str, Any]] | None = None,
+    minimum_row_count: int = 0,
 ) -> list[dict[str, Any]]:
     """
-    Clear one DataTable column while preserving all rows.
+    Clear one DataTable column while preserving rows.
+
+    Optionally creates empty rows if the table is empty or shorter than
+    minimum_row_count.
     """
-    rows = [
-        normalize_table_row(
-            row=row,
-        )
-        for row in (table_data or [])
-    ]
+    rows = normalize_table_rows(
+        table_data=table_data,
+    )
+
+    if empty_row_factory is not None:
+        while len(rows) < int(minimum_row_count):
+            rows.append(
+                normalize_table_row(
+                    row=empty_row_factory(),
+                )
+            )
 
     for row in rows:
         row[column_name] = ""
 
     return rows
+
+
+def normalize_table_rows(
+    *,
+    table_data: Optional[list[dict[str, Any]]],
+) -> list[dict[str, Any]]:
+    """
+    Normalize Dash DataTable rows into mutable dictionaries.
+    """
+    return [
+        normalize_table_row(
+            row=row,
+        )
+        for row in (table_data or [])
+        if isinstance(row, dict)
+    ]
+
+
+def normalize_table_row(
+    *,
+    row: dict[str, Any],
+) -> dict[str, Any]:
+    """
+    Convert one row into a string keyed dictionary.
+    """
+    return {
+        str(key): normalize_datatable_scalar(
+            value=value,
+        )
+        for key, value in dict(row).items()
+    }
 
 
 def find_first_empty_row_index(
@@ -96,50 +141,44 @@ def find_first_empty_row_index(
     return None
 
 
-def normalize_table_row(
+def coerce_peak_positions_to_float_list(
     *,
-    row: dict[str, Any],
-) -> dict[str, Any]:
-    """
-    Convert all row values to Dash DataTable safe values.
-    """
-    return {
-        str(key): normalize_datatable_value(
-            value=value,
-        )
-        for key, value in dict(row).items()
-    }
-
-
-def normalize_peak_positions(
-    *,
-    peak_positions: list[Any],
+    peak_positions: Any,
     logger: logging.Logger,
-) -> list[Any]:
+) -> list[float]:
     """
-    Convert a peak position collection into JSON safe scalar values.
-    """
-    normalized_peak_positions: list[Any] = []
+    Convert peak positions into a flat list of finite floats.
 
-    for peak_position in flatten_peak_positions(
+    Accepted inputs include:
+    - scalar number
+    - NumPy scalar
+    - NumPy array
+    - list or tuple of numeric values
+    - dictionaries with x, position, value, or peak_position
+    """
+    raw_values = flatten_peak_positions(
         value=peak_positions,
-    ):
-        normalized_value = normalize_datatable_value(
-            value=peak_position,
+    )
+
+    float_values: list[float] = []
+
+    for raw_value in raw_values:
+        float_value = coerce_float(
+            value=raw_value,
         )
 
-        if normalized_value is None:
+        if float_value is None:
             logger.debug(
-                "Ignored peak position because it could not be converted to a DataTable scalar: %r",
-                peak_position,
+                "Ignored non numeric peak position: %r",
+                raw_value,
             )
             continue
 
-        normalized_peak_positions.append(
-            normalized_value,
+        float_values.append(
+            float_value,
         )
 
-    return normalized_peak_positions
+    return float_values
 
 
 def flatten_peak_positions(
@@ -147,12 +186,26 @@ def flatten_peak_positions(
     value: Any,
 ) -> list[Any]:
     """
-    Flatten common peak position containers.
-
-    This intentionally flattens NumPy arrays and nested lists because a single
-    DataTable cell must not receive a list or array.
+    Flatten peak position containers into scalar like values.
     """
     if value is None:
+        return []
+
+    if isinstance(value, dict):
+        for key in (
+            "x",
+            "clicked_x",
+            "clicked_x_position",
+            "x_position",
+            "position",
+            "value",
+            "peak_position",
+        ):
+            if key in value:
+                return flatten_peak_positions(
+                    value=value[key],
+                )
+
         return []
 
     if isinstance(value, np.ndarray):
@@ -161,9 +214,11 @@ def flatten_peak_positions(
                 value.item(),
             ]
 
+        return value.reshape(-1).tolist()
+
+    if isinstance(value, np.generic):
         return [
-            item
-            for item in value.reshape(-1).tolist()
+            value.item(),
         ]
 
     if isinstance(value, (list, tuple)):
@@ -183,55 +238,80 @@ def flatten_peak_positions(
     ]
 
 
-def normalize_datatable_value(
+def coerce_float(
+    *,
+    value: Any,
+) -> float | None:
+    """
+    Convert one value to a finite float.
+    """
+    if value is None:
+        return None
+
+    if isinstance(value, np.ndarray):
+        if value.ndim == 0:
+            return coerce_float(
+                value=value.item(),
+            )
+
+        if value.size == 1:
+            return coerce_float(
+                value=value.reshape(-1)[0],
+            )
+
+        return None
+
+    if isinstance(value, np.generic):
+        return coerce_float(
+            value=value.item(),
+        )
+
+    try:
+        float_value = float(value)
+    except (TypeError, ValueError):
+        return None
+
+    if not np.isfinite(float_value):
+        return None
+
+    return float_value
+
+
+def normalize_datatable_scalar(
     *,
     value: Any,
 ) -> Any:
     """
-    Convert one value to a Dash DataTable compatible scalar.
-
-    Accepted return types are string, int, float, bool, or None.
+    Convert one existing table value to a Dash DataTable compatible scalar.
     """
     if value is None:
         return ""
 
-    if isinstance(value, bool):
+    if isinstance(value, (str, bool, int)):
         return value
 
-    if isinstance(value, str):
-        return value
-
-    if isinstance(value, (int, float)):
-        if isinstance(value, float) and not np.isfinite(value):
+    if isinstance(value, float):
+        if not np.isfinite(value):
             return ""
 
         return value
 
     if isinstance(value, np.generic):
-        return normalize_datatable_value(
+        return normalize_datatable_scalar(
             value=value.item(),
         )
 
     if isinstance(value, np.ndarray):
         if value.ndim == 0:
-            return normalize_datatable_value(
+            return normalize_datatable_scalar(
                 value=value.item(),
             )
 
         if value.size == 1:
-            return normalize_datatable_value(
+            return normalize_datatable_scalar(
                 value=value.reshape(-1)[0],
             )
 
         return ""
-
-    if hasattr(value, "item"):
-        try:
-            return normalize_datatable_value(
-                value=value.item(),
-            )
-
-        except Exception:
-            return str(value)
 
     return str(value)
