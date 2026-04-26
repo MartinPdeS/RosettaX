@@ -1,23 +1,291 @@
 # -*- coding: utf-8 -*-
 
+from dataclasses import dataclass
 from typing import Any, Optional
 import logging
 
 import dash
 import numpy as np
+import plotly.graph_objs as go
 
-from RosettaX.pages.scattering.backend import BackEnd
-from RosettaX.workflow.peak_workflow.adapters.base import BasePeakWorkflowAdapter
+from .base import BasePeakWorkflowAdapter
+from RosettaX.utils import casting
+from RosettaX.utils import plottings
+from RosettaX.utils.reader import FCSFile
 
 
 logger = logging.getLogger(__name__)
 
 
-class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
+@dataclass(frozen=True)
+class FluorescencePeakDetectionResult:
     """
-    Adapter for the scattering calibration peak workflow.
+    Minimal peak detection result compatible with shared peak scripts.
+    """
 
-    This adapter appends only scalar x axis values into the scattering
+    peak_positions: np.ndarray
+
+
+@dataclass(frozen=True)
+class FluorescenceHistogramResult:
+    """
+    Histogram result compatible with the shared peak graph workflow.
+    """
+
+    values: np.ndarray
+    counts: np.ndarray
+    bin_edges: np.ndarray
+
+
+class FluorescencePeakGraphBackendAdapter:
+    """
+    Backend adapter exposing the methods expected by shared peak scripts.
+
+    The shared peak scripts use the scattering backend API. This adapter exposes
+    the same method names for fluorescence FCS files.
+    """
+
+    def __init__(
+        self,
+        *,
+        fcs_file_path: str,
+    ) -> None:
+        self.fcs_file_path = str(fcs_file_path)
+        self.file_path = str(fcs_file_path)
+
+    def column_copy(
+        self,
+        detector_column: str,
+        *,
+        dtype: Any = float,
+        n: Optional[int] = None,
+    ) -> np.ndarray:
+        """
+        Return an owned copy of a detector column.
+        """
+        with FCSFile(
+            self.fcs_file_path,
+            writable=False,
+        ) as fcs_file:
+            values = fcs_file.column_copy(
+                str(detector_column),
+                dtype=dtype,
+                n=n,
+            )
+
+        return np.asarray(
+            values,
+            dtype=dtype,
+        )
+
+    def build_histogram(
+        self,
+        *,
+        detector_column: str,
+        n_bins_for_plots: Any,
+        max_events_for_analysis: Any,
+    ) -> FluorescenceHistogramResult:
+        """
+        Build a fluorescence histogram.
+        """
+        resolved_number_of_bins = casting.as_int(
+            n_bins_for_plots,
+            default=100,
+            min_value=10,
+            max_value=5000,
+        )
+
+        resolved_max_events_for_analysis = casting.as_int(
+            max_events_for_analysis,
+            default=10000,
+            min_value=1,
+            max_value=5_000_000,
+        )
+
+        values = self.column_copy(
+            str(detector_column),
+            dtype=float,
+            n=resolved_max_events_for_analysis,
+        )
+
+        values = np.asarray(
+            values,
+            dtype=float,
+        )
+
+        values = values[
+            np.isfinite(values)
+        ]
+
+        if values.size == 0:
+            return FluorescenceHistogramResult(
+                values=values,
+                counts=np.asarray(
+                    [],
+                    dtype=float,
+                ),
+                bin_edges=np.asarray(
+                    [],
+                    dtype=float,
+                ),
+            )
+
+        counts, bin_edges = np.histogram(
+            values,
+            bins=int(resolved_number_of_bins),
+        )
+
+        return FluorescenceHistogramResult(
+            values=values,
+            counts=np.asarray(
+                counts,
+                dtype=float,
+            ),
+            bin_edges=np.asarray(
+                bin_edges,
+                dtype=float,
+            ),
+        )
+
+    def build_histogram_figure(
+        self,
+        *,
+        histogram_result: FluorescenceHistogramResult,
+        detector_column: str,
+        use_log_counts: bool,
+        peak_positions: Optional[list[float]] = None,
+    ) -> go.Figure:
+        """
+        Build a fluorescence histogram figure.
+        """
+        values = np.asarray(
+            histogram_result.values,
+            dtype=float,
+        )
+
+        counts = np.asarray(
+            histogram_result.counts,
+            dtype=float,
+        )
+
+        bin_edges = np.asarray(
+            histogram_result.bin_edges,
+            dtype=float,
+        )
+
+        figure = go.Figure()
+
+        if counts.size > 0 and bin_edges.size == counts.size + 1:
+            bin_centers = 0.5 * (
+                bin_edges[:-1] + bin_edges[1:]
+            )
+            bin_widths = np.diff(
+                bin_edges,
+            )
+
+            figure.add_trace(
+                go.Bar(
+                    x=bin_centers,
+                    y=counts,
+                    width=bin_widths,
+                    name=str(detector_column),
+                )
+            )
+
+        else:
+            figure.add_trace(
+                go.Histogram(
+                    x=values,
+                    name=str(detector_column),
+                )
+            )
+
+        figure.update_layout(
+            xaxis_title=f"{detector_column} [a.u.]",
+            yaxis_title="Counts",
+            separators=".,",
+            hovermode="closest",
+            uirevision=f"fluorescence_peak_histogram|{self.fcs_file_path}|{detector_column}",
+        )
+
+        figure.update_yaxes(
+            type="log" if use_log_counts else "linear",
+        )
+
+        resolved_peak_positions = [
+            float(value)
+            for value in (peak_positions or [])
+        ]
+
+        if resolved_peak_positions:
+            figure = plottings.add_vertical_lines(
+                fig=figure,
+                line_positions=resolved_peak_positions,
+                line_labels=[
+                    f"Peak {index + 1}"
+                    for index in range(
+                        len(resolved_peak_positions),
+                    )
+                ],
+            )
+
+        return figure
+
+    def find_scattering_peaks(
+        self,
+        *,
+        detector_column: str,
+        max_peaks: Any,
+        max_events_for_analysis: Any,
+        debug: bool = False,
+    ) -> FluorescencePeakDetectionResult:
+        """
+        Find fluorescence peak positions.
+
+        The method name intentionally matches the scattering backend API used by
+        shared peak scripts.
+        """
+        del debug
+
+        resolved_peak_count = casting.as_int(
+            max_peaks,
+            default=3,
+            min_value=1,
+            max_value=100,
+        )
+
+        resolved_max_events_for_analysis = casting.as_int(
+            max_events_for_analysis,
+            default=10000,
+            min_value=1,
+            max_value=5_000_000,
+        )
+
+        values = self.column_copy(
+            str(detector_column),
+            dtype=float,
+            n=resolved_max_events_for_analysis,
+        )
+
+        peak_positions = estimate_histogram_peak_positions(
+            values=values,
+            peak_count=resolved_peak_count,
+            number_of_bins=512,
+        )
+
+        return FluorescencePeakDetectionResult(
+            peak_positions=np.asarray(
+                peak_positions,
+                dtype=float,
+            ),
+        )
+
+
+class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
+    """
+    Adapter for the fluorescence calibration peak workflow.
+
+    This adapter appends only scalar x axis values into the fluorescence
     calibration table. It never writes y values, point dictionaries, lists, or
     full payload objects into the table.
     """
@@ -25,49 +293,42 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
     uploaded_fcs_path_keys: tuple[str, ...] = (
         "uploaded_fcs_path",
         "uploaded_fcs_file_path",
-        "scattering_uploaded_fcs_path",
+        "fluorescence_uploaded_fcs_path",
         "fcs_path",
     )
 
     peak_lines_payload_keys: tuple[str, ...] = (
-        "scattering_peak_lines_payload",
+        "fluorescence_peak_lines_payload",
         "peak_lines_payload",
         "peak_lines",
     )
 
-    default_peak_lines_payload_key: str = "scattering_peak_lines_payload"
+    default_peak_lines_payload_key: str = "fluorescence_peak_lines_payload"
 
-    scattering_peak_column_name: str = "measured_peak_position"
+    fluorescence_intensity_column_name: str = "col2"
 
-    scattering_peak_column_candidates: tuple[str, ...] = (
-        "measured_peak_position",
-        "Measured scatter",
-        "measured_scatter",
-        "Scattering intensity",
-        "scattering_intensity",
+    fluorescence_intensity_column_candidates: tuple[str, ...] = (
+        "col2",
         "Intensity",
         "intensity",
+        "Fluorescence intensity",
+        "fluorescence_intensity",
+        "Measured fluorescence",
+        "measured_fluorescence",
         "Peak position",
         "peak_position",
         "Peak",
         "peak",
     )
 
-    mie_model_column_candidates: tuple[str, ...] = (
-        "mie_model",
-        "Mie model",
-        "Model",
-        "model",
-    )
-
     automatic_peak_position_names: tuple[str, ...] = (
-        "peak_positions",
+        "new_peak_positions",
+        "new_x_positions",
         "detected_peak_positions",
         "automatic_peak_positions",
-        "new_peak_positions",
+        "peak_positions",
         "x_positions",
         "x_values",
-        "new_x_positions",
     )
 
     manual_peak_position_names: tuple[str, ...] = (
@@ -90,9 +351,9 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
         """
         if hasattr(
             page,
-            "get_scattering_backend",
+            "get_fluorescence_backend",
         ):
-            return page.get_scattering_backend(
+            return page.get_fluorescence_backend(
                 uploaded_fcs_path=uploaded_fcs_path,
             )
 
@@ -110,7 +371,10 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
             None,
         )
 
-        if backend is not None:
+        if backend is not None and hasattr(
+            backend,
+            "build_histogram",
+        ):
             return backend
 
         uploaded_fcs_path_clean = str(
@@ -120,25 +384,9 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
         if not uploaded_fcs_path_clean:
             return None
 
-        try:
-            page.backend = BackEnd(
-                fcs_file_path=uploaded_fcs_path_clean,
-            )
-
-            logger.debug(
-                "Rebuilt scattering backend from uploaded_fcs_path=%r",
-                uploaded_fcs_path_clean,
-            )
-
-            return page.backend
-
-        except Exception:
-            logger.exception(
-                "Failed to rebuild scattering backend from uploaded_fcs_path=%r",
-                uploaded_fcs_path_clean,
-            )
-
-            return None
+        return FluorescencePeakGraphBackendAdapter(
+            fcs_file_path=uploaded_fcs_path_clean,
+        )
 
     def apply_peak_process_result_to_table(
         self,
@@ -149,23 +397,20 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
         logger: logging.Logger,
     ) -> Any:
         """
-        Append x axis peak values to the scattering calibration table.
+        Append x axis peak values to the fluorescence calibration table.
 
         Manual graph clicks append exactly one scalar x value. Automatic peak
-        detection appends one scalar x value per detected peak.
+        detection appends one scalar x value for every detected peak.
         """
-        mie_model = resolve_mie_model(
-            context.get("mie_model"),
-        )
+        del context
 
         if getattr(
             result,
             "clear_existing_table_peaks",
             False,
         ):
-            return self.clear_scattering_peak_column(
+            return self.clear_fluorescence_peak_column(
                 table_data=table_data,
-                mie_model=mie_model,
             )
 
         x_values_to_append = self.extract_x_values_to_append(
@@ -174,21 +419,20 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
 
         if not x_values_to_append:
             logger.debug(
-                "Scattering peak process produced no x values to append."
+                "Fluorescence peak process produced no x values to append."
             )
 
             return dash.no_update
 
         logger.debug(
-            "Appending scattering peak x values to table: count=%d values=%r",
+            "Appending fluorescence peak x values to table: count=%d values=%r",
             len(x_values_to_append),
             x_values_to_append,
         )
 
-        return self.append_x_values_to_scattering_table(
+        return self.append_x_values_to_fluorescence_table(
             table_data=table_data,
             x_values=x_values_to_append,
-            mie_model=mie_model,
         )
 
     def extract_x_values_to_append(
@@ -265,7 +509,7 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
         names: tuple[str, ...],
     ) -> Any:
         """
-        Return the first non None value found as an attribute or dictionary key.
+        Return the first non None value found as an attribute or dict key.
         """
         for name in names:
             value = getattr(
@@ -300,6 +544,12 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
     ) -> list[Any]:
         """
         Extract only scalar x values from an arbitrary payload.
+
+        Examples
+        --------
+        {"x": 12.3, "y": 45.6} -> [12.3]
+        [{"x": 1, "y": 2}, {"x": 3, "y": 4}] -> [1, 3]
+        np.array([1, 2, 3]) -> [1, 2, 3]
         """
         raw_x_values = self.collect_raw_x_values(
             value=value,
@@ -500,18 +750,17 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
 
         return None
 
-    def append_x_values_to_scattering_table(
+    def append_x_values_to_fluorescence_table(
         self,
         *,
         table_data: Optional[list[dict[str, Any]]],
         x_values: list[Any],
-        mie_model: str,
     ) -> list[dict[str, Any]]:
         """
-        Append x values to the next empty scattering table rows.
+        Append x values to the next empty fluorescence table rows.
 
         Existing filled rows are preserved. New rows are created when there is no
-        empty ``measured_peak_position`` cell left.
+        empty ``col2`` cell left.
         """
         rows = self.normalize_table_data(
             table_data=table_data,
@@ -519,33 +768,25 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
 
         if not rows:
             rows = [
-                build_empty_table_row(
-                    mie_model=mie_model,
-                ),
+                self.build_empty_fluorescence_table_row(),
             ]
 
         target_column_name = self.find_first_existing_column_name(
             table_data=rows,
-            candidate_column_names=self.scattering_peak_column_candidates,
+            candidate_column_names=self.fluorescence_intensity_column_candidates,
         )
 
         if target_column_name is None:
-            target_column_name = self.scattering_peak_column_name
+            target_column_name = self.fluorescence_intensity_column_name
 
-        normalized_x_values = [
-            self.normalize_single_x_value_for_table(
+        for x_value in x_values:
+            normalized_x_value = self.normalize_single_x_value_for_table(
                 value=x_value,
             )
-            for x_value in x_values
-        ]
 
-        normalized_x_values = [
-            normalized_x_value
-            for normalized_x_value in normalized_x_values
-            if normalized_x_value != ""
-        ]
+            if normalized_x_value == "":
+                continue
 
-        for x_value in normalized_x_values:
             empty_row_index = self.find_first_empty_value_row_index(
                 rows=rows,
                 column_name=target_column_name,
@@ -553,18 +794,11 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
 
             if empty_row_index is None:
                 rows.append(
-                    build_empty_table_row(
-                        mie_model=mie_model,
-                    )
+                    self.build_empty_fluorescence_table_row(),
                 )
                 empty_row_index = len(rows) - 1
 
-            rows[empty_row_index][target_column_name] = x_value
-
-            self.ensure_row_matches_mie_model(
-                row=rows[empty_row_index],
-                mie_model=mie_model,
-            )
+            rows[empty_row_index][target_column_name] = normalized_x_value
 
         return self.normalize_table_data(
             table_data=rows,
@@ -579,8 +813,7 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
         Convert one x value to a Dash DataTable scalar.
 
         Dictionaries are explicitly reduced to their x component. This prevents
-        values like {"x": ..., "y": ...} from being written into
-        ``measured_peak_position``.
+        values like {"x": ..., "y": ...} from being written into ``col2``.
         """
         if isinstance(
             value,
@@ -608,9 +841,7 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
 
             if value.size == 1:
                 return self.normalize_single_x_value_for_table(
-                    value=value.reshape(
-                        -1,
-                    )[0],
+                    value=value.reshape(-1)[0],
                 )
 
             return ""
@@ -648,69 +879,35 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
             normalized_value,
         )
 
-    def clear_scattering_peak_column(
+    def clear_fluorescence_peak_column(
         self,
         *,
         table_data: Optional[list[dict[str, Any]]],
-        mie_model: str,
-    ) -> list[dict[str, Any]]:
+    ) -> Any:
         """
-        Clear the scattering measured peak column.
+        Clear the fluorescence measured peak column.
         """
         rows = self.normalize_table_data(
             table_data=table_data,
         )
 
         if not rows:
-            rows = [
-                build_empty_table_row(
-                    mie_model=mie_model,
-                )
-                for _ in range(3)
-            ]
+            return dash.no_update
 
         target_column_name = self.find_first_existing_column_name(
             table_data=rows,
-            candidate_column_names=self.scattering_peak_column_candidates,
+            candidate_column_names=self.fluorescence_intensity_column_candidates,
         )
 
         if target_column_name is None:
-            target_column_name = self.scattering_peak_column_name
+            target_column_name = self.fluorescence_intensity_column_name
 
         for row in rows:
             row[target_column_name] = ""
 
-            self.ensure_row_matches_mie_model(
-                row=row,
-                mie_model=mie_model,
-            )
-
-        return ensure_minimum_row_count(
-            rows=self.normalize_table_data(
-                table_data=rows,
-            ),
-            mie_model=mie_model,
-            minimum_row_count=3,
+        return self.normalize_table_data(
+            table_data=rows,
         )
-
-    def ensure_row_matches_mie_model(
-        self,
-        *,
-        row: dict[str, Any],
-        mie_model: str,
-    ) -> None:
-        """
-        Ensure a row contains the columns expected by the selected Mie model.
-        """
-        template_row = build_empty_table_row(
-            mie_model=mie_model,
-        )
-
-        for key, value in template_row.items():
-            row.setdefault(
-                key,
-                value,
-            )
 
     def find_first_empty_value_row_index(
         self,
@@ -740,67 +937,166 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
 
         return None
 
-
-def resolve_mie_model(
-    mie_model: Any,
-) -> str:
-    """
-    Resolve the Mie model name used by the scattering reference table.
-    """
-    mie_model_string = str(
-        mie_model or "",
-    ).strip()
-
-    if mie_model_string == "Core/Shell Sphere":
-        return "Core/Shell Sphere"
-
-    return "Solid Sphere"
-
-
-def build_empty_table_row(
-    *,
-    mie_model: str,
-) -> dict[str, str]:
-    """
-    Build an empty scattering calibration table row.
-    """
-    if mie_model == "Core/Shell Sphere":
+    def build_empty_fluorescence_table_row(self) -> dict[str, str]:
+        """
+        Build an empty fluorescence calibration table row.
+        """
         return {
-            "core_diameter_nm": "",
-            "shell_thickness_nm": "",
-            "outer_diameter_nm": "",
-            "measured_peak_position": "",
-            "expected_coupling": "",
+            "col1": "",
+            "col2": "",
         }
 
-    return {
-        "particle_diameter_nm": "",
-        "measured_peak_position": "",
-        "expected_coupling": "",
-    }
 
-
-def ensure_minimum_row_count(
+def estimate_histogram_peak_positions(
     *,
-    rows: list[dict[str, Any]],
-    mie_model: str,
-    minimum_row_count: int,
-) -> list[dict[str, Any]]:
+    values: np.ndarray,
+    peak_count: int,
+    number_of_bins: int,
+) -> list[float]:
     """
-    Ensure a minimum number of table rows.
+    Estimate peak positions from a one dimensional histogram.
     """
-    next_rows = [
-        dict(row)
-        for row in rows
+    values = np.asarray(
+        values,
+        dtype=float,
+    )
+
+    values = values[
+        np.isfinite(values)
     ]
 
-    while len(next_rows) < int(
-        minimum_row_count,
-    ):
-        next_rows.append(
-            build_empty_table_row(
-                mie_model=mie_model,
-            )
-        )
+    if values.size == 0:
+        return []
 
-    return next_rows
+    lower_quantile, upper_quantile = np.quantile(
+        values,
+        [
+            0.001,
+            0.999,
+        ],
+    )
+
+    values = values[
+        (values >= lower_quantile)
+        & (values <= upper_quantile)
+    ]
+
+    if values.size == 0:
+        return []
+
+    counts, bin_edges = np.histogram(
+        values,
+        bins=int(number_of_bins),
+    )
+
+    if counts.size == 0:
+        return []
+
+    smoothed_counts = smooth_counts(
+        counts=np.asarray(
+            counts,
+            dtype=float,
+        ),
+        window_size=7,
+    )
+
+    candidate_indices = find_local_maxima_indices(
+        values=smoothed_counts,
+    )
+
+    if not candidate_indices:
+        candidate_indices = [
+            int(index)
+            for index in np.argsort(smoothed_counts)[-int(peak_count):]
+        ]
+
+    candidate_indices = sorted(
+        candidate_indices,
+        key=lambda index: smoothed_counts[index],
+        reverse=True,
+    )
+
+    selected_indices = sorted(
+        candidate_indices[: int(peak_count)]
+    )
+
+    bin_centers = 0.5 * (
+        bin_edges[:-1] + bin_edges[1:]
+    )
+
+    return [
+        float(bin_centers[index])
+        for index in selected_indices
+        if 0 <= index < bin_centers.size
+    ]
+
+
+def smooth_counts(
+    *,
+    counts: np.ndarray,
+    window_size: int,
+) -> np.ndarray:
+    """
+    Smooth histogram counts using a moving average.
+    """
+    counts = np.asarray(
+        counts,
+        dtype=float,
+    )
+
+    if counts.size < 3:
+        return counts
+
+    resolved_window_size = max(
+        3,
+        int(window_size),
+    )
+
+    if resolved_window_size % 2 == 0:
+        resolved_window_size += 1
+
+    if counts.size < resolved_window_size:
+        resolved_window_size = counts.size
+
+        if resolved_window_size % 2 == 0:
+            resolved_window_size -= 1
+
+    if resolved_window_size < 3:
+        return counts
+
+    kernel = np.ones(
+        resolved_window_size,
+        dtype=float,
+    ) / float(resolved_window_size)
+
+    return np.convolve(
+        counts,
+        kernel,
+        mode="same",
+    )
+
+
+def find_local_maxima_indices(
+    *,
+    values: np.ndarray,
+) -> list[int]:
+    """
+    Find local maxima indices in a one dimensional signal.
+    """
+    values = np.asarray(
+        values,
+        dtype=float,
+    )
+
+    maxima_indices: list[int] = []
+
+    for index in range(
+        1,
+        values.size - 1,
+    ):
+        if values[index] >= values[index - 1] and values[index] >= values[index + 1]:
+            maxima_indices.append(
+                index,
+            )
+
+    return maxima_indices

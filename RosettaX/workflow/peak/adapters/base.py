@@ -32,9 +32,8 @@ class BasePeakWorkflowAdapter:
     """
     Base adapter for page specific peak workflow behavior.
 
-    The shared peak workflow callbacks should not know how a page stores its
-    uploaded FCS path, peak lines, backend instance, or calibration table. This
-    adapter provides common state handling and JSON safe DataTable utilities.
+    This class owns common page state helpers and small DataTable utilities.
+    Subclasses still decide which table column receives peak positions.
     """
 
     uploaded_fcs_path_keys: tuple[str, ...] = (
@@ -51,6 +50,41 @@ class BasePeakWorkflowAdapter:
     )
 
     default_peak_lines_payload_key: str = "peak_lines_payload"
+
+    delta_peak_value_names: tuple[str, ...] = (
+        "new_peak_positions",
+        "new_x_positions",
+        "detected_peak_positions",
+        "automatic_peak_positions",
+    )
+
+    manual_peak_value_names: tuple[str, ...] = (
+        "clicked_x",
+        "clicked_x_position",
+        "clicked_point",
+        "new_point",
+        "manual_x",
+        "manual_x_position",
+    )
+
+    cumulative_peak_value_names: tuple[str, ...] = (
+        "peak_values",
+        "peak_positions",
+        "peaks",
+        "x_positions",
+        "x_values",
+        "values",
+    )
+
+    mapping_x_value_keys: tuple[str, ...] = (
+        "x",
+        "clicked_x",
+        "clicked_x_position",
+        "x_position",
+        "position",
+        "value",
+        "peak_position",
+    )
 
     def get_page_state_from_payload(
         self,
@@ -197,7 +231,11 @@ class BasePeakWorkflowAdapter:
                 uploaded_fcs_path=uploaded_fcs_path,
             )
 
-        backend = getattr(page, "backend", None)
+        backend = getattr(
+            page,
+            "backend",
+            None,
+        )
 
         if backend is not None:
             return backend
@@ -228,51 +266,54 @@ class BasePeakWorkflowAdapter:
         """
         Extract peak values from common result payload shapes.
 
-        The returned list is flattened and converted to Dash DataTable safe
-        scalar values.
+        Delta fields are preferred over cumulative fields. This prevents manual
+        2D clicks from appending all previously clicked points again.
         """
         if result is None:
             return []
 
-        for attribute_name in (
-            "new_peak_positions",
-            "peak_values",
-            "peak_positions",
-            "peaks",
-            "x_values",
-            "values",
-        ):
-            value = getattr(
-                result,
-                attribute_name,
-                None,
+        delta_value = self.get_first_attribute_or_key(
+            source=result,
+            names=self.delta_peak_value_names,
+        )
+
+        if delta_value is not None:
+            return self.normalize_datatable_values(
+                value=delta_value,
             )
 
-            if value is not None:
-                return self.normalize_datatable_values(
-                    value=value,
-                )
+        manual_value = self.get_first_attribute_or_key(
+            source=result,
+            names=self.manual_peak_value_names,
+        )
 
-        if isinstance(result, dict):
-            for key in (
-                "new_peak_positions",
-                "peak_values",
-                "peak_positions",
-                "peaks",
-                "x_values",
-                "values",
-            ):
-                value = result.get(key)
+        if manual_value is not None:
+            values = self.normalize_datatable_values(
+                value=manual_value,
+            )
 
-                if value is not None:
-                    return self.normalize_datatable_values(
-                        value=value,
-                    )
+            if values:
+                return [
+                    values[-1],
+                ]
 
-        peak_lines_payload = getattr(
-            result,
-            "peak_lines_payload",
-            None,
+            return []
+
+        cumulative_value = self.get_first_attribute_or_key(
+            source=result,
+            names=self.cumulative_peak_value_names,
+        )
+
+        if cumulative_value is not None:
+            return self.normalize_datatable_values(
+                value=cumulative_value,
+            )
+
+        peak_lines_payload = self.get_first_attribute_or_key(
+            source=result,
+            names=(
+                "peak_lines_payload",
+            ),
         )
 
         if peak_lines_payload is not None:
@@ -283,6 +324,34 @@ class BasePeakWorkflowAdapter:
             )
 
         return []
+
+    def get_first_attribute_or_key(
+        self,
+        *,
+        source: Any,
+        names: tuple[str, ...],
+    ) -> Any:
+        """
+        Return the first non None value found as an attribute or dictionary key.
+        """
+        for name in names:
+            value = getattr(
+                source,
+                name,
+                None,
+            )
+
+            if value is not None:
+                return value
+
+        if isinstance(source, dict):
+            for name in names:
+                value = source.get(name)
+
+                if value is not None:
+                    return value
+
+        return None
 
     def extract_peak_values_from_peak_lines_payload(
         self,
@@ -297,6 +366,10 @@ class BasePeakWorkflowAdapter:
 
         if isinstance(peak_lines_payload, dict):
             for key in (
+                "new_peak_positions",
+                "new_x_positions",
+                "detected_peak_positions",
+                "automatic_peak_positions",
                 "x",
                 "xs",
                 "values",
@@ -319,10 +392,12 @@ class BasePeakWorkflowAdapter:
 
                 for point in points:
                     if isinstance(point, dict):
-                        for key in ("x", "value", "position"):
-                            if key in point:
-                                values.append(point[key])
-                                break
+                        extracted_value = self.extract_x_value_from_mapping(
+                            mapping=point,
+                        )
+
+                        if extracted_value is not None:
+                            values.append(extracted_value)
 
                 return values
 
@@ -331,10 +406,12 @@ class BasePeakWorkflowAdapter:
 
             for item in peak_lines_payload:
                 if isinstance(item, dict):
-                    for key in ("x", "value", "position"):
-                        if key in item:
-                            values.append(item[key])
-                            break
+                    extracted_value = self.extract_x_value_from_mapping(
+                        mapping=item,
+                    )
+
+                    if extracted_value is not None:
+                        values.append(extracted_value)
 
                 else:
                     values.append(item)
@@ -391,10 +468,6 @@ class BasePeakWorkflowAdapter:
     ) -> Any:
         """
         Apply values to the first matching column found in a Dash DataTable.
-
-        Every written value is converted to a JSON safe scalar. This prevents
-        Dash DataTable errors caused by NumPy arrays, NumPy scalars, lists, or
-        other non scalar objects.
         """
         normalized_values = self.normalize_datatable_values(
             value=values,
@@ -503,6 +576,9 @@ class BasePeakWorkflowAdapter:
             if normalized_value is None:
                 continue
 
+            if normalized_value == "":
+                continue
+
             normalized_values.append(
                 normalized_value,
             )
@@ -517,11 +593,23 @@ class BasePeakWorkflowAdapter:
         """
         Flatten common scalar containers.
 
-        DataTable cells must not receive lists or arrays, so nested values are
-        flattened before writing to rows.
+        Dictionaries are interpreted as 2D or structured peak payloads. In that
+        case only the x-like coordinate is returned.
         """
         if value is None:
             return []
+
+        if isinstance(value, dict):
+            extracted_value = self.extract_x_value_from_mapping(
+                mapping=value,
+            )
+
+            if extracted_value is None:
+                return []
+
+            return self.flatten_datatable_values(
+                value=extracted_value,
+            )
 
         if isinstance(value, np.ndarray):
             if value.ndim == 0:
@@ -529,10 +617,16 @@ class BasePeakWorkflowAdapter:
                     value.item(),
                 ]
 
-            return [
-                item
-                for item in value.reshape(-1).tolist()
-            ]
+            flattened_values: list[Any] = []
+
+            for item in value.reshape(-1).tolist():
+                flattened_values.extend(
+                    self.flatten_datatable_values(
+                        value=item,
+                    )
+                )
+
+            return flattened_values
 
         if isinstance(value, np.generic):
             return [
@@ -540,7 +634,7 @@ class BasePeakWorkflowAdapter:
             ]
 
         if isinstance(value, (list, tuple)):
-            flattened_values: list[Any] = []
+            flattened_values = []
 
             for item in value:
                 flattened_values.extend(
@@ -555,6 +649,20 @@ class BasePeakWorkflowAdapter:
             value,
         ]
 
+    def extract_x_value_from_mapping(
+        self,
+        *,
+        mapping: dict[str, Any],
+    ) -> Any:
+        """
+        Extract the x-like scalar from a structured peak payload.
+        """
+        for key in self.mapping_x_value_keys:
+            if key in mapping:
+                return mapping[key]
+
+        return None
+
     def normalize_datatable_value(
         self,
         *,
@@ -562,9 +670,6 @@ class BasePeakWorkflowAdapter:
     ) -> Any:
         """
         Convert one value to a Dash DataTable compatible scalar.
-
-        Valid Dash DataTable cell values are string, number, and boolean. Empty
-        or invalid values are returned as an empty string.
         """
         if value is None:
             return ""
@@ -611,7 +716,28 @@ class BasePeakWorkflowAdapter:
             except (TypeError, ValueError):
                 return str(value)
 
-        if isinstance(value, (list, tuple, dict)):
-            return str(value)
+        if isinstance(value, dict):
+            extracted_value = self.extract_x_value_from_mapping(
+                mapping=value,
+            )
+
+            if extracted_value is None:
+                return ""
+
+            return self.normalize_datatable_value(
+                value=extracted_value,
+            )
+
+        if isinstance(value, (list, tuple)):
+            values = self.flatten_datatable_values(
+                value=value,
+            )
+
+            if len(values) == 1:
+                return self.normalize_datatable_value(
+                    value=values[0],
+                )
+
+            return ""
 
         return str(value)

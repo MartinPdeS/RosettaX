@@ -6,10 +6,10 @@ import inspect
 import numpy as np
 import plotly.graph_objs as go
 
-from RosettaX.workflow.peak_workflow.core import detectors
-from RosettaX.workflow.peak_workflow.scripts import registry
-from RosettaX.utils import casting
-from RosettaX.utils import plottings
+from . import detectors
+from .. import registry
+from ..graph_range import apply_stable_2d_axis_ranges
+from RosettaX.utils import casting, plottings
 from RosettaX.utils.runtime_config import RuntimeConfig
 
 
@@ -257,6 +257,8 @@ def build_process_specific_figure(
             detector_channels=detector_channels,
             peak_lines_payload=peak_lines_payload,
             max_events_for_plots=max_events_for_plots,
+            xscale_selection=xscale_selection,
+            yscale_selection=yscale_selection,
         )
 
     return plottings._make_info_figure(
@@ -348,12 +350,17 @@ def build_default_2d_scatter_figure(
     detector_channels: dict[str, Any],
     peak_lines_payload: Any,
     max_events_for_plots: int,
+    xscale_selection: Any,
+    yscale_selection: Any,
 ) -> go.Figure:
     """
     Build a fallback two dimensional scatter figure.
 
     Manual 2D clicks are rendered as vertical guide lines at the clicked x
     positions, plus markers at the clicked coordinates.
+
+    Axis limits are clamped from the event data only. Picked peak annotations
+    are never allowed to determine the displayed axis range.
     """
     required_channel_names = get_required_detector_channels(
         process=process,
@@ -430,10 +437,24 @@ def build_default_2d_scatter_figure(
         hovermode="closest",
     )
 
-    return add_manual_2d_peak_annotations(
+    figure = add_manual_2d_peak_annotations(
         figure=figure,
         peak_lines_payload=peak_lines_payload,
     )
+
+    figure = apply_stable_2d_axis_ranges(
+        figure=figure,
+        x_values=x_values,
+        y_values=y_values,
+        x_log_scale=scale_selection_is_log(
+            xscale_selection,
+        ),
+        y_log_scale=scale_selection_is_log(
+            yscale_selection,
+        ),
+    )
+
+    return figure
 
 
 def add_manual_2d_peak_annotations(

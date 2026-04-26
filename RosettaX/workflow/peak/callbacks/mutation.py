@@ -2,11 +2,11 @@
 
 from typing import Any, Optional
 import logging
-
+import inspect
 import dash
 
-from RosettaX.workflow.peak_workflow.core import detectors
-from RosettaX.workflow.peak_workflow.scripts import registry
+from ..core import detectors
+from .. import registry
 from RosettaX.utils import casting
 from RosettaX.utils.runtime_config import RuntimeConfig
 
@@ -560,6 +560,10 @@ def handle_run_action(
 ) -> tuple[Any, Any, list[Any]]:
     """
     Handle an automatic run action.
+
+    Process settings from the Dash controls are passed to the script through
+    ``process_settings``. Legacy scripts that still expect ``peak_count`` also
+    receive that value when their signature supports it.
     """
     if not context_is_valid_for_process(
         process=process,
@@ -617,11 +621,26 @@ def handle_run_action(
         uploaded_fcs_path=uploaded_fcs_path,
     )
 
-    result = process.run_automatic_action(
+    logger.debug(
+        "Running automatic peak process with target_process_name=%r "
+        "detector_channels=%r process_settings=%r resolved_peak_count=%r "
+        "resolved_max_events=%r",
+        target_process_name,
+        detector_channels,
+        process_settings,
+        resolved_peak_count,
+        resolved_max_events,
+    )
+
+    result = call_run_automatic_action_with_supported_arguments(
+        process=process,
         backend=backend,
         detector_channels=detector_channels,
+        process_settings=process_settings,
         peak_count=resolved_peak_count,
         max_events_for_analysis=resolved_max_events,
+        max_events_for_plots=resolved_max_events,
+        runtime_config_data=runtime_config_data,
     )
 
     if result is None:
@@ -654,6 +673,74 @@ def handle_run_action(
         page_state.to_dict(),
         table_result,
         status_children,
+    )
+
+
+def call_run_automatic_action_with_supported_arguments(
+    *,
+    process: Any,
+    backend: Any,
+    detector_channels: dict[str, Any],
+    process_settings: dict[str, Any],
+    peak_count: int,
+    max_events_for_analysis: int,
+    max_events_for_plots: int,
+    runtime_config_data: Any,
+) -> Any:
+    """
+    Call ``run_automatic_action`` with only the keyword arguments supported by
+    the selected process.
+
+    This keeps older 1D scripts compatible while allowing newer scripts to use
+    the full process_settings dictionary.
+    """
+    run_automatic_action = getattr(
+        process,
+        "run_automatic_action",
+        None,
+    )
+
+    if not callable(run_automatic_action):
+        logger.debug(
+            "Process %r does not implement run_automatic_action.",
+            getattr(process, "process_name", process),
+        )
+
+        return None
+
+    candidate_arguments = {
+        "backend": backend,
+        "detector_channels": detector_channels,
+        "process_settings": process_settings,
+        "settings": process_settings,
+        "peak_count": peak_count,
+        "max_events_for_analysis": max_events_for_analysis,
+        "max_events_for_plots": max_events_for_plots,
+        "runtime_config_data": runtime_config_data,
+    }
+
+    signature = inspect.signature(
+        run_automatic_action,
+    )
+
+    accepts_arbitrary_keywords = any(
+        parameter.kind == inspect.Parameter.VAR_KEYWORD
+        for parameter in signature.parameters.values()
+    )
+
+    if accepts_arbitrary_keywords:
+        return run_automatic_action(
+            **candidate_arguments,
+        )
+
+    supported_arguments = {
+        argument_name: argument_value
+        for argument_name, argument_value in candidate_arguments.items()
+        if argument_name in signature.parameters
+    }
+
+    return run_automatic_action(
+        **supported_arguments,
     )
 
 

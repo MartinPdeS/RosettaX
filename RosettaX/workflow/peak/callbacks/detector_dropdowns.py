@@ -5,7 +5,7 @@ import logging
 
 import dash
 
-from RosettaX.workflow.peak_workflow.core import detectors
+from ..core import detectors
 
 
 logger = logging.getLogger(__name__)

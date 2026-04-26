@@ -3,10 +3,10 @@
 from typing import Any
 import logging
 
-from RosettaX.workflow.peak_workflow.adapters import FluorescencePeakWorkflowAdapter
-from RosettaX.workflow.peak.callbacks import register_peak_callbacks
+from RosettaX.workflow.peak.adapters.fluorescence import FluorescencePeakWorkflowAdapter
+from RosettaX.workflow.peak.callbacks.main import register_peak_callbacks
 from RosettaX.workflow.peak.layout import PeakLayout
-from RosettaX.workflow.peak_workflow.models import PeakConfig
+from RosettaX.workflow.peak.models import PeakConfig
 
 
 logger = logging.getLogger(__name__)

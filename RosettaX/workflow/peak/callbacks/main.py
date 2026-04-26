@@ -3,8 +3,8 @@
 from typing import Any
 import logging
 
-from RosettaX.workflow.peak_workflow.callbacks import PeakWorkflowCallbacks
-from RosettaX.workflow.peak_workflow.models import PeakConfig
+from .shared import PeakWorkflowCallbacks
+from ..models import PeakConfig
 
 
 def register_peak_callbacks(

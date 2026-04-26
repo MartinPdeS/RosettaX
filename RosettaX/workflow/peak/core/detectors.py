@@ -3,8 +3,7 @@
 from typing import Any, Optional
 import logging
 
-from ..scripts.registry import resolve_detector_channel_state
-from ..scripts.registry import resolve_process_name
+from .. import registry
 from RosettaX.utils.reader import FCSFile
 
 
@@ -229,7 +228,7 @@ def resolve_detector_channels_for_process(
     dict[str, Any]
         Mapping from logical channel name to selected FCS column.
     """
-    channel_state = resolve_detector_channel_state(
+    channel_state = registry.resolve_detector_channel_state(
         detector_dropdown_ids=detector_dropdown_ids or [],
         detector_dropdown_values=detector_dropdown_values or [],
         process_name=process_name,
@@ -269,7 +268,7 @@ def resolve_process_setting_state(
     dict[str, Any]
         Mapping from setting name to value.
     """
-    resolved_process_name = resolve_process_name(
+    resolved_process_name = registry.resolve_process_name(
         process_name,
     )
 

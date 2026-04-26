@@ -3,11 +3,8 @@
 from typing import Any
 import logging
 
-from RosettaX.workflow.peak_workflow.adapters import ScatteringPeakWorkflowAdapter
-from RosettaX.workflow.peak.callbacks import register_peak_callbacks
-from RosettaX.workflow.peak.layout import PeakLayout
-from RosettaX.workflow.peak_workflow.models import PeakConfig
-
+from RosettaX.workflow.peak.adapters.scattering import ScatteringPeakWorkflowAdapter
+from RosettaX.workflow import peak
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +27,7 @@ class Peaks:
         self.ids = page.ids.Scattering
         self.adapter = ScatteringPeakWorkflowAdapter()
 
-        self.config = PeakConfig(
+        self.config = peak.models.PeakConfig(
             header_title="2. Scattering peak detection",
             process_dropdown_label="Peak process",
             graph_title="Scattering peak detection graph",
@@ -41,7 +38,7 @@ class Peaks:
             mie_model_input_id=self.page.ids.Parameters.mie_model,
         )
 
-        self.layout_builder = PeakLayout(
+        self.layout_builder = peak.layout.PeakLayout(
             ids=self.ids,
             config=self.config,
         )
@@ -61,7 +58,7 @@ class Peaks:
         """
         Register scattering peak workflow callbacks.
         """
-        register_peak_callbacks(
+        peak.callbacks.main.register_peak_callbacks(
             page=self.page,
             ids=self.ids,
             adapter=self.adapter,

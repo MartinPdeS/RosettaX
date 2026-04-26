@@ -4,8 +4,8 @@ from typing import Any
 
 import dash
 
-from RosettaX.workflow.peak_workflow.core import graphing
-from RosettaX.workflow.peak_workflow.scripts import registry
+from ..core import graphing
+from .. import registry
 
 
 def register_visibility_callbacks(

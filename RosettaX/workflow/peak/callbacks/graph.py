@@ -6,7 +6,7 @@ import logging
 import dash
 import plotly.graph_objs as go
 
-from RosettaX.workflow.peak_workflow.core import graphing
+from ..core import graphing
 from RosettaX.utils import plottings
 
 
