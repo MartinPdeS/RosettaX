@@ -24,7 +24,7 @@ logo = documentation.joinpath("images/logo.png")
 
 css = documentation.joinpath("source/_static/default.css")
 
-fcs_data = root / "fcs"
+fcs_data = root / "data"
 
 profiles = root / "profiles"
 

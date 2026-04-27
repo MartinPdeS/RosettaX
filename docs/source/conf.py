@@ -4,10 +4,9 @@
 import sys
 import os
 from sphinx_gallery.sorting import FileNameSortKey
-from MPSPlots.styles import use_mpsplots_style
 from pathlib import Path
 import RosettaX
-from RosettaX.directories import css
+from RosettaX.utils.directories import css
 
 
 package_name = "RosettaX"
