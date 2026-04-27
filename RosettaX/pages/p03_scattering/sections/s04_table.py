@@ -7,11 +7,10 @@ import dash
 import dash_bootstrap_components as dbc
 
 from RosettaX.pages.p00_sidebar.ids import SidebarIds
-from RosettaX.pages.p03_scattering.sections.s03_parameters import services
+from RosettaX.pages.p03_scattering.sections import s04_table_services as services
 from RosettaX.pages.p03_scattering.state import ScatteringPageState
 from RosettaX.utils import styling
 from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.workflow import table as workflow_table
 
 
 logger = logging.getLogger(__name__)
@@ -19,36 +18,29 @@ logger = logging.getLogger(__name__)
 
 class ReferenceTable:
     """
-    Scattering calibration reference table section.
+    Scattering calibration standard table section.
 
     Responsibilities
     ----------------
-    - Render the scattering calibration reference table.
+    - Render the scattering calibration standard table.
     - Render the add row button.
-    - Render the expected coupling computation action.
+    - Render the standard coupling computation action.
     - Populate the table from the default runtime profile at layout creation.
     - Rebuild the table from runtime profile values when a profile is loaded.
     - Synchronize table schema with the selected Mie model.
-    - Compute expected coupling values from the current optical and particle
-      parameters.
-    - Store the scattering parameter payload in the scattering page state.
+    - Compute modeled coupling values from the current calibration standard
+      optical and particle parameters.
+    - Store the calibration standard parameter payload in the scattering page state.
 
     Ownership rule
     --------------
-    This section owns the calibration reference table and the model computation
-    action. The calibration section only reads the table when fitting.
+    This section owns the calibration standard table and the standard coupling
+    computation action. The calibration section reads the table when fitting the
+    instrument response.
     """
 
     sphere_table_columns = services.sphere_table_columns
     core_shell_table_columns = services.core_shell_table_columns
-
-    sphere_user_data_column_ids = workflow_table.get_column_ids(
-        columns=sphere_table_columns,
-    )
-
-    core_shell_user_data_column_ids = workflow_table.get_column_ids(
-        columns=core_shell_table_columns,
-    )
 
     def __init__(
         self,
@@ -64,7 +56,7 @@ class ReferenceTable:
 
     def get_layout(self) -> dbc.Card:
         """
-        Build the scattering reference table layout.
+        Build the scattering calibration standard table layout.
         """
         logger.debug("Building Scattering ReferenceTable layout.")
 
@@ -86,7 +78,7 @@ class ReferenceTable:
         Build the section header.
         """
         return dbc.CardHeader(
-            "4. Calibration reference table",
+            "4. Calibration standard table",
         )
 
     def _build_body(self) -> dbc.CardBody:
@@ -107,20 +99,21 @@ class ReferenceTable:
 
     def _build_reference_table_section(self) -> dash.html.Div:
         """
-        Build the reference table block.
+        Build the calibration standard table block.
         """
         default_columns, default_rows = self._build_default_table_state()
 
         return dash.html.Div(
             [
-                dash.html.H5("Calibration reference table"),
+                dash.html.H5("Calibration standard table"),
                 dash.html.Div(
                     (
-                        "The table is the source of truth. Edit the particle "
-                        "geometry directly here. Measured peak positions are "
-                        "optional at this stage. First click Compute Expected "
-                        "Coupling to fill the model column. Then click Fit "
-                        "Calibration in the next section."
+                        "This table defines the calibration standard used to infer "
+                        "the instrument response. Edit the standard particle geometry "
+                        "directly here. Measured peak positions are optional at this "
+                        "stage. First click Compute Standard Coupling to fill the "
+                        "modeled coupling column. Then fit the instrument response in "
+                        "the next section."
                     ),
                     style={
                         "marginBottom": "10px",
@@ -150,15 +143,16 @@ class ReferenceTable:
 
     def _build_compute_model_block(self) -> dash.html.Div:
         """
-        Build the expected coupling computation block.
+        Build the standard coupling computation block.
         """
         return dash.html.Div(
             [
                 self._build_compute_model_button(),
                 dash.html.Div(
                     (
-                        "This step fills the expected coupling column in the "
-                        "table using the current optical and particle parameters."
+                        "This step fills the modeled coupling column for the "
+                        "calibration standard using the current optical and particle "
+                        "parameters."
                     ),
                     style={
                         "marginTop": "8px",
@@ -170,10 +164,10 @@ class ReferenceTable:
 
     def _build_compute_model_button(self) -> dash.html.Button:
         """
-        Build the expected coupling computation button.
+        Build the standard coupling computation button.
         """
         return dash.html.Button(
-            "Compute Expected Coupling",
+            "Compute Standard Coupling",
             id=self.ids.compute_model_btn,
             n_clicks=0,
             style={
@@ -187,15 +181,15 @@ class ReferenceTable:
         """
         runtime_config = RuntimeConfig.from_default_profile()
 
-        return build_table_state_from_runtime_config(
+        return services.build_table_state_from_runtime_config(
             runtime_config=runtime_config,
         )
 
     def register_callbacks(self) -> None:
         """
-        Register reference table callbacks.
+        Register calibration standard table callbacks.
         """
-        logger.debug("Registering Scattering ReferenceTable callbacks.")
+        logger.debug("Registering scattering calibration standard table callbacks.")
 
         self._register_table_default_population_callback()
         self._register_table_callbacks()
@@ -241,10 +235,6 @@ class ReferenceTable:
                 runtime_config_data if isinstance(runtime_config_data, dict) else None
             )
 
-            profile_load_was_requested = workflow_table.profile_load_was_requested(
-                profile_load_event_data=profile_load_event_data,
-            )
-
             resolved_mie_model = services.resolve_mie_model(
                 runtime_config.get_str(
                     "particle_model.mie_model",
@@ -252,50 +242,49 @@ class ReferenceTable:
                 )
             )
 
+            should_rebuild_table = services.should_rebuild_table_from_runtime_config(
+                mie_model=resolved_mie_model,
+                profile_load_event_data=profile_load_event_data,
+                current_rows=current_rows,
+            )
+
             normalized_current_rows = services.normalize_table_rows(
                 mie_model=resolved_mie_model,
                 current_rows=current_rows,
             )
 
-            user_data_column_ids = get_user_data_column_ids_for_model(
+            user_data_column_ids = services.get_user_data_column_ids_for_model(
                 resolved_mie_model,
             )
 
             logger.debug(
                 "populate_table_from_runtime_defaults_callback called with "
-                "triggered_id=%r profile_load_was_requested=%r "
+                "triggered_id=%r should_rebuild_table=%r "
                 "profile_load_event_data=%r resolved_mie_model=%r "
                 "user_data_column_ids=%r current_rows=%r",
                 dash.ctx.triggered_id,
-                profile_load_was_requested,
+                should_rebuild_table,
                 profile_load_event_data,
                 resolved_mie_model,
                 user_data_column_ids,
                 normalized_current_rows,
             )
 
-            should_rebuild_table = workflow_table.should_rebuild_table_from_runtime_config(
-                profile_load_was_requested=profile_load_was_requested,
-                current_rows=normalized_current_rows,
-                user_data_column_ids=user_data_column_ids,
-            )
-
             if not should_rebuild_table:
                 logger.debug(
-                    "Reference table already contains user data and no profile "
-                    "load was requested. Leaving it unchanged."
+                    "Calibration standard table already contains user data and no "
+                    "profile load was requested. Leaving it unchanged."
                 )
 
                 return dash.no_update, dash.no_update
 
-            columns, rows = build_table_state_from_runtime_config(
+            columns, rows = services.build_table_state_from_runtime_config(
                 runtime_config=runtime_config,
             )
 
             logger.debug(
-                "Rebuilt scattering reference table from runtime config. "
-                "profile_load_was_requested=%r columns=%r rows=%r",
-                profile_load_was_requested,
+                "Rebuilt scattering calibration standard table from runtime config. "
+                "columns=%r rows=%r",
                 columns,
                 rows,
             )
@@ -372,18 +361,13 @@ class ReferenceTable:
                 None if rows is None else len(rows),
             )
 
-            resolved_mie_model = services.resolve_mie_model(
-                mie_model,
-            )
-
-            next_rows = workflow_table.copy_table_rows(
+            next_rows = services.add_empty_row_for_model(
+                mie_model=mie_model,
                 rows=rows,
             )
 
-            next_rows.append(
-                services.build_empty_row_for_model(
-                    resolved_mie_model,
-                )
+            resolved_mie_model = services.resolve_mie_model(
+                mie_model,
             )
 
             logger.debug(
@@ -409,7 +393,7 @@ class ReferenceTable:
             data_timestamp: Any,
             mie_model: Any,
             current_rows: Optional[list[dict[str, Any]]],
-        ) -> list[dict[str, str]]:
+        ) -> list[dict[str, Any]]:
             logger.debug(
                 "normalize_table_after_user_edit called with data_timestamp=%r "
                 "mie_model=%r row_count=%r",
@@ -438,7 +422,7 @@ class ReferenceTable:
 
     def _register_compute_model_callback(self) -> None:
         """
-        Register expected coupling computation.
+        Register standard coupling computation.
         """
 
         @dash.callback(
@@ -497,7 +481,7 @@ class ReferenceTable:
                 mie_model,
             )
 
-            scattering_parameters_payload = build_scattering_parameters_payload(
+            calibration_standard_parameters_payload = services.build_scattering_parameters_payload(
                 mie_model=resolved_mie_model,
                 medium_refractive_index=medium_refractive_index,
                 particle_refractive_index=particle_refractive_index,
@@ -517,16 +501,8 @@ class ReferenceTable:
             )
 
             page_state = page_state.update(
-                scattering_parameters_payload=scattering_parameters_payload,
+                scattering_parameters_payload=calibration_standard_parameters_payload,
             )
-
-            if not current_rows:
-                empty_rows = services.build_empty_rows_for_model(
-                    resolved_mie_model,
-                    row_count=3,
-                )
-
-                return empty_rows, page_state.to_dict()
 
             computed_rows = services.compute_model_for_rows(
                 mie_model=resolved_mie_model,
@@ -545,11 +521,17 @@ class ReferenceTable:
                 logger=logger,
             )
 
+            logger.debug(
+                "compute_model returning resolved_mie_model=%r row_count=%d",
+                resolved_mie_model,
+                len(computed_rows),
+            )
+
             return computed_rows, page_state.to_dict()
 
     def _register_post_compute_cleanup_callback(self) -> None:
         """
-        Clear table selection after expected coupling computation.
+        Clear table selection after standard coupling computation.
         """
 
         @dash.callback(
@@ -562,114 +544,8 @@ class ReferenceTable:
             _n_clicks: int,
         ) -> tuple[None, list]:
             logger.debug(
-                "Clearing scattering reference table selection after Compute Expected Coupling."
+                "Clearing scattering calibration standard table selection after "
+                "Compute Standard Coupling."
             )
 
             return None, []
-
-
-def get_user_data_column_ids_for_model(
-    mie_model: Any,
-) -> list[str]:
-    """
-    Return the table columns that should count as user data for a Mie model.
-    """
-    resolved_mie_model = services.resolve_mie_model(
-        mie_model,
-    )
-
-    columns = services.get_table_columns_for_model(
-        resolved_mie_model,
-    )
-
-    return workflow_table.get_column_ids(
-        columns=columns,
-    )
-
-
-def build_table_state_from_runtime_config(
-    *,
-    runtime_config: RuntimeConfig,
-) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    """
-    Build table columns and rows from a runtime configuration.
-
-    This function is used both during initial layout creation and during sidebar
-    profile loading.
-    """
-    resolved_mie_model = services.resolve_mie_model(
-        runtime_config.get_str(
-            "particle_model.mie_model",
-            default="Solid Sphere",
-        )
-    )
-
-    columns = services.get_table_columns_for_model(
-        resolved_mie_model,
-    )
-
-    rows = services.populate_table_from_runtime_defaults(
-        mie_model=resolved_mie_model,
-        runtime_particle_diameters_nm=runtime_config.get_path(
-            "particle_model.particle_diameter_nm",
-            default=[],
-        ),
-        runtime_core_diameters_nm=runtime_config.get_path(
-            "particle_model.core_diameter_nm",
-            default=[],
-        ),
-        runtime_shell_thicknesses_nm=runtime_config.get_path(
-            "particle_model.shell_thickness_nm",
-            default=[],
-        ),
-    )
-
-    if not rows:
-        rows = services.build_empty_rows_for_model(
-            resolved_mie_model,
-            row_count=3,
-        )
-
-    logger.debug(
-        "Built scattering reference table state from runtime config. "
-        "resolved_mie_model=%r columns=%r rows=%r",
-        resolved_mie_model,
-        columns,
-        rows,
-    )
-
-    return columns, rows
-
-
-def build_scattering_parameters_payload(
-    *,
-    mie_model: Any,
-    medium_refractive_index: Any,
-    particle_refractive_index: Any,
-    core_refractive_index: Any,
-    shell_refractive_index: Any,
-    wavelength_nm: Any,
-    detector_numerical_aperture: Any,
-    detector_cache_numerical_aperture: Any,
-    blocker_bar_numerical_aperture: Any,
-    detector_sampling: Any,
-    detector_phi_angle_degree: Any,
-    detector_gamma_angle_degree: Any,
-) -> dict[str, Any]:
-    """
-    Build the serializable scattering parameter payload stored in page state.
-    """
-    return {
-        "mie_model": mie_model,
-        "medium_refractive_index": medium_refractive_index,
-        "particle_refractive_index": particle_refractive_index,
-        "core_refractive_index": core_refractive_index,
-        "shell_refractive_index": shell_refractive_index,
-        "wavelength_nm": wavelength_nm,
-        "detector_numerical_aperture": detector_numerical_aperture,
-        "detector_cache_numerical_aperture": detector_cache_numerical_aperture,
-        "blocker_bar_numerical_aperture": blocker_bar_numerical_aperture,
-        "detector_sampling": detector_sampling,
-        "detector_phi_angle_degree": detector_phi_angle_degree,
-        "detector_gamma_angle_degree": detector_gamma_angle_degree,
-    }
