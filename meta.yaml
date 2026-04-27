@@ -1,60 +1,80 @@
+{% set version = GIT_DESCRIBE_TAG.replace("v", "") %}
+
 package:
   name: rosettax
-  version: {{ GIT_DESCRIBE_TAG }}
+  version: {{ version }}
 
 source:
-  path: ../
-  git_url: https://github.com/MartinPdeS/RosettaX.git
+  path: ..
 
 build:
-  noarch: python
-  script: "{{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation"
   number: 0
-
-channels:
-  - conda-forge
-  - martinpdes
+  script: "{{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation"
+  skip: true  # [py<310 or py>=314]
 
 requirements:
   host:
-    - python >=3.10
-    - setuptools >=40.8.0
-    - wheel
-    - setuptools-scm >=8.0
+    - python >=3.10,<3.14
     - pip
+    - setuptools >=64
+    - setuptools-scm >=8
+    - wheel
+
   run:
+    - python >=3.10,<3.14
     - numpy
     - pandas
+    - scipy
+    - plotly
+    - dash
+    - dash-bootstrap-components
+    - flask
+    - pydantic
+    - platformdirs
     - martinpdes::mpsplots
     - martinpdes::pymiesim
-
-
-about:
-  home: https://github.com/MartinPdeS/RosettaX
-  license: MIT
-  summary: "A package for refractive index values."
-  description: PyOptik is a library that helps the end-user to build it's own refractive index library.
-  dev_url: https://github.com/MartinPdeS/RosettaX
-  doc_url: https://rosettax.readthedocs.io
-  license_file: LICENSE
-  keywords:
-    - flow-cytometre
-    - calibration
-    - physics
-    - data-analysis
 
 test:
   imports:
     - RosettaX
+
   requires:
-    - pytest >=0.6
-    - pytest-cov >=2.0
-    - pytest-json-report ~=1.5
-    - coverage ~=7.6
-  commands:
-    - python -m pytest
+    - pytest >=7
+    - pytest-cov >=4
+    - pytest-json-report >=1.5
+    - coverage >=7
+
   source_files:
     - tests
+
+  commands:
+    - python -m pytest tests
+
+about:
+  home: https://github.com/MartinPdeS/RosettaX
+  dev_url: https://github.com/MartinPdeS/RosettaX
+  doc_url: https://martinpdes.github.io/RosettaX/
+  license: MIT
+  license_file: LICENSE
+  summary: Interactive fluorescence and scattering calibration workflows for flow cytometry.
+  description: |
+    RosettaX is an interactive application for fluorescence and scattering
+    calibration workflows in flow cytometry. It provides graphical tools for
+    calibration setup, FCS data inspection, peak detection, optical modeling,
+    calibration fitting, profile management, and calibrated result export.
+
+    The application is designed to connect experimental calibration data,
+    Mie based optical modeling, and reusable instrument settings in a
+    reproducible workflow.
+
+  keywords:
+    - flow-cytometry
+    - calibration
+    - fluorescence
+    - scattering
+    - mie-theory
+    - optical-modeling
+    - data-analysis
 
 extra:
   recipe-maintainers:
