@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import annotations
-
 from typing import Self
 
 import dash
@@ -17,13 +15,31 @@ class ApplyCalibrationPage:
     """
     Apply calibration page.
 
-    The page owns one serialized page state store. Individual sections should
-    progressively migrate away from section-specific stores and use the page
-    state as the single source of truth.
+    The page owns one serialized page state store and a small number of
+    section-level stores used by the current calibration application workflow.
+
+    Stores
+    ------
+    - page_state_store:
+      Serialized page state.
+
+    - selected_calibration_path_store:
+      Selected calibration dropdown value, for example
+      "fluorescence/example.json" or "scattering/example.json".
+
+    - selected_calibration_summary_store:
+      Lightweight metadata extracted from the selected calibration file.
+      This is used by the UI to show scattering target model controls when
+      a scattering calibration is selected.
+
+    - uploaded_fcs_path_store:
+      Uploaded input FCS path or paths.
     """
 
     def __init__(self) -> None:
-        self.container_style = {"paddingBottom": "48px"}
+        self.container_style = {
+            "paddingBottom": "48px",
+        }
 
         self.ids = Ids()
 
@@ -63,15 +79,57 @@ class ApplyCalibrationPage:
                     id=self.ids.Page.location,
                     refresh=False,
                 ),
-                dcc.Store(
-                    id=self.ids.State.page_state_store,
-                    data=ApplyCalibrationPageState.empty().to_dict(),
-                    storage_type="session",
-                ),
-                *[section.get_layout() for section in self.sections],
+                self._build_page_state_store(),
+                self._build_selected_calibration_path_store(),
+                self._build_selected_calibration_summary_store(),
+                self._build_uploaded_fcs_path_store(),
+                *[
+                    section.get_layout()
+                    for section in self.sections
+                ],
             ],
             fluid=True,
             style=self.container_style,
+        )
+
+    def _build_page_state_store(self) -> dcc.Store:
+        """
+        Build the serialized page state store.
+        """
+        return dcc.Store(
+            id=self.ids.State.page_state_store,
+            data=ApplyCalibrationPageState.empty().to_dict(),
+            storage_type="session",
+        )
+
+    def _build_selected_calibration_path_store(self) -> dcc.Store:
+        """
+        Build the selected calibration path store.
+        """
+        return dcc.Store(
+            id=self.ids.Stores.selected_calibration_path_store,
+            data=None,
+            storage_type="session",
+        )
+
+    def _build_selected_calibration_summary_store(self) -> dcc.Store:
+        """
+        Build the selected calibration summary store.
+        """
+        return dcc.Store(
+            id=self.ids.Stores.selected_calibration_summary_store,
+            data=None,
+            storage_type="session",
+        )
+
+    def _build_uploaded_fcs_path_store(self) -> dcc.Store:
+        """
+        Build the uploaded FCS path store.
+        """
+        return dcc.Store(
+            id=self.ids.Stores.uploaded_fcs_path_store,
+            data=None,
+            storage_type="session",
         )
 
 

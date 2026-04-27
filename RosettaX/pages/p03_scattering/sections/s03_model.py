@@ -7,14 +7,13 @@ import dash
 import dash_bootstrap_components as dbc
 
 from RosettaX.utils import styling
-from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.workflow.parameters import services, particle_presets
+from RosettaX.workflow.model.scattering import ScatteringModelConfiguration
 
 
 logger = logging.getLogger(__name__)
 
 
-class Parameters:
+class Model:
     """
     Scattering parameter section.
 
@@ -30,10 +29,11 @@ class Parameters:
     ---------
     This section owns only the visual parameter inputs.
 
-    The calibration reference table, add row button, table normalization,
-    runtime table population, expected coupling computation, and table selection
-    cleanup are owned by the dedicated reference table section.
+    The reusable scattering model logic lives in
+    RosettaX.workflow.model.scattering.
     """
+
+    model_configuration = ScatteringModelConfiguration
 
     def __init__(
         self,
@@ -41,112 +41,17 @@ class Parameters:
     ) -> None:
         self.page = page
         self.ids = page.ids.Parameters
+        self.default_values = self.model_configuration.build_default_profile_defaults()
 
         logger.debug(
             "Initialized Parameters section with page=%r",
             page,
         )
 
-    def _get_default_runtime_config(self) -> RuntimeConfig:
-        return RuntimeConfig.from_default_profile()
-
-    def _get_default_mie_model(self) -> str:
-        runtime_config = self._get_default_runtime_config()
-
-        return runtime_config.get_str(
-            "particle_model.mie_model",
-            default="Solid Sphere",
-        )
-
-    def _get_default_wavelength_nm(self) -> float:
-        runtime_config = self._get_default_runtime_config()
-
-        return runtime_config.get_float(
-            "optics.wavelength_nm",
-            default=700.0,
-        )
-
-    def _get_default_detector_numerical_aperture(self) -> float:
-        runtime_config = self._get_default_runtime_config()
-
-        return runtime_config.get_float(
-            "optics.detector_numerical_aperture",
-            default=0.2,
-        )
-
-    def _get_default_detector_cache_numerical_aperture(self) -> float:
-        runtime_config = self._get_default_runtime_config()
-
-        return runtime_config.get_float(
-            "optics.detector_cache_numerical_aperture",
-            default=0.0,
-        )
-
-    def _get_default_blocker_bar_numerical_aperture(self) -> float:
-        runtime_config = self._get_default_runtime_config()
-
-        return runtime_config.get_float(
-            "optics.blocker_bar_numerical_aperture",
-            default=0.0,
-        )
-
-    def _get_default_detector_sampling(self) -> int:
-        runtime_config = self._get_default_runtime_config()
-
-        return runtime_config.get_int(
-            "optics.detector_sampling",
-            default=600,
-        )
-
-    def _get_default_detector_phi_angle_degree(self) -> float:
-        runtime_config = self._get_default_runtime_config()
-
-        return runtime_config.get_float(
-            "optics.detector_phi_angle_degree",
-            default=0.0,
-        )
-
-    def _get_default_detector_gamma_angle_degree(self) -> float:
-        runtime_config = self._get_default_runtime_config()
-
-        return runtime_config.get_float(
-            "optics.detector_gamma_angle_degree",
-            default=0.0,
-        )
-
-    def _get_default_medium_refractive_index(self) -> float:
-        runtime_config = self._get_default_runtime_config()
-
-        return runtime_config.get_float(
-            "optics.medium_refractive_index",
-            default=1.333,
-        )
-
-    def _get_default_particle_refractive_index(self) -> float:
-        runtime_config = self._get_default_runtime_config()
-
-        return runtime_config.get_float(
-            "particle_model.particle_refractive_index",
-            default=1.59,
-        )
-
-    def _get_default_core_refractive_index(self) -> float:
-        runtime_config = self._get_default_runtime_config()
-
-        return runtime_config.get_float(
-            "particle_model.core_refractive_index",
-            default=1.47,
-        )
-
-    def _get_default_shell_refractive_index(self) -> float:
-        runtime_config = self._get_default_runtime_config()
-
-        return runtime_config.get_float(
-            "particle_model.shell_refractive_index",
-            default=1.46,
-        )
-
     def get_layout(self) -> dbc.Card:
+        """
+        Build the scattering parameter layout.
+        """
         logger.debug("Building Parameters layout.")
 
         return dbc.Card(
@@ -157,12 +62,21 @@ class Parameters:
         )
 
     def _get_layout(self) -> dbc.Card:
+        """
+        Compatibility alias for older section loading code.
+        """
         return self.get_layout()
 
     def _build_header(self) -> dbc.CardHeader:
+        """
+        Build section header.
+        """
         return dbc.CardHeader("3. Set calculation parameters")
 
     def _build_collapse(self) -> dbc.Collapse:
+        """
+        Build collapsible parameter body.
+        """
         return dbc.Collapse(
             self._build_body(),
             id=self.ids.collapse_example,
@@ -170,6 +84,9 @@ class Parameters:
         )
 
     def _build_body(self) -> dbc.CardBody:
+        """
+        Build parameter body.
+        """
         return dbc.CardBody(
             [
                 self._build_optical_configuration_section(),
@@ -179,6 +96,9 @@ class Parameters:
         )
 
     def _build_optical_configuration_section(self) -> dash.html.Div:
+        """
+        Build optical configuration section.
+        """
         return dash.html.Div(
             [
                 dash.html.H5("Optical configuration"),
@@ -199,13 +119,16 @@ class Parameters:
         )
 
     def _build_optical_configuration_controls(self) -> dash.html.Div:
+        """
+        Build optical configuration controls.
+        """
         return dash.html.Div(
             [
                 self._build_numeric_input_row(
                     label="Wavelength (nm):",
                     component_id=self.ids.wavelength_nm,
                     placeholder="Wavelength (nm)",
-                    value=self._get_default_wavelength_nm(),
+                    value=self.default_values.wavelength_nm,
                     min_value=1,
                     step=1,
                     width_px=220,
@@ -214,8 +137,8 @@ class Parameters:
                     "Detector preset:",
                     dash.dcc.Dropdown(
                         id=self.ids.detector_configuration_preset,
-                        options=services.build_detector_preset_options(),
-                        value=services.CUSTOM_DETECTOR_PRESET_NAME,
+                        options=self.model_configuration.build_detector_preset_options(),
+                        value=self.model_configuration.custom_detector_preset_name,
                         placeholder="Select detector preset",
                         clearable=False,
                         searchable=False,
@@ -233,7 +156,7 @@ class Parameters:
                             label="Detector NA:",
                             component_id=self.ids.detector_numerical_aperture,
                             placeholder="Detector NA",
-                            value=self._get_default_detector_numerical_aperture(),
+                            value=self.default_values.detector_numerical_aperture,
                             min_value=0.0,
                             max_value=1.5,
                             step=0.001,
@@ -243,7 +166,7 @@ class Parameters:
                             label="Detector cache NA:",
                             component_id=self.ids.detector_cache_numerical_aperture,
                             placeholder="Detector cache NA",
-                            value=self._get_default_detector_cache_numerical_aperture(),
+                            value=self.default_values.detector_cache_numerical_aperture,
                             min_value=0.0,
                             max_value=1.5,
                             step=0.001,
@@ -253,7 +176,7 @@ class Parameters:
                             label="Blocker bar NA:",
                             component_id=self.ids.blocker_bar_numerical_aperture,
                             placeholder="Blocker bar NA",
-                            value=self._get_default_blocker_bar_numerical_aperture(),
+                            value=self.default_values.blocker_bar_numerical_aperture,
                             min_value=0.0,
                             max_value=1.5,
                             step=0.001,
@@ -263,7 +186,7 @@ class Parameters:
                             label="Detector sampling:",
                             component_id=self.ids.detector_sampling,
                             placeholder="Detector sampling",
-                            value=self._get_default_detector_sampling(),
+                            value=self.default_values.detector_sampling,
                             min_value=1,
                             step=1,
                             width_px=220,
@@ -272,7 +195,7 @@ class Parameters:
                             label="Detector phi angle (deg):",
                             component_id=self.ids.detector_phi_angle_degree,
                             placeholder="Detector phi angle",
-                            value=self._get_default_detector_phi_angle_degree(),
+                            value=self.default_values.detector_phi_angle_degree,
                             min_value=-360.0,
                             max_value=360.0,
                             step=0.1,
@@ -282,7 +205,7 @@ class Parameters:
                             label="Detector gamma angle (deg):",
                             component_id=self.ids.detector_gamma_angle_degree,
                             placeholder="Detector gamma angle",
-                            value=self._get_default_detector_gamma_angle_degree(),
+                            value=self.default_values.detector_gamma_angle_degree,
                             min_value=-360.0,
                             max_value=360.0,
                             step=0.1,
@@ -302,17 +225,20 @@ class Parameters:
         )
 
     def _build_optical_configuration_visualization(self) -> dbc.Card:
+        """
+        Build optical configuration preview graph.
+        """
         return dbc.Card(
             dbc.CardBody(
                 [
                     dash.dcc.Graph(
                         id=self.ids.optical_configuration_preview,
-                        figure=services.build_optical_configuration_preview_figure(
-                            detector_numerical_aperture=self._get_default_detector_numerical_aperture(),
-                            blocker_bar_numerical_aperture=self._get_default_blocker_bar_numerical_aperture(),
-                            medium_refractive_index=self._get_default_medium_refractive_index(),
-                            detector_phi_angle_degree=self._get_default_detector_phi_angle_degree(),
-                            detector_gamma_angle_degree=self._get_default_detector_gamma_angle_degree(),
+                        figure=self.model_configuration.build_optical_configuration_preview_figure(
+                            detector_numerical_aperture=self.default_values.detector_numerical_aperture,
+                            blocker_bar_numerical_aperture=self.default_values.blocker_bar_numerical_aperture,
+                            medium_refractive_index=self.default_values.medium_refractive_index,
+                            detector_phi_angle_degree=self.default_values.detector_phi_angle_degree,
+                            detector_gamma_angle_degree=self.default_values.detector_gamma_angle_degree,
                         ),
                         style={
                             **styling.PLOTLY_GRAPH_STYLE,
@@ -334,6 +260,9 @@ class Parameters:
         )
 
     def _build_particle_configuration_section(self) -> dash.html.Div:
+        """
+        Build particle configuration section.
+        """
         return dash.html.Div(
             [
                 dash.html.H5("Particle configuration"),
@@ -341,8 +270,8 @@ class Parameters:
                     "Particle type:",
                     dash.dcc.Dropdown(
                         id=self.ids.mie_model,
-                        options=particle_presets.MIE_MODEL_OPTIONS,
-                        value=self._get_default_mie_model(),
+                        options=self.model_configuration.mie_model_options,
+                        value=self.default_values.mie_model,
                         clearable=False,
                         searchable=False,
                         persistence=True,
@@ -357,8 +286,8 @@ class Parameters:
                     label="Medium refractive index:",
                     preset_id=self.ids.medium_refractive_index_source,
                     value_id=self.ids.medium_refractive_index_custom,
-                    default_value=self._get_default_medium_refractive_index(),
-                    preset_options=particle_presets.MEDIUM_REFRACTIVE_INDEX_PRESETS,
+                    default_value=self.default_values.medium_refractive_index,
+                    preset_options=self.model_configuration.medium_refractive_index_presets,
                 ),
                 dash.html.Div(
                     self._build_solid_sphere_parameters_block(),
@@ -377,36 +306,45 @@ class Parameters:
             ]
         )
 
-    def _build_solid_sphere_parameters_block(self) -> list:
+    def _build_solid_sphere_parameters_block(self) -> list[Any]:
+        """
+        Build solid sphere parameter controls.
+        """
         return [
             self._refractive_index_picker(
                 label="Particle refractive index:",
                 preset_id=self.ids.particle_refractive_index_source,
                 value_id=self.ids.particle_refractive_index_custom,
-                default_value=self._get_default_particle_refractive_index(),
-                preset_options=particle_presets.PARTICLE_REFRACTIVE_INDEX_PRESETS,
+                default_value=self.default_values.particle_refractive_index,
+                preset_options=self.model_configuration.particle_refractive_index_presets,
             ),
         ]
 
-    def _build_core_shell_parameters_block(self) -> list:
+    def _build_core_shell_parameters_block(self) -> list[Any]:
+        """
+        Build core shell parameter controls.
+        """
         return [
             self._refractive_index_picker(
                 label="Core refractive index:",
                 preset_id=self.ids.core_refractive_index_source,
                 value_id=self.ids.core_refractive_index_custom,
-                default_value=self._get_default_core_refractive_index(),
-                preset_options=particle_presets.CORE_REFRACTIVE_INDEX_PRESETS,
+                default_value=self.default_values.core_refractive_index,
+                preset_options=self.model_configuration.core_refractive_index_presets,
             ),
             self._refractive_index_picker(
                 label="Shell refractive index:",
                 preset_id=self.ids.shell_refractive_index_source,
                 value_id=self.ids.shell_refractive_index_custom,
-                default_value=self._get_default_shell_refractive_index(),
-                preset_options=particle_presets.SHELL_REFRACTIVE_INDEX_PRESETS,
+                default_value=self.default_values.shell_refractive_index,
+                preset_options=self.model_configuration.shell_refractive_index_presets,
             ),
         ]
 
     def register_callbacks(self) -> None:
+        """
+        Register parameter callbacks.
+        """
         logger.debug("Registering Parameters callbacks.")
 
         self._register_visibility_callbacks()
@@ -416,6 +354,10 @@ class Parameters:
         self._register_runtime_sync_callbacks()
 
     def _register_runtime_sync_callbacks(self) -> None:
+        """
+        Register runtime configuration synchronization callback.
+        """
+
         @dash.callback(
             dash.Output(self.ids.mie_model, "value"),
             dash.Output(self.ids.medium_refractive_index_custom, "value"),
@@ -440,60 +382,9 @@ class Parameters:
                 runtime_config_data,
             )
 
-            runtime_config = RuntimeConfig.from_dict(
-                runtime_config_data if isinstance(runtime_config_data, dict) else None
-            )
-
-            resolved_values = (
-                runtime_config.get_str(
-                    "particle_model.mie_model",
-                    default="Solid Sphere",
-                ),
-                runtime_config.get_float(
-                    "optics.medium_refractive_index",
-                    default=1.333,
-                ),
-                runtime_config.get_float(
-                    "particle_model.particle_refractive_index",
-                    default=1.59,
-                ),
-                runtime_config.get_float(
-                    "particle_model.core_refractive_index",
-                    default=1.47,
-                ),
-                runtime_config.get_float(
-                    "particle_model.shell_refractive_index",
-                    default=1.46,
-                ),
-                runtime_config.get_float(
-                    "optics.wavelength_nm",
-                    default=700.0,
-                ),
-                runtime_config.get_float(
-                    "optics.detector_numerical_aperture",
-                    default=0.2,
-                ),
-                runtime_config.get_float(
-                    "optics.detector_cache_numerical_aperture",
-                    default=0.0,
-                ),
-                runtime_config.get_float(
-                    "optics.blocker_bar_numerical_aperture",
-                    default=0.0,
-                ),
-                runtime_config.get_int(
-                    "optics.detector_sampling",
-                    default=600,
-                ),
-                runtime_config.get_float(
-                    "optics.detector_phi_angle_degree",
-                    default=0.0,
-                ),
-                runtime_config.get_float(
-                    "optics.detector_gamma_angle_degree",
-                    default=0.0,
-                ),
-            )
+            resolved_values = self.model_configuration.build_defaults_from_runtime_config(
+                runtime_config_data,
+            ).to_callback_values()
 
             logger.debug(
                 "sync_parameters_from_runtime_config returning resolved_values=%r",
@@ -503,6 +394,10 @@ class Parameters:
             return resolved_values
 
     def _register_visibility_callbacks(self) -> None:
+        """
+        Register particle model visibility callbacks.
+        """
+
         @dash.callback(
             dash.Output(self.ids.solid_sphere_container, "style"),
             dash.Output(self.ids.core_shell_container, "style"),
@@ -512,45 +407,22 @@ class Parameters:
         def toggle_parameter_blocks(
             mie_model_value: Optional[str],
         ) -> tuple[dict[str, str], dict[str, str]]:
-            resolved_mie_model = services.resolve_mie_model(
-                mie_model_value,
+            resolved_styles = self.model_configuration.build_visibility_styles_for_mie_model(
+                mie_model=mie_model_value,
             )
 
             logger.debug(
-                "toggle_parameter_blocks called with mie_model_value=%r "
-                "resolved_mie_model=%r",
+                "toggle_parameter_blocks called with mie_model_value=%r styles=%r",
                 mie_model_value,
-                resolved_mie_model,
+                resolved_styles,
             )
 
-            if resolved_mie_model == "Core/Shell Sphere":
-                return {
-                    "display": "none",
-                }, {
-                    "display": "block",
-                }
-
-            return {
-                "display": "block",
-            }, {
-                "display": "none",
-            }
+            return resolved_styles
 
     def _register_refractive_index_callbacks(self) -> None:
-        def apply_preset_value(
-            preset_value: Any,
-            current_value: Any,
-        ) -> Any:
-            logger.debug(
-                "apply_preset_value called with preset_value=%r current_value=%r",
-                preset_value,
-                current_value,
-            )
-
-            if preset_value is None:
-                return current_value
-
-            return float(preset_value)
+        """
+        Register refractive index preset callbacks.
+        """
 
         @dash.callback(
             dash.Output(
@@ -566,9 +438,9 @@ class Parameters:
             preset_value: Any,
             current_value: Any,
         ) -> Any:
-            return apply_preset_value(
-                preset_value,
-                current_value,
+            return self.model_configuration.apply_refractive_index_preset(
+                preset_value=preset_value,
+                current_value=current_value,
             )
 
         @dash.callback(
@@ -585,9 +457,9 @@ class Parameters:
             preset_value: Any,
             current_value: Any,
         ) -> Any:
-            return apply_preset_value(
-                preset_value,
-                current_value,
+            return self.model_configuration.apply_refractive_index_preset(
+                preset_value=preset_value,
+                current_value=current_value,
             )
 
         @dash.callback(
@@ -604,9 +476,9 @@ class Parameters:
             preset_value: Any,
             current_value: Any,
         ) -> Any:
-            return apply_preset_value(
-                preset_value,
-                current_value,
+            return self.model_configuration.apply_refractive_index_preset(
+                preset_value=preset_value,
+                current_value=current_value,
             )
 
         @dash.callback(
@@ -623,12 +495,16 @@ class Parameters:
             preset_value: Any,
             current_value: Any,
         ) -> Any:
-            return apply_preset_value(
-                preset_value,
-                current_value,
+            return self.model_configuration.apply_refractive_index_preset(
+                preset_value=preset_value,
+                current_value=current_value,
             )
 
     def _register_detector_configuration_callbacks(self) -> None:
+        """
+        Register detector configuration callbacks.
+        """
+
         @dash.callback(
             dash.Output(
                 self.ids.detector_configuration_custom_values_container,
@@ -645,7 +521,7 @@ class Parameters:
                 preset_name,
             )
 
-            return services.resolve_detector_configuration_visibility_style(
+            return self.model_configuration.resolve_detector_configuration_visibility_style(
                 preset_name=preset_name,
             )
 
@@ -699,20 +575,11 @@ class Parameters:
             current_detector_gamma_angle_degree: Any,
         ) -> tuple[Any, Any, Any, Any, Any, Any]:
             logger.debug(
-                "apply_detector_configuration_preset called with preset_name=%r "
-                "current_values=%r",
+                "apply_detector_configuration_preset called with preset_name=%r",
                 preset_name,
-                (
-                    current_detector_numerical_aperture,
-                    current_detector_cache_numerical_aperture,
-                    current_blocker_bar_numerical_aperture,
-                    current_detector_sampling,
-                    current_detector_phi_angle_degree,
-                    current_detector_gamma_angle_degree,
-                ),
             )
 
-            resolved_values = services.resolve_detector_configuration_values(
+            resolved_values = self.model_configuration.resolve_detector_configuration_values(
                 preset_name=preset_name,
                 current_detector_numerical_aperture=current_detector_numerical_aperture,
                 current_detector_cache_numerical_aperture=current_detector_cache_numerical_aperture,
@@ -730,6 +597,10 @@ class Parameters:
             return resolved_values
 
     def _register_optical_configuration_preview_callback(self) -> None:
+        """
+        Register optical configuration preview callback.
+        """
+
         @dash.callback(
             dash.Output(
                 self.ids.optical_configuration_preview,
@@ -761,7 +632,7 @@ class Parameters:
                 detector_gamma_angle_degree,
             )
 
-            return services.build_optical_configuration_preview_figure(
+            return self.model_configuration.build_optical_configuration_preview_figure(
                 detector_numerical_aperture=detector_numerical_aperture,
                 blocker_bar_numerical_aperture=blocker_bar_numerical_aperture,
                 medium_refractive_index=medium_refractive_index,
@@ -781,6 +652,9 @@ class Parameters:
         step: Optional[float] = None,
         width_px: int = 220,
     ) -> dash.html.Div:
+        """
+        Build a labeled numeric input row.
+        """
         return self._inline_row(
             label,
             dash.dcc.Input(
@@ -810,6 +684,9 @@ class Parameters:
         preset_options: Sequence[dict],
         preset_placeholder_label: str = "Select preset",
     ) -> dash.html.Div:
+        """
+        Build refractive index preset and custom value controls.
+        """
         preset_dropdown = dash.dcc.Dropdown(
             id=preset_id,
             options=list(preset_options),
@@ -861,6 +738,9 @@ class Parameters:
         *,
         margin_top: bool = True,
     ) -> dash.html.Div:
+        """
+        Build one aligned label control row.
+        """
         row_style = {
             "display": "flex",
             "alignItems": "center",
@@ -874,27 +754,23 @@ class Parameters:
                 None,
             )
 
-        label_style = {
-            "width": "260px",
-            "minWidth": "260px",
-            "fontWeight": 500,
-        }
-
-        control_wrapper_style = {
-            "flex": "1",
-            "display": "flex",
-            "alignItems": "center",
-        }
-
         return dash.html.Div(
             [
                 dash.html.Div(
                     label,
-                    style=label_style,
+                    style={
+                        "width": "260px",
+                        "minWidth": "260px",
+                        "fontWeight": 500,
+                    },
                 ),
                 dash.html.Div(
                     control,
-                    style=control_wrapper_style,
+                    style={
+                        "flex": "1",
+                        "display": "flex",
+                        "alignItems": "center",
+                    },
                 ),
             ],
             style=row_style,

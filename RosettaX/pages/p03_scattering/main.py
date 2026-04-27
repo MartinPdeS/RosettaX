@@ -22,7 +22,7 @@ class ScatterCalibrationPage:
         self.sections = [
             sections.Upload(page=self),
             sections.Peaks(page=self),
-            sections.Parameters(page=self),
+            sections.Model(page=self),
             sections.ReferenceTable(page=self),
             sections.Calibration(page=self),
             sections.Save(page=self),
