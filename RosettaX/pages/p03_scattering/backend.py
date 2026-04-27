@@ -211,10 +211,9 @@ class BackEnd:
             elapsed_time = time.perf_counter() - start_time
 
             logger.debug(
-                "experiment.get('coupling') returned after %.3f s with raw type=%s value=%r",
+                "experiment.get('coupling') returned after %.3f s with raw type=%s",
                 elapsed_time,
                 type(coupling_values).__name__,
-                coupling_values,
             )
 
             coupling_values = np.asarray(coupling_values).squeeze()
@@ -230,9 +229,8 @@ class BackEnd:
             coupling_values = np.asarray(coupling_values, dtype=float).reshape(-1)
 
             logger.debug(
-                "Processed coupling values with sampling=%r => %r",
+                "Processed coupling values with sampling=%r",
                 simulation_sampling,
-                coupling_values.tolist(),
             )
 
             return coupling_values
