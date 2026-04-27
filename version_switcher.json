@@ -6,6 +6,12 @@
 }
 ,
 {
+  "name": "v0.0.9",
+  "version": "v0.0.9",
+  "url": "https://martinpdes.github.io/RosettaX/docs/v0.0.9"
+}
+,
+{
   "name": "v0.0.8",
   "version": "v0.0.8",
   "url": "https://martinpdes.github.io/RosettaX/docs/v0.0.8"
@@ -39,11 +45,5 @@
   "name": "v0.0.3",
   "version": "v0.0.3",
   "url": "https://martinpdes.github.io/RosettaX/docs/v0.0.3"
-}
-,
-{
-  "name": "0.0.0.0",
-  "version": "0.0.0.0",
-  "url": "https://martinpdes.github.io/RosettaX/docs/0.0.0.0"
 }
 ]
