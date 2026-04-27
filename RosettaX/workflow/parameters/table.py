@@ -4,62 +4,181 @@ from typing import Any, Optional
 
 import numpy as np
 
+from RosettaX.workflow.table import services as table_services
+
+
+MIE_MODEL_SOLID_SPHERE = "Solid Sphere"
+MIE_MODEL_CORE_SHELL_SPHERE = "Core/Shell Sphere"
+
+COLUMN_PARTICLE_DIAMETER_NM = "particle_diameter_nm"
+COLUMN_CORE_DIAMETER_NM = "core_diameter_nm"
+COLUMN_SHELL_THICKNESS_NM = "shell_thickness_nm"
+COLUMN_OUTER_DIAMETER_NM = "outer_diameter_nm"
+COLUMN_MEASURED_PEAK_POSITION = "measured_peak_position"
+COLUMN_EXPECTED_COUPLING = "expected_coupling"
+
 
 sphere_table_columns = [
-    {"name": "Particle diameter [nm]", "id": "particle_diameter_nm", "editable": True},
-    {"name": "Measured peak position [a.u.]", "id": "measured_peak_position", "editable": True},
-    {"name": "Expected coupling", "id": "expected_coupling", "editable": False},
+    {
+        "name": "Particle diameter [nm]",
+        "id": COLUMN_PARTICLE_DIAMETER_NM,
+        "editable": True,
+    },
+    {
+        "name": "Measured peak position [a.u.]",
+        "id": COLUMN_MEASURED_PEAK_POSITION,
+        "editable": True,
+    },
+    {
+        "name": "Expected coupling",
+        "id": COLUMN_EXPECTED_COUPLING,
+        "editable": False,
+    },
 ]
 
 core_shell_table_columns = [
-    {"name": "Core diameter [nm]", "id": "core_diameter_nm", "editable": True},
-    {"name": "Shell thickness [nm]", "id": "shell_thickness_nm", "editable": True},
-    {"name": "Outer diameter [nm]", "id": "outer_diameter_nm", "editable": False},
-    {"name": "Measured peak position [a.u.]", "id": "measured_peak_position", "editable": True},
-    {"name": "Expected coupling", "id": "expected_coupling", "editable": False},
+    {
+        "name": "Core diameter [nm]",
+        "id": COLUMN_CORE_DIAMETER_NM,
+        "editable": True,
+    },
+    {
+        "name": "Shell thickness [nm]",
+        "id": COLUMN_SHELL_THICKNESS_NM,
+        "editable": True,
+    },
+    {
+        "name": "Outer diameter [nm]",
+        "id": COLUMN_OUTER_DIAMETER_NM,
+        "editable": False,
+    },
+    {
+        "name": "Measured peak position [a.u.]",
+        "id": COLUMN_MEASURED_PEAK_POSITION,
+        "editable": True,
+    },
+    {
+        "name": "Expected coupling",
+        "id": COLUMN_EXPECTED_COUPLING,
+        "editable": False,
+    },
 ]
 
 
-def resolve_mie_model(mie_model: Any) -> str:
+def resolve_mie_model(
+    mie_model: Any,
+) -> str:
+    """
+    Normalize a raw Mie model value.
+
+    Unknown or empty values fall back to the solid sphere model.
+    """
     mie_model_string = "" if mie_model is None else str(mie_model).strip()
-    return "Core/Shell Sphere" if mie_model_string == "Core/Shell Sphere" else "Solid Sphere"
+
+    if mie_model_string == MIE_MODEL_CORE_SHELL_SPHERE:
+        return MIE_MODEL_CORE_SHELL_SPHERE
+
+    return MIE_MODEL_SOLID_SPHERE
 
 
-def get_table_columns_for_model(mie_model: str) -> list[dict[str, Any]]:
-    return list(core_shell_table_columns) if mie_model == "Core/Shell Sphere" else list(sphere_table_columns)
+def get_table_columns_for_model(
+    mie_model: Any,
+) -> list[dict[str, Any]]:
+    """
+    Return calibration standard table columns for a Mie model.
+    """
+    resolved_mie_model = resolve_mie_model(
+        mie_model,
+    )
+
+    if resolved_mie_model == MIE_MODEL_CORE_SHELL_SPHERE:
+        return [
+            dict(column)
+            for column in core_shell_table_columns
+        ]
+
+    return [
+        dict(column)
+        for column in sphere_table_columns
+    ]
 
 
-def build_empty_row_for_model(mie_model: str) -> dict[str, str]:
-    if mie_model == "Core/Shell Sphere":
+def get_user_data_column_ids_for_model(
+    mie_model: Any,
+) -> list[str]:
+    """
+    Return the columns that should count as populated table data.
+    """
+    return table_services.get_column_ids(
+        columns=get_table_columns_for_model(
+            mie_model,
+        )
+    )
+
+
+def build_empty_row_for_model(
+    mie_model: Any,
+) -> dict[str, str]:
+    """
+    Build one empty calibration standard table row for a Mie model.
+    """
+    resolved_mie_model = resolve_mie_model(
+        mie_model,
+    )
+
+    if resolved_mie_model == MIE_MODEL_CORE_SHELL_SPHERE:
         return {
-            "core_diameter_nm": "",
-            "shell_thickness_nm": "",
-            "outer_diameter_nm": "",
-            "measured_peak_position": "",
-            "expected_coupling": "",
+            COLUMN_CORE_DIAMETER_NM: "",
+            COLUMN_SHELL_THICKNESS_NM: "",
+            COLUMN_OUTER_DIAMETER_NM: "",
+            COLUMN_MEASURED_PEAK_POSITION: "",
+            COLUMN_EXPECTED_COUPLING: "",
         }
 
     return {
-        "particle_diameter_nm": "",
-        "measured_peak_position": "",
-        "expected_coupling": "",
+        COLUMN_PARTICLE_DIAMETER_NM: "",
+        COLUMN_MEASURED_PEAK_POSITION: "",
+        COLUMN_EXPECTED_COUPLING: "",
     }
 
 
-def build_empty_rows_for_model(mie_model: str, row_count: int) -> list[dict[str, str]]:
-    return [build_empty_row_for_model(mie_model) for _ in range(int(row_count))]
+def build_empty_rows_for_model(
+    mie_model: Any,
+    *,
+    row_count: int,
+) -> list[dict[str, str]]:
+    """
+    Build empty calibration standard table rows for a Mie model.
+    """
+    resolved_row_count = max(
+        0,
+        int(
+            row_count,
+        ),
+    )
+
+    return [
+        build_empty_row_for_model(
+            mie_model,
+        )
+        for _ in range(
+            resolved_row_count,
+        )
+    ]
 
 
-def normalize_editable_cell(value: Any) -> str:
+def normalize_cell_value(
+    value: Any,
+) -> str:
+    """
+    Normalize a Dash DataTable cell value into a stripped string.
+    """
     if value is None:
         return ""
-    return str(value).strip()
 
-
-def normalize_readonly_cell(value: Any) -> str:
-    if value is None:
-        return ""
-    return str(value).strip()
+    return str(
+        value,
+    ).strip()
 
 
 def compute_outer_diameter_string(
@@ -67,254 +186,469 @@ def compute_outer_diameter_string(
     core_diameter_nm: Any,
     shell_thickness_nm: Any,
 ) -> str:
+    """
+    Compute the outer diameter string for a core shell standard row.
+    """
     try:
-        resolved_core_diameter_nm = float(core_diameter_nm)
-        resolved_shell_thickness_nm = float(shell_thickness_nm)
+        resolved_core_diameter_nm = float(
+            core_diameter_nm,
+        )
+
+        resolved_shell_thickness_nm = float(
+            shell_thickness_nm,
+        )
+
     except Exception:
         return ""
 
-    if resolved_core_diameter_nm <= 0.0 or resolved_shell_thickness_nm < 0.0:
+    if resolved_core_diameter_nm <= 0.0:
+        return ""
+
+    if resolved_shell_thickness_nm < 0.0:
         return ""
 
     outer_diameter_nm = resolved_core_diameter_nm + 2.0 * resolved_shell_thickness_nm
+
     return f"{outer_diameter_nm:.6g}"
 
 
 def remap_table_rows_to_model(
     *,
-    mie_model: str,
+    mie_model: Any,
     current_rows: Optional[list[dict[str, Any]]],
 ) -> list[dict[str, str]]:
-    resolved_current_rows = [dict(row) for row in (current_rows or [])]
-    row_count = max(3, len(resolved_current_rows))
-    remapped_rows: list[dict[str, str]] = []
+    """
+    Remap existing table rows to the selected Mie model schema.
 
-    if mie_model == "Core/Shell Sphere":
-        for row_index in range(row_count):
-            source_row = resolved_current_rows[row_index] if row_index < len(resolved_current_rows) else {}
+    This preserves compatible values when switching between solid sphere and
+    core shell sphere table schemas.
+    """
+    resolved_mie_model = resolve_mie_model(
+        mie_model,
+    )
 
-            particle_diameter_nm = normalize_editable_cell(source_row.get("particle_diameter_nm"))
-            core_diameter_nm = normalize_editable_cell(source_row.get("core_diameter_nm"))
-            shell_thickness_nm = normalize_editable_cell(source_row.get("shell_thickness_nm"))
-            measured_peak_position = normalize_editable_cell(source_row.get("measured_peak_position"))
-            expected_coupling = normalize_readonly_cell(source_row.get("expected_coupling"))
+    source_rows = table_services.copy_table_rows(
+        rows=current_rows,
+    )
 
-            if not core_diameter_nm and particle_diameter_nm:
-                core_diameter_nm = particle_diameter_nm
+    row_count = max(
+        3,
+        len(
+            source_rows,
+        ),
+    )
 
-            outer_diameter_nm = compute_outer_diameter_string(
-                core_diameter_nm=core_diameter_nm,
-                shell_thickness_nm=shell_thickness_nm,
+    if resolved_mie_model == MIE_MODEL_CORE_SHELL_SPHERE:
+        return [
+            remap_row_to_core_shell_model(
+                row=source_rows[row_index] if row_index < len(source_rows) else {},
             )
-
-            remapped_rows.append(
-                {
-                    "core_diameter_nm": core_diameter_nm,
-                    "shell_thickness_nm": shell_thickness_nm,
-                    "outer_diameter_nm": outer_diameter_nm,
-                    "measured_peak_position": measured_peak_position,
-                    "expected_coupling": expected_coupling,
-                }
+            for row_index in range(
+                row_count,
             )
+        ]
 
-        return remapped_rows
-
-    for row_index in range(row_count):
-        source_row = resolved_current_rows[row_index] if row_index < len(resolved_current_rows) else {}
-
-        particle_diameter_nm = normalize_editable_cell(source_row.get("particle_diameter_nm"))
-        core_diameter_nm = normalize_editable_cell(source_row.get("core_diameter_nm"))
-        outer_diameter_nm = normalize_editable_cell(source_row.get("outer_diameter_nm"))
-        measured_peak_position = normalize_editable_cell(source_row.get("measured_peak_position"))
-        expected_coupling = normalize_readonly_cell(source_row.get("expected_coupling"))
-
-        if not particle_diameter_nm:
-            if outer_diameter_nm:
-                particle_diameter_nm = outer_diameter_nm
-            elif core_diameter_nm:
-                particle_diameter_nm = core_diameter_nm
-
-        remapped_rows.append(
-            {
-                "particle_diameter_nm": particle_diameter_nm,
-                "measured_peak_position": measured_peak_position,
-                "expected_coupling": expected_coupling,
-            }
+    return [
+        remap_row_to_solid_sphere_model(
+            row=source_rows[row_index] if row_index < len(source_rows) else {},
         )
+        for row_index in range(
+            row_count,
+        )
+    ]
 
-    return remapped_rows
+
+def remap_row_to_core_shell_model(
+    *,
+    row: dict[str, Any],
+) -> dict[str, str]:
+    """
+    Remap one source row to the core shell table schema.
+    """
+    particle_diameter_nm = normalize_cell_value(
+        row.get(
+            COLUMN_PARTICLE_DIAMETER_NM,
+        )
+    )
+
+    core_diameter_nm = normalize_cell_value(
+        row.get(
+            COLUMN_CORE_DIAMETER_NM,
+        )
+    )
+
+    shell_thickness_nm = normalize_cell_value(
+        row.get(
+            COLUMN_SHELL_THICKNESS_NM,
+        )
+    )
+
+    measured_peak_position = normalize_cell_value(
+        row.get(
+            COLUMN_MEASURED_PEAK_POSITION,
+        )
+    )
+
+    expected_coupling = normalize_cell_value(
+        row.get(
+            COLUMN_EXPECTED_COUPLING,
+        )
+    )
+
+    if not core_diameter_nm and particle_diameter_nm:
+        core_diameter_nm = particle_diameter_nm
+
+    return {
+        COLUMN_CORE_DIAMETER_NM: core_diameter_nm,
+        COLUMN_SHELL_THICKNESS_NM: shell_thickness_nm,
+        COLUMN_OUTER_DIAMETER_NM: compute_outer_diameter_string(
+            core_diameter_nm=core_diameter_nm,
+            shell_thickness_nm=shell_thickness_nm,
+        ),
+        COLUMN_MEASURED_PEAK_POSITION: measured_peak_position,
+        COLUMN_EXPECTED_COUPLING: expected_coupling,
+    }
+
+
+def remap_row_to_solid_sphere_model(
+    *,
+    row: dict[str, Any],
+) -> dict[str, str]:
+    """
+    Remap one source row to the solid sphere table schema.
+    """
+    particle_diameter_nm = normalize_cell_value(
+        row.get(
+            COLUMN_PARTICLE_DIAMETER_NM,
+        )
+    )
+
+    core_diameter_nm = normalize_cell_value(
+        row.get(
+            COLUMN_CORE_DIAMETER_NM,
+        )
+    )
+
+    outer_diameter_nm = normalize_cell_value(
+        row.get(
+            COLUMN_OUTER_DIAMETER_NM,
+        )
+    )
+
+    measured_peak_position = normalize_cell_value(
+        row.get(
+            COLUMN_MEASURED_PEAK_POSITION,
+        )
+    )
+
+    expected_coupling = normalize_cell_value(
+        row.get(
+            COLUMN_EXPECTED_COUPLING,
+        )
+    )
+
+    if not particle_diameter_nm:
+        if outer_diameter_nm:
+            particle_diameter_nm = outer_diameter_nm
+
+        elif core_diameter_nm:
+            particle_diameter_nm = core_diameter_nm
+
+    return {
+        COLUMN_PARTICLE_DIAMETER_NM: particle_diameter_nm,
+        COLUMN_MEASURED_PEAK_POSITION: measured_peak_position,
+        COLUMN_EXPECTED_COUPLING: expected_coupling,
+    }
 
 
 def normalize_table_rows(
     *,
-    mie_model: str,
+    mie_model: Any,
     current_rows: Optional[list[dict[str, Any]]],
 ) -> list[dict[str, str]]:
-    resolved_current_rows = [dict(row) for row in (current_rows or [])]
+    """
+    Normalize table rows according to the selected Mie model schema.
+    """
+    resolved_mie_model = resolve_mie_model(
+        mie_model,
+    )
 
-    if mie_model == "Core/Shell Sphere":
-        normalized_rows: list[dict[str, str]] = []
+    source_rows = table_services.copy_table_rows(
+        rows=current_rows,
+    )
 
-        for source_row in resolved_current_rows:
-            core_diameter_nm = normalize_editable_cell(source_row.get("core_diameter_nm"))
-            shell_thickness_nm = normalize_editable_cell(source_row.get("shell_thickness_nm"))
-            measured_peak_position = normalize_editable_cell(source_row.get("measured_peak_position"))
-            expected_coupling = normalize_readonly_cell(source_row.get("expected_coupling"))
-
-            outer_diameter_nm = compute_outer_diameter_string(
-                core_diameter_nm=core_diameter_nm,
-                shell_thickness_nm=shell_thickness_nm,
+    if resolved_mie_model == MIE_MODEL_CORE_SHELL_SPHERE:
+        return [
+            normalize_core_shell_row(
+                row=row,
             )
+            for row in source_rows
+        ]
 
-            normalized_rows.append(
-                {
-                    "core_diameter_nm": core_diameter_nm,
-                    "shell_thickness_nm": shell_thickness_nm,
-                    "outer_diameter_nm": outer_diameter_nm,
-                    "measured_peak_position": measured_peak_position,
-                    "expected_coupling": expected_coupling,
-                }
-            )
-
-        return normalized_rows
-
-    normalized_rows: list[dict[str, str]] = []
-
-    for source_row in resolved_current_rows:
-        normalized_rows.append(
-            {
-                "particle_diameter_nm": normalize_editable_cell(source_row.get("particle_diameter_nm")),
-                "measured_peak_position": normalize_editable_cell(source_row.get("measured_peak_position")),
-                "expected_coupling": normalize_readonly_cell(source_row.get("expected_coupling")),
-            }
+    return [
+        normalize_solid_sphere_row(
+            row=row,
         )
+        for row in source_rows
+    ]
 
-    return normalized_rows
+
+def normalize_core_shell_row(
+    *,
+    row: dict[str, Any],
+) -> dict[str, str]:
+    """
+    Normalize one core shell table row.
+    """
+    core_diameter_nm = normalize_cell_value(
+        row.get(
+            COLUMN_CORE_DIAMETER_NM,
+        )
+    )
+
+    shell_thickness_nm = normalize_cell_value(
+        row.get(
+            COLUMN_SHELL_THICKNESS_NM,
+        )
+    )
+
+    return {
+        COLUMN_CORE_DIAMETER_NM: core_diameter_nm,
+        COLUMN_SHELL_THICKNESS_NM: shell_thickness_nm,
+        COLUMN_OUTER_DIAMETER_NM: compute_outer_diameter_string(
+            core_diameter_nm=core_diameter_nm,
+            shell_thickness_nm=shell_thickness_nm,
+        ),
+        COLUMN_MEASURED_PEAK_POSITION: normalize_cell_value(
+            row.get(
+                COLUMN_MEASURED_PEAK_POSITION,
+            )
+        ),
+        COLUMN_EXPECTED_COUPLING: normalize_cell_value(
+            row.get(
+                COLUMN_EXPECTED_COUPLING,
+            )
+        ),
+    }
+
+
+def normalize_solid_sphere_row(
+    *,
+    row: dict[str, Any],
+) -> dict[str, str]:
+    """
+    Normalize one solid sphere table row.
+    """
+    return {
+        COLUMN_PARTICLE_DIAMETER_NM: normalize_cell_value(
+            row.get(
+                COLUMN_PARTICLE_DIAMETER_NM,
+            )
+        ),
+        COLUMN_MEASURED_PEAK_POSITION: normalize_cell_value(
+            row.get(
+                COLUMN_MEASURED_PEAK_POSITION,
+            )
+        ),
+        COLUMN_EXPECTED_COUPLING: normalize_cell_value(
+            row.get(
+                COLUMN_EXPECTED_COUPLING,
+            )
+        ),
+    }
 
 
 def table_is_effectively_empty(
     *,
-    mie_model: str,
+    mie_model: Any,
     rows: Optional[list[dict[str, Any]]],
 ) -> bool:
+    """
+    Return whether the calibration standard table contains no useful data.
+    """
+    resolved_mie_model = resolve_mie_model(
+        mie_model,
+    )
+
     normalized_rows = normalize_table_rows(
-        mie_model=mie_model,
+        mie_model=resolved_mie_model,
         current_rows=rows,
     )
 
-    if not normalized_rows:
-        return True
-
-    if mie_model == "Core/Shell Sphere":
-        for row in normalized_rows:
-            if (
-                str(row.get("core_diameter_nm", "")).strip()
-                or str(row.get("shell_thickness_nm", "")).strip()
-                or str(row.get("measured_peak_position", "")).strip()
-                or str(row.get("expected_coupling", "")).strip()
-            ):
-                return False
-        return True
-
-    for row in normalized_rows:
-        if (
-            str(row.get("particle_diameter_nm", "")).strip()
-            or str(row.get("measured_peak_position", "")).strip()
-            or str(row.get("expected_coupling", "")).strip()
-        ):
-            return False
-
-    return True
+    return table_services.table_is_effectively_empty(
+        rows=normalized_rows,
+        user_data_column_ids=get_user_data_column_ids_for_model(
+            resolved_mie_model,
+        ),
+    )
 
 
-def as_float_list_from_runtime_value(value: Any) -> list[float]:
+def as_float_list_from_runtime_value(
+    value: Any,
+) -> list[float]:
+    """
+    Convert a runtime configuration value into a finite float list.
+    """
     if value in (None, ""):
         return []
 
-    if isinstance(value, (list, tuple)):
-        result: list[float] = []
-        for item in value:
-            try:
-                parsed_value = float(item)
-            except Exception:
-                continue
-            if np.isfinite(parsed_value):
-                result.append(float(parsed_value))
-        return result
+    if isinstance(
+        value,
+        (list, tuple),
+    ):
+        values = value
 
-    text = str(value).replace(";", ",")
-    result: list[float] = []
+    else:
+        values = str(
+            value,
+        ).replace(
+            ";",
+            ",",
+        ).split(
+            ",",
+        )
 
-    for part in text.split(","):
-        part = part.strip()
-        if not part:
-            continue
+    float_values: list[float] = []
+
+    for item in values:
         try:
-            parsed_value = float(part)
+            parsed_value = float(
+                str(
+                    item,
+                ).strip()
+            )
+
         except Exception:
             continue
-        if np.isfinite(parsed_value):
-            result.append(float(parsed_value))
 
-    return result
+        if np.isfinite(
+            parsed_value,
+        ):
+            float_values.append(
+                parsed_value,
+            )
+
+    return float_values
 
 
 def populate_table_from_runtime_defaults(
     *,
-    mie_model: str,
+    mie_model: Any,
     runtime_particle_diameters_nm: Any,
     runtime_core_diameters_nm: Any,
     runtime_shell_thicknesses_nm: Any,
 ) -> list[dict[str, str]]:
-    if mie_model == "Core/Shell Sphere":
-        core_diameters_nm = as_float_list_from_runtime_value(runtime_core_diameters_nm)
-        shell_thicknesses_nm = as_float_list_from_runtime_value(runtime_shell_thicknesses_nm)
+    """
+    Populate calibration standard table rows from runtime configuration values.
+    """
+    resolved_mie_model = resolve_mie_model(
+        mie_model,
+    )
 
-        row_count = max(3, len(core_diameters_nm), len(shell_thicknesses_nm))
-        rows: list[dict[str, str]] = []
+    if resolved_mie_model == MIE_MODEL_CORE_SHELL_SPHERE:
+        return populate_core_shell_rows_from_runtime_defaults(
+            runtime_core_diameters_nm=runtime_core_diameters_nm,
+            runtime_shell_thicknesses_nm=runtime_shell_thicknesses_nm,
+        )
 
-        for index in range(row_count):
-            core_value = (
-                f"{float(core_diameters_nm[index]):.6g}"
-                if index < len(core_diameters_nm)
-                else ""
-            )
-            shell_value = (
-                f"{float(shell_thicknesses_nm[index]):.6g}"
-                if index < len(shell_thicknesses_nm)
-                else ""
-            )
+    return populate_solid_sphere_rows_from_runtime_defaults(
+        runtime_particle_diameters_nm=runtime_particle_diameters_nm,
+    )
 
-            rows.append(
-                {
-                    "core_diameter_nm": core_value,
-                    "shell_thickness_nm": shell_value,
-                    "outer_diameter_nm": compute_outer_diameter_string(
-                        core_diameter_nm=core_value,
-                        shell_thickness_nm=shell_value,
-                    ),
-                    "measured_peak_position": "",
-                    "expected_coupling": "",
-                }
-            )
 
-        return rows
+def populate_core_shell_rows_from_runtime_defaults(
+    *,
+    runtime_core_diameters_nm: Any,
+    runtime_shell_thicknesses_nm: Any,
+) -> list[dict[str, str]]:
+    """
+    Populate core shell calibration standard rows from runtime defaults.
+    """
+    core_diameters_nm = as_float_list_from_runtime_value(
+        runtime_core_diameters_nm,
+    )
 
-    particle_diameters_nm = as_float_list_from_runtime_value(runtime_particle_diameters_nm)
-    row_count = max(3, len(particle_diameters_nm))
+    shell_thicknesses_nm = as_float_list_from_runtime_value(
+        runtime_shell_thicknesses_nm,
+    )
+
+    row_count = max(
+        3,
+        len(
+            core_diameters_nm,
+        ),
+        len(
+            shell_thicknesses_nm,
+        ),
+    )
+
     rows: list[dict[str, str]] = []
 
-    for index in range(row_count):
-        particle_value = (
-            f"{float(particle_diameters_nm[index]):.6g}"
-            if index < len(particle_diameters_nm)
+    for row_index in range(
+        row_count,
+    ):
+        core_diameter_nm = (
+            f"{float(core_diameters_nm[row_index]):.6g}"
+            if row_index < len(core_diameters_nm)
             else ""
         )
+
+        shell_thickness_nm = (
+            f"{float(shell_thicknesses_nm[row_index]):.6g}"
+            if row_index < len(shell_thicknesses_nm)
+            else ""
+        )
+
         rows.append(
             {
-                "particle_diameter_nm": particle_value,
-                "measured_peak_position": "",
-                "expected_coupling": "",
+                COLUMN_CORE_DIAMETER_NM: core_diameter_nm,
+                COLUMN_SHELL_THICKNESS_NM: shell_thickness_nm,
+                COLUMN_OUTER_DIAMETER_NM: compute_outer_diameter_string(
+                    core_diameter_nm=core_diameter_nm,
+                    shell_thickness_nm=shell_thickness_nm,
+                ),
+                COLUMN_MEASURED_PEAK_POSITION: "",
+                COLUMN_EXPECTED_COUPLING: "",
+            }
+        )
+
+    return rows
+
+
+def populate_solid_sphere_rows_from_runtime_defaults(
+    *,
+    runtime_particle_diameters_nm: Any,
+) -> list[dict[str, str]]:
+    """
+    Populate solid sphere calibration standard rows from runtime defaults.
+    """
+    particle_diameters_nm = as_float_list_from_runtime_value(
+        runtime_particle_diameters_nm,
+    )
+
+    row_count = max(
+        3,
+        len(
+            particle_diameters_nm,
+        ),
+    )
+
+    rows: list[dict[str, str]] = []
+
+    for row_index in range(
+        row_count,
+    ):
+        particle_diameter_nm = (
+            f"{float(particle_diameters_nm[row_index]):.6g}"
+            if row_index < len(particle_diameters_nm)
+            else ""
+        )
+
+        rows.append(
+            {
+                COLUMN_PARTICLE_DIAMETER_NM: particle_diameter_nm,
+                COLUMN_MEASURED_PEAK_POSITION: "",
+                COLUMN_EXPECTED_COUPLING: "",
             }
         )
 

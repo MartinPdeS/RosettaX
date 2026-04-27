@@ -19,7 +19,7 @@ from .detector_configuration import (
 
 from .model import compute_model_for_rows
 
-from . import presets
+from . import particle_presets
 
 __all__ = [
     "sphere_table_columns",
@@ -35,5 +35,5 @@ __all__ = [
     "resolve_detector_configuration_visibility_style",
     "resolve_detector_configuration_values",
     "compute_model_for_rows",
-    "presets",
+    "particle_presets",
 ]

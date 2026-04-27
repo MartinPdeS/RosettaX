@@ -7,10 +7,11 @@ import dash
 import dash_bootstrap_components as dbc
 
 from RosettaX.pages.p00_sidebar.ids import SidebarIds
-from RosettaX.pages.p03_scattering.sections import s04_table_services as services
 from RosettaX.pages.p03_scattering.state import ScatteringPageState
 from RosettaX.utils import styling
 from RosettaX.utils.runtime_config import RuntimeConfig
+from RosettaX.workflow.parameters import table as parameters_table
+from RosettaX.workflow.table.scattering import ScatteringCalibrationStandardTable
 
 
 logger = logging.getLogger(__name__)
@@ -39,8 +40,8 @@ class ReferenceTable:
     instrument response.
     """
 
-    sphere_table_columns = services.sphere_table_columns
-    core_shell_table_columns = services.core_shell_table_columns
+    sphere_table_columns = ScatteringCalibrationStandardTable.sphere_table_columns
+    core_shell_table_columns = ScatteringCalibrationStandardTable.core_shell_table_columns
 
     def __init__(
         self,
@@ -128,14 +129,20 @@ class ReferenceTable:
                 ),
                 dash.html.Div(
                     [
-                        dash.html.Button(
+                        dbc.Button(
                             "Add row",
                             id=self.ids.add_row_btn,
                             n_clicks=0,
-                        )
+                            color="secondary",
+                            outline=True,
+                            size="sm",
+                        ),
                     ],
                     style={
                         "marginTop": "10px",
+                        "display": "flex",
+                        "gap": "8px",
+                        "alignItems": "center",
                     },
                 ),
             ]
@@ -162,14 +169,15 @@ class ReferenceTable:
             ]
         )
 
-    def _build_compute_model_button(self) -> dash.html.Button:
+    def _build_compute_model_button(self) -> dbc.Button:
         """
         Build the standard coupling computation button.
         """
-        return dash.html.Button(
+        return dbc.Button(
             "Compute Standard Coupling",
             id=self.ids.compute_model_btn,
             n_clicks=0,
+            color="primary",
             style={
                 "marginTop": "12px",
             },
@@ -181,7 +189,7 @@ class ReferenceTable:
         """
         runtime_config = RuntimeConfig.from_default_profile()
 
-        return services.build_table_state_from_runtime_config(
+        return ScatteringCalibrationStandardTable.build_state_from_runtime_config(
             runtime_config=runtime_config,
         )
 
@@ -235,25 +243,25 @@ class ReferenceTable:
                 runtime_config_data if isinstance(runtime_config_data, dict) else None
             )
 
-            resolved_mie_model = services.resolve_mie_model(
+            resolved_mie_model = parameters_table.resolve_mie_model(
                 runtime_config.get_str(
                     "particle_model.mie_model",
-                    default=mie_model or "Solid Sphere",
+                    default=mie_model or parameters_table.MIE_MODEL_SOLID_SPHERE,
                 )
             )
 
-            should_rebuild_table = services.should_rebuild_table_from_runtime_config(
+            should_rebuild_table = ScatteringCalibrationStandardTable.should_rebuild_from_runtime_config(
                 mie_model=resolved_mie_model,
                 profile_load_event_data=profile_load_event_data,
                 current_rows=current_rows,
             )
 
-            normalized_current_rows = services.normalize_table_rows(
+            normalized_current_rows = ScatteringCalibrationStandardTable.normalize_rows(
                 mie_model=resolved_mie_model,
-                current_rows=current_rows,
+                rows=current_rows,
             )
 
-            user_data_column_ids = services.get_user_data_column_ids_for_model(
+            user_data_column_ids = ScatteringCalibrationStandardTable.get_user_data_column_ids_for_model(
                 resolved_mie_model,
             )
 
@@ -278,7 +286,7 @@ class ReferenceTable:
 
                 return dash.no_update, dash.no_update
 
-            columns, rows = services.build_table_state_from_runtime_config(
+            columns, rows = ScatteringCalibrationStandardTable.build_state_from_runtime_config(
                 runtime_config=runtime_config,
             )
 
@@ -315,15 +323,15 @@ class ReferenceTable:
             mie_model: Any,
             current_rows: Optional[list[dict[str, Any]]],
         ) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
-            resolved_mie_model = services.resolve_mie_model(
+            resolved_mie_model = parameters_table.resolve_mie_model(
                 mie_model,
             )
 
-            next_columns = services.get_table_columns_for_model(
+            next_columns = ScatteringCalibrationStandardTable.get_columns_for_model(
                 resolved_mie_model,
             )
 
-            next_rows = services.remap_table_rows_to_model(
+            next_rows = ScatteringCalibrationStandardTable.remap_rows_to_model(
                 mie_model=resolved_mie_model,
                 current_rows=current_rows,
             )
@@ -361,13 +369,13 @@ class ReferenceTable:
                 None if rows is None else len(rows),
             )
 
-            next_rows = services.add_empty_row_for_model(
-                mie_model=mie_model,
-                rows=rows,
+            resolved_mie_model = parameters_table.resolve_mie_model(
+                mie_model,
             )
 
-            resolved_mie_model = services.resolve_mie_model(
-                mie_model,
+            next_rows = ScatteringCalibrationStandardTable.add_empty_row(
+                mie_model=resolved_mie_model,
+                rows=rows,
             )
 
             logger.debug(
@@ -402,13 +410,13 @@ class ReferenceTable:
                 None if current_rows is None else len(current_rows),
             )
 
-            resolved_mie_model = services.resolve_mie_model(
+            resolved_mie_model = parameters_table.resolve_mie_model(
                 mie_model,
             )
 
-            normalized_rows = services.normalize_table_rows(
+            normalized_rows = ScatteringCalibrationStandardTable.normalize_rows(
                 mie_model=resolved_mie_model,
-                current_rows=current_rows,
+                rows=current_rows,
             )
 
             logger.debug(
@@ -477,23 +485,25 @@ class ReferenceTable:
                 None if current_rows is None else len(current_rows),
             )
 
-            resolved_mie_model = services.resolve_mie_model(
+            resolved_mie_model = parameters_table.resolve_mie_model(
                 mie_model,
             )
 
-            calibration_standard_parameters_payload = services.build_scattering_parameters_payload(
-                mie_model=resolved_mie_model,
-                medium_refractive_index=medium_refractive_index,
-                particle_refractive_index=particle_refractive_index,
-                core_refractive_index=core_refractive_index,
-                shell_refractive_index=shell_refractive_index,
-                wavelength_nm=wavelength_nm,
-                detector_numerical_aperture=detector_numerical_aperture,
-                detector_cache_numerical_aperture=detector_cache_numerical_aperture,
-                blocker_bar_numerical_aperture=blocker_bar_numerical_aperture,
-                detector_sampling=detector_sampling,
-                detector_phi_angle_degree=detector_phi_angle_degree,
-                detector_gamma_angle_degree=detector_gamma_angle_degree,
+            calibration_standard_parameters_payload = (
+                ScatteringCalibrationStandardTable.build_parameters_payload(
+                    mie_model=resolved_mie_model,
+                    medium_refractive_index=medium_refractive_index,
+                    particle_refractive_index=particle_refractive_index,
+                    core_refractive_index=core_refractive_index,
+                    shell_refractive_index=shell_refractive_index,
+                    wavelength_nm=wavelength_nm,
+                    detector_numerical_aperture=detector_numerical_aperture,
+                    detector_cache_numerical_aperture=detector_cache_numerical_aperture,
+                    blocker_bar_numerical_aperture=blocker_bar_numerical_aperture,
+                    detector_sampling=detector_sampling,
+                    detector_phi_angle_degree=detector_phi_angle_degree,
+                    detector_gamma_angle_degree=detector_gamma_angle_degree,
+                )
             )
 
             page_state = ScatteringPageState.from_dict(
@@ -504,7 +514,7 @@ class ReferenceTable:
                 scattering_parameters_payload=calibration_standard_parameters_payload,
             )
 
-            computed_rows = services.compute_model_for_rows(
+            computed_rows = ScatteringCalibrationStandardTable.compute_model_for_rows(
                 mie_model=resolved_mie_model,
                 current_rows=current_rows,
                 medium_refractive_index=medium_refractive_index,

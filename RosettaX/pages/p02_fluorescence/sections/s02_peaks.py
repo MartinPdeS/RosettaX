@@ -3,11 +3,7 @@
 from typing import Any
 import logging
 
-from RosettaX.workflow.peak.adapters.fluorescence import FluorescencePeakWorkflowAdapter
-from RosettaX.workflow.peak.callbacks.main import register_peak_callbacks
-from RosettaX.workflow.peak.layout import PeakLayout
-from RosettaX.workflow.peak.models import PeakConfig
-
+from RosettaX.workflow import peak
 
 logger = logging.getLogger(__name__)
 
@@ -37,9 +33,9 @@ class Peaks:
     ) -> None:
         self.page = page
         self.ids = page.ids.Fluorescence
-        self.adapter = FluorescencePeakWorkflowAdapter()
+        self.adapter = peak.FluorescencePeakWorkflowAdapter()
 
-        self.config = PeakConfig(
+        self.config = peak.PeakConfig(
             header_title="3. Fluorescence peak detection",
             process_dropdown_label="Peak process",
             graph_title="Fluorescence peak detection graph",
@@ -50,7 +46,7 @@ class Peaks:
             mie_model_input_id=None,
         )
 
-        self.layout_builder = PeakLayout(
+        self.layout_builder = peak.PeakLayout(
             ids=self.ids,
             config=self.config,
         )
@@ -70,7 +66,7 @@ class Peaks:
         """
         Register fluorescence peak workflow callbacks.
         """
-        register_peak_callbacks(
+        peak.register_peak_callbacks(
             page=self.page,
             ids=self.ids,
             adapter=self.adapter,

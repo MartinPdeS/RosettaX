@@ -2,10 +2,7 @@
 
 import logging
 
-from RosettaX.workflow.save.adapters import CalibrationStoreSaveAdapter
-from RosettaX.workflow.save.callbacks import register_save_callbacks
-from RosettaX.workflow.save.layout import SaveLayout
-from RosettaX.workflow.save.models import SaveConfig
+from RosettaX.workflow import save
 from RosettaX.utils import directories
 
 
@@ -32,7 +29,7 @@ class Save:
         self.page = page
         self.ids = page.ids.Save
 
-        self.config = SaveConfig(
+        self.config = save.SaveConfig(
             calibration_kind="fluorescence",
             output_directory=directories.fluorescence_calibration,
             header_title="5. Save calibration",
@@ -42,9 +39,9 @@ class Save:
             failure_message="Failed to save calibration. See terminal logs for details.",
         )
 
-        self.adapter = CalibrationStoreSaveAdapter()
+        self.adapter = save.CalibrationStoreSaveAdapter()
 
-        self.layout_builder = SaveLayout(
+        self.layout_builder = save.SaveLayout(
             ids=self.ids,
             config=self.config,
         )
@@ -64,7 +61,7 @@ class Save:
         """
         Register callbacks for the fluorescence save section.
         """
-        register_save_callbacks(
+        save.register_save_callbacks(
             page=self.page,
             ids=self.ids,
             adapter=self.adapter,

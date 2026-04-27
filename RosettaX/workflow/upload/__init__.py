@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from RosettaX.workflow.upload.adapters import FluorescenceUploadAdapter
-from RosettaX.workflow.upload.adapters import ScatteringUploadAdapter
-from RosettaX.workflow.upload.adapters import UploadAdapter
-from RosettaX.workflow.upload.callbacks import register_upload_callbacks
-from RosettaX.workflow.upload.ids import UploadIds
-from RosettaX.workflow.upload.layout import UploadLayout
-from RosettaX.workflow.upload.models import UploadCallbackResult
-from RosettaX.workflow.upload.models import UploadConfig
-from RosettaX.workflow.upload.models import UploadState
+from .adapters import FluorescenceUploadAdapter
+from .adapters import ScatteringUploadAdapter
+from .adapters import UploadAdapter
+from .callbacks import register_upload_callbacks
+from .ids import UploadIds
+from .layout import UploadLayout
+from .models import UploadCallbackResult
+from .models import UploadConfig
+from .models import UploadState
 
 __all__ = [
     "FluorescenceUploadAdapter",

@@ -8,8 +8,7 @@ import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
 
 from ..state import FluorescencePageState
-from RosettaX.utils import graph_config
-
+from RosettaX.utils import styling
 from RosettaX.workflow.calibration import fluorescence as services
 
 
@@ -155,8 +154,8 @@ class Calibration:
                         dash.dcc.Loading(
                             dash.dcc.Graph(
                                 id=self.ids.graph_calibration,
-                                style=graph_config.PLOTLY_GRAPH_STYLE,
-                                config=graph_config.PLOTLY_GRAPH_CONFIG,
+                                style=styling.PLOTLY_GRAPH_STYLE,
+                                config=styling.PLOTLY_GRAPH_CONFIG,
                             ),
                             type="default",
                         ),

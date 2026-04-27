@@ -9,9 +9,7 @@ import dash_bootstrap_components as dbc
 from RosettaX.pages.p00_sidebar.ids import SidebarIds
 from RosettaX.utils import styling
 from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.workflow import table as workflow_table
-
-from RosettaX.workflow.table import fluorescence as services
+from RosettaX.workflow.table.fluorescence import FluorescenceReferenceTable
 
 
 logger = logging.getLogger(__name__)
@@ -37,26 +35,11 @@ class ReferenceTable:
     only section allowed to use add_row_btn to update bead_table.data.
     """
 
-    bead_table_columns: list[dict[str, Any]] = [
-        {
-            "name": "Intensity [calibrated units]",
-            "id": "col1",
-            "editable": True,
-        },
-        {
-            "name": "Intensity [a.u.]",
-            "id": "col2",
-            "editable": True,
-        },
-    ]
+    calibrated_intensity_column_name = FluorescenceReferenceTable.column_calibrated_intensity
+    measured_intensity_column_name = FluorescenceReferenceTable.column_measured_intensity
 
-    calibrated_intensity_column_name = "col1"
-    measured_intensity_column_name = "col2"
-
-    user_data_column_ids = [
-        calibrated_intensity_column_name,
-        measured_intensity_column_name,
-    ]
+    bead_table_columns = FluorescenceReferenceTable.columns
+    user_data_column_ids = FluorescenceReferenceTable.user_data_column_ids
 
     def __init__(
         self,
@@ -126,6 +109,14 @@ class ReferenceTable:
             },
         )
 
+    def _build_table_options(self) -> dict[str, Any]:
+        """
+        Build DataTable options for the fluorescence reference table.
+        """
+        return {
+            **styling.DATATABLE,
+        }
+
     def _build_bead_table(self) -> dash.dash_table.DataTable:
         """
         Build the bead calibration table using the default runtime profile.
@@ -142,7 +133,7 @@ class ReferenceTable:
             id=self.ids.bead_table,
             columns=self.bead_table_columns,
             data=default_rows,
-            **styling.DATATABLE,
+            **self._build_table_options(),
         )
 
     def _build_add_row_button_row(self) -> dash.html.Div:
@@ -151,14 +142,20 @@ class ReferenceTable:
         """
         return dash.html.Div(
             [
-                dash.html.Button(
-                    "Add Row",
+                dbc.Button(
+                    "Add row",
                     id=self.ids.add_row_btn,
                     n_clicks=0,
+                    color="secondary",
+                    outline=True,
+                    size="sm",
                 )
             ],
             style={
                 "marginTop": "10px",
+                "display": "flex",
+                "gap": "8px",
+                "alignItems": "center",
             },
         )
 
@@ -217,28 +214,22 @@ class ReferenceTable:
 
                 return dash.no_update
 
-            profile_load_was_requested = workflow_table.profile_load_was_requested(
+            should_rebuild_table = FluorescenceReferenceTable.should_rebuild_from_runtime_config(
                 profile_load_event_data=profile_load_event_data,
+                current_rows=current_rows,
             )
 
-            normalized_current_rows = workflow_table.normalize_table_rows(
+            normalized_current_rows = FluorescenceReferenceTable.normalize_rows(
                 rows=current_rows,
             )
 
             logger.debug(
                 "sync_bead_table_from_runtime_store called with triggered_id=%r "
-                "profile_load_was_requested=%r profile_load_event_data=%r "
-                "current_rows=%r",
+                "should_rebuild_table=%r profile_load_event_data=%r current_rows=%r",
                 dash.ctx.triggered_id,
-                profile_load_was_requested,
+                should_rebuild_table,
                 profile_load_event_data,
                 normalized_current_rows,
-            )
-
-            should_rebuild_table = workflow_table.should_rebuild_table_from_runtime_config(
-                profile_load_was_requested=profile_load_was_requested,
-                current_rows=normalized_current_rows,
-                user_data_column_ids=self.user_data_column_ids,
             )
 
             if not should_rebuild_table:
@@ -253,14 +244,13 @@ class ReferenceTable:
                 runtime_config_data,
             )
 
-            resolved_rows = build_bead_rows_from_runtime_config(
+            resolved_rows = FluorescenceReferenceTable.build_rows_from_runtime_config(
                 runtime_config=runtime_config,
             )
 
             logger.debug(
                 "Rebuilt fluorescence reference table from runtime config. "
-                "profile_load_was_requested=%r row_count=%r rows=%r",
-                profile_load_was_requested,
+                "row_count=%r rows=%r",
                 len(resolved_rows),
                 resolved_rows,
             )
@@ -280,24 +270,20 @@ class ReferenceTable:
             ),
             dash.Input(self.ids.add_row_btn, "n_clicks"),
             dash.State(self.ids.bead_table, "data"),
-            dash.State(self.ids.bead_table, "columns"),
             prevent_initial_call=True,
         )
         def add_row(
             n_clicks: int,
-            rows: list[dict[str, Any]],
-            columns: list[dict[str, Any]],
+            rows: Optional[list[dict[str, Any]]],
         ) -> list[dict[str, Any]]:
             logger.debug(
-                "add_row called with n_clicks=%r existing_row_count=%r columns=%r",
+                "add_row called with n_clicks=%r existing_row_count=%r",
                 n_clicks,
                 None if rows is None else len(rows),
-                columns,
             )
 
-            next_rows = workflow_table.add_empty_row_from_columns(
+            next_rows = FluorescenceReferenceTable.add_empty_row(
                 rows=rows,
-                columns=columns,
             )
 
             logger.debug(
@@ -314,72 +300,16 @@ def build_bead_rows_from_runtime_config(
 ) -> list[dict[str, str]]:
     """
     Build fluorescence calibration table rows from a runtime configuration.
+
+    Compatibility wrapper for older imports.
     """
-    mesf_values = runtime_config.get_path(
-        "calibration.mesf_values",
-        default=[],
+    rows = FluorescenceReferenceTable.build_rows_from_runtime_config(
+        runtime_config=runtime_config,
     )
-
-    rows = services.build_bead_rows_from_mesf_values(
-        mesf_values,
-    )
-
-    if not rows:
-        rows = workflow_table.build_empty_rows(
-            column_ids=[
-                ReferenceTable.calibrated_intensity_column_name,
-                ReferenceTable.measured_intensity_column_name,
-            ],
-            row_count=3,
-        )
 
     logger.debug(
-        "Built fluorescence reference table rows from runtime config. "
-        "mesf_values=%r rows=%r",
-        mesf_values,
+        "Built fluorescence reference table rows from runtime config. rows=%r",
         rows,
     )
 
     return rows
-
-
-def normalize_fluorescence_table_rows(
-    *,
-    rows: Any,
-) -> list[dict[str, Any]]:
-    """
-    Normalize arbitrary table data into a list of dictionary rows.
-
-    Compatibility wrapper for older imports.
-    """
-    return workflow_table.normalize_table_rows(
-        rows=rows,
-    )
-
-
-def fluorescence_table_is_effectively_empty(
-    *,
-    rows: list[dict[str, Any]],
-) -> bool:
-    """
-    Return whether the fluorescence table contains no useful user data.
-
-    Compatibility wrapper for older imports.
-    """
-    return workflow_table.table_is_effectively_empty(
-        rows=rows,
-        user_data_column_ids=ReferenceTable.user_data_column_ids,
-    )
-
-
-def value_is_not_empty(
-    value: Any,
-) -> bool:
-    """
-    Return whether a table cell value should be considered populated.
-
-    Compatibility wrapper for older imports.
-    """
-    return workflow_table.value_is_not_empty(
-        value,
-    )

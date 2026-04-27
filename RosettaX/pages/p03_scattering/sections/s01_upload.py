@@ -3,10 +3,7 @@
 import logging
 
 from ..state import ScatteringPageState
-from RosettaX.workflow.upload.adapters import ScatteringUploadAdapter
-from RosettaX.workflow.upload.callbacks import register_upload_callbacks
-from RosettaX.workflow.upload.layout import UploadLayout
-from RosettaX.workflow.upload.models import UploadConfig
+from RosettaX.workflow import upload
 
 
 logger = logging.getLogger(__name__)
@@ -31,7 +28,7 @@ class Upload:
         self.page = page
         self.ids = page.ids.Upload
 
-        self.config = UploadConfig(
+        self.config = upload.UploadConfig(
             section_title="Scattering calibration",
             card_title="1. Upload FCS File",
             upload_link_text="Select Bead File",
@@ -47,11 +44,11 @@ class Upload:
             body_style_key="card_body_scroll",
         )
 
-        self.adapter = ScatteringUploadAdapter(
+        self.adapter = upload.ScatteringUploadAdapter(
             state_class=ScatteringPageState,
         )
 
-        self.layout_builder = UploadLayout(
+        self.layout_builder = upload.UploadLayout(
             ids=self.ids,
             config=self.config,
         )
@@ -71,7 +68,7 @@ class Upload:
         """
         Register callbacks for the scattering upload section.
         """
-        register_upload_callbacks(
+        upload.register_upload_callbacks(
             page=self.page,
             ids=self.ids,
             adapter=self.adapter,

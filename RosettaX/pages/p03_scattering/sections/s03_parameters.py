@@ -6,10 +6,9 @@ from typing import Any, Optional, Sequence
 import dash
 import dash_bootstrap_components as dbc
 
-from RosettaX.utils import graph_config
+from RosettaX.utils import styling
 from RosettaX.utils.runtime_config import RuntimeConfig
-
-from RosettaX.workflow.parameters import services, presets
+from RosettaX.workflow.parameters import services, particle_presets
 
 
 logger = logging.getLogger(__name__)
@@ -316,10 +315,10 @@ class Parameters:
                             detector_gamma_angle_degree=self._get_default_detector_gamma_angle_degree(),
                         ),
                         style={
-                            **graph_config.PLOTLY_GRAPH_STYLE,
+                            **styling.PLOTLY_GRAPH_STYLE,
                             "height": "30vh",
                         },
-                        config=graph_config.PLOTLY_GRAPH_CONFIG,
+                        config=styling.PLOTLY_GRAPH_CONFIG,
                         className="optical-configuration-preview-graph",
                     ),
                 ],
@@ -342,7 +341,7 @@ class Parameters:
                     "Particle type:",
                     dash.dcc.Dropdown(
                         id=self.ids.mie_model,
-                        options=presets.MIE_MODEL_OPTIONS,
+                        options=particle_presets.MIE_MODEL_OPTIONS,
                         value=self._get_default_mie_model(),
                         clearable=False,
                         searchable=False,
@@ -359,7 +358,7 @@ class Parameters:
                     preset_id=self.ids.medium_refractive_index_source,
                     value_id=self.ids.medium_refractive_index_custom,
                     default_value=self._get_default_medium_refractive_index(),
-                    preset_options=presets.MEDIUM_REFRACTIVE_INDEX_PRESETS,
+                    preset_options=particle_presets.MEDIUM_REFRACTIVE_INDEX_PRESETS,
                 ),
                 dash.html.Div(
                     self._build_solid_sphere_parameters_block(),
@@ -385,7 +384,7 @@ class Parameters:
                 preset_id=self.ids.particle_refractive_index_source,
                 value_id=self.ids.particle_refractive_index_custom,
                 default_value=self._get_default_particle_refractive_index(),
-                preset_options=presets.PARTICLE_REFRACTIVE_INDEX_PRESETS,
+                preset_options=particle_presets.PARTICLE_REFRACTIVE_INDEX_PRESETS,
             ),
         ]
 
@@ -396,14 +395,14 @@ class Parameters:
                 preset_id=self.ids.core_refractive_index_source,
                 value_id=self.ids.core_refractive_index_custom,
                 default_value=self._get_default_core_refractive_index(),
-                preset_options=presets.CORE_REFRACTIVE_INDEX_PRESETS,
+                preset_options=particle_presets.CORE_REFRACTIVE_INDEX_PRESETS,
             ),
             self._refractive_index_picker(
                 label="Shell refractive index:",
                 preset_id=self.ids.shell_refractive_index_source,
                 value_id=self.ids.shell_refractive_index_custom,
                 default_value=self._get_default_shell_refractive_index(),
-                preset_options=presets.SHELL_REFRACTIVE_INDEX_PRESETS,
+                preset_options=particle_presets.SHELL_REFRACTIVE_INDEX_PRESETS,
             ),
         ]
 

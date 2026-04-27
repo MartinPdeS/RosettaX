@@ -3,10 +3,7 @@
 import logging
 
 from RosettaX.pages.p03_scattering.state import ScatteringPageState
-from RosettaX.workflow.save.adapters import PageStateSaveAdapter
-from RosettaX.workflow.save.callbacks import register_save_callbacks
-from RosettaX.workflow.save.layout import SaveLayout
-from RosettaX.workflow.save.models import SaveConfig
+from RosettaX.workflow import save
 from RosettaX.utils import directories
 
 
@@ -33,7 +30,7 @@ class Save:
         self.page = page
         self.ids = page.ids.Save
 
-        self.config = SaveConfig(
+        self.config = save.SaveConfig(
             calibration_kind="scattering",
             output_directory=directories.scattering_calibration,
             header_title="5. Save calibration",
@@ -43,12 +40,12 @@ class Save:
             failure_message="Failed to save calibration. See terminal logs for details.",
         )
 
-        self.adapter = PageStateSaveAdapter(
+        self.adapter = save.PageStateSaveAdapter(
             state_class=ScatteringPageState,
             calibration_payload_attribute="calibration_payload",
         )
 
-        self.layout_builder = SaveLayout(
+        self.layout_builder = save.SaveLayout(
             ids=self.ids,
             config=self.config,
         )
@@ -68,7 +65,7 @@ class Save:
         """
         Register callbacks for the scattering save section.
         """
-        register_save_callbacks(
+        save.register_save_callbacks(
             page=self.page,
             ids=self.ids,
             adapter=self.adapter,
