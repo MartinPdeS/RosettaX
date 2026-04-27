@@ -7,7 +7,7 @@ import numpy as np
 
 from RosettaX.pages.p03_scattering.backend import BackEnd
 from RosettaX.utils.casting import as_optional_float, as_required_float, as_required_int
-from . import parameter_table
+from . import table
 
 
 def compute_model_for_rows(
@@ -69,7 +69,7 @@ def compute_model_for_rows(
         logger.exception(
             "compute_model_for_rows aborted because optical parameters are invalid."
         )
-        return parameter_table.normalize_table_rows(
+        return table.normalize_table_rows(
             mie_model=mie_model,
             current_rows=resolved_rows,
         )
@@ -145,7 +145,7 @@ def _compute_core_shell_model_for_rows(
         logger.exception(
             "compute_model_for_rows aborted because core/shell refractive indices are invalid."
         )
-        return parameter_table.normalize_table_rows(
+        return table.normalize_table_rows(
             mie_model=mie_model,
             current_rows=current_rows,
         )
@@ -153,7 +153,7 @@ def _compute_core_shell_model_for_rows(
     valid_row_indices: list[int] = []
     outer_diameters_nm: list[float] = []
 
-    updated_rows = parameter_table.normalize_table_rows(
+    updated_rows = table.normalize_table_rows(
         mie_model=mie_model,
         current_rows=current_rows,
     )
@@ -239,7 +239,7 @@ def _compute_solid_sphere_model_for_rows(
         logger.exception(
             "compute_model_for_rows aborted because particle refractive index is invalid."
         )
-        return parameter_table.normalize_table_rows(
+        return table.normalize_table_rows(
             mie_model=mie_model,
             current_rows=current_rows,
         )
@@ -247,7 +247,7 @@ def _compute_solid_sphere_model_for_rows(
     valid_row_indices: list[int] = []
     particle_diameters_nm: list[float] = []
 
-    updated_rows = parameter_table.normalize_table_rows(
+    updated_rows = table.normalize_table_rows(
         mie_model=mie_model,
         current_rows=current_rows,
     )

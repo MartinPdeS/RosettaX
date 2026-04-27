@@ -11,7 +11,7 @@ from RosettaX.utils import styling
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow import table as workflow_table
 
-from . import services
+from RosettaX.workflow.table import fluorescence as services
 
 
 logger = logging.getLogger(__name__)

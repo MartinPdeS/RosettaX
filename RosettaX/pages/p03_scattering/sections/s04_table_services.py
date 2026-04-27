@@ -3,17 +3,18 @@
 import logging
 from typing import Any, Optional
 
-from RosettaX.pages.p03_scattering.sections.s03_parameters import services as parameter_services
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow import table as workflow_table
 from RosettaX.workflow.calibration.mie_relation import build_mie_parameter_payload
 
+from RosettaX.workflow.parameters import services as parameters_services
+from RosettaX.workflow.table import services as table_services
 
 logger = logging.getLogger(__name__)
 
 
-sphere_table_columns = parameter_services.sphere_table_columns
-core_shell_table_columns = parameter_services.core_shell_table_columns
+sphere_table_columns = parameters_services.sphere_table_columns
+core_shell_table_columns = parameters_services.core_shell_table_columns
 
 
 def resolve_mie_model(
@@ -22,7 +23,7 @@ def resolve_mie_model(
     """
     Resolve the Mie model name used by the scattering standard table.
     """
-    return parameter_services.resolve_mie_model(
+    return parameters_services.resolve_mie_model(
         mie_model,
     )
 
@@ -37,7 +38,7 @@ def get_table_columns_for_model(
         mie_model,
     )
 
-    return parameter_services.get_table_columns_for_model(
+    return parameters_services.get_table_columns_for_model(
         resolved_mie_model,
     )
 
@@ -52,7 +53,7 @@ def get_user_data_column_ids_for_model(
         mie_model,
     )
 
-    return workflow_table.get_column_ids(
+    return table_services.get_column_ids(
         columns=columns,
     )
 
@@ -69,7 +70,7 @@ def normalize_table_rows(
         mie_model,
     )
 
-    return parameter_services.normalize_table_rows(
+    return parameters_services.normalize_table_rows(
         mie_model=resolved_mie_model,
         current_rows=current_rows,
     )
@@ -115,7 +116,7 @@ def should_rebuild_table_from_runtime_config(
         mie_model,
     )
 
-    profile_load_was_requested = workflow_table.profile_load_was_requested(
+    profile_load_was_requested = table_services.profile_load_was_requested(
         profile_load_event_data=profile_load_event_data,
     )
 
@@ -128,7 +129,7 @@ def should_rebuild_table_from_runtime_config(
         resolved_mie_model,
     )
 
-    return workflow_table.should_rebuild_table_from_runtime_config(
+    return table_services.should_rebuild_table_from_runtime_config(
         profile_load_was_requested=profile_load_was_requested,
         current_rows=normalized_current_rows,
         user_data_column_ids=user_data_column_ids,
@@ -153,7 +154,7 @@ def build_table_state_from_runtime_config(
         resolved_mie_model,
     )
 
-    rows = parameter_services.populate_table_from_runtime_defaults(
+    rows = parameters_services.populate_table_from_runtime_defaults(
         mie_model=resolved_mie_model,
         runtime_particle_diameters_nm=runtime_config.get_path(
             "particle_model.particle_diameter_nm",
@@ -198,7 +199,7 @@ def remap_table_rows_to_model(
         mie_model,
     )
 
-    return parameter_services.remap_table_rows_to_model(
+    return parameters_services.remap_table_rows_to_model(
         mie_model=resolved_mie_model,
         current_rows=current_rows,
     )
@@ -214,7 +215,7 @@ def build_empty_row_for_model(
         mie_model,
     )
 
-    return parameter_services.build_empty_row_for_model(
+    return parameters_services.build_empty_row_for_model(
         resolved_mie_model,
     )
 
@@ -231,7 +232,7 @@ def build_empty_rows_for_model(
         mie_model,
     )
 
-    return parameter_services.build_empty_rows_for_model(
+    return parameters_services.build_empty_rows_for_model(
         resolved_mie_model,
         row_count=row_count,
     )
@@ -292,7 +293,7 @@ def compute_model_for_rows(
             row_count=3,
         )
 
-    return parameter_services.compute_model_for_rows(
+    return parameters_services.compute_model_for_rows(
         mie_model=resolved_mie_model,
         current_rows=current_rows,
         medium_refractive_index=medium_refractive_index,

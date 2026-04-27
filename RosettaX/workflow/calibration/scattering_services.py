@@ -9,12 +9,12 @@ import plotly.graph_objs as go
 
 from RosettaX.pages.p03_scattering.backend import BackEnd
 from RosettaX.utils import plottings
-from RosettaX.workflow.calibration.scattering import OpticalParameters
-from RosettaX.workflow.calibration.scattering import build_solid_sphere_scattering_calibration_from_standard_data
-from RosettaX.workflow.calibration.scattering import parse_core_shell_rows_for_fit
-from RosettaX.workflow.calibration.scattering import parse_optical_parameters
-from RosettaX.workflow.calibration.scattering import parse_sphere_rows_for_fit
-from RosettaX.workflow.calibration.scattering import resolve_mie_model
+from .scattering import OpticalParameters
+from .scattering import build_solid_sphere_scattering_calibration_from_standard_data
+from .scattering import parse_core_shell_rows_for_fit
+from .scattering import parse_optical_parameters
+from .scattering import parse_sphere_rows_for_fit
+from .scattering import resolve_mie_model
 
 
 @dataclass(frozen=True)

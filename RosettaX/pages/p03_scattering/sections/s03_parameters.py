@@ -9,8 +9,7 @@ import dash_bootstrap_components as dbc
 from RosettaX.utils import graph_config
 from RosettaX.utils.runtime_config import RuntimeConfig
 
-from . import presets
-from . import services
+from RosettaX.workflow.parameters import services, presets
 
 
 logger = logging.getLogger(__name__)

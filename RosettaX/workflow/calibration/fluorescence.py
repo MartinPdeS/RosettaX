@@ -15,11 +15,6 @@ from RosettaX.utils.reader import FCSFile
 from RosettaX.utils.plottings import _make_info_figure
 
 
-DEFAULT_BEAD_ROWS = [
-    {"col1": "", "col2": ""}
-    for _ in range(3)
-]
-
 
 @dataclass
 class CalibrationResult:
@@ -61,78 +56,22 @@ class FluorescenceFitResult:
     intensity_calibrated_units_log10: np.ndarray
 
 
-def build_default_bead_rows() -> list[dict[str, str]]:
-    return [
-        dict(row)
-        for row in DEFAULT_BEAD_ROWS
-    ]
 
+# def resolve_bead_rows_from_runtime_store(
+#     runtime_config_data: Any,
+# ) -> list[dict[str, str]]:
+#     runtime_config = RuntimeConfig.from_dict(
+#         runtime_config_data if isinstance(runtime_config_data, dict) else None
+#     )
 
-def build_bead_rows_from_mesf_values(
-    mesf_values: Any,
-) -> list[dict[str, str]]:
-    if mesf_values is None:
-        return build_default_bead_rows()
+#     mesf_values = runtime_config.get_path(
+#         "calibration.mesf_values",
+#         default=[],
+#     )
 
-    if isinstance(mesf_values, str):
-        raw_parts = [
-            part.strip()
-            for part in mesf_values.split(",")
-        ]
-    elif isinstance(mesf_values, (list, tuple)):
-        raw_parts = [
-            str(part).strip()
-            for part in mesf_values
-        ]
-    else:
-        raw_parts = [
-            str(mesf_values).strip()
-        ]
-
-    parsed_values: list[str] = []
-
-    for raw_part in raw_parts:
-        if not raw_part:
-            continue
-
-        parsed_value = casting.as_float(
-            raw_part,
-        )
-
-        if parsed_value is None:
-            continue
-
-        parsed_values.append(
-            f"{float(parsed_value):.6g}"
-        )
-
-    if not parsed_values:
-        return build_default_bead_rows()
-
-    return [
-        {
-            "col1": value,
-            "col2": "",
-        }
-        for value in parsed_values
-    ]
-
-
-def resolve_bead_rows_from_runtime_store(
-    runtime_config_data: Any,
-) -> list[dict[str, str]]:
-    runtime_config = RuntimeConfig.from_dict(
-        runtime_config_data if isinstance(runtime_config_data, dict) else None
-    )
-
-    mesf_values = runtime_config.get_path(
-        "calibration.mesf_values",
-        default=[],
-    )
-
-    return build_bead_rows_from_mesf_values(
-        mesf_values,
-    )
+#     return build_bead_rows_from_mesf_values(
+#         mesf_values,
+#     )
 
 
 def rebuild_calibration_graph(
