@@ -9,6 +9,7 @@ import dash_bootstrap_components as dbc
 from RosettaX.pages.p00_sidebar.ids import SidebarIds
 from RosettaX.utils import styling
 from RosettaX.utils.runtime_config import RuntimeConfig
+from RosettaX.workflow import table as workflow_table
 
 from . import services
 
@@ -51,6 +52,11 @@ class ReferenceTable:
 
     calibrated_intensity_column_name = "col1"
     measured_intensity_column_name = "col2"
+
+    user_data_column_ids = [
+        calibrated_intensity_column_name,
+        measured_intensity_column_name,
+    ]
 
     def __init__(
         self,
@@ -211,12 +217,11 @@ class ReferenceTable:
 
                 return dash.no_update
 
-            profile_load_was_requested = (
-                isinstance(profile_load_event_data, dict)
-                and bool(profile_load_event_data.get("profile_name"))
+            profile_load_was_requested = workflow_table.profile_load_was_requested(
+                profile_load_event_data=profile_load_event_data,
             )
 
-            normalized_current_rows = normalize_fluorescence_table_rows(
+            normalized_current_rows = workflow_table.normalize_table_rows(
                 rows=current_rows,
             )
 
@@ -230,18 +235,19 @@ class ReferenceTable:
                 normalized_current_rows,
             )
 
-            if not profile_load_was_requested:
-                table_has_user_data = not fluorescence_table_is_effectively_empty(
-                    rows=normalized_current_rows,
+            should_rebuild_table = workflow_table.should_rebuild_table_from_runtime_config(
+                profile_load_was_requested=profile_load_was_requested,
+                current_rows=normalized_current_rows,
+                user_data_column_ids=self.user_data_column_ids,
+            )
+
+            if not should_rebuild_table:
+                logger.debug(
+                    "Fluorescence reference table already contains user data "
+                    "and no profile load was requested. Leaving it unchanged."
                 )
 
-                if table_has_user_data:
-                    logger.debug(
-                        "Fluorescence reference table already contains user data "
-                        "and no profile load was requested. Leaving it unchanged."
-                    )
-
-                    return dash.no_update
+                return dash.no_update
 
             runtime_config = RuntimeConfig.from_dict(
                 runtime_config_data,
@@ -281,7 +287,7 @@ class ReferenceTable:
             n_clicks: int,
             rows: list[dict[str, Any]],
             columns: list[dict[str, Any]],
-        ) -> list[dict[str, str]]:
+        ) -> list[dict[str, Any]]:
             logger.debug(
                 "add_row called with n_clicks=%r existing_row_count=%r columns=%r",
                 n_clicks,
@@ -289,7 +295,7 @@ class ReferenceTable:
                 columns,
             )
 
-            next_rows = services.add_empty_row(
+            next_rows = workflow_table.add_empty_row_from_columns(
                 rows=rows,
                 columns=columns,
             )
@@ -319,13 +325,13 @@ def build_bead_rows_from_runtime_config(
     )
 
     if not rows:
-        rows = [
-            {
-                "col1": "",
-                "col2": "",
-            }
-            for _ in range(3)
-        ]
+        rows = workflow_table.build_empty_rows(
+            column_ids=[
+                ReferenceTable.calibrated_intensity_column_name,
+                ReferenceTable.measured_intensity_column_name,
+            ],
+            row_count=3,
+        )
 
     logger.debug(
         "Built fluorescence reference table rows from runtime config. "
@@ -343,24 +349,12 @@ def normalize_fluorescence_table_rows(
 ) -> list[dict[str, Any]]:
     """
     Normalize arbitrary table data into a list of dictionary rows.
+
+    Compatibility wrapper for older imports.
     """
-    if not isinstance(rows, list):
-        return []
-
-    normalized_rows: list[dict[str, Any]] = []
-
-    for row in rows:
-        if not isinstance(row, dict):
-            continue
-
-        normalized_rows.append(
-            {
-                str(key): value
-                for key, value in row.items()
-            }
-        )
-
-    return normalized_rows
+    return workflow_table.normalize_table_rows(
+        rows=rows,
+    )
 
 
 def fluorescence_table_is_effectively_empty(
@@ -370,33 +364,12 @@ def fluorescence_table_is_effectively_empty(
     """
     Return whether the fluorescence table contains no useful user data.
 
-    Both calibrated values and measured peak values are considered user data.
+    Compatibility wrapper for older imports.
     """
-    if not rows:
-        return True
-
-    for row in rows:
-        calibrated_value = row.get(
-            "col1",
-            "",
-        )
-
-        measured_value = row.get(
-            "col2",
-            "",
-        )
-
-        if value_is_not_empty(
-            calibrated_value,
-        ):
-            return False
-
-        if value_is_not_empty(
-            measured_value,
-        ):
-            return False
-
-    return True
+    return workflow_table.table_is_effectively_empty(
+        rows=rows,
+        user_data_column_ids=ReferenceTable.user_data_column_ids,
+    )
 
 
 def value_is_not_empty(
@@ -404,13 +377,9 @@ def value_is_not_empty(
 ) -> bool:
     """
     Return whether a table cell value should be considered populated.
+
+    Compatibility wrapper for older imports.
     """
-    if value is None:
-        return False
-
-    if isinstance(value, str):
-        return bool(
-            value.strip()
-        )
-
-    return True
+    return workflow_table.value_is_not_empty(
+        value,
+    )

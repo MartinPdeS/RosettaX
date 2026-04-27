@@ -365,7 +365,7 @@ class Apply:
             return Path(directories.fluorescence_calibration) / file_name
 
         if folder_name == "scattering":
-            return Path(directories.scattering_calibration_directory) / file_name
+            return Path(directories.scattering_calibration) / file_name
 
         raise ValueError(f'Unsupported calibration folder "{folder_name}".')
 

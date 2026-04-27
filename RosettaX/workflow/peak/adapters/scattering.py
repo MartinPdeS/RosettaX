@@ -85,19 +85,14 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
         "manual_x_position",
     )
 
-    def get_backend(
-        self,
-        *,
-        page: Any,
-        uploaded_fcs_path: Any = None,
-    ) -> Any:
+    def get_backend(self, uploaded_fcs_path: Any = None) -> Any:
         """
         Return the page-owned backend compatible with the shared peak workflow.
 
         ``uploaded_fcs_path`` is accepted only for interface compatibility with
         ``BasePeakWorkflowAdapter``. It is intentionally not used here.
         """
-        from RosettaX.pages.scattering.backend import BackEnd
+        from RosettaX.pages.p03_scattering.backend import BackEnd
 
         backend = BackEnd()
         backend.fcs_file_path = uploaded_fcs_path

@@ -6,12 +6,12 @@ from typing import Any, Optional
 import dash
 import dash_bootstrap_components as dbc
 
-from RosettaX.pages.p03_scattering.state import ScatteringPageState
-from RosettaX.pages.p03_scattering.sections.s03_parameters import services
 from RosettaX.pages.p00_sidebar.ids import SidebarIds
+from RosettaX.pages.p03_scattering.sections.s03_parameters import services
+from RosettaX.pages.p03_scattering.state import ScatteringPageState
 from RosettaX.utils import styling
 from RosettaX.utils.runtime_config import RuntimeConfig
-
+from RosettaX.workflow import table as workflow_table
 
 
 logger = logging.getLogger(__name__)
@@ -41,6 +41,14 @@ class ReferenceTable:
 
     sphere_table_columns = services.sphere_table_columns
     core_shell_table_columns = services.core_shell_table_columns
+
+    sphere_user_data_column_ids = workflow_table.get_column_ids(
+        columns=sphere_table_columns,
+    )
+
+    core_shell_user_data_column_ids = workflow_table.get_column_ids(
+        columns=core_shell_table_columns,
+    )
 
     def __init__(
         self,
@@ -233,9 +241,8 @@ class ReferenceTable:
                 runtime_config_data if isinstance(runtime_config_data, dict) else None
             )
 
-            profile_load_was_requested = (
-                isinstance(profile_load_event_data, dict)
-                and bool(profile_load_event_data.get("profile_name"))
+            profile_load_was_requested = workflow_table.profile_load_was_requested(
+                profile_load_event_data=profile_load_event_data,
             )
 
             resolved_mie_model = services.resolve_mie_model(
@@ -250,30 +257,36 @@ class ReferenceTable:
                 current_rows=current_rows,
             )
 
+            user_data_column_ids = get_user_data_column_ids_for_model(
+                resolved_mie_model,
+            )
+
             logger.debug(
                 "populate_table_from_runtime_defaults_callback called with "
                 "triggered_id=%r profile_load_was_requested=%r "
-                "profile_load_event_data=%r resolved_mie_model=%r current_rows=%r",
+                "profile_load_event_data=%r resolved_mie_model=%r "
+                "user_data_column_ids=%r current_rows=%r",
                 dash.ctx.triggered_id,
                 profile_load_was_requested,
                 profile_load_event_data,
                 resolved_mie_model,
+                user_data_column_ids,
                 normalized_current_rows,
             )
 
-            if not profile_load_was_requested:
-                table_has_user_data = not services.table_is_effectively_empty(
-                    mie_model=resolved_mie_model,
-                    rows=normalized_current_rows,
+            should_rebuild_table = workflow_table.should_rebuild_table_from_runtime_config(
+                profile_load_was_requested=profile_load_was_requested,
+                current_rows=normalized_current_rows,
+                user_data_column_ids=user_data_column_ids,
+            )
+
+            if not should_rebuild_table:
+                logger.debug(
+                    "Reference table already contains user data and no profile "
+                    "load was requested. Leaving it unchanged."
                 )
 
-                if table_has_user_data:
-                    logger.debug(
-                        "Reference table already contains user data and no profile "
-                        "load was requested. Leaving it unchanged."
-                    )
-
-                    return dash.no_update, dash.no_update
+                return dash.no_update, dash.no_update
 
             columns, rows = build_table_state_from_runtime_config(
                 runtime_config=runtime_config,
@@ -351,7 +364,7 @@ class ReferenceTable:
             n_clicks: int,
             mie_model: Any,
             rows: Optional[list[dict[str, Any]]],
-        ) -> list[dict[str, str]]:
+        ) -> list[dict[str, Any]]:
             logger.debug(
                 "add_row called with n_clicks=%r mie_model=%r row_count=%r",
                 n_clicks,
@@ -363,10 +376,9 @@ class ReferenceTable:
                 mie_model,
             )
 
-            next_rows = [
-                dict(row)
-                for row in (rows or [])
-            ]
+            next_rows = workflow_table.copy_table_rows(
+                rows=rows,
+            )
 
             next_rows.append(
                 services.build_empty_row_for_model(
@@ -554,6 +566,25 @@ class ReferenceTable:
             )
 
             return None, []
+
+
+def get_user_data_column_ids_for_model(
+    mie_model: Any,
+) -> list[str]:
+    """
+    Return the table columns that should count as user data for a Mie model.
+    """
+    resolved_mie_model = services.resolve_mie_model(
+        mie_model,
+    )
+
+    columns = services.get_table_columns_for_model(
+        resolved_mie_model,
+    )
+
+    return workflow_table.get_column_ids(
+        columns=columns,
+    )
 
 
 def build_table_state_from_runtime_config(

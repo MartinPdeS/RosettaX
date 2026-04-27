@@ -99,47 +99,11 @@ class HomePage:
                                 ],
                                 md=8,
                             ),
-                            dbc.Col(
-                                self._status_card(),
-                                md=4,
-                            ),
                         ],
                         className="g-3 align-items-stretch",
                     )
                 ]
             ),
-            style={"height": "100%"},
-        )
-
-    def _status_card(self) -> dbc.Card:
-        return dbc.Card(
-            dbc.CardBody(
-                [
-                    html.H5(
-                        "Designed for",
-                        style={
-                            "marginTop": "0px",
-                            "marginBottom": "12px",
-                            "fontWeight": "700",
-                        },
-                    ),
-                    html.Ul(
-                        [
-                            html.Li("Fluorescence calibration workflows"),
-                            html.Li("Scattering calibration workflows"),
-                            html.Li("Batch application to FCS files"),
-                            html.Li("Saved calibration review and reuse"),
-                        ],
-                        style={
-                            "marginBottom": "0px",
-                            "paddingLeft": "20px",
-                            "opacity": 0.9,
-                        },
-                    ),
-                ]
-            ),
-            color="light",
-            outline=True,
             style={"height": "100%"},
         )
 

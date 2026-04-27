@@ -79,25 +79,14 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
         "manual_x_position",
     )
 
-    def get_backend(
-        self,
-        *,
-        page: Any,
-        uploaded_fcs_path: Any = None,
-    ) -> Any:
+    def get_backend(self, uploaded_fcs_path: Any = None) -> Any:
         """
         Return the page-owned backend compatible with the shared peak workflow.
 
         ``uploaded_fcs_path`` is accepted only for interface compatibility with
         ``BasePeakWorkflowAdapter``. It is intentionally not used here.
         """
-        if hasattr(page, "get_scattering_backend"):
-            backend = page.get_scattering_backend()
-
-            if backend is not None:
-                return backend
-
-        from RosettaX.pages.fluorescence.backend import BackEnd
+        from RosettaX.pages.p02_fluorescence.backend import BackEnd
 
         backend = BackEnd()
         backend.fcs_file_path = uploaded_fcs_path
