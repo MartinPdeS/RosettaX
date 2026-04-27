@@ -7,6 +7,10 @@ Examples
 
 A gallery of examples and that showcase how RosettaX can be used. Some examples demonstrate the use of the API in general and some demonstrate specific applications in tutorial form.
 
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
 
 .. raw:: html
 
@@ -19,66 +23,6 @@ A gallery of examples and that showcase how RosettaX can be used. Some examples 
 .. raw:: html
 
     </div>
-
-
-Workflow
-========
-
-
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbnails">
-
-.. thumbnail-parent-div-open
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="Just a dummy example to illustrate the workflow examples gallery.">
-
-.. only:: html
-
-  .. image:: /gallery/workflow/images/thumb/sphx_glr_workflow_thumb.png
-    :alt:
-
-  :doc:`/gallery/workflow/workflow`
-
-.. raw:: html
-
-      <div class="sphx-glr-thumbnail-title">Workflow example</div>
-    </div>
-
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="Just a dummy example to illustrate the workflow examples gallery.">
-
-.. only:: html
-
-  .. image:: /gallery/workflow/images/thumb/sphx_glr_workflow_backend_thumb.png
-    :alt:
-
-  :doc:`/gallery/workflow/workflow_backend`
-
-.. raw:: html
-
-      <div class="sphx-glr-thumbnail-title">Workflow example</div>
-    </div>
-
-
-.. thumbnail-parent-div-close
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-   :includehidden:
-
-
-   /gallery//workflow/index.rst
 
 
 
