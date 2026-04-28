@@ -9,7 +9,6 @@ from dash import dcc
 from dash import html
 
 from RosettaX.utils import styling
-from RosettaX.utils import ui_forms
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.upload import services
 from RosettaX.workflow.upload.models import UploadConfig
@@ -21,6 +20,10 @@ logger = logging.getLogger(__name__)
 class UploadLayout:
     """
     Reusable layout builder for FCS upload sections.
+
+    This component intentionally renders only the upload card. Page level
+    explanation and workflow guidance should live in the page header section,
+    for example ``s00_header.py``.
     """
 
     def __init__(
@@ -32,7 +35,7 @@ class UploadLayout:
         self.ids = ids
         self.config = config
 
-    def get_layout(self) -> html.Div:
+    def get_layout(self) -> dbc.Card:
         """
         Build the upload section layout.
         """
@@ -45,47 +48,8 @@ class UploadLayout:
             initial_filename,
         )
 
-        return html.Div(
-            [
-                self._build_hero_section(),
-                html.Div(
-                    style={
-                        "height": "16px",
-                    },
-                ),
-                self._build_upload_card(
-                    initial_filename=initial_filename,
-                ),
-            ]
-        )
-
-    def _build_hero_section(self) -> dbc.Card:
-        """
-        Build the upload hero section.
-        """
-        return dbc.Card(
-            dbc.CardBody(
-                [
-                    ui_forms.build_section_intro(
-                        title=self.config.section_title,
-                        title_component="H2",
-                        title_style_overrides={
-                            "fontSize": "2rem",
-                            "fontWeight": "600",
-                            "lineHeight": "1.2",
-                            "marginBottom": "8px",
-                        },
-                        description=self.config.description,
-                        description_opacity=0.9,
-                        description_margin_bottom_px=0,
-                        description_style_overrides={
-                            "fontSize": "1.02rem",
-                            "maxWidth": "980px",
-                            "marginBottom": "0px",
-                        },
-                    ),
-                ]
-            )
+        return self._build_upload_card(
+            initial_filename=initial_filename,
         )
 
     def _build_upload_card(
@@ -107,7 +71,7 @@ class UploadLayout:
                             id=self.ids.upload,
                             children=html.Div(
                                 [
-                                    "Drag and Drop or ",
+                                    "Drag and drop or ",
                                     html.A(
                                         self.config.upload_link_text,
                                     ),

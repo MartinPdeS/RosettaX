@@ -71,7 +71,7 @@ class ReferenceTable:
         Build the section header.
         """
         return dbc.CardHeader(
-            "4. Calibration reference table",
+            "3. Calibration reference table",
         )
 
     def _build_body(self) -> dbc.CardBody:
@@ -159,7 +159,7 @@ class ReferenceTable:
         """
         runtime_config = RuntimeConfig.from_default_profile()
 
-        return build_bead_rows_from_runtime_config(
+        return self.build_bead_rows_from_runtime_config(
             runtime_config=runtime_config,
         )
 
@@ -288,22 +288,23 @@ class ReferenceTable:
             return next_rows
 
 
-def build_bead_rows_from_runtime_config(
-    *,
-    runtime_config: RuntimeConfig,
-) -> list[dict[str, str]]:
-    """
-    Build fluorescence calibration table rows from a runtime configuration.
+    def build_bead_rows_from_runtime_config(
+        self,
+        *,
+        runtime_config: RuntimeConfig,
+    ) -> list[dict[str, str]]:
+        """
+        Build fluorescence calibration table rows from a runtime configuration.
 
-    Compatibility wrapper for older imports.
-    """
-    rows = FluorescenceReferenceTable.build_rows_from_runtime_config(
-        runtime_config=runtime_config,
-    )
+        Compatibility wrapper for older imports.
+        """
+        rows = FluorescenceReferenceTable.build_rows_from_runtime_config(
+            runtime_config=runtime_config,
+        )
 
-    logger.debug(
-        "Built fluorescence reference table rows from runtime config. rows=%r",
-        rows,
-    )
+        logger.debug(
+            "Built fluorescence reference table rows from runtime config. rows=%r",
+            rows,
+        )
 
-    return rows
+        return rows

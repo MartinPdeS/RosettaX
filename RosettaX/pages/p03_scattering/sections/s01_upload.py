@@ -15,13 +15,14 @@ class Upload:
 
     Responsibilities
     ----------------
-    - Provide the scattering upload layout.
+    - Provide the scattering FCS upload card.
     - Register the reusable upload workflow callbacks.
 
     Notes
     -----
+    The page level explanation is handled by ``s00_header.Header``.
     Upload persistence, runtime config synchronization, filename display, and
-    page state update behavior are delegated to RosettaX.workflow.upload.
+    page state update behavior are delegated to ``RosettaX.workflow.upload``.
     """
 
     def __init__(self, page) -> None:
@@ -29,14 +30,8 @@ class Upload:
         self.ids = page.ids.Upload
 
         self.config = upload.UploadConfig(
-            section_title="Scattering calibration",
-            card_title="1. Upload Calibration FCS File",
-            upload_link_text="Select Bead File",
-            description=(
-                "Start by uploading the FCS file used for the scattering calibration workflow. "
-                "After upload, RosettaX will keep the selected file in session state and use it as "
-                "the data source for detector selection, histogram inspection, peak finding, and model fitting."
-            ),
+            card_title="1. Upload calibration FCS file",
+            upload_link_text="Select bead FCS file",
             initial_runtime_config_path="files.scattering_fcs_file_path",
             runtime_config_output_path="files.scattering_fcs_file_path",
             accepted_file_extensions=".fcs",

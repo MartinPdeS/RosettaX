@@ -62,7 +62,7 @@ class Calibration:
         Build the card header.
         """
         return dbc.CardHeader(
-            "5. Calibration",
+            "4. Calibration",
         )
 
     def _build_collapse(self) -> dbc.Collapse:

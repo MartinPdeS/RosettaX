@@ -36,7 +36,7 @@ class Peaks:
         self.adapter = peak.FluorescencePeakWorkflowAdapter()
 
         self.config = peak.PeakConfig(
-            header_title="3. Fluorescence peak detection",
+            header_title="2. Fluorescence peak detection",
             process_dropdown_label="Peak process",
             graph_title="Fluorescence peak detection graph",
             table_id=self.page.ids.Calibration.bead_table,

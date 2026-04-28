@@ -22,6 +22,7 @@ class FluorescencePage:
         self.backend = None
 
         self.sections = [
+            sections.Header(page=self),
             sections.Upload(page=self),
             sections.Peaks(page=self),
             sections.ReferenceTable(page=self),

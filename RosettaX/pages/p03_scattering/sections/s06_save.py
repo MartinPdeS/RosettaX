@@ -33,7 +33,7 @@ class Save:
         self.config = save.SaveConfig(
             calibration_kind="scattering",
             output_directory=directories.scattering_calibration,
-            header_title="5. Save calibration",
+            header_title="6. Save calibration",
             button_text="Save calibration",
             file_name_placeholder="calibration name",
             saved_message_prefix="Saved calibration",

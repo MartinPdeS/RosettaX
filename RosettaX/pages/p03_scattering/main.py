@@ -20,6 +20,7 @@ class ScatterCalibrationPage:
         self.backend = None
 
         self.sections = [
+            sections.Header(page=self),
             sections.Upload(page=self),
             sections.Peaks(page=self),
             sections.Model(page=self),

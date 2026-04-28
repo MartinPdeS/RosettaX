@@ -11,10 +11,8 @@ class UploadConfig:
     Static configuration for one reusable FCS upload section.
     """
 
-    section_title: str
     card_title: str
     upload_link_text: str
-    description: str
     initial_runtime_config_path: str
     runtime_config_output_path: str
     accepted_file_extensions: str = ".fcs"

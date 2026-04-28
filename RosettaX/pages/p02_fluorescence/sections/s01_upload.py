@@ -14,13 +14,14 @@ class Upload:
 
     Responsibilities
     ----------------
-    - Provide the fluorescence upload layout.
+    - Provide the fluorescence FCS upload card.
     - Register the reusable upload workflow callbacks.
 
     Notes
     -----
+    The page level explanation is handled by ``s00_header.Header``.
     Upload persistence, runtime config synchronization, filename display, and
-    page state reset behavior are delegated to RosettaX.workflow.upload.
+    page state reset behavior are delegated to ``RosettaX.workflow.upload``.
     """
 
     def __init__(self, page) -> None:
@@ -28,14 +29,8 @@ class Upload:
         self.ids = page.ids.Upload
 
         self.config = upload.UploadConfig(
-            section_title="Fluorescence calibration",
-            card_title="1. Upload Calibration FCS File",
-            upload_link_text="Select Bead File",
-            description=(
-                "Start by uploading the bead FCS file used to build the fluorescence calibration. "
-                "After upload, RosettaX will keep the selected file available for the rest of the "
-                "workflow. Detector selection is handled by the selected peak script."
-            ),
+            card_title="1. Upload calibration FCS file",
+            upload_link_text="Select bead FCS file",
             initial_runtime_config_path="files.fluorescence_fcs_file_path",
             runtime_config_output_path="files.fluorescence_fcs_file_path",
             accepted_file_extensions=".fcs",

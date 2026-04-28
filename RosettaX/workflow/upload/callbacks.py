@@ -26,8 +26,8 @@ def register_upload_callbacks(
     Register reusable upload callbacks.
     """
     logger.debug(
-        "Registering reusable upload callbacks for section_title=%r",
-        config.section_title,
+        "Registering reusable upload callbacks for card_title=%r",
+        config.card_title,
     )
 
     _register_filename_display_callback(
@@ -118,8 +118,9 @@ def _register_upload_callback(
         runtime_config_data: Any,
     ) -> tuple[Any, Any]:
         logger.debug(
-            "handle_upload called with contents_type=%s filename=%r "
+            "handle_upload called for card_title=%r with contents_type=%s filename=%r "
             "page_state_payload_type=%s runtime_config_data_type=%s",
+            config.card_title,
             type(contents).__name__,
             filename,
             type(page_state_payload).__name__,
@@ -166,7 +167,8 @@ def _register_upload_callback(
         )
 
         logger.debug(
-            "handle_upload returning uploaded_fcs_path=%r uploaded_filename=%r",
+            "handle_upload returning for card_title=%r uploaded_fcs_path=%r uploaded_filename=%r",
+            config.card_title,
             upload_state.uploaded_fcs_path,
             upload_state.uploaded_filename,
         )
