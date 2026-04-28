@@ -10,6 +10,7 @@ build:
   script: "{{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation"
   skip: true  # [py<310 or py>=314]
 
+
 requirements:
   host:
     - python >=3.10,<3.14
@@ -20,17 +21,11 @@ requirements:
 
   run:
     - python >=3.10,<3.14
-    - numpy
-    - pandas
-    - scipy
-    - plotly
-    - dash
-    - dash-bootstrap-components
-    - flask
-    - pydantic
-    - platformdirs
-    - martinpdes::mpsplots
-    - martinpdes::pymiesim
+    - numpy ==2.2.6
+    - plotly >=6.3.1
+    - dash ==3.2.0
+    - dash-bootstrap-components ==2.0.4
+    - martinpdes::pymiesim >=5.0.3
 
 test:
   imports:
@@ -52,7 +47,7 @@ about:
   home: https://github.com/MartinPdeS/RosettaX
   dev_url: https://github.com/MartinPdeS/RosettaX
   doc_url: https://martinpdes.github.io/RosettaX/
-  license: MIT
+  license: AGPL-3.0-or-later
   license_file: LICENSE
   summary: Interactive fluorescence and scattering calibration workflows for flow cytometry.
   description: |
