@@ -10,6 +10,8 @@ from dash import dcc, html
 from .callbacks.shared import get_peak_processes
 from .models import PeakConfig
 from RosettaX.utils.runtime_config import RuntimeConfig
+from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
+from RosettaX.workflow.plotting.scatter2d import Scatter2DGraphIds
 
 
 logger = logging.getLogger(__name__)
@@ -27,7 +29,8 @@ class PeakLayout:
     - Build detector dropdowns with optional process supplied labels.
     - Build process settings.
     - Build setting tooltips.
-    - Build graph controls.
+    - Build graph visibility controls.
+    - Build shared 2D graph axis scale controls.
     - Build graph container.
     - Build workflow stores.
     """
@@ -133,19 +136,16 @@ class PeakLayout:
                     "marginBottom": "8px",
                 },
             ),
-            self._build_histogram_controls(
+            self._build_graph_controls(
                 container_id=self.ids.histogram_controls_container,
                 nbins_control_container_id=self.ids.nbins_control_container,
                 nbins_input_id=self.ids.nbins_input,
-                xscale_switch_id=self.ids.xscale_switch,
-                yscale_switch_id=self.ids.yscale_switch,
                 number_of_bins=self._get_default_number_of_bins(),
-                xscale=self._get_default_xscale(),
-                yscale=self._get_default_yscale(),
             ),
             self._build_graph_container(
                 container_id=self.ids.graph_toggle_container,
                 graph_id=self.ids.graph_hist,
+                axis_scale_toggle_id=self._get_axis_scale_toggle_id(),
             ),
         ]
 
@@ -645,31 +645,6 @@ class PeakLayout:
             persistence_type="session",
         )
 
-    def _build_log_scale_control(
-        self,
-        *,
-        switch_id: str,
-        label: str,
-        value: Optional[list[str]] = None,
-    ) -> dbc.Checklist:
-        """
-        Build a log scale toggle.
-        """
-        return dbc.Checklist(
-            id=switch_id,
-            options=[
-                {
-                    "label": label,
-                    "value": "log",
-                }
-            ],
-            value=value if value is not None else [],
-            switch=True,
-            inline=True,
-            persistence=True,
-            persistence_type="session",
-        )
-
     def _build_number_of_bins_control(
         self,
         *,
@@ -712,20 +687,18 @@ class PeakLayout:
             ],
         )
 
-    def _build_histogram_controls(
+    def _build_graph_controls(
         self,
         *,
         container_id: str,
         nbins_control_container_id: str,
         nbins_input_id: str,
-        xscale_switch_id: str,
-        yscale_switch_id: str,
         number_of_bins: int = 100,
-        xscale: str = "linear",
-        yscale: str = "log",
     ) -> html.Div:
         """
-        Build the graph scale and histogram controls.
+        Build graph controls that are not part of the shared graph component.
+
+        Axis scale controls are now rendered by Scatter2DGraph below the graph.
         """
         return html.Div(
             id=container_id,
@@ -735,22 +708,13 @@ class PeakLayout:
                     input_id=nbins_input_id,
                     value=number_of_bins,
                 ),
-                self._build_log_scale_control(
-                    switch_id=xscale_switch_id,
-                    label="Log x",
-                    value=["log"] if xscale == "log" else [],
-                ),
-                self._build_log_scale_control(
-                    switch_id=yscale_switch_id,
-                    label="Log y",
-                    value=["log"] if yscale == "log" else [],
-                ),
             ],
             style={
                 "display": "flex",
                 "alignItems": "center",
                 "gap": "16px",
                 "flexWrap": "wrap",
+                "marginBottom": "8px",
             },
         )
 
@@ -759,20 +723,25 @@ class PeakLayout:
         *,
         container_id: str,
         graph_id: str,
+        axis_scale_toggle_id: str,
     ) -> html.Div:
         """
-        Build the graph container.
+        Build the graph container with shared 2D scatter controls.
         """
         return html.Div(
             id=container_id,
             children=[
-                dcc.Graph(
-                    id=graph_id,
-                    config={
-                        "displaylogo": False,
-                        "responsive": True,
-                    },
-                    style={
+                Scatter2DGraph.build_component(
+                    component_ids=Scatter2DGraphIds(
+                        graph=graph_id,
+                        axis_scale_toggle=axis_scale_toggle_id,
+                    ),
+                    figure=Scatter2DGraph.build_empty_figure(
+                        message="Upload an FCS file and select a peak process.",
+                    ),
+                    x_log_enabled=self._get_default_xscale() == "log",
+                    y_log_enabled=self._get_default_yscale() == "log",
+                    graph_style={
                         "height": "850px",
                         "width": "100%",
                     },
@@ -1044,6 +1013,30 @@ class PeakLayout:
             },
         )
 
+    def _get_axis_scale_toggle_id(self) -> str:
+        """
+        Return the shared axis scale toggle ID.
+
+        Prefer an explicit axis_scale_toggle ID. Fall back to a deterministic ID
+        only to avoid breaking older ID classes while migrating.
+        """
+        axis_scale_toggle_id = getattr(
+            self.ids,
+            "axis_scale_toggle",
+            None,
+        )
+
+        if isinstance(axis_scale_toggle_id, str) and axis_scale_toggle_id:
+            return axis_scale_toggle_id
+
+        if callable(axis_scale_toggle_id):
+            resolved_axis_scale_toggle_id = axis_scale_toggle_id()
+
+            if isinstance(resolved_axis_scale_toggle_id, str) and resolved_axis_scale_toggle_id:
+                return resolved_axis_scale_toggle_id
+
+        return f"{self.ids.graph_hist}-axis-scale-toggle"
+
     def _get_default_runtime_config(self) -> RuntimeConfig:
         """
         Return the default runtime configuration.
@@ -1063,31 +1056,55 @@ class PeakLayout:
 
     def _get_default_xscale(self) -> str:
         """
-        Return the default x axis scale.
+        Return the default x axis scale for the shared peak graph toggle.
         """
         runtime_config = self._get_default_runtime_config()
 
-        return runtime_config.get_str(
-            self.config.xscale_runtime_config_path,
-            default=runtime_config.get_str(
-                self.config.xscale_fallback_runtime_config_path,
-                default=self.config.default_xscale,
+        return self._normalize_axis_scale(
+            runtime_config.get_str(
+                "calibration.histogram_xscale",
+                default="linear",
             ),
+            default="linear",
         )
+
 
     def _get_default_yscale(self) -> str:
         """
-        Return the default y axis scale.
+        Return the default y axis scale for the shared peak graph toggle.
         """
         runtime_config = self._get_default_runtime_config()
 
-        return runtime_config.get_str(
-            self.config.yscale_runtime_config_path,
-            default=runtime_config.get_str(
-                self.config.yscale_fallback_runtime_config_path,
-                default=self.config.default_yscale,
+        return self._normalize_axis_scale(
+            runtime_config.get_str(
+                "calibration.histogram_yscale",
+                default=runtime_config.get_str(
+                    "calibration.histogram_scale",
+                    default="log",
+                ),
             ),
+            default="log",
         )
+
+
+    def _normalize_axis_scale(
+        self,
+        value: Any,
+        *,
+        default: str,
+    ) -> str:
+        """
+        Normalize an axis scale value.
+        """
+        value_string = str(value or "").strip().lower()
+
+        if value_string in (
+            "linear",
+            "log",
+        ):
+            return value_string
+
+        return default
 
     def _get_process_name(
         self,

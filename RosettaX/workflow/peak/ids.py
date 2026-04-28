@@ -39,6 +39,10 @@ class PeakIds:
         return str(self.prefix)
 
     @property
+    def axis_scale_toggle(self) -> str:
+        return f"{self.prefix}-peak-workflow-axis-scale-toggle"
+
+    @property
     def process_detector_dropdown_type(self) -> str:
         return f"{self.resolved_namespace}-peak-script-detector-dropdown"
 

@@ -9,14 +9,16 @@
     "peak_count": 4,
     "histogram_xscale": "linear",
     "histogram_yscale": "linear",
-    "default_fluorescence_peak_process": "2D manual click",
-    "default_scattering_peak_process": "1D automatic peaks",
+    "default_fluorescence_peak_process": "2D automatic detection",
+    "default_scattering_peak_process": "2D automatic detection",
     "default_gating_channel": null,
     "default_gating_threshold": null,
     "max_events_for_analysis": 10000,
     "n_bins_for_plots": 100,
     "show_calibration_plot_by_default": false,
-    "default_output_suffix": "_calibrated"
+    "default_output_suffix": "_calibrated",
+    "target_mie_relation_xscale": "linear",
+    "target_mie_relation_yscale": "linear"
   },
   "optics": {
     "medium_refractive_index": 1.334,

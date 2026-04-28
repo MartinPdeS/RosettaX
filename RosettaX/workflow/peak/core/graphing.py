@@ -12,6 +12,9 @@ from .. import registry
 from RosettaX.utils import casting, plottings
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.utils.io import column_copy
+from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
+from RosettaX.workflow.plotting.scatter2d import Scatter2DTrace
+
 
 logger = logging.getLogger(__name__)
 
@@ -39,12 +42,17 @@ def scale_selection_is_log(
 ) -> bool:
     """
     Return whether a checklist style scale selection requests log scale.
+
+    Compatibility wrapper for older peak workflow code.
     """
     if isinstance(scale_selection, str):
         return scale_selection == "log"
 
     if isinstance(scale_selection, (list, tuple, set)):
         return "log" in scale_selection
+
+    if isinstance(scale_selection, (list, tuple, set)):
+        return Scatter2DGraph.x_log_value in scale_selection or Scatter2DGraph.y_log_value in scale_selection
 
     return False
 
@@ -58,26 +66,31 @@ def compute_stable_axis_range(
     Compute a robust Plotly axis range from finite data values.
 
     For log axes, Plotly expects the axis range in log10 coordinates.
+
+    This remains here because peak overlays need the visible data range before
+    gate shading is added.
     """
-    values = np.asarray(
+    value_array = np.asarray(
         values,
         dtype=float,
     )
 
-    values = values[
-        np.isfinite(values)
+    value_array = value_array[
+        np.isfinite(
+            value_array,
+        )
     ]
 
     if log_scale:
-        values = values[
-            values > 0.0
+        value_array = value_array[
+            value_array > 0.0
         ]
 
-    if values.size < 2:
+    if value_array.size < 2:
         return None
 
     lower_value, upper_value = np.quantile(
-        values,
+        value_array,
         [
             0.001,
             0.999,
@@ -99,7 +112,10 @@ def compute_stable_axis_range(
     if log_scale:
         lower_value = max(
             lower_value,
-            np.nextafter(0.0, 1.0),
+            np.nextafter(
+                0.0,
+                1.0,
+            ),
         )
 
         upper_value = max(
@@ -108,15 +124,29 @@ def compute_stable_axis_range(
         )
 
         return [
-            float(np.log10(lower_value)),
-            float(np.log10(upper_value)),
+            float(
+                np.log10(
+                    lower_value,
+                )
+            ),
+            float(
+                np.log10(
+                    upper_value,
+                )
+            ),
         ]
 
-    padding = 0.05 * float(upper_value - lower_value)
+    padding = 0.05 * float(
+        upper_value - lower_value,
+    )
 
     return [
-        float(lower_value - padding),
-        float(upper_value + padding),
+        float(
+            lower_value - padding,
+        ),
+        float(
+            upper_value + padding,
+        ),
     ]
 
 
@@ -203,12 +233,27 @@ def build_peak_workflow_graph_figure(
 class PeakWorkflowGraphBuilder:
     """
     Build the graph figure for the selected peak workflow process.
+
+    This class owns peak workflow orchestration:
+
+    - process dispatch
+    - detector channel resolution
+    - process setting resolution
+    - custom process figure dispatch
+    - histogram fallback
+    - 2D scatter fallback
+    - peak markers
+    - gate overlays
+    - runtime visualization settings
+
+    Generic 2D scatter formatting is delegated to
+    ``RosettaX.workflow.plotting.scatter2d.Scatter2DGraph``.
     """
 
     default_margin: dict[str, int] = {
         "l": 80,
         "r": 30,
-        "t": 30,
+        "t": 55,
         "b": 70,
     }
 
@@ -350,7 +395,9 @@ class PeakWorkflowGraphBuilder:
         for channel_name in self._get_required_detector_channels():
             if not str(self.detector_channels.get(channel_name) or "").strip():
                 missing_channel_names.append(
-                    str(channel_name),
+                    str(
+                        channel_name,
+                    )
                 )
 
         return missing_channel_names
@@ -372,27 +419,11 @@ class PeakWorkflowGraphBuilder:
         """
         Build a dictionary of process setting values for the selected process.
         """
-        process_settings: dict[str, Any] = {}
-
-        for process_setting_id, process_setting_value in zip(
-            self.process_setting_ids,
-            self.process_setting_values,
-            strict=False,
-        ):
-            if not isinstance(process_setting_id, dict):
-                continue
-
-            if process_setting_id.get("process") != self.resolved_process_name:
-                continue
-
-            setting_name = process_setting_id.get("setting")
-
-            if not isinstance(setting_name, str):
-                continue
-
-            process_settings[setting_name] = process_setting_value
-
-        return process_settings
+        return build_process_settings(
+            process_setting_ids=self.process_setting_ids,
+            process_setting_values=self.process_setting_values,
+            process_name=self.resolved_process_name,
+        )
 
     def _build_process_specific_figure(self) -> go.Figure:
         """
@@ -455,8 +486,26 @@ class PeakWorkflowGraphBuilder:
             )
 
             if getattr(self.process, "graph_type", None) == "2d_scatter":
-                self._apply_axis_types(
+                Scatter2DGraph.apply_formatting(
                     figure=figure,
+                    title=str(
+                        getattr(
+                            self.process,
+                            "process_label",
+                            "2D scatter",
+                        )
+                    ),
+                    x_axis_title=str(
+                        figure.layout.xaxis.title.text or "x",
+                    ),
+                    y_axis_title=str(
+                        figure.layout.yaxis.title.text or "y",
+                    ),
+                    x_axis_type="log" if self._x_axis_is_log() else "linear",
+                    y_axis_type="log" if self._y_axis_is_log() else "linear",
+                    show_grid=self._show_grid_by_default(),
+                    hovermode="closest",
+                    uirevision=f"peak_workflow_{self.resolved_process_name}_2d_scatter",
                 )
 
                 figure = self._add_2d_overlays(
@@ -487,7 +536,6 @@ class PeakWorkflowGraphBuilder:
 
         peak_positions = self._extract_x_positions_from_peak_lines_payload()
 
-
         return plottings.build_histogram_figure(
             histogram_result=histogram_result,
             detector_column=detector_column,
@@ -501,9 +549,9 @@ class PeakWorkflowGraphBuilder:
         """
         Build a fallback two dimensional scatter figure.
 
-        Axis limits are clamped from event data only. Gate shading and selected
-        peak markers are added after the axis range is fixed, so they cannot
-        rescale the graph.
+        Generic formatting is delegated to ``Scatter2DGraph``. Peak specific
+        overlays and gate shading are added after the data axis range is fixed,
+        so overlays do not rescale the graph.
         """
         required_channel_names = self._get_required_detector_channels()
 
@@ -525,11 +573,12 @@ class PeakWorkflowGraphBuilder:
                 "Select both detector channels first.",
             )
 
-
         x_values = np.asarray(
             column_copy(
                 fcs_file_path=self.backend.fcs_file_path,
-                detector_column=str(x_detector_column),
+                detector_column=str(
+                    x_detector_column,
+                ),
                 dtype=float,
                 n=self._resolve_max_events_for_plots(),
             ),
@@ -539,58 +588,51 @@ class PeakWorkflowGraphBuilder:
         y_values = np.asarray(
             column_copy(
                 fcs_file_path=self.backend.fcs_file_path,
-                detector_column=str(y_detector_column),
+                detector_column=str(
+                    y_detector_column,
+                ),
                 dtype=float,
                 n=self._resolve_max_events_for_plots(),
             ),
             dtype=float,
         )
 
-        finite_mask = np.isfinite(x_values) & np.isfinite(y_values)
+        axis_scale_toggle_values = self._build_scatter2d_axis_scale_toggle_values()
 
-        if self._x_axis_is_log():
-            finite_mask = finite_mask & (x_values > 0.0)
-
-        if self._y_axis_is_log():
-            finite_mask = finite_mask & (y_values > 0.0)
-
-        x_values = x_values[
-            finite_mask
-        ]
-
-        y_values = y_values[
-            finite_mask
-        ]
-
-        figure = go.Figure()
-
-        figure.add_trace(
-            go.Scattergl(
-                x=x_values,
-                y=y_values,
-                mode="markers",
-                marker={
-                    "size": 4,
-                    "opacity": 0.5,
-                },
-                name="Events",
-            )
-        )
-
-        figure.update_layout(
-            xaxis_title=f"{x_detector_column} [a.u.]",
-            yaxis_title=f"{y_detector_column} [a.u.]",
+        figure = Scatter2DGraph.build_figure(
+            traces=[
+                Scatter2DTrace(
+                    x_values=x_values,
+                    y_values=y_values,
+                    name="Events",
+                    marker_size=self._get_default_marker_size(),
+                    marker_opacity=0.5,
+                )
+            ],
+            title=str(
+                getattr(
+                    self.process,
+                    "process_label",
+                    "2D peak workflow scatter",
+                )
+            ),
+            x_axis_title=f"{x_detector_column} [a.u.]",
+            y_axis_title=f"{y_detector_column} [a.u.]",
+            axis_scale_toggle_values=axis_scale_toggle_values,
+            show_grid=self._show_grid_by_default(),
             hovermode="closest",
+            uirevision=f"peak_workflow_{self.resolved_process_name}_2d_scatter",
         )
 
-        self._apply_axis_types(
-            figure=figure,
+        filtered_x_values, filtered_y_values = self._filter_2d_values_for_axis_scale(
+            x_values=x_values,
+            y_values=y_values,
         )
 
         figure = apply_stable_2d_axis_ranges(
             figure=figure,
-            x_values=x_values,
-            y_values=y_values,
+            x_values=filtered_x_values,
+            y_values=filtered_y_values,
             x_log_scale=self._x_axis_is_log(),
             y_log_scale=self._y_axis_is_log(),
         )
@@ -600,6 +642,71 @@ class PeakWorkflowGraphBuilder:
         )
 
         return figure
+
+    def _filter_2d_values_for_axis_scale(
+        self,
+        *,
+        x_values: Any,
+        y_values: Any,
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Filter event values using finite and log scale constraints.
+        """
+        x_array = np.asarray(
+            x_values,
+            dtype=float,
+        )
+
+        y_array = np.asarray(
+            y_values,
+            dtype=float,
+        )
+
+        finite_mask = (
+            np.isfinite(
+                x_array,
+            )
+            & np.isfinite(
+                y_array,
+            )
+        )
+
+        if self._x_axis_is_log():
+            finite_mask = finite_mask & (
+                x_array > 0.0
+            )
+
+        if self._y_axis_is_log():
+            finite_mask = finite_mask & (
+                y_array > 0.0
+            )
+
+        return (
+            x_array[
+                finite_mask
+            ],
+            y_array[
+                finite_mask
+            ],
+        )
+
+    def _build_scatter2d_axis_scale_toggle_values(self) -> list[str]:
+        """
+        Convert peak workflow x/y scale selections into Scatter2DGraph values.
+        """
+        axis_scale_toggle_values: list[str] = []
+
+        if self._x_axis_is_log():
+            axis_scale_toggle_values.append(
+                Scatter2DGraph.x_log_value,
+            )
+
+        if self._y_axis_is_log():
+            axis_scale_toggle_values.append(
+                Scatter2DGraph.y_log_value,
+            )
+
+        return axis_scale_toggle_values
 
     def _add_2d_overlays(
         self,
@@ -752,7 +859,11 @@ class PeakWorkflowGraphBuilder:
                         points[index]["x"],
                         points[index]["y"],
                     ]
-                    for index in range(len(points))
+                    for index in range(
+                        len(
+                            points,
+                        )
+                    )
                 ],
                 hovertemplate=(
                     "%{customdata[0]}<br>"
@@ -790,15 +901,23 @@ class PeakWorkflowGraphBuilder:
             logger.debug(
                 "Could not add x gate shading because visible x range is unavailable."
             )
+
             return
 
         visible_lower_x, visible_upper_x = visible_x_range
 
         if lower_gate is not None and np.isfinite(lower_gate):
-            shaded_lower_x = float(visible_lower_x)
+            shaded_lower_x = float(
+                visible_lower_x,
+            )
+
             shaded_upper_x = min(
-                float(lower_gate),
-                float(visible_upper_x),
+                float(
+                    lower_gate,
+                ),
+                float(
+                    visible_upper_x,
+                ),
             )
 
             if shaded_upper_x > shaded_lower_x:
@@ -819,10 +938,17 @@ class PeakWorkflowGraphBuilder:
 
         if upper_gate is not None and np.isfinite(upper_gate):
             shaded_lower_x = max(
-                float(upper_gate),
-                float(visible_lower_x),
+                float(
+                    upper_gate,
+                ),
+                float(
+                    visible_lower_x,
+                ),
             )
-            shaded_upper_x = float(visible_upper_x)
+
+            shaded_upper_x = float(
+                visible_upper_x,
+            )
 
             if shaded_upper_x > shaded_lower_x:
                 figure.add_shape(
@@ -859,15 +985,23 @@ class PeakWorkflowGraphBuilder:
             logger.debug(
                 "Could not add y gate shading because visible y range is unavailable."
             )
+
             return
 
         visible_lower_y, visible_upper_y = visible_y_range
 
         if lower_gate is not None and np.isfinite(lower_gate):
-            shaded_lower_y = float(visible_lower_y)
+            shaded_lower_y = float(
+                visible_lower_y,
+            )
+
             shaded_upper_y = min(
-                float(lower_gate),
-                float(visible_upper_y),
+                float(
+                    lower_gate,
+                ),
+                float(
+                    visible_upper_y,
+                ),
             )
 
             if shaded_upper_y > shaded_lower_y:
@@ -888,10 +1022,17 @@ class PeakWorkflowGraphBuilder:
 
         if upper_gate is not None and np.isfinite(upper_gate):
             shaded_lower_y = max(
-                float(upper_gate),
-                float(visible_lower_y),
+                float(
+                    upper_gate,
+                ),
+                float(
+                    visible_lower_y,
+                ),
             )
-            shaded_upper_y = float(visible_upper_y)
+
+            shaded_upper_y = float(
+                visible_upper_y,
+            )
 
             if shaded_upper_y > shaded_lower_y:
                 figure.add_shape(
@@ -919,18 +1060,24 @@ class PeakWorkflowGraphBuilder:
     ) -> None:
         """
         Add a vertical line as a shape, not as an annotation.
-
-        This avoids Plotly's default 'new text' annotation behavior.
         """
-        if not np.isfinite(float(x)):
+        if not np.isfinite(
+            float(
+                x,
+            )
+        ):
             return
 
         figure.add_shape(
             type="line",
             xref="x",
             yref="paper",
-            x0=float(x),
-            x1=float(x),
+            x0=float(
+                x,
+            ),
+            x1=float(
+                x,
+            ),
             y0=0.0,
             y1=1.0,
             line={
@@ -950,10 +1097,12 @@ class PeakWorkflowGraphBuilder:
     ) -> None:
         """
         Add a horizontal line as a shape, not as an annotation.
-
-        This avoids Plotly's default 'new text' annotation behavior.
         """
-        if not np.isfinite(float(y)):
+        if not np.isfinite(
+            float(
+                y,
+            )
+        ):
             return
 
         figure.add_shape(
@@ -962,8 +1111,12 @@ class PeakWorkflowGraphBuilder:
             yref="y",
             x0=0.0,
             x1=1.0,
-            y0=float(y),
-            y1=float(y),
+            y0=float(
+                y,
+            ),
+            y1=float(
+                y,
+            ),
             line={
                 "width": line_width,
                 "dash": line_dash,
@@ -1002,8 +1155,13 @@ class PeakWorkflowGraphBuilder:
             return None
 
         try:
-            lower_value = float(axis_range[0])
-            upper_value = float(axis_range[1])
+            lower_value = float(
+                axis_range[0],
+            )
+
+            upper_value = float(
+                axis_range[1],
+            )
 
         except (TypeError, ValueError):
             return None
@@ -1025,8 +1183,12 @@ class PeakWorkflowGraphBuilder:
             lower_value, upper_value = upper_value, lower_value
 
         return (
-            float(lower_value),
-            float(upper_value),
+            float(
+                lower_value,
+            ),
+            float(
+                upper_value,
+            ),
         )
 
     def _extract_x_axis_lower_gate_from_peak_lines_payload(self) -> Optional[float]:
@@ -1131,17 +1293,25 @@ class PeakWorkflowGraphBuilder:
             return []
 
         candidate_values = (
-            self.peak_lines_payload.get("x_positions")
-            or self.peak_lines_payload.get("positions")
+            self.peak_lines_payload.get(
+                "x_positions",
+            )
+            or self.peak_lines_payload.get(
+                "positions",
+            )
             or []
         )
 
         if not candidate_values and isinstance(
-            self.peak_lines_payload.get("points"),
+            self.peak_lines_payload.get(
+                "points",
+            ),
             list,
         ):
             candidate_values = [
-                point.get("x")
+                point.get(
+                    "x",
+                )
                 for point in self.peak_lines_payload["points"]
                 if isinstance(point, dict)
             ]
@@ -1206,8 +1376,13 @@ class PeakWorkflowGraphBuilder:
 
             return resolved_points
 
-        x_positions = self.peak_lines_payload.get("x_positions") or []
-        y_positions = self.peak_lines_payload.get("y_positions") or []
+        x_positions = self.peak_lines_payload.get(
+            "x_positions",
+        ) or []
+
+        y_positions = self.peak_lines_payload.get(
+            "y_positions",
+        ) or []
 
         resolved_points: list[dict[str, float]] = []
 
@@ -1255,7 +1430,9 @@ class PeakWorkflowGraphBuilder:
 
             if isinstance(labels, list):
                 resolved_labels = [
-                    str(label)
+                    str(
+                        label,
+                    )
                     for label in labels[:point_count]
                 ]
 
@@ -1268,7 +1445,9 @@ class PeakWorkflowGraphBuilder:
 
         return [
             f"Peak {index + 1}"
-            for index in range(point_count)
+            for index in range(
+                point_count,
+            )
         ]
 
     def _apply_axis_types(
@@ -1295,10 +1474,7 @@ class PeakWorkflowGraphBuilder:
         """
         Apply profile visualization settings to a peak workflow figure.
         """
-        default_marker_size = self._get_nested_config_float(
-            path="visualization.default_marker_size",
-            default=10.0,
-        )
+        default_marker_size = self._get_default_marker_size()
 
         default_line_width = self._get_nested_config_float(
             path="visualization.default_line_width",
@@ -1315,16 +1491,20 @@ class PeakWorkflowGraphBuilder:
             default=18.0,
         )
 
-        show_grid_by_default = self._get_nested_config_bool(
-            path="visualization.show_grid_by_default",
-            default=False,
-        )
+        show_grid_by_default = self._show_grid_by_default()
 
         figure.update_layout(
             font={
                 "size": default_font_size,
             },
             legend={
+                "x": 0.99,
+                "y": 0.99,
+                "xanchor": "right",
+                "yanchor": "top",
+                "bgcolor": "rgba(255, 255, 255, 0.72)",
+                "bordercolor": "rgba(0, 0, 0, 0.18)",
+                "borderwidth": 1,
                 "font": {
                     "size": default_tick_size,
                 },
@@ -1435,7 +1615,9 @@ class PeakWorkflowGraphBuilder:
                 return []
 
             return [
-                str(channel_name)
+                str(
+                    channel_name,
+                )
                 for channel_name in channel_names
             ]
 
@@ -1449,7 +1631,9 @@ class PeakWorkflowGraphBuilder:
             return []
 
         return [
-            str(channel_name)
+            str(
+                channel_name,
+            )
             for channel_name in channel_names
         ]
 
@@ -1473,6 +1657,9 @@ class PeakWorkflowGraphBuilder:
         """
         return scale_selection_is_log(
             self.xscale_selection,
+        ) or (
+            isinstance(self.xscale_selection, (list, tuple, set))
+            and Scatter2DGraph.x_log_value in self.xscale_selection
         )
 
     def _y_axis_is_log(self) -> bool:
@@ -1481,6 +1668,27 @@ class PeakWorkflowGraphBuilder:
         """
         return scale_selection_is_log(
             self.yscale_selection,
+        ) or (
+            isinstance(self.yscale_selection, (list, tuple, set))
+            and Scatter2DGraph.y_log_value in self.yscale_selection
+        )
+
+    def _get_default_marker_size(self) -> float:
+        """
+        Return default marker size from runtime config.
+        """
+        return self._get_nested_config_float(
+            path="visualization.default_marker_size",
+            default=10.0,
+        )
+
+    def _show_grid_by_default(self) -> bool:
+        """
+        Return whether grid lines should be shown by default.
+        """
+        return self._get_nested_config_bool(
+            path="visualization.show_grid_by_default",
+            default=False,
         )
 
     def _get_nested_config_float(
@@ -1503,10 +1711,14 @@ class PeakWorkflowGraphBuilder:
             )
 
         except (TypeError, ValueError):
-            return float(default)
+            return float(
+                default,
+            )
 
         if not np.isfinite(value_float):
-            return float(default)
+            return float(
+                default,
+            )
 
         return value_float
 
@@ -1536,7 +1748,9 @@ class PeakWorkflowGraphBuilder:
                 "enabled",
             )
 
-        return bool(value)
+        return bool(
+            value,
+        )
 
     def _get_nested_config_value(
         self,
@@ -1624,7 +1838,9 @@ def build_process_settings(
         if process_setting_id.get("process") != resolved_process_name:
             continue
 
-        setting_name = process_setting_id.get("setting")
+        setting_name = process_setting_id.get(
+            "setting",
+        )
 
         if not isinstance(setting_name, str):
             continue

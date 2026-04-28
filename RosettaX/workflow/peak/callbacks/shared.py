@@ -8,6 +8,7 @@ from .graph import register_graph_callbacks
 from .mutation import register_mutation_callbacks
 from .visibility import register_visibility_callbacks
 from RosettaX.utils.runtime_config import RuntimeConfig
+from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
 
 from .. import registry
 
@@ -89,32 +90,30 @@ class PeakWorkflowCallbacks:
         """
         Register runtime configuration synchronization callbacks.
 
-        This callback synchronizes the shared peak workflow graph controls from the
-        runtime profile.
+        This callback synchronizes the shared peak workflow graph controls from
+        the runtime profile.
 
         It intentionally does not run on initial page render. Dash session
         persistence should restore user choices for:
 
         - Show graph
-        - Log x
-        - Log y
+        - Log x and Log y through the shared axis scale toggle
         - Bins
 
-        The callback still runs when a new profile is loaded and the runtime config
-        store changes during the session.
+        The callback still runs when a new profile is loaded and the runtime
+        config store changes during the session.
         """
 
         @dash.callback(
             dash.Output(ids.nbins_input, "value"),
             dash.Output(ids.graph_toggle_switch, "value"),
-            dash.Output(ids.xscale_switch, "value"),
-            dash.Output(ids.yscale_switch, "value"),
+            dash.Output(ids.axis_scale_toggle, "value"),
             dash.Input(runtime_config_store_id, "data"),
             prevent_initial_call=True,
         )
         def sync_graph_controls_from_runtime_store(
             runtime_config_data: Any,
-        ) -> tuple[Any, Any, Any, Any]:
+        ) -> tuple[Any, Any, Any]:
             runtime_config = RuntimeConfig.from_dict(
                 runtime_config_data if isinstance(runtime_config_data, dict) else None
             )
@@ -138,16 +137,49 @@ class PeakWorkflowCallbacks:
                 default="log",
             )
 
+            axis_scale_toggle_values = self.build_axis_scale_toggle_values(
+                xscale=histogram_xscale,
+                yscale=histogram_yscale,
+            )
+
             return (
                 runtime_config.get_int(
                     "calibration.n_bins_for_plots",
                     default=100,
                 ),
                 ["enabled"] if runtime_config.get_show_graphs(default=True) else [],
-                ["log"] if histogram_xscale == "log" else [],
-                ["log"] if histogram_yscale == "log" else [],
+                axis_scale_toggle_values,
             )
 
+    def build_axis_scale_toggle_values(
+        self,
+        *,
+        xscale: Any,
+        yscale: Any,
+    ) -> list[str]:
+        """
+        Convert normalized x and y scale values into the shared scatter toggle
+        values.
+        """
+        axis_scale_toggle_values: list[str] = []
+
+        if self.normalize_axis_scale(
+            xscale,
+            default="linear",
+        ) == "log":
+            axis_scale_toggle_values.append(
+                Scatter2DGraph.x_log_value,
+            )
+
+        if self.normalize_axis_scale(
+            yscale,
+            default="linear",
+        ) == "log":
+            axis_scale_toggle_values.append(
+                Scatter2DGraph.y_log_value,
+            )
+
+        return axis_scale_toggle_values
 
     def normalize_axis_scale(
         self,

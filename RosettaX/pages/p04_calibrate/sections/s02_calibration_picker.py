@@ -8,11 +8,13 @@ from urllib.parse import parse_qs
 
 import dash
 import dash_bootstrap_components as dbc
-import numpy as np
-import plotly.graph_objs as go
 
 from RosettaX.utils import directories
+from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.model.scattering import ScatteringModelConfiguration
+from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
+from RosettaX.workflow.plotting.scatter2d import Scatter2DGraphIds
+from RosettaX.workflow.plotting.scatter2d import Scatter2DTrace
 
 
 logger = logging.getLogger(__name__)
@@ -207,16 +209,18 @@ class CalibrationPicker:
                                         "marginBottom": "10px",
                                     },
                                 ),
-                                dash.dcc.Graph(
-                                    id=self.page.ids.CalibrationPicker.target_mie_relation_graph,
+
+                                Scatter2DGraph.build_component(
+                                    component_ids=Scatter2DGraphIds(
+                                        graph=self.page.ids.CalibrationPicker.target_mie_relation_graph,
+                                        axis_scale_toggle=self.page.ids.CalibrationPicker.target_mie_relation_axis_scale_toggle,
+                                    ),
                                     figure=self._build_empty_target_mie_relation_figure(),
-                                    style={
+                                    x_log_enabled=self._get_default_target_mie_relation_xscale() == "log",
+                                    y_log_enabled=self._get_default_target_mie_relation_yscale() == "log",
+                                    graph_style={
                                         "height": "320px",
                                         "width": "100%",
-                                    },
-                                    config={
-                                        "displaylogo": False,
-                                        "responsive": True,
                                     },
                                 ),
                             ],
@@ -332,6 +336,127 @@ class CalibrationPicker:
         self._register_selected_calibration_summary_callback()
         self._register_scattering_target_model_visibility_callback()
         self._register_target_mie_relation_preview_callback()
+        self._register_target_mie_relation_axis_scale_runtime_sync_callback()
+
+    def _register_target_mie_relation_axis_scale_runtime_sync_callback(self) -> None:
+        """
+        Synchronize the target Mie relation preview axis scale toggle from the
+        active runtime profile.
+        """
+
+        @dash.callback(
+            dash.Output(
+                self.page.ids.CalibrationPicker.target_mie_relation_axis_scale_toggle,
+                "value",
+            ),
+            dash.Input(
+                "runtime-config-store",
+                "data",
+            ),
+            prevent_initial_call=False,
+        )
+        def sync_target_mie_relation_axis_scale_from_runtime_config(
+            runtime_config_data: Any,
+        ) -> list[str]:
+            runtime_config = RuntimeConfig.from_dict(
+                runtime_config_data if isinstance(runtime_config_data, dict) else None
+            )
+
+            xscale = self._normalize_axis_scale(
+                runtime_config.get_str(
+                    "calibration.target_mie_relation_xscale",
+                    default="linear",
+                ),
+                default="linear",
+            )
+
+            yscale = self._normalize_axis_scale(
+                runtime_config.get_str(
+                    "calibration.target_mie_relation_yscale",
+                    default="log",
+                ),
+                default="log",
+            )
+
+            return self._build_axis_scale_toggle_values(
+                xscale=xscale,
+                yscale=yscale,
+            )
+
+
+    def _get_default_target_mie_relation_xscale(self) -> str:
+        """
+        Return the default x axis scale for the target Mie relation preview.
+        """
+        runtime_config = RuntimeConfig.from_default_profile()
+
+        return self._normalize_axis_scale(
+            runtime_config.get_str(
+                "calibration.target_mie_relation_xscale",
+                default="linear",
+            ),
+            default="linear",
+        )
+
+
+    def _get_default_target_mie_relation_yscale(self) -> str:
+        """
+        Return the default y axis scale for the target Mie relation preview.
+        """
+        runtime_config = RuntimeConfig.from_default_profile()
+
+        return self._normalize_axis_scale(
+            runtime_config.get_str(
+                "calibration.target_mie_relation_yscale",
+                default="log",
+            ),
+            default="log",
+        )
+
+
+    @staticmethod
+    def _normalize_axis_scale(
+        value: Any,
+        *,
+        default: str,
+    ) -> str:
+        """
+        Normalize an axis scale value.
+        """
+        value_string = str(value or "").strip().lower()
+
+        if value_string in (
+            "linear",
+            "log",
+        ):
+            return value_string
+
+        return default
+
+
+    @staticmethod
+    def _build_axis_scale_toggle_values(
+        *,
+        xscale: Any,
+        yscale: Any,
+    ) -> list[str]:
+        """
+        Convert x and y axis scales to Scatter2DGraph checklist values.
+        """
+        axis_scale_toggle_values: list[str] = []
+
+        if str(xscale).strip().lower() == "log":
+            axis_scale_toggle_values.append(
+                Scatter2DGraph.x_log_value,
+            )
+
+        if str(yscale).strip().lower() == "log":
+            axis_scale_toggle_values.append(
+                Scatter2DGraph.y_log_value,
+            )
+
+        return axis_scale_toggle_values
+
 
     def _register_dropdown_refresh_callback(self) -> None:
         """
@@ -628,6 +753,10 @@ class CalibrationPicker:
                 self.page.ids.CalibrationPicker.target_diameter_count,
                 "value",
             ),
+            dash.Input(
+                self.page.ids.CalibrationPicker.target_mie_relation_axis_scale_toggle,
+                "value",
+            ),
             prevent_initial_call=False,
         )
         def update_target_mie_relation_preview(
@@ -638,13 +767,14 @@ class CalibrationPicker:
             target_diameter_min_nm: Any,
             target_diameter_max_nm: Any,
             target_diameter_count: Any,
+            axis_scale_toggle_values: Any,
         ) -> tuple[Any, str, str]:
             logger.debug(
                 "update_target_mie_relation_preview called with "
                 "selected_calibration_summary=%r target_mie_model=%r "
                 "target_medium_refractive_index=%r target_particle_refractive_index=%r "
                 "target_diameter_min_nm=%r target_diameter_max_nm=%r "
-                "target_diameter_count=%r",
+                "target_diameter_count=%r axis_scale_toggle_values=%r",
                 selected_calibration_summary,
                 target_mie_model,
                 target_medium_refractive_index,
@@ -652,6 +782,7 @@ class CalibrationPicker:
                 target_diameter_min_nm,
                 target_diameter_max_nm,
                 target_diameter_count,
+                axis_scale_toggle_values,
             )
 
             if not (
@@ -740,6 +871,7 @@ class CalibrationPicker:
                         selected_diameter_values_nm=selected_diameter_values_nm,
                         selected_coupling_values=selected_coupling_values,
                         show_selected_branch=True,
+                        axis_scale_toggle_values=axis_scale_toggle_values,
                     )
 
                     selected_interval = relation_resolution.selected_interval
@@ -766,6 +898,7 @@ class CalibrationPicker:
                     selected_diameter_values_nm=selected_diameter_values_nm,
                     selected_coupling_values=selected_coupling_values,
                     show_selected_branch=False,
+                    axis_scale_toggle_values=axis_scale_toggle_values,
                 )
 
                 return (
@@ -1009,36 +1142,13 @@ class CalibrationPicker:
         return selected_calibration
 
     @staticmethod
-    def _build_empty_target_mie_relation_figure() -> go.Figure:
+    def _build_empty_target_mie_relation_figure() -> Any:
         """
         Build an empty target Mie relation preview figure.
         """
-        figure = go.Figure()
-
-        figure.update_layout(
-            title="Target Mie relation preview",
-            xaxis_title="Target diameter [nm]",
-            yaxis_title="Theoretical optical coupling",
-            template="plotly_white",
-            margin={
-                "l": 60,
-                "r": 20,
-                "t": 45,
-                "b": 55,
-            },
-            height=320,
+        return Scatter2DGraph.build_empty_figure(
+            message="Select a scattering calibration to compute the preview.",
         )
-
-        figure.add_annotation(
-            text="Select a scattering calibration to compute the preview.",
-            xref="paper",
-            yref="paper",
-            x=0.5,
-            y=0.5,
-            showarrow=False,
-        )
-
-        return figure
 
     @staticmethod
     def _build_target_mie_relation_figure(
@@ -1048,7 +1158,8 @@ class CalibrationPicker:
         selected_diameter_values_nm: Any,
         selected_coupling_values: Any,
         show_selected_branch: bool,
-    ) -> go.Figure:
+        axis_scale_toggle_values: Any,
+    ) -> Any:
         """
         Build the target Mie relation preview figure.
 
@@ -1056,73 +1167,32 @@ class CalibrationPicker:
         monotonic, the automatically selected largest monotonic branch is shown
         as a second curve.
         """
-        full_diameter_values_nm = np.asarray(
-            full_diameter_values_nm,
-            dtype=float,
-        ).reshape(-1)
-
-        full_coupling_values = np.asarray(
-            full_coupling_values,
-            dtype=float,
-        ).reshape(-1)
-
-        selected_diameter_values_nm = np.asarray(
-            selected_diameter_values_nm,
-            dtype=float,
-        ).reshape(-1)
-
-        selected_coupling_values = np.asarray(
-            selected_coupling_values,
-            dtype=float,
-        ).reshape(-1)
-
-        figure = go.Figure()
-
-        figure.add_trace(
-            go.Scatter(
-                x=full_diameter_values_nm,
-                y=full_coupling_values,
-                mode="lines",
+        traces = [
+            Scatter2DTrace(
+                x_values=full_diameter_values_nm,
+                y_values=full_coupling_values,
                 name="Full target Mie relation",
-                line={
-                    "width": 2,
-                },
+                mode="lines",
             )
-        )
+        ]
 
         if show_selected_branch:
-            figure.add_trace(
-                go.Scatter(
-                    x=selected_diameter_values_nm,
-                    y=selected_coupling_values,
-                    mode="lines",
+            traces.append(
+                Scatter2DTrace(
+                    x_values=selected_diameter_values_nm,
+                    y_values=selected_coupling_values,
                     name="Auto selected largest monotonic branch",
-                    line={
-                        "width": 4,
-                    },
+                    mode="lines",
                 )
             )
 
-        figure.update_layout(
+        return Scatter2DGraph.build_figure(
+            traces=traces,
             title="Target Mie relation preview",
-            xaxis_title="Target diameter [nm]",
-            yaxis_title="Theoretical optical coupling",
+            x_axis_title="Target diameter [nm]",
+            y_axis_title="Theoretical optical coupling",
+            axis_scale_toggle_values=axis_scale_toggle_values,
+            show_grid=True,
             hovermode="closest",
-            template="plotly_white",
-            margin={
-                "l": 60,
-                "r": 20,
-                "t": 45,
-                "b": 55,
-            },
-            height=320,
             uirevision="target_mie_relation_preview",
         )
-
-        figure.update_yaxes(
-            type="log",
-            exponentformat="e",
-            showexponent="all",
-        )
-
-        return figure

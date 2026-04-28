@@ -23,6 +23,10 @@ class Ids:
         dropdown = f"{page_name}-calibration-dropdown"
         refresh_button = f"{page_name}-refresh-button"
 
+        target_mie_relation_axis_scale_toggle = (
+            f"{page_name}-calibration-picker-target-mie-relation-axis-scale-toggle"
+        )
+
         scattering_target_model_container = (
             f"{page_name}-calibration-picker-scattering-target-model-container"
         )

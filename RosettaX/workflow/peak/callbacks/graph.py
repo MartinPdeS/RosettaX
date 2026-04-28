@@ -29,6 +29,12 @@ def register_graph_callbacks(
     """
     Register the main peak workflow graph callback.
     """
+    del page
+
+    axis_scale_toggle_id = resolve_axis_scale_toggle_id(
+        ids=ids,
+    )
+
     state_components: list[Any] = [
         dash.State(
             ids.process_detector_dropdown_pattern(),
@@ -50,21 +56,41 @@ def register_graph_callbacks(
         )
 
     state_components.append(
-        dash.State(runtime_config_store_id, "data"),
+        dash.State(
+            runtime_config_store_id,
+            "data",
+        )
     )
 
     @dash.callback(
-        dash.Output(ids.graph_hist, "figure"),
-        dash.Input(ids.graph_toggle_switch, "value"),
-        dash.Input(ids.xscale_switch, "value"),
-        dash.Input(ids.yscale_switch, "value"),
-        dash.Input(page_state_store_id, "data"),
-        dash.Input(ids.nbins_input, "value"),
+        dash.Output(
+            ids.graph_hist,
+            "figure",
+        ),
+        dash.Input(
+            ids.graph_toggle_switch,
+            "value",
+        ),
+        dash.Input(
+            axis_scale_toggle_id,
+            "value",
+        ),
+        dash.Input(
+            page_state_store_id,
+            "data",
+        ),
+        dash.Input(
+            ids.nbins_input,
+            "value",
+        ),
         dash.Input(
             ids.process_detector_dropdown_pattern(),
             "value",
         ),
-        dash.Input(ids.process_dropdown, "value"),
+        dash.Input(
+            ids.process_dropdown,
+            "value",
+        ),
         dash.Input(
             ids.process_setting_pattern(),
             "value",
@@ -74,8 +100,7 @@ def register_graph_callbacks(
     )
     def update_graph(
         graph_toggle_value: Any,
-        xscale_selection: Any,
-        yscale_selection: Any,
+        axis_scale_toggle_values: Any,
         page_state_payload: Any,
         nbins: Any,
         detector_dropdown_values: list[Any],
@@ -116,6 +141,16 @@ def register_graph_callbacks(
             uploaded_fcs_path=uploaded_fcs_path,
         )
 
+        x_log_scale = axis_scale_toggle_contains(
+            axis_scale_toggle_values=axis_scale_toggle_values,
+            expected_value="x_log",
+        )
+
+        y_log_scale = axis_scale_toggle_contains(
+            axis_scale_toggle_values=axis_scale_toggle_values,
+            expected_value="y_log",
+        )
+
         try:
             figure = graphing.build_peak_workflow_graph_figure(
                 backend=backend,
@@ -126,8 +161,8 @@ def register_graph_callbacks(
                 process_setting_ids=process_setting_ids,
                 process_setting_values=process_setting_values,
                 graph_toggle_value=graph_toggle_value,
-                xscale_selection=xscale_selection,
-                yscale_selection=yscale_selection,
+                xscale_selection=axis_scale_toggle_values,
+                yscale_selection=axis_scale_toggle_values,
                 nbins=nbins,
                 peak_lines_payload=peak_lines_payload,
                 max_events_for_plots=max_events_for_plots,
@@ -138,6 +173,8 @@ def register_graph_callbacks(
                 figure=figure,
                 peak_lines_payload=peak_lines_payload,
                 nbins=nbins,
+                x_log_scale=x_log_scale,
+                y_log_scale=y_log_scale,
             )
 
             apply_peak_graph_layout(
@@ -147,7 +184,9 @@ def register_graph_callbacks(
             return figure
 
         except Exception as exc:
-            logger.exception("Failed to build peak workflow graph.")
+            logger.exception(
+                "Failed to build peak workflow graph."
+            )
 
             figure = plottings._make_info_figure(
                 f"{type(exc).__name__}: {exc}",
@@ -158,6 +197,51 @@ def register_graph_callbacks(
             )
 
             return figure
+
+
+def resolve_axis_scale_toggle_id(
+    *,
+    ids: Any,
+) -> str:
+    """
+    Resolve the shared Scatter2DGraph axis scale toggle ID.
+
+    Prefer the explicit ``ids.axis_scale_toggle`` field. Fall back to a
+    deterministic ID only for older ID classes during migration.
+    """
+    axis_scale_toggle_id = getattr(
+        ids,
+        "axis_scale_toggle",
+        None,
+    )
+
+    if isinstance(axis_scale_toggle_id, str) and axis_scale_toggle_id:
+        return axis_scale_toggle_id
+
+    if callable(axis_scale_toggle_id):
+        resolved_axis_scale_toggle_id = axis_scale_toggle_id()
+
+        if isinstance(resolved_axis_scale_toggle_id, str) and resolved_axis_scale_toggle_id:
+            return resolved_axis_scale_toggle_id
+
+    return f"{ids.graph_hist}-axis-scale-toggle"
+
+
+def axis_scale_toggle_contains(
+    *,
+    axis_scale_toggle_values: Any,
+    expected_value: str,
+) -> bool:
+    """
+    Return whether the shared axis scale toggle contains a value.
+    """
+    if isinstance(axis_scale_toggle_values, str):
+        return axis_scale_toggle_values == expected_value
+
+    if isinstance(axis_scale_toggle_values, (list, tuple, set)):
+        return expected_value in axis_scale_toggle_values
+
+    return False
 
 
 def apply_peak_graph_layout(
@@ -172,7 +256,7 @@ def apply_peak_graph_layout(
         margin={
             "l": 70,
             "r": 30,
-            "t": 30,
+            "t": 55,
             "b": 70,
         },
     )
@@ -185,6 +269,8 @@ def add_grouped_payload_traces(
     figure: go.Figure,
     peak_lines_payload: Any,
     nbins: Any,
+    x_log_scale: bool,
+    y_log_scale: bool,
 ) -> go.Figure:
     """
     Add grouped traces stored by peak processes.
@@ -205,6 +291,8 @@ def add_grouped_payload_traces(
     figure = add_grouped_2d_scatter_traces(
         figure=figure,
         peak_lines_payload=peak_lines_payload,
+        x_log_scale=x_log_scale,
+        y_log_scale=y_log_scale,
     )
 
     return figure
@@ -301,6 +389,8 @@ def add_grouped_2d_scatter_traces(
     *,
     figure: go.Figure,
     peak_lines_payload: dict[str, Any],
+    x_log_scale: bool,
+    y_log_scale: bool,
 ) -> go.Figure:
     """
     Add one Scattergl trace per K means 2D group.
@@ -335,6 +425,8 @@ def add_grouped_2d_scatter_traces(
     for group_index, raw_group_points in enumerate(group_points):
         x_values, y_values = sanitize_group_points(
             group_points=raw_group_points,
+            x_log_scale=x_log_scale,
+            y_log_scale=y_log_scale,
         )
 
         if x_values.size == 0:
@@ -423,7 +515,10 @@ def soften_existing_traces(
             continue
 
         try:
-            trace.opacity = float(opacity)
+            trace.opacity = float(
+                opacity,
+            )
+
         except Exception:
             logger.debug(
                 "Could not update opacity for trace=%r",
@@ -451,13 +546,17 @@ def sanitize_numeric_values(
         )
 
     return array[
-        np.isfinite(array)
+        np.isfinite(
+            array,
+        )
     ]
 
 
 def sanitize_group_points(
     *,
     group_points: Any,
+    x_log_scale: bool,
+    y_log_scale: bool,
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Convert a grouped 2D point payload to finite x and y arrays.
@@ -504,11 +603,32 @@ def sanitize_group_points(
         :common_size
     ]
 
-    finite_mask = np.isfinite(x_values) & np.isfinite(y_values)
+    finite_mask = (
+        np.isfinite(
+            x_values,
+        )
+        & np.isfinite(
+            y_values,
+        )
+    )
+
+    if x_log_scale:
+        finite_mask = finite_mask & (
+            x_values > 0.0
+        )
+
+    if y_log_scale:
+        finite_mask = finite_mask & (
+            y_values > 0.0
+        )
 
     return (
-        x_values[finite_mask],
-        y_values[finite_mask],
+        x_values[
+            finite_mask
+        ],
+        y_values[
+            finite_mask
+        ],
     )
 
 

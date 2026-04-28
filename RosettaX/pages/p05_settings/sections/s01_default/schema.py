@@ -434,6 +434,26 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         default=False,
         options=YES_NO_OPTIONS,
     ),
+    FieldDefinition(
+        name="target_mie_relation_xscale",
+        section="calibration",
+        label="Target Mie relation x scale:",
+        component_kind="dropdown",
+        value_kind="choice",
+        runtime_path="calibration.target_mie_relation_xscale",
+        default="linear",
+        options=AXIS_SCALE_OPTIONS,
+    ),
+    FieldDefinition(
+        name="target_mie_relation_yscale",
+        section="calibration",
+        label="Target Mie relation y scale:",
+        component_kind="dropdown",
+        value_kind="choice",
+        runtime_path="calibration.target_mie_relation_yscale",
+        default="log",
+        options=AXIS_SCALE_OPTIONS,
+    ),
 ]
 
 

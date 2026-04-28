@@ -91,6 +91,8 @@ class Ids:
         scattering_fcs_file_path = f"{PAGE_NAME}-scattering-fcs-file-path"
         theme_mode = f"{PAGE_NAME}-theme-mode"
         show_graphs = f"{PAGE_NAME}-show-graphs"
+        target_mie_relation_xscale = f"{PAGE_NAME}-target-mie-relation-xscale"
+        target_mie_relation_yscale = f"{PAGE_NAME}-target-mie-relation-yscale"
 
     class NewProfile:
         """

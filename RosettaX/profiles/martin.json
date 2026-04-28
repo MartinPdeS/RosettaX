@@ -9,6 +9,8 @@
     "peak_count": 4,
     "histogram_xscale": "linear",
     "histogram_yscale": "log",
+    "target_mie_relation_xscale": "linear",
+    "target_mie_relation_yscale": "log",
     "default_fluorescence_peak_process": "2D manual click",
     "default_scattering_peak_process": "1D automatic peaks",
     "default_gating_channel": null,
