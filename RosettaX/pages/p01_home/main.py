@@ -22,8 +22,8 @@ class HomePage:
 
         self.github_url = "https://github.com/MartinPdeS/RosettaX"
         self.pypi_url = "https://pypi.org/project/RosettaX/"
-        self.anaconda_url = "https://anaconda.org/"
-        self.documentation_url = "#"
+        self.anaconda_url = "https://anaconda.org/channels/MartinPdeS/packages/Rosettax/overview"
+        self.documentation_url = "https://martinpdes.github.io/RosettaX/docs/latest/index.html"
         self.contact_email = "martin.poinsinet.de.sivry@gmail.com"
 
     def _id(self, name: str) -> str:
