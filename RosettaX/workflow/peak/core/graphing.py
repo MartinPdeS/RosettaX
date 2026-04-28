@@ -488,6 +488,13 @@ class PeakWorkflowGraphBuilder:
             if getattr(self.process, "graph_type", None) == "2d_scatter":
                 Scatter2DGraph.apply_formatting(
                     figure=figure,
+                    title=str(
+                        getattr(
+                            self.process,
+                            "process_label",
+                            "2D scatter",
+                        )
+                    ),
                     x_axis_title=str(
                         figure.layout.xaxis.title.text or "x",
                     ),
@@ -640,6 +647,13 @@ class PeakWorkflowGraphBuilder:
 
         Scatter2DGraph.apply_formatting(
             figure=figure,
+            title=str(
+                getattr(
+                    self.process,
+                    "process_label",
+                    "2D peak workflow scatter",
+                )
+            ),
             x_axis_title=f"{x_detector_column} [a.u.]",
             y_axis_title=f"{y_detector_column} [a.u.]",
             x_axis_type="log" if self._x_axis_is_log() else "linear",

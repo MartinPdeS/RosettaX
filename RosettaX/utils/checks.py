@@ -476,39 +476,3 @@ class FCSMultiFileConsistencyChecker:
         )
 
         return report
-
-
-# def check_column_name_consistency(file_paths: list[str]) -> dict[str, Any]:
-#     """
-#     Backward compatible wrapper for column name consistency checks.
-#     """
-#     consistency_checker = FCSMultiFileConsistencyChecker(file_paths=file_paths)
-
-#     return consistency_checker.check_column_name_consistency()
-
-
-# def check_version_consistency(file_paths: list[str]) -> dict[str, Any]:
-#     """
-#     Backward compatible wrapper for FCS version consistency checks.
-#     """
-#     consistency_checker = FCSMultiFileConsistencyChecker(file_paths=file_paths)
-
-#     return consistency_checker.check_version_consistency()
-
-
-# def check_detector_voltage_consistency(file_paths: list[str]) -> dict[str, Any]:
-#     """
-#     Check that detector voltages are consistent across all FCS files.
-#     """
-#     consistency_checker = FCSMultiFileConsistencyChecker(file_paths=file_paths)
-
-#     return consistency_checker.check_detector_voltage_consistency()
-
-
-# def check_multifiles_consistency(file_paths: list[str]) -> dict[str, Any]:
-#     """
-#     Backward compatible wrapper for all multi file consistency checks.
-#     """
-#     consistency_checker = FCSMultiFileConsistencyChecker(file_paths=file_paths)
-
-#     return consistency_checker.check_multifiles_consistency()
