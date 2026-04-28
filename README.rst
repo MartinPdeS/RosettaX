@@ -5,7 +5,7 @@ RosettaX
    :alt: RosettaX logo
 
 .. list-table::
-   :widths: 10 25 25
+   :widths: 10 25 25, 25
    :header-rows: 0
 
    * - Meta
@@ -28,93 +28,132 @@ RosettaX
 
 RosettaX is an interactive calibration application for flow cytometry.
 
-It provides structured fluorescence and scattering calibration workflows that
-combine FCS data loading, histogram inspection, peak identification, calibration
-fitting, profile management, and reusable calibration export in a single
-graphical interface.
+It provides local graphical workflows for fluorescence and scattering
+calibration, combining FCS data loading, histogram inspection, peak
+identification, calibration fitting, runtime profile management, and reusable
+calibration export in a single interface.
 
-The project aims to make calibration workflows easier to inspect, repeat,
-document, and reuse across experiments. It is designed as a practical bridge
-between calibration data, optical modeling, instrument settings, and downstream
-analysis.
+The goal of RosettaX is to make calibration workflows explicit, inspectable,
+repeatable, and easier to maintain across experiments. The application is
+designed as a practical bridge between experimental cytometry data, optical
+modeling, detector settings, calibration references, and downstream analysis.
+
+
+Overview
+********
+
+Flow cytometry calibration is often distributed across several disconnected
+tools: instrument software, notebooks, scripts, spreadsheets, manually selected
+peaks, copied constants, and exported configuration files. This fragmentation
+makes calibration procedures difficult to audit, reproduce, compare, and reuse.
+
+RosettaX brings these steps into a structured application. A calibration session
+can be configured, inspected, fitted, saved, and reused without separating the
+scientific model from the practical workflow. This is particularly useful when
+calibration results need to remain traceable across instruments, detector
+settings, reference materials, and analysis pipelines.
+
+RosettaX currently focuses on two main calibration workflows:
+
+* fluorescence calibration
+* scattering calibration
+
+The fluorescence workflow supports calibration from reference intensity data.
+The scattering workflow connects measured cytometry signals with optical
+parameters such as particle size, refractive index, detector configuration, and
+scattering intensity.
 
 
 Features
 ********
 
-RosettaX currently provides tools for:
+RosettaX currently provides:
 
 * fluorescence calibration workflows
 * scattering calibration workflows
 * FCS data loading
-* profile based configuration management
 * interactive histogram inspection
 * peak identification and peak finding
 * calibration fitting
-* calibration export
-* reusable saved calibrations
+* reusable calibration export
+* runtime profile management
 * detector and optical parameter presets
-* session friendly graphical interface behavior
 * support for default and custom parameter configurations
+* local graphical application behavior suitable for repeated calibration work
 
 
 Why RosettaX
 ************
 
-Flow cytometry calibration workflows are often fragmented across instrument
-software, notebooks, scripts, spreadsheets, manual peak selection, and copied
-calibration constants.
+RosettaX is intended to reduce the amount of manual and implicit work involved
+in flow cytometry calibration.
 
-This makes calibration procedures difficult to inspect, reproduce, and maintain.
+Typical calibration workflows often require users to move between acquisition
+software, custom scripts, spreadsheets, and manually recorded parameters. This
+can make it difficult to know exactly which data, peaks, settings, assumptions,
+and fitted models produced a given calibration result.
 
-RosettaX brings these operations into one application so that the full workflow
-becomes explicit: data are loaded, peaks are inspected, models are fitted,
-parameters are saved, and calibration results can be reused later.
+RosettaX addresses this by keeping the workflow organized around explicit
+steps:
 
-The application is particularly useful when you want to:
+* load the relevant cytometry data
+* select or define the calibration context
+* inspect the signal distributions
+* identify the calibration peaks
+* fit the calibration relation
+* review the result
+* export a reusable calibration file
 
-* standardize calibration procedures
-* reduce manual copy paste operations
-* keep instrument and processing defaults organized
-* compare settings across runs
-* save reusable calibration results
-* build a cleaner calibration workflow for long term use
+This makes the calibration process easier to document, compare, repeat, and
+adapt to new experiments.
 
 
 Typical Workflow
 ****************
 
-A typical RosettaX workflow is:
+A typical RosettaX session follows these steps:
 
-#. launch the application
+#. launch the local application
 #. load or select a runtime profile
 #. import the relevant FCS data
-#. select the fluorescence or scattering workflow
-#. configure the relevant detector and calibration parameters
+#. choose the fluorescence or scattering calibration workflow
+#. configure the detector, optical, and calibration parameters
 #. inspect histograms and identify calibration peaks
 #. fit the calibration model
 #. review the calibration result
 #. save the calibration for later reuse
 
-The exact workflow depends on whether fluorescence or scattering calibration is
-being performed, but the interface is organized to keep each step explicit and
-traceable.
+The exact procedure depends on the selected workflow, but the application is
+organized so that each step remains visible and traceable.
 
 
 Scientific Scope
 ****************
 
 RosettaX is intended for research and development workflows involving flow
-cytometry calibration.
+cytometry calibration. It focuses on calibration analysis and calibration file
+generation rather than instrument control.
 
-The application focuses on practical calibration tasks rather than instrument
-control. It is especially relevant when calibration data, optical parameters,
-detector settings, and reusable analysis profiles need to be kept together in a
-structured workflow.
+The application is especially relevant when experimental cytometry data,
+reference materials, optical parameters, detector settings, and reusable
+analysis profiles need to be managed together in a structured workflow.
 
-The scattering calibration workflow is designed to connect measured cytometry
-data with optical modeling concepts such as particle size, refractive index,
-detector configuration, and scattering intensity.
+For scattering calibration, RosettaX is designed to connect measured cytometry
+signals with optical modeling concepts, including particle size, refractive
+index, collection geometry, detector configuration, and scattering intensity.
+This makes it suitable for workflows where optical interpretation and
+instrument calibration need to remain linked.
+
+
+Data Handling
+*************
+
+RosettaX runs locally.
+
+The application does not upload FCS files, calibration profiles, calibration
+results, or generated configuration files to a remote service. Data remain on
+the machine running the software unless the user explicitly moves, uploads, or
+shares them outside the application.
 
 
 Project Status
@@ -123,8 +162,9 @@ Project Status
 RosettaX is currently in alpha development.
 
 The application is usable for development, testing, and iterative calibration
-workflow design, but the public API and internal organization may still change.
-New users should expect active development and occasional breaking changes.
+workflow design. However, the public API, internal organization, and graphical
+workflows may still change. New users should expect active development and
+occasional breaking changes.
 
 Current development priorities include:
 
@@ -133,7 +173,8 @@ Current development priorities include:
 * improving documentation
 * adding reproducible examples
 * strengthening calibration validation
-* polishing the graphical interface
+* refining the graphical interface
+* improving packaging and release workflows
 
 
 Installation
@@ -146,12 +187,14 @@ PyPI
 
    pip install RosettaX
 
+
 Anaconda
 ========
 
 .. code-block:: bash
 
    conda install -c martinpdes rosettax
+
 
 From Source
 ===========
@@ -174,9 +217,9 @@ After installation, launch RosettaX with:
 
 This starts the local graphical calibration application.
 
-RosettaX is intended to run locally. Data remain on the machine running the
-software unless the user explicitly moves or shares them outside the
-application.
+The application opens a browser based interface served from the local machine.
+It is intended for local calibration workflows and does not require a remote
+server.
 
 
 Documentation
@@ -186,9 +229,9 @@ The documentation is available here:
 
 `RosettaX documentation <https://martinpdes.github.io/RosettaX/>`_
 
-The documentation is expected to evolve together with the application. At this
-stage, the README provides the high level overview, while the full
-documentation contains more detailed usage information.
+The documentation is expected to evolve with the application. At this stage, the
+README provides the high level overview, while the full documentation contains
+more detailed usage information.
 
 
 Development
@@ -232,22 +275,24 @@ Useful contributions include:
 * user interface improvements
 * support for additional calibration workflows
 
-For substantial changes, opening an issue first is recommended so the intended
+For substantial changes, please open an issue first so that the intended
 direction can be discussed before implementation.
 
 
 Citation
 ********
 
-If you use RosettaX in scientific work, please cite the repository for now:
+If you use RosettaX in scientific work, please cite the repository and the
+archived Zenodo release:
 
 .. code-block:: text
 
    Martin Poinsinet de Sivry Houle.
    RosettaX: Interactive flow cytometry calibration software.
    https://github.com/MartinPdeS/RosettaX
+   https://doi.org/10.5281/zenodo.19846629
 
-A formal citation entry may be added later.
+A formal citation file may be added in a future release.
 
 
 Contact
@@ -263,7 +308,13 @@ For collaboration, questions, or feedback:
 License
 *******
 
-Please refer to the repository license file for licensing information.
+RosettaX is distributed under the GNU Affero General Public License v3.0 or
+later.
+
+See the repository ``LICENSE`` file for the full license text.
+
+Commercial licensing, support, validation, or custom deployment agreements may
+be discussed with the author.
 
 
 .. |zenodo| image:: https://zenodo.org/badge/1087203577.svg
