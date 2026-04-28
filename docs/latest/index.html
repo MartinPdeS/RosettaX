@@ -432,87 +432,120 @@
 <h1>RosettaX<a class="headerlink" href="#rosettax" title="Link to this heading">#</a></h1>
 <img alt="RosettaX logo" src="https://raw.githubusercontent.com/MartinPdeS/RosettaX/master/RosettaX/assets/logo_light.png" />
 <p>RosettaX is an interactive calibration application for flow cytometry.</p>
-<p>It provides structured fluorescence and scattering calibration workflows that
-combine FCS data loading, histogram inspection, peak identification, calibration
-fitting, profile management, and reusable calibration export in a single
-graphical interface.</p>
-<p>The project aims to make calibration workflows easier to inspect, repeat,
-document, and reuse across experiments. It is designed as a practical bridge
-between calibration data, optical modeling, instrument settings, and downstream
-analysis.</p>
+<p>It provides local graphical workflows for fluorescence and scattering
+calibration, combining FCS data loading, histogram inspection, peak
+identification, calibration fitting, runtime profile management, and reusable
+calibration export in a single interface.</p>
+<p>The goal of RosettaX is to make calibration workflows explicit, inspectable,
+repeatable, and easier to maintain across experiments. The application is
+designed as a practical bridge between experimental cytometry data, optical
+modeling, detector settings, calibration references, and downstream analysis.</p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<p>Flow cytometry calibration is often distributed across several disconnected
+tools: instrument software, notebooks, scripts, spreadsheets, manually selected
+peaks, copied constants, and exported configuration files. This fragmentation
+makes calibration procedures difficult to audit, reproduce, compare, and reuse.</p>
+<p>RosettaX brings these steps into a structured application. A calibration session
+can be configured, inspected, fitted, saved, and reused without separating the
+scientific model from the practical workflow. This is particularly useful when
+calibration results need to remain traceable across instruments, detector
+settings, reference materials, and analysis pipelines.</p>
+<p>RosettaX currently focuses on two main calibration workflows:</p>
+<ul class="simple">
+<li><p>fluorescence calibration</p></li>
+<li><p>scattering calibration</p></li>
+</ul>
+<p>The fluorescence workflow supports calibration from reference intensity data.
+The scattering workflow connects measured cytometry signals with optical
+parameters such as particle size, refractive index, detector configuration, and
+scattering intensity.</p>
+</section>
 <section id="features">
 <h2>Features<a class="headerlink" href="#features" title="Link to this heading">#</a></h2>
-<p>RosettaX currently provides tools for:</p>
+<p>RosettaX currently provides:</p>
 <ul class="simple">
 <li><p>fluorescence calibration workflows</p></li>
 <li><p>scattering calibration workflows</p></li>
 <li><p>FCS data loading</p></li>
-<li><p>profile based configuration management</p></li>
 <li><p>interactive histogram inspection</p></li>
 <li><p>peak identification and peak finding</p></li>
 <li><p>calibration fitting</p></li>
-<li><p>calibration export</p></li>
-<li><p>reusable saved calibrations</p></li>
+<li><p>reusable calibration export</p></li>
+<li><p>runtime profile management</p></li>
 <li><p>detector and optical parameter presets</p></li>
-<li><p>session friendly graphical interface behavior</p></li>
 <li><p>support for default and custom parameter configurations</p></li>
+<li><p>local graphical application behavior suitable for repeated calibration work</p></li>
 </ul>
 </section>
 <section id="why-rosettax">
 <h2>Why RosettaX<a class="headerlink" href="#why-rosettax" title="Link to this heading">#</a></h2>
-<p>Flow cytometry calibration workflows are often fragmented across instrument
-software, notebooks, scripts, spreadsheets, manual peak selection, and copied
-calibration constants.</p>
-<p>This makes calibration procedures difficult to inspect, reproduce, and maintain.</p>
-<p>RosettaX brings these operations into one application so that the full workflow
-becomes explicit: data are loaded, peaks are inspected, models are fitted,
-parameters are saved, and calibration results can be reused later.</p>
-<p>The application is particularly useful when you want to:</p>
+<p>RosettaX is intended to reduce the amount of manual and implicit work involved
+in flow cytometry calibration.</p>
+<p>Typical calibration workflows often require users to move between acquisition
+software, custom scripts, spreadsheets, and manually recorded parameters. This
+can make it difficult to know exactly which data, peaks, settings, assumptions,
+and fitted models produced a given calibration result.</p>
+<p>RosettaX addresses this by keeping the workflow organized around explicit
+steps:</p>
 <ul class="simple">
-<li><p>standardize calibration procedures</p></li>
-<li><p>reduce manual copy paste operations</p></li>
-<li><p>keep instrument and processing defaults organized</p></li>
-<li><p>compare settings across runs</p></li>
-<li><p>save reusable calibration results</p></li>
-<li><p>build a cleaner calibration workflow for long term use</p></li>
+<li><p>load the relevant cytometry data</p></li>
+<li><p>select or define the calibration context</p></li>
+<li><p>inspect the signal distributions</p></li>
+<li><p>identify the calibration peaks</p></li>
+<li><p>fit the calibration relation</p></li>
+<li><p>review the result</p></li>
+<li><p>export a reusable calibration file</p></li>
 </ul>
+<p>This makes the calibration process easier to document, compare, repeat, and
+adapt to new experiments.</p>
 </section>
 <section id="typical-workflow">
 <h2>Typical Workflow<a class="headerlink" href="#typical-workflow" title="Link to this heading">#</a></h2>
-<p>A typical RosettaX workflow is:</p>
+<p>A typical RosettaX session follows these steps:</p>
 <ol class="arabic simple">
-<li><p>launch the application</p></li>
+<li><p>launch the local application</p></li>
 <li><p>load or select a runtime profile</p></li>
 <li><p>import the relevant FCS data</p></li>
-<li><p>select the fluorescence or scattering workflow</p></li>
-<li><p>configure the relevant detector and calibration parameters</p></li>
+<li><p>choose the fluorescence or scattering calibration workflow</p></li>
+<li><p>configure the detector, optical, and calibration parameters</p></li>
 <li><p>inspect histograms and identify calibration peaks</p></li>
 <li><p>fit the calibration model</p></li>
 <li><p>review the calibration result</p></li>
 <li><p>save the calibration for later reuse</p></li>
 </ol>
-<p>The exact workflow depends on whether fluorescence or scattering calibration is
-being performed, but the interface is organized to keep each step explicit and
-traceable.</p>
+<p>The exact procedure depends on the selected workflow, but the application is
+organized so that each step remains visible and traceable.</p>
 </section>
 <section id="scientific-scope">
 <h2>Scientific Scope<a class="headerlink" href="#scientific-scope" title="Link to this heading">#</a></h2>
 <p>RosettaX is intended for research and development workflows involving flow
-cytometry calibration.</p>
-<p>The application focuses on practical calibration tasks rather than instrument
-control. It is especially relevant when calibration data, optical parameters,
-detector settings, and reusable analysis profiles need to be kept together in a
-structured workflow.</p>
-<p>The scattering calibration workflow is designed to connect measured cytometry
-data with optical modeling concepts such as particle size, refractive index,
-detector configuration, and scattering intensity.</p>
+cytometry calibration. It focuses on calibration analysis and calibration file
+generation rather than instrument control.</p>
+<p>The application is especially relevant when experimental cytometry data,
+reference materials, optical parameters, detector settings, and reusable
+analysis profiles need to be managed together in a structured workflow.</p>
+<p>For scattering calibration, RosettaX is designed to connect measured cytometry
+signals with optical modeling concepts, including particle size, refractive
+index, collection geometry, detector configuration, and scattering intensity.
+This makes it suitable for workflows where optical interpretation and
+instrument calibration need to remain linked.</p>
+</section>
+<section id="data-handling">
+<h2>Data Handling<a class="headerlink" href="#data-handling" title="Link to this heading">#</a></h2>
+<p>RosettaX runs locally.</p>
+<p>The application does not upload FCS files, calibration profiles, calibration
+results, or generated configuration files to a remote service. Data remain on
+the machine running the software unless the user explicitly moves, uploads, or
+shares them outside the application.</p>
 </section>
 <section id="project-status">
 <h2>Project Status<a class="headerlink" href="#project-status" title="Link to this heading">#</a></h2>
 <p>RosettaX is currently in alpha development.</p>
 <p>The application is usable for development, testing, and iterative calibration
-workflow design, but the public API and internal organization may still change.
-New users should expect active development and occasional breaking changes.</p>
+workflow design. However, the public API, internal organization, and graphical
+workflows may still change. New users should expect active development and
+occasional breaking changes.</p>
 <p>Current development priorities include:</p>
 <ul class="simple">
 <li><p>improving workflow robustness</p></li>
@@ -520,7 +553,8 @@ New users should expect active development and occasional breaking changes.</p>
 <li><p>improving documentation</p></li>
 <li><p>adding reproducible examples</p></li>
 <li><p>strengthening calibration validation</p></li>
-<li><p>polishing the graphical interface</p></li>
+<li><p>refining the graphical interface</p></li>
+<li><p>improving packaging and release workflows</p></li>
 </ul>
 </section>
 <section id="installation">
@@ -553,17 +587,17 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
 </pre></div>
 </div>
 <p>This starts the local graphical calibration application.</p>
-<p>RosettaX is intended to run locally. Data remain on the machine running the
-software unless the user explicitly moves or shares them outside the
-application.</p>
+<p>The application opens a browser based interface served from the local machine.
+It is intended for local calibration workflows and does not require a remote
+server.</p>
 </section>
 <section id="documentation">
 <h2>Documentation<a class="headerlink" href="#documentation" title="Link to this heading">#</a></h2>
 <p>The documentation is available here:</p>
 <p><a class="reference external" href="https://martinpdes.github.io/RosettaX/">RosettaX documentation</a></p>
-<p>The documentation is expected to evolve together with the application. At this
-stage, the README provides the high level overview, while the full
-documentation contains more detailed usage information.</p>
+<p>The documentation is expected to evolve with the application. At this stage, the
+README provides the high level overview, while the full documentation contains
+more detailed usage information.</p>
 </section>
 <section id="development">
 <h2>Development<a class="headerlink" href="#development" title="Link to this heading">#</a></h2>
@@ -596,18 +630,20 @@ development as the project matures.</p>
 <li><p>user interface improvements</p></li>
 <li><p>support for additional calibration workflows</p></li>
 </ul>
-<p>For substantial changes, opening an issue first is recommended so the intended
+<p>For substantial changes, please open an issue first so that the intended
 direction can be discussed before implementation.</p>
 </section>
 <section id="citation">
 <h2>Citation<a class="headerlink" href="#citation" title="Link to this heading">#</a></h2>
-<p>If you use RosettaX in scientific work, please cite the repository for now:</p>
+<p>If you use RosettaX in scientific work, please cite the repository and the
+archived Zenodo release:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Martin Poinsinet de Sivry Houle.
 RosettaX: Interactive flow cytometry calibration software.
 https://github.com/MartinPdeS/RosettaX
+https://doi.org/10.5281/zenodo.19846629
 </pre></div>
 </div>
-<p>A formal citation entry may be added later.</p>
+<p>A formal citation file may be added in a future release.</p>
 </section>
 <section id="contact">
 <h2>Contact<a class="headerlink" href="#contact" title="Link to this heading">#</a></h2>
@@ -617,7 +653,11 @@ https://github.com/MartinPdeS/RosettaX
 </section>
 <section id="license">
 <h2>License<a class="headerlink" href="#license" title="Link to this heading">#</a></h2>
-<p>Please refer to the repository license file for licensing information.</p>
+<p>RosettaX is distributed under the GNU Affero General Public License v3.0 or
+later.</p>
+<p>See the repository <code class="docutils literal notranslate"><span class="pre">LICENSE</span></code> file for the full license text.</p>
+<p>Commercial licensing, support, validation, or custom deployment agreements may
+be discussed with the author.</p>
 <div class="toctree-wrapper compound">
 </div>
 </section>
@@ -647,10 +687,12 @@ https://github.com/MartinPdeS/RosettaX
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">RosettaX</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#features">Features</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-rosettax">Why RosettaX</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#typical-workflow">Typical Workflow</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scientific-scope">Scientific Scope</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-handling">Data Handling</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#project-status">Project Status</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
 </ul>
