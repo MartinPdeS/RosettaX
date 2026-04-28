@@ -48,6 +48,7 @@
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/sg-tags.js?v=d80f6fa4"></script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'theory';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
@@ -468,6 +469,594 @@
                   
   <section id="theoretical-background">
 <span id="theory"></span><h1>Theoretical background<a class="headerlink" href="#theoretical-background" title="Link to this heading">#</a></h1>
+<p>RosettaX is built around the idea that flow cytometry calibration should remain
+explicit from the raw measurement space to the exported calibration relation.</p>
+<p>In many workflows, calibration is performed through a combination of acquisition
+software, exported FCS files, manual peak selection, spreadsheets, optical
+models, and downstream analysis scripts. Each of these steps can be valid on its
+own, but the full calibration chain often becomes difficult to inspect and
+reproduce once parameters are copied between tools.</p>
+<p>RosettaX provides a structured interface for this process. It does not attempt
+to control the cytometer. Instead, it focuses on the calibration analysis step:
+loading cytometry data, inspecting signal distributions, identifying reference
+populations, fitting calibration relations, and exporting reusable calibration
+files.</p>
+<p>The purpose of this section is to describe the physical and numerical concepts
+behind the calibration workflows implemented in RosettaX.</p>
+<section id="flow-cytometry-measurements">
+<h2>Flow cytometry measurements<a class="headerlink" href="#flow-cytometry-measurements" title="Link to this heading">#</a></h2>
+<p>Flow cytometry measures particles or cells as they pass through an interrogation
+region, usually defined by a focused optical beam and a hydrodynamically focused
+sample stream. As each particle crosses the beam, it produces optical signals
+that are detected by one or more photodetectors.</p>
+<p>Common signal channels include:</p>
+<ul class="simple">
+<li><p>forward scatter, often associated with low angle scattered light</p></li>
+<li><p>side scatter, often associated with larger angle scattered light</p></li>
+<li><p>fluorescence channels, associated with emitted light from fluorophores</p></li>
+<li><p>trigger channels, used by the instrument to decide whether an event should be
+recorded</p></li>
+</ul>
+<p>The recorded data are usually exported as FCS files. Each row in an FCS file
+corresponds to an event, and each column corresponds to a measured feature or
+channel. Depending on the instrument and acquisition settings, these features
+may include pulse height, pulse area, pulse width, or other processed signal
+quantities.</p>
+<p>RosettaX works with these exported measurements. It treats the FCS file as the
+experimental input and uses calibration references to convert instrument signal
+values into more interpretable calibrated quantities.</p>
+</section>
+<section id="events-signals-and-features">
+<h2>Events, signals, and features<a class="headerlink" href="#events-signals-and-features" title="Link to this heading">#</a></h2>
+<p>A flow cytometry event is not a direct measurement of a particle property. It is
+the result of several physical and electronic steps:</p>
+<ol class="arabic simple">
+<li><p>the particle crosses the illuminated interrogation volume</p></li>
+<li><p>light is scattered or emitted</p></li>
+<li><p>part of this light is collected by the optical system</p></li>
+<li><p>the optical power reaches a detector</p></li>
+<li><p>the detector converts optical power into an electrical signal</p></li>
+<li><p>analog and digital electronics process the signal</p></li>
+<li><p>triggering logic decides whether the signal is stored as an event</p></li>
+<li><p>event features are extracted from the time dependent pulse</p></li>
+</ol>
+<p>The values stored in an FCS file are therefore processed observables. They are
+not usually raw optical powers.</p>
+<p>For calibration, this distinction matters. A calibration relation should be
+interpreted as a mapping between a measured instrument observable and a chosen
+reference quantity. The exact meaning of this relation depends on the selected
+channel, feature type, detector configuration, and calibration model.</p>
+<p>For example, a calibration may relate a fluorescence channel to a reference
+fluorescence intensity, or it may relate a scattering channel to a modeled
+scattering quantity for particles of known optical properties.</p>
+</section>
+<section id="calibration-as-a-mapping-problem">
+<h2>Calibration as a mapping problem<a class="headerlink" href="#calibration-as-a-mapping-problem" title="Link to this heading">#</a></h2>
+<p>Calibration can be viewed as a mapping between two spaces:</p>
+<ul class="simple">
+<li><p>the instrument measurement space</p></li>
+<li><p>the reference or model space</p></li>
+</ul>
+<p>The instrument measurement space is formed by the values measured by the
+cytometer. These values may be arbitrary detector units, digitizer counts,
+scaled channel values, or transformed quantities depending on the instrument
+and export settings.</p>
+<p>The reference space is defined by the calibration material or model. In
+fluorescence calibration, this may be a known reference intensity. In scattering
+calibration, this may be a modeled scattering signal computed from particle
+diameter, refractive index, wavelength, collection geometry, and detector
+configuration.</p>
+<p>The calibration task is to estimate a function</p>
+<div class="math notranslate nohighlight">
+\[y = f(x)\]</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">x</span></code> is the measured signal value and <code class="docutils literal notranslate"><span class="pre">y</span></code> is the calibrated reference
+quantity.</p>
+<p>Depending on the workflow, the relation may also be represented in the opposite
+direction,</p>
+<div class="math notranslate nohighlight">
+\[x = g(y)\]</div>
+<p>where the measured signal is modeled as a function of the reference quantity.</p>
+<p>Both views are useful. The first is useful when applying a calibration to
+experimental data. The second is useful when fitting expected instrument
+responses from known reference populations.</p>
+</section>
+<section id="reference-populations">
+<h2>Reference populations<a class="headerlink" href="#reference-populations" title="Link to this heading">#</a></h2>
+<p>A calibration reference usually contains several distinguishable populations.
+These populations may be beads, particles, or samples with known or modeled
+properties.</p>
+<p>A good reference population should satisfy several practical conditions:</p>
+<ul class="simple">
+<li><p>it should be measurable above the relevant noise floor</p></li>
+<li><p>it should produce a distinguishable peak or mode</p></li>
+<li><p>its reference value should be known or computable</p></li>
+<li><p>it should span the useful dynamic range of the instrument</p></li>
+<li><p>it should be stable enough for repeated measurements</p></li>
+<li><p>it should be appropriate for the channel being calibrated</p></li>
+</ul>
+<p>In practice, reference populations are identified from histograms or density
+plots. RosettaX provides tools to inspect these distributions and associate
+detected peaks with calibration reference values.</p>
+<p>The calibration quality depends strongly on the quality of this association.
+Incorrect peak assignment, unresolved populations, saturated channels, or
+poorly separated peaks can produce misleading calibration fits.</p>
+</section>
+<section id="histograms-and-peak-identification">
+<h2>Histograms and peak identification<a class="headerlink" href="#histograms-and-peak-identification" title="Link to this heading">#</a></h2>
+<p>Calibration workflows often begin by inspecting one dimensional or two
+dimensional signal distributions.</p>
+<p>For a one dimensional channel, a histogram estimates the distribution of event
+values. Peaks in the histogram may correspond to reference populations,
+background events, unresolved mixtures, or instrument artifacts.</p>
+<p>For a two dimensional representation, density plots can reveal whether
+populations are well separated, whether a channel contains correlated
+structure, or whether a selected peak is actually a projection of several
+overlapping populations.</p>
+<p>Peak identification is therefore not only a numerical task. It is also a
+quality control step.</p>
+<p>When selecting calibration peaks, the user should consider:</p>
+<ul class="simple">
+<li><p>whether the population is clearly separated from neighboring populations</p></li>
+<li><p>whether the population is above the detection threshold</p></li>
+<li><p>whether the peak position is stable under reasonable binning choices</p></li>
+<li><p>whether the peak is affected by saturation or clipping</p></li>
+<li><p>whether the selected channel and feature type are appropriate</p></li>
+<li><p>whether the number of events is sufficient for a stable estimate</p></li>
+</ul>
+<p>RosettaX is designed to make this step inspectable rather than hidden. The user
+can review the distribution, identify the relevant peaks, and verify that the
+calibration points are physically reasonable before exporting a calibration.</p>
+</section>
+<section id="fluorescence-calibration">
+<h2>Fluorescence calibration<a class="headerlink" href="#fluorescence-calibration" title="Link to this heading">#</a></h2>
+<p>Fluorescence calibration relates measured fluorescence channel values to a
+reference fluorescence scale.</p>
+<p>A fluorescence measurement depends on several factors:</p>
+<ul class="simple">
+<li><p>excitation wavelength and optical power</p></li>
+<li><p>fluorophore absorption</p></li>
+<li><p>fluorophore emission spectrum</p></li>
+<li><p>quantum yield</p></li>
+<li><p>optical filters</p></li>
+<li><p>collection efficiency</p></li>
+<li><p>detector responsivity</p></li>
+<li><p>electronic gain</p></li>
+<li><p>acquisition settings</p></li>
+<li><p>background and noise</p></li>
+</ul>
+<p>In many practical calibration workflows, these factors are not modeled
+individually. Instead, reference materials with known or assigned fluorescence
+values are measured, and a calibration relation is fitted between measured
+channel values and reference intensities.</p>
+<p>This produces an empirical mapping from instrument units to calibrated
+fluorescence units.</p>
+<p>The general workflow is:</p>
+<ol class="arabic simple">
+<li><p>measure a fluorescence reference sample</p></li>
+<li><p>identify the measured peak positions</p></li>
+<li><p>assign each peak to its known reference value</p></li>
+<li><p>fit a calibration relation</p></li>
+<li><p>review the residuals and the usable range</p></li>
+<li><p>export the calibration result</p></li>
+</ol>
+<p>The fitted relation may be linear, log linear, polynomial, or another model
+depending on the assumptions of the workflow and the response of the detector
+chain.</p>
+<p>A simple linear relation has the form</p>
+<div class="math notranslate nohighlight">
+\[y = a x + b\]</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">x</span></code> is the measured channel value, <code class="docutils literal notranslate"><span class="pre">y</span></code> is the calibrated reference
+value, <code class="docutils literal notranslate"><span class="pre">a</span></code> is the gain factor, and <code class="docutils literal notranslate"><span class="pre">b</span></code> is the offset.</p>
+<p>For many cytometry applications, the useful response may be approximately
+linear only over a limited range. Saturation, background subtraction, nonlinear
+amplification, compensation, or exported scaling may all affect the apparent
+relation.</p>
+<p>The fitted calibration should therefore be interpreted within the range covered
+by the reference populations. Extrapolation outside the measured calibration
+range should be treated carefully.</p>
+</section>
+<section id="scattering-calibration">
+<h2>Scattering calibration<a class="headerlink" href="#scattering-calibration" title="Link to this heading">#</a></h2>
+<p>Scattering calibration relates measured scatter signals to optical scattering
+quantities predicted from a physical model.</p>
+<p>When a particle is illuminated, it redirects part of the incident optical field.
+The angular distribution and total scattered intensity depend on the particle
+properties and optical configuration.</p>
+<p>Important parameters include:</p>
+<ul class="simple">
+<li><p>particle diameter</p></li>
+<li><p>particle refractive index</p></li>
+<li><p>surrounding medium refractive index</p></li>
+<li><p>illumination wavelength</p></li>
+<li><p>incident polarization</p></li>
+<li><p>collection angle</p></li>
+<li><p>numerical aperture</p></li>
+<li><p>detector geometry</p></li>
+<li><p>optical throughput</p></li>
+<li><p>detector responsivity</p></li>
+</ul>
+<p>For spherical particles, scattering is often modeled using Mie theory. Mie
+theory provides an exact solution of Maxwell’s equations for a homogeneous
+sphere in a homogeneous medium illuminated by a plane wave.</p>
+<p>The model produces quantities such as:</p>
+<ul class="simple">
+<li><p>scattering efficiency</p></li>
+<li><p>extinction efficiency</p></li>
+<li><p>angular scattering amplitudes</p></li>
+<li><p>differential scattering intensity</p></li>
+<li><p>collected optical power over a detector acceptance region</p></li>
+</ul>
+<p>For cytometry calibration, the relevant quantity is usually not the total
+scattered power over all angles. Instead, it is the portion of scattered light
+that is collected by the instrument optics and routed to a specific detector.</p>
+<p>This means that the optical model must account for the collection geometry.
+Forward scatter and side scatter channels do not measure the same angular
+region, and they may not respond similarly to particle size or refractive index.</p>
+</section>
+<section id="size-parameter-and-refractive-index-contrast">
+<h2>Size parameter and refractive index contrast<a class="headerlink" href="#size-parameter-and-refractive-index-contrast" title="Link to this heading">#</a></h2>
+<p>A central dimensionless quantity in scattering theory is the size parameter,</p>
+<div class="math notranslate nohighlight">
+\[x = \frac{2 \pi r n_m}{\lambda}\]</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">r</span></code> is the particle radius, <code class="docutils literal notranslate"><span class="pre">n_m</span></code> is the refractive index of the
+surrounding medium, and <code class="docutils literal notranslate"><span class="pre">lambda</span></code> is the wavelength in vacuum.</p>
+<p>The scattering response depends strongly on the size parameter and on the
+relative refractive index,</p>
+<div class="math notranslate nohighlight">
+\[m = \frac{n_p}{n_m}\]</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">n_p</span></code> is the particle refractive index.</p>
+<p>Small particles with weak refractive index contrast may scatter very little
+light. In the Rayleigh regime, the scattering intensity approximately scales
+with the sixth power of particle radius,</p>
+<div class="math notranslate nohighlight">
+\[I_\mathrm{sca} \propto r^6\]</div>
+<p>This scaling is only an approximation for sufficiently small particles, but it
+is useful for intuition. It shows why small changes in particle size can produce
+large changes in scattering signal.</p>
+<p>For extracellular vesicles, lipoproteins, small beads, and other submicron
+particles, this strong size dependence is particularly important. The measured
+scatter distribution may be dominated by the largest particles even if smaller
+particles are far more numerous.</p>
+</section>
+<section id="angular-collection">
+<h2>Angular collection<a class="headerlink" href="#angular-collection" title="Link to this heading">#</a></h2>
+<p>A flow cytometer does not usually collect all scattered light. Each scatter
+channel collects a limited angular range determined by the optical design.</p>
+<p>A simplified collected signal can be written as an angular integral,</p>
+<div class="math notranslate nohighlight">
+\[S = C \int_{\Omega_D} I_\mathrm{sca}(\theta, \phi) \, d\Omega\]</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">I_sca</span></code> is the angular scattering intensity, <code class="docutils literal notranslate"><span class="pre">Omega_D</span></code> is the
+detector collection solid angle, and <code class="docutils literal notranslate"><span class="pre">C</span></code> is an instrument dependent
+proportionality factor.</p>
+<p>This expression emphasizes three important points.</p>
+<p>First, the collected signal depends on the detector geometry. A particle may
+produce strong scattering at angles that are not collected by a given channel.</p>
+<p>Second, the forward and side scatter responses can have different size and
+refractive index dependence.</p>
+<p>Third, the absolute scaling factor is usually instrument dependent. Unless all
+optical throughput, detector responsivity, gain, and processing steps are known,
+the measured channel value should be calibrated empirically.</p>
+</section>
+<section id="calibration-curves-and-monotonicity">
+<h2>Calibration curves and monotonicity<a class="headerlink" href="#calibration-curves-and-monotonicity" title="Link to this heading">#</a></h2>
+<p>A scattering calibration often requires a relation between a particle property
+and a predicted scatter signal. For example, a bead diameter may be mapped to a
+predicted collected scattering intensity.</p>
+<p>However, scattering curves are not always monotonic. Mie resonances and angular
+collection effects can produce oscillations, plateaus, or multiple particle
+sizes that yield similar collected signals.</p>
+<p>This has important consequences.</p>
+<p>If the relation between diameter and signal is not monotonic, then the inverse
+problem is ambiguous. A single measured signal may correspond to multiple
+possible diameters or optical configurations.</p>
+<p>For calibration workflows, RosettaX therefore treats monotonicity as an
+important quality criterion. When a model relation is used as a target
+calibration curve, the usable branch should be inspected. A calibration based
+on a non monotonic region can produce unstable or physically ambiguous results.</p>
+<p>In practical terms, the user should verify:</p>
+<ul class="simple">
+<li><p>whether the calibration range is monotonic</p></li>
+<li><p>whether the selected reference populations fall on a single branch</p></li>
+<li><p>whether the inverse mapping is unique over the intended range</p></li>
+<li><p>whether extrapolation would cross a non monotonic region</p></li>
+<li><p>whether the channel geometry is appropriate for the target size range</p></li>
+</ul>
+</section>
+<section id="instrument-response">
+<h2>Instrument response<a class="headerlink" href="#instrument-response" title="Link to this heading">#</a></h2>
+<p>The optical signal produced by a particle is not the final value stored in an
+FCS file.</p>
+<p>The measured value is affected by the instrument response, including:</p>
+<ul class="simple">
+<li><p>optical transmission</p></li>
+<li><p>filter transmission</p></li>
+<li><p>detector responsivity</p></li>
+<li><p>analog gain</p></li>
+<li><p>electronic bandwidth</p></li>
+<li><p>digitization</p></li>
+<li><p>baseline processing</p></li>
+<li><p>pulse detection</p></li>
+<li><p>trigger thresholds</p></li>
+<li><p>exported feature definitions</p></li>
+</ul>
+<p>A simplified measurement model can be written as</p>
+<div class="math notranslate nohighlight">
+\[x_\mathrm{meas} = h(S_\mathrm{optical}) + \epsilon\]</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">S_optical</span></code> is the collected optical signal, <code class="docutils literal notranslate"><span class="pre">h</span></code> represents the
+instrument response, and <code class="docutils literal notranslate"><span class="pre">epsilon</span></code> represents noise and residual variability.</p>
+<p>In ideal conditions, <code class="docutils literal notranslate"><span class="pre">h</span></code> may be approximated as a linear function over a
+limited dynamic range. In real instruments, the response may include offsets,
+nonlinearities, saturation, filtering, baseline correction, or proprietary
+processing.</p>
+<p>This is why RosettaX focuses on empirical calibration using measured reference
+data. The optical model provides the target reference values, but the measured
+instrument response is estimated from experimental data.</p>
+</section>
+<section id="noise-and-detection-limits">
+<h2>Noise and detection limits<a class="headerlink" href="#noise-and-detection-limits" title="Link to this heading">#</a></h2>
+<p>Calibration is most reliable when reference populations are well above the
+noise floor and well separated from background.</p>
+<p>In low signal regimes, several effects can complicate calibration:</p>
+<ul class="simple">
+<li><p>detector noise</p></li>
+<li><p>shot noise</p></li>
+<li><p>electronic noise</p></li>
+<li><p>background light</p></li>
+<li><p>autofluorescence</p></li>
+<li><p>coincident particles</p></li>
+<li><p>unresolved reference populations</p></li>
+<li><p>thresholding bias</p></li>
+<li><p>feature extraction variability</p></li>
+</ul>
+<p>The lower limit of detection is especially important for small particle
+scattering. Particles that produce signals close to the background may not form
+stable peaks, and their measured distributions may be distorted by triggering
+and event selection.</p>
+<p>If a reference population is only partially detected, the measured peak may not
+represent the true population response. It may represent only the high signal
+tail that crossed the event threshold.</p>
+<p>For this reason, calibration points near the detection limit should be reviewed
+carefully. They may be useful for understanding instrument sensitivity, but they
+may be unsuitable for fitting a stable calibration relation.</p>
+</section>
+<section id="triggering-and-selection-bias">
+<h2>Triggering and selection bias<a class="headerlink" href="#triggering-and-selection-bias" title="Link to this heading">#</a></h2>
+<p>Flow cytometers record events only when the acquisition logic decides that a
+signal satisfies the trigger condition. This means the recorded event
+population can be biased relative to the particles that passed through the
+interrogation region.</p>
+<p>A trigger condition may depend on:</p>
+<ul class="simple">
+<li><p>one selected channel</p></li>
+<li><p>one selected pulse feature</p></li>
+<li><p>a threshold</p></li>
+<li><p>hysteresis</p></li>
+<li><p>debounce logic</p></li>
+<li><p>coincidence behavior</p></li>
+<li><p>electronic filtering</p></li>
+<li><p>digital processing</p></li>
+</ul>
+<p>If the trigger channel is not the same as the calibration channel, the recorded
+events may be selected by one physical observable and calibrated in another.
+This can affect the apparent distribution and peak positions.</p>
+<p>For example, a sample triggered on side scatter may have a different recorded
+population than the same sample triggered on fluorescence or forward scatter.</p>
+<p>When interpreting calibration results, it is therefore important to know:</p>
+<ul class="simple">
+<li><p>which channel was used for triggering</p></li>
+<li><p>whether the reference populations were fully detected</p></li>
+<li><p>whether the selected peaks are affected by thresholding</p></li>
+<li><p>whether the same trigger settings were used across measurements</p></li>
+<li><p>whether the calibration will be applied to data acquired under compatible
+conditions</p></li>
+</ul>
+</section>
+<section id="pulse-features">
+<h2>Pulse features<a class="headerlink" href="#pulse-features" title="Link to this heading">#</a></h2>
+<p>A particle crossing the interrogation region produces a time dependent pulse.
+The FCS file may contain several features extracted from this pulse.</p>
+<p>Common pulse features include:</p>
+<ul class="simple">
+<li><p>height</p></li>
+<li><p>area</p></li>
+<li><p>width</p></li>
+</ul>
+<p>Pulse height is often related to the maximum signal amplitude. Pulse area is
+related to the integrated signal over the event duration. Pulse width is related
+to the temporal extent of the event.</p>
+<p>These features are not interchangeable. Their relationship depends on particle
+velocity, beam shape, signal processing, and event extraction.</p>
+<p>For calibration, the selected feature should match the intended interpretation.
+A calibration built from pulse height should not be applied blindly to pulse
+area unless the relationship between the two is known and stable.</p>
+<p>RosettaX therefore keeps calibration workflows organized around explicit
+channel and feature choices.</p>
+</section>
+<section id="fitting-calibration-relations">
+<h2>Fitting calibration relations<a class="headerlink" href="#fitting-calibration-relations" title="Link to this heading">#</a></h2>
+<p>Once measured peak positions and reference values are associated, RosettaX can
+fit a calibration relation.</p>
+<p>The fitting problem can be written generally as</p>
+<div class="math notranslate nohighlight">
+\[y_i = f(x_i; \boldsymbol{\theta}) + \epsilon_i\]</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">x_i</span></code> are the measured peak positions, <code class="docutils literal notranslate"><span class="pre">y_i</span></code> are the reference
+values, <code class="docutils literal notranslate"><span class="pre">f</span></code> is the calibration model, <code class="docutils literal notranslate"><span class="pre">theta</span></code> are the fitted parameters,
+and <code class="docutils literal notranslate"><span class="pre">epsilon_i</span></code> are residual errors.</p>
+<p>The choice of model should reflect the expected instrument response and the
+calibration range. A more complex model is not always better. It may fit the
+reference points more closely while producing unstable interpolation or
+unreasonable extrapolation.</p>
+<p>When reviewing a calibration fit, the user should inspect:</p>
+<ul class="simple">
+<li><p>the fitted curve</p></li>
+<li><p>the calibration points</p></li>
+<li><p>the residuals</p></li>
+<li><p>the dynamic range covered by the references</p></li>
+<li><p>the behavior near the lower and upper ends of the range</p></li>
+<li><p>whether the relation is physically plausible</p></li>
+<li><p>whether the model will be used for interpolation or extrapolation</p></li>
+</ul>
+<p>A calibration fit should be considered a model with assumptions, not just a
+numerical conversion table.</p>
+</section>
+<section id="interpolation-and-extrapolation">
+<h2>Interpolation and extrapolation<a class="headerlink" href="#interpolation-and-extrapolation" title="Link to this heading">#</a></h2>
+<p>Calibration is most reliable within the range spanned by the reference
+populations. Applying a calibration inside this range is interpolation.
+Applying it outside this range is extrapolation.</p>
+<p>Interpolation can still be affected by model choice, noise, and reference
+quality, but it is generally better constrained than extrapolation.</p>
+<p>Extrapolation is riskier because the fitted relation is being used outside the
+region where it was supported by data. In this case, nonlinear detector
+response, saturation, noise floor effects, or non monotonic scattering behavior
+can produce large errors.</p>
+<p>For this reason, exported calibrations should be interpreted together with
+their valid range. Users should avoid applying a calibration to signal values
+far outside the reference range unless the extrapolation has been explicitly
+validated.</p>
+</section>
+<section id="calibration-export">
+<h2>Calibration export<a class="headerlink" href="#calibration-export" title="Link to this heading">#</a></h2>
+<p>A useful calibration result should be reusable. It should not exist only as a
+plot or as values copied manually from one script to another.</p>
+<p>RosettaX therefore supports calibration export. The exported calibration should
+contain enough information to identify:</p>
+<ul class="simple">
+<li><p>the calibration type</p></li>
+<li><p>the fitted parameters</p></li>
+<li><p>the reference data used for the fit</p></li>
+<li><p>the measured peak positions</p></li>
+<li><p>the selected channel and feature</p></li>
+<li><p>the model assumptions</p></li>
+<li><p>the runtime profile or relevant settings</p></li>
+<li><p>the software version when available</p></li>
+</ul>
+<p>The exact contents may evolve with the application, but the goal remains the
+same: exported calibrations should be traceable and reusable in downstream
+analysis.</p>
+<p>A calibration file should be treated as part of the experimental record.</p>
+</section>
+<section id="runtime-profiles">
+<h2>Runtime profiles<a class="headerlink" href="#runtime-profiles" title="Link to this heading">#</a></h2>
+<p>Runtime profiles are used to organize repeated calibration settings.</p>
+<p>A profile may contain default parameters such as detector names, channel
+choices, optical assumptions, reference material settings, or workflow options.
+This avoids repeatedly entering the same information and reduces the chance of
+copying inconsistent values between calibration sessions.</p>
+<p>Profiles are not a substitute for experimental metadata. Instead, they provide a
+structured way to keep frequently reused assumptions and application settings
+together.</p>
+<p>When using profiles, users should ensure that the selected profile corresponds
+to the instrument configuration and reference materials used in the actual
+measurement.</p>
+</section>
+<section id="local-execution-and-reproducibility">
+<h2>Local execution and reproducibility<a class="headerlink" href="#local-execution-and-reproducibility" title="Link to this heading">#</a></h2>
+<p>RosettaX is designed to run locally. The application serves a graphical
+interface from the user’s machine and does not require a remote calibration
+server.</p>
+<p>Local execution has practical advantages:</p>
+<ul class="simple">
+<li><p>FCS files remain on the user’s machine</p></li>
+<li><p>calibration work can be performed without uploading data</p></li>
+<li><p>local files and profiles can be reused across sessions</p></li>
+<li><p>the workflow can be integrated into laboratory data management practices</p></li>
+</ul>
+<p>Reproducibility depends on more than local execution. A reproducible calibration
+workflow should also preserve:</p>
+<ul class="simple">
+<li><p>input FCS files or their identifiers</p></li>
+<li><p>reference material information</p></li>
+<li><p>selected peaks</p></li>
+<li><p>fitted model type</p></li>
+<li><p>fitted parameters</p></li>
+<li><p>software version</p></li>
+<li><p>runtime profile</p></li>
+<li><p>acquisition settings</p></li>
+<li><p>relevant instrument metadata</p></li>
+</ul>
+<p>RosettaX is intended to make these elements easier to organize, but users
+should still maintain complete experimental records when using calibration
+results for scientific reporting.</p>
+</section>
+<section id="limitations">
+<h2>Limitations<a class="headerlink" href="#limitations" title="Link to this heading">#</a></h2>
+<p>RosettaX does not make calibration automatically correct. It provides a
+structured workflow, but the quality of the result still depends on the quality
+of the input data, reference materials, model assumptions, and user choices.</p>
+<p>Important limitations include:</p>
+<ul class="simple">
+<li><p>FCS data may already contain instrument specific processing</p></li>
+<li><p>proprietary instrument internals may be unknown</p></li>
+<li><p>reference populations may overlap or be partially detected</p></li>
+<li><p>scattering models require assumptions about size, refractive index, and
+collection geometry</p></li>
+<li><p>calibration fits may be unreliable outside the reference range</p></li>
+<li><p>peak identification may require user review</p></li>
+<li><p>low signal populations may be biased by triggering and detection limits</p></li>
+<li><p>exported calibration files are only valid under compatible acquisition and
+analysis conditions</p></li>
+</ul>
+<p>These limitations are not specific to RosettaX. They are general features of
+calibration workflows in flow cytometry. RosettaX aims to make them more
+visible and easier to manage.</p>
+</section>
+<section id="best-practices">
+<h2>Best practices<a class="headerlink" href="#best-practices" title="Link to this heading">#</a></h2>
+<p>For reliable calibration workflows, users should follow several practical
+guidelines.</p>
+</section>
+</section>
+<section id="use-appropriate-reference-materials">
+<h1>Use appropriate reference materials<a class="headerlink" href="#use-appropriate-reference-materials" title="Link to this heading">#</a></h1>
+<p>The reference material should be suitable for the channel and dynamic range
+being calibrated. Reference populations should be detectable, separable, and
+matched to the intended measurement regime.</p>
+</section>
+<section id="inspect-the-data-before-fitting">
+<h1>Inspect the data before fitting<a class="headerlink" href="#inspect-the-data-before-fitting" title="Link to this heading">#</a></h1>
+<p>Do not fit a calibration relation blindly. Inspect histograms, density plots,
+peak positions, and possible background populations before accepting the
+calibration points.</p>
+</section>
+<section id="avoid-unsupported-extrapolation">
+<h1>Avoid unsupported extrapolation<a class="headerlink" href="#avoid-unsupported-extrapolation" title="Link to this heading">#</a></h1>
+<p>Use calibrations primarily within the range covered by the reference
+populations. Treat extrapolated values as uncertain unless the extrapolation has
+been validated independently.</p>
+</section>
+<section id="keep-acquisition-settings-consistent">
+<h1>Keep acquisition settings consistent<a class="headerlink" href="#keep-acquisition-settings-consistent" title="Link to this heading">#</a></h1>
+<p>Calibration is only transferable when the relevant acquisition and processing
+conditions are compatible. Changes in detector gain, trigger settings, optical
+configuration, filters, or exported feature definitions can invalidate a
+calibration.</p>
+</section>
+<section id="review-monotonicity-for-scattering-calibration">
+<h1>Review monotonicity for scattering calibration<a class="headerlink" href="#review-monotonicity-for-scattering-calibration" title="Link to this heading">#</a></h1>
+<p>When a scattering model is used, verify that the relevant calibration branch is
+monotonic over the intended range. Non monotonic scattering relations can make
+inverse calibration ambiguous.</p>
+</section>
+<section id="preserve-calibration-metadata">
+<h1>Preserve calibration metadata<a class="headerlink" href="#preserve-calibration-metadata" title="Link to this heading">#</a></h1>
+<p>Save the calibration file, runtime profile, reference material information, FCS
+file identifiers, acquisition settings, and software version whenever possible.
+These elements are necessary for later interpretation.</p>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">#</a></h2>
+<p>RosettaX treats calibration as a structured mapping between measured flow
+cytometry signals and reference or model based quantities.</p>
+<p>For fluorescence workflows, this mapping is usually empirical and based on
+reference intensity populations. For scattering workflows, the mapping connects
+measured scatter signals with optical models that depend on particle size,
+refractive index, wavelength, and collection geometry.</p>
+<p>In both cases, the calibration result is only meaningful when the reference
+populations, measured peaks, fitted relation, acquisition settings, and model
+assumptions remain traceable.</p>
+<p>RosettaX is designed to make this calibration chain explicit, inspectable, and
+reusable.</p>
+</section>
 </section>
 
 
@@ -484,6 +1073,51 @@
                 <dialog id="pst-secondary-sidebar-modal"></dialog>
                 <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Theoretical background</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flow-cytometry-measurements">Flow cytometry measurements</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#events-signals-and-features">Events, signals, and features</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#calibration-as-a-mapping-problem">Calibration as a mapping problem</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-populations">Reference populations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#histograms-and-peak-identification">Histograms and peak identification</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fluorescence-calibration">Fluorescence calibration</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scattering-calibration">Scattering calibration</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#size-parameter-and-refractive-index-contrast">Size parameter and refractive index contrast</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#angular-collection">Angular collection</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#calibration-curves-and-monotonicity">Calibration curves and monotonicity</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#instrument-response">Instrument response</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#noise-and-detection-limits">Noise and detection limits</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#triggering-and-selection-bias">Triggering and selection bias</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pulse-features">Pulse features</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fitting-calibration-relations">Fitting calibration relations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#interpolation-and-extrapolation">Interpolation and extrapolation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#calibration-export">Calibration export</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#runtime-profiles">Runtime profiles</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#local-execution-and-reproducibility">Local execution and reproducibility</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#limitations">Limitations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#best-practices">Best practices</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#use-appropriate-reference-materials">Use appropriate reference materials</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#inspect-the-data-before-fitting">Inspect the data before fitting</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#avoid-unsupported-extrapolation">Avoid unsupported extrapolation</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#keep-acquisition-settings-consistent">Keep acquisition settings consistent</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#review-monotonicity-for-scattering-calibration">Review monotonicity for scattering calibration</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#preserve-calibration-metadata">Preserve calibration metadata</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
+</ul>
+</li>
+</ul>
+
+  </nav></div>
 
   <div class="sidebar-secondary-item">
 
