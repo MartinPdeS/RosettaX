@@ -97,6 +97,7 @@
 | RosettaX/workflow/save/layout.py                                   |       27 |       27 |        0 |        0 |     0.00% |     3-121 |
 | RosettaX/workflow/save/models.py                                   |       19 |       19 |        0 |        0 |     0.00% |      3-50 |
 | RosettaX/workflow/save/services.py                                 |       39 |       39 |        8 |        0 |     0.00% |     3-173 |
+| RosettaX/workflow/sidebar/services.py                              |       64 |       64 |       12 |        0 |     0.00% |     3-153 |
 | RosettaX/workflow/table/fluorescence.py                            |       70 |       70 |       14 |        0 |     0.00% |     3-268 |
 | RosettaX/workflow/table/scattering.py                              |       80 |       80 |        4 |        0 |     0.00% |     3-478 |
 | RosettaX/workflow/table/services.py                                |      115 |      115 |       62 |        0 |     0.00% |     3-381 |
@@ -106,7 +107,7 @@
 | RosettaX/workflow/upload/layout.py                                 |       35 |       35 |        4 |        0 |     0.00% |     3-158 |
 | RosettaX/workflow/upload/models.py                                 |       15 |       15 |        0 |        0 |     0.00% |      3-52 |
 | RosettaX/workflow/upload/services.py                               |       82 |       82 |       24 |        0 |     0.00% |     3-286 |
-| **TOTAL**                                                          | **9133** | **8564** | **2486** |   **42** | **6.22%** |           |
+| **TOTAL**                                                          | **9197** | **8628** | **2498** |   **42** | **6.18%** |           |
 
 1 file skipped due to complete coverage.
 
