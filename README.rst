@@ -5,7 +5,7 @@ RosettaX
    :alt: RosettaX logo
 
 .. list-table::
-   :widths: 10 25 25, 25
+   :widths: 10 25 25 25
    :header-rows: 0
 
    * - Meta
@@ -287,10 +287,7 @@ archived Zenodo release:
 
 .. code-block:: text
 
-   Martin Poinsinet de Sivry Houle.
-   RosettaX: Interactive flow cytometry calibration software.
-   https://github.com/MartinPdeS/RosettaX
-   https://doi.org/10.5281/zenodo.19846629
+   Martin Poinsinet de Sivry-Houle. (2026). MartinPdeS/RosettaX: Pre-release (v0.0.10). Zenodo. https://doi.org/10.5281/zenodo.19846630
 
 A formal citation file may be added in a future release.
 
