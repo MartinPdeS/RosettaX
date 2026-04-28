@@ -7,9 +7,10 @@ import dash
 import dash_bootstrap_components as dbc
 
 from RosettaX.pages.p00_sidebar.ids import SidebarIds
-from RosettaX.utils import styling
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.table.fluorescence import FluorescenceReferenceTable
+from RosettaX.workflow.table.layout import ReferenceTableConfig
+from RosettaX.workflow.table.layout import ReferenceTableLayout
 
 
 logger = logging.getLogger(__name__)
@@ -21,8 +22,7 @@ class ReferenceTable:
 
     Responsibilities
     ----------------
-    - Render the fluorescence calibration reference table.
-    - Render the add row button.
+    - Configure the fluorescence reference table layout.
     - Populate the table from the default runtime profile at layout creation.
     - Rebuild the table from runtime profile values when a sidebar profile is loaded.
     - Preserve user edited rows during ordinary runtime store updates.
@@ -31,8 +31,8 @@ class ReferenceTable:
 
     Ownership rule
     --------------
-    This section is the only section allowed to render the bead table and the
-    only section allowed to use add_row_btn to update bead_table.data.
+    This section owns fluorescence reference table behavior. Generic table
+    rendering is delegated to ``ReferenceTableLayout``.
     """
 
     calibrated_intensity_column_name = FluorescenceReferenceTable.column_calibrated_intensity
@@ -48,6 +48,27 @@ class ReferenceTable:
         self.page = page
         self.ids = page.ids.Calibration
 
+        self.config = ReferenceTableConfig(
+            card_title="3. Calibration reference table",
+            table_title=None,
+            description=(
+                "Enter the calibrated intensity values and use the fluorescence "
+                "peak detection section to fill the measured peak positions. "
+                "This table is the source of truth for the fluorescence "
+                "calibration fit."
+            ),
+            add_row_button_label="Add row",
+            body_style_key="body_scroll",
+            show_table_title=False,
+        )
+
+        self.layout_builder = ReferenceTableLayout(
+            ids=self.ids,
+            config=self.config,
+            table_columns=self.bead_table_columns,
+            table_data=self._build_default_bead_rows(),
+        )
+
         logger.debug(
             "Initialized Fluorescence ReferenceTable section with page=%r",
             page,
@@ -59,99 +80,7 @@ class ReferenceTable:
         """
         logger.debug("Building Fluorescence ReferenceTable layout.")
 
-        return dbc.Card(
-            [
-                self._build_header(),
-                self._build_body(),
-            ]
-        )
-
-    def _build_header(self) -> dbc.CardHeader:
-        """
-        Build the section header.
-        """
-        return dbc.CardHeader(
-            "3. Calibration reference table",
-        )
-
-    def _build_body(self) -> dbc.CardBody:
-        """
-        Build the section body.
-        """
-        return dbc.CardBody(
-            [
-                self._build_description(),
-                self._build_bead_table(),
-                self._build_add_row_button_row(),
-            ]
-        )
-
-    def _build_description(self) -> dash.html.Div:
-        """
-        Build the table description.
-        """
-        return dash.html.Div(
-            (
-                "Enter the calibrated intensity values and use the fluorescence "
-                "peak detection section to fill the measured peak positions. "
-                "This table is the source of truth for the fluorescence "
-                "calibration fit."
-            ),
-            style={
-                "marginBottom": "10px",
-                "opacity": 0.8,
-            },
-        )
-
-    def _build_table_options(self) -> dict[str, Any]:
-        """
-        Build DataTable options for the fluorescence reference table.
-        """
-        return {
-            **styling.DATATABLE,
-        }
-
-    def _build_bead_table(self) -> dash.dash_table.DataTable:
-        """
-        Build the bead calibration table using the default runtime profile.
-        """
-        default_rows = self._build_default_bead_rows()
-
-        logger.debug(
-            "Building fluorescence reference table with default row_count=%r rows=%r",
-            len(default_rows),
-            default_rows,
-        )
-
-        return dash.dash_table.DataTable(
-            id=self.ids.bead_table,
-            columns=self.bead_table_columns,
-            data=default_rows,
-            **self._build_table_options(),
-        )
-
-    def _build_add_row_button_row(self) -> dash.html.Div:
-        """
-        Build the add row button row.
-        """
-        return dash.html.Div(
-            [
-                dbc.Button(
-                    "Add row",
-                    id=self.ids.add_row_btn,
-                    n_clicks=0,
-                    color="secondary",
-                    outline=True,
-                    size="sm",
-                )
-            ],
-            style={
-                "marginTop": "10px",
-                "display": "flex",
-                "gap": "8px",
-                "alignItems": "center",
-            },
-        )
+        return self.layout_builder.get_layout()
 
     def _build_default_bead_rows(self) -> list[dict[str, str]]:
         """
@@ -175,13 +104,6 @@ class ReferenceTable:
     def _register_runtime_table_sync_callback(self) -> None:
         """
         Register runtime config to table synchronization.
-
-        If a sidebar profile has been loaded, the table is always rebuilt from
-        the new runtime profile. Existing user edited rows are intentionally
-        discarded in that case.
-
-        If no profile load is involved, the table is only populated when it is
-        effectively empty.
         """
 
         @dash.callback(
@@ -286,7 +208,6 @@ class ReferenceTable:
             )
 
             return next_rows
-
 
     def build_bead_rows_from_runtime_config(
         self,

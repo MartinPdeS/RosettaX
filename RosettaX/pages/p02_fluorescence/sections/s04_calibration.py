@@ -35,6 +35,8 @@ class Calibration:
     ``self.ids.bead_table`` during calibration.
     """
 
+    graph_min_width_px = 760
+
     def __init__(self, page: Any) -> None:
         self.page = page
         self.ids = page.ids.Calibration
@@ -83,11 +85,9 @@ class Calibration:
             [
                 self._build_graph_store(),
                 self._build_calibration_store(),
-                self._build_actions_block(),
-                dash.html.Hr(),
-                self._build_graph_block(),
+                self._build_action_block(),
                 dash.html.Br(),
-                self._build_fit_outputs_block(),
+                self._build_graph_block(),
                 dash.html.Br(),
                 self._build_status_block(),
             ]
@@ -111,21 +111,22 @@ class Calibration:
             storage_type="session",
         )
 
-    def _build_actions_block(self) -> dash.html.Div:
+    def _build_action_block(self) -> dash.html.Div:
         """
         Build calibration action controls.
         """
         return dash.html.Div(
             [
-                dash.html.Button(
-                    "Create Calibration",
+                dbc.Button(
+                    "Create calibration",
                     id=self.ids.calibrate_btn,
                     n_clicks=0,
+                    color="primary",
                 ),
                 dash.html.Div(
                     (
-                        "This step reads the MESF values and measured peak "
-                        "positions from the calibration reference table."
+                        "This step matches the measured fluorescence peak positions "
+                        "to the calibrated MESF values from the reference table."
                     ),
                     style={
                         "marginTop": "8px",
@@ -137,35 +138,67 @@ class Calibration:
 
     def _build_graph_block(self) -> dash.html.Div:
         """
-        Build calibration graph block.
+        Build the calibration graph panel.
         """
         return dash.html.Div(
             [
-                dash.html.Div(
+                self._build_graph_panel_card(
+                    title="Fluorescence calibration fit",
+                    graph_id=self.ids.graph_calibration,
+                    footer_content=self._build_calibration_footer(),
+                ),
+            ],
+            style={
+                "display": "flex",
+                "gap": "24px",
+                "alignItems": "stretch",
+                "width": "100%",
+                "overflowX": "auto",
+            },
+        )
+
+    def _build_graph_panel_card(
+        self,
+        *,
+        title: str,
+        graph_id: str,
+        footer_content: Any,
+    ) -> dbc.Card:
+        """
+        Build one self contained graph panel card.
+        """
+        return dbc.Card(
+            [
+                dbc.CardHeader(
+                    title,
+                    style={
+                        "fontWeight": "600",
+                    },
+                ),
+                dbc.CardBody(
                     [
                         dash.dcc.Loading(
                             dash.dcc.Graph(
-                                id=self.ids.graph_calibration,
+                                id=graph_id,
                                 style=self._build_graph_style(),
                                 config=styling.PLOTLY_GRAPH_CONFIG,
                             ),
                             type="default",
                         ),
-                    ],
-                    id=self.ids.graph_toggle_container,
+                    ]
+                ),
+                dbc.CardFooter(
+                    footer_content,
                     style={
-                        "display": "block",
-                        "width": "100%",
-                        "overflow": "visible",
+                        "opacity": 0.9,
                     },
                 ),
             ],
             style={
-                "display": "block",
-                "width": "100%",
-                "overflow": "visible",
-                "marginBottom": "16px",
+                "flex": "1 1 0",
+                "minWidth": f"{self.graph_min_width_px}px",
             },
+            class_name="h-100",
         )
 
     def _build_graph_style(self) -> dict[str, Any]:
@@ -178,6 +211,7 @@ class Calibration:
         graph_style = dict(styling.PLOTLY_GRAPH_STYLE)
         graph_style["height"] = self._get_default_graph_height()
         graph_style["width"] = "100%"
+        graph_style["display"] = "block"
 
         return graph_style
 
@@ -199,46 +233,80 @@ class Calibration:
 
         return graph_height
 
-    def _build_fit_outputs_block(self) -> dash.html.Div:
+    def _build_calibration_footer(self) -> dash.html.Div:
         """
-        Build fit output display block.
+        Build the calibration graph footer with fit outputs.
         """
         return dash.html.Div(
             [
-                self._build_output_row(
-                    "Slope:",
-                    self.ids.slope_out,
+                dash.html.Div(
+                    (
+                        "This graph shows the fitted relation between measured "
+                        "fluorescence intensity and calibrated fluorescence units. "
+                        "Review the fit before saving the calibration."
+                    ),
+                    style={
+                        "marginBottom": "10px",
+                    },
                 ),
-                self._build_output_row(
-                    "Intercept:",
-                    self.ids.intercept_out,
-                ),
-                self._build_output_row(
-                    "R²:",
-                    self.ids.r_squared_out,
+                dash.html.Div(
+                    [
+                        self._build_fit_metric(
+                            "Slope",
+                            self.ids.slope_out,
+                        ),
+                        self._build_fit_metric(
+                            "Intercept",
+                            self.ids.intercept_out,
+                        ),
+                        self._build_fit_metric(
+                            "R²",
+                            self.ids.r_squared_out,
+                        ),
+                    ],
+                    style={
+                        "display": "grid",
+                        "gridTemplateColumns": "repeat(3, minmax(120px, 1fr))",
+                        "gap": "10px",
+                        "alignItems": "stretch",
+                    },
                 ),
             ]
         )
 
-    def _build_output_row(
+    def _build_fit_metric(
         self,
         label: str,
         output_id: str,
     ) -> dash.html.Div:
         """
-        Build one fit output row.
+        Build one compact fit metric box.
         """
         return dash.html.Div(
             [
-                dash.html.Div(label),
+                dash.html.Div(
+                    label,
+                    style={
+                        "fontWeight": "600",
+                        "fontSize": "0.9rem",
+                        "opacity": 0.85,
+                    },
+                ),
                 dash.html.Div(
                     "",
                     id=output_id,
+                    style={
+                        "fontFamily": "monospace",
+                        "fontSize": "0.95rem",
+                        "marginTop": "2px",
+                    },
                 ),
             ],
             style={
-                "display": "flex",
-                "gap": "8px",
+                "padding": "8px 10px",
+                "border": "1px solid rgba(128,128,128,0.25)",
+                "borderRadius": "8px",
+                "background": "rgba(128,128,128,0.08)",
             },
         )
 
@@ -380,11 +448,56 @@ class Calibration:
                 logger=logger,
             )
 
-            figure.update_layout(
-                height=None,
+            return self._finalize_figure_size(
+                figure=figure,
             )
 
-            return figure
+    def _finalize_figure_size(
+        self,
+        *,
+        figure: go.Figure,
+    ) -> go.Figure:
+        """
+        Apply the section graph layout and legend placement.
+
+        The graph height is controlled by the Dash component CSS style, not by
+        Plotly layout height. Axis automargins are disabled so long axis titles
+        cannot shrink the plotting area unpredictably.
+        """
+        figure.update_layout(
+            height=None,
+            autosize=True,
+            title={
+                "text": "",
+            },
+            margin={
+                "l": 92,
+                "r": 28,
+                "t": 18,
+                "b": 78,
+            },
+            legend={
+                "x": 0.98,
+                "y": 0.98,
+                "xanchor": "right",
+                "yanchor": "top",
+                "bgcolor": "rgba(255,255,255,0.65)",
+                "bordercolor": "rgba(0,0,0,0.15)",
+                "borderwidth": 1,
+            },
+        )
+
+        figure.update_xaxes(
+            automargin=False,
+            title_standoff=10,
+        )
+
+        figure.update_yaxes(
+            automargin=False,
+            title_standoff=10,
+        )
+
+        return figure
 
     def _register_calibration_workflow_callback(self) -> None:
         """

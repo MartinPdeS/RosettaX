@@ -8,9 +8,11 @@ import dash_bootstrap_components as dbc
 
 from RosettaX.pages.p00_sidebar.ids import SidebarIds
 from RosettaX.pages.p03_scattering.state import ScatteringPageState
-from RosettaX.utils import styling
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.parameters import table as parameters_table
+from RosettaX.workflow.table.layout import ReferenceTableActionConfig
+from RosettaX.workflow.table.layout import ReferenceTableConfig
+from RosettaX.workflow.table.layout import ReferenceTableLayout
 from RosettaX.workflow.table.scattering import ScatteringCalibrationStandardTable
 
 
@@ -23,9 +25,7 @@ class ReferenceTable:
 
     Responsibilities
     ----------------
-    - Render the scattering calibration standard table.
-    - Render the add row button.
-    - Render the standard coupling computation action.
+    - Configure the scattering calibration standard table layout.
     - Populate the table from the default runtime profile at layout creation.
     - Rebuild the table from runtime profile values when a profile is loaded.
     - Synchronize table schema with the selected Mie model.
@@ -36,8 +36,8 @@ class ReferenceTable:
     Ownership rule
     --------------
     This section owns the calibration standard table and the standard coupling
-    computation action. The calibration section reads the table when fitting the
-    instrument response.
+    computation action. Generic table rendering is delegated to
+    ``ReferenceTableLayout``.
     """
 
     sphere_table_columns = ScatteringCalibrationStandardTable.sphere_table_columns
@@ -50,6 +50,44 @@ class ReferenceTable:
         self.page = page
         self.ids = page.ids.Calibration
 
+        default_columns, default_rows = self._build_default_table_state()
+
+        self.config = ReferenceTableConfig(
+            card_title="4. Calibration standard table",
+            table_title="Calibration standard table",
+            description=(
+                "This table defines the calibration standard used to infer the "
+                "instrument response. Edit the standard particle geometry directly "
+                "here. Measured peak positions are optional at this stage. First "
+                "click Compute Standard Coupling to fill the modeled coupling column. "
+                "Then fit the instrument response in the next section."
+            ),
+            add_row_button_label="Add row",
+            body_style_key="body_scroll",
+            show_table_title=True,
+        )
+
+        self.action_config = ReferenceTableActionConfig(
+            button_id=self.ids.compute_model_btn,
+            button_label="Compute Standard Coupling",
+            description=(
+                "This step fills the modeled coupling column for the calibration "
+                "standard using the current optical and particle parameters."
+            ),
+            button_color="primary",
+            button_style={
+                "marginTop": "12px",
+            },
+        )
+
+        self.layout_builder = ReferenceTableLayout(
+            ids=self.ids,
+            config=self.config,
+            table_columns=default_columns,
+            table_data=default_rows,
+            action_config=self.action_config,
+        )
+
         logger.debug(
             "Initialized Scattering ReferenceTable section with page=%r",
             page,
@@ -61,121 +99,7 @@ class ReferenceTable:
         """
         logger.debug("Building Scattering ReferenceTable layout.")
 
-        return dbc.Card(
-            [
-                self._build_header(),
-                self._build_body(),
-            ]
-        )
-
-    def _build_header(self) -> dbc.CardHeader:
-        """
-        Build the section header.
-        """
-        return dbc.CardHeader(
-            "4. Calibration standard table",
-        )
-
-    def _build_body(self) -> dbc.CardBody:
-        """
-        Build the section body.
-        """
-        return dbc.CardBody(
-            [
-                self._build_reference_table_section(),
-                dash.html.Div(
-                    style={
-                        "height": "12px",
-                    },
-                ),
-                self._build_compute_model_block(),
-            ]
-        )
-
-    def _build_reference_table_section(self) -> dash.html.Div:
-        """
-        Build the calibration standard table block.
-        """
-        default_columns, default_rows = self._build_default_table_state()
-
-        return dash.html.Div(
-            [
-                dash.html.H5("Calibration standard table"),
-                dash.html.Div(
-                    (
-                        "This table defines the calibration standard used to infer "
-                        "the instrument response. Edit the standard particle geometry "
-                        "directly here. Measured peak positions are optional at this "
-                        "stage. First click Compute Standard Coupling to fill the "
-                        "modeled coupling column. Then fit the instrument response in "
-                        "the next section."
-                    ),
-                    style={
-                        "marginBottom": "10px",
-                        "opacity": 0.8,
-                    },
-                ),
-                dash.dash_table.DataTable(
-                    id=self.ids.bead_table,
-                    columns=default_columns,
-                    data=default_rows,
-                    **styling.DATATABLE,
-                ),
-                dash.html.Div(
-                    [
-                        dbc.Button(
-                            "Add row",
-                            id=self.ids.add_row_btn,
-                            n_clicks=0,
-                            color="secondary",
-                            outline=True,
-                            size="sm",
-                        ),
-                    ],
-                    style={
-                        "marginTop": "10px",
-                        "display": "flex",
-                        "gap": "8px",
-                        "alignItems": "center",
-                    },
-                ),
-            ]
-        )
-
-    def _build_compute_model_block(self) -> dash.html.Div:
-        """
-        Build the standard coupling computation block.
-        """
-        return dash.html.Div(
-            [
-                self._build_compute_model_button(),
-                dash.html.Div(
-                    (
-                        "This step fills the modeled coupling column for the "
-                        "calibration standard using the current optical and particle "
-                        "parameters."
-                    ),
-                    style={
-                        "marginTop": "8px",
-                        "opacity": 0.75,
-                    },
-                ),
-            ]
-        )
-
-    def _build_compute_model_button(self) -> dbc.Button:
-        """
-        Build the standard coupling computation button.
-        """
-        return dbc.Button(
-            "Compute Standard Coupling",
-            id=self.ids.compute_model_btn,
-            n_clicks=0,
-            color="primary",
-            style={
-                "marginTop": "12px",
-            },
-        )
+        return self.layout_builder.get_layout()
 
     def _build_default_table_state(self) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         """
