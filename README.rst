@@ -11,15 +11,19 @@ RosettaX
    * - Meta
      - |python|
      - |docs|
+     - |zenodo|
    * - Testing
      - |ci/cd|
      - |coverage|
+     -
    * - PyPI
      - |PyPi|
      - |PyPi_download|
+     -
    * - Anaconda
      - |anaconda|
      - |anaconda_download|
+     -
 
 
 RosettaX is an interactive calibration application for flow cytometry.
@@ -260,6 +264,10 @@ License
 *******
 
 Please refer to the repository license file for licensing information.
+
+
+.. |zenodo| image:: https://zenodo.org/badge/1087203577.svg
+  :target: https://doi.org/10.5281/zenodo.19846629
 
 
 .. |python| image:: https://img.shields.io/pypi/pyversions/rosettax.svg
