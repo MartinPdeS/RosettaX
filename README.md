@@ -77,7 +77,7 @@
 | RosettaX/workflow/peak/adapters/main.py                            |       22 |       22 |        4 |        0 |     0.00% |      3-88 |
 | RosettaX/workflow/peak/adapters/scattering.py                      |      188 |      188 |      112 |        0 |     0.00% |     3-764 |
 | RosettaX/workflow/peak/core/detectors.py                           |       66 |       66 |       28 |        0 |     0.00% |     3-301 |
-| RosettaX/workflow/peak/core/graphing.py                            |      495 |      495 |      224 |        0 |     0.00% |    3-2010 |
+| RosettaX/workflow/peak/core/graphing.py                            |      495 |      495 |      224 |        0 |     0.00% |    3-2024 |
 | RosettaX/workflow/peak/ids.py                                      |      132 |      132 |        6 |        0 |     0.00% |     3-290 |
 | RosettaX/workflow/peak/layout.py                                   |      217 |      217 |       74 |        0 |     0.00% |    3-1350 |
 | RosettaX/workflow/peak/models.py                                   |       17 |       17 |        0 |        0 |     0.00% |      3-34 |
