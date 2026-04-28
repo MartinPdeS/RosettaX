@@ -29,7 +29,7 @@ class SmoothedDensityProminence2DPeakProcess(BasePeakProcess):
     """
 
     process_name = "Prominence 2D"
-    process_label = "Prominence 2D peaks"
+    process_label = "Prominence 2D"
     description = (
         "Gate two detector signals with quantiles, build a smoothed 2D density "
         "map, then detect local density maxima using prominence and minimum "

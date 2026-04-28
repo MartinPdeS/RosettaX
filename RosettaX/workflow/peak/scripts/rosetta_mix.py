@@ -29,8 +29,8 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
     4. returns 2D marker positions for display and x values for table insertion
     """
 
-    process_name = "Rosetta Mix"
-    process_label = "Fluorescence guided scatter peaks"
+    process_name = "Rosetta"
+    process_label = "Rosetta"
     description = (
         "Use the green fluorescence channel to guide automatic detection of "
         "visible peaks in the scattering channel."

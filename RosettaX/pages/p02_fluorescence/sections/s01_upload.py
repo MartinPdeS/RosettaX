@@ -29,7 +29,7 @@ class Upload:
 
         self.config = upload.UploadConfig(
             section_title="Fluorescence calibration",
-            card_title="1. Upload FCS File",
+            card_title="1. Upload Calibration FCS File",
             upload_link_text="Select Bead File",
             description=(
                 "Start by uploading the bead FCS file used to build the fluorescence calibration. "

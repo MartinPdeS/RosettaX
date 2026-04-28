@@ -9,6 +9,7 @@ import plotly.graph_objs as go
 
 from ..state import FluorescencePageState
 from RosettaX.utils import styling
+from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.calibration import fluorescence as services
 
 
@@ -145,7 +146,7 @@ class Calibration:
                         dash.dcc.Loading(
                             dash.dcc.Graph(
                                 id=self.ids.graph_calibration,
-                                style=styling.PLOTLY_GRAPH_STYLE,
+                                style=self._build_graph_style(),
                                 config=styling.PLOTLY_GRAPH_CONFIG,
                             ),
                             type="default",
@@ -154,10 +155,49 @@ class Calibration:
                     id=self.ids.graph_toggle_container,
                     style={
                         "display": "block",
+                        "width": "100%",
+                        "overflow": "visible",
                     },
                 ),
-            ]
+            ],
+            style={
+                "display": "block",
+                "width": "100%",
+                "overflow": "visible",
+                "marginBottom": "16px",
+            },
         )
+
+    def _build_graph_style(self) -> dict[str, Any]:
+        """
+        Build the Plotly graph CSS style.
+
+        The graph height is controlled by the runtime profile setting
+        ``visualization.graph_height``.
+        """
+        graph_style = dict(styling.PLOTLY_GRAPH_STYLE)
+        graph_style["height"] = self._get_default_graph_height()
+        graph_style["width"] = "100%"
+
+        return graph_style
+
+    def _get_default_graph_height(self) -> str:
+        """
+        Return the default graph height from the runtime profile.
+        """
+        runtime_config = RuntimeConfig.from_default_profile()
+
+        graph_height = runtime_config.get_str(
+            "visualization.graph_height",
+            default="850px",
+        )
+
+        graph_height = str(graph_height or "").strip()
+
+        if not graph_height:
+            return "850px"
+
+        return graph_height
 
     def _build_fit_outputs_block(self) -> dash.html.Div:
         """
@@ -333,12 +373,18 @@ class Calibration:
                 type(stored_figure).__name__,
             )
 
-            return services.rebuild_calibration_graph(
+            figure = services.rebuild_calibration_graph(
                 stored_figure=stored_figure,
                 empty_message="Create a calibration first.",
                 failure_message="Failed to render calibration graph.",
                 logger=logger,
             )
+
+            figure.update_layout(
+                height=None,
+            )
+
+            return figure
 
     def _register_calibration_workflow_callback(self) -> None:
         """

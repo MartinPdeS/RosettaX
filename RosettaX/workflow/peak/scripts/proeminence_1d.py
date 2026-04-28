@@ -25,7 +25,7 @@ class SmoothedHistogramProminence1DPeakProcess(BasePeakProcess):
     """
 
     process_name = "Prominence 1D"
-    process_label = "Prominence 1D peaks"
+    process_label = "Prominence 1D"
     description = (
         "Gate one detector signal with quantiles, smooth the histogram, then "
         "detect local maxima using prominence and minimum distance criteria."

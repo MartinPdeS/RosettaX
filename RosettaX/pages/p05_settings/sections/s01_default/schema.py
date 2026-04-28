@@ -105,6 +105,16 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         step=1,
     ),
     FieldDefinition(
+        name="graph_height",
+        section="visualization",
+        label="Graph height:",
+        component_kind="text",
+        value_kind="string",
+        runtime_path="visualization.graph_height",
+        default="850px",
+        placeholder="850px, 70vh, calc(100vh - 260px)",
+    ),
+    FieldDefinition(
         name="histogram_xscale",
         section="calibration",
         label="Peak graph x scale:",

@@ -57,7 +57,8 @@
     "default_line_width": 3.0,
     "default_font_size": 34.0,
     "default_tick_size": 18.0,
-    "show_grid_by_default": false
+    "show_grid_by_default": false,
+    "graph_height": "700px"
   },
   "files": {
     "fluorescence_fcs_file_path": null,

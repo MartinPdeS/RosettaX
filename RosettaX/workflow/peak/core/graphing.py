@@ -488,13 +488,6 @@ class PeakWorkflowGraphBuilder:
             if getattr(self.process, "graph_type", None) == "2d_scatter":
                 Scatter2DGraph.apply_formatting(
                     figure=figure,
-                    title=str(
-                        getattr(
-                            self.process,
-                            "process_label",
-                            "2D scatter",
-                        )
-                    ),
                     x_axis_title=str(
                         figure.layout.xaxis.title.text or "x",
                     ),
@@ -549,9 +542,9 @@ class PeakWorkflowGraphBuilder:
         """
         Build a fallback two dimensional scatter figure.
 
-        Generic formatting is delegated to ``Scatter2DGraph``. Peak specific
-        overlays and gate shading are added after the data axis range is fixed,
-        so overlays do not rescale the graph.
+        Event density is shown through marker color. The density is estimated with a
+        two dimensional histogram, and for log axes the density is computed in log10
+        space so that the color mapping follows the displayed geometry.
         """
         required_channel_names = self._get_required_detector_channels()
 
@@ -597,36 +590,63 @@ class PeakWorkflowGraphBuilder:
             dtype=float,
         )
 
-        axis_scale_toggle_values = self._build_scatter2d_axis_scale_toggle_values()
-
-        figure = Scatter2DGraph.build_figure(
-            traces=[
-                Scatter2DTrace(
-                    x_values=x_values,
-                    y_values=y_values,
-                    name="Events",
-                    marker_size=self._get_default_marker_size(),
-                    marker_opacity=0.5,
-                )
-            ],
-            title=str(
-                getattr(
-                    self.process,
-                    "process_label",
-                    "2D peak workflow scatter",
-                )
-            ),
-            x_axis_title=f"{x_detector_column} [a.u.]",
-            y_axis_title=f"{y_detector_column} [a.u.]",
-            axis_scale_toggle_values=axis_scale_toggle_values,
-            show_grid=self._show_grid_by_default(),
-            hovermode="closest",
-            uirevision=f"peak_workflow_{self.resolved_process_name}_2d_scatter",
-        )
-
         filtered_x_values, filtered_y_values = self._filter_2d_values_for_axis_scale(
             x_values=x_values,
             y_values=y_values,
+        )
+
+        if filtered_x_values.size == 0 or filtered_y_values.size == 0:
+            return plottings._make_info_figure(
+                "No finite events are available for the selected axis scale.",
+            )
+
+        density_values = self._compute_2d_density_values(
+            x_values=filtered_x_values,
+            y_values=filtered_y_values,
+            x_log_scale=self._x_axis_is_log(),
+            y_log_scale=self._y_axis_is_log(),
+            number_of_bins=self._resolve_density_colormap_number_of_bins(),
+        )
+
+        figure = go.Figure()
+
+        figure.add_trace(
+            go.Scattergl(
+                x=filtered_x_values,
+                y=filtered_y_values,
+                mode="markers",
+                name="Events",
+                marker={
+                    "size": self._get_default_marker_size(),
+                    "opacity": 0.72,
+                    "color": density_values,
+                    "colorscale": "Viridis",
+                    "showscale": True,
+                    "colorbar": {
+                        "title": {
+                            "text": "Density",
+                        },
+                    },
+                },
+                customdata=density_values,
+                hovertemplate=(
+                    f"{x_detector_column}=%{{x:.6g}}<br>"
+                    f"{y_detector_column}=%{{y:.6g}}<br>"
+                    "density=%{customdata:.6g}"
+                    "<extra></extra>"
+                ),
+            )
+        )
+
+        Scatter2DGraph.apply_formatting(
+            figure=figure,
+            x_axis_title=f"{x_detector_column} [a.u.]",
+            y_axis_title=f"{y_detector_column} [a.u.]",
+            x_axis_type="log" if self._x_axis_is_log() else "linear",
+            y_axis_type="log" if self._y_axis_is_log() else "linear",
+            show_grid=self._show_grid_by_default(),
+            hovermode="closest",
+            uirevision=f"peak_workflow_{self.resolved_process_name}_2d_scatter",
         )
 
         figure = apply_stable_2d_axis_ranges(
@@ -642,6 +662,146 @@ class PeakWorkflowGraphBuilder:
         )
 
         return figure
+
+
+
+    def _compute_2d_density_values(
+        self,
+        *,
+        x_values: Any,
+        y_values: Any,
+        x_log_scale: bool,
+        y_log_scale: bool,
+        number_of_bins: int,
+    ) -> np.ndarray:
+        """
+        Compute local point density values for 2D scatter color mapping.
+        """
+        x_array = np.asarray(
+            x_values,
+            dtype=float,
+        )
+
+        y_array = np.asarray(
+            y_values,
+            dtype=float,
+        )
+
+        if x_array.size == 0 or y_array.size == 0:
+            return np.asarray(
+                [],
+                dtype=float,
+            )
+
+        density_x_values = x_array.copy()
+        density_y_values = y_array.copy()
+
+        if x_log_scale:
+            density_x_values = np.log10(
+                density_x_values,
+            )
+
+        if y_log_scale:
+            density_y_values = np.log10(
+                density_y_values,
+            )
+
+        finite_mask = (
+            np.isfinite(
+                density_x_values,
+            )
+            & np.isfinite(
+                density_y_values,
+            )
+        )
+
+        if not np.all(finite_mask):
+            density_values = np.zeros(
+                x_array.shape,
+                dtype=float,
+            )
+
+            valid_density_values = self._compute_2d_density_values(
+                x_values=x_array[finite_mask],
+                y_values=y_array[finite_mask],
+                x_log_scale=x_log_scale,
+                y_log_scale=y_log_scale,
+                number_of_bins=number_of_bins,
+            )
+
+            density_values[finite_mask] = valid_density_values
+
+            return density_values
+
+        if x_array.size < 2:
+            return np.ones(
+                x_array.shape,
+                dtype=float,
+            )
+
+        histogram, x_edges, y_edges = np.histogram2d(
+            density_x_values,
+            density_y_values,
+            bins=number_of_bins,
+        )
+
+        x_bin_indices = np.searchsorted(
+            x_edges,
+            density_x_values,
+            side="right",
+        ) - 1
+
+        y_bin_indices = np.searchsorted(
+            y_edges,
+            density_y_values,
+            side="right",
+        ) - 1
+
+        x_bin_indices = np.clip(
+            x_bin_indices,
+            0,
+            histogram.shape[0] - 1,
+        )
+
+        y_bin_indices = np.clip(
+            y_bin_indices,
+            0,
+            histogram.shape[1] - 1,
+        )
+
+        raw_density_values = histogram[
+            x_bin_indices,
+            y_bin_indices,
+        ]
+
+        return np.log10(
+            raw_density_values + 1.0,
+        )
+
+
+    def _resolve_density_colormap_number_of_bins(self) -> int:
+        """
+        Resolve the number of bins used for 2D density color mapping.
+        """
+        default_number_of_bins = self._resolve_number_of_bins()
+
+        return casting.as_int(
+            self._get_nested_config_value(
+                path="visualization.density_colormap_n_bins",
+                default=default_number_of_bins,
+            ),
+            default=default_number_of_bins,
+            min_value=10,
+            max_value=1000,
+        )
+
+
+
+
+
+
+
+
 
     def _filter_2d_values_for_axis_scale(
         self,

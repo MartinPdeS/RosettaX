@@ -119,7 +119,7 @@ DATATABLE = dict(
 PLOTLY_GRAPH_CONFIG = {
     "displayModeBar": True,
     "scrollZoom": False,
-    "doubleClick": False,
+    "doubleClick": "reset",
     "responsive": True,
     "staticPlot": False,
     "editable": False,
@@ -129,21 +129,14 @@ PLOTLY_GRAPH_CONFIG = {
         "legendText": False,
     },
     "modeBarButtonsToRemove": [
-        "zoom2d",
-        "pan2d",
         "select2d",
         "lasso2d",
-        "zoomIn2d",
-        "zoomOut2d",
-        "autoScale2d",
-        "resetScale2d",
     ],
 }
 
 
 PLOTLY_STATIC_GRAPH_CONFIG = {
     **PLOTLY_GRAPH_CONFIG,
-    "displayModeBar": False,
     "staticPlot": True,
 }
 

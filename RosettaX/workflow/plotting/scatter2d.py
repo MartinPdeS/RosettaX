@@ -44,6 +44,7 @@ class Scatter2DGraph:
     Responsibilities
     ----------------
     - Apply consistent Plotly formatting to all 2D scatter plots.
+    - Never render a graph title inside the Plotly canvas.
     - Put the legend inside the graph when traces have names.
     - Provide a compact x log and y log toggle box below the graph.
     - Convert Dash toggle values into Plotly axis scale settings.
@@ -186,7 +187,7 @@ class Scatter2DGraph:
         cls,
         *,
         traces: list[Scatter2DTrace],
-        title: str,
+        title: str = "",
         x_axis_title: str,
         y_axis_title: str,
         axis_scale_toggle_values: Any = None,
@@ -196,6 +197,8 @@ class Scatter2DGraph:
     ) -> go.Figure:
         """
         Build a consistently formatted 2D scatter figure.
+
+        The title argument is intentionally ignored to keep graph canvases title free.
         """
         x_axis_type, y_axis_type = cls.axis_scale_from_toggle_values(
             axis_scale_toggle_values,
@@ -234,6 +237,7 @@ class Scatter2DGraph:
             y_values = y_values[finite_mask]
 
             text_values = None
+
             if trace.text_values is not None:
                 text_values_array = np.asarray(
                     trace.text_values,
@@ -244,6 +248,7 @@ class Scatter2DGraph:
                     text_values = text_values_array[finite_mask]
 
             customdata = None
+
             if trace.customdata is not None:
                 customdata_array = np.asarray(
                     trace.customdata,
@@ -293,7 +298,7 @@ class Scatter2DGraph:
         cls,
         *,
         figure: go.Figure,
-        title: str,
+        title: str = "",
         x_axis_title: str,
         y_axis_title: str,
         x_axis_type: str = "linear",
@@ -304,6 +309,9 @@ class Scatter2DGraph:
     ) -> go.Figure:
         """
         Apply shared 2D scatter formatting to an existing Plotly figure.
+
+        The title argument is intentionally ignored. This method always removes
+        any Plotly title.
         """
         trace_names = [
             str(trace.name).strip()
@@ -314,7 +322,9 @@ class Scatter2DGraph:
         show_legend = len(trace_names) > 0
 
         figure.update_layout(
-            title=title,
+            title={
+                "text": "",
+            },
             xaxis_title=x_axis_title,
             yaxis_title=y_axis_title,
             hovermode=hovermode,
@@ -324,7 +334,7 @@ class Scatter2DGraph:
             margin={
                 "l": 70,
                 "r": 20,
-                "t": 55,
+                "t": 20,
                 "b": 65,
             },
             font={
@@ -383,7 +393,7 @@ class Scatter2DGraph:
 
         cls.apply_formatting(
             figure=figure,
-            title="2D scatter",
+            title="",
             x_axis_title="x",
             y_axis_title="y",
             x_axis_type="linear",

@@ -24,8 +24,8 @@ class QuantileGatedKMeans2DPeakProcess(BasePeakProcess):
     and grouped event coordinates for colored cluster rendering.
     """
 
-    process_name = "Quantile gated K-means 2D peaks"
-    process_label = "Quantile gated K-means 2D peaks"
+    process_name = "Gated K-means 2D"
+    process_label = "Gated K-means 2D"
     description = (
         "Gate events on both axes using quantiles, then run K-means on the "
         "remaining 2D event coordinates."

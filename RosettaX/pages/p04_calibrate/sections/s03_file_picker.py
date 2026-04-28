@@ -3,9 +3,9 @@
 import base64
 import logging
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
-from datetime import datetime
 
 import dash
 import dash_bootstrap_components as dbc
@@ -37,8 +37,28 @@ class FilePickerResult:
 
 
 class FilePicker:
+    """
+    Input FCS file picker section.
+
+    Responsibilities
+    ----------------
+    - Render the FCS upload widget.
+    - Save uploaded FCS files to the local RosettaX upload directory.
+    - Store saved FCS file paths in a Dash store.
+    - Check multi file FCS consistency using ``FCSMultiFileConsistencyChecker``.
+    - Display upload and consistency status.
+
+    Development rule
+    ----------------
+    Programming errors must fail loudly. Missing IDs, missing checker classes,
+    missing checker methods, malformed callback dependencies, and failed file
+    writes are not swallowed.
+    """
+
     def __init__(self, page) -> None:
         self.page = page
+        self._validate_page_contract()
+
         self._upload_dir = Path.home() / ".rosettax" / "uploads"
         self._upload_dir.mkdir(parents=True, exist_ok=True)
 
@@ -105,6 +125,8 @@ class FilePicker:
         )
 
     def register_callbacks(self) -> None:
+        self._validate_checks_contract()
+
         @dash.callback(
             dash.Output(self.page.ids.Stores.uploaded_fcs_path_store, "data"),
             dash.Output(self.page.ids.FilePicker.column_consistency_alert, "children"),
@@ -126,6 +148,7 @@ class FilePicker:
 
             if not contents_list or not filenames:
                 logger.debug("Upload was cancelled or no files were provided.")
+
                 return FilePickerResult(
                     uploaded_fcs_path_store=None,
                     alert_children="Upload canceled.",
@@ -133,38 +156,19 @@ class FilePicker:
                     alert_is_open=True,
                 ).to_tuple()
 
-            try:
-                saved_paths = self._save_uploaded_files(
-                    contents_list=contents_list,
-                    filenames=filenames,
-                )
-            except Exception:
-                logger.exception("Failed while saving uploaded FCS files.")
-                return FilePickerResult(
-                    uploaded_fcs_path_store=None,
-                    alert_children="Failed to save uploaded FCS files.",
-                    alert_color="danger",
-                    alert_is_open=True,
-                ).to_tuple()
+            self._validate_upload_payload(
+                contents_list=contents_list,
+                filenames=filenames,
+            )
 
+            saved_paths = self._save_uploaded_files(
+                contents_list=contents_list,
+                filenames=filenames,
+            )
 
-            try:
-                consistency_report = checks.check_multifiles_consistency(
-                    [str(path) for path in saved_paths]
-                )
-            except Exception:
-                logger.exception("Failed while checking uploaded FCS files consistency.")
-                consistency_report = {
-                    "are_all_files_consistent": False,
-                    "mismatch_details": [
-                        "Could not verify whether all uploaded FCS files are consistent."
-                    ],
-                }
-
-            except Exception:
-                logger.exception("Failed while checking uploaded FCS column consistency.")
-                consistency_message = "Could not verify whether all uploaded FCS files share the same list of columns."
-                consistency_is_open = True
+            consistency_report = self._check_saved_files_consistency(
+                saved_paths=saved_paths,
+            )
 
             alert_children, alert_color, alert_is_open = self._build_success_alert_payload(
                 saved_paths=saved_paths,
@@ -185,6 +189,61 @@ class FilePicker:
                 alert_is_open=alert_is_open,
             ).to_tuple()
 
+    def _validate_page_contract(self) -> None:
+        required_attributes = [
+            "ids",
+            "ids.FilePicker",
+            "ids.FilePicker.upload",
+            "ids.FilePicker.column_consistency_alert",
+            "ids.Stores",
+            "ids.Stores.uploaded_fcs_path_store",
+        ]
+
+        for required_attribute in required_attributes:
+            current_object = self.page
+
+            for attribute_name in required_attribute.split("."):
+                if not hasattr(current_object, attribute_name):
+                    raise AttributeError(
+                        f"FilePicker requires page.{required_attribute}, "
+                        f"but missing attribute {attribute_name!r} while resolving "
+                        f"{required_attribute!r}."
+                    )
+
+                current_object = getattr(current_object, attribute_name)
+
+    @staticmethod
+    def _validate_checks_contract() -> None:
+        if not hasattr(checks, "FCSMultiFileConsistencyChecker"):
+            raise AttributeError(
+                "RosettaX.utils.checks must expose FCSMultiFileConsistencyChecker. "
+                "The old check_multifiles_consistency helper is no longer used here."
+            )
+
+        checker_class = checks.FCSMultiFileConsistencyChecker
+
+        if not hasattr(checker_class, "check_multifiles_consistency"):
+            raise AttributeError(
+                "FCSMultiFileConsistencyChecker must define "
+                "check_multifiles_consistency()."
+            )
+
+    @staticmethod
+    def _validate_upload_payload(
+        *,
+        contents_list: list[str],
+        filenames: list[str],
+    ) -> None:
+        if len(contents_list) != len(filenames):
+            raise ValueError(
+                "Upload payload is malformed because contents_list and filenames "
+                f"have different lengths: {len(contents_list)} != {len(filenames)}."
+            )
+
+        for filename in filenames:
+            if not str(filename).strip():
+                raise ValueError("Upload payload contains an empty filename.")
+
     def _save_uploaded_files(
         self,
         *,
@@ -200,6 +259,9 @@ class FilePicker:
             )
             saved_paths.append(saved_path)
 
+        if not saved_paths:
+            raise RuntimeError("No uploaded FCS files were saved.")
+
         return saved_paths
 
     def _save_single_uploaded_file(
@@ -213,8 +275,13 @@ class FilePicker:
             filename,
         )
 
+        if "," not in contents:
+            raise ValueError(
+                f"Uploaded file {filename!r} has malformed Dash contents payload."
+            )
+
         _, encoded_payload = contents.split(",", 1)
-        raw_bytes = base64.b64decode(encoded_payload)
+        raw_bytes = base64.b64decode(encoded_payload, validate=True)
 
         original_path = Path(str(filename))
         safe_stem = original_path.stem.strip() or "uploaded_file"
@@ -222,7 +289,18 @@ class FilePicker:
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
         output_path = self._upload_dir / f"{safe_stem}_{timestamp}{safe_suffix}"
+
         output_path.write_bytes(raw_bytes)
+
+        if not output_path.exists():
+            raise FileNotFoundError(
+                f"Uploaded file was not written successfully: {output_path}"
+            )
+
+        if output_path.stat().st_size == 0:
+            raise ValueError(
+                f"Uploaded file was written but is empty: {output_path}"
+            )
 
         logger.debug(
             "Saved uploaded file successfully to output_path=%r byte_count=%r",
@@ -232,21 +310,57 @@ class FilePicker:
 
         return output_path
 
+    @staticmethod
+    def _check_saved_files_consistency(
+        *,
+        saved_paths: list[Path],
+    ) -> dict[str, Any]:
+        checker = checks.FCSMultiFileConsistencyChecker(
+            file_paths=[
+                str(path)
+                for path in saved_paths
+            ]
+        )
+
+        consistency_report = checker.check_multifiles_consistency()
+
+        if not isinstance(consistency_report, dict):
+            raise TypeError(
+                "FCSMultiFileConsistencyChecker.check_multifiles_consistency() "
+                f"must return a dict, got {type(consistency_report).__name__}."
+            )
+
+        if "are_all_files_consistent" not in consistency_report:
+            raise KeyError(
+                "Consistency report is missing required key "
+                "'are_all_files_consistent'."
+            )
+
+        return consistency_report
+
     def _build_success_alert_payload(
         self,
         *,
         saved_paths: list[Path],
         consistency_report: dict[str, Any],
     ) -> tuple[str, str, bool]:
+        if not saved_paths:
+            raise ValueError("Cannot build upload success payload without saved files.")
+
         if not consistency_report.get("are_all_files_consistent", True):
             mismatch_details = consistency_report.get("mismatch_details", [])
-            preview = ", ".join(mismatch_details[:3]) if mismatch_details else "Uploaded files are inconsistent."
+
+            if mismatch_details:
+                preview = ", ".join(
+                    str(detail)
+                    for detail in mismatch_details[:3]
+                )
+            else:
+                preview = "Uploaded files are inconsistent."
+
             return preview, "warning", True
 
-        if not saved_paths:
-            return "Upload canceled.", "danger", True
-
         if len(saved_paths) == 1:
-            return f'Uploaded 1 FCS file: {saved_paths[0].name}', "success", True
+            return f"Uploaded 1 FCS file: {saved_paths[0].name}", "success", True
 
         return f"Uploaded {len(saved_paths)} FCS files.", "success", True

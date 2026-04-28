@@ -14,9 +14,6 @@ from RosettaX.utils import plottings
 logger = logging.getLogger(__name__)
 
 
-PEAK_GRAPH_HEIGHT = 850
-
-
 def register_graph_callbacks(
     *,
     page: Any,
@@ -28,6 +25,10 @@ def register_graph_callbacks(
 ) -> None:
     """
     Register the main peak workflow graph callback.
+
+    Graph height is intentionally not controlled here. The height belongs to the
+    Dash dcc.Graph component style, which is built in the layout from the runtime
+    profile setting ``visualization.graph_height``.
     """
     del page
 
@@ -177,7 +178,7 @@ def register_graph_callbacks(
                 y_log_scale=y_log_scale,
             )
 
-            apply_peak_graph_layout(
+            figure = apply_peak_graph_layout(
                 figure=figure,
             )
 
@@ -192,7 +193,7 @@ def register_graph_callbacks(
                 f"{type(exc).__name__}: {exc}",
             )
 
-            apply_peak_graph_layout(
+            figure = apply_peak_graph_layout(
                 figure=figure,
             )
 
@@ -250,13 +251,24 @@ def apply_peak_graph_layout(
 ) -> go.Figure:
     """
     Apply shared peak graph layout settings.
+
+    Important
+    ---------
+    The figure layout must not set ``height``. The graph height is controlled by
+    the Dash component style from the profile setting
+    ``visualization.graph_height``.
+
+    This function only controls margins and removes any stale title.
     """
     figure.update_layout(
-        height=PEAK_GRAPH_HEIGHT,
+        height=None,
+        title={
+            "text": "",
+        },
         margin={
             "l": 70,
             "r": 30,
-            "t": 55,
+            "t": 20,
             "b": 70,
         },
     )
@@ -514,6 +526,26 @@ def soften_existing_traces(
         if trace_name.startswith(protected_name_prefixes):
             continue
 
+        marker = getattr(
+            trace,
+            "marker",
+            None,
+        )
+
+        if marker is not None:
+            try:
+                marker.opacity = float(
+                    opacity,
+                )
+                continue
+
+            except Exception:
+                logger.debug(
+                    "Could not update marker opacity for trace=%r",
+                    trace_name,
+                    exc_info=True,
+                )
+
         try:
             trace.opacity = float(
                 opacity,
@@ -523,6 +555,7 @@ def soften_existing_traces(
             logger.debug(
                 "Could not update opacity for trace=%r",
                 trace_name,
+                exc_info=True,
             )
 
 

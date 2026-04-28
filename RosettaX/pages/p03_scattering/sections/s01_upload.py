@@ -30,7 +30,7 @@ class Upload:
 
         self.config = upload.UploadConfig(
             section_title="Scattering calibration",
-            card_title="1. Upload FCS File",
+            card_title="1. Upload Calibration FCS File",
             upload_link_text="Select Bead File",
             description=(
                 "Start by uploading the FCS file used for the scattering calibration workflow. "

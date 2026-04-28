@@ -24,8 +24,8 @@ class Automatic2DPeakProcess(BasePeakProcess):
     the x coordinates through the page specific adapter.
     """
 
-    process_name = "2D automatic detection"
-    process_label = "2D automatic detection"
+    process_name = "Automatic 2D"
+    process_label = "Automatic 2D"
     graph_type = "2d_scatter"
     sort_order = 40
 

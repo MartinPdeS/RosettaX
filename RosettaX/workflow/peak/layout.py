@@ -129,13 +129,6 @@ class PeakLayout:
                     processes=processes,
                 )
             ),
-            html.H6(
-                self.config.graph_title,
-                style={
-                    "marginTop": "18px",
-                    "marginBottom": "8px",
-                },
-            ),
             self._build_graph_controls(
                 container_id=self.ids.histogram_controls_container,
                 nbins_control_container_id=self.ids.nbins_control_container,
@@ -742,15 +735,36 @@ class PeakLayout:
                     x_log_enabled=self._get_default_xscale() == "log",
                     y_log_enabled=self._get_default_yscale() == "log",
                     graph_style={
-                        "height": "850px",
+                        "height": self._get_default_graph_height(),
                         "width": "100%",
                     },
                 )
             ],
             style={
                 "display": "block",
+                "width": "100%",
+                "overflow": "visible",
+                "marginBottom": "16px",
             },
         )
+
+    def _get_default_graph_height(self) -> str:
+        """
+        Return the default graph height from the runtime profile.
+        """
+        runtime_config = self._get_default_runtime_config()
+
+        graph_height = runtime_config.get_str(
+            "visualization.graph_height",
+            default="850px",
+        )
+
+        graph_height = str(graph_height or "").strip()
+
+        if not graph_height:
+            return "850px"
+
+        return graph_height
 
     def _build_detector_dropdown_control(
         self,
