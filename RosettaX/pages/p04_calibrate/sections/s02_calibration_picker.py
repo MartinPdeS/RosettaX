@@ -12,10 +12,7 @@ import dash_bootstrap_components as dbc
 from RosettaX.utils import directories
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.model.scattering import ScatteringModelConfiguration
-from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
-from RosettaX.workflow.plotting.scatter2d import Scatter2DGraphIds
-from RosettaX.workflow.plotting.scatter2d import Scatter2DTrace
-
+from RosettaX.workflow.plotting import scatter2d
 
 logger = logging.getLogger(__name__)
 
@@ -210,8 +207,8 @@ class CalibrationPicker:
                                     },
                                 ),
 
-                                Scatter2DGraph.build_component(
-                                    component_ids=Scatter2DGraphIds(
+                                scatter2d.Scatter2DGraph.build_component(
+                                    component_ids=scatter2d.Scatter2DGraphIds(
                                         graph=self.page.ids.CalibrationPicker.target_mie_relation_graph,
                                         axis_scale_toggle=self.page.ids.CalibrationPicker.target_mie_relation_axis_scale_toggle,
                                     ),
@@ -447,12 +444,12 @@ class CalibrationPicker:
 
         if str(xscale).strip().lower() == "log":
             axis_scale_toggle_values.append(
-                Scatter2DGraph.x_log_value,
+                scatter2d.Scatter2DGraph.x_log_value,
             )
 
         if str(yscale).strip().lower() == "log":
             axis_scale_toggle_values.append(
-                Scatter2DGraph.y_log_value,
+                scatter2d.Scatter2DGraph.y_log_value,
             )
 
         return axis_scale_toggle_values
@@ -1146,7 +1143,7 @@ class CalibrationPicker:
         """
         Build an empty target Mie relation preview figure.
         """
-        return Scatter2DGraph.build_empty_figure(
+        return scatter2d.Scatter2DGraph.build_empty_figure(
             message="Select a scattering calibration to compute the preview.",
         )
 
@@ -1168,7 +1165,7 @@ class CalibrationPicker:
         as a second curve.
         """
         traces = [
-            Scatter2DTrace(
+            scatter2d.Scatter2DTrace(
                 x_values=full_diameter_values_nm,
                 y_values=full_coupling_values,
                 name="Full target Mie relation",
@@ -1178,7 +1175,7 @@ class CalibrationPicker:
 
         if show_selected_branch:
             traces.append(
-                Scatter2DTrace(
+                scatter2d.Scatter2DTrace(
                     x_values=selected_diameter_values_nm,
                     y_values=selected_coupling_values,
                     name="Auto selected largest monotonic branch",
@@ -1186,7 +1183,7 @@ class CalibrationPicker:
                 )
             )
 
-        return Scatter2DGraph.build_figure(
+        return scatter2d.Scatter2DGraph.build_figure(
             traces=traces,
             title="Target Mie relation preview",
             x_axis_title="Target diameter [nm]",

@@ -66,12 +66,6 @@ class ReferenceTable:
             ]
         )
 
-    def _get_layout(self) -> dbc.Card:
-        """
-        Compatibility alias for older section loading code.
-        """
-        return self.get_layout()
-
     def _build_header(self) -> dbc.CardHeader:
         """
         Build the section header.

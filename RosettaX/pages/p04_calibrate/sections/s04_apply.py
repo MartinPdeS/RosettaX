@@ -6,7 +6,6 @@ import logging
 
 import dash
 import dash_bootstrap_components as dbc
-from dash import dcc
 
 from RosettaX.workflow import apply_calibration
 
@@ -89,7 +88,7 @@ class Apply:
                     },
                 ),
                 self._build_status_alert(),
-                dcc.Download(
+                dash.dcc.Download(
                     id=self.page.ids.Export.download,
                 ),
             ]
@@ -432,7 +431,7 @@ class Apply:
 
             return (
                 result.status,
-                dcc.send_bytes(
+                dash.dcc.send_bytes(
                     result.payload_bytes,
                     result.download_filename,
                 ),

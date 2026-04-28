@@ -9,8 +9,7 @@ import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
 
 from RosettaX.pages.p03_scattering.state import ScatteringPageState
-from RosettaX.utils import styling
-from RosettaX.utils import plottings
+from RosettaX.utils import styling, plottings
 
 from RosettaX.workflow.calibration import scattering_services as services
 
@@ -66,12 +65,6 @@ class Calibration:
                 self._build_body(),
             ]
         )
-
-    def _get_layout(self) -> dbc.Card:
-        """
-        Compatibility alias for older section loading code.
-        """
-        return self.get_layout()
 
     def _build_header(self) -> dbc.CardHeader:
         """

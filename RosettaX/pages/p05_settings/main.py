@@ -42,7 +42,7 @@ class SettingsPage:
                     data=SettingsPageState.empty().to_dict(),
                 ),
                 *[
-                    section._get_layout()
+                    section.get_layout()
                     for section in self.sections
                 ],
             ]

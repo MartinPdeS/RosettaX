@@ -26,7 +26,7 @@ class CreateProfile:
 
         logger.debug("Initialized CreateProfile section with page=%r", page)
 
-    def _get_layout(self) -> dbc.Card:
+    def get_layout(self) -> dbc.Card:
         """
         Build the layout for the create profile section.
         """

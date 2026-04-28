@@ -9,7 +9,7 @@ from dash import dcc, html
 from datetime import datetime, timezone
 
 from .ids import SidebarIds
-from . import services
+from RosettaX.workflow.sidebar import services
 from RosettaX.utils import styling
 
 

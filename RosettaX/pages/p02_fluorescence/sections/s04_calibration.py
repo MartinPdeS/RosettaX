@@ -34,10 +34,7 @@ class Calibration:
     ``self.ids.bead_table`` during calibration.
     """
 
-    def __init__(
-        self,
-        page: Any,
-    ) -> None:
+    def __init__(self, page: Any) -> None:
         self.page = page
         self.ids = page.ids.Calibration
 
@@ -58,12 +55,6 @@ class Calibration:
                 self._build_collapse(),
             ]
         )
-
-    def _get_layout(self) -> dbc.Card:
-        """
-        Compatibility alias for older section loading code.
-        """
-        return self.get_layout()
 
     def _build_header(self) -> dbc.CardHeader:
         """
@@ -381,8 +372,6 @@ class Calibration:
                 page_state_payload if isinstance(page_state_payload, dict) else None
             )
 
-            bead_file_path = page_state.uploaded_fcs_path
-
             detector_column = self._resolve_active_fluorescence_channel(
                 selected_process_name=selected_fluorescence_process_name,
                 detector_dropdown_ids=fluorescence_detector_dropdown_ids,
@@ -394,7 +383,7 @@ class Calibration:
                 "table_row_count=%r selected_fluorescence_process_name=%r "
                 "detector_column=%r",
                 n_clicks,
-                bead_file_path,
+                page_state.uploaded_fcs_path,
                 None if table_data is None else len(table_data),
                 selected_fluorescence_process_name,
                 detector_column,
@@ -403,7 +392,7 @@ class Calibration:
             del n_clicks
 
             result = services.run_calibration_workflow(
-                bead_file_path=bead_file_path,
+                bead_file_path=page_state.uploaded_fcs_path,
                 table_data=table_data,
                 detector_column=detector_column,
                 scattering_detector_column=None,

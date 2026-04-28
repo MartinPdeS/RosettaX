@@ -43,8 +43,8 @@ class DefaultProfile:
             runtime_config,
         )
 
-    def _get_layout(self):
-        logger.debug("DefaultProfile._get_layout rebuilding settings page.")
+    def get_layout(self):
+        logger.debug("DefaultProfile.get_layout rebuilding settings page.")
 
         initial_form_store_data = self._initial_form_store_data()
 

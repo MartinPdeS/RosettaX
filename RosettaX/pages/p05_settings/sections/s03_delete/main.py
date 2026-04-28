@@ -61,7 +61,7 @@ class DeleteProfile:
 
         return options
 
-    def _get_layout(self) -> dbc.Card:
+    def get_layout(self) -> dbc.Card:
         """
         Build the layout for the delete profile section.
 
