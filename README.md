@@ -11,7 +11,7 @@
 | RosettaX/application/routes.py                                     |       43 |       43 |        6 |        0 |     0.00% |     3-156 |
 | RosettaX/pages/p00\_sidebar/ids.py                                 |       16 |       16 |        0 |        0 |     0.00% |      1-18 |
 | RosettaX/pages/p00\_sidebar/main.py                                |      129 |      129 |       20 |        0 |     0.00% |     3-716 |
-| RosettaX/pages/p01\_home/main.py                                   |       36 |       36 |        0 |        0 |     0.00% |     3-503 |
+| RosettaX/pages/p01\_home/main.py                                   |       36 |       36 |        0 |        0 |     0.00% |     3-474 |
 | RosettaX/pages/p02\_fluorescence/backend.py                        |        2 |        2 |        0 |        0 |     0.00% |       1-2 |
 | RosettaX/pages/p02\_fluorescence/ids.py                            |       57 |       57 |        0 |        0 |     0.00% |     2-114 |
 | RosettaX/pages/p02\_fluorescence/main.py                           |       19 |       19 |        2 |        0 |     0.00% |      3-77 |
@@ -55,7 +55,7 @@
 | RosettaX/utils/directories.py                                      |       53 |       30 |       20 |        0 |    31.51% |53-57, 73-84, 103-124 |
 | RosettaX/utils/fcs\_metadata.py                                    |       67 |       15 |       16 |        5 |    73.49% |46-51, 60-65, 72, 75, 128, 167-181 |
 | RosettaX/utils/reader.py                                           |      541 |      251 |      174 |       36 |    49.51% |93, 111, 114, 141-147, 155, 160, 162-\>165, 222, 256, 273-\>284, 276-277, 284-\>exit, 287-288, 311-318, 329, 347-348, 354, 363-364, 397-399, 410, 421, 433-434, 440, 450, 453, 458-462, 499, 552-558, 569-573, 581-586, 592, 597-628, 637-642, 681-688, 708-\>717, 717-\>726, 731, 737, 740, 743, 746, 765-\>752, 776-783, 792-796, 835-863, 877-929, 947-956, 964-1015, 1018-1051, 1054-1059, 1065-1102, 1105-1143, 1146-1202, 1205-1224 |
-| RosettaX/utils/runtime\_config.py                                  |      203 |       12 |       58 |        8 |    92.34% |55-56, 98-\>101, 127-128, 260, 294-\>297, 319, 352, 458-\>461, 468, 481-483, 499 |
+| RosettaX/utils/runtime\_config.py                                  |      345 |       29 |      136 |       20 |    88.98% |296-\>303, 311-312, 354-\>357, 383-384, 440, 458, 498, 520-528, 567-\>570, 577, 608, 615, 647, 652, 658-661, 759, 816, 849, 866-867, 949, 951-\>954, 961, 979-981 |
 | RosettaX/workflow/apply\_calibration/fluorescence.py               |       46 |       46 |       16 |        0 |     0.00% |     3-187 |
 | RosettaX/workflow/apply\_calibration/io.py                         |       81 |       81 |       30 |        0 |     0.00% |     3-297 |
 | RosettaX/workflow/apply\_calibration/scattering.py                 |      236 |      236 |       76 |        0 |     0.00% |    3-1061 |
@@ -111,7 +111,7 @@
 | RosettaX/workflow/upload/layout.py                                 |       32 |       32 |        4 |        0 |     0.00% |     3-122 |
 | RosettaX/workflow/upload/models.py                                 |       15 |       15 |        0 |        0 |     0.00% |      3-63 |
 | RosettaX/workflow/upload/services.py                               |       82 |       82 |       24 |        0 |     0.00% |     3-286 |
-| **TOTAL**                                                          | **9634** | **8976** | **2554** |   **49** | **6.75%** |           |
+| **TOTAL**                                                          | **9776** | **8993** | **2632** |   **61** | **8.14%** |           |
 
 1 file skipped due to complete coverage.
 
