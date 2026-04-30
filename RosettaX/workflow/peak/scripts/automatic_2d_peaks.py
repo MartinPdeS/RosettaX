@@ -5,8 +5,7 @@ import logging
 
 import numpy as np
 
-from .base import BasePeakProcess
-from .base import PeakProcessResult
+from .base import BasePeakProcess, PeakProcessResult, resolve_integer_setting, resolve_integer_value
 from RosettaX.utils.io import column_copy
 
 
@@ -633,60 +632,6 @@ def select_separated_peak_indices(
         )
 
     return selected_indices
-
-
-def resolve_integer_setting(
-    *,
-    settings: dict[str, Any],
-    name: str,
-    default: int,
-    minimum: int,
-    maximum: int,
-) -> int:
-    """
-    Resolve an integer process setting from a setting dictionary.
-    """
-    return resolve_integer_value(
-        value=settings.get(
-            name,
-        ),
-        default=default,
-        minimum=minimum,
-        maximum=maximum,
-    )
-
-
-def resolve_integer_value(
-    *,
-    value: Any,
-    default: int,
-    minimum: int,
-    maximum: int,
-) -> int:
-    """
-    Resolve a bounded integer value.
-    """
-    try:
-        resolved_value = int(
-            value,
-        )
-
-    except (TypeError, ValueError):
-        resolved_value = int(
-            default,
-        )
-
-    resolved_value = max(
-        int(minimum),
-        resolved_value,
-    )
-
-    resolved_value = min(
-        int(maximum),
-        resolved_value,
-    )
-
-    return resolved_value
 
 
 PROCESS = Automatic2DPeakProcess()

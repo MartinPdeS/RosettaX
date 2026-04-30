@@ -5,7 +5,15 @@ import logging
 
 import numpy as np
 
-from .base import BasePeakProcess, PeakProcessResult
+from .base import (
+    BasePeakProcess,
+    PeakProcessResult,
+    deduplicate_2d_peak_positions,
+    resolve_float_setting,
+    resolve_integer_setting,
+    resolve_integer_value,
+    resolve_yes_no_setting,
+)
 from RosettaX.utils.io import column_copy
 
 
@@ -1292,192 +1300,6 @@ def build_empty_result() -> SmoothedDensityProminence2DResult:
         y_axis_upper_gate=0.0,
         gated_event_count=0,
     )
-
-
-def resolve_integer_setting(
-    *,
-    settings: dict[str, Any],
-    name: str,
-    default: int,
-    minimum: int,
-    maximum: int,
-) -> int:
-    """
-    Resolve an integer process setting.
-    """
-    return resolve_integer_value(
-        value=settings.get(
-            name,
-        ),
-        default=default,
-        minimum=minimum,
-        maximum=maximum,
-    )
-
-
-def resolve_float_setting(
-    *,
-    settings: dict[str, Any],
-    name: str,
-    default: float,
-    minimum: float,
-    maximum: float,
-) -> float:
-    """
-    Resolve a bounded float setting.
-    """
-    try:
-        resolved_value = float(
-            settings.get(
-                name,
-                default,
-            )
-        )
-
-    except (TypeError, ValueError):
-        resolved_value = float(
-            default,
-        )
-
-    if not np.isfinite(
-        resolved_value,
-    ):
-        resolved_value = float(
-            default,
-        )
-
-    resolved_value = max(
-        float(minimum),
-        resolved_value,
-    )
-
-    resolved_value = min(
-        float(maximum),
-        resolved_value,
-    )
-
-    return resolved_value
-
-
-def resolve_integer_value(
-    *,
-    value: Any,
-    default: int,
-    minimum: int,
-    maximum: int,
-) -> int:
-    """
-    Resolve a bounded integer value.
-    """
-    try:
-        resolved_value = int(
-            value,
-        )
-
-    except (TypeError, ValueError):
-        resolved_value = int(
-            default,
-        )
-
-    resolved_value = max(
-        int(minimum),
-        resolved_value,
-    )
-
-    resolved_value = min(
-        int(maximum),
-        resolved_value,
-    )
-
-    return resolved_value
-
-
-def resolve_yes_no_setting(
-    *,
-    settings: dict[str, Any],
-    name: str,
-    default: bool,
-) -> bool:
-    """
-    Resolve a yes or no setting.
-    """
-    value = settings.get(
-        name,
-        None,
-    )
-
-    if value is None:
-        return bool(
-            default,
-        )
-
-    if isinstance(value, bool):
-        return value
-
-    return str(
-        value,
-    ).strip().lower() in (
-        "yes",
-        "true",
-        "1",
-        "on",
-        "enabled",
-    )
-
-
-def deduplicate_2d_peak_positions(
-    *,
-    peak_positions: list[dict[str, float]],
-    decimal_places: int = 12,
-) -> list[dict[str, float]]:
-    """
-    Remove duplicate 2D peak positions while preserving order.
-    """
-    unique_peak_positions: list[dict[str, float]] = []
-    seen_keys: set[tuple[float, float]] = set()
-
-    for peak_position in peak_positions:
-        try:
-            x_value = float(
-                peak_position["x"],
-            )
-
-            y_value = float(
-                peak_position["y"],
-            )
-
-        except (KeyError, TypeError, ValueError):
-            continue
-
-        if not np.isfinite(x_value) or not np.isfinite(y_value):
-            continue
-
-        key = (
-            round(
-                x_value,
-                int(decimal_places),
-            ),
-            round(
-                y_value,
-                int(decimal_places),
-            ),
-        )
-
-        if key in seen_keys:
-            continue
-
-        seen_keys.add(
-            key,
-        )
-
-        unique_peak_positions.append(
-            {
-                "x": x_value,
-                "y": y_value,
-            }
-        )
-
-    return unique_peak_positions
 
 
 PROCESS = SmoothedDensityProminence2DPeakProcess()
