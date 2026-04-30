@@ -467,6 +467,6 @@ def deduplicate_2d_peak_positions(
             continue
 
         seen_keys.add(key)
-        unique_peak_positions.append(peak_position)
+        unique_peak_positions.append({"x": x_value, "y": y_value})
 
     return unique_peak_positions
