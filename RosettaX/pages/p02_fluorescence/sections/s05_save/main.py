@@ -7,8 +7,9 @@ import dash_bootstrap_components as dbc
 
 from RosettaX.workflow import save
 from RosettaX.utils import directories
-from RosettaX.utils import styling
-from RosettaX.utils import ui_forms
+
+from . import layout as _layout
+from . import callbacks as _callbacks
 
 
 logger = logging.getLogger(__name__)
@@ -67,31 +68,10 @@ class Save:
         """
         Create the fluorescence save section layout.
         """
-        card = self.layout_builder.get_layout()
-
-        section_style = styling.build_workflow_section_legacy_style(
-            self.card_color,
-        )
-
-        return ui_forms.apply_workflow_section_card_style(
-            card=card,
-            header_background=section_style["header_background"],
-            header_border=section_style["header_border"],
-            left_border=section_style["left_border"],
-            header_font_weight="750",
-            header_font_size="1.02rem",
-        )
+        return _layout.get_layout(self)
 
     def register_callbacks(self) -> None:
         """
         Register callbacks for the fluorescence save section.
         """
-        save.register_save_callbacks(
-            page=self.page,
-            ids=self.ids,
-            adapter=self.adapter,
-            config=self.config,
-            logger=logger,
-            calibration_store_id=self.page.ids.Calibration.calibration_store,
-            page_state_store_id=None,
-        )
+        _callbacks.register_callbacks(self)
