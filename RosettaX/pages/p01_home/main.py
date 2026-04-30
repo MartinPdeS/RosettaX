@@ -95,35 +95,6 @@ class HomePage:
                                 "marginBottom": "18px",
                             },
                         ),
-                        html.Div(
-                            [
-                                dbc.Button(
-                                    "Start fluorescence calibration",
-                                    href="/fluorescence",
-                                    id=self._id("hero-fluorescence-link"),
-                                    color="primary",
-                                ),
-                                dbc.Button(
-                                    "Start scattering calibration",
-                                    href="/scattering",
-                                    id=self._id("hero-scattering-link"),
-                                    color="primary",
-                                    outline=True,
-                                ),
-                                dbc.Button(
-                                    "Apply saved calibration",
-                                    href="/calibrate",
-                                    id=self._id("hero-apply-link"),
-                                    color="success",
-                                    outline=True,
-                                ),
-                            ],
-                            style={
-                                "display": "flex",
-                                "gap": "10px",
-                                "flexWrap": "wrap",
-                            },
-                        ),
                     ],
                     style={
                         "padding": "26px",
