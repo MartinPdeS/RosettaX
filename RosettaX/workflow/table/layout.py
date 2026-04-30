@@ -19,8 +19,8 @@ class ReferenceTableConfig:
     Static configuration for one reusable reference table section.
     """
 
-    card_title: str
-    description: str
+    card_title: Any
+    description: Optional[Any]
     table_title: Optional[str] = None
     add_row_button_label: str = "Add row"
     add_row_button_color: str = "secondary"
@@ -37,7 +37,7 @@ class ReferenceTableActionConfig:
 
     button_id: Any
     button_label: str
-    description: str
+    description: Optional[Any]
     button_color: str = "primary"
     button_style: Optional[dict[str, Any]] = None
 
@@ -135,15 +135,19 @@ class ReferenceTableLayout:
                 )
             )
 
-        children.extend(
-            [
+        if self.config.description is not None:
+            children.append(
                 dash.html.Div(
                     self.config.description,
                     style={
                         "marginBottom": "10px",
                         "opacity": 0.8,
                     },
-                ),
+                )
+            )
+
+        children.extend(
+            [
                 dash.dash_table.DataTable(
                     id=self.ids.bead_table,
                     columns=self.table_columns,
@@ -196,23 +200,68 @@ class ReferenceTableLayout:
             }
         )
 
+        children: list[Any] = [
+            dbc.Button(
+                self.action_config.button_label,
+                id=self.action_config.button_id,
+                n_clicks=0,
+                color=self.action_config.button_color,
+                style=button_style,
+            ),
+        ]
+
+        if self.action_config.description is not None:
+            info_target_id = f"{self.action_config.button_id}-info-target"
+            info_tooltip_id = f"{self.action_config.button_id}-info-tooltip"
+
+            children.extend(
+                [
+                    self._build_info_badge(
+                        info_target_id,
+                    ),
+                    dbc.Tooltip(
+                        self.action_config.description,
+                        id=info_tooltip_id,
+                        target=info_target_id,
+                        placement="right",
+                    ),
+                ]
+            )
+
         return dash.html.Div(
-            [
-                dbc.Button(
-                    self.action_config.button_label,
-                    id=self.action_config.button_id,
-                    n_clicks=0,
-                    color=self.action_config.button_color,
-                    style=button_style,
-                ),
-                dash.html.Div(
-                    self.action_config.description,
-                    style={
-                        "marginTop": "8px",
-                        "opacity": 0.75,
-                    },
-                ),
-            ]
+            children,
+            style={
+                "display": "flex",
+                "alignItems": "center",
+            },
+        )
+
+    def _build_info_badge(
+        self,
+        tooltip_target_id: str,
+    ) -> dash.html.Span:
+        """
+        Build a compact reusable info badge.
+        """
+        return dash.html.Span(
+            "i",
+            id=tooltip_target_id,
+            style={
+                "width": "19px",
+                "height": "19px",
+                "borderRadius": "50%",
+                "display": "inline-flex",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "fontSize": "0.72rem",
+                "fontWeight": "800",
+                "marginLeft": "8px",
+                "cursor": "help",
+                "opacity": 0.72,
+                "border": "1px solid currentColor",
+                "lineHeight": "1",
+                "flex": "0 0 auto",
+            },
         )
 
     def _build_table_options(self) -> dict[str, Any]:

@@ -7,6 +7,7 @@ import dash
 import dash_bootstrap_components as dbc
 
 from RosettaX.utils import styling
+from RosettaX.utils import ui_forms
 from RosettaX.workflow.model.scattering import ScatteringModelConfiguration
 
 
@@ -43,6 +44,21 @@ class Model:
         self.ids = page.ids.Parameters
         self.default_values = self.model_configuration.build_default_profile_defaults()
 
+        self.section_tooltip_target_id = f"{self.ids.mie_model}-section-info-target"
+        self.section_tooltip_id = f"{self.ids.mie_model}-section-info-tooltip"
+
+        self.optical_configuration_tooltip_target_id = f"{self.ids.wavelength_nm}-optical-info-target"
+        self.optical_configuration_tooltip_id = f"{self.ids.wavelength_nm}-optical-info-tooltip"
+
+        self.particle_configuration_tooltip_target_id = f"{self.ids.mie_model}-particle-info-target"
+        self.particle_configuration_tooltip_id = f"{self.ids.mie_model}-particle-info-tooltip"
+
+        self.detector_preset_tooltip_target_id = f"{self.ids.detector_configuration_preset}-info-target"
+        self.detector_preset_tooltip_id = f"{self.ids.detector_configuration_preset}-info-tooltip"
+
+        self.optical_preview_tooltip_target_id = f"{self.ids.optical_configuration_preview}-info-target"
+        self.optical_preview_tooltip_id = f"{self.ids.optical_configuration_preview}-info-tooltip"
+
         logger.debug(
             "Initialized Parameters section with page=%r",
             page,
@@ -58,14 +74,24 @@ class Model:
             [
                 self._build_header(),
                 self._build_collapse(),
-            ]
+            ],
+            style=styling.WORKFLOW_SECTION["card"],
         )
 
     def _build_header(self) -> dbc.CardHeader:
         """
         Build section header.
         """
-        return dbc.CardHeader("3. Set calculation parameters")
+        return ui_forms.build_card_header_with_info(
+            title="3. Set calculation parameters",
+            tooltip_target_id=self.section_tooltip_target_id,
+            tooltip_id=self.section_tooltip_id,
+            tooltip_text=(
+                "These parameters define the optical, detector, and particle "
+                "model used to compute the calibration standard coupling values."
+            ),
+            subtitle="Configure the physical model used for scattering calibration.",
+        )
 
     def _build_collapse(self) -> dbc.Collapse:
         """
@@ -83,33 +109,67 @@ class Model:
         """
         return dbc.CardBody(
             [
-                self._build_optical_configuration_section(),
-                dash.html.Hr(),
-                self._build_particle_configuration_section(),
-            ]
-        )
-
-    def _build_optical_configuration_section(self) -> dash.html.Div:
-        """
-        Build optical configuration section.
-        """
-        return dash.html.Div(
-            [
-                dash.html.H5("Optical configuration"),
+                self._build_optical_configuration_panel(),
                 dash.html.Div(
-                    [
-                        self._build_optical_configuration_controls(),
-                        self._build_optical_configuration_visualization(),
-                    ],
                     style={
-                        "display": "flex",
-                        "gap": "24px",
-                        "alignItems": "flex-start",
-                        "width": "100%",
-                        "flexWrap": "wrap",
+                        "height": "18px",
                     },
                 ),
-            ]
+                self._build_particle_configuration_panel(),
+            ],
+            style=styling.WORKFLOW_SECTION["body"],
+        )
+
+    def _build_optical_configuration_panel(self) -> dbc.Card:
+        """
+        Build the optical configuration subpanel.
+        """
+        return dbc.Card(
+            [
+                dbc.CardHeader(
+                    [
+                        ui_forms.build_title_with_info(
+                            title="Optical configuration",
+                            tooltip_target_id=self.optical_configuration_tooltip_target_id,
+                            tooltip_id=self.optical_configuration_tooltip_id,
+                            tooltip_text=(
+                                "These controls define the illumination wavelength, detector "
+                                "acceptance geometry, collection numerical aperture, blocker "
+                                "bar numerical aperture, and angular sampling used by the "
+                                "scattering model."
+                            ),
+                            title_style_overrides={
+                                "fontSize": "1rem",
+                            },
+                        ),
+                        dash.html.Div(
+                            "Illumination, detector geometry, and angular sampling.",
+                            style=styling.WORKFLOW_SECTION["subtitle"],
+                        ),
+                    ],
+                    style=styling.WORKFLOW_SECTION["subcard_header"],
+                ),
+                dbc.CardBody(
+                    [
+                        dash.html.Div(
+                            [
+                                self._build_optical_configuration_controls(),
+                                self._build_optical_configuration_visualization(),
+                            ],
+                            style={
+                                "display": "flex",
+                                "gap": "24px",
+                                "alignItems": "flex-start",
+                                "width": "100%",
+                                "flexWrap": "wrap",
+                                "overflow": "visible",
+                            },
+                        ),
+                    ],
+                    style=styling.WORKFLOW_SECTION["subcard_body"],
+                ),
+            ],
+            style=styling.WORKFLOW_SECTION["subcard"],
         )
 
     def _build_optical_configuration_controls(self) -> dash.html.Div:
@@ -127,22 +187,51 @@ class Model:
                     step=1,
                     width_px=220,
                 ),
-                self._inline_row(
-                    "Detector preset:",
-                    dash.dcc.Dropdown(
-                        id=self.ids.detector_configuration_preset,
-                        options=self.model_configuration.build_detector_preset_options(),
-                        value=self.model_configuration.custom_detector_preset_name,
-                        placeholder="Select detector preset",
-                        clearable=False,
-                        searchable=False,
-                        persistence=True,
-                        persistence_type="session",
+                ui_forms.build_inline_row(
+                    label="Detector preset:",
+                    control=dash.html.Div(
+                        [
+                            dash.dcc.Dropdown(
+                                id=self.ids.detector_configuration_preset,
+                                options=self.model_configuration.build_detector_preset_options(),
+                                value=self.model_configuration.custom_detector_preset_name,
+                                placeholder="Select detector preset",
+                                clearable=False,
+                                searchable=False,
+                                persistence=True,
+                                persistence_type="session",
+                                style={
+                                    "width": "320px",
+                                },
+                            ),
+                            ui_forms.build_info_badge(
+                                tooltip_target_id=self.detector_preset_tooltip_target_id,
+                            ),
+                            dbc.Tooltip(
+                                (
+                                    "Use a detector preset to load a predefined "
+                                    "collection geometry. Select the custom preset "
+                                    "when you want to edit each detector parameter "
+                                    "manually."
+                                ),
+                                id=self.detector_preset_tooltip_id,
+                                target=self.detector_preset_tooltip_target_id,
+                                placement="right",
+                            ),
+                        ],
                         style={
-                            "width": "320px",
+                            "display": "flex",
+                            "alignItems": "center",
+                            "overflow": "visible",
                         },
                     ),
                     margin_top=True,
+                    row_style_overrides={
+                        "overflow": "visible",
+                    },
+                    control_wrapper_style_overrides={
+                        "overflow": "visible",
+                    },
                 ),
                 dash.html.Div(
                     [
@@ -209,12 +298,14 @@ class Model:
                     id=self.ids.detector_configuration_custom_values_container,
                     style={
                         "display": "block",
+                        "overflow": "visible",
                     },
                 ),
             ],
             style={
                 "flex": "1 1 520px",
                 "minWidth": "480px",
+                "overflow": "visible",
             },
         )
 
@@ -223,34 +314,96 @@ class Model:
         Build optical configuration preview graph.
         """
         return dbc.Card(
-            dbc.CardBody(
-                [
-                    dash.dcc.Graph(
-                        id=self.ids.optical_configuration_preview,
-                        figure=self.model_configuration.build_optical_configuration_preview_figure(
-                            detector_numerical_aperture=self.default_values.detector_numerical_aperture,
-                            blocker_bar_numerical_aperture=self.default_values.blocker_bar_numerical_aperture,
-                            medium_refractive_index=self.default_values.medium_refractive_index,
-                            detector_phi_angle_degree=self.default_values.detector_phi_angle_degree,
-                            detector_gamma_angle_degree=self.default_values.detector_gamma_angle_degree,
+            [
+                dbc.CardHeader(
+                    ui_forms.build_title_with_info(
+                        title="Optical preview",
+                        tooltip_target_id=self.optical_preview_tooltip_target_id,
+                        tooltip_id=self.optical_preview_tooltip_id,
+                        tooltip_text=(
+                            "This preview visualizes the detector collection region "
+                            "and blocker bar geometry from the current optical "
+                            "configuration. It is only a geometric preview, not the "
+                            "final Mie coupling curve."
                         ),
-                        style={
-                            **styling.PLOTLY_GRAPH_STYLE,
-                            "height": "30vh",
+                        title_style_overrides={
+                            "fontSize": "0.95rem",
                         },
-                        config=styling.PLOTLY_GRAPH_CONFIG,
-                        className="optical-configuration-preview-graph",
                     ),
-                ],
-                style={
-                    "padding": "0px",
-                },
-            ),
+                    style={
+                        "background": "rgba(128, 128, 128, 0.08)",
+                        "borderBottom": "1px solid rgba(128, 128, 128, 0.18)",
+                        "padding": "10px 14px",
+                        "borderTopLeftRadius": "10px",
+                        "borderTopRightRadius": "10px",
+                    },
+                ),
+                dbc.CardBody(
+                    [
+                        dash.dcc.Graph(
+                            id=self.ids.optical_configuration_preview,
+                            figure=self.model_configuration.build_optical_configuration_preview_figure(
+                                detector_numerical_aperture=self.default_values.detector_numerical_aperture,
+                                blocker_bar_numerical_aperture=self.default_values.blocker_bar_numerical_aperture,
+                                medium_refractive_index=self.default_values.medium_refractive_index,
+                                detector_phi_angle_degree=self.default_values.detector_phi_angle_degree,
+                                detector_gamma_angle_degree=self.default_values.detector_gamma_angle_degree,
+                            ),
+                            style={
+                                **styling.PLOTLY_GRAPH_STYLE,
+                                "height": "30vh",
+                            },
+                            config=styling.PLOTLY_GRAPH_CONFIG,
+                            className="optical-configuration-preview-graph",
+                        ),
+                    ],
+                    style={
+                        "padding": "0px",
+                    },
+                ),
+            ],
             style={
                 "flex": "0 1 430px",
                 "minWidth": "340px",
-                "overflow": "hidden",
+                "borderRadius": "10px",
+                "overflow": "visible",
             },
+        )
+
+    def _build_particle_configuration_panel(self) -> dbc.Card:
+        """
+        Build the particle configuration subpanel.
+        """
+        return dbc.Card(
+            [
+                dbc.CardHeader(
+                    [
+                        ui_forms.build_title_with_info(
+                            title="Particle configuration",
+                            tooltip_target_id=self.particle_configuration_tooltip_target_id,
+                            tooltip_id=self.particle_configuration_tooltip_id,
+                            tooltip_text=(
+                                "These controls define the particle model and refractive "
+                                "indices used to compute the modeled optical coupling of "
+                                "the calibration standard."
+                            ),
+                            title_style_overrides={
+                                "fontSize": "1rem",
+                            },
+                        ),
+                        dash.html.Div(
+                            "Particle model and refractive index parameters.",
+                            style=styling.WORKFLOW_SECTION["subtitle"],
+                        ),
+                    ],
+                    style=styling.WORKFLOW_SECTION["subcard_header"],
+                ),
+                dbc.CardBody(
+                    self._build_particle_configuration_section(),
+                    style=styling.WORKFLOW_SECTION["subcard_body"],
+                ),
+            ],
+            style=styling.WORKFLOW_SECTION["subcard"],
         )
 
     def _build_particle_configuration_section(self) -> dash.html.Div:
@@ -259,10 +412,9 @@ class Model:
         """
         return dash.html.Div(
             [
-                dash.html.H5("Particle configuration"),
-                self._inline_row(
-                    "Particle type:",
-                    dash.dcc.Dropdown(
+                ui_forms.build_inline_row(
+                    label="Particle type:",
+                    control=dash.dcc.Dropdown(
                         id=self.ids.mie_model,
                         options=self.model_configuration.mie_model_options,
                         value=self.default_values.mie_model,
@@ -275,6 +427,12 @@ class Model:
                         },
                     ),
                     margin_top=False,
+                    row_style_overrides={
+                        "overflow": "visible",
+                    },
+                    control_wrapper_style_overrides={
+                        "overflow": "visible",
+                    },
                 ),
                 self._refractive_index_picker(
                     label="Medium refractive index:",
@@ -288,6 +446,7 @@ class Model:
                     id=self.ids.solid_sphere_container,
                     style={
                         "display": "block",
+                        "overflow": "visible",
                     },
                 ),
                 dash.html.Div(
@@ -295,9 +454,13 @@ class Model:
                     id=self.ids.core_shell_container,
                     style={
                         "display": "none",
+                        "overflow": "visible",
                     },
                 ),
-            ]
+            ],
+            style={
+                "overflow": "visible",
+            },
         )
 
     def _build_solid_sphere_parameters_block(self) -> list[Any]:
@@ -334,6 +497,110 @@ class Model:
                 preset_options=self.model_configuration.shell_refractive_index_presets,
             ),
         ]
+
+    def _build_numeric_input_row(
+        self,
+        *,
+        label: str,
+        component_id: str,
+        placeholder: str,
+        value: Any,
+        min_value: Optional[float] = None,
+        max_value: Optional[float] = None,
+        step: Optional[float] = None,
+        width_px: int = 220,
+    ) -> dash.html.Div:
+        """
+        Build a labeled numeric input row.
+        """
+        return ui_forms.build_inline_row(
+            label=label,
+            control=dash.dcc.Input(
+                id=component_id,
+                type="number",
+                placeholder=placeholder,
+                value=value,
+                min=min_value,
+                max=max_value,
+                step=step,
+                debounce=True,
+                persistence=True,
+                persistence_type="session",
+                style={
+                    "width": f"{width_px}px",
+                },
+            ),
+            row_style_overrides={
+                "overflow": "visible",
+            },
+            control_wrapper_style_overrides={
+                "overflow": "visible",
+            },
+        )
+
+    def _refractive_index_picker(
+        self,
+        *,
+        label: str,
+        preset_id: str,
+        value_id: str,
+        default_value: float,
+        preset_options: Sequence[dict],
+        preset_placeholder_label: str = "Select preset",
+    ) -> dash.html.Div:
+        """
+        Build refractive index preset and custom value controls.
+        """
+        preset_dropdown = dash.dcc.Dropdown(
+            id=preset_id,
+            options=list(preset_options),
+            value=None,
+            placeholder=preset_placeholder_label,
+            clearable=True,
+            searchable=False,
+            persistence=True,
+            persistence_type="session",
+            style={
+                "width": "220px",
+                "marginRight": "10px",
+            },
+        )
+
+        numeric_input = dash.dcc.Input(
+            id=value_id,
+            type="number",
+            value=default_value,
+            min=1.0,
+            max=2.5,
+            step=0.001,
+            debounce=True,
+            persistence=True,
+            persistence_type="session",
+            style={
+                "width": "160px",
+            },
+        )
+
+        return ui_forms.build_inline_row(
+            label=label,
+            control=dash.html.Div(
+                [
+                    preset_dropdown,
+                    numeric_input,
+                ],
+                style={
+                    "display": "flex",
+                    "alignItems": "center",
+                    "overflow": "visible",
+                },
+            ),
+            row_style_overrides={
+                "overflow": "visible",
+            },
+            control_wrapper_style_overrides={
+                "overflow": "visible",
+            },
+        )
 
     def register_callbacks(self) -> None:
         """
@@ -633,139 +900,3 @@ class Model:
                 detector_phi_angle_degree=detector_phi_angle_degree,
                 detector_gamma_angle_degree=detector_gamma_angle_degree,
             )
-
-    def _build_numeric_input_row(
-        self,
-        *,
-        label: str,
-        component_id: str,
-        placeholder: str,
-        value: Any,
-        min_value: Optional[float] = None,
-        max_value: Optional[float] = None,
-        step: Optional[float] = None,
-        width_px: int = 220,
-    ) -> dash.html.Div:
-        """
-        Build a labeled numeric input row.
-        """
-        return self._inline_row(
-            label,
-            dash.dcc.Input(
-                id=component_id,
-                type="number",
-                placeholder=placeholder,
-                value=value,
-                min=min_value,
-                max=max_value,
-                step=step,
-                debounce=True,
-                persistence=True,
-                persistence_type="session",
-                style={
-                    "width": f"{width_px}px",
-                },
-            ),
-        )
-
-    def _refractive_index_picker(
-        self,
-        *,
-        label: str,
-        preset_id: str,
-        value_id: str,
-        default_value: float,
-        preset_options: Sequence[dict],
-        preset_placeholder_label: str = "Select preset",
-    ) -> dash.html.Div:
-        """
-        Build refractive index preset and custom value controls.
-        """
-        preset_dropdown = dash.dcc.Dropdown(
-            id=preset_id,
-            options=list(preset_options),
-            value=None,
-            placeholder=preset_placeholder_label,
-            clearable=True,
-            searchable=False,
-            persistence=True,
-            persistence_type="session",
-            style={
-                "width": "220px",
-                "marginRight": "10px",
-            },
-        )
-
-        numeric_input = dash.dcc.Input(
-            id=value_id,
-            type="number",
-            value=default_value,
-            min=1.0,
-            max=2.5,
-            step=0.001,
-            debounce=True,
-            persistence=True,
-            persistence_type="session",
-            style={
-                "width": "160px",
-            },
-        )
-
-        return self._inline_row(
-            label,
-            dash.html.Div(
-                [
-                    preset_dropdown,
-                    numeric_input,
-                ],
-                style={
-                    "display": "flex",
-                    "alignItems": "center",
-                },
-            ),
-        )
-
-    def _inline_row(
-        self,
-        label: str,
-        control: Any,
-        *,
-        margin_top: bool = True,
-    ) -> dash.html.Div:
-        """
-        Build one aligned label control row.
-        """
-        row_style = {
-            "display": "flex",
-            "alignItems": "center",
-            "width": "100%",
-            "marginTop": "10px",
-        }
-
-        if not margin_top:
-            row_style.pop(
-                "marginTop",
-                None,
-            )
-
-        return dash.html.Div(
-            [
-                dash.html.Div(
-                    label,
-                    style={
-                        "width": "260px",
-                        "minWidth": "260px",
-                        "fontWeight": 500,
-                    },
-                ),
-                dash.html.Div(
-                    control,
-                    style={
-                        "flex": "1",
-                        "display": "flex",
-                        "alignItems": "center",
-                    },
-                ),
-            ],
-            style=row_style,
-        )

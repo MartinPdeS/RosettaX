@@ -31,6 +31,7 @@ class PeakLayout:
     - Build setting tooltips.
     - Build graph visibility controls.
     - Build shared 2D graph axis scale controls.
+    - Build histogram controls in the graph control row.
     - Build graph container.
     - Build workflow stores.
     """
@@ -129,12 +130,6 @@ class PeakLayout:
                     processes=processes,
                 )
             ),
-            self._build_graph_controls(
-                container_id=self.ids.histogram_controls_container,
-                nbins_control_container_id=self.ids.nbins_control_container,
-                nbins_input_id=self.ids.nbins_input,
-                number_of_bins=self._get_default_number_of_bins(),
-            ),
             self._build_graph_container(
                 container_id=self.ids.graph_toggle_container,
                 graph_id=self.ids.graph_hist,
@@ -165,10 +160,10 @@ class PeakLayout:
             for process in processes
         ]
 
-        selected_value = value
-
-        if selected_value is None and options:
-            selected_value = options[0]["value"]
+        selected_value = self._resolve_default_process_value(
+            explicit_value=value,
+            options=options,
+        )
 
         return html.Div(
             [
@@ -193,6 +188,66 @@ class PeakLayout:
                 "minWidth": "260px",
             },
         )
+
+    def _resolve_default_process_value(
+        self,
+        *,
+        explicit_value: Any,
+        options: list[dict[str, Any]],
+    ) -> Any:
+        """
+        Resolve the default peak process dropdown value.
+
+        Resolution order
+        ----------------
+        - Explicit layout value.
+        - Runtime profile value from config.default_process_runtime_config_path.
+        - First available dropdown option.
+        """
+        option_values = {
+            option.get("value")
+            for option in options
+            if isinstance(option, dict)
+        }
+
+        if explicit_value in option_values:
+            return explicit_value
+
+        runtime_config_path = getattr(
+            self.config,
+            "default_process_runtime_config_path",
+            None,
+        )
+
+        if isinstance(runtime_config_path, str) and runtime_config_path:
+            runtime_config = self._get_default_runtime_config()
+
+            configured_value = runtime_config.get_str(
+                runtime_config_path,
+                default="",
+            )
+
+            if configured_value in option_values:
+                logger.debug(
+                    "Using configured default peak process %r from path %r.",
+                    configured_value,
+                    runtime_config_path,
+                )
+
+                return configured_value
+
+            logger.debug(
+                "Configured default peak process %r from path %r is not available. "
+                "Available values are %r.",
+                configured_value,
+                runtime_config_path,
+                sorted(str(value) for value in option_values),
+            )
+
+        if options:
+            return options[0].get("value")
+
+        return None
 
     def _build_peak_process_cards(
         self,
@@ -659,7 +714,7 @@ class PeakLayout:
                     label,
                     html_for=input_id,
                     style={
-                        "marginBottom": "4px",
+                        "marginBottom": "0px",
                         "fontSize": "0.85rem",
                     },
                 ),
@@ -678,6 +733,11 @@ class PeakLayout:
                     persistence_type="session",
                 ),
             ],
+            style={
+                "display": "flex",
+                "alignItems": "center",
+                "gap": "8px",
+            },
         )
 
     def _build_graph_controls(
@@ -689,9 +749,11 @@ class PeakLayout:
         number_of_bins: int = 100,
     ) -> html.Div:
         """
-        Build graph controls that are not part of the shared graph component.
+        Build histogram specific controls.
 
-        Axis scale controls are now rendered by Scatter2DGraph below the graph.
+        This container is rendered in the same bottom control row as the x and y
+        log toggles. Visibility is controlled by the peak workflow callbacks so
+        it only appears for one dimensional histogram based processes.
         """
         return html.Div(
             id=container_id,
@@ -703,11 +765,10 @@ class PeakLayout:
                 ),
             ],
             style={
-                "display": "flex",
+                "display": "none",
                 "alignItems": "center",
                 "gap": "16px",
                 "flexWrap": "wrap",
-                "marginBottom": "8px",
             },
         )
 
@@ -738,6 +799,14 @@ class PeakLayout:
                         "height": self._get_default_graph_height(),
                         "width": "100%",
                     },
+                    bottom_controls=[
+                        self._build_graph_controls(
+                            container_id=self.ids.histogram_controls_container,
+                            nbins_control_container_id=self.ids.nbins_control_container,
+                            nbins_input_id=self.ids.nbins_input,
+                            number_of_bins=self._get_default_number_of_bins(),
+                        ),
+                    ],
                 )
             ],
             style={
@@ -1059,14 +1128,25 @@ class PeakLayout:
 
     def _get_default_number_of_bins(self) -> int:
         """
-        Return the default number of histogram bins.
+        Return the default number of histogram bins from the runtime profile.
         """
         runtime_config = self._get_default_runtime_config()
 
-        return runtime_config.get_int(
+        number_of_bins = runtime_config.get_int(
             self.config.number_of_bins_runtime_config_path,
-            default=self.config.default_number_of_bins,
+            default=runtime_config.get_int(
+                "visualization.n_bins_for_plots",
+                default=runtime_config.get_int(
+                    "calibration.n_bins_for_plots",
+                    default=self.config.default_number_of_bins,
+                ),
+            ),
         )
+
+        if number_of_bins < 1:
+            return self.config.default_number_of_bins
+
+        return number_of_bins
 
     def _get_default_xscale(self) -> str:
         """
@@ -1076,12 +1156,14 @@ class PeakLayout:
 
         return self._normalize_axis_scale(
             runtime_config.get_str(
-                "calibration.histogram_xscale",
-                default="linear",
+                self.config.xscale_runtime_config_path,
+                default=runtime_config.get_str(
+                    self.config.xscale_fallback_runtime_config_path,
+                    default=self.config.default_xscale,
+                ),
             ),
-            default="linear",
+            default=self.config.default_xscale,
         )
-
 
     def _get_default_yscale(self) -> str:
         """
@@ -1091,15 +1173,14 @@ class PeakLayout:
 
         return self._normalize_axis_scale(
             runtime_config.get_str(
-                "calibration.histogram_yscale",
+                self.config.yscale_runtime_config_path,
                 default=runtime_config.get_str(
-                    "calibration.histogram_scale",
-                    default="log",
+                    self.config.yscale_fallback_runtime_config_path,
+                    default=self.config.default_yscale,
                 ),
             ),
-            default="log",
+            default=self.config.default_yscale,
         )
-
 
     def _normalize_axis_scale(
         self,

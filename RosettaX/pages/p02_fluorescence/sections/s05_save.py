@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 
+from typing import Any
 import logging
+
+import dash_bootstrap_components as dbc
 
 from RosettaX.workflow import save
 from RosettaX.utils import directories
+from RosettaX.utils import ui_forms
 
 
 logger = logging.getLogger(__name__)
@@ -25,7 +29,10 @@ class Save:
     delegated to RosettaX.workflow.save.
     """
 
-    def __init__(self, page) -> None:
+    def __init__(
+        self,
+        page: Any,
+    ) -> None:
         self.page = page
         self.ids = page.ids.Save
 
@@ -51,11 +58,17 @@ class Save:
             page,
         )
 
-    def get_layout(self):
+    def get_layout(self) -> dbc.Card:
         """
         Create the fluorescence save section layout.
         """
-        return self.layout_builder.get_layout()
+        card = self.layout_builder.get_layout()
+
+        return ui_forms.apply_workflow_section_card_style(
+            card=card,
+            header_font_weight="750",
+            header_font_size="1.02rem",
+        )
 
     def register_callbacks(self) -> None:
         """

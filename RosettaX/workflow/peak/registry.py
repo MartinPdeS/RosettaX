@@ -4,6 +4,7 @@ import importlib
 import inspect
 import logging
 import pkgutil
+from functools import lru_cache
 from typing import Any
 
 
@@ -42,11 +43,13 @@ def clean_optional_string(value: Any) -> str:
     return cleaned_value
 
 
-def load_peak_scripts() -> list[Any]:
+@lru_cache(maxsize=1)
+def load_peak_scripts() -> tuple[Any, ...]:
     """
-    Load all shared peak scripts.
+    Load all shared peak scripts once per Python process.
 
-    A valid script class is any concrete class in RosettaX.peak_script that has:
+    A valid script class is any concrete class in RosettaX.workflow.peak.scripts
+    that has:
     - process_name
     - get_process_option
     - get_required_detector_channels
@@ -54,7 +57,7 @@ def load_peak_scripts() -> list[Any]:
 
     Returns
     -------
-    list[Any]
+    tuple[Any, ...]
         Instantiated peak script objects.
     """
     try:
@@ -68,7 +71,7 @@ def load_peak_scripts() -> list[Any]:
             PEAK_SCRIPT_PACKAGE_NAME,
         )
 
-        return []
+        return tuple()
 
     scripts: list[Any] = []
 
@@ -121,7 +124,7 @@ def load_peak_scripts() -> list[Any]:
             )
 
     logger.debug(
-        "Loaded %d peak scripts: %r",
+        "Loaded %d peak scripts once: %r",
         len(scripts),
         [
             getattr(script, "process_name", None)
@@ -129,7 +132,21 @@ def load_peak_scripts() -> list[Any]:
         ],
     )
 
-    return scripts
+    return tuple(scripts)
+
+
+def clear_peak_script_cache() -> None:
+    """
+    Clear the cached peak script instances.
+
+    This is mainly useful for tests or explicit development reloads.
+    The normal application path should not call this.
+    """
+    load_peak_scripts.cache_clear()
+
+    logger.debug(
+        "Cleared cached peak script instances."
+    )
 
 
 def find_script_class_in_module(
@@ -187,14 +204,14 @@ def find_script_class_in_module(
 
 def get_peak_process_instances() -> list[Any]:
     """
-    Return dynamically discovered peak process instances.
+    Return cached peak process instances.
 
     Returns
     -------
     list[Any]
         Instantiated peak process objects.
     """
-    return load_peak_scripts()
+    return list(load_peak_scripts())
 
 
 def build_script_map(
@@ -217,6 +234,20 @@ def build_script_map(
         str(script.process_name): script
         for script in scripts
     }
+
+
+def get_cached_script_map() -> dict[str, Any]:
+    """
+    Build a script lookup from the cached script instances.
+
+    Returns
+    -------
+    dict[str, Any]
+        Mapping from process name to cached script instance.
+    """
+    return build_script_map(
+        get_peak_process_instances()
+    )
 
 
 def resolve_process_name(process_name: Any) -> str:
@@ -248,7 +279,7 @@ def get_process_instance(
     process_name: Any,
 ) -> Any:
     """
-    Return a discovered peak process instance for a selected process name.
+    Return a cached peak process instance for a selected process name.
 
     Parameters
     ----------
@@ -281,7 +312,7 @@ def get_process_instance(
 
 def build_peak_process_options() -> list[dict[str, str]]:
     """
-    Build peak process dropdown options from discovered peak scripts.
+    Build peak process dropdown options from cached peak scripts.
 
     Returns
     -------

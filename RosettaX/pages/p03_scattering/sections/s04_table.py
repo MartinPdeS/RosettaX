@@ -8,6 +8,7 @@ import dash_bootstrap_components as dbc
 
 from RosettaX.pages.p00_sidebar.ids import SidebarIds
 from RosettaX.pages.p03_scattering.state import ScatteringPageState
+from RosettaX.utils import ui_forms
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.parameters import table as parameters_table
 from RosettaX.workflow.table.layout import ReferenceTableActionConfig
@@ -50,18 +51,18 @@ class ReferenceTable:
         self.page = page
         self.ids = page.ids.Calibration
 
+        self.description_tooltip_id = f"{self.ids.bead_table}-description-tooltip"
+        self.description_tooltip_target_id = f"{self.ids.bead_table}-description-tooltip-target"
+
+        self.compute_model_tooltip_id = f"{self.ids.compute_model_btn}-info-tooltip"
+        self.compute_model_tooltip_target_id = f"{self.ids.compute_model_btn}-info-target"
+
         default_columns, default_rows = self._build_default_table_state()
 
         self.config = ReferenceTableConfig(
-            card_title="4. Calibration standard table",
-            table_title="Calibration standard table",
-            description=(
-                "This table defines the calibration standard used to infer the "
-                "instrument response. Edit the standard particle geometry directly "
-                "here. Measured peak positions are optional at this stage. First "
-                "click Compute Standard Coupling to fill the modeled coupling column. "
-                "Then fit the instrument response in the next section."
-            ),
+            card_title=self._build_card_title(),
+            table_title=None,
+            description=None,
             add_row_button_label="Add row",
             body_style_key="body_scroll",
             show_table_title=True,
@@ -69,11 +70,8 @@ class ReferenceTable:
 
         self.action_config = ReferenceTableActionConfig(
             button_id=self.ids.compute_model_btn,
-            button_label="Compute Standard Coupling",
-            description=(
-                "This step fills the modeled coupling column for the calibration "
-                "standard using the current optical and particle parameters."
-            ),
+            button_label="Compute model",
+            description=self._build_compute_model_description(),
             button_color="primary",
             button_style={
                 "marginTop": "12px",
@@ -99,7 +97,53 @@ class ReferenceTable:
         """
         logger.debug("Building Scattering ReferenceTable layout.")
 
-        return self.layout_builder.get_layout()
+        return ui_forms.apply_workflow_section_card_style(
+            card=self.layout_builder.get_layout(),
+        )
+
+    def _build_card_title(self):
+        """
+        Build the card title with compact hover help.
+        """
+        return ui_forms.build_title_with_info(
+            title="4. Calibration standard table",
+            tooltip_target_id=self.description_tooltip_target_id,
+            tooltip_id=self.description_tooltip_id,
+            tooltip_text=(
+                "This table defines the calibration standard used to infer "
+                "the instrument response. Edit the standard particle geometry "
+                "directly here. Measured peak positions are optional at this "
+                "stage. First click Compute model to fill the modeled coupling "
+                "column. Then fit the instrument response in the next section."
+            ),
+        )
+
+    def _build_compute_model_description(self) -> dash.html.Div:
+        """
+        Build the compute model action help as a compact hover tooltip.
+        """
+        return dash.html.Div(
+            [
+                ui_forms.build_info_badge(
+                    tooltip_target_id=self.compute_model_tooltip_target_id,
+                ),
+                dbc.Tooltip(
+                    (
+                        "This step fills the modeled coupling column for the "
+                        "calibration standard using the current optical and particle "
+                        "parameters."
+                    ),
+                    id=self.compute_model_tooltip_id,
+                    target=self.compute_model_tooltip_target_id,
+                    placement="right",
+                ),
+            ],
+            style={
+                "display": "inline-flex",
+                "alignItems": "center",
+                "marginLeft": "8px",
+            },
+        )
 
     def _build_default_table_state(self) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         """
@@ -473,7 +517,7 @@ class ReferenceTable:
         ) -> tuple[None, list]:
             logger.debug(
                 "Clearing scattering calibration standard table selection after "
-                "Compute Standard Coupling."
+                "Compute model."
             )
 
             return None, []

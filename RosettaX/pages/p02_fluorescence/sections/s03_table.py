@@ -7,6 +7,7 @@ import dash
 import dash_bootstrap_components as dbc
 
 from RosettaX.pages.p00_sidebar.ids import SidebarIds
+from RosettaX.utils import ui_forms
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.table.fluorescence import FluorescenceReferenceTable
 from RosettaX.workflow.table.layout import ReferenceTableConfig
@@ -48,15 +49,13 @@ class ReferenceTable:
         self.page = page
         self.ids = page.ids.Calibration
 
+        self.reference_table_tooltip_target_id = f"{self.ids.bead_table}-reference-table-info-target"
+        self.reference_table_tooltip_id = f"{self.ids.bead_table}-reference-table-info-tooltip"
+
         self.config = ReferenceTableConfig(
-            card_title="3. Calibration reference table",
+            card_title=self._build_card_title(),
             table_title=None,
-            description=(
-                "Enter the calibrated intensity values and use the fluorescence "
-                "peak detection section to fill the measured peak positions. "
-                "This table is the source of truth for the fluorescence "
-                "calibration fit."
-            ),
+            description=None,
             add_row_button_label="Add row",
             body_style_key="body_scroll",
             show_table_title=False,
@@ -80,7 +79,29 @@ class ReferenceTable:
         """
         logger.debug("Building Fluorescence ReferenceTable layout.")
 
-        return self.layout_builder.get_layout()
+        card = self.layout_builder.get_layout()
+
+        return ui_forms.apply_workflow_section_card_style(
+            card=card,
+            header_font_weight="750",
+            header_font_size="1.02rem",
+        )
+
+    def _build_card_title(self) -> dash.html.Div:
+        """
+        Build the card title with compact hover help.
+        """
+        return ui_forms.build_title_with_info(
+            title="3. Calibration reference table",
+            tooltip_target_id=self.reference_table_tooltip_target_id,
+            tooltip_id=self.reference_table_tooltip_id,
+            tooltip_text=(
+                "Enter the known MESF values for the fluorescence calibration "
+                "beads and use the fluorescence peak detection section to fill "
+                "the measured peak positions. This table is the source of truth "
+                "for the fluorescence calibration fit."
+            ),
+        )
 
     def _build_default_bead_rows(self) -> list[dict[str, str]]:
         """

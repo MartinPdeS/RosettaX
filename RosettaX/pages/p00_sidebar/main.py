@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import logging
+from datetime import datetime, timezone
 from typing import Any, Optional
 
 import dash
 import dash_bootstrap_components as dbc
 from dash import dcc, html
-from datetime import datetime, timezone
 
 from .ids import SidebarIds
 from RosettaX.workflow.sidebar import services
@@ -47,12 +47,16 @@ class Sidebar:
             self.logo_src,
         )
 
-    def _get_default_profile_name(self, profile_options: list[dict[str, Any]]) -> Optional[str]:
+    def _get_default_profile_name(
+        self,
+        profile_options: list[dict[str, Any]],
+    ) -> Optional[str]:
         """
         Resolve the startup profile name shown in the sidebar.
 
         At application startup, RosettaX loads ``default_profile`` automatically.
-        The sidebar should mirror that initial state if the profile exists.
+        The sidebar should mirror that initial state only when no profile is
+        already selected in the session.
         """
         option_values = [
             option.get("value")
@@ -94,6 +98,7 @@ class Sidebar:
                 len(saved_calibrations.get("fluorescence", [])),
                 len(saved_calibrations.get("scattering", [])),
             )
+
             return self._build_saved_calibrations_body(saved_calibrations)
 
         @dash.callback(
@@ -101,11 +106,14 @@ class Sidebar:
             dash.Input(SidebarIds.saved_calibrations_open_folder_button, "n_clicks"),
             prevent_initial_call=True,
         )
-        def open_saved_calibrations_folder(n_clicks: Optional[int]):
+        def open_saved_calibrations_folder(
+            n_clicks: Optional[int],
+        ):
             logger.debug(
                 "open_saved_calibrations_folder called with n_clicks=%r",
                 n_clicks,
             )
+
             del n_clicks
 
             try:
@@ -120,8 +128,14 @@ class Sidebar:
             dash.Input(SidebarIds.saved_profiles_refresh_button, "n_clicks"),
             prevent_initial_call=True,
         )
-        def refresh_saved_profiles(n_clicks: Optional[int]):
-            logger.debug("refresh_saved_profiles called with n_clicks=%r", n_clicks)
+        def refresh_saved_profiles(
+            n_clicks: Optional[int],
+        ):
+            logger.debug(
+                "refresh_saved_profiles called with n_clicks=%r",
+                n_clicks,
+            )
+
             return services.build_saved_profile_options()
 
         @dash.callback(
@@ -138,7 +152,8 @@ class Sidebar:
             selected_profile_store_data: Optional[str],
         ):
             logger.debug(
-                "initialize_or_sync_selected_profile called with dropdown_value=%r selected_profile_store_data=%r profile_options=%r",
+                "initialize_or_sync_selected_profile called with dropdown_value=%r "
+                "selected_profile_store_data=%r profile_options=%r",
                 dropdown_value,
                 selected_profile_store_data,
                 profile_options,
@@ -153,29 +168,39 @@ class Sidebar:
                 if isinstance(option, dict) and option.get("value")
             }
 
-            if selected_profile_store_data in option_values:
-                if dropdown_value != selected_profile_store_data:
+            if dropdown_value in option_values:
+                logger.debug(
+                    "Keeping valid dropdown_value=%r as selected profile.",
+                    dropdown_value,
+                )
+
+                if selected_profile_store_data != dropdown_value:
                     logger.debug(
-                        "Syncing dropdown value from selected_profile_store_data=%r",
-                        selected_profile_store_data,
+                        "Syncing selected_profile_store from dropdown_value=%r.",
+                        dropdown_value,
                     )
-                    return selected_profile_store_data, selected_profile_store_data
+
+                    return dash.no_update, dropdown_value
 
                 return dash.no_update, dash.no_update
 
-            if dropdown_value in option_values:
+            if selected_profile_store_data in option_values:
                 logger.debug(
-                    "Syncing selected_profile_store from dropdown_value=%r",
-                    dropdown_value,
+                    "Restoring dropdown from selected_profile_store_data=%r.",
+                    selected_profile_store_data,
                 )
-                return dash.no_update, dropdown_value
 
-            resolved_default_profile = self._get_default_profile_name(profile_options)
+                return selected_profile_store_data, dash.no_update
+
+            resolved_default_profile = self._get_default_profile_name(
+                profile_options,
+            )
 
             logger.debug(
                 "Initializing sidebar selected profile to resolved_default_profile=%r",
                 resolved_default_profile,
             )
+
             return resolved_default_profile, resolved_default_profile
 
         @dash.callback(
@@ -231,7 +256,9 @@ class Sidebar:
             dash.Input(SidebarIds.selected_profile_store, "data"),
             prevent_initial_call=False,
         )
-        def render_selected_profile_status(selected_profile: Any) -> str:
+        def render_selected_profile_status(
+            selected_profile: Any,
+        ) -> str:
             logger.debug(
                 "render_selected_profile_status called with selected_profile=%r",
                 selected_profile,
@@ -247,8 +274,14 @@ class Sidebar:
             dash.Input(SidebarIds.saved_profiles_open_folder_button, "n_clicks"),
             prevent_initial_call=True,
         )
-        def open_saved_profiles_folder(n_clicks: Optional[int]):
-            logger.debug("open_saved_profiles_folder called with n_clicks=%r", n_clicks)
+        def open_saved_profiles_folder(
+            n_clicks: Optional[int],
+        ):
+            logger.debug(
+                "open_saved_profiles_folder called with n_clicks=%r",
+                n_clicks,
+            )
+
             del n_clicks
 
             try:
@@ -258,17 +291,28 @@ class Sidebar:
                 logger.exception("Failed to open profile folder.")
                 return f"Could not open profile folder: {type(exc).__name__}: {exc}"
 
-    def layout(self, sidebar: Optional[dict[str, list[str]]] = None) -> html.Div:
+    def layout(
+        self,
+        sidebar: Optional[dict[str, list[str]]] = None,
+    ) -> html.Div:
         """
         Build the complete sidebar layout.
+
+        The selected profile dropdown and store are intentionally initialized
+        with ``None`` here. The synchronization callback initializes them only
+        when no valid session value already exists. This prevents page navigation
+        from resetting the active profile back to ``default_profile``.
         """
-        logger.debug("Building sidebar layout with sidebar=%r", sidebar)
+        logger.debug(
+            "Building sidebar layout with sidebar=%r",
+            sidebar,
+        )
 
         if sidebar is None:
             sidebar = services.list_saved_calibrations()
 
         saved_profile_options = services.build_saved_profile_options()
-        initial_selected_profile = self._get_default_profile_name(saved_profile_options)
+        initial_selected_profile = None
 
         return html.Div(
             [
@@ -285,7 +329,7 @@ class Sidebar:
                 ),
                 dcc.Store(
                     id=SidebarIds.selected_profile_store,
-                    data=initial_selected_profile,
+                    data=None,
                     storage_type="session",
                 ),
                 dcc.Store(
@@ -324,7 +368,9 @@ class Sidebar:
                     },
                 ),
             ],
-            style={"width": "100%"},
+            style={
+                "width": "100%",
+            },
         )
 
     def _build_navigation_section(self) -> html.Div:
@@ -348,7 +394,11 @@ class Sidebar:
             ]
         )
 
-    def _nav_link(self, label: str, href: str) -> dbc.NavLink:
+    def _nav_link(
+        self,
+        label: str,
+        href: str,
+    ) -> dbc.NavLink:
         """
         Build a sidebar navigation link.
         """
@@ -407,7 +457,9 @@ class Sidebar:
                                         persistence_type="session",
                                         maxHeight=220,
                                     ),
-                                    style={"flex": "1"},
+                                    style={
+                                        "flex": "1",
+                                    },
                                 ),
                                 dbc.Button(
                                     "Load",
@@ -422,15 +474,27 @@ class Sidebar:
                                 "alignItems": "center",
                             },
                         ),
-                        html.Div(style={"height": "8px"}),
+                        html.Div(
+                            style={
+                                "height": "8px",
+                            }
+                        ),
                         html.Small(
                             id=SidebarIds.saved_profiles_load_status,
-                            style={"opacity": 0.75},
+                            style={
+                                "opacity": 0.75,
+                            },
                         ),
-                        html.Div(style={"height": "8px"}),
+                        html.Div(
+                            style={
+                                "height": "8px",
+                            }
+                        ),
                         html.Small(
                             id=SidebarIds.saved_profiles_open_folder_status,
-                            style={"opacity": 0.75},
+                            style={
+                                "opacity": 0.75,
+                            },
                         ),
                     ]
                 ),
@@ -481,10 +545,16 @@ class Sidebar:
                             self._build_saved_calibrations_body(saved_calibrations),
                             id=SidebarIds.saved_calibrations_body_container,
                         ),
-                        html.Div(style={"height": "8px"}),
+                        html.Div(
+                            style={
+                                "height": "8px",
+                            }
+                        ),
                         html.Small(
                             id=SidebarIds.saved_calibrations_open_folder_status,
-                            style={"opacity": 0.75},
+                            style={
+                                "opacity": 0.75,
+                            },
                         ),
                     ]
                 ),
@@ -501,7 +571,10 @@ class Sidebar:
         body_children: list[html.Div] = []
 
         for folder_key, folder_label in services.FOLDER_DISPLAY_ORDER:
-            file_names = saved_calibrations.get(folder_key, [])
+            file_names = saved_calibrations.get(
+                folder_key,
+                [],
+            )
 
             logger.debug(
                 "Rendering folder_key=%r with %d files",
@@ -511,7 +584,13 @@ class Sidebar:
 
             if file_names:
                 file_list = html.Ul(
-                    [self._saved_file_item(folder_key, file_name) for file_name in file_names],
+                    [
+                        self._saved_file_item(
+                            folder_key,
+                            file_name,
+                        )
+                        for file_name in file_names
+                    ],
                     style={
                         "paddingLeft": "20px",
                         "marginBottom": "0px",
@@ -538,13 +617,19 @@ class Sidebar:
                         ),
                         file_list,
                     ],
-                    style={"marginBottom": "12px"},
+                    style={
+                        "marginBottom": "12px",
+                    },
                 )
             )
 
         return body_children
 
-    def _saved_file_item(self, folder: str, file_name: str) -> html.Li:
+    def _saved_file_item(
+        self,
+        folder: str,
+        file_name: str,
+    ) -> html.Li:
         """
         Build one saved calibration row.
 
@@ -558,7 +643,10 @@ class Sidebar:
             file_name,
         )
 
-        apply_href = services.build_apply_href(folder, file_name)
+        apply_href = services.build_apply_href(
+            folder,
+            file_name,
+        )
 
         return html.Li(
             html.Div(
@@ -614,9 +702,15 @@ def register_sidebar_callbacks() -> None:
     _sidebar_instance.register_callbacks()
 
 
-def sidebar_html(sidebar: Optional[dict[str, list[str]]]) -> html.Div:
+def sidebar_html(
+    sidebar: Optional[dict[str, list[str]]],
+) -> html.Div:
     """
     Build sidebar HTML for the singleton sidebar instance.
     """
-    logger.debug("sidebar_html called with sidebar=%r", sidebar)
+    logger.debug(
+        "sidebar_html called with sidebar=%r",
+        sidebar,
+    )
+
     return _sidebar_instance.layout(sidebar)

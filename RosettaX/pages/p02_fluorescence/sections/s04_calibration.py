@@ -9,6 +9,7 @@ import plotly.graph_objs as go
 
 from ..state import FluorescencePageState
 from RosettaX.utils import styling
+from RosettaX.utils import ui_forms
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.calibration import fluorescence as services
 
@@ -37,9 +38,21 @@ class Calibration:
 
     graph_min_width_px = 760
 
-    def __init__(self, page: Any) -> None:
+    def __init__(
+        self,
+        page: Any,
+    ) -> None:
         self.page = page
         self.ids = page.ids.Calibration
+
+        self.section_tooltip_target_id = f"{self.ids.calibrate_btn}-section-info-target"
+        self.section_tooltip_id = f"{self.ids.calibrate_btn}-section-info-tooltip"
+
+        self.create_calibration_tooltip_target_id = f"{self.ids.calibrate_btn}-create-calibration-info-target"
+        self.create_calibration_tooltip_id = f"{self.ids.calibrate_btn}-create-calibration-info-tooltip"
+
+        self.graph_tooltip_target_id = f"{self.ids.graph_calibration}-info-target"
+        self.graph_tooltip_id = f"{self.ids.graph_calibration}-info-tooltip"
 
         logger.debug(
             "Initialized Calibration section with page=%r",
@@ -56,7 +69,8 @@ class Calibration:
             [
                 self._build_header(),
                 self._build_collapse(),
-            ]
+            ],
+            style=ui_forms.build_workflow_section_card_style(),
         )
 
     def _build_header(self) -> dbc.CardHeader:
@@ -64,7 +78,23 @@ class Calibration:
         Build the card header.
         """
         return dbc.CardHeader(
-            "4. Calibration",
+            [
+                ui_forms.build_title_with_info(
+                    title="4. Calibration",
+                    tooltip_target_id=self.section_tooltip_target_id,
+                    tooltip_id=self.section_tooltip_id,
+                    tooltip_text=(
+                        "This section creates the fluorescence calibration from the "
+                        "measured bead peak positions and the known MESF values in the "
+                        "reference table."
+                    ),
+                ),
+                dash.html.Div(
+                    "Fit the fluorescence response from reference MESF values and measured bead peaks.",
+                    style=ui_forms.build_workflow_section_subtitle_style(),
+                ),
+            ],
+            style=ui_forms.build_workflow_section_header_style(),
         )
 
     def _build_collapse(self) -> dbc.Collapse:
@@ -85,12 +115,21 @@ class Calibration:
             [
                 self._build_graph_store(),
                 self._build_calibration_store(),
-                self._build_action_block(),
-                dash.html.Br(),
+                self._build_action_panel(),
+                dash.html.Div(
+                    style={
+                        "height": "18px",
+                    },
+                ),
                 self._build_graph_block(),
-                dash.html.Br(),
+                dash.html.Div(
+                    style={
+                        "height": "12px",
+                    },
+                ),
                 self._build_status_block(),
-            ]
+            ],
+            style=ui_forms.build_workflow_section_body_style(),
         )
 
     def _build_graph_store(self) -> dash.dcc.Store:
@@ -111,29 +150,89 @@ class Calibration:
             storage_type="session",
         )
 
-    def _build_action_block(self) -> dash.html.Div:
+    def _build_action_panel(self) -> dbc.Card:
         """
         Build calibration action controls.
         """
-        return dash.html.Div(
-            [
-                dbc.Button(
-                    "Create calibration",
-                    id=self.ids.calibrate_btn,
-                    n_clicks=0,
-                    color="primary",
-                ),
-                dash.html.Div(
-                    (
-                        "This step matches the measured fluorescence peak positions "
-                        "to the calibrated MESF values from the reference table."
+        return dbc.Card(
+            dbc.CardBody(
+                [
+                    dash.html.Div(
+                        [
+                            dash.html.Div(
+                                [
+                                    dash.html.Div(
+                                        "Fluorescence calibration fit",
+                                        style={
+                                            "fontWeight": "700",
+                                            "fontSize": "1rem",
+                                        },
+                                    ),
+                                    dash.html.Div(
+                                        (
+                                            "Create the calibration by matching measured "
+                                            "fluorescence peak positions to known MESF "
+                                            "reference values."
+                                        ),
+                                        style={
+                                            "opacity": 0.72,
+                                            "fontSize": "0.9rem",
+                                            "marginTop": "2px",
+                                        },
+                                    ),
+                                ],
+                                style={
+                                    "flex": "1 1 auto",
+                                },
+                            ),
+                            dash.html.Div(
+                                [
+                                    dbc.Button(
+                                        "Create calibration",
+                                        id=self.ids.calibrate_btn,
+                                        n_clicks=0,
+                                        color="primary",
+                                    ),
+                                    ui_forms.build_info_badge(
+                                        tooltip_target_id=self.create_calibration_tooltip_target_id,
+                                    ),
+                                    dbc.Tooltip(
+                                        (
+                                            "Create the fluorescence calibration by matching the measured "
+                                            "fluorescence peak positions to the known MESF values from "
+                                            "the reference table."
+                                        ),
+                                        id=self.create_calibration_tooltip_id,
+                                        target=self.create_calibration_tooltip_target_id,
+                                        placement="right",
+                                    ),
+                                ],
+                                style={
+                                    "display": "flex",
+                                    "alignItems": "center",
+                                    "gap": "0px",
+                                    "flex": "0 0 auto",
+                                },
+                            ),
+                        ],
+                        style={
+                            "display": "flex",
+                            "alignItems": "center",
+                            "justifyContent": "space-between",
+                            "gap": "16px",
+                            "flexWrap": "wrap",
+                        },
                     ),
-                    style={
-                        "marginTop": "8px",
-                        "opacity": 0.75,
-                    },
-                ),
-            ]
+                ],
+                style={
+                    "padding": "14px 16px",
+                },
+            ),
+            style=ui_forms.build_workflow_panel_style(
+                style_overrides={
+                    "background": "rgba(13, 110, 253, 0.04)",
+                },
+            ),
         )
 
     def _build_graph_block(self) -> dash.html.Div:
@@ -144,16 +243,18 @@ class Calibration:
             [
                 self._build_graph_panel_card(
                     title="Fluorescence calibration fit",
+                    subtitle="Measured fluorescence intensity mapped to calibrated MESF units.",
                     graph_id=self.ids.graph_calibration,
                     footer_content=self._build_calibration_footer(),
                 ),
             ],
             style={
                 "display": "flex",
-                "gap": "24px",
+                "gap": "18px",
                 "alignItems": "stretch",
                 "width": "100%",
                 "overflowX": "auto",
+                "overflowY": "visible",
             },
         )
 
@@ -161,6 +262,7 @@ class Calibration:
         self,
         *,
         title: str,
+        subtitle: str,
         graph_id: str,
         footer_content: Any,
     ) -> dbc.Card:
@@ -170,10 +272,28 @@ class Calibration:
         return dbc.Card(
             [
                 dbc.CardHeader(
-                    title,
-                    style={
-                        "fontWeight": "600",
-                    },
+                    [
+                        ui_forms.build_title_with_info(
+                            title=title,
+                            tooltip_target_id=self.graph_tooltip_target_id,
+                            tooltip_id=self.graph_tooltip_id,
+                            tooltip_text=(
+                                "This graph shows the fitted relation between measured "
+                                "fluorescence intensity and calibrated fluorescence units. "
+                                "Review the fit before saving the calibration."
+                            ),
+                            title_style_overrides={
+                                "fontSize": "0.98rem",
+                            },
+                        ),
+                        dash.html.Div(
+                            subtitle,
+                            style=ui_forms.build_workflow_section_subtitle_style(
+                                font_size="0.84rem",
+                            ),
+                        ),
+                    ],
+                    style=ui_forms.build_workflow_subpanel_header_style(),
                 ),
                 dbc.CardBody(
                     [
@@ -185,16 +305,24 @@ class Calibration:
                             ),
                             type="default",
                         ),
-                    ]
+                    ],
+                    style={
+                        "padding": "14px",
+                        "overflow": "visible",
+                    },
                 ),
                 dbc.CardFooter(
                     footer_content,
                     style={
-                        "opacity": 0.9,
+                        "opacity": 0.95,
+                        "padding": "12px 14px",
+                        "borderTop": "1px solid rgba(128, 128, 128, 0.18)",
+                        "background": "rgba(128, 128, 128, 0.04)",
                     },
                 ),
             ],
             style={
+                **ui_forms.build_workflow_subpanel_card_style(),
                 "flex": "1 1 0",
                 "minWidth": f"{self.graph_min_width_px}px",
             },
@@ -239,39 +367,25 @@ class Calibration:
         """
         return dash.html.Div(
             [
-                dash.html.Div(
-                    (
-                        "This graph shows the fitted relation between measured "
-                        "fluorescence intensity and calibrated fluorescence units. "
-                        "Review the fit before saving the calibration."
-                    ),
-                    style={
-                        "marginBottom": "10px",
-                    },
+                self._build_fit_metric(
+                    "Slope",
+                    self.ids.slope_out,
                 ),
-                dash.html.Div(
-                    [
-                        self._build_fit_metric(
-                            "Slope",
-                            self.ids.slope_out,
-                        ),
-                        self._build_fit_metric(
-                            "Intercept",
-                            self.ids.intercept_out,
-                        ),
-                        self._build_fit_metric(
-                            "R²",
-                            self.ids.r_squared_out,
-                        ),
-                    ],
-                    style={
-                        "display": "grid",
-                        "gridTemplateColumns": "repeat(3, minmax(120px, 1fr))",
-                        "gap": "10px",
-                        "alignItems": "stretch",
-                    },
+                self._build_fit_metric(
+                    "Intercept",
+                    self.ids.intercept_out,
                 ),
-            ]
+                self._build_fit_metric(
+                    "R²",
+                    self.ids.r_squared_out,
+                ),
+            ],
+            style={
+                "display": "grid",
+                "gridTemplateColumns": "repeat(3, minmax(120px, 1fr))",
+                "gap": "10px",
+                "alignItems": "stretch",
+            },
         )
 
     def _build_fit_metric(
@@ -302,12 +416,7 @@ class Calibration:
                     },
                 ),
             ],
-            style={
-                "padding": "8px 10px",
-                "border": "1px solid rgba(128,128,128,0.25)",
-                "borderRadius": "8px",
-                "background": "rgba(128,128,128,0.08)",
-            },
+            style=ui_forms.build_metric_box_style(),
         )
 
     def _build_status_block(self) -> dash.html.Div:

@@ -11,6 +11,7 @@ import dash
 import dash_bootstrap_components as dbc
 
 from RosettaX.utils import checks
+from RosettaX.utils import ui_forms
 
 
 logger = logging.getLogger(__name__)
@@ -55,76 +56,187 @@ class FilePicker:
     writes are not swallowed.
     """
 
-    def __init__(self, page) -> None:
+    def __init__(
+        self,
+        page: Any,
+    ) -> None:
         self.page = page
         self._validate_page_contract()
 
         self._upload_dir = Path.home() / ".rosettax" / "uploads"
-        self._upload_dir.mkdir(parents=True, exist_ok=True)
+        self._upload_dir.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
+
+        self.header_tooltip_target_id = f"{self.page.ids.FilePicker.upload}-section-info-target"
+        self.header_tooltip_id = f"{self.page.ids.FilePicker.upload}-section-info-tooltip"
+
+        logger.debug(
+            "Initialized FilePicker with upload_dir=%r",
+            str(self._upload_dir),
+        )
 
     def get_layout(self) -> dbc.Card:
+        """
+        Build the file picker layout.
+        """
         return dbc.Card(
             [
                 self._build_header(),
                 self._build_body(),
-            ]
+            ],
+            style=ui_forms.build_workflow_section_card_style(),
         )
 
     def _build_header(self) -> dbc.CardHeader:
-        return dbc.CardHeader("1. Upload input FCS")
-
-    def _build_body(self) -> dbc.CardBody:
-        return dbc.CardBody(
-            [
-                self._build_upload_widget(),
-                self._build_spacing(),
-                self._build_alert(),
-                self._build_upload_store(),
-            ]
+        """
+        Build the section header.
+        """
+        return ui_forms.build_card_header_with_info(
+            title="1. Upload input FCS",
+            tooltip_target_id=self.header_tooltip_target_id,
+            tooltip_id=self.header_tooltip_id,
+            tooltip_text=(
+                "Upload one or more FCS files to apply a saved calibration. "
+                "When multiple files are uploaded, RosettaX checks whether "
+                "their channel structure is consistent before continuing."
+            ),
+            subtitle="Select the input cytometry files that will be calibrated.",
         )
 
-    @staticmethod
-    def _build_spacing(height: str = "10px") -> dash.html.Div:
-        return dash.html.Div(style={"height": height})
+    def _build_body(self) -> dbc.CardBody:
+        """
+        Build the section body.
+        """
+        return dbc.CardBody(
+            [
+                self._build_upload_panel(),
+                dash.html.Div(
+                    style={
+                        "height": "14px",
+                    },
+                ),
+                self._build_alert(),
+                self._build_upload_store(),
+            ],
+            style=ui_forms.build_workflow_section_body_style(),
+        )
+
+    def _build_upload_panel(self) -> dbc.Card:
+        """
+        Build the upload panel.
+        """
+        return dbc.Card(
+            dbc.CardBody(
+                [
+                    dash.html.Div(
+                        [
+                            dash.html.Div(
+                                [
+                                    dash.html.Div(
+                                        "Input FCS files",
+                                        style={
+                                            "fontWeight": "700",
+                                            "fontSize": "1rem",
+                                        },
+                                    ),
+                                    dash.html.Div(
+                                        (
+                                            "Upload a single file or a batch of files. "
+                                            "Uploaded files are copied to the local "
+                                            "RosettaX upload directory for this session."
+                                        ),
+                                        style=ui_forms.build_workflow_section_subtitle_style(
+                                            font_size="0.9rem",
+                                            opacity=0.72,
+                                            margin_top_px=2,
+                                        ),
+                                    ),
+                                ],
+                                style={
+                                    "marginBottom": "12px",
+                                },
+                            ),
+                            self._build_upload_widget(),
+                        ]
+                    ),
+                ],
+                style={
+                    "padding": "14px 16px",
+                },
+            ),
+            style=ui_forms.build_workflow_panel_style(
+                style_overrides={
+                    "background": "rgba(13, 110, 253, 0.04)",
+                },
+            ),
+        )
 
     def _build_upload_widget(self) -> dash.dcc.Upload:
+        """
+        Build the Dash upload widget.
+        """
         return dash.dcc.Upload(
             id=self.page.ids.FilePicker.upload,
             children=dash.html.Div(
                 [
-                    "Drag and drop or ",
-                    dash.html.A("select one or more .fcs files"),
+                    dash.html.Span(
+                        "Drag and drop or ",
+                    ),
+                    dash.html.A(
+                        "select one or more .fcs files",
+                        style={
+                            "fontWeight": "650",
+                            "textDecoration": "none",
+                        },
+                    ),
                 ]
             ),
             multiple=True,
             style={
                 "width": "100%",
-                "height": "46px",
-                "lineHeight": "46px",
+                "minHeight": "64px",
+                "lineHeight": "64px",
                 "borderWidth": "1px",
                 "borderStyle": "dashed",
-                "borderRadius": "6px",
+                "borderRadius": "12px",
                 "textAlign": "center",
                 "cursor": "pointer",
+                "background": "rgba(128, 128, 128, 0.045)",
+                "borderColor": "rgba(128, 128, 128, 0.35)",
+                "transition": "border-color 120ms ease, background 120ms ease",
             },
         )
 
     def _build_alert(self) -> dbc.Alert:
+        """
+        Build the upload status alert.
+        """
         return dbc.Alert(
             "Upload one or more FCS files.",
             id=self.page.ids.FilePicker.column_consistency_alert,
             color="secondary",
             is_open=True,
-            style={"marginBottom": "0px"},
+            style={
+                "marginBottom": "0px",
+                "borderRadius": "10px",
+            },
         )
 
     def _build_upload_store(self) -> dash.dcc.Store:
+        """
+        Build the uploaded file path store.
+        """
         return dash.dcc.Store(
             id=self.page.ids.Stores.uploaded_fcs_path_store,
             storage_type="session",
         )
 
     def register_callbacks(self) -> None:
+        """
+        Register callbacks for the file picker.
+        """
         self._validate_checks_contract()
 
         @dash.callback(
@@ -177,19 +289,28 @@ class FilePicker:
 
             logger.debug(
                 "Upload handling succeeded with saved_paths=%r alert_color=%r alert_is_open=%r",
-                [str(path) for path in saved_paths],
+                [
+                    str(path)
+                    for path in saved_paths
+                ],
                 alert_color,
                 alert_is_open,
             )
 
             return FilePickerResult(
-                uploaded_fcs_path_store=[str(path) for path in saved_paths],
+                uploaded_fcs_path_store=[
+                    str(path)
+                    for path in saved_paths
+                ],
                 alert_children=alert_children,
                 alert_color=alert_color,
                 alert_is_open=alert_is_open,
             ).to_tuple()
 
     def _validate_page_contract(self) -> None:
+        """
+        Validate the page ID contract required by this section.
+        """
         required_attributes = [
             "ids",
             "ids.FilePicker",
@@ -210,10 +331,16 @@ class FilePicker:
                         f"{required_attribute!r}."
                     )
 
-                current_object = getattr(current_object, attribute_name)
+                current_object = getattr(
+                    current_object,
+                    attribute_name,
+                )
 
     @staticmethod
     def _validate_checks_contract() -> None:
+        """
+        Validate the FCS consistency checker contract.
+        """
         if not hasattr(checks, "FCSMultiFileConsistencyChecker"):
             raise AttributeError(
                 "RosettaX.utils.checks must expose FCSMultiFileConsistencyChecker. "
@@ -234,6 +361,9 @@ class FilePicker:
         contents_list: list[str],
         filenames: list[str],
     ) -> None:
+        """
+        Validate Dash upload payload consistency.
+        """
         if len(contents_list) != len(filenames):
             raise ValueError(
                 "Upload payload is malformed because contents_list and filenames "
@@ -250,14 +380,24 @@ class FilePicker:
         contents_list: list[str],
         filenames: list[str],
     ) -> list[Path]:
+        """
+        Save all uploaded files.
+        """
         saved_paths: list[Path] = []
 
-        for contents, filename in zip(contents_list, filenames):
+        for contents, filename in zip(
+            contents_list,
+            filenames,
+            strict=False,
+        ):
             saved_path = self._save_single_uploaded_file(
                 contents=contents,
                 filename=filename,
             )
-            saved_paths.append(saved_path)
+
+            saved_paths.append(
+                saved_path,
+            )
 
         if not saved_paths:
             raise RuntimeError("No uploaded FCS files were saved.")
@@ -270,6 +410,9 @@ class FilePicker:
         contents: str,
         filename: str,
     ) -> Path:
+        """
+        Save one uploaded file to the local upload directory.
+        """
         logger.debug(
             "_save_single_uploaded_file called with filename=%r",
             filename,
@@ -280,17 +423,32 @@ class FilePicker:
                 f"Uploaded file {filename!r} has malformed Dash contents payload."
             )
 
-        _, encoded_payload = contents.split(",", 1)
-        raw_bytes = base64.b64decode(encoded_payload, validate=True)
+        _, encoded_payload = contents.split(
+            ",",
+            1,
+        )
 
-        original_path = Path(str(filename))
+        raw_bytes = base64.b64decode(
+            encoded_payload,
+            validate=True,
+        )
+
+        original_path = Path(
+            str(filename),
+        )
+
         safe_stem = original_path.stem.strip() or "uploaded_file"
         safe_suffix = original_path.suffix if original_path.suffix else ".fcs"
 
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+        timestamp = datetime.now().strftime(
+            "%Y%m%d_%H%M%S_%f",
+        )
+
         output_path = self._upload_dir / f"{safe_stem}_{timestamp}{safe_suffix}"
 
-        output_path.write_bytes(raw_bytes)
+        output_path.write_bytes(
+            raw_bytes,
+        )
 
         if not output_path.exists():
             raise FileNotFoundError(
@@ -315,6 +473,9 @@ class FilePicker:
         *,
         saved_paths: list[Path],
     ) -> dict[str, Any]:
+        """
+        Check uploaded FCS files for consistency.
+        """
         checker = checks.FCSMultiFileConsistencyChecker(
             file_paths=[
                 str(path)
@@ -343,18 +504,28 @@ class FilePicker:
         *,
         saved_paths: list[Path],
         consistency_report: dict[str, Any],
-    ) -> tuple[str, str, bool]:
+    ) -> tuple[Any, str, bool]:
+        """
+        Build the upload success or warning alert payload.
+        """
         if not saved_paths:
             raise ValueError("Cannot build upload success payload without saved files.")
 
-        if not consistency_report.get("are_all_files_consistent", True):
-            mismatch_details = consistency_report.get("mismatch_details", [])
+        if not consistency_report.get(
+            "are_all_files_consistent",
+            True,
+        ):
+            mismatch_details = consistency_report.get(
+                "mismatch_details",
+                [],
+            )
 
             if mismatch_details:
                 preview = ", ".join(
                     str(detail)
                     for detail in mismatch_details[:3]
                 )
+
             else:
                 preview = "Uploaded files are inconsistent."
 

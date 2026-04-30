@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
 
 
 @dataclass(frozen=True)
@@ -13,9 +13,9 @@ class PeakConfig:
     workflow.
     """
 
-    header_title: str
+    header_title: Any
     process_dropdown_label: str
-    graph_title: str
+    graph_title: Any
 
     table_id: Any = None
     page_state_store_id: Any = None
@@ -23,7 +23,9 @@ class PeakConfig:
     runtime_config_store_id: str = "runtime-config-store"
     mie_model_input_id: Any = None
 
-    number_of_bins_runtime_config_path: str = "calibration.n_bins_for_plots"
+    default_process_runtime_config_path: Optional[str] = None
+
+    number_of_bins_runtime_config_path: str = "visualization.n_bins"
     xscale_runtime_config_path: str = "calibration.histogram_xscale"
     xscale_fallback_runtime_config_path: str = "calibration.xscale"
     yscale_runtime_config_path: str = "calibration.histogram_yscale"

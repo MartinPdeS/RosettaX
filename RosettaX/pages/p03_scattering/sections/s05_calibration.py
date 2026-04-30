@@ -9,8 +9,8 @@ import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
 
 from RosettaX.pages.p03_scattering.state import ScatteringPageState
-from RosettaX.utils import styling, plottings
-
+from RosettaX.utils import plottings
+from RosettaX.utils import styling
 from RosettaX.workflow.calibration import scattering_services as services
 
 
@@ -43,12 +43,26 @@ class Calibration:
     graph_height_px = 520
     graph_min_width_px = 760
 
+    workflow_accent_rgba = "13, 110, 253"
+
     def __init__(
         self,
         page: Any,
     ) -> None:
         self.page = page
         self.ids = page.ids.Calibration
+
+        self.header_tooltip_target_id = f"{self.ids.calibrate_btn}-section-info-target"
+        self.header_tooltip_id = f"{self.ids.calibrate_btn}-section-info-tooltip"
+
+        self.compute_model_tooltip_target_id = f"{self.ids.calibrate_btn}-compute-model-info-target"
+        self.compute_model_tooltip_id = f"{self.ids.calibrate_btn}-compute-model-info-tooltip"
+
+        self.instrument_response_tooltip_target_id = f"{self.ids.graph_calibration}-info-target"
+        self.instrument_response_tooltip_id = f"{self.ids.graph_calibration}-info-tooltip"
+
+        self.mie_relation_tooltip_target_id = f"{self.ids.graph_model}-info-target"
+        self.mie_relation_tooltip_id = f"{self.ids.graph_model}-info-tooltip"
 
         logger.debug(
             "Initialized Scattering Calibration section with page=%r",
@@ -63,7 +77,8 @@ class Calibration:
             [
                 self._build_header(),
                 self._build_body(),
-            ]
+            ],
+            style=self._build_workflow_section_card_style(),
         )
 
     def _build_header(self) -> dbc.CardHeader:
@@ -71,7 +86,23 @@ class Calibration:
         Build the section header.
         """
         return dbc.CardHeader(
-            "5. Fit instrument response",
+            [
+                self._build_title_with_info(
+                    title="5. Fit instrument response",
+                    tooltip_target_id=self.header_tooltip_target_id,
+                    tooltip_id=self.header_tooltip_id,
+                    tooltip_text=(
+                        "This section fits the relation between the measured standard "
+                        "peak positions and the modeled optical coupling values from "
+                        "the calibration standard table."
+                    ),
+                ),
+                dash.html.Div(
+                    "Estimate the instrument response from the calibration standard.",
+                    style=self._build_workflow_section_subtitle_style(),
+                ),
+            ],
+            style=self._build_workflow_section_header_style(),
         )
 
     def _build_body(self) -> dbc.CardBody:
@@ -80,43 +111,109 @@ class Calibration:
         """
         return dbc.CardBody(
             [
-                self._build_action_block(),
-                dash.html.Br(),
+                self._build_action_panel(),
+                dash.html.Div(
+                    style={
+                        "height": "18px",
+                    },
+                ),
                 self._build_graph_block(),
-                dash.html.Br(),
+                dash.html.Div(
+                    style={
+                        "height": "12px",
+                    },
+                ),
                 dash.html.Div(
                     id=self.ids.apply_status,
                     style={
                         "marginTop": "8px",
                     },
                 ),
-            ]
+            ],
+            style=self._build_workflow_section_body_style(),
         )
 
-    def _build_action_block(self) -> dash.html.Div:
+    def _build_action_panel(self) -> dbc.Card:
         """
-        Build the instrument response fit action block.
+        Build the instrument response computation action panel.
         """
-        return dash.html.Div(
-            [
-                dash.html.Button(
-                    "Fit Instrument Response",
-                    id=self.ids.calibrate_btn,
-                    n_clicks=0,
-                ),
-                dash.html.Div(
-                    (
-                        "This step uses the measured standard peak positions and "
-                        "modeled standard coupling values currently present in the "
-                        "calibration standard table. The fitted relation maps "
-                        "measured instrument signal to modeled optical coupling."
+        return dbc.Card(
+            dbc.CardBody(
+                [
+                    dash.html.Div(
+                        [
+                            dash.html.Div(
+                                [
+                                    dash.html.Div(
+                                        "Instrument response fit",
+                                        style={
+                                            "fontWeight": "700",
+                                            "fontSize": "1rem",
+                                        },
+                                    ),
+                                    dash.html.Div(
+                                        (
+                                            "Use the current measured peak positions and modeled "
+                                            "standard coupling values to compute the scattering "
+                                            "instrument response."
+                                        ),
+                                        style={
+                                            "opacity": 0.72,
+                                            "fontSize": "0.9rem",
+                                            "marginTop": "2px",
+                                        },
+                                    ),
+                                ],
+                                style={
+                                    "flex": "1 1 auto",
+                                },
+                            ),
+                            dash.html.Div(
+                                [
+                                    dbc.Button(
+                                        "Create calibration",
+                                        id=self.ids.calibrate_btn,
+                                        n_clicks=0,
+                                        color="primary",
+                                    ),
+                                    self._build_info_badge(
+                                        tooltip_target_id=self.compute_model_tooltip_target_id,
+                                    ),
+                                    dbc.Tooltip(
+                                        (
+                                            "Compute the fitted instrument response from the measured "
+                                            "standard peak positions and the modeled optical coupling "
+                                            "values currently present in the calibration standard table."
+                                        ),
+                                        id=self.compute_model_tooltip_id,
+                                        target=self.compute_model_tooltip_target_id,
+                                        placement="right",
+                                    ),
+                                ],
+                                style={
+                                    "display": "flex",
+                                    "alignItems": "center",
+                                    "gap": "0px",
+                                    "flex": "0 0 auto",
+                                },
+                            ),
+                        ],
+                        style={
+                            "display": "flex",
+                            "alignItems": "center",
+                            "justifyContent": "space-between",
+                            "gap": "16px",
+                            "flexWrap": "wrap",
+                        },
                     ),
-                    style={
-                        "marginTop": "8px",
-                        "opacity": 0.75,
-                    },
-                ),
-            ]
+                ],
+                style={
+                    "padding": "14px 16px",
+                },
+            ),
+            style=self._build_workflow_panel_card_style(
+                background="rgba(13, 110, 253, 0.04)",
+            ),
         )
 
     def _build_graph_block(self) -> dash.html.Div:
@@ -127,6 +224,14 @@ class Calibration:
             [
                 self._build_graph_panel_card(
                     title="Instrument response calibration",
+                    subtitle="Measured standard signal mapped to modeled optical coupling.",
+                    tooltip_target_id=self.instrument_response_tooltip_target_id,
+                    tooltip_id=self.instrument_response_tooltip_id,
+                    tooltip_text=(
+                        "This graph shows the fitted relation between measured "
+                        "standard peak intensity and modeled optical coupling. "
+                        "The fitted slope is the instrument gain."
+                    ),
                     graph_id=self.ids.graph_calibration,
                     x_switch_id=self.ids.instrument_response_x_log_switch,
                     y_switch_id=self.ids.instrument_response_y_log_switch,
@@ -136,20 +241,29 @@ class Calibration:
                 ),
                 self._build_graph_panel_card(
                     title="Calibration standard Mie relation",
+                    subtitle="Modeled coupling curve for the selected calibration standard.",
+                    tooltip_target_id=self.mie_relation_tooltip_target_id,
+                    tooltip_id=self.mie_relation_tooltip_id,
+                    tooltip_text=(
+                        "This graph shows the modeled relation between standard "
+                        "particle diameter and modeled optical coupling for the "
+                        "calibration standard."
+                    ),
                     graph_id=self.ids.graph_model,
                     x_switch_id=self.ids.mie_relation_x_log_switch,
                     y_switch_id=self.ids.mie_relation_y_log_switch,
                     x_default_enabled=False,
                     y_default_enabled=True,
-                    footer_content=self._build_mie_relation_footer(),
+                    footer_content=None,
                 ),
             ],
             style={
                 "display": "flex",
-                "gap": "24px",
+                "gap": "18px",
                 "alignItems": "stretch",
                 "width": "100%",
                 "overflowX": "auto",
+                "overflowY": "visible",
             },
         )
 
@@ -157,6 +271,10 @@ class Calibration:
         self,
         *,
         title: str,
+        subtitle: str,
+        tooltip_target_id: str,
+        tooltip_id: str,
+        tooltip_text: str,
         graph_id: str,
         x_switch_id: str,
         y_switch_id: str,
@@ -167,46 +285,74 @@ class Calibration:
         """
         Build one self contained graph panel card.
         """
-        return dbc.Card(
-            [
-                dbc.CardHeader(
-                    title,
-                    style={
-                        "fontWeight": "600",
-                    },
-                ),
-                dbc.CardBody(
-                    [
-                        self._build_axis_control_block(
-                            x_switch_id=x_switch_id,
-                            y_switch_id=y_switch_id,
-                            x_default_enabled=x_default_enabled,
-                            y_default_enabled=y_default_enabled,
+        card_children = [
+            dbc.CardHeader(
+                [
+                    self._build_title_with_info(
+                        title=title,
+                        tooltip_target_id=tooltip_target_id,
+                        tooltip_id=tooltip_id,
+                        tooltip_text=tooltip_text,
+                        title_style={
+                            "fontSize": "0.98rem",
+                        },
+                    ),
+                    dash.html.Div(
+                        subtitle,
+                        style=self._build_workflow_section_subtitle_style(
+                            font_size="0.84rem",
                         ),
-                        dash.html.Div(
-                            style={
-                                "height": "12px",
-                            },
-                        ),
-                        dash.dcc.Graph(
-                            id=graph_id,
-                            style={
-                                **styling.PLOTLY_GRAPH_STYLE,
-                                "height": f"{self.graph_height_px}px",
-                                "width": "100%",
-                            },
-                            config=styling.PLOTLY_GRAPH_CONFIG,
-                        ),
-                    ]
-                ),
+                    ),
+                ],
+                style=self._build_workflow_panel_header_style(),
+            ),
+            dbc.CardBody(
+                [
+                    self._build_axis_control_block(
+                        x_switch_id=x_switch_id,
+                        y_switch_id=y_switch_id,
+                        x_default_enabled=x_default_enabled,
+                        y_default_enabled=y_default_enabled,
+                    ),
+                    dash.html.Div(
+                        style={
+                            "height": "12px",
+                        },
+                    ),
+                    dash.dcc.Graph(
+                        id=graph_id,
+                        style={
+                            **styling.PLOTLY_GRAPH_STYLE,
+                            "height": f"{self.graph_height_px}px",
+                            "width": "100%",
+                        },
+                        config=styling.PLOTLY_GRAPH_CONFIG,
+                    ),
+                ],
+                style={
+                    "padding": "14px",
+                    "overflow": "visible",
+                },
+            ),
+        ]
+
+        if footer_content is not None:
+            card_children.append(
                 dbc.CardFooter(
                     footer_content,
                     style={
-                        "opacity": 0.9,
+                        "opacity": 0.95,
+                        "padding": "12px 14px",
+                        "borderTop": "1px solid rgba(128, 128, 128, 0.18)",
+                        "background": "rgba(128, 128, 128, 0.04)",
                     },
-                ),
-            ],
+                )
+            )
+
+        return dbc.Card(
+            card_children,
             style={
+                **self._build_workflow_panel_card_style(),
                 "flex": "1 1 0",
                 "minWidth": f"{self.graph_min_width_px}px",
             },
@@ -255,12 +401,7 @@ class Calibration:
                     persistence_type="session",
                 ),
             ],
-            style={
-                "display": "flex",
-                "gap": "18px",
-                "alignItems": "center",
-                "flexWrap": "wrap",
-            },
+            style=self._build_compact_control_panel_style(),
         )
 
     def _build_instrument_response_footer(self) -> dash.html.Div:
@@ -269,50 +410,25 @@ class Calibration:
         """
         return dash.html.Div(
             [
-                dash.html.Div(
-                    (
-                        "This graph shows the fitted relation between measured "
-                        "standard peak intensity and modeled optical coupling. "
-                        "The fitted slope is the instrument gain."
-                    ),
-                    style={
-                        "marginBottom": "10px",
-                    },
+                self._build_fit_metric(
+                    "Gain",
+                    self.ids.slope_out,
                 ),
-                dash.html.Div(
-                    [
-                        self._build_fit_metric(
-                            "Gain",
-                            self.ids.slope_out,
-                        ),
-                        self._build_fit_metric(
-                            "Offset",
-                            self.ids.intercept_out,
-                        ),
-                        self._build_fit_metric(
-                            "R²",
-                            self.ids.r_squared_out,
-                        ),
-                    ],
-                    style={
-                        "display": "grid",
-                        "gridTemplateColumns": "repeat(3, minmax(120px, 1fr))",
-                        "gap": "10px",
-                        "alignItems": "stretch",
-                    },
+                self._build_fit_metric(
+                    "Offset",
+                    self.ids.intercept_out,
                 ),
-            ]
-        )
-
-    def _build_mie_relation_footer(self) -> dash.html.Div:
-        """
-        Build the calibration standard Mie relation card footer.
-        """
-        return dash.html.Div(
-            (
-                "This graph shows the modeled relation between standard particle "
-                "diameter and modeled optical coupling for the calibration standard."
-            )
+                self._build_fit_metric(
+                    "R²",
+                    self.ids.r_squared_out,
+                ),
+            ],
+            style={
+                "display": "grid",
+                "gridTemplateColumns": "repeat(3, minmax(120px, 1fr))",
+                "gap": "10px",
+                "alignItems": "stretch",
+            },
         )
 
     def _build_fit_metric(
@@ -343,13 +459,174 @@ class Calibration:
                     },
                 ),
             ],
+            style=self._build_metric_box_style(),
+        )
+
+    def _build_title_with_info(
+        self,
+        *,
+        title: str,
+        tooltip_target_id: str,
+        tooltip_id: str,
+        tooltip_text: str,
+        title_style: dict[str, Any] | None = None,
+    ) -> dash.html.Div:
+        """
+        Build a compact title with a hover info badge.
+        """
+        return dash.html.Div(
+            [
+                dash.html.Span(
+                    title,
+                ),
+                self._build_info_badge(
+                    tooltip_target_id=tooltip_target_id,
+                ),
+                dbc.Tooltip(
+                    tooltip_text,
+                    id=tooltip_id,
+                    target=tooltip_target_id,
+                    placement="right",
+                ),
+            ],
             style={
-                "padding": "8px 10px",
-                "border": "1px solid rgba(128,128,128,0.25)",
-                "borderRadius": "8px",
-                "background": "rgba(128,128,128,0.08)",
+                "display": "flex",
+                "alignItems": "center",
+                "fontWeight": "750",
+                "fontSize": "1.02rem",
+                **(title_style or {}),
             },
         )
+
+    def _build_info_badge(
+        self,
+        *,
+        tooltip_target_id: str,
+    ) -> dash.html.Span:
+        """
+        Build a compact reusable info badge.
+        """
+        return dash.html.Span(
+            "i",
+            id=tooltip_target_id,
+            style={
+                "width": "19px",
+                "height": "19px",
+                "borderRadius": "50%",
+                "display": "inline-flex",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "fontSize": "0.72rem",
+                "fontWeight": "800",
+                "marginLeft": "8px",
+                "cursor": "help",
+                "opacity": 0.72,
+                "border": "1px solid currentColor",
+                "lineHeight": "1",
+                "flex": "0 0 auto",
+            },
+        )
+
+    def _build_workflow_section_card_style(self) -> dict[str, Any]:
+        """
+        Build the outer workflow card style.
+        """
+        return {
+            "borderRadius": "15px",
+            "borderLeft": f"5px solid rgba({self.workflow_accent_rgba}, 0.75)",
+            "boxShadow": "0 0.35rem 0.9rem rgba(0, 0, 0, 0.08)",
+            "overflow": "visible",
+        }
+
+    def _build_workflow_section_header_style(self) -> dict[str, Any]:
+        """
+        Build the outer workflow card header style.
+        """
+        return {
+            "background": f"rgba({self.workflow_accent_rgba}, 0.10)",
+            "borderBottom": f"1px solid rgba({self.workflow_accent_rgba}, 0.20)",
+            "padding": "13px 18px",
+            "borderTopLeftRadius": "15px",
+            "borderTopRightRadius": "15px",
+            "overflow": "visible",
+        }
+
+    def _build_workflow_section_body_style(self) -> dict[str, Any]:
+        """
+        Build the outer workflow card body style.
+        """
+        return {
+            "padding": "18px",
+            "overflow": "visible",
+        }
+
+    def _build_workflow_section_subtitle_style(
+        self,
+        *,
+        font_size: str = "0.86rem",
+    ) -> dict[str, Any]:
+        """
+        Build the standard subtitle style used under workflow section headers.
+        """
+        return {
+            "fontSize": font_size,
+            "opacity": 0.76,
+            "marginTop": "3px",
+        }
+
+    def _build_workflow_panel_card_style(
+        self,
+        *,
+        background: str = "transparent",
+    ) -> dict[str, Any]:
+        """
+        Build a nested workflow panel card style.
+        """
+        return {
+            "borderRadius": "12px",
+            "border": f"1px solid rgba({self.workflow_accent_rgba}, 0.16)",
+            "background": background,
+            "overflow": "visible",
+        }
+
+    def _build_workflow_panel_header_style(self) -> dict[str, Any]:
+        """
+        Build a nested workflow panel header style.
+        """
+        return {
+            "background": f"rgba({self.workflow_accent_rgba}, 0.06)",
+            "borderBottom": f"1px solid rgba({self.workflow_accent_rgba}, 0.16)",
+            "padding": "12px 16px",
+            "borderTopLeftRadius": "12px",
+            "borderTopRightRadius": "12px",
+            "overflow": "visible",
+        }
+
+    def _build_compact_control_panel_style(self) -> dict[str, Any]:
+        """
+        Build the compact axis control panel style.
+        """
+        return {
+            "display": "inline-flex",
+            "gap": "18px",
+            "alignItems": "center",
+            "flexWrap": "wrap",
+            "padding": "8px 10px",
+            "border": "1px solid rgba(128, 128, 128, 0.18)",
+            "borderRadius": "9px",
+            "background": "rgba(128, 128, 128, 0.06)",
+        }
+
+    def _build_metric_box_style(self) -> dict[str, Any]:
+        """
+        Build one compact fit metric box style.
+        """
+        return {
+            "padding": "8px 10px",
+            "border": "1px solid rgba(128, 128, 128, 0.25)",
+            "borderRadius": "8px",
+            "background": "rgba(128, 128, 128, 0.08)",
+        }
 
     def _finalize_figure_size(
         self,
@@ -372,8 +649,8 @@ class Calibration:
                 "y": 0.98,
                 "xanchor": "right",
                 "yanchor": "top",
-                "bgcolor": "rgba(255,255,255,0.65)",
-                "bordercolor": "rgba(0,0,0,0.15)",
+                "bgcolor": "rgba(255, 255, 255, 0.65)",
+                "bordercolor": "rgba(0, 0, 0, 0.15)",
                 "borderwidth": 1,
             },
         )
@@ -666,7 +943,7 @@ class Calibration:
 
             if not stored_figure:
                 figure = plottings._make_info_figure(
-                    "Click Fit Instrument Response to generate the instrument response graph."
+                    "Click Compute model to generate the instrument response graph."
                 )
 
             else:
@@ -727,7 +1004,7 @@ class Calibration:
 
             if not stored_figure:
                 figure = plottings._make_info_figure(
-                    "Click Fit Instrument Response to generate the calibration standard Mie relation graph."
+                    "Click Compute model to generate the calibration standard Mie relation graph."
                 )
 
             else:

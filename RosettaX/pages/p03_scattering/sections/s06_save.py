@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 
 import logging
+from typing import Any
+
+import dash_bootstrap_components as dbc
 
 from RosettaX.pages.p03_scattering.state import ScatteringPageState
-from RosettaX.workflow import save
 from RosettaX.utils import directories
+from RosettaX.utils import ui_forms
+from RosettaX.workflow import save
 
 
 logger = logging.getLogger(__name__)
@@ -13,20 +17,12 @@ logger = logging.getLogger(__name__)
 class Save:
     """
     Scattering calibration save section.
-
-    Responsibilities
-    ----------------
-    - Provide the scattering save layout.
-    - Register the reusable save workflow callbacks.
-
-    Notes
-    -----
-    The scattering calibration payload is read from the scattering page state
-    store. Saving, validation, file creation, and sidebar refresh signaling are
-    delegated to RosettaX.workflow.save.
     """
 
-    def __init__(self, page) -> None:
+    def __init__(
+        self,
+        page: Any,
+    ) -> None:
         self.page = page
         self.ids = page.ids.Save
 
@@ -55,11 +51,13 @@ class Save:
             page,
         )
 
-    def get_layout(self):
+    def get_layout(self) -> dbc.Card:
         """
         Create the scattering save section layout.
         """
-        return self.layout_builder.get_layout()
+        return ui_forms.apply_workflow_section_card_style(
+            card=self.layout_builder.get_layout(),
+        )
 
     def register_callbacks(self) -> None:
         """

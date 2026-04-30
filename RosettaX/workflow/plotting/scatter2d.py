@@ -47,6 +47,7 @@ class Scatter2DGraph:
     - Never render a graph title inside the Plotly canvas.
     - Put the legend inside the graph when traces have names.
     - Provide a compact x log and y log toggle box below the graph.
+    - Optionally render graph specific controls in the same bottom control row.
     - Convert Dash toggle values into Plotly axis scale settings.
 
     Intended usage
@@ -73,9 +74,14 @@ class Scatter2DGraph:
         x_log_enabled: bool = False,
         y_log_enabled: bool = False,
         graph_style: Optional[dict[str, Any]] = None,
+        bottom_controls: Optional[list[Any]] = None,
     ) -> dash.html.Div:
         """
         Build a reusable graph block with axis scale controls below it.
+
+        Optional bottom controls are rendered in the same control row as the
+        x and y log toggles. This is intended for graph specific controls such
+        as histogram bin count.
         """
         toggle_values: list[str] = []
 
@@ -110,6 +116,7 @@ class Scatter2DGraph:
                 cls.build_axis_scale_control(
                     component_id=component_ids.axis_scale_toggle,
                     value=toggle_values,
+                    bottom_controls=bottom_controls,
                 ),
             ]
         )
@@ -120,34 +127,50 @@ class Scatter2DGraph:
         *,
         component_id: str,
         value: Optional[list[str]] = None,
+        bottom_controls: Optional[list[Any]] = None,
     ) -> dbc.Card:
         """
         Build the compact x log and y log toggle box below the graph.
         """
+        controls: list[Any] = [
+            dbc.Checklist(
+                id=component_id,
+                options=[
+                    {
+                        "label": "x log",
+                        "value": cls.x_log_value,
+                    },
+                    {
+                        "label": "y log",
+                        "value": cls.y_log_value,
+                    },
+                ],
+                value=value if isinstance(value, list) else [],
+                inline=True,
+                switch=True,
+                persistence=True,
+                persistence_type="session",
+            ),
+        ]
+
+        if isinstance(bottom_controls, list):
+            controls.extend(
+                [
+                    control
+                    for control in bottom_controls
+                    if control is not None
+                ]
+            )
+
         return dbc.Card(
             dbc.CardBody(
-                [
-                    dbc.Checklist(
-                        id=component_id,
-                        options=[
-                            {
-                                "label": "x log",
-                                "value": cls.x_log_value,
-                            },
-                            {
-                                "label": "y log",
-                                "value": cls.y_log_value,
-                            },
-                        ],
-                        value=value if isinstance(value, list) else [],
-                        inline=True,
-                        switch=True,
-                        persistence=True,
-                        persistence_type="session",
-                    ),
-                ],
+                controls,
                 style={
                     "padding": "8px 10px",
+                    "display": "flex",
+                    "alignItems": "center",
+                    "gap": "16px",
+                    "flexWrap": "wrap",
                 },
             ),
             style={

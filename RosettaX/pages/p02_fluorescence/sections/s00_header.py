@@ -49,7 +49,6 @@ class Header:
                             "height": "12px",
                         },
                     ),
-                    self._build_guidance_block(),
                 ]
             ),
             style={
@@ -75,20 +74,20 @@ class Header:
                         "marginBottom": "6px",
                     },
                 ),
-                html.P(
-                    (
-                        "Use this workflow to convert measured fluorescence signals "
-                        "into calibrated fluorescence units. RosettaX reads a bead "
-                        "calibration FCS file, detects the bead population peaks, "
-                        "links those peaks to known MESF values, and saves the fitted "
-                        "calibration for later use."
-                    ),
-                    style={
-                        "marginBottom": "0px",
-                        "opacity": 0.82,
-                        "maxWidth": "1100px",
-                    },
-                ),
+                # html.P(
+                #     (
+                #         "Use this workflow to convert measured fluorescence signals "
+                #         "into calibrated fluorescence units. RosettaX reads a bead "
+                #         "calibration FCS file, detects the bead population peaks, "
+                #         "links those peaks to known MESF values, and saves the fitted "
+                #         "calibration for later use."
+                #     ),
+                #     style={
+                #         "marginBottom": "0px",
+                #         "opacity": 0.82,
+                #         "maxWidth": "1100px",
+                #     },
+                # ),
             ]
         )
 
@@ -211,24 +210,5 @@ class Header:
             style={
                 "height": "100%",
                 "borderRadius": "12px",
-            },
-        )
-
-    def _build_guidance_block(self) -> dbc.Alert:
-        """
-        Build compact practical guidance for the user.
-        """
-        return dbc.Alert(
-            [
-                html.Strong("Recommended input: "),
-                (
-                    "use a bead calibration FCS file acquired with the same fluorescence "
-                    "detector settings as the measurements you want to calibrate. After "
-                    "detecting the bead peaks, enter the MESF values in the matching order."
-                ),
-            ],
-            color="info",
-            style={
-                "marginBottom": "0px",
             },
         )

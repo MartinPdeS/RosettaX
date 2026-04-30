@@ -2,7 +2,55 @@
 
 from typing import Any, Optional
 
+import dash_bootstrap_components as dbc
 from dash import dcc, html
+
+from RosettaX.utils import styling
+
+
+def copy_style(
+    style: Any,
+) -> dict[str, Any]:
+    """
+    Return a mutable copy of a style dictionary.
+    """
+    if isinstance(style, dict):
+        return dict(style)
+
+    return {}
+
+
+def merge_style(
+    *styles: Any,
+) -> dict[str, Any]:
+    """
+    Merge style dictionaries while ignoring non dictionary values.
+    """
+    merged_style: dict[str, Any] = {}
+
+    for style in styles:
+        if isinstance(style, dict):
+            merged_style.update(style)
+
+    return merged_style
+
+
+def normalize_children(
+    children: Any,
+) -> list[Any]:
+    """
+    Normalize Dash children into a list.
+    """
+    if children is None:
+        return []
+
+    if isinstance(children, list):
+        return children
+
+    if isinstance(children, tuple):
+        return list(children)
+
+    return [children]
 
 
 def persistent_input(
@@ -13,21 +61,6 @@ def persistent_input(
 ) -> dcc.Input:
     """
     Build a Dash input with session persistence enabled by default.
-
-    Parameters
-    ----------
-    persistence
-        Whether the component value should persist across page refreshes
-        within the same browser session.
-    persistence_type
-        Dash persistence backend. Defaults to ``"session"``.
-    **kwargs
-        Additional keyword arguments forwarded to ``dcc.Input``.
-
-    Returns
-    -------
-    dcc.Input
-        Configured Dash input component.
     """
     return dcc.Input(
         persistence=persistence,
@@ -44,21 +77,6 @@ def persistent_dropdown(
 ) -> dcc.Dropdown:
     """
     Build a Dash dropdown with session persistence enabled by default.
-
-    Parameters
-    ----------
-    persistence
-        Whether the component value should persist across page refreshes
-        within the same browser session.
-    persistence_type
-        Dash persistence backend. Defaults to ``"session"``.
-    **kwargs
-        Additional keyword arguments forwarded to ``dcc.Dropdown``.
-
-    Returns
-    -------
-    dcc.Dropdown
-        Configured Dash dropdown component.
     """
     return dcc.Dropdown(
         persistence=persistence,
@@ -75,27 +93,373 @@ def persistent_checklist(
 ) -> dcc.Checklist:
     """
     Build a Dash checklist with session persistence enabled by default.
-
-    Parameters
-    ----------
-    persistence
-        Whether the component value should persist across page refreshes
-        within the same browser session.
-    persistence_type
-        Dash persistence backend. Defaults to ``"session"``.
-    **kwargs
-        Additional keyword arguments forwarded to ``dcc.Checklist``.
-
-    Returns
-    -------
-    dcc.Checklist
-        Configured Dash checklist component.
     """
     return dcc.Checklist(
         persistence=persistence,
         persistence_type=persistence_type,
         **kwargs,
     )
+
+
+def build_info_badge(
+    *,
+    tooltip_target_id: str,
+    text: str = "i",
+    style_overrides: Optional[dict[str, Any]] = None,
+) -> html.Span:
+    """
+    Build a compact reusable hover help badge.
+    """
+    return html.Span(
+        text,
+        id=tooltip_target_id,
+        style=merge_style(
+            {
+                "width": "19px",
+                "height": "19px",
+                "borderRadius": "50%",
+                "display": "inline-flex",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "fontSize": "0.72rem",
+                "fontWeight": "800",
+                "marginLeft": "8px",
+                "cursor": "help",
+                "opacity": 0.72,
+                "border": "1px solid currentColor",
+                "lineHeight": "1",
+                "flex": "0 0 auto",
+                "userSelect": "none",
+            },
+            style_overrides,
+        ),
+    )
+
+
+def build_title_with_info(
+    *,
+    title: str,
+    tooltip_target_id: str,
+    tooltip_id: str,
+    tooltip_text: str,
+    placement: str = "right",
+    title_style_overrides: Optional[dict[str, Any]] = None,
+    badge_style_overrides: Optional[dict[str, Any]] = None,
+) -> html.Div:
+    """
+    Build a compact title with a hover help tooltip.
+    """
+    return html.Div(
+        [
+            html.Span(title),
+            build_info_badge(
+                tooltip_target_id=tooltip_target_id,
+                style_overrides=badge_style_overrides,
+            ),
+            dbc.Tooltip(
+                tooltip_text,
+                id=tooltip_id,
+                target=tooltip_target_id,
+                placement=placement,
+            ),
+        ],
+        style=merge_style(
+            {
+                "display": "flex",
+                "alignItems": "center",
+                "fontWeight": "750",
+                "fontSize": "1.02rem",
+            },
+            title_style_overrides,
+        ),
+    )
+
+
+def build_card_header_with_info(
+    *,
+    title: str,
+    tooltip_target_id: str,
+    tooltip_id: str,
+    tooltip_text: str,
+    subtitle: Optional[str] = None,
+    placement: str = "right",
+    header_style_overrides: Optional[dict[str, Any]] = None,
+    title_style_overrides: Optional[dict[str, Any]] = None,
+    subtitle_style_overrides: Optional[dict[str, Any]] = None,
+) -> dbc.CardHeader:
+    """
+    Build a workflow card header with title, tooltip, and optional subtitle.
+    """
+    children: list[Any] = [
+        build_title_with_info(
+            title=title,
+            tooltip_target_id=tooltip_target_id,
+            tooltip_id=tooltip_id,
+            tooltip_text=tooltip_text,
+            placement=placement,
+            title_style_overrides=title_style_overrides,
+        )
+    ]
+
+    if subtitle:
+        children.append(
+            html.Div(
+                subtitle,
+                style=build_workflow_section_subtitle_style(
+                    style_overrides=subtitle_style_overrides,
+                ),
+            )
+        )
+
+    return dbc.CardHeader(
+        children,
+        style=build_workflow_section_header_style(
+            style_overrides=header_style_overrides,
+        ),
+    )
+
+
+def build_workflow_section_card_style(
+    *,
+    accent_rgba: str = "13, 110, 253",
+    border_radius_px: int = 15,
+    style_overrides: Optional[dict[str, Any]] = None,
+) -> dict[str, Any]:
+    """
+    Build the standard outer workflow section card style.
+    """
+    return merge_style(
+        {
+            "borderRadius": f"{border_radius_px}px",
+            "borderLeft": f"5px solid rgba({accent_rgba}, 0.75)",
+            "boxShadow": "0 0.35rem 0.9rem rgba(0, 0, 0, 0.08)",
+            "overflow": "visible",
+        },
+        style_overrides,
+    )
+
+
+def build_workflow_section_header_style(
+    *,
+    accent_rgba: str = "13, 110, 253",
+    border_radius_px: int = 15,
+    style_overrides: Optional[dict[str, Any]] = None,
+) -> dict[str, Any]:
+    """
+    Build the standard outer workflow section header style.
+    """
+    return merge_style(
+        {
+            "background": f"rgba({accent_rgba}, 0.10)",
+            "borderBottom": f"1px solid rgba({accent_rgba}, 0.20)",
+            "padding": "13px 18px",
+            "borderTopLeftRadius": f"{border_radius_px}px",
+            "borderTopRightRadius": f"{border_radius_px}px",
+            "overflow": "visible",
+        },
+        style_overrides,
+    )
+
+
+def build_workflow_section_body_style(
+    *,
+    style_overrides: Optional[dict[str, Any]] = None,
+) -> dict[str, Any]:
+    """
+    Build the standard outer workflow section body style.
+    """
+    return merge_style(
+        {
+            "padding": "18px",
+            "overflow": "visible",
+        },
+        style_overrides,
+    )
+
+
+def build_workflow_section_subtitle_style(
+    *,
+    font_size: str = "0.86rem",
+    opacity: float = 0.76,
+    margin_top_px: int = 3,
+    style_overrides: Optional[dict[str, Any]] = None,
+) -> dict[str, Any]:
+    """
+    Build the standard subtitle style used under workflow section headers.
+    """
+    return merge_style(
+        {
+            "fontSize": font_size,
+            "opacity": opacity,
+            "marginTop": f"{int(margin_top_px)}px",
+        },
+        style_overrides,
+    )
+
+
+def build_workflow_panel_style(
+    *,
+    accent_rgba: str = "13, 110, 253",
+    background: Optional[str] = None,
+    border_radius_px: int = 12,
+    style_overrides: Optional[dict[str, Any]] = None,
+) -> dict[str, Any]:
+    """
+    Build a standard inner workflow panel card style.
+    """
+    base_style: dict[str, Any] = {
+        "borderRadius": f"{border_radius_px}px",
+        "border": f"1px solid rgba({accent_rgba}, 0.16)",
+        "overflow": "visible",
+    }
+
+    if background is not None:
+        base_style["background"] = background
+
+    return merge_style(
+        base_style,
+        style_overrides,
+    )
+
+
+def build_workflow_panel_body_style(
+    *,
+    padding: str = "16px",
+    style_overrides: Optional[dict[str, Any]] = None,
+) -> dict[str, Any]:
+    """
+    Build a standard inner workflow panel body style.
+    """
+    return merge_style(
+        {
+            "padding": padding,
+            "overflow": "visible",
+        },
+        style_overrides,
+    )
+
+
+def build_workflow_subpanel_card_style(
+    *,
+    accent_rgba: str = "13, 110, 253",
+    border_radius_px: int = 12,
+    style_overrides: Optional[dict[str, Any]] = None,
+) -> dict[str, Any]:
+    """
+    Build a nested graph or form panel card style.
+    """
+    return build_workflow_panel_style(
+        accent_rgba=accent_rgba,
+        border_radius_px=border_radius_px,
+        style_overrides=style_overrides,
+    )
+
+
+def build_workflow_subpanel_header_style(
+    *,
+    accent_rgba: str = "13, 110, 253",
+    border_radius_px: int = 12,
+    style_overrides: Optional[dict[str, Any]] = None,
+) -> dict[str, Any]:
+    """
+    Build a nested graph or form panel header style.
+    """
+    return merge_style(
+        {
+            "background": f"rgba({accent_rgba}, 0.06)",
+            "borderBottom": f"1px solid rgba({accent_rgba}, 0.16)",
+            "padding": "12px 16px",
+            "borderTopLeftRadius": f"{border_radius_px}px",
+            "borderTopRightRadius": f"{border_radius_px}px",
+            "overflow": "visible",
+        },
+        style_overrides,
+    )
+
+
+def build_compact_control_panel_style(
+    *,
+    style_overrides: Optional[dict[str, Any]] = None,
+) -> dict[str, Any]:
+    """
+    Build a compact control strip style for toggles or graph controls.
+    """
+    return merge_style(
+        {
+            "display": "inline-flex",
+            "gap": "18px",
+            "alignItems": "center",
+            "flexWrap": "wrap",
+            "padding": "8px 10px",
+            "border": "1px solid rgba(128, 128, 128, 0.18)",
+            "borderRadius": "9px",
+            "background": "rgba(128, 128, 128, 0.06)",
+            "overflow": "visible",
+        },
+        style_overrides,
+    )
+
+
+def build_metric_box_style(
+    *,
+    style_overrides: Optional[dict[str, Any]] = None,
+) -> dict[str, Any]:
+    """
+    Build a compact metric display box style.
+    """
+    return merge_style(
+        {
+            "padding": "8px 10px",
+            "border": "1px solid rgba(128, 128, 128, 0.25)",
+            "borderRadius": "8px",
+            "background": "rgba(128, 128, 128, 0.08)",
+        },
+        style_overrides,
+    )
+
+
+def apply_workflow_section_card_style(
+    card: Any,
+    *,
+    accent_rgba: str = "13, 110, 253",
+    border_radius_px: int = 15,
+    header_font_weight: str = "750",
+    header_font_size: str = "1.02rem",
+) -> Any:
+    """
+    Apply the shared RosettaX workflow section card styling to an existing card.
+
+    This is used when a reusable layout object already returns a dbc.Card.
+    """
+    card.style = merge_style(
+        copy_style(getattr(card, "style", None)),
+        build_workflow_section_card_style(
+            accent_rgba=accent_rgba,
+            border_radius_px=border_radius_px,
+        ),
+    )
+
+    for child in normalize_children(getattr(card, "children", None)):
+        if child.__class__.__name__ == "CardHeader":
+            child.style = merge_style(
+                copy_style(getattr(child, "style", None)),
+                build_workflow_section_header_style(
+                    accent_rgba=accent_rgba,
+                    border_radius_px=border_radius_px,
+                    style_overrides={
+                        "fontWeight": header_font_weight,
+                        "fontSize": header_font_size,
+                    },
+                ),
+            )
+
+        if child.__class__.__name__ == "CardBody":
+            child.style = merge_style(
+                copy_style(getattr(child, "style", None)),
+                build_workflow_section_body_style(),
+            )
+
+    return card
 
 
 def build_labeled_row(
@@ -117,62 +481,31 @@ def build_labeled_row(
 ) -> html.Div:
     """
     Build a standard two column form row with a fixed width label area.
-
-    This is intended for repeated settings style layouts where the left side
-    contains a text label and the right side contains a control component.
-
-    Parameters
-    ----------
-    label
-        Label text shown on the left side.
-    component
-        Dash component rendered on the right side.
-    label_width_px
-        Fixed width allocated to the label area.
-    gap_px
-        Horizontal space between the label and the component.
-    margin_bottom_px
-        Bottom margin applied to the whole row.
-    align_items
-        Flex alignment of the row.
-    label_font_weight
-        CSS font weight used for the label.
-    label_margin_bottom
-        CSS marginBottom value for the label.
-    component_flex
-        CSS flex value used for the component wrapper.
-    component_display
-        Optional CSS display value for the component wrapper.
-    component_align_items
-        Optional CSS alignItems value for the component wrapper.
-    row_style_overrides
-        Optional extra CSS merged into the row style.
-    label_style_overrides
-        Optional extra CSS merged into the label style.
-    component_style_overrides
-        Optional extra CSS merged into the component wrapper style.
-
-    Returns
-    -------
-    html.Div
-        Row container.
     """
-    row_style: dict[str, Any] = {
-        "display": "flex",
-        "alignItems": align_items,
-        "gap": f"{int(gap_px)}px",
-        "marginBottom": f"{int(margin_bottom_px)}px",
-    }
+    row_style = merge_style(
+        {
+            "display": "flex",
+            "alignItems": align_items,
+            "gap": f"{int(gap_px)}px",
+            "marginBottom": f"{int(margin_bottom_px)}px",
+            "overflow": "visible",
+        },
+        row_style_overrides,
+    )
 
-    label_style: dict[str, Any] = {
-        "width": f"{int(label_width_px)}px",
-        "minWidth": f"{int(label_width_px)}px",
-        "fontWeight": label_font_weight,
-        "marginBottom": label_margin_bottom,
-    }
+    label_style = merge_style(
+        {
+            "width": f"{int(label_width_px)}px",
+            "minWidth": f"{int(label_width_px)}px",
+            "fontWeight": label_font_weight,
+            "marginBottom": label_margin_bottom,
+        },
+        label_style_overrides,
+    )
 
-    component_style: dict[str, Any] = {
+    component_style = {
         "flex": component_flex,
+        "overflow": "visible",
     }
 
     if component_display is not None:
@@ -181,14 +514,10 @@ def build_labeled_row(
     if component_align_items is not None:
         component_style["alignItems"] = component_align_items
 
-    if row_style_overrides:
-        row_style.update(row_style_overrides)
-
-    if label_style_overrides:
-        label_style.update(label_style_overrides)
-
-    if component_style_overrides:
-        component_style.update(component_style_overrides)
+    component_style = merge_style(
+        component_style,
+        component_style_overrides,
+    )
 
     return html.Div(
         [
@@ -215,70 +544,40 @@ def build_inline_row(
 ) -> html.Div:
     """
     Build a common inline row used in parameter panels.
-
-    This helper mirrors the pattern often used in RosettaX pages where a label
-    sits on the left and the control is wrapped in a flexible container on the
-    right.
-
-    Parameters
-    ----------
-    label
-        Label text shown on the left side.
-    control
-        Dash component or component tree rendered on the right side.
-    label_width_px
-        Fixed width allocated to the label area.
-    margin_top
-        Whether the row should include top margin.
-    margin_top_px
-        Amount of top margin when ``margin_top`` is enabled.
-    row_width
-        CSS width of the row.
-    align_items
-        Flex alignment of the row.
-    label_font_weight
-        CSS font weight of the label.
-    label_style_overrides
-        Optional extra CSS merged into the label style.
-    control_wrapper_style_overrides
-        Optional extra CSS merged into the control wrapper style.
-    row_style_overrides
-        Optional extra CSS merged into the row style.
-
-    Returns
-    -------
-    html.Div
-        Row container.
     """
     row_style: dict[str, Any] = {
         "display": "flex",
         "alignItems": align_items,
         "width": row_width,
+        "overflow": "visible",
     }
 
     if margin_top:
         row_style["marginTop"] = f"{int(margin_top_px)}px"
 
-    label_style: dict[str, Any] = {
-        "width": f"{int(label_width_px)}px",
-        "minWidth": f"{int(label_width_px)}px",
-        "fontWeight": label_font_weight,
-    }
+    row_style = merge_style(
+        row_style,
+        row_style_overrides,
+    )
 
-    control_wrapper_style: dict[str, Any] = {
-        "flex": "1",
-        "display": "flex",
-        "alignItems": align_items,
-    }
+    label_style = merge_style(
+        {
+            "width": f"{int(label_width_px)}px",
+            "minWidth": f"{int(label_width_px)}px",
+            "fontWeight": label_font_weight,
+        },
+        label_style_overrides,
+    )
 
-    if row_style_overrides:
-        row_style.update(row_style_overrides)
-
-    if label_style_overrides:
-        label_style.update(label_style_overrides)
-
-    if control_wrapper_style_overrides:
-        control_wrapper_style.update(control_wrapper_style_overrides)
+    control_wrapper_style = merge_style(
+        {
+            "flex": "1",
+            "display": "flex",
+            "alignItems": align_items,
+            "overflow": "visible",
+        },
+        control_wrapper_style_overrides,
+    )
 
     return html.Div(
         [
@@ -302,33 +601,16 @@ def build_section_intro(
 ) -> html.Div:
     """
     Build a small section intro block with a title and optional description.
-
-    Parameters
-    ----------
-    title
-        Section title.
-    description
-        Optional explanatory text shown below the title.
-    title_component
-        HTML heading component name. Supported values are ``"H4"``, ``"H5"``,
-        and ``"H6"``. Any other value falls back to ``html.H5``.
-    description_opacity
-        CSS opacity used for the description paragraph.
-    description_margin_bottom_px
-        Bottom margin applied to the description paragraph.
-    container_style
-        Optional container style overrides.
-
-    Returns
-    -------
-    html.Div
-        Section intro block.
     """
     heading_factory = {
+        "H2": html.H2,
         "H4": html.H4,
         "H5": html.H5,
         "H6": html.H6,
-    }.get(str(title_component).upper(), html.H5)
+    }.get(
+        str(title_component).upper(),
+        html.H5,
+    )
 
     default_title_style = {
         "marginBottom": "8px",
@@ -359,28 +641,31 @@ def build_section_intro(
             }
         )
 
-    if title_style_overrides:
-        default_title_style.update(title_style_overrides)
-
-    description_style = {
-        "marginBottom": f"{int(description_margin_bottom_px)}px",
-        "opacity": description_opacity,
-    }
-
-    if description_style_overrides:
-        description_style.update(description_style_overrides)
-
-    children: list[Any] = [heading_factory(title, style=default_title_style)]
+    children: list[Any] = [
+        heading_factory(
+            title,
+            style=merge_style(
+                default_title_style,
+                title_style_overrides,
+            ),
+        )
+    ]
 
     if description:
         children.append(
             html.P(
                 description,
-                style=description_style,
+                style=merge_style(
+                    {
+                        "marginBottom": f"{int(description_margin_bottom_px)}px",
+                        "opacity": description_opacity,
+                    },
+                    description_style_overrides,
+                ),
             )
         )
 
     return html.Div(
         children,
-        style=container_style or {},
+        style=copy_style(container_style),
     )

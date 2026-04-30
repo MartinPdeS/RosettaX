@@ -75,8 +75,8 @@ class Ids:
         default_gating_threshold = f"{PAGE_NAME}-default-gating-threshold"
 
         max_events_for_analysis = f"{PAGE_NAME}-max-events-for-analysis"
-        n_bins_for_plots = f"{PAGE_NAME}-n-bins-for-plots"
-        show_calibration_plot_by_default = f"{PAGE_NAME}-show-calibration-plot-by-default"
+        n_bins = f"{PAGE_NAME}-n-bins-for-plots"
+        show_calibration = f"{PAGE_NAME}-show-calibration-plot-by-default"
         default_output_suffix = f"{PAGE_NAME}-default-output-suffix"
         operator_name = f"{PAGE_NAME}-operator-name"
         instrument_name = f"{PAGE_NAME}-instrument-name"

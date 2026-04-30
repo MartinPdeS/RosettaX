@@ -146,3 +146,112 @@ PLOTLY_GRAPH_STYLE = {
     "width": "100%",
     "height": "60vh"
 }
+
+
+WORKFLOW_SECTION = {
+    "card": {
+        "borderRadius": "15px",
+        "borderLeft": "5px solid rgba(13, 110, 253, 0.75)",
+        "boxShadow": "0 0.35rem 0.9rem rgba(0, 0, 0, 0.08)",
+        "overflow": "visible",
+    },
+    "header": {
+        "background": "rgba(13, 110, 253, 0.10)",
+        "borderBottom": "1px solid rgba(13, 110, 253, 0.20)",
+        "padding": "13px 18px",
+        "borderTopLeftRadius": "15px",
+        "borderTopRightRadius": "15px",
+        "fontWeight": "750",
+        "fontSize": "1.02rem",
+    },
+    "body": {
+        "padding": "18px",
+        "overflow": "visible",
+    },
+    "subtitle": {
+        "fontSize": "0.86rem",
+        "opacity": 0.76,
+        "marginTop": "3px",
+    },
+    "subcard": {
+        "borderRadius": "12px",
+        "border": "1px solid rgba(13, 110, 253, 0.16)",
+        "overflow": "visible",
+    },
+    "subcard_header": {
+        "background": "rgba(13, 110, 253, 0.06)",
+        "borderBottom": "1px solid rgba(13, 110, 253, 0.16)",
+        "padding": "12px 16px",
+        "borderTopLeftRadius": "12px",
+        "borderTopRightRadius": "12px",
+    },
+    "subcard_body": {
+        "padding": "16px",
+        "overflow": "visible",
+    },
+    "action_panel": {
+        "borderRadius": "12px",
+        "border": "1px solid rgba(13, 110, 253, 0.16)",
+        "background": "rgba(13, 110, 253, 0.04)",
+        "overflow": "visible",
+    },
+    "compact_control_box": {
+        "display": "inline-flex",
+        "gap": "18px",
+        "alignItems": "center",
+        "flexWrap": "wrap",
+        "padding": "8px 10px",
+        "border": "1px solid rgba(128, 128, 128, 0.18)",
+        "borderRadius": "9px",
+        "background": "rgba(128, 128, 128, 0.06)",
+    },
+    "info_badge": {
+        "width": "19px",
+        "height": "19px",
+        "borderRadius": "50%",
+        "display": "inline-flex",
+        "alignItems": "center",
+        "justifyContent": "center",
+        "fontSize": "0.72rem",
+        "fontWeight": "800",
+        "marginLeft": "8px",
+        "cursor": "help",
+        "opacity": 0.72,
+        "border": "1px solid currentColor",
+        "lineHeight": "1",
+        "flex": "0 0 auto",
+    },
+    "title_with_info": {
+        "display": "flex",
+        "alignItems": "center",
+        "fontWeight": "750",
+        "fontSize": "1.02rem",
+    },
+}
+
+
+def merge_style(
+    *styles,
+) -> dict:
+    """
+    Merge style dictionaries while ignoring non dictionary values.
+    """
+    merged_style = {}
+
+    for style in styles:
+        if isinstance(style, dict):
+            merged_style.update(style)
+
+    return merged_style
+
+
+def copy_style(
+    style,
+) -> dict:
+    """
+    Return a mutable copy of a style dictionary.
+    """
+    if isinstance(style, dict):
+        return dict(style)
+
+    return {}

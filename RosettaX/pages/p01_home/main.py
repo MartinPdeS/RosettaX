@@ -4,6 +4,8 @@ import dash
 import dash_bootstrap_components as dbc
 from dash import html
 
+from RosettaX.utils import ui_forms
+
 
 class HomePage:
     """
@@ -13,8 +15,8 @@ class HomePage:
     ----------------
     - Present RosettaX in one clear message.
     - Help users choose one of the three main workflows.
-    - Avoid repeated navigation links to the same destination.
-    - Keep support and configuration links secondary.
+    - Keep support and external resource links secondary.
+    - Avoid help content that belongs on the help page.
     """
 
     def __init__(self) -> None:
@@ -24,20 +26,39 @@ class HomePage:
         self.pypi_url = "https://pypi.org/project/RosettaX/"
         self.anaconda_url = "https://anaconda.org/channels/MartinPdeS/packages/Rosettax/overview"
         self.documentation_url = "https://martinpdes.github.io/RosettaX/docs/latest/index.html"
+        self.support_url = "https://github.com/sponsors/MartinPdeS"
         self.contact_email = "martin.poinsinet.de.sivry@gmail.com"
 
-    def _id(self, name: str) -> str:
+    def _id(
+        self,
+        name: str,
+    ) -> str:
         return f"{self.page_name}-{name}"
 
-    def layout(self, **_kwargs) -> dbc.Container:
+    def layout(
+        self,
+        **_kwargs,
+    ) -> dbc.Container:
         return dbc.Container(
             [
                 self._hero_section(),
-                html.Div(style={"height": "18px"}),
+                html.Div(
+                    style={
+                        "height": "18px",
+                    },
+                ),
                 self._workflow_cards_row(),
-                html.Div(style={"height": "18px"}),
-                self._secondary_actions_row(),
-                html.Div(style={"height": "18px"}),
+                html.Div(
+                    style={
+                        "height": "18px",
+                    },
+                ),
+                self._secondary_actions_card(),
+                html.Div(
+                    style={
+                        "height": "18px",
+                    },
+                ),
                 self._footer_links(),
             ],
             fluid=True,
@@ -48,49 +69,73 @@ class HomePage:
         )
 
     def _hero_section(self) -> dbc.Card:
-        return dbc.Card(
-            dbc.CardBody(
-                [
-                    html.Div(
-                        "Flow cytometry calibration workspace",
-                        style={
-                            "fontSize": "0.78rem",
-                            "fontWeight": "700",
-                            "letterSpacing": "0.08em",
-                            "textTransform": "uppercase",
-                            "opacity": 0.68,
-                            "marginBottom": "10px",
-                        },
-                    ),
-                    html.H1(
-                        "RosettaX",
-                        style={
-                            "marginBottom": "10px",
-                            "fontWeight": "800",
-                            "fontSize": "2.45rem",
-                            "lineHeight": "1.08",
-                        },
-                    ),
-                    html.P(
-                        (
-                            "Build fluorescence and scattering calibrations from bead based "
-                            "FCS measurements, then apply saved calibrations to experimental files."
+        card = dbc.Card(
+            [
+                dbc.CardBody(
+                    [
+                        html.Div(
+                            "RosettaX",
+                            style={
+                                "fontWeight": "800",
+                                "fontSize": "2.55rem",
+                                "lineHeight": "1.05",
+                                "marginBottom": "8px",
+                            },
                         ),
-                        style={
-                            "fontSize": "1.1rem",
-                            "opacity": 0.88,
-                            "marginBottom": "0px",
-                            "maxWidth": "980px",
-                        },
-                    ),
-                ],
-                style={
-                    "padding": "26px",
-                },
-            ),
-            style={
-                "borderRadius": "16px",
-            },
+                        html.Div(
+                            (
+                                "A calibration workflow for bead based flow cytometry. "
+                                "Build fluorescence and scattering calibrations, save them "
+                                "as reusable records, then apply them to experimental FCS files."
+                            ),
+                            style={
+                                "fontSize": "1.08rem",
+                                "opacity": 0.86,
+                                "maxWidth": "980px",
+                                "marginBottom": "18px",
+                            },
+                        ),
+                        html.Div(
+                            [
+                                dbc.Button(
+                                    "Start fluorescence calibration",
+                                    href="/fluorescence",
+                                    id=self._id("hero-fluorescence-link"),
+                                    color="primary",
+                                ),
+                                dbc.Button(
+                                    "Start scattering calibration",
+                                    href="/scattering",
+                                    id=self._id("hero-scattering-link"),
+                                    color="primary",
+                                    outline=True,
+                                ),
+                                dbc.Button(
+                                    "Apply saved calibration",
+                                    href="/calibrate",
+                                    id=self._id("hero-apply-link"),
+                                    color="success",
+                                    outline=True,
+                                ),
+                            ],
+                            style={
+                                "display": "flex",
+                                "gap": "10px",
+                                "flexWrap": "wrap",
+                            },
+                        ),
+                    ],
+                    style={
+                        "padding": "26px",
+                    },
+                ),
+            ]
+        )
+
+        return ui_forms.apply_workflow_section_card_style(
+            card=card,
+            header_font_weight="750",
+            header_font_size="1.02rem",
         )
 
     def _workflow_cards_row(self) -> dbc.Row:
@@ -98,15 +143,16 @@ class HomePage:
             [
                 dbc.Col(
                     self._workflow_card(
-                        label="Build",
                         title="Fluorescence calibration",
+                        subtitle="MESF based fluorescence response",
                         description=(
-                            "Create a fluorescence calibration from bead peaks and known MESF values."
+                            "Create a calibration from fluorescence bead peak positions "
+                            "and known MESF reference values."
                         ),
                         steps=[
                             "Upload bead FCS",
-                            "Detect peaks",
-                            "Enter MESF values",
+                            "Detect fluorescence peaks",
+                            "Review MESF table",
                             "Create calibration",
                             "Save calibration",
                         ],
@@ -119,38 +165,40 @@ class HomePage:
                 ),
                 dbc.Col(
                     self._workflow_card(
-                        label="Build",
                         title="Scattering calibration",
+                        subtitle="Mie based scattering response",
                         description=(
-                            "Create a scattering calibration by linking measured peaks to Mie coupling values."
+                            "Create a scattering calibration by linking measured bead "
+                            "peaks to modeled optical coupling values."
                         ),
                         steps=[
                             "Upload bead FCS",
-                            "Detect peaks",
-                            "Define Mie model",
+                            "Detect scattering peaks",
+                            "Configure Mie model",
                             "Compute coupling",
-                            "Create calibration",
+                            "Fit response",
                             "Save calibration",
                         ],
                         button_text="Open scattering workflow",
                         button_href="/scattering",
-                        button_color="secondary",
+                        button_color="primary",
                         button_id=self._id("scattering-link"),
                     ),
                     lg=4,
                 ),
                 dbc.Col(
                     self._workflow_card(
-                        label="Apply",
                         title="Apply calibration",
+                        subtitle="Batch calibrated FCS export",
                         description=(
-                            "Use a saved calibration to add calibrated channels to FCS files."
+                            "Use a saved fluorescence or scattering calibration to add "
+                            "calibrated channels to FCS files."
                         ),
                         steps=[
-                            "Upload FCS files",
+                            "Upload input FCS files",
                             "Select calibration",
-                            "Choose channels",
-                            "Preview output",
+                            "Configure target model",
+                            "Choose export columns",
                             "Export calibrated files",
                         ],
                         button_text="Open apply workflow",
@@ -167,8 +215,8 @@ class HomePage:
     def _workflow_card(
         self,
         *,
-        label: str,
         title: str,
+        subtitle: str,
         description: str,
         steps: list[str],
         button_text: str,
@@ -177,64 +225,90 @@ class HomePage:
         button_id: str,
     ) -> dbc.Card:
         return dbc.Card(
-            dbc.CardBody(
-                [
-                    html.Div(
-                        label,
-                        style={
-                            "display": "inline-block",
-                            "fontSize": "0.74rem",
-                            "fontWeight": "800",
-                            "letterSpacing": "0.06em",
-                            "textTransform": "uppercase",
-                            "opacity": 0.65,
-                            "marginBottom": "8px",
-                        },
-                    ),
-                    html.H4(
-                        title,
-                        style={
-                            "fontWeight": "760",
-                            "marginBottom": "10px",
-                        },
-                    ),
-                    html.P(
-                        description,
-                        style={
-                            "opacity": 0.84,
-                            "minHeight": "54px",
-                            "marginBottom": "14px",
-                        },
-                    ),
-                    html.Div(
-                        [
-                            self._workflow_step_pill(
-                                index=index + 1,
-                                label=step,
-                            )
-                            for index, step in enumerate(steps)
-                        ],
-                        style={
-                            "display": "flex",
-                            "flexDirection": "column",
-                            "gap": "7px",
-                            "marginBottom": "16px",
-                        },
-                    ),
-                    dbc.Button(
-                        button_text,
-                        href=button_href,
-                        id=button_id,
-                        color=button_color,
-                        style={
-                            "width": "100%",
-                        },
-                    ),
-                ]
-            ),
+            [
+                dbc.CardHeader(
+                    [
+                        html.Div(
+                            title,
+                            style={
+                                "fontWeight": "760",
+                                "fontSize": "1.08rem",
+                                "lineHeight": "1.2",
+                            },
+                        ),
+                        html.Div(
+                            subtitle,
+                            style={
+                                "fontSize": "0.84rem",
+                                "opacity": 0.72,
+                                "marginTop": "3px",
+                            },
+                        ),
+                    ],
+                    style={
+                        "background": "rgba(13, 110, 253, 0.06)",
+                        "borderBottom": "1px solid rgba(13, 110, 253, 0.16)",
+                        "padding": "12px 16px",
+                        "borderTopLeftRadius": "12px",
+                        "borderTopRightRadius": "12px",
+                    },
+                ),
+                dbc.CardBody(
+                    [
+                        html.P(
+                            description,
+                            style={
+                                "opacity": 0.82,
+                                "minHeight": "66px",
+                                "marginBottom": "14px",
+                            },
+                        ),
+                        html.Div(
+                            [
+                                self._workflow_step_pill(
+                                    index=index + 1,
+                                    label=step,
+                                )
+                                for index, step in enumerate(
+                                    steps,
+                                )
+                            ],
+                            style={
+                                "display": "flex",
+                                "flexDirection": "column",
+                                "gap": "7px",
+                                "marginBottom": "16px",
+                            },
+                        ),
+                        html.Div(
+                            dbc.Button(
+                                button_text,
+                                href=button_href,
+                                id=button_id,
+                                color=button_color,
+                                style={
+                                    "width": "100%",
+                                },
+                            ),
+                            style={
+                                "marginTop": "auto",
+                            },
+                        ),
+                    ],
+                    style={
+                        "height": "100%",
+                        "display": "flex",
+                        "flexDirection": "column",
+                        "padding": "16px",
+                    },
+                ),
+            ],
             style={
                 "height": "100%",
-                "borderRadius": "14px",
+                "borderRadius": "12px",
+                "border": "1px solid rgba(13, 110, 253, 0.16)",
+                "boxShadow": "0 0.25rem 0.65rem rgba(0, 0, 0, 0.06)",
+                "overflow": "visible",
             },
         )
 
@@ -277,203 +351,146 @@ class HomePage:
             },
         )
 
-    def _secondary_actions_row(self) -> dbc.Row:
-        return dbc.Row(
-            [
-                dbc.Col(
-                    self._principles_card(),
-                    lg=6,
-                ),
-                dbc.Col(
-                    self._secondary_links_card(),
-                    lg=6,
-                ),
-            ],
-            className="g-3",
-        )
-
-    def _principles_card(self) -> dbc.Card:
-        return dbc.Card(
+    def _secondary_actions_card(self) -> dbc.Card:
+        card = dbc.Card(
             [
                 dbc.CardHeader(
-                    "Before applying a calibration",
-                    style={
-                        "fontWeight": "700",
-                    },
-                ),
-                dbc.CardBody(
                     [
-                        self._principle_item(
-                            "Use compatible acquisition settings",
-                            "Reference and experimental files should use matching detector configuration.",
+                        html.Div(
+                            "Project resources",
+                            style={
+                                "fontWeight": "750",
+                                "fontSize": "1.02rem",
+                            },
                         ),
-                        self._principle_item(
-                            "Inspect peak detection",
-                            "The calibration fit is only meaningful if the selected bead peaks are correct.",
-                        ),
-                        self._principle_item(
-                            "Keep the calibration JSON",
-                            "Save it with exported FCS files so the conversion remains traceable.",
+                        html.Div(
+                            "Documentation, source code, package links, and project support.",
+                            style={
+                                "fontSize": "0.86rem",
+                                "opacity": 0.76,
+                                "marginTop": "3px",
+                            },
                         ),
                     ]
                 ),
-            ],
-            style={
-                "height": "100%",
-                "borderRadius": "14px",
-            },
-        )
-
-    def _principle_item(
-        self,
-        title: str,
-        description: str,
-    ) -> html.Div:
-        return html.Div(
-            [
-                html.Div(
-                    title,
-                    style={
-                        "fontWeight": "650",
-                        "marginBottom": "3px",
-                    },
-                ),
-                html.Div(
-                    description,
-                    style={
-                        "fontSize": "0.92rem",
-                        "opacity": 0.76,
-                    },
-                ),
-            ],
-            style={
-                "marginBottom": "14px",
-            },
-        )
-
-    def _secondary_links_card(self) -> dbc.Card:
-        return dbc.Card(
-            [
-                dbc.CardHeader(
-                    "Project and settings",
-                    style={
-                        "fontWeight": "700",
-                    },
-                ),
                 dbc.CardBody(
                     [
-                        html.P(
-                            (
-                                "Use settings to configure profiles and defaults. Use the repository "
-                                "for source code, issues, and contributions."
-                            ),
-                            style={
-                                "opacity": 0.82,
-                                "marginBottom": "16px",
-                            },
-                        ),
                         dbc.Row(
                             [
                                 dbc.Col(
-                                    dbc.Button(
-                                        "Open settings",
-                                        href="/settings",
-                                        id=self._id("settings-link"),
-                                        color="dark",
-                                        outline=True,
-                                        style={
-                                            "width": "100%",
-                                        },
-                                    ),
-                                    md=4,
-                                ),
-                                dbc.Col(
-                                    dbc.Button(
-                                        "Open GitHub",
-                                        href=self.github_url,
-                                        target="_blank",
-                                        rel="noopener noreferrer",
-                                        id=self._id("github-link"),
-                                        color="dark",
-                                        outline=True,
-                                        style={
-                                            "width": "100%",
-                                        },
-                                    ),
-                                    md=4,
-                                ),
-                                dbc.Col(
-                                    dbc.Button(
-                                        "Contact",
-                                        href=f"mailto:{self.contact_email}",
-                                        id=self._id("email-link"),
+                                    self._resource_button(
+                                        label="Documentation",
+                                        href=self.documentation_url,
                                         color="primary",
-                                        outline=True,
-                                        style={
-                                            "width": "100%",
-                                        },
+                                        outline=False,
+                                        target="_blank",
                                     ),
-                                    md=4,
+                                    md=3,
+                                ),
+                                dbc.Col(
+                                    self._resource_button(
+                                        label="GitHub",
+                                        href=self.github_url,
+                                        color="dark",
+                                        outline=True,
+                                        target="_blank",
+                                    ),
+                                    md=3,
+                                ),
+                                dbc.Col(
+                                    self._resource_button(
+                                        label="PyPI",
+                                        href=self.pypi_url,
+                                        color="secondary",
+                                        outline=True,
+                                        target="_blank",
+                                    ),
+                                    md=2,
+                                ),
+                                dbc.Col(
+                                    self._resource_button(
+                                        label="Anaconda",
+                                        href=self.anaconda_url,
+                                        color="secondary",
+                                        outline=True,
+                                        target="_blank",
+                                    ),
+                                    md=2,
+                                ),
+                                dbc.Col(
+                                    self._resource_button(
+                                        label="Support",
+                                        href=self.support_url,
+                                        color="warning",
+                                        outline=False,
+                                        target="_blank",
+                                    ),
+                                    md=2,
                                 ),
                             ],
                             className="g-2",
                         ),
-                    ]
+                        html.Div(
+                            [
+                                html.Span(
+                                    "Contact: ",
+                                    style={
+                                        "fontWeight": "600",
+                                    },
+                                ),
+                                html.A(
+                                    self.contact_email,
+                                    href=f"mailto:{self.contact_email}",
+                                    id=self._id("email-link"),
+                                ),
+                            ],
+                            style={
+                                "fontSize": "0.86rem",
+                                "opacity": 0.75,
+                                "marginTop": "12px",
+                            },
+                        ),
+                    ],
+                    style={
+                        "padding": "16px",
+                    },
                 ),
-            ],
+            ]
+        )
+
+        return ui_forms.apply_workflow_section_card_style(
+            card=card,
+            header_font_weight="750",
+            header_font_size="1.02rem",
+        )
+
+    def _resource_button(
+        self,
+        *,
+        label: str,
+        href: str,
+        color: str,
+        outline: bool,
+        target: str,
+    ) -> dbc.Button:
+        return dbc.Button(
+            label,
+            href=href,
+            color=color,
+            outline=outline,
+            target=target,
+            rel="noopener noreferrer",
             style={
-                "height": "100%",
-                "borderRadius": "14px",
+                "width": "100%",
             },
         )
 
     def _footer_links(self) -> html.Div:
         return html.Div(
-            [
-                html.Span(
-                    "Resources:",
-                    style={
-                        "fontWeight": "600",
-                        "marginRight": "10px",
-                    },
-                ),
-                html.A(
-                    "GitHub",
-                    href=self.github_url,
-                    target="_blank",
-                    rel="noopener noreferrer",
-                    style={
-                        "marginRight": "12px",
-                    },
-                ),
-                html.A(
-                    "PyPI",
-                    href=self.pypi_url,
-                    target="_blank",
-                    rel="noopener noreferrer",
-                    style={
-                        "marginRight": "12px",
-                    },
-                ),
-                html.A(
-                    "Anaconda",
-                    href=self.anaconda_url,
-                    target="_blank",
-                    rel="noopener noreferrer",
-                    style={
-                        "marginRight": "12px",
-                    },
-                ),
-                html.A(
-                    "Online documentation",
-                    href=self.documentation_url,
-                    target="_blank",
-                    rel="noopener noreferrer",
-                ),
-            ],
+            "RosettaX is an open source scientific calibration tool for flow cytometry.",
             style={
                 "fontSize": "0.82rem",
-                "opacity": 0.68,
+                "opacity": 0.62,
                 "textAlign": "center",
                 "paddingTop": "4px",
             },

@@ -15,8 +15,6 @@
     "default_gating_channel": null,
     "default_gating_threshold": null,
     "max_events_for_analysis": 10000,
-    "n_bins_for_plots": 100,
-    "show_calibration_plot_by_default": false,
     "default_output_suffix": "_calibrated"
   },
   "optics": {
@@ -45,12 +43,14 @@
     "instrument_name": null
   },
   "visualization": {
+    "n_bins": 200,
     "default_marker_size": 10.0,
     "default_line_width": 3.0,
     "default_font_size": 24.0,
     "default_tick_size": 12.0,
     "show_grid_by_default": false,
-    "graph_height": "700px"
+    "graph_height": "700px",
+    "show_calibration": true
   },
   "files": {
     "fluorescence_fcs_file_path": null,
