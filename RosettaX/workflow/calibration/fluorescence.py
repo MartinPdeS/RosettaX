@@ -30,6 +30,23 @@ class CalibrationResult:
     apply_status: str = ""
 
     def to_tuple(self) -> tuple:
+        """
+        Return a tuple of all output values in Dash callback output order.
+
+        Order
+        -----
+        1. figure_store
+        2. calibration_store
+        3. slope_out
+        4. intercept_out
+        5. r_squared_out
+        6. apply_status
+
+        Returns
+        -------
+        tuple
+            Six-element tuple matching the Dash callback output order.
+        """
         return (
             self.figure_store,
             self.calibration_store,
@@ -42,12 +59,42 @@ class CalibrationResult:
 
 @dataclass(frozen=True)
 class ExtractedCalibrationPoints:
+    """
+    Paired intensity arrays extracted from a calibration table.
+
+    Attributes
+    ----------
+    intensity_calibrated_units : np.ndarray
+        Reference bead intensities in calibrated units (y values).
+    intensity_au : np.ndarray
+        Measured bead intensities in arbitrary units (x values).
+    """
+
     intensity_calibrated_units: np.ndarray
     intensity_au: np.ndarray
 
 
 @dataclass(frozen=True)
 class FluorescenceFitResult:
+    """
+    Result of a log–log linear calibration fit.
+
+    Attributes
+    ----------
+    slope : float
+        Slope of the log10–log10 linear model.
+    intercept : float
+        Intercept of the log10–log10 linear model.
+    prefactor : float
+        Power-law pre-factor equivalent to ``10 ** intercept``.
+    r_squared : float
+        Coefficient of determination (R²) of the fit.
+    intensity_au_log10 : np.ndarray
+        log10-transformed arbitrary-unit intensities used for fitting.
+    intensity_calibrated_units_log10 : np.ndarray
+        log10-transformed calibrated-unit intensities used for fitting.
+    """
+
     slope: float
     intercept: float
     prefactor: float
@@ -81,6 +128,28 @@ def rebuild_calibration_graph(
     failure_message: str,
     logger: logging.Logger,
 ) -> go.Figure:
+    """
+    Reconstruct a Plotly figure from a serialised store value.
+
+    Returns an informational figure when the stored value is absent or
+    cannot be parsed.
+
+    Parameters
+    ----------
+    stored_figure : Any
+        Serialised figure dictionary from a Dash store, or ``None``/falsy.
+    empty_message : str
+        Message displayed when *stored_figure* is absent.
+    failure_message : str
+        Message displayed when *stored_figure* cannot be deserialised.
+    logger : logging.Logger
+        Logger instance used to record debug and exception messages.
+
+    Returns
+    -------
+    go.Figure
+        Reconstructed figure, or a single-annotation informational figure.
+    """
     if not stored_figure:
         logger.debug(
             "No stored figure available. Returning info figure."
@@ -108,6 +177,25 @@ def add_empty_row(
     rows: list[dict[str, Any]] | None,
     columns: list[dict[str, Any]] | None,
 ) -> list[dict[str, str]]:
+    """
+    Append a blank row to a Dash DataTable row list.
+
+    The new row contains empty strings for every column id present in
+    *columns*.
+
+    Parameters
+    ----------
+    rows : list[dict[str, Any]] | None
+        Existing table rows.  ``None`` is treated as an empty list.
+    columns : list[dict[str, Any]] | None
+        Column definitions as returned by Dash DataTable's ``columns``
+        property.  Each entry must have an ``"id"`` key.
+
+    Returns
+    -------
+    list[dict[str, str]]
+        Shallow copies of the existing rows with one new blank row appended.
+    """
     next_rows = [
         dict(row)
         for row in (rows or [])
@@ -126,6 +214,24 @@ def add_empty_row(
 def extract_xy_from_table(
     table_data: list[dict[str, Any]] | None,
 ) -> ExtractedCalibrationPoints:
+    """
+    Extract calibration point pairs from a Dash DataTable payload.
+
+    Reads the ``"col1"`` (reference / calibrated units) and ``"col2"``
+    (measured / a.u.) columns from each row, discarding rows where either
+    value cannot be parsed as a finite float.
+
+    Parameters
+    ----------
+    table_data : list[dict[str, Any]] | None
+        Row dictionaries from a Dash DataTable.  ``None`` is treated as an
+        empty list.
+
+    Returns
+    -------
+    ExtractedCalibrationPoints
+        Paired arrays of calibrated-unit and arbitrary-unit intensity values.
+    """
     intensity_calibrated_units_values: list[float] = []
     intensity_au_values: list[float] = []
 
@@ -164,6 +270,25 @@ def compute_r_squared(
     y_true: np.ndarray,
     y_pred: np.ndarray,
 ) -> float:
+    """
+    Compute the coefficient of determination (R²) between two arrays.
+
+    Only finite-valued pairs are included in the computation.  Returns
+    ``float("nan")`` when fewer than two finite pairs are available or when
+    the total sum of squares is zero.
+
+    Parameters
+    ----------
+    y_true : np.ndarray
+        Observed values.
+    y_pred : np.ndarray
+        Predicted values with the same length as *y_true*.
+
+    Returns
+    -------
+    float
+        R² value in the range (−∞, 1], or ``NaN`` when not computable.
+    """
     y_true = np.asarray(
         y_true,
         dtype=float,
@@ -198,6 +323,36 @@ def fit_log10_calibration(
     intensity_calibrated_units: np.ndarray,
     intensity_au: np.ndarray,
 ) -> FluorescenceFitResult:
+    """
+    Fit a log–log linear calibration model to bead intensity data.
+
+    The model is::
+
+        log10(y) = slope * log10(x) + intercept
+        y = prefactor * x ** slope,  where prefactor = 10 ** intercept
+
+    Both arrays are masked to retain only positive finite values before
+    fitting.
+
+    Parameters
+    ----------
+    intensity_calibrated_units : np.ndarray
+        Reference bead intensities in calibrated units (y values).
+    intensity_au : np.ndarray
+        Measured bead intensities in arbitrary units (x values).
+
+    Returns
+    -------
+    FluorescenceFitResult
+        Fit parameters (slope, intercept, prefactor, R²) and the log10
+        arrays used for fitting.
+
+    Raises
+    ------
+    ValueError
+        If fewer than two valid (positive, finite) bead points remain after
+        masking.
+    """
     intensity_calibrated_units = np.asarray(
         intensity_calibrated_units,
         dtype=float,
@@ -259,6 +414,22 @@ def build_reference_points(
     intensity_calibrated_units: np.ndarray,
     intensity_au: np.ndarray,
 ) -> list[dict[str, float]]:
+    """
+    Pair calibrated-unit and arbitrary-unit intensities into a list of dicts.
+
+    Parameters
+    ----------
+    intensity_calibrated_units : np.ndarray
+        Reference bead intensities in calibrated units.
+    intensity_au : np.ndarray
+        Measured bead intensities in arbitrary units.
+
+    Returns
+    -------
+    list[dict[str, float]]
+        List of ``{"reference_value": …, "measured_value": …}`` dicts, one
+        per bead point.
+    """
     return [
         {
             "reference_value": float(reference_value),
@@ -275,6 +446,22 @@ def build_reference_points(
 def resolve_gating_threshold_value(
     scattering_threshold: Any,
 ) -> Optional[float]:
+    """
+    Extract a numeric gating threshold from a threshold store value.
+
+    The threshold may be stored as a plain number, a string, or a dict with a
+    ``"threshold"`` key (as returned by some Dash stores).
+
+    Parameters
+    ----------
+    scattering_threshold : Any
+        Raw threshold value from a Dash store.
+
+    Returns
+    -------
+    Optional[float]
+        Parsed threshold float, or ``None`` if the value cannot be parsed.
+    """
     if isinstance(scattering_threshold, dict):
         return casting.as_float(
             scattering_threshold.get("threshold"),
@@ -294,6 +481,29 @@ def build_calibration_payload(
     reference_points: list[dict[str, float]],
     fit_result: FluorescenceFitResult,
 ) -> dict[str, Any]:
+    """
+    Assemble the JSON-serialisable calibration payload for a fluorescence fit.
+
+    Parameters
+    ----------
+    bead_file_path : Optional[str]
+        Path to the bead FCS file used during calibration.
+    detector_column : Optional[str]
+        Fluorescence detector column name.
+    scattering_detector_column : Optional[str]
+        Scattering detector column used for gating, if any.
+    scattering_threshold : Any
+        Gating threshold raw value (see :func:`resolve_gating_threshold_value`).
+    reference_points : list[dict[str, float]]
+        Paired bead intensity reference points.
+    fit_result : FluorescenceFitResult
+        Log-log fit parameters.
+
+    Returns
+    -------
+    dict[str, Any]
+        Calibration payload conforming to schema version ``"1.0"``.
+    """
     gating_threshold = resolve_gating_threshold_value(
         scattering_threshold,
     )
@@ -336,6 +546,22 @@ def build_apply_status(
     detector_column: Optional[str],
     valid_event_count: Optional[int],
 ) -> str:
+    """
+    Build a human-readable status string for the calibration apply action.
+
+    Parameters
+    ----------
+    detector_column : Optional[str]
+        Detector column for which a preview was computed.  When ``None`` or
+        empty, a generic success message is returned.
+    valid_event_count : Optional[int]
+        Number of events that passed the calibration preview computation.
+
+    Returns
+    -------
+    str
+        A short status string suitable for display in the UI.
+    """
     if not detector_column:
         return "Calibration fit created successfully."
 
@@ -353,6 +579,28 @@ def build_calibration_figure(
     slope: float,
     intercept: float,
 ) -> go.Figure:
+    """
+    Build a Plotly scatter figure showing the log–log calibration fit.
+
+    The figure contains a scatter trace for the bead measurement points and a
+    line trace for the fitted model.
+
+    Parameters
+    ----------
+    x_log10 : np.ndarray
+        log10-transformed measured intensities (x axis).
+    y_log10 : np.ndarray
+        log10-transformed calibrated intensities (y axis).
+    slope : float
+        Slope of the log–log linear fit.
+    intercept : float
+        Intercept of the log–log linear fit.
+
+    Returns
+    -------
+    go.Figure
+        Plotly figure with bead points and fit line traces.
+    """
     x_log10 = np.asarray(
         x_log10,
         dtype=float,
@@ -406,6 +654,29 @@ def compute_valid_event_count_for_preview(
     slope: float,
     prefactor: float,
 ) -> int:
+    """
+    Count how many events yield a valid (positive, finite) calibrated value.
+
+    Reads the raw intensities for *detector_column*, applies the power-law
+    calibration ``y = prefactor * x ** slope``, and counts the resulting
+    positive finite values.
+
+    Parameters
+    ----------
+    bead_file_path : str
+        Path to the bead FCS file.
+    detector_column : str
+        Fluorescence detector column to calibrate.
+    slope : float
+        Power-law exponent from the log–log fit.
+    prefactor : float
+        Power-law pre-factor (``10 ** intercept``).
+
+    Returns
+    -------
+    int
+        Count of events that produce a positive finite calibrated value.
+    """
     with FCSFile(
         str(bead_file_path),
         writable=False,
@@ -450,6 +721,34 @@ def run_calibration_workflow(
     scattering_threshold: Any,
     logger: logging.Logger,
 ) -> CalibrationResult:
+    """
+    Run the full fluorescence calibration workflow.
+
+    Extracts calibration pairs from the table, fits a log–log model, builds the
+    calibration figure and payload, and optionally computes a preview event
+    count.
+
+    Parameters
+    ----------
+    bead_file_path : Optional[str]
+        Path to the bead FCS file.  Calibration is aborted if absent.
+    table_data : list[dict[str, Any]] | None
+        Row data from the bead table (see :func:`extract_xy_from_table`).
+    detector_column : Optional[str]
+        Fluorescence detector column for the preview computation.
+    scattering_detector_column : Optional[str]
+        Scattering detector column used for gating metadata.
+    scattering_threshold : Any
+        Gating threshold value stored in the calibration payload.
+    logger : logging.Logger
+        Logger instance for debug and exception messages.
+
+    Returns
+    -------
+    CalibrationResult
+        Container with updated figure, calibration payload, fit metrics, and
+        status string.
+    """
     if not bead_file_path:
         logger.debug(
             "Calibration aborted because bead_file_path is missing."

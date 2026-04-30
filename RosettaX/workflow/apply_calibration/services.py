@@ -164,15 +164,59 @@ def build_scattering_dataframe_transformer_factory(
     target_model_parameters: ScatteringTargetModelParameters,
 ):
     """
-    Build a dataframe transformer factory for scattering calibration.
+    Build a per-file dataframe transformer factory for scattering calibration.
+
+    Returns a callable that accepts an FCS file path and itself returns a
+    dataframe transformer function suitable for use with
+    :func:`~RosettaX.workflow.apply_calibration.io.build_exported_fcs_bytes`.
+
+    Parameters
+    ----------
+    source_channel : str
+        Detector column to calibrate.
+    calibration_payload : dict[str, Any]
+        Loaded calibration JSON payload.
+    target_model_parameters : ScatteringTargetModelParameters
+        Target Mie model parameters for the scattering conversion.
+
+    Returns
+    -------
+    Callable[[str], Callable[[Any], Any]]
+        A factory function ``f(uploaded_fcs_path) -> transformer``.
     """
 
     def dataframe_transformer_factory(
         uploaded_fcs_path: str,
     ):
+        """
+        Return a dataframe transformer bound to *uploaded_fcs_path*.
+
+        Parameters
+        ----------
+        uploaded_fcs_path : str
+            Path to the FCS file being processed.
+
+        Returns
+        -------
+        Callable[[Any], Any]
+            Transformer that applies scattering calibration to a DataFrame.
+        """
         def dataframe_transformer(
             dataframe: Any,
         ) -> Any:
+            """
+            Apply scattering calibration to *dataframe* and return the result.
+
+            Parameters
+            ----------
+            dataframe : Any
+                Pandas DataFrame loaded from the FCS file.
+
+            Returns
+            -------
+            Any
+                Transformed DataFrame with calibrated scattering columns.
+            """
             result = apply_scattering_calibration_to_dataframe(
                 dataframe=dataframe,
                 source_channel=source_channel,
@@ -199,15 +243,57 @@ def build_legacy_dataframe_transformer_factory(
     calibration_payload: dict[str, Any],
 ):
     """
-    Build a dataframe transformer factory for legacy fluorescence calibration.
+    Build a per-file dataframe transformer factory for legacy fluorescence calibration.
+
+    Returns a callable that accepts an FCS file path and itself returns a
+    dataframe transformer applying the power-law fluorescence calibration.
+
+    Parameters
+    ----------
+    source_channel : str
+        Detector column to calibrate.
+    calibration_payload : dict[str, Any]
+        Loaded calibration JSON payload.
+
+    Returns
+    -------
+    Callable[[str], Callable[[Any], Any]]
+        A factory function ``f(uploaded_fcs_path) -> transformer``.
     """
 
     def dataframe_transformer_factory(
         _uploaded_fcs_path: str,
     ):
+        """
+        Return a dataframe transformer (ignores the file path argument).
+
+        Parameters
+        ----------
+        _uploaded_fcs_path : str
+            Unused FCS file path (accepted for interface compatibility).
+
+        Returns
+        -------
+        Callable[[Any], Any]
+            Transformer that applies fluorescence calibration to a DataFrame.
+        """
         def dataframe_transformer(
             dataframe: Any,
         ) -> Any:
+            """
+            Apply legacy fluorescence calibration to *dataframe*.
+
+            Parameters
+            ----------
+            dataframe : Any
+                Pandas DataFrame loaded from the FCS file.
+
+            Returns
+            -------
+            Any
+                Deep copy of *dataframe* with the source channel values
+                replaced by calibrated intensities.
+            """
             output_dataframe = dataframe.copy(
                 deep=True,
             )
@@ -235,7 +321,21 @@ def resolve_source_channel(
     calibration_payload: dict[str, Any],
 ) -> str:
     """
-    Resolve the canonical source channel from a calibration payload.
+    Resolve the canonical source channel name from a calibration payload.
+
+    Checks the top-level ``"source_channel"`` key first.  If absent or empty,
+    falls back to ``payload["instrument_response"]["measured_channel"]`` for
+    legacy scattering calibration payloads.
+
+    Parameters
+    ----------
+    calibration_payload : dict[str, Any]
+        Loaded calibration JSON payload.
+
+    Returns
+    -------
+    str
+        Source channel name, or an empty string when not found.
     """
     if not isinstance(calibration_payload, dict):
         return ""
@@ -276,7 +376,23 @@ def build_success_message(
     output_channels: list[str],
 ) -> str:
     """
-    Build a compact success message.
+    Build a compact success message for the apply-calibration action.
+
+    Parameters
+    ----------
+    selected_calibration : Any
+        Name of the calibration that was applied (used in the message).
+    source_channel : str
+        Detector column that was calibrated.
+    file_count : int
+        Number of FCS files that were processed.
+    output_channels : list[str]
+        Names of the exported output columns.
+
+    Returns
+    -------
+    str
+        Human-readable success message for display in the UI.
     """
     output_channel_text = ", ".join(
         [

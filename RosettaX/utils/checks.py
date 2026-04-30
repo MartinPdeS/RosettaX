@@ -36,6 +36,19 @@ class FCSMultiFileConsistencyChecker:
 
     @staticmethod
     def _normalize_file_paths(file_paths: list[str]) -> list[str]:
+        """
+        Expand user home shortcuts and remove blank path strings.
+
+        Parameters
+        ----------
+        file_paths : list[str]
+            Raw file paths, possibly containing ``~`` prefixes or blank entries.
+
+        Returns
+        -------
+        list[str]
+            Cleaned list of absolute path strings.
+        """
         normalized_file_paths = [
             str(Path(file_path).expanduser())
             for file_path in file_paths
@@ -52,6 +65,15 @@ class FCSMultiFileConsistencyChecker:
 
     @staticmethod
     def _build_empty_column_name_consistency_report() -> dict[str, Any]:
+        """
+        Return an empty column-name consistency report indicating no files to check.
+
+        Returns
+        -------
+        dict[str, Any]
+            Report with ``are_all_files_consistent`` set to ``True`` and empty
+            lists for invalid paths and mismatch details.
+        """
         return {
             "are_all_files_consistent": True,
             "reference_file_path": None,
@@ -62,6 +84,15 @@ class FCSMultiFileConsistencyChecker:
 
     @staticmethod
     def _build_empty_version_consistency_report() -> dict[str, Any]:
+        """
+        Return an empty FCS-version consistency report indicating no files to check.
+
+        Returns
+        -------
+        dict[str, Any]
+            Report with ``are_all_files_consistent`` set to ``True`` and empty
+            lists for invalid paths and mismatch details.
+        """
         return {
             "are_all_files_consistent": True,
             "reference_file_path": None,
@@ -72,6 +103,16 @@ class FCSMultiFileConsistencyChecker:
 
     @staticmethod
     def _build_empty_detector_voltage_consistency_report() -> dict[str, Any]:
+        """
+        Return an empty detector-voltage consistency report indicating no files to check.
+
+        Returns
+        -------
+        dict[str, Any]
+            Report with ``are_all_files_consistent`` set to ``True`` and empty
+            dicts/lists for reference voltages, invalid paths, and mismatch
+            details.
+        """
         return {
             "are_all_files_consistent": True,
             "reference_file_path": None,
@@ -82,6 +123,17 @@ class FCSMultiFileConsistencyChecker:
 
     @classmethod
     def build_empty_consistency_report(cls) -> dict[str, Any]:
+        """
+        Build a combined empty consistency report for all three check categories.
+
+        Useful as a safe default when no files have been provided.
+
+        Returns
+        -------
+        dict[str, Any]
+            Aggregated report combining column-name, version, and
+            detector-voltage sub-reports, all marked consistent.
+        """
         column_name_consistency_report = cls._build_empty_column_name_consistency_report()
         version_consistency_report = cls._build_empty_version_consistency_report()
         detector_voltage_consistency_report = cls._build_empty_detector_voltage_consistency_report()
@@ -100,6 +152,27 @@ class FCSMultiFileConsistencyChecker:
         }
 
     def get_file_metadata(self, file_path: str) -> FCSMetadata:
+        """
+        Return :class:`~RosettaX.utils.fcs_metadata.FCSMetadata` for a file.
+
+        Results are cached by normalised path so that repeated calls for the
+        same file do not trigger additional disk reads.
+
+        Parameters
+        ----------
+        file_path : str
+            Path to the FCS file.
+
+        Returns
+        -------
+        FCSMetadata
+            Parsed metadata for the file.
+
+        Raises
+        ------
+        Exception
+            Re-raises any exception raised while reading the FCS file.
+        """
         normalized_file_path = str(Path(file_path).expanduser())
 
         if normalized_file_path in self._metadata_by_file_path:
@@ -136,8 +209,20 @@ class FCSMultiFileConsistencyChecker:
         return file_metadata
 
     def check_column_name_consistency(self) -> dict[str, Any]:
+        """
+        Check that all FCS files share the same detector column names.
+
+        Uses the first file as the reference and compares the remaining files
+        against it.
+
+        Returns
+        -------
+        dict[str, Any]
+            Report containing ``are_all_files_consistent``,
+            ``reference_column_names``, ``invalid_file_paths``, and
+            ``mismatch_details``.
+        """
         logger.debug(
-            "Checking FCS column name consistency for file_count=%r",
             len(self.file_paths),
         )
 
@@ -223,6 +308,19 @@ class FCSMultiFileConsistencyChecker:
         return report
 
     def check_version_consistency(self) -> dict[str, Any]:
+        """
+        Check that all FCS files share the same FCS format version.
+
+        Uses the first file as the reference and compares the remaining files
+        against it.
+
+        Returns
+        -------
+        dict[str, Any]
+            Report containing ``are_all_files_consistent``,
+            ``reference_fcs_version``, ``invalid_file_paths``, and
+            ``mismatch_details``.
+        """
         logger.debug(
             "Checking FCS version consistency for file_count=%r",
             len(self.file_paths),
@@ -308,6 +406,19 @@ class FCSMultiFileConsistencyChecker:
         return report
 
     def check_detector_voltage_consistency(self) -> dict[str, Any]:
+        """
+        Check that all FCS files share the same detector voltages.
+
+        Uses the first file as the reference and compares the remaining files
+        against it.  Per-detector voltage mismatches are reported individually.
+
+        Returns
+        -------
+        dict[str, Any]
+            Report containing ``are_all_files_consistent``,
+            ``reference_detector_voltages``, ``invalid_file_paths``, and
+            ``mismatch_details``.
+        """
         logger.debug(
             "Checking FCS detector voltage consistency for file_count=%r",
             len(self.file_paths),
@@ -402,6 +513,28 @@ class FCSMultiFileConsistencyChecker:
         reference_detector_voltages: dict[str, Optional[float]],
         current_detector_voltages: dict[str, Optional[float]],
     ) -> list[str]:
+        """
+        Build per-detector voltage mismatch detail strings.
+
+        Compares detector voltages between a reference file and a candidate file
+        and returns a human-readable message for each differing detector.
+
+        Parameters
+        ----------
+        reference_file_path : str
+            Path to the reference FCS file.
+        current_file_path : str
+            Path to the candidate FCS file being compared.
+        reference_detector_voltages : dict[str, Optional[float]]
+            Mapping of detector name to voltage for the reference file.
+        current_detector_voltages : dict[str, Optional[float]]
+            Mapping of detector name to voltage for the candidate file.
+
+        Returns
+        -------
+        list[str]
+            List of mismatch description strings, one per differing detector.
+        """
         mismatch_details: list[str] = []
 
         all_detector_names = sorted(
@@ -425,6 +558,21 @@ class FCSMultiFileConsistencyChecker:
         return mismatch_details
 
     def check_multifiles_consistency(self) -> dict[str, Any]:
+        """
+        Run all three consistency checks and return a combined report.
+
+        Runs :meth:`check_column_name_consistency`,
+        :meth:`check_version_consistency`, and
+        :meth:`check_detector_voltage_consistency`, then merges the results into
+        a single aggregated report.
+
+        Returns
+        -------
+        dict[str, Any]
+            Combined report with sub-reports for each check category and
+            merged ``are_all_files_consistent``, ``invalid_file_paths``, and
+            ``mismatch_details`` fields.
+        """
         logger.debug(
             "Checking complete FCS multi file consistency for file_paths=%r",
             self.file_paths,

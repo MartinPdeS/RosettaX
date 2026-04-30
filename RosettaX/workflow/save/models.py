@@ -47,6 +47,19 @@ class SaveResult:
     sidebar_refresh_signal: Any = dash.no_update
 
     def to_tuple(self) -> tuple[Any, Any]:
+        """
+        Return outputs as a tuple in Dash callback output order.
+
+        Order
+        -----
+        1. save_out
+        2. sidebar_refresh_signal
+
+        Returns
+        -------
+        tuple[Any, Any]
+            Two-element tuple matching the Dash callback output order.
+        """
         return (
             self.save_out,
             self.sidebar_refresh_signal,

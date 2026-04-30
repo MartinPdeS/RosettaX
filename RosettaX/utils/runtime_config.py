@@ -191,6 +191,21 @@ class RuntimeConfig:
         return RuntimeConfig.from_dict(self.data)
 
     def get_path(self, path: str, default: Any = None) -> Any:
+        """
+        Retrieve a value from the configuration using a dotted path.
+
+        Parameters
+        ----------
+        path : str
+            Dot-separated key path, e.g. ``"ui.theme_mode"``.
+        default : Any
+            Value returned when the path does not exist.
+
+        Returns
+        -------
+        Any
+            The value at *path*, or *default* if not found.
+        """
         resolved_value = self._get_nested_value(self.data, path, default=default)
         logger.debug(
             "RuntimeConfig.get_path called with path=%r default=%r resolved_value=%r",
@@ -201,6 +216,19 @@ class RuntimeConfig:
         return resolved_value
 
     def set_path(self, path: str, value: Any) -> None:
+        """
+        Set a value in the configuration using a dotted path.
+
+        Intermediate dictionaries are created automatically when they do not
+        already exist.
+
+        Parameters
+        ----------
+        path : str
+            Dot-separated key path, e.g. ``"ui.theme_mode"``.
+        value : Any
+            Value to store at *path*.
+        """
         old_value = self._get_nested_value(self.data, path, default=None)
         self._set_nested_value(self.data, path, value)
         logger.debug(
@@ -211,12 +239,47 @@ class RuntimeConfig:
         )
 
     def get_str(self, path: str, default: str = "") -> str:
+        """
+        Retrieve a configuration value as a stripped string.
+
+        Parameters
+        ----------
+        path : str
+            Dot-separated key path.
+        default : str
+            Fallback string when the path does not exist or the value is
+            ``None``.
+
+        Returns
+        -------
+        str
+            The value coerced to a stripped string, or *default*.
+        """
         value = self.get_path(path, default=default)
         if value is None:
             return default
         return str(value).strip()
 
     def get_bool(self, path: str, default: bool = False) -> bool:
+        """
+        Retrieve a configuration value as a boolean.
+
+        String values such as ``"true"``, ``"yes"``, ``"1"``, ``"on"``, and
+        ``"enabled"`` are interpreted as ``True``; ``"false"``, ``"no"``,
+        ``"0"``, ``"off"``, and ``"disabled"`` as ``False``.
+
+        Parameters
+        ----------
+        path : str
+            Dot-separated key path.
+        default : bool
+            Fallback value when the path does not exist.
+
+        Returns
+        -------
+        bool
+            The resolved boolean value.
+        """
         value = self.get_path(path, default=default)
 
         if isinstance(value, bool):
@@ -234,6 +297,22 @@ class RuntimeConfig:
         return bool(value)
 
     def get_float(self, path: str, default: Optional[float] = None) -> Optional[float]:
+        """
+        Retrieve a configuration value as a float.
+
+        Parameters
+        ----------
+        path : str
+            Dot-separated key path.
+        default : Optional[float]
+            Fallback value when the path does not exist or the value cannot be
+            coerced to a float.
+
+        Returns
+        -------
+        Optional[float]
+            The value coerced to ``float``, or *default*.
+        """
         value = self.get_path(path, default=default)
 
         if value is None:
@@ -251,6 +330,22 @@ class RuntimeConfig:
             return default
 
     def get_int(self, path: str, default: Optional[int] = None) -> Optional[int]:
+        """
+        Retrieve a configuration value as an integer.
+
+        Parameters
+        ----------
+        path : str
+            Dot-separated key path.
+        default : Optional[int]
+            Fallback value when the path does not exist or the value cannot be
+            coerced to an integer.
+
+        Returns
+        -------
+        Optional[int]
+            The value coerced to ``int``, or *default*.
+        """
         value = self.get_path(path, default=default)
 
         if value is None:
@@ -388,9 +483,34 @@ class RuntimeConfig:
         return representation
 
     def to_json(self, *, indent: int = 2) -> str:
+        """
+        Serialise the configuration to a JSON string.
+
+        Parameters
+        ----------
+        indent : int
+            Number of spaces used for indentation.
+
+        Returns
+        -------
+        str
+            JSON representation of the configuration.
+        """
         return json.dumps(self.to_dict(), indent=indent, ensure_ascii=False)
 
     def to_json_path(self, json_path: Path | str, *, indent: int = 2) -> None:
+        """
+        Write the configuration to a JSON file.
+
+        Parent directories are created automatically if they do not exist.
+
+        Parameters
+        ----------
+        json_path : Path | str
+            Destination file path.
+        indent : int
+            Number of spaces used for indentation.
+        """
         resolved_json_path = Path(json_path).expanduser().resolve()
         resolved_json_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -404,6 +524,22 @@ class RuntimeConfig:
 
     @staticmethod
     def _make_json_safe(value: Any) -> Any:
+        """
+        Recursively convert NumPy types and arrays to JSON-serialisable objects.
+
+        ``np.ndarray`` → ``list``; ``np.generic`` scalars → Python native; dict
+        keys are cast to ``str``; lists and tuples are traversed recursively.
+
+        Parameters
+        ----------
+        value : Any
+            Arbitrary value that may contain NumPy objects.
+
+        Returns
+        -------
+        Any
+            The value with all NumPy types replaced by JSON-safe equivalents.
+        """
         if isinstance(value, np.ndarray):
             return value.tolist()
 
