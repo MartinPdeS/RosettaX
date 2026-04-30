@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Any, ClassVar, Optional
 import logging
 
+import numpy as np
 import dash
 
 from RosettaX.utils import styling
@@ -321,3 +322,151 @@ class BasePeakProcess:
             "y_positions": [],
             "points": [],
         }
+
+
+def resolve_integer_value(
+    *,
+    value: Any,
+    default: int,
+    minimum: int,
+    maximum: int,
+) -> int:
+    """
+    Resolve a bounded integer value.
+    """
+    try:
+        resolved_value = int(value)
+    except (TypeError, ValueError):
+        resolved_value = int(default)
+
+    resolved_value = max(int(minimum), resolved_value)
+    resolved_value = min(int(maximum), resolved_value)
+
+    return resolved_value
+
+
+def resolve_integer_setting(
+    *,
+    settings: dict[str, Any],
+    name: str,
+    default: int,
+    minimum: int,
+    maximum: int,
+) -> int:
+    """
+    Resolve an integer process setting.
+    """
+    return resolve_integer_value(
+        value=settings.get(name),
+        default=default,
+        minimum=minimum,
+        maximum=maximum,
+    )
+
+
+def resolve_float_setting(
+    *,
+    settings: dict[str, Any],
+    name: str,
+    default: float,
+    minimum: float,
+    maximum: float,
+) -> float:
+    """
+    Resolve a bounded float process setting.
+    """
+    try:
+        resolved_value = float(settings.get(name, default))
+    except (TypeError, ValueError):
+        resolved_value = float(default)
+
+    if not np.isfinite(resolved_value):
+        resolved_value = float(default)
+
+    resolved_value = max(float(minimum), resolved_value)
+    resolved_value = min(float(maximum), resolved_value)
+
+    return resolved_value
+
+
+def resolve_yes_no_setting(
+    *,
+    settings: dict[str, Any],
+    name: str,
+    default: bool,
+) -> bool:
+    """
+    Resolve a yes or no setting.
+    """
+    value = settings.get(name, None)
+
+    if value is None:
+        return bool(default)
+
+    if isinstance(value, bool):
+        return value
+
+    return str(value).strip().lower() in ("yes", "true", "1", "on", "enabled")
+
+
+def deduplicate_1d_peak_positions(
+    *,
+    peak_positions: list[float],
+    decimal_places: int = 12,
+) -> list[float]:
+    """
+    Remove duplicate 1D peak positions while preserving order.
+    """
+    unique_peak_positions: list[float] = []
+    seen_keys: set[float] = set()
+
+    for peak_position in peak_positions:
+        try:
+            x_value = float(peak_position)
+        except (TypeError, ValueError):
+            continue
+
+        if not np.isfinite(x_value):
+            continue
+
+        key = round(x_value, int(decimal_places))
+
+        if key in seen_keys:
+            continue
+
+        seen_keys.add(key)
+        unique_peak_positions.append(x_value)
+
+    return unique_peak_positions
+
+
+def deduplicate_2d_peak_positions(
+    *,
+    peak_positions: list[dict[str, float]],
+    decimal_places: int = 12,
+) -> list[dict[str, float]]:
+    """
+    Remove duplicate 2D peak positions while preserving order.
+    """
+    unique_peak_positions: list[dict[str, float]] = []
+    seen_keys: set[tuple[float, float]] = set()
+
+    for peak_position in peak_positions:
+        try:
+            x_value = float(peak_position["x"])
+            y_value = float(peak_position["y"])
+        except (KeyError, TypeError, ValueError):
+            continue
+
+        if not np.isfinite(x_value) or not np.isfinite(y_value):
+            continue
+
+        key = (round(x_value, int(decimal_places)), round(y_value, int(decimal_places)))
+
+        if key in seen_keys:
+            continue
+
+        seen_keys.add(key)
+        unique_peak_positions.append(peak_position)
+
+    return unique_peak_positions
