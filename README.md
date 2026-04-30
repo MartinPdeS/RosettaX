@@ -14,35 +14,35 @@
 | RosettaX/pages/p01\_home/main.py                                   |       36 |       36 |        0 |        0 |     0.00% |     3-503 |
 | RosettaX/pages/p02\_fluorescence/backend.py                        |        2 |        2 |        0 |        0 |     0.00% |       1-2 |
 | RosettaX/pages/p02\_fluorescence/ids.py                            |       57 |       57 |        0 |        0 |     0.00% |     2-114 |
-| RosettaX/pages/p02\_fluorescence/main.py                           |       19 |       19 |        2 |        0 |     0.00% |      3-72 |
-| RosettaX/pages/p02\_fluorescence/sections/s00\_header.py           |       20 |       20 |        0 |        0 |     0.00% |     3-171 |
-| RosettaX/pages/p02\_fluorescence/sections/s01\_upload.py           |       24 |       24 |        0 |        0 |     0.00% |      3-96 |
-| RosettaX/pages/p02\_fluorescence/sections/s02\_peaks.py            |       33 |       33 |        2 |        0 |     0.00% |     3-140 |
-| RosettaX/pages/p02\_fluorescence/sections/s03\_table.py            |       64 |       64 |        4 |        0 |     0.00% |     3-252 |
-| RosettaX/pages/p02\_fluorescence/sections/s04\_calibration.py      |      115 |      115 |       22 |        0 |     0.00% |     3-671 |
-| RosettaX/pages/p02\_fluorescence/sections/s05\_save.py             |       20 |       20 |        0 |        0 |     0.00% |      3-77 |
+| RosettaX/pages/p02\_fluorescence/main.py                           |       19 |       19 |        2 |        0 |     0.00% |      3-77 |
+| RosettaX/pages/p02\_fluorescence/sections/s00\_header.py           |       22 |       22 |        0 |        0 |     0.00% |     3-164 |
+| RosettaX/pages/p02\_fluorescence/sections/s01\_upload.py           |       28 |       28 |        0 |        0 |     0.00% |     3-108 |
+| RosettaX/pages/p02\_fluorescence/sections/s02\_peaks.py            |       37 |       37 |        2 |        0 |     0.00% |     3-152 |
+| RosettaX/pages/p02\_fluorescence/sections/s03\_table.py            |       68 |       68 |        4 |        0 |     0.00% |     3-264 |
+| RosettaX/pages/p02\_fluorescence/sections/s04\_calibration.py      |      117 |      117 |       22 |        0 |     0.00% |     3-685 |
+| RosettaX/pages/p02\_fluorescence/sections/s05\_save.py             |       24 |       24 |        0 |        0 |     0.00% |      3-89 |
 | RosettaX/pages/p02\_fluorescence/state.py                          |       82 |       82 |       30 |        0 |     0.00% |     3-332 |
 | RosettaX/pages/p03\_scattering/backend.py                          |      111 |      111 |       24 |        0 |     0.00% |     3-383 |
 | RosettaX/pages/p03\_scattering/ids.py                              |      141 |      141 |        0 |        0 |     0.00% |     3-236 |
-| RosettaX/pages/p03\_scattering/main.py                             |       18 |       18 |        2 |        0 |     0.00% |      2-71 |
-| RosettaX/pages/p03\_scattering/sections/s00\_header.py             |       20 |       20 |        0 |        0 |     0.00% |     3-181 |
-| RosettaX/pages/p03\_scattering/sections/s01\_upload.py             |       24 |       24 |        0 |        0 |     0.00% |      3-84 |
-| RosettaX/pages/p03\_scattering/sections/s02\_peaks.py              |       32 |       32 |        2 |        0 |     0.00% |     3-120 |
-| RosettaX/pages/p03\_scattering/sections/s03\_model.py              |      103 |      103 |        0 |        0 |     0.00% |     3-896 |
-| RosettaX/pages/p03\_scattering/sections/s04\_table.py              |       98 |       98 |        2 |        0 |     0.00% |     3-523 |
-| RosettaX/pages/p03\_scattering/sections/s05\_calibration.py        |      148 |      148 |       24 |        0 |     0.00% |    3-1033 |
-| RosettaX/pages/p03\_scattering/sections/s06\_save.py               |       20 |       20 |        0 |        0 |     0.00% |      3-66 |
+| RosettaX/pages/p03\_scattering/main.py                             |       19 |       19 |        2 |        0 |     0.00% |     2-109 |
+| RosettaX/pages/p03\_scattering/sections/s00\_header.py             |       22 |       22 |        0 |        0 |     0.00% |     3-173 |
+| RosettaX/pages/p03\_scattering/sections/s01\_upload.py             |       28 |       28 |        0 |        0 |     0.00% |      3-98 |
+| RosettaX/pages/p03\_scattering/sections/s02\_peaks.py              |       36 |       36 |        2 |        0 |     0.00% |     3-134 |
+| RosettaX/pages/p03\_scattering/sections/s03\_model.py              |      105 |      105 |        0 |        0 |     0.00% |     3-911 |
+| RosettaX/pages/p03\_scattering/sections/s04\_table.py              |      102 |      102 |        2 |        0 |     0.00% |     3-537 |
+| RosettaX/pages/p03\_scattering/sections/s05\_calibration.py        |      130 |      130 |       24 |        0 |     0.00% |     3-882 |
+| RosettaX/pages/p03\_scattering/sections/s06\_save.py               |       24 |       24 |        0 |        0 |     0.00% |      3-80 |
 | RosettaX/pages/p03\_scattering/state.py                            |       36 |       36 |        6 |        0 |     0.00% |     3-127 |
 | RosettaX/pages/p04\_calibrate/ids.py                               |       37 |       37 |        0 |        0 |     0.00% |      3-69 |
-| RosettaX/pages/p04\_calibrate/main.py                              |       29 |       29 |        2 |        0 |     0.00% |     3-139 |
-| RosettaX/pages/p04\_calibrate/sections/s01\_header.py              |        9 |        9 |        0 |        0 |     0.00% |      3-31 |
-| RosettaX/pages/p04\_calibrate/sections/s02\_calibration\_picker.py |      235 |      235 |       52 |        0 |     0.00% |    3-1363 |
-| RosettaX/pages/p04\_calibrate/sections/s03\_file\_picker.py        |      125 |      125 |       40 |        0 |     0.00% |     3-537 |
-| RosettaX/pages/p04\_calibrate/sections/s04\_apply.py               |       89 |       89 |       12 |        0 |     0.00% |     3-593 |
+| RosettaX/pages/p04\_calibrate/main.py                              |       33 |       33 |        2 |        0 |     0.00% |     3-168 |
+| RosettaX/pages/p04\_calibrate/sections/s01\_header.py              |       10 |       10 |        0 |        0 |     0.00% |      3-40 |
+| RosettaX/pages/p04\_calibrate/sections/s02\_calibration\_picker.py |      239 |      239 |       52 |        0 |     0.00% |    3-1378 |
+| RosettaX/pages/p04\_calibrate/sections/s03\_file\_picker.py        |      128 |      128 |       40 |        0 |     0.00% |     3-547 |
+| RosettaX/pages/p04\_calibrate/sections/s04\_apply.py               |       92 |       92 |       12 |        0 |     0.00% |     3-607 |
 | RosettaX/pages/p04\_calibrate/state.py                             |       29 |       29 |        4 |        0 |     0.00% |     3-106 |
 | RosettaX/pages/p05\_settings/ids.py                                |       56 |       56 |        0 |        0 |     0.00% |     4-114 |
 | RosettaX/pages/p05\_settings/main.py                               |       20 |       20 |        2 |        0 |     0.00% |      3-56 |
-| RosettaX/pages/p05\_settings/sections/s01\_default/main.py         |      122 |      122 |       14 |        0 |     0.00% |     3-816 |
+| RosettaX/pages/p05\_settings/sections/s01\_default/main.py         |      122 |      122 |       14 |        0 |     0.00% |     3-784 |
 | RosettaX/pages/p05\_settings/sections/s01\_default/schema.py       |       27 |       27 |        2 |        0 |     0.00% |     3-488 |
 | RosettaX/pages/p05\_settings/sections/s01\_default/services.py     |      146 |      146 |       74 |        0 |     0.00% |     3-464 |
 | RosettaX/pages/p05\_settings/sections/s02\_create/main.py          |       43 |       43 |        4 |        0 |     0.00% |     3-182 |
@@ -111,7 +111,7 @@
 | RosettaX/workflow/upload/layout.py                                 |       32 |       32 |        4 |        0 |     0.00% |     3-122 |
 | RosettaX/workflow/upload/models.py                                 |       15 |       15 |        0 |        0 |     0.00% |      3-50 |
 | RosettaX/workflow/upload/services.py                               |       82 |       82 |       24 |        0 |     0.00% |     3-286 |
-| **TOTAL**                                                          | **9720** | **9062** | **2584** |   **49** | **6.69%** |           |
+| **TOTAL**                                                          | **9758** | **9100** | **2584** |   **49** | **6.67%** |           |
 
 1 file skipped due to complete coverage.
 
