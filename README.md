@@ -83,14 +83,14 @@
 | RosettaX/workflow/peak/models.py                                   |       18 |       18 |        0 |        0 |     0.00% |      3-73 |
 | RosettaX/workflow/peak/registry.py                                 |      113 |      113 |       52 |        0 |     0.00% |     3-399 |
 | RosettaX/workflow/peak/scripts/automatic\_1d\_peaks.py             |      195 |      195 |       54 |        0 |     0.00% |    3-1208 |
-| RosettaX/workflow/peak/scripts/automatic\_2d\_peaks.py             |      157 |      157 |       52 |        0 |     0.00% |     3-692 |
-| RosettaX/workflow/peak/scripts/base.py                             |       47 |       47 |        4 |        0 |     0.00% |     3-317 |
-| RosettaX/workflow/peak/scripts/k\_mean\_1d.py                      |      223 |      223 |       54 |        0 |     0.00% |    3-1130 |
-| RosettaX/workflow/peak/scripts/k\_mean\_2d.py                      |      250 |      250 |       58 |        0 |     0.00% |    3-1306 |
+| RosettaX/workflow/peak/scripts/automatic\_2d\_peaks.py             |      146 |      146 |       52 |        0 |     0.00% |     3-637 |
+| RosettaX/workflow/peak/scripts/base.py                             |      108 |      108 |       22 |        0 |     0.00% |     3-472 |
+| RosettaX/workflow/peak/scripts/k\_mean\_1d.py                      |      180 |      180 |       42 |        0 |     0.00% |     3-963 |
+| RosettaX/workflow/peak/scripts/k\_mean\_2d.py                      |      206 |      206 |       46 |        0 |     0.00% |    3-1142 |
 | RosettaX/workflow/peak/scripts/manual\_1d\_click.py                |       71 |       71 |       14 |        0 |     0.00% |     3-428 |
 | RosettaX/workflow/peak/scripts/manual\_2d\_click.py                |       98 |       98 |       22 |        0 |     0.00% |     3-635 |
-| RosettaX/workflow/peak/scripts/proeminence\_1d.py                  |      238 |      238 |       72 |        0 |     0.00% |    3-1164 |
-| RosettaX/workflow/peak/scripts/prominence\_2d.py                   |      279 |      279 |       72 |        0 |     0.00% |    3-1483 |
+| RosettaX/workflow/peak/scripts/proeminence\_1d.py                  |      195 |      195 |       60 |        0 |     0.00% |     3-997 |
+| RosettaX/workflow/peak/scripts/prominence\_2d.py                   |      235 |      235 |       60 |        0 |     0.00% |    3-1305 |
 | RosettaX/workflow/peak/scripts/rosetta\_mix.py                     |      195 |      195 |       66 |        0 |     0.00% |     3-865 |
 | RosettaX/workflow/peak/services.py                                 |       37 |       37 |        8 |        0 |     0.00% |     3-170 |
 | RosettaX/workflow/plotting/scatter2d.py                            |       91 |       91 |       24 |        0 |     0.00% |     3-433 |
@@ -111,7 +111,7 @@
 | RosettaX/workflow/upload/layout.py                                 |       32 |       32 |        4 |        0 |     0.00% |     3-122 |
 | RosettaX/workflow/upload/models.py                                 |       15 |       15 |        0 |        0 |     0.00% |      3-63 |
 | RosettaX/workflow/upload/services.py                               |       82 |       82 |       24 |        0 |     0.00% |     3-286 |
-| **TOTAL**                                                          | **9758** | **9100** | **2584** |   **49** | **6.67%** |           |
+| **TOTAL**                                                          | **9634** | **8976** | **2554** |   **49** | **6.75%** |           |
 
 1 file skipped due to complete coverage.
 
