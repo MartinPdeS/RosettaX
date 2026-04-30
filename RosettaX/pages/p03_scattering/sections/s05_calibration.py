@@ -11,6 +11,7 @@ import plotly.graph_objs as go
 from RosettaX.pages.p03_scattering.state import ScatteringPageState
 from RosettaX.utils import plottings
 from RosettaX.utils import styling
+from RosettaX.utils import ui_forms
 from RosettaX.workflow.calibration import scattering_services as services
 
 
@@ -43,14 +44,16 @@ class Calibration:
     graph_height_px = 520
     graph_min_width_px = 760
 
-    workflow_accent_rgba = "13, 110, 253"
-
     def __init__(
         self,
         page: Any,
+        section_number: int,
+        card_color: str = "blue",
     ) -> None:
         self.page = page
         self.ids = page.ids.Calibration
+        self.section_number = section_number
+        self.card_color = card_color
 
         self.header_tooltip_target_id = f"{self.ids.calibrate_btn}-section-info-target"
         self.header_tooltip_id = f"{self.ids.calibrate_btn}-section-info-tooltip"
@@ -78,7 +81,9 @@ class Calibration:
                 self._build_header(),
                 self._build_body(),
             ],
-            style=self._build_workflow_section_card_style(),
+            style=ui_forms.build_workflow_section_card_style(
+                color_name=self.card_color,
+            ),
         )
 
     def _build_header(self) -> dbc.CardHeader:
@@ -87,8 +92,8 @@ class Calibration:
         """
         return dbc.CardHeader(
             [
-                self._build_title_with_info(
-                    title="5. Fit instrument response",
+                ui_forms.build_title_with_info(
+                    title=f"{self.section_number}. Fit instrument response",
                     tooltip_target_id=self.header_tooltip_target_id,
                     tooltip_id=self.header_tooltip_id,
                     tooltip_text=(
@@ -99,10 +104,12 @@ class Calibration:
                 ),
                 dash.html.Div(
                     "Estimate the instrument response from the calibration standard.",
-                    style=self._build_workflow_section_subtitle_style(),
+                    style=ui_forms.build_workflow_section_subtitle_style(),
                 ),
             ],
-            style=self._build_workflow_section_header_style(),
+            style=ui_forms.build_workflow_section_header_style(
+                color_name=self.card_color,
+            ),
         )
 
     def _build_body(self) -> dbc.CardBody:
@@ -130,7 +137,7 @@ class Calibration:
                     },
                 ),
             ],
-            style=self._build_workflow_section_body_style(),
+            style=ui_forms.build_workflow_section_body_style(),
         )
 
     def _build_action_panel(self) -> dbc.Card:
@@ -176,7 +183,7 @@ class Calibration:
                                         n_clicks=0,
                                         color="primary",
                                     ),
-                                    self._build_info_badge(
+                                    ui_forms.build_info_badge(
                                         tooltip_target_id=self.compute_model_tooltip_target_id,
                                     ),
                                     dbc.Tooltip(
@@ -211,8 +218,12 @@ class Calibration:
                     "padding": "14px 16px",
                 },
             ),
-            style=self._build_workflow_panel_card_style(
-                background="rgba(13, 110, 253, 0.04)",
+            style=ui_forms.build_workflow_panel_style(
+                color_name=self.card_color,
+                background=styling.build_rgba(
+                    self.card_color,
+                    0.04,
+                ),
             ),
         )
 
@@ -288,23 +299,25 @@ class Calibration:
         card_children = [
             dbc.CardHeader(
                 [
-                    self._build_title_with_info(
+                    ui_forms.build_title_with_info(
                         title=title,
                         tooltip_target_id=tooltip_target_id,
                         tooltip_id=tooltip_id,
                         tooltip_text=tooltip_text,
-                        title_style={
+                        title_style_overrides={
                             "fontSize": "0.98rem",
                         },
                     ),
                     dash.html.Div(
                         subtitle,
-                        style=self._build_workflow_section_subtitle_style(
+                        style=ui_forms.build_workflow_section_subtitle_style(
                             font_size="0.84rem",
                         ),
                     ),
                 ],
-                style=self._build_workflow_panel_header_style(),
+                style=ui_forms.build_workflow_subpanel_header_style(
+                    color_name=self.card_color,
+                ),
             ),
             dbc.CardBody(
                 [
@@ -352,7 +365,9 @@ class Calibration:
         return dbc.Card(
             card_children,
             style={
-                **self._build_workflow_panel_card_style(),
+                **ui_forms.build_workflow_subpanel_card_style(
+                    color_name=self.card_color,
+                ),
                 "flex": "1 1 0",
                 "minWidth": f"{self.graph_min_width_px}px",
             },
@@ -401,7 +416,7 @@ class Calibration:
                     persistence_type="session",
                 ),
             ],
-            style=self._build_compact_control_panel_style(),
+            style=ui_forms.build_compact_control_panel_style(),
         )
 
     def _build_instrument_response_footer(self) -> dash.html.Div:
@@ -459,174 +474,8 @@ class Calibration:
                     },
                 ),
             ],
-            style=self._build_metric_box_style(),
+            style=ui_forms.build_metric_box_style(),
         )
-
-    def _build_title_with_info(
-        self,
-        *,
-        title: str,
-        tooltip_target_id: str,
-        tooltip_id: str,
-        tooltip_text: str,
-        title_style: dict[str, Any] | None = None,
-    ) -> dash.html.Div:
-        """
-        Build a compact title with a hover info badge.
-        """
-        return dash.html.Div(
-            [
-                dash.html.Span(
-                    title,
-                ),
-                self._build_info_badge(
-                    tooltip_target_id=tooltip_target_id,
-                ),
-                dbc.Tooltip(
-                    tooltip_text,
-                    id=tooltip_id,
-                    target=tooltip_target_id,
-                    placement="right",
-                ),
-            ],
-            style={
-                "display": "flex",
-                "alignItems": "center",
-                "fontWeight": "750",
-                "fontSize": "1.02rem",
-                **(title_style or {}),
-            },
-        )
-
-    def _build_info_badge(
-        self,
-        *,
-        tooltip_target_id: str,
-    ) -> dash.html.Span:
-        """
-        Build a compact reusable info badge.
-        """
-        return dash.html.Span(
-            "i",
-            id=tooltip_target_id,
-            style={
-                "width": "19px",
-                "height": "19px",
-                "borderRadius": "50%",
-                "display": "inline-flex",
-                "alignItems": "center",
-                "justifyContent": "center",
-                "fontSize": "0.72rem",
-                "fontWeight": "800",
-                "marginLeft": "8px",
-                "cursor": "help",
-                "opacity": 0.72,
-                "border": "1px solid currentColor",
-                "lineHeight": "1",
-                "flex": "0 0 auto",
-            },
-        )
-
-    def _build_workflow_section_card_style(self) -> dict[str, Any]:
-        """
-        Build the outer workflow card style.
-        """
-        return {
-            "borderRadius": "15px",
-            "borderLeft": f"5px solid rgba({self.workflow_accent_rgba}, 0.75)",
-            "boxShadow": "0 0.35rem 0.9rem rgba(0, 0, 0, 0.08)",
-            "overflow": "visible",
-        }
-
-    def _build_workflow_section_header_style(self) -> dict[str, Any]:
-        """
-        Build the outer workflow card header style.
-        """
-        return {
-            "background": f"rgba({self.workflow_accent_rgba}, 0.10)",
-            "borderBottom": f"1px solid rgba({self.workflow_accent_rgba}, 0.20)",
-            "padding": "13px 18px",
-            "borderTopLeftRadius": "15px",
-            "borderTopRightRadius": "15px",
-            "overflow": "visible",
-        }
-
-    def _build_workflow_section_body_style(self) -> dict[str, Any]:
-        """
-        Build the outer workflow card body style.
-        """
-        return {
-            "padding": "18px",
-            "overflow": "visible",
-        }
-
-    def _build_workflow_section_subtitle_style(
-        self,
-        *,
-        font_size: str = "0.86rem",
-    ) -> dict[str, Any]:
-        """
-        Build the standard subtitle style used under workflow section headers.
-        """
-        return {
-            "fontSize": font_size,
-            "opacity": 0.76,
-            "marginTop": "3px",
-        }
-
-    def _build_workflow_panel_card_style(
-        self,
-        *,
-        background: str = "transparent",
-    ) -> dict[str, Any]:
-        """
-        Build a nested workflow panel card style.
-        """
-        return {
-            "borderRadius": "12px",
-            "border": f"1px solid rgba({self.workflow_accent_rgba}, 0.16)",
-            "background": background,
-            "overflow": "visible",
-        }
-
-    def _build_workflow_panel_header_style(self) -> dict[str, Any]:
-        """
-        Build a nested workflow panel header style.
-        """
-        return {
-            "background": f"rgba({self.workflow_accent_rgba}, 0.06)",
-            "borderBottom": f"1px solid rgba({self.workflow_accent_rgba}, 0.16)",
-            "padding": "12px 16px",
-            "borderTopLeftRadius": "12px",
-            "borderTopRightRadius": "12px",
-            "overflow": "visible",
-        }
-
-    def _build_compact_control_panel_style(self) -> dict[str, Any]:
-        """
-        Build the compact axis control panel style.
-        """
-        return {
-            "display": "inline-flex",
-            "gap": "18px",
-            "alignItems": "center",
-            "flexWrap": "wrap",
-            "padding": "8px 10px",
-            "border": "1px solid rgba(128, 128, 128, 0.18)",
-            "borderRadius": "9px",
-            "background": "rgba(128, 128, 128, 0.06)",
-        }
-
-    def _build_metric_box_style(self) -> dict[str, Any]:
-        """
-        Build one compact fit metric box style.
-        """
-        return {
-            "padding": "8px 10px",
-            "border": "1px solid rgba(128, 128, 128, 0.25)",
-            "borderRadius": "8px",
-            "background": "rgba(128, 128, 128, 0.08)",
-        }
 
     def _finalize_figure_size(
         self,

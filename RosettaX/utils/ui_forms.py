@@ -53,6 +53,44 @@ def normalize_children(
     return [children]
 
 
+def resolve_color_name(
+    *,
+    color_name: Optional[str] = None,
+    accent_rgba: Optional[str] = None,
+) -> str:
+    """
+    Resolve the color name used by the shared styling helpers.
+
+    The accent_rgba argument is kept for backward compatibility. When provided,
+    it is interpreted as a raw RGB triplet.
+    """
+    if color_name is not None:
+        return color_name
+
+    if accent_rgba is not None:
+        return accent_rgba
+
+    return "blue"
+
+
+def build_rgba_from_color_name(
+    *,
+    color_name: Optional[str] = None,
+    accent_rgba: Optional[str] = None,
+    opacity: float,
+) -> str:
+    """
+    Build an rgba CSS value from a named color or a raw RGB triplet.
+    """
+    if accent_rgba is not None and color_name is None:
+        return f"rgba({accent_rgba}, {opacity})"
+
+    return styling.build_rgba(
+        color_name or "blue",
+        opacity,
+    )
+
+
 def persistent_input(
     *,
     persistence: bool = True,
@@ -114,21 +152,8 @@ def build_info_badge(
         text,
         id=tooltip_target_id,
         style=merge_style(
+            styling.WORKFLOW_SECTION["info_badge"],
             {
-                "width": "19px",
-                "height": "19px",
-                "borderRadius": "50%",
-                "display": "inline-flex",
-                "alignItems": "center",
-                "justifyContent": "center",
-                "fontSize": "0.72rem",
-                "fontWeight": "800",
-                "marginLeft": "8px",
-                "cursor": "help",
-                "opacity": 0.72,
-                "border": "1px solid currentColor",
-                "lineHeight": "1",
-                "flex": "0 0 auto",
                 "userSelect": "none",
             },
             style_overrides,
@@ -164,12 +189,7 @@ def build_title_with_info(
             ),
         ],
         style=merge_style(
-            {
-                "display": "flex",
-                "alignItems": "center",
-                "fontWeight": "750",
-                "fontSize": "1.02rem",
-            },
+            styling.WORKFLOW_SECTION["title_with_info"],
             title_style_overrides,
         ),
     )
@@ -183,6 +203,7 @@ def build_card_header_with_info(
     tooltip_text: str,
     subtitle: Optional[str] = None,
     placement: str = "right",
+    color_name: str = "blue",
     header_style_overrides: Optional[dict[str, Any]] = None,
     title_style_overrides: Optional[dict[str, Any]] = None,
     subtitle_style_overrides: Optional[dict[str, Any]] = None,
@@ -214,6 +235,7 @@ def build_card_header_with_info(
     return dbc.CardHeader(
         children,
         style=build_workflow_section_header_style(
+            color_name=color_name,
             style_overrides=header_style_overrides,
         ),
     )
@@ -221,7 +243,8 @@ def build_card_header_with_info(
 
 def build_workflow_section_card_style(
     *,
-    accent_rgba: str = "13, 110, 253",
+    color_name: str = "blue",
+    accent_rgba: Optional[str] = None,
     border_radius_px: int = 15,
     style_overrides: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
@@ -231,7 +254,10 @@ def build_workflow_section_card_style(
     return merge_style(
         {
             "borderRadius": f"{border_radius_px}px",
-            "borderLeft": f"5px solid rgba({accent_rgba}, 0.75)",
+            "borderLeft": (
+                "5px solid "
+                f"{build_rgba_from_color_name(color_name=color_name, accent_rgba=accent_rgba, opacity=0.75)}"
+            ),
             "boxShadow": "0 0.35rem 0.9rem rgba(0, 0, 0, 0.08)",
             "overflow": "visible",
         },
@@ -241,7 +267,8 @@ def build_workflow_section_card_style(
 
 def build_workflow_section_header_style(
     *,
-    accent_rgba: str = "13, 110, 253",
+    color_name: str = "blue",
+    accent_rgba: Optional[str] = None,
     border_radius_px: int = 15,
     style_overrides: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
@@ -250,8 +277,15 @@ def build_workflow_section_header_style(
     """
     return merge_style(
         {
-            "background": f"rgba({accent_rgba}, 0.10)",
-            "borderBottom": f"1px solid rgba({accent_rgba}, 0.20)",
+            "background": build_rgba_from_color_name(
+                color_name=color_name,
+                accent_rgba=accent_rgba,
+                opacity=0.10,
+            ),
+            "borderBottom": (
+                "1px solid "
+                f"{build_rgba_from_color_name(color_name=color_name, accent_rgba=accent_rgba, opacity=0.20)}"
+            ),
             "padding": "13px 18px",
             "borderTopLeftRadius": f"{border_radius_px}px",
             "borderTopRightRadius": f"{border_radius_px}px",
@@ -299,7 +333,8 @@ def build_workflow_section_subtitle_style(
 
 def build_workflow_panel_style(
     *,
-    accent_rgba: str = "13, 110, 253",
+    color_name: str = "blue",
+    accent_rgba: Optional[str] = None,
     background: Optional[str] = None,
     border_radius_px: int = 12,
     style_overrides: Optional[dict[str, Any]] = None,
@@ -309,7 +344,10 @@ def build_workflow_panel_style(
     """
     base_style: dict[str, Any] = {
         "borderRadius": f"{border_radius_px}px",
-        "border": f"1px solid rgba({accent_rgba}, 0.16)",
+        "border": (
+            "1px solid "
+            f"{build_rgba_from_color_name(color_name=color_name, accent_rgba=accent_rgba, opacity=0.16)}"
+        ),
         "overflow": "visible",
     }
 
@@ -341,7 +379,8 @@ def build_workflow_panel_body_style(
 
 def build_workflow_subpanel_card_style(
     *,
-    accent_rgba: str = "13, 110, 253",
+    color_name: str = "blue",
+    accent_rgba: Optional[str] = None,
     border_radius_px: int = 12,
     style_overrides: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
@@ -349,6 +388,7 @@ def build_workflow_subpanel_card_style(
     Build a nested graph or form panel card style.
     """
     return build_workflow_panel_style(
+        color_name=color_name,
         accent_rgba=accent_rgba,
         border_radius_px=border_radius_px,
         style_overrides=style_overrides,
@@ -357,7 +397,8 @@ def build_workflow_subpanel_card_style(
 
 def build_workflow_subpanel_header_style(
     *,
-    accent_rgba: str = "13, 110, 253",
+    color_name: str = "blue",
+    accent_rgba: Optional[str] = None,
     border_radius_px: int = 12,
     style_overrides: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
@@ -366,8 +407,15 @@ def build_workflow_subpanel_header_style(
     """
     return merge_style(
         {
-            "background": f"rgba({accent_rgba}, 0.06)",
-            "borderBottom": f"1px solid rgba({accent_rgba}, 0.16)",
+            "background": build_rgba_from_color_name(
+                color_name=color_name,
+                accent_rgba=accent_rgba,
+                opacity=0.06,
+            ),
+            "borderBottom": (
+                "1px solid "
+                f"{build_rgba_from_color_name(color_name=color_name, accent_rgba=accent_rgba, opacity=0.16)}"
+            ),
             "padding": "12px 16px",
             "borderTopLeftRadius": f"{border_radius_px}px",
             "borderTopRightRadius": f"{border_radius_px}px",
@@ -385,15 +433,8 @@ def build_compact_control_panel_style(
     Build a compact control strip style for toggles or graph controls.
     """
     return merge_style(
+        styling.WORKFLOW_SECTION["compact_control_box"],
         {
-            "display": "inline-flex",
-            "gap": "18px",
-            "alignItems": "center",
-            "flexWrap": "wrap",
-            "padding": "8px 10px",
-            "border": "1px solid rgba(128, 128, 128, 0.18)",
-            "borderRadius": "9px",
-            "background": "rgba(128, 128, 128, 0.06)",
             "overflow": "visible",
         },
         style_overrides,
@@ -421,7 +462,11 @@ def build_metric_box_style(
 def apply_workflow_section_card_style(
     card: Any,
     *,
-    accent_rgba: str = "13, 110, 253",
+    color_name: str = "blue",
+    accent_rgba: Optional[str] = None,
+    header_background: Optional[str] = None,
+    header_border: Optional[str] = None,
+    left_border: Optional[str] = None,
     border_radius_px: int = 15,
     header_font_weight: str = "750",
     header_font_size: str = "1.02rem",
@@ -431,29 +476,44 @@ def apply_workflow_section_card_style(
 
     This is used when a reusable layout object already returns a dbc.Card.
     """
-    card.style = merge_style(
-        copy_style(getattr(card, "style", None)),
-        build_workflow_section_card_style(
-            accent_rgba=accent_rgba,
-            border_radius_px=border_radius_px,
-        ),
+    card_style = build_workflow_section_card_style(
+        color_name=color_name,
+        accent_rgba=accent_rgba,
+        border_radius_px=border_radius_px,
     )
 
+    if left_border is not None:
+        card_style["borderLeft"] = left_border
+
+    card.style = merge_style(
+        copy_style(getattr(card, "style", None)),
+        card_style,
+    )
+
+    header_style_overrides = {
+        "fontWeight": header_font_weight,
+        "fontSize": header_font_size,
+    }
+
+    if header_background is not None:
+        header_style_overrides["background"] = header_background
+
+    if header_border is not None:
+        header_style_overrides["borderBottom"] = header_border
+
     for child in normalize_children(getattr(card, "children", None)):
-        if child.__class__.__name__ == "CardHeader":
+        if isinstance(child, dbc.CardHeader):
             child.style = merge_style(
                 copy_style(getattr(child, "style", None)),
                 build_workflow_section_header_style(
+                    color_name=color_name,
                     accent_rgba=accent_rgba,
                     border_radius_px=border_radius_px,
-                    style_overrides={
-                        "fontWeight": header_font_weight,
-                        "fontSize": header_font_size,
-                    },
+                    style_overrides=header_style_overrides,
                 ),
             )
 
-        if child.__class__.__name__ == "CardBody":
+        if isinstance(child, dbc.CardBody):
             child.style = merge_style(
                 copy_style(getattr(child, "style", None)),
                 build_workflow_section_body_style(),

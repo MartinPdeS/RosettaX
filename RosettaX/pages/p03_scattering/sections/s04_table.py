@@ -8,6 +8,7 @@ import dash_bootstrap_components as dbc
 
 from RosettaX.pages.p00_sidebar.ids import SidebarIds
 from RosettaX.pages.p03_scattering.state import ScatteringPageState
+from RosettaX.utils import styling
 from RosettaX.utils import ui_forms
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.parameters import table as parameters_table
@@ -47,9 +48,13 @@ class ReferenceTable:
     def __init__(
         self,
         page: Any,
+        section_number: int,
+        card_color: str = "blue",
     ) -> None:
         self.page = page
         self.ids = page.ids.Calibration
+        self.section_number = section_number
+        self.card_color = card_color
 
         self.description_tooltip_id = f"{self.ids.bead_table}-description-tooltip"
         self.description_tooltip_target_id = f"{self.ids.bead_table}-description-tooltip-target"
@@ -97,8 +102,17 @@ class ReferenceTable:
         """
         logger.debug("Building Scattering ReferenceTable layout.")
 
+        section_style = styling.build_workflow_section_legacy_style(
+            self.card_color,
+        )
+
         return ui_forms.apply_workflow_section_card_style(
             card=self.layout_builder.get_layout(),
+            header_background=section_style["header_background"],
+            header_border=section_style["header_border"],
+            left_border=section_style["left_border"],
+            header_font_weight="750",
+            header_font_size="1.02rem",
         )
 
     def _build_card_title(self):
@@ -106,7 +120,7 @@ class ReferenceTable:
         Build the card title with compact hover help.
         """
         return ui_forms.build_title_with_info(
-            title="4. Calibration standard table",
+            title=f"{self.section_number}. Calibration standard table",
             tooltip_target_id=self.description_tooltip_target_id,
             tooltip_id=self.description_tooltip_id,
             tooltip_text=(

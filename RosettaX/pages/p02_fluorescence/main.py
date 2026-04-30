@@ -22,12 +22,12 @@ class FluorescencePage:
         self.backend = None
 
         self.sections = [
-            sections.Header(page=self),
-            sections.Upload(page=self),
-            sections.Peaks(page=self),
-            sections.ReferenceTable(page=self),
-            sections.Calibration(page=self),
-            sections.Save(page=self),
+            sections.Header(page=self, card_color="white"),
+            sections.Upload(page=self, section_number=1, card_color="pink"),
+            sections.Peaks(page=self, section_number=2, card_color="blue"),
+            sections.ReferenceTable(page=self, section_number=3, card_color="orange"),
+            sections.Calibration(page=self, section_number=4, card_color="green"),
+            sections.Save(page=self, section_number=5, card_color="gray"),
         ]
 
     def register_callbacks(self) -> Self:
@@ -62,7 +62,12 @@ class FluorescencePage:
                 ),
                 dash.html.Br(),
                 *[section.get_layout() for section in self.sections],
-            ]
+            ],
+            style={
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "18px",
+            },
         )
 
 

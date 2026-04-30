@@ -41,9 +41,13 @@ class Calibration:
     def __init__(
         self,
         page: Any,
+        section_number: int,
+        card_color: str = "pink",
     ) -> None:
         self.page = page
         self.ids = page.ids.Calibration
+        self.section_number = section_number
+        self.card_color = card_color
 
         self.section_tooltip_target_id = f"{self.ids.calibrate_btn}-section-info-target"
         self.section_tooltip_id = f"{self.ids.calibrate_btn}-section-info-tooltip"
@@ -70,7 +74,9 @@ class Calibration:
                 self._build_header(),
                 self._build_collapse(),
             ],
-            style=ui_forms.build_workflow_section_card_style(),
+            style=ui_forms.build_workflow_section_card_style(
+                color_name=self.card_color,
+            ),
         )
 
     def _build_header(self) -> dbc.CardHeader:
@@ -80,7 +86,7 @@ class Calibration:
         return dbc.CardHeader(
             [
                 ui_forms.build_title_with_info(
-                    title="4. Calibration",
+                    title=f"{self.section_number}. Calibration",
                     tooltip_target_id=self.section_tooltip_target_id,
                     tooltip_id=self.section_tooltip_id,
                     tooltip_text=(
@@ -94,7 +100,9 @@ class Calibration:
                     style=ui_forms.build_workflow_section_subtitle_style(),
                 ),
             ],
-            style=ui_forms.build_workflow_section_header_style(),
+            style=ui_forms.build_workflow_section_header_style(
+                color_name=self.card_color,
+            ),
         )
 
     def _build_collapse(self) -> dbc.Collapse:
@@ -229,9 +237,11 @@ class Calibration:
                 },
             ),
             style=ui_forms.build_workflow_panel_style(
-                style_overrides={
-                    "background": "rgba(13, 110, 253, 0.04)",
-                },
+                color_name=self.card_color,
+                background=styling.build_rgba(
+                    self.card_color,
+                    0.04,
+                ),
             ),
         )
 
@@ -293,7 +303,9 @@ class Calibration:
                             ),
                         ),
                     ],
-                    style=ui_forms.build_workflow_subpanel_header_style(),
+                    style=ui_forms.build_workflow_subpanel_header_style(
+                        color_name=self.card_color,
+                    ),
                 ),
                 dbc.CardBody(
                     [
@@ -322,7 +334,9 @@ class Calibration:
                 ),
             ],
             style={
-                **ui_forms.build_workflow_subpanel_card_style(),
+                **ui_forms.build_workflow_subpanel_card_style(
+                    color_name=self.card_color,
+                ),
                 "flex": "1 1 0",
                 "minWidth": f"{self.graph_min_width_px}px",
             },

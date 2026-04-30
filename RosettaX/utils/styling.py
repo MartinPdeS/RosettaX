@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+
+
 UPLOAD = {
     "width": "100%",
     "height": "60px",
@@ -12,7 +15,7 @@ UPLOAD = {
 CARD = {
     "display": "flex",
     "gap": "12px",
-    "alignItems": "center"
+    "alignItems": "center",
 }
 
 SIDEBAR = {
@@ -20,7 +23,7 @@ SIDEBAR = {
     "top": 0,
     "left": 0,
     "bottom": 0,
-    "width": f"500px",
+    "width": "500px",
     "padding": "16px",
     "overflowY": "auto",
     "zIndex": 1000,
@@ -28,14 +31,26 @@ SIDEBAR = {
 }
 
 PAGE = {
-    "body_scroll": {"maxHeight": "80vh", "overflowY": "auto"},
-    "row": {"display": "flex", "alignItems": "center", "gap": "10px"},
-    "label": {"minWidth": "160px"},
-    "card_body_scroll": {"maxHeight": "60vh", "overflowY": "auto"},
+    "body_scroll": {
+        "maxHeight": "80vh",
+        "overflowY": "auto",
+    },
+    "row": {
+        "display": "flex",
+        "alignItems": "center",
+        "gap": "10px",
+    },
+    "label": {
+        "minWidth": "160px",
+    },
+    "card_body_scroll": {
+        "maxHeight": "60vh",
+        "overflowY": "auto",
+    },
 }
 
 CONTENT = {
-    "marginLeft": f"460px",
+    "marginLeft": "460px",
     "padding": "16px",
     "minHeight": "100vh",
     "boxSizing": "border-box",
@@ -144,7 +159,30 @@ PLOTLY_STATIC_GRAPH_CONFIG = {
 PLOTLY_GRAPH_STYLE = {
     "touchAction": "none",
     "width": "100%",
-    "height": "60vh"
+    "height": "60vh",
+}
+
+
+COLOR_SCHEME = {
+    "blue": "13, 110, 253",
+    "gray": "108, 117, 125",
+    "green": "25, 135, 84",
+    "red": "220, 53, 69",
+    "orange": "255, 193, 7",
+    "cyan": "13, 202, 240",
+    "pink": "214, 51, 132",
+    "purple": "111, 66, 193",
+    "dark": "33, 37, 41",
+    "light": "248, 249, 250",
+}
+
+
+SECTION_COLOR_BY_KEY = {
+    "fluorescence": "pink",
+    "scattering": "blue",
+    "calibration": "orange",
+    "visualization": "green",
+    "miscellaneous": "gray",
 }
 
 
@@ -255,3 +293,120 @@ def copy_style(
         return dict(style)
 
     return {}
+
+
+def get_color_rgb(
+    color_name: str,
+) -> str:
+    """
+    Return the RGB triplet associated with a named color.
+    """
+    return COLOR_SCHEME.get(
+        color_name,
+        COLOR_SCHEME["blue"],
+    )
+
+
+def get_section_color_name(
+    section_key: str,
+) -> str:
+    """
+    Return the named color associated with a section key.
+    """
+    return SECTION_COLOR_BY_KEY.get(
+        section_key,
+        "blue",
+    )
+
+
+def build_rgba(
+    color_name: str,
+    opacity: float,
+) -> str:
+    """
+    Build an rgba CSS color from a named color.
+    """
+    return f"rgba({get_color_rgb(color_name)}, {opacity})"
+
+
+def build_workflow_section_style(
+    color_name: str = "blue",
+) -> dict:
+    """
+    Build workflow section styles from a named color.
+    """
+    return {
+        "card": {
+            **WORKFLOW_SECTION["card"],
+            "borderLeft": f"5px solid {build_rgba(color_name, 0.75)}",
+        },
+        "header": {
+            **WORKFLOW_SECTION["header"],
+            "background": build_rgba(color_name, 0.10),
+            "borderBottom": f"1px solid {build_rgba(color_name, 0.20)}",
+        },
+        "body": {
+            **WORKFLOW_SECTION["body"],
+        },
+        "subtitle": {
+            **WORKFLOW_SECTION["subtitle"],
+        },
+        "subcard": {
+            **WORKFLOW_SECTION["subcard"],
+            "border": f"1px solid {build_rgba(color_name, 0.16)}",
+        },
+        "subcard_header": {
+            **WORKFLOW_SECTION["subcard_header"],
+            "background": build_rgba(color_name, 0.06),
+            "borderBottom": f"1px solid {build_rgba(color_name, 0.16)}",
+        },
+        "subcard_body": {
+            **WORKFLOW_SECTION["subcard_body"],
+        },
+        "action_panel": {
+            **WORKFLOW_SECTION["action_panel"],
+            "border": f"1px solid {build_rgba(color_name, 0.16)}",
+            "background": build_rgba(color_name, 0.04),
+        },
+        "compact_control_box": {
+            **WORKFLOW_SECTION["compact_control_box"],
+        },
+        "info_badge": {
+            **WORKFLOW_SECTION["info_badge"],
+        },
+        "title_with_info": {
+            **WORKFLOW_SECTION["title_with_info"],
+        },
+    }
+
+
+def build_workflow_section_legacy_style(
+    color_name: str = "blue",
+) -> dict[str, str]:
+    """
+    Build the compact style dictionary used by older page code.
+    """
+    section_style = build_workflow_section_style(
+        color_name,
+    )
+
+    return {
+        "header_background": section_style["header"]["background"],
+        "header_border": section_style["header"]["borderBottom"],
+        "left_border": section_style["card"]["borderLeft"],
+    }
+
+
+def build_section_legacy_style(
+    section_key: str,
+) -> dict[str, str]:
+    """
+    Build card style from a semantic section key.
+    """
+    color_name = get_section_color_name(
+        section_key,
+    )
+
+    return build_workflow_section_legacy_style(
+        color_name,
+    )

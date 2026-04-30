@@ -6,6 +6,7 @@ import logging
 import dash
 import dash_bootstrap_components as dbc
 
+from RosettaX.utils import styling
 from RosettaX.utils import ui_forms
 from RosettaX.workflow import peak
 
@@ -21,9 +22,13 @@ class Peaks:
     def __init__(
         self,
         page: Any,
+        section_number: int,
+        card_color: str = "blue",
     ) -> None:
         self.page = page
         self.ids = page.ids.Scattering
+        self.section_number = section_number
+        self.card_color = card_color
         self.adapter = peak.ScatteringPeakWorkflowAdapter()
 
         self.section_tooltip_target_id = f"{self.ids.process_dropdown}-section-info-target"
@@ -58,8 +63,17 @@ class Peaks:
         """
         Build the scattering peak section layout.
         """
+        section_style = styling.build_workflow_section_legacy_style(
+            self.card_color,
+        )
+
         return ui_forms.apply_workflow_section_card_style(
             card=self.layout_builder.get_layout(),
+            header_background=section_style["header_background"],
+            header_border=section_style["header_border"],
+            left_border=section_style["left_border"],
+            header_font_weight="750",
+            header_font_size="1.02rem",
         )
 
     def _build_section_title(self) -> dash.html.Div:
@@ -67,7 +81,7 @@ class Peaks:
         Build the section title with compact hover help.
         """
         return ui_forms.build_title_with_info(
-            title="2. Scattering peak detection",
+            title=f"{self.section_number}. Scattering peak detection",
             tooltip_target_id=self.section_tooltip_target_id,
             tooltip_id=self.section_tooltip_id,
             tooltip_text=(
@@ -82,7 +96,7 @@ class Peaks:
         Build the graph title with compact hover help.
         """
         return ui_forms.build_title_with_info(
-            title="Scattering peak detection graph",
+            title=f"{self.section_number}. Scattering peak detection graph",
             tooltip_target_id=self.graph_tooltip_target_id,
             tooltip_id=self.graph_tooltip_id,
             tooltip_text=(

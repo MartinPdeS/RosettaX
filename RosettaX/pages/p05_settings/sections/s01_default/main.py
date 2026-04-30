@@ -8,6 +8,7 @@ import dash_bootstrap_components as dbc
 from dash import Input, Output, State, callback, html
 
 from ...state import SettingsPageState
+from RosettaX.utils import styling
 from RosettaX.utils import ui_forms
 from RosettaX.utils.runtime_config import RuntimeConfig
 
@@ -32,7 +33,7 @@ class DefaultProfile:
     State ownership
     ---------------
     The editable form values are mirrored into SettingsPageState instead of a
-    section-local dcc.Store.
+    section local dcc.Store.
     """
 
     vertical_spacing_px = 16
@@ -454,41 +455,8 @@ class DefaultProfile:
         """
         Return visual styling for one settings section.
         """
-        styles = {
-            "fluorescence": {
-                "header_background": "rgba(214, 51, 132, 0.10)",
-                "header_border": "1px solid rgba(214, 51, 132, 0.20)",
-                "left_border": "5px solid rgba(214, 51, 132, 0.75)",
-            },
-            "scattering": {
-                "header_background": "rgba(13, 110, 253, 0.10)",
-                "header_border": "1px solid rgba(13, 110, 253, 0.20)",
-                "left_border": "5px solid rgba(13, 110, 253, 0.75)",
-            },
-            "calibration": {
-                "header_background": "rgba(255, 193, 7, 0.13)",
-                "header_border": "1px solid rgba(255, 193, 7, 0.24)",
-                "left_border": "5px solid rgba(255, 193, 7, 0.85)",
-            },
-            "visualization": {
-                "header_background": "rgba(25, 135, 84, 0.10)",
-                "header_border": "1px solid rgba(25, 135, 84, 0.20)",
-                "left_border": "5px solid rgba(25, 135, 84, 0.75)",
-            },
-            "miscellaneous": {
-                "header_background": "rgba(108, 117, 125, 0.12)",
-                "header_border": "1px solid rgba(108, 117, 125, 0.22)",
-                "left_border": "5px solid rgba(108, 117, 125, 0.78)",
-            },
-        }
-
-        return styles.get(
+        return styling.build_section_legacy_style(
             section_key,
-            {
-                "header_background": "rgba(128, 128, 128, 0.10)",
-                "header_border": "1px solid rgba(128, 128, 128, 0.20)",
-                "left_border": "5px solid rgba(128, 128, 128, 0.65)",
-            },
         )
 
     def _section_description(

@@ -39,9 +39,13 @@ class Model:
     def __init__(
         self,
         page: Any,
+        section_number: int,
+        card_color: str = "blue",
     ) -> None:
         self.page = page
         self.ids = page.ids.Parameters
+        self.section_number = section_number
+        self.card_color = card_color
         self.default_values = self.model_configuration.build_default_profile_defaults()
 
         self.section_tooltip_target_id = f"{self.ids.mie_model}-section-info-target"
@@ -75,7 +79,9 @@ class Model:
                 self._build_header(),
                 self._build_collapse(),
             ],
-            style=styling.WORKFLOW_SECTION["card"],
+            style=ui_forms.build_workflow_section_card_style(
+                color_name=self.card_color,
+            ),
         )
 
     def _build_header(self) -> dbc.CardHeader:
@@ -83,7 +89,7 @@ class Model:
         Build section header.
         """
         return ui_forms.build_card_header_with_info(
-            title="3. Set calculation parameters",
+            title=f"{self.section_number}. Set calculation parameters",
             tooltip_target_id=self.section_tooltip_target_id,
             tooltip_id=self.section_tooltip_id,
             tooltip_text=(
@@ -91,6 +97,7 @@ class Model:
                 "model used to compute the calibration standard coupling values."
             ),
             subtitle="Configure the physical model used for scattering calibration.",
+            color_name=self.card_color,
         )
 
     def _build_collapse(self) -> dbc.Collapse:
@@ -117,7 +124,7 @@ class Model:
                 ),
                 self._build_particle_configuration_panel(),
             ],
-            style=styling.WORKFLOW_SECTION["body"],
+            style=ui_forms.build_workflow_section_body_style(),
         )
 
     def _build_optical_configuration_panel(self) -> dbc.Card:
@@ -144,10 +151,12 @@ class Model:
                         ),
                         dash.html.Div(
                             "Illumination, detector geometry, and angular sampling.",
-                            style=styling.WORKFLOW_SECTION["subtitle"],
+                            style=ui_forms.build_workflow_section_subtitle_style(),
                         ),
                     ],
-                    style=styling.WORKFLOW_SECTION["subcard_header"],
+                    style=ui_forms.build_workflow_subpanel_header_style(
+                        color_name=self.card_color,
+                    ),
                 ),
                 dbc.CardBody(
                     [
@@ -166,10 +175,12 @@ class Model:
                             },
                         ),
                     ],
-                    style=styling.WORKFLOW_SECTION["subcard_body"],
+                    style=ui_forms.build_workflow_panel_body_style(),
                 ),
             ],
-            style=styling.WORKFLOW_SECTION["subcard"],
+            style=ui_forms.build_workflow_subpanel_card_style(
+                color_name=self.card_color,
+            ),
         )
 
     def _build_optical_configuration_controls(self) -> dash.html.Div:
@@ -393,17 +404,21 @@ class Model:
                         ),
                         dash.html.Div(
                             "Particle model and refractive index parameters.",
-                            style=styling.WORKFLOW_SECTION["subtitle"],
+                            style=ui_forms.build_workflow_section_subtitle_style(),
                         ),
                     ],
-                    style=styling.WORKFLOW_SECTION["subcard_header"],
+                    style=ui_forms.build_workflow_subpanel_header_style(
+                        color_name=self.card_color,
+                    ),
                 ),
                 dbc.CardBody(
                     self._build_particle_configuration_section(),
-                    style=styling.WORKFLOW_SECTION["subcard_body"],
+                    style=ui_forms.build_workflow_panel_body_style(),
                 ),
             ],
-            style=styling.WORKFLOW_SECTION["subcard"],
+            style=ui_forms.build_workflow_subpanel_card_style(
+                color_name=self.card_color,
+            ),
         )
 
     def _build_particle_configuration_section(self) -> dash.html.Div:

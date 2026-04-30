@@ -15,18 +15,47 @@ class ScatterCalibrationPage:
     state as the single source of truth.
     """
 
+    section_color = "blue"
+
     def __init__(self) -> None:
         self.ids = Ids()
         self.backend = None
 
         self.sections = [
-            sections.Header(page=self),
-            sections.Upload(page=self),
-            sections.Peaks(page=self),
-            sections.Model(page=self),
-            sections.ReferenceTable(page=self),
-            sections.Calibration(page=self),
-            sections.Save(page=self),
+            sections.Header(
+                page=self,
+                card_color="white",
+            ),
+            sections.Upload(
+                page=self,
+                section_number=1,
+                card_color="pink",
+            ),
+            sections.Peaks(
+                page=self,
+                section_number=2,
+                card_color="blue",
+            ),
+            sections.Model(
+                page=self,
+                section_number=3,
+                card_color="orange",
+            ),
+            sections.ReferenceTable(
+                page=self,
+                section_number=4,
+                card_color="green",
+            ),
+            sections.Calibration(
+                page=self,
+                section_number=5,
+                card_color="yellow",
+            ),
+            sections.Save(
+                page=self,
+                section_number=6,
+                card_color="gray",
+            ),
         ]
 
     def register_callbacks(self) -> "ScatterCalibrationPage":
@@ -59,8 +88,17 @@ class ScatterCalibrationPage:
                     data=ScatteringPageState.empty().to_dict(),
                     storage_type="session",
                 ),
-                dash.html.Br(),
-                *[section.get_layout() for section in self.sections],
+                dash.html.Div(
+                    [
+                        section.get_layout()
+                        for section in self.sections
+                    ],
+                    style={
+                        "display": "flex",
+                        "flexDirection": "column",
+                        "gap": "18px",
+                    },
+                ),
             ]
         )
 

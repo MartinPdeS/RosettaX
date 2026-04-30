@@ -7,6 +7,7 @@ import logging
 import dash
 import dash_bootstrap_components as dbc
 
+from RosettaX.utils import styling
 from RosettaX.utils import ui_forms
 from RosettaX.workflow import apply_calibration
 
@@ -48,8 +49,12 @@ class Apply:
     def __init__(
         self,
         page: Any,
+        section_number: int,
+        card_color: str = "green",
     ) -> None:
         self.page = page
+        self.section_number = section_number
+        self.card_color = card_color
 
         self.header_tooltip_target_id = f"{self.page.ids.Export.apply_and_export_button}-section-info-target"
         self.header_tooltip_id = f"{self.page.ids.Export.apply_and_export_button}-section-info-tooltip"
@@ -74,7 +79,9 @@ class Apply:
                 self._build_header(),
                 self._build_body(),
             ],
-            style=ui_forms.build_workflow_section_card_style(),
+            style=ui_forms.build_workflow_section_card_style(
+                color_name=self.card_color,
+            ),
         )
 
     def _build_header(self) -> dbc.CardHeader:
@@ -82,7 +89,7 @@ class Apply:
         Build the section header.
         """
         return ui_forms.build_card_header_with_info(
-            title="3. Apply and export",
+            title=f"{self.section_number}. Apply and export",
             tooltip_target_id=self.header_tooltip_target_id,
             tooltip_id=self.header_tooltip_id,
             tooltip_text=(
@@ -94,6 +101,7 @@ class Apply:
                 "Generate calibrated FCS outputs from the selected calibration "
                 "and input files."
             ),
+            color_name=self.card_color,
         )
 
     def _build_body(self) -> dbc.CardBody:
@@ -149,7 +157,9 @@ class Apply:
                             ),
                         ),
                     ],
-                    style=ui_forms.build_workflow_subpanel_header_style(),
+                    style=ui_forms.build_workflow_subpanel_header_style(
+                        color_name=self.card_color,
+                    ),
                 ),
                 dbc.CardBody(
                     [
@@ -184,7 +194,9 @@ class Apply:
                     style=ui_forms.build_workflow_panel_body_style(),
                 ),
             ],
-            style=ui_forms.build_workflow_subpanel_card_style(),
+            style=ui_forms.build_workflow_subpanel_card_style(
+                color_name=self.card_color,
+            ),
         )
 
     def _build_action_panel(self) -> dbc.Card:
@@ -264,9 +276,11 @@ class Apply:
                 },
             ),
             style=ui_forms.build_workflow_panel_style(
-                style_overrides={
-                    "background": "rgba(13, 110, 253, 0.04)",
-                },
+                color_name=self.card_color,
+                background=styling.build_rgba(
+                    self.card_color,
+                    0.04,
+                ),
             ),
         )
 

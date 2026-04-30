@@ -36,6 +36,11 @@ class ApplyCalibrationPage:
       Uploaded input FCS path or paths.
     """
 
+    header_color = "green"
+    calibration_picker_color = "pink"
+    file_picker_color = "blue"
+    apply_color = "orange"
+
     def __init__(self) -> None:
         self.container_style = {
             "paddingBottom": "48px",
@@ -44,10 +49,25 @@ class ApplyCalibrationPage:
         self.ids = Ids()
 
         self.sections = [
-            sections.Header(page=self),
-            sections.CalibrationPicker(page=self),
-            sections.FilePicker(page=self),
-            sections.Apply(page=self),
+            sections.Header(
+                page=self,
+                card_color=self.header_color,
+            ),
+            sections.CalibrationPicker(
+                page=self,
+                section_number=1,
+                card_color=self.calibration_picker_color,
+            ),
+            sections.FilePicker(
+                page=self,
+                section_number=2,
+                card_color=self.file_picker_color,
+            ),
+            sections.Apply(
+                page=self,
+                section_number=3,
+                card_color=self.apply_color,
+            ),
         ]
 
     def register_callbacks(self) -> Self:
@@ -83,10 +103,19 @@ class ApplyCalibrationPage:
                 self._build_selected_calibration_path_store(),
                 self._build_selected_calibration_summary_store(),
                 self._build_uploaded_fcs_path_store(),
-                *[
-                    section.get_layout()
-                    for section in self.sections
-                ],
+                dbc.Container(
+                    [
+                        section.get_layout()
+                        for section in self.sections
+                    ],
+                    fluid=True,
+                    style={
+                        "display": "flex",
+                        "flexDirection": "column",
+                        "gap": "18px",
+                        "padding": "0px",
+                    },
+                ),
             ],
             fluid=True,
             style=self.container_style,

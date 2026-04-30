@@ -6,6 +6,8 @@ from typing import Any
 import dash_bootstrap_components as dbc
 from dash import html
 
+from RosettaX.utils import styling
+
 
 logger = logging.getLogger(__name__)
 
@@ -22,8 +24,13 @@ class Header:
     - Keep explanatory UX content separate from upload and processing logic.
     """
 
-    def __init__(self, page: Any) -> None:
+    def __init__(
+        self,
+        page: Any,
+        card_color: str = "blue",
+    ) -> None:
         self.page = page
+        self.card_color = card_color
 
         logger.debug(
             "Initialized Scattering Header section with page=%r",
@@ -74,21 +81,6 @@ class Header:
                         "marginBottom": "6px",
                     },
                 ),
-                # html.P(
-                #     (
-                #         "Use this workflow to convert measured scattering signals into "
-                #         "a calibrated particle size or coupling relation. RosettaX reads "
-                #         "a bead calibration FCS file, detects the bead population peaks, "
-                #         "defines the Mie model parameters, computes the expected optical "
-                #         "coupling for known particle diameters, and saves the fitted "
-                #         "calibration for later use."
-                #     ),
-                #     style={
-                #         "marginBottom": "0px",
-                #         "opacity": 0.82,
-                #         "maxWidth": "1100px",
-                #     },
-                # ),
             ]
         )
 
@@ -192,8 +184,14 @@ class Header:
                             "justifyContent": "center",
                             "fontWeight": "700",
                             "fontSize": "0.9rem",
-                            "backgroundColor": "rgba(13, 110, 253, 0.12)",
-                            "border": "1px solid rgba(13, 110, 253, 0.35)",
+                            "backgroundColor": styling.build_rgba(
+                                self.card_color,
+                                0.12,
+                            ),
+                            "border": (
+                                "1px solid "
+                                f"{styling.build_rgba(self.card_color, 0.35)}"
+                            ),
                             "marginBottom": "10px",
                         },
                     ),

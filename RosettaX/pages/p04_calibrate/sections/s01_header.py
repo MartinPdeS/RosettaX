@@ -6,8 +6,13 @@ from RosettaX.utils import ui_forms
 
 
 class Header:
-    def __init__(self, page) -> None:
+    def __init__(
+        self,
+        page,
+        card_color: str = "green",
+    ) -> None:
         self.page = page
+        self.card_color = card_color
 
     def get_layout(self) -> dbc.Card:
         return dbc.Card(
@@ -22,9 +27,13 @@ class Header:
                             "files, choose the relevant detector mapping, and export calibrated outputs."
                         ),
                     )
-                ]
+                ],
+                style=ui_forms.build_workflow_section_body_style(),
             ),
             id=self.page.ids.Header.container,
+            style=ui_forms.build_workflow_section_card_style(
+                color_name=self.card_color,
+            ),
         )
 
     def register_callbacks(self) -> None:

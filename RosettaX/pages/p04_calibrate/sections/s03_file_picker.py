@@ -11,6 +11,7 @@ import dash
 import dash_bootstrap_components as dbc
 
 from RosettaX.utils import checks
+from RosettaX.utils import styling
 from RosettaX.utils import ui_forms
 
 
@@ -59,8 +60,12 @@ class FilePicker:
     def __init__(
         self,
         page: Any,
+        section_number: int,
+        card_color: str = "green",
     ) -> None:
         self.page = page
+        self.section_number = section_number
+        self.card_color = card_color
         self._validate_page_contract()
 
         self._upload_dir = Path.home() / ".rosettax" / "uploads"
@@ -86,7 +91,9 @@ class FilePicker:
                 self._build_header(),
                 self._build_body(),
             ],
-            style=ui_forms.build_workflow_section_card_style(),
+            style=ui_forms.build_workflow_section_card_style(
+                color_name=self.card_color,
+            ),
         )
 
     def _build_header(self) -> dbc.CardHeader:
@@ -94,7 +101,7 @@ class FilePicker:
         Build the section header.
         """
         return ui_forms.build_card_header_with_info(
-            title="1. Upload input FCS",
+            title=f"{self.section_number}. Upload input FCS",
             tooltip_target_id=self.header_tooltip_target_id,
             tooltip_id=self.header_tooltip_id,
             tooltip_text=(
@@ -103,6 +110,7 @@ class FilePicker:
                 "their channel structure is consistent before continuing."
             ),
             subtitle="Select the input cytometry files that will be calibrated.",
+            color_name=self.card_color,
         )
 
     def _build_body(self) -> dbc.CardBody:
@@ -167,9 +175,11 @@ class FilePicker:
                 },
             ),
             style=ui_forms.build_workflow_panel_style(
-                style_overrides={
-                    "background": "rgba(13, 110, 253, 0.04)",
-                },
+                color_name=self.card_color,
+                background=styling.build_rgba(
+                    self.card_color,
+                    0.04,
+                ),
             ),
         )
 
