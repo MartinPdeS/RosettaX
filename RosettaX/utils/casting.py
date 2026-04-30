@@ -127,6 +127,7 @@ def as_float_list(value: Any) -> np.ndarray:
 
     return np.asarray(parsed_values, dtype=float)
 
+
 def as_required_float(value: Any, field_name: str) -> float:
     """
     Parse a value into a float, raising ``ValueError`` if parsing fails.
@@ -148,12 +149,13 @@ def as_required_float(value: Any, field_name: str) -> float:
     ValueError
         If the value is ``None``, an empty string, or cannot be converted.
     """
+    if value in (None, ""):
+        raise ValueError(f"Invalid value for {field_name}: {value!r}")
     try:
-        if value in (None, ""):
-            raise ValueError
         return float(value)
-    except Exception as exc:
+    except (TypeError, ValueError) as exc:
         raise ValueError(f"Invalid value for {field_name}: {value!r}") from exc
+
 
 def as_required_int(value: Any, field_name: str) -> int:
     """
@@ -176,12 +178,13 @@ def as_required_int(value: Any, field_name: str) -> int:
     ValueError
         If the value is ``None``, an empty string, or cannot be converted.
     """
+    if value in (None, ""):
+        raise ValueError(f"Invalid value for {field_name}: {value!r}")
     try:
-        if value in (None, ""):
-            raise ValueError
         return int(value)
-    except Exception as exc:
+    except (TypeError, ValueError) as exc:
         raise ValueError(f"Invalid value for {field_name}: {value!r}") from exc
+
 
 def as_optional_float(value: Any) -> Optional[float]:
     """
@@ -203,6 +206,7 @@ def as_optional_float(value: Any) -> Optional[float]:
         return float(value)
     except Exception:
         return None
+
 
 def as_optional_int(value: Any) -> Optional[int]:
     """
@@ -245,6 +249,7 @@ def parse_float_list(value: Any) -> list[float]:
     """
     parsed_values = as_float_list(value)
     return [float(item) for item in parsed_values.tolist()]
+
 
 def coerce_optional_number(value: Any) -> Optional[float]:
     """
@@ -291,6 +296,7 @@ def coerce_optional_integer(value: Any) -> Optional[int]:
         return None
     return int(parsed_value)
 
+
 def coerce_optional_string(value: Any) -> Optional[str]:
     """
     Coerce a value to a non-empty stripped string, returning ``None`` otherwise.
@@ -310,6 +316,7 @@ def coerce_optional_string(value: Any) -> Optional[str]:
         return None
     resolved_value = str(value).strip()
     return resolved_value if resolved_value else None
+
 
 def format_float_list_for_input(value: Any) -> str:
     """

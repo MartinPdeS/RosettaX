@@ -1,5 +1,5 @@
 """
-PyMieSim package initialization.
+RosettaX package initialization.
 """
 
 try:
@@ -7,5 +7,3 @@ try:
 
 except ImportError:
     __version__ = "0.0.0"
-
-debug_mode = False

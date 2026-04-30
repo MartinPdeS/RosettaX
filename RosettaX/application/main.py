@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
+import os
 import sys
 import webbrowser
 from pathlib import Path
@@ -17,15 +18,30 @@ from RosettaX.pages.p00_sidebar.main import register_sidebar_callbacks
 from RosettaX.utils.parser import _parse_args
 
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
-    stream=sys.stdout,
-    force=True,
-)
-
 logger = logging.getLogger(__name__)
-logging.getLogger("RosettaX").setLevel(logging.DEBUG)
+
+
+def _configure_logging(debug: bool = False) -> None:
+    """
+    Configure root and RosettaX loggers.
+
+    This is called once inside :func:`main` so that importing this module does
+    not override any logging configuration already set up by the caller.
+
+    Parameters
+    ----------
+    debug : bool
+        When ``True`` the RosettaX logger is set to ``DEBUG`` level; otherwise
+        ``INFO`` is used.
+    """
+    logging.basicConfig(
+        level=logging.DEBUG if debug else logging.INFO,
+        format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+        stream=sys.stdout,
+        force=True,
+    )
+    rosettax_log_level = logging.DEBUG if debug else logging.INFO
+    logging.getLogger("RosettaX").setLevel(rosettax_log_level)
 
 
 class RosettaXApplication:
@@ -53,16 +69,19 @@ class RosettaXApplication:
         host: str,
         port: int,
         open_browser: bool,
+        debug: bool = False,
     ) -> None:
         self.host = str(host)
         self.port = int(port)
         self.open_browser = bool(open_browser)
+        self.debug = bool(debug)
 
         logger.debug(
-            "Initializing RosettaXApplication with host=%r port=%r open_browser=%r",
+            "Initializing RosettaXApplication with host=%r port=%r open_browser=%r debug=%r",
             self.host,
             self.port,
             self.open_browser,
+            self.debug,
         )
 
         assets_folder = Path(__file__).resolve().parents[1] / "assets"
@@ -95,10 +114,11 @@ class RosettaXApplication:
         Start the Dash development server.
         """
         logger.debug(
-            "Starting Dash server with host=%r port=%r open_browser=%r",
+            "Starting Dash server with host=%r port=%r open_browser=%r debug=%r",
             self.host,
             self.port,
             self.open_browser,
+            self.debug,
         )
 
         if self.open_browser:
@@ -108,7 +128,7 @@ class RosettaXApplication:
         self.app.run(
             host=self.host,
             port=self.port,
-            debug=True,
+            debug=self.debug,
         )
 
     def _open_browser(self) -> None:
@@ -126,13 +146,25 @@ def main(argv: Optional[list[str]] = None) -> None:
     """
     Parse command line arguments and start the RosettaX application.
     """
+    parsed_arguments = _parse_args(argv)
+
+    debug = bool(getattr(parsed_arguments, "debug", False))
+
+    _configure_logging(debug=debug)
+
     logger.debug("Entering main with argv=%r", argv)
 
-    parsed_arguments = _parse_args(argv)
+    # Forward an optional startup FCS file path via the environment so that
+    # page layouts can pick it up without requiring direct argument passing.
+    fcs_file_path = getattr(parsed_arguments, "fcs_file_path", None)
+    if fcs_file_path:
+        os.environ.setdefault("ROSETTAX_STARTUP_FCS_FILE", str(fcs_file_path))
+        logger.debug("Set ROSETTAX_STARTUP_FCS_FILE=%r", fcs_file_path)
 
     application = RosettaXApplication(
         host=str(parsed_arguments.host),
         port=int(parsed_arguments.port),
         open_browser=not bool(parsed_arguments.no_browser),
+        debug=debug,
     )
     application.run()

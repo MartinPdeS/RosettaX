@@ -6,8 +6,6 @@ import json
 import logging
 import re
 
-from RosettaX.utils.reader import FCSFile
-
 
 logger = logging.getLogger(__name__)
 
@@ -34,29 +32,6 @@ NON_VALID_KEYWORDS = [
     "diameter",
     "cross section",
 ]
-
-
-@dataclass(frozen=True)
-class ChannelOptions:
-    """
-    Detector options derived from an FCS file.
-
-    Attributes
-    ----------
-    scatter_options : list[dict[str, str]]
-        Dropdown options for scattering channels.
-    secondary_options : list[dict[str, str]]
-        Dropdown options for the secondary detector family.
-    scatter_value : Optional[str]
-        Default scattering selection.
-    secondary_value : Optional[str]
-        Default secondary detector selection.
-    """
-
-    scatter_options: list[dict[str, str]]
-    secondary_options: list[dict[str, str]]
-    scatter_value: Optional[str]
-    secondary_value: Optional[str]
 
 
 @dataclass(frozen=True)
@@ -102,30 +77,6 @@ def sanitize_filename(name: str) -> str:
         sanitized_name = "calibration"
 
     return sanitized_name
-
-
-def get_detector_column_names_from_file(file_path: str) -> list[str]:
-    """
-    Extract detector column names from an FCS file.
-
-    Parameters
-    ----------
-    file_path : str
-        FCS file path.
-
-    Returns
-    -------
-    list[str]
-        Detector column names in file order.
-    """
-    with FCSFile(str(file_path), writable=False) as fcs_file:
-        detectors = fcs_file.text["Detectors"]
-        parameter_count = int(fcs_file.text["Keywords"]["$PAR"])
-
-        return [
-            str(detectors[index].get("N", f"P{index}"))
-            for index in range(1, parameter_count + 1)
-        ]
 
 
 def is_scatter_channel(column_name: str) -> bool:
@@ -198,65 +149,6 @@ def resolve_default_dropdown_value(
     return None
 
 
-# def build_channel_options_from_file(
-#     file_path: str,
-#     *,
-#     preferred_scatter: Optional[str] = None,
-#     preferred_secondary: Optional[str] = None,
-# ) -> ChannelOptions:
-#     """
-#     Derive detector options from an FCS file.
-
-#     Parameters
-#     ----------
-#     file_path : str
-#         FCS file path.
-#     preferred_scatter : Optional[str]
-#         Preferred scattering detector if present.
-#     preferred_secondary : Optional[str]
-#         Preferred secondary detector if present.
-
-#     Returns
-#     -------
-#     ChannelOptions
-#         Dropdown options and default values.
-#     """
-#     detector_column_names = get_detector_column_names_from_file(file_path)
-
-#     scatter_options: list[dict[str, str]] = []
-#     secondary_options: list[dict[str, str]] = []
-
-#     for detector_column_name in detector_column_names:
-#         if is_invalid_detector_channel(detector_column_name):
-#             continue
-
-#         detector_option = {
-#             "label": str(detector_column_name),
-#             "value": str(detector_column_name),
-#         }
-
-#         if is_scatter_channel(detector_column_name):
-#             scatter_options.append(detector_option)
-#         else:
-#             secondary_options.append(detector_option)
-
-#     scatter_value = resolve_default_dropdown_value(
-#         options=scatter_options,
-#         preferred_value=preferred_scatter,
-#     )
-#     secondary_value = resolve_default_dropdown_value(
-#         options=secondary_options,
-#         preferred_value=preferred_secondary,
-#     )
-
-#     return ChannelOptions(
-#         scatter_options=scatter_options,
-#         secondary_options=secondary_options,
-#         scatter_value=scatter_value,
-#         secondary_value=secondary_value,
-#     )
-
-
 def save_calibration_to_file(
     *,
     name: str,
@@ -316,21 +208,20 @@ def save_calibration_to_file(
 def list_saved_calibrations_from_directory(
     *,
     directory: Path,
-) -> dict[str, list[str]]:
+) -> list[str]:
     """
     List saved calibration files in the format expected by the sidebar.
 
     Parameters
     ----------
-    folder_name : str
-        Logical folder name used by the UI.
     directory : Path
         Directory containing saved calibration files.
 
     Returns
     -------
-    dict[str, list[str]]
-        Mapping folder name to list of filenames.
+    list[str]
+        Sorted list of JSON filenames found in *directory*, or an empty list
+        when the directory contains no JSON files.
     """
     files = sorted(
         file_path.name

@@ -12,9 +12,13 @@ import RosettaX
 logger = logging.getLogger(__name__)
 
 
-
-
-root = Path(RosettaX.__path__[0])
+try:
+    root = Path(RosettaX.__path__[0])
+except (AttributeError, IndexError) as _exc:
+    raise RuntimeError(
+        "RosettaX package root could not be determined. "
+        "Ensure the package is properly installed (e.g. `pip install -e .`)."
+    ) from _exc
 
 project = root.parents[0]
 

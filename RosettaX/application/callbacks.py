@@ -31,10 +31,11 @@ def register_application_callbacks(app: Dash) -> None:
         prevent_initial_call=False,
     )
     def sync_theme_from_runtime_config(runtime_config_data: Any):
-        logger.debug(
-            "sync_theme_from_runtime_config called with runtime_config_data=%r",
-            runtime_config_data,
-        )
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                "sync_theme_from_runtime_config called with runtime_config_data=%r",
+                runtime_config_data,
+            )
 
         runtime_config = RuntimeConfig.from_dict(
             runtime_config_data if isinstance(runtime_config_data, dict) else None
@@ -114,7 +115,8 @@ def register_application_callbacks(app: Dash) -> None:
         Input("theme-store", "data"),
     )
     def update_sidebar_logo(theme_store_data: Any):
-        logger.debug("Updating sidebar logo with theme_store_data=%r", theme_store_data)
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Updating sidebar logo with theme_store_data=%r", theme_store_data)
 
         if isinstance(theme_store_data, dict):
             theme_name = str(theme_store_data.get("theme", "dark")).strip().lower()

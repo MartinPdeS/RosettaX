@@ -124,9 +124,9 @@ def get_column_names(fcs_file_path: str) -> list[str]:
     """
     Return detector column names from an FCS file.
 
-    The names are read from the ``$PnN`` keywords in the TEXT segment and
-    returned in parameter order.  If a parameter has no name keyword, a
-    fallback of the form ``P{index}`` is used.
+    Delegates to :meth:`FCSFile.get_column_names` which reads the ``$PnN``
+    keywords from the TEXT segment in parameter order.  A fallback of the form
+    ``P{index}`` is used when a parameter has no name keyword.
 
     Parameters
     ----------
@@ -141,13 +141,7 @@ def get_column_names(fcs_file_path: str) -> list[str]:
     logger.debug("get_column_names called for fcs_file_path=%r", fcs_file_path)
 
     with FCSFile(fcs_file_path, writable=False) as fcs_file:
-        detectors = fcs_file.text["Detectors"]
-        parameter_count = int(fcs_file.text["Keywords"]["$PAR"])
-
-        column_names = [
-            str(detectors[index].get("N", f"P{index}"))
-            for index in range(1, parameter_count + 1)
-        ]
+        column_names = fcs_file.get_column_names()
 
     logger.debug("get_column_names returning n_columns=%r", len(column_names))
 

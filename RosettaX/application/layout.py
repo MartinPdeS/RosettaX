@@ -47,11 +47,17 @@ def build_sidebar_content() -> html.Div:
     )
 
 
-def build_stores() -> list[Any]:
+def build_stores() -> tuple[list[Any], str]:
     """
-    Build global application stores.
+    Build global application stores and return initial theme mode.
 
     Only truly global stores should exist here.
+
+    Returns
+    -------
+    tuple[list[Any], str]
+        A tuple of ``(stores, initial_theme_mode)`` so callers can reuse the
+        already-loaded runtime config without reading the profile twice.
     """
     logger.debug("Building application stores")
 
@@ -65,7 +71,7 @@ def build_stores() -> list[Any]:
         initial_theme_mode,
     )
 
-    return [
+    stores = [
         dcc.Store(
             id="theme-store",
             data={"theme": initial_theme_mode},
@@ -83,14 +89,20 @@ def build_stores() -> list[Any]:
         ),
     ]
 
+    return stores, initial_theme_mode
 
-def build_theme_link() -> html.Link:
+
+def build_theme_link(initial_theme_mode: str = "dark") -> html.Link:
     """
     Build the Bootstrap theme stylesheet link.
-    """
-    runtime_config = RuntimeConfig.from_default_profile()
-    initial_theme_mode = runtime_config.get_theme_mode(default="dark")
 
+    Parameters
+    ----------
+    initial_theme_mode : str
+        Theme mode string (``"dark"`` or ``"light"``).  Defaults to ``"dark"``.
+        Pass the value already resolved by :func:`build_stores` to avoid
+        loading the default profile a second time.
+    """
     if initial_theme_mode == "light":
         initial_theme_href = THEME_LIGHT
     else:
@@ -117,8 +129,8 @@ def build_application_layout() -> html.Div:
 
     main_content = build_main_content()
     sidebar_content = build_sidebar_content()
-    theme_link = build_theme_link()
-    stores = build_stores()
+    stores, initial_theme_mode = build_stores()
+    theme_link = build_theme_link(initial_theme_mode)
 
     layout = html.Div(
         [
