@@ -15,7 +15,33 @@ def load_signal(
     require_positive_values: bool = False,
 ) -> np.ndarray:
     """
-    Load a detector signal from the FCS file.
+    Load a detector signal from an FCS file.
+
+    Reads all events for the requested detector column, strips non-finite
+    values, and optionally filters out non-positive values and truncates to a
+    maximum event count.
+
+    Parameters
+    ----------
+    fcs_file_path : str
+        Absolute or relative path to the FCS file.
+    detector_column : str
+        Name of the detector column to read.
+    max_events_for_analysis : Optional[int]
+        If provided, only the first *max_events_for_analysis* events are
+        returned after filtering.
+    require_positive_values : bool
+        If ``True``, events with a value of zero or below are removed.
+
+    Returns
+    -------
+    np.ndarray
+        1D array of finite (and optionally positive) float values.
+
+    Raises
+    ------
+    ValueError
+        If *detector_column* is empty.
     """
     resolved_detector_column = str(detector_column).strip()
 
@@ -59,11 +85,27 @@ def column_copy(
     n: Optional[int] = None,
 ) -> np.ndarray:
     """
-    Return an owned copy of a detector column.
+    Return an owned copy of a detector column from an FCS file.
 
-    This method matches the minimal file reader interface expected by the shared
-    peak workflow graph code. It delegates to ``load_signal`` so all FCS reading
-    remains centralized in this backend.
+    This function matches the minimal file-reader interface expected by the
+    shared peak-workflow graph code.  It delegates to :func:`load_signal` so
+    that all FCS reading remains centralised in one place.
+
+    Parameters
+    ----------
+    fcs_file_path : str
+        Absolute or relative path to the FCS file.
+    detector_column : str
+        Name of the detector column to read.
+    dtype : type
+        NumPy dtype to cast the values to.  Defaults to ``float``.
+    n : Optional[int]
+        If provided, only the first *n* events are returned.
+
+    Returns
+    -------
+    np.ndarray
+        1D array of values cast to *dtype*.
     """
     values = load_signal(
         fcs_file_path=fcs_file_path,
@@ -80,7 +122,21 @@ def column_copy(
 
 def get_column_names(fcs_file_path: str) -> list[str]:
     """
-    Return detector column names from the FCS file.
+    Return detector column names from an FCS file.
+
+    The names are read from the ``$PnN`` keywords in the TEXT segment and
+    returned in parameter order.  If a parameter has no name keyword, a
+    fallback of the form ``P{index}`` is used.
+
+    Parameters
+    ----------
+    fcs_file_path : str
+        Absolute or relative path to the FCS file.
+
+    Returns
+    -------
+    list[str]
+        Ordered list of detector column names.
     """
     logger.debug("get_column_names called for fcs_file_path=%r", fcs_file_path)
 

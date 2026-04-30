@@ -47,6 +47,19 @@ class UploadCallbackResult:
     runtime_config_data: Any
 
     def to_tuple(self) -> tuple[Any, Any]:
+        """
+        Return outputs as a tuple in Dash callback output order.
+
+        Order
+        -----
+        1. page_state_payload
+        2. runtime_config_data
+
+        Returns
+        -------
+        tuple[Any, Any]
+            Two-element tuple matching the Dash callback output order.
+        """
         return (
             self.page_state_payload,
             self.runtime_config_data,

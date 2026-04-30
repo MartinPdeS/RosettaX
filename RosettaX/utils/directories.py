@@ -85,6 +85,21 @@ def list_calibrations(calibration_type: str) -> list[str]:
 
 
 def open_directory(path: Path) -> None:
+    """
+    Open a directory in the native file manager of the current operating system.
+
+    Parameters
+    ----------
+    path : Path
+        Directory path to open.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the resolved path does not exist.
+    RuntimeError
+        If the operating system is not Darwin, Windows, or Linux.
+    """
     resolved_path = Path(path).resolve()
 
     logger.debug("Opening directory at path=%r", str(resolved_path))

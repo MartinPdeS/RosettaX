@@ -13,12 +13,36 @@ logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class HistogramResult:
+    """
+    Immutable container for a 1D histogram computed from detector signal data.
+
+    Attributes
+    ----------
+    values : np.ndarray
+        Raw signal values used to build the histogram.
+    counts : np.ndarray
+        Event counts in each bin.
+    edges : np.ndarray
+        Bin edge positions (length = ``len(counts) + 1``).
+    centers : np.ndarray
+        Bin centre positions (length = ``len(counts)``).
+    """
+
     values: np.ndarray
     counts: np.ndarray
     edges: np.ndarray
     centers: np.ndarray
 
     def to_dict(self) -> dict[str, Any]:
+        """
+        Serialise all arrays to plain Python lists for JSON storage.
+
+        Returns
+        -------
+        dict[str, Any]
+            Dictionary with keys ``values``, ``counts``, ``edges``, and
+            ``centers``, each containing a Python list of floats.
+        """
         return {
             "values": self.values.tolist(),
             "counts": self.counts.tolist(),
@@ -34,7 +58,28 @@ def build_histogram(
     max_events_for_analysis: Optional[int] = None,
 ) -> HistogramResult:
     """
-    Build a 1D histogram from the detector signal.
+    Build a 1D histogram from a detector signal in an FCS file.
+
+    Parameters
+    ----------
+    fcs_file_path : str
+        Absolute or relative path to the FCS file.
+    detector_column : str
+        Name of the detector column to read.
+    n_bins_for_plots : int
+        Number of bins to use for the histogram.
+    max_events_for_analysis : Optional[int]
+        If provided, only the first *max_events_for_analysis* events are used.
+
+    Returns
+    -------
+    HistogramResult
+        Histogram data including raw values, counts, edges, and bin centres.
+
+    Raises
+    ------
+    ValueError
+        If no finite signal values are available after loading.
     """
     resolved_detector_column = str(detector_column).strip()
 
@@ -83,7 +128,24 @@ def build_histogram_figure(
     peak_positions: Optional[np.ndarray] = None,
 ) -> go.Figure:
     """
-    Build a Plotly histogram figure.
+    Build a Plotly bar chart figure from a pre-computed histogram.
+
+    Parameters
+    ----------
+    detector_column : str
+        Detector column name used to label the x axis.
+    histogram_result : HistogramResult
+        Pre-computed histogram data (bin centres and counts).
+    use_log_counts : bool
+        If ``True``, the y axis is rendered on a logarithmic scale.
+    peak_positions : Optional[np.ndarray]
+        Optional array of peak x positions.  Each position is drawn as a
+        vertical dashed line on the figure.
+
+    Returns
+    -------
+    go.Figure
+        Plotly figure with a bar trace and optional vertical peak lines.
     """
     resolved_detector_column = str(detector_column).strip()
 

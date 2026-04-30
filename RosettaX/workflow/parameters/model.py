@@ -27,6 +27,52 @@ def compute_model_for_rows(
     detector_gamma_angle_degree: Any,
     logger: logging.Logger,
 ) -> list[dict[str, str]]:
+    """
+    Compute Mie scattering model values for all rows in the parameter table.
+
+    Validates the optical parameters, then delegates to either the solid-sphere
+    or core/shell sphere branch based on *mie_model*.  Rows with missing or
+    non-positive diameters are skipped and their ``expected_coupling`` cell is
+    set to an empty string.
+
+    Parameters
+    ----------
+    mie_model : str
+        Mie model variant: ``"Core/Shell Sphere"`` or solid-sphere (any other
+        value).
+    current_rows : Optional[list[dict[str, Any]]]
+        Current table rows from a Dash DataTable.
+    medium_refractive_index : Any
+        Real part of the medium refractive index.
+    particle_refractive_index : Any
+        Real part of the particle refractive index (solid-sphere model).
+    core_refractive_index : Any
+        Real part of the core refractive index (core/shell model, unused in
+        the current implementation – outer shell index is used instead).
+    shell_refractive_index : Any
+        Real part of the shell refractive index (core/shell model).
+    wavelength_nm : Any
+        Laser wavelength in nanometres.
+    detector_numerical_aperture : Any
+        Numerical aperture of the main detector.
+    detector_cache_numerical_aperture : Any
+        Numerical aperture of the detector cache (beam stop).
+    blocker_bar_numerical_aperture : Any
+        Numerical aperture of the blocker bar.
+    detector_sampling : Any
+        Number of angular sampling points for the detector integration.
+    detector_phi_angle_degree : Any
+        Detector phi offset angle in degrees.
+    detector_gamma_angle_degree : Any
+        Detector gamma offset angle in degrees.
+    logger : logging.Logger
+        Logger instance for debug and exception messages.
+
+    Returns
+    -------
+    list[dict[str, str]]
+        Updated rows with the ``expected_coupling`` column populated.
+    """
     resolved_rows = [dict(row) for row in (current_rows or [])]
 
     if not resolved_rows:
@@ -134,6 +180,42 @@ def _compute_core_shell_model_for_rows(
     detector_gamma_angle_degree: float,
     logger: logging.Logger,
 ) -> list[dict[str, str]]:
+    """
+    Compute expected coupling values for the core/shell sphere Mie model.
+
+    Uses the outer-shell diameter from each row and the shell refractive index
+    to evaluate the scattering cross-section.
+
+    Parameters
+    ----------
+    current_rows : list[dict[str, Any]]
+        Table rows containing ``outer_diameter_nm`` values.
+    mie_model : str
+        Mie model label passed through to :func:`table.normalize_table_rows`.
+    medium_refractive_index : float
+        Real part of the medium refractive index.
+    shell_refractive_index : Any
+        Real part of the shell refractive index (must be convertible to float).
+    wavelength_nm : float
+        Laser wavelength in nanometres.
+    detector_numerical_aperture : float
+        Numerical aperture of the main detector.
+    detector_cache_numerical_aperture : float
+        Numerical aperture of the detector cache.
+    detector_sampling : int
+        Angular sampling resolution.
+    detector_phi_angle_degree : float
+        Detector phi offset angle in degrees.
+    detector_gamma_angle_degree : float
+        Detector gamma offset angle in degrees.
+    logger : logging.Logger
+        Logger instance for debug and exception messages.
+
+    Returns
+    -------
+    list[dict[str, str]]
+        Updated rows with ``expected_coupling`` populated for valid entries.
+    """
     logger.debug("compute_model_for_rows running in Core/Shell Sphere mode.")
 
     try:
@@ -228,6 +310,43 @@ def _compute_solid_sphere_model_for_rows(
     detector_gamma_angle_degree: float,
     logger: logging.Logger,
 ) -> list[dict[str, str]]:
+    """
+    Compute expected coupling values for the solid sphere Mie model.
+
+    Uses the particle diameter from each row and the particle refractive index
+    to evaluate the scattering cross-section.
+
+    Parameters
+    ----------
+    current_rows : list[dict[str, Any]]
+        Table rows containing ``particle_diameter_nm`` values.
+    mie_model : str
+        Mie model label passed through to :func:`table.normalize_table_rows`.
+    medium_refractive_index : float
+        Real part of the medium refractive index.
+    particle_refractive_index : Any
+        Real part of the particle refractive index (must be convertible to
+        float).
+    wavelength_nm : float
+        Laser wavelength in nanometres.
+    detector_numerical_aperture : float
+        Numerical aperture of the main detector.
+    detector_cache_numerical_aperture : float
+        Numerical aperture of the detector cache.
+    detector_sampling : int
+        Angular sampling resolution.
+    detector_phi_angle_degree : float
+        Detector phi offset angle in degrees.
+    detector_gamma_angle_degree : float
+        Detector gamma offset angle in degrees.
+    logger : logging.Logger
+        Logger instance for debug and exception messages.
+
+    Returns
+    -------
+    list[dict[str, str]]
+        Updated rows with ``expected_coupling`` populated for valid entries.
+    """
     logger.debug("compute_model_for_rows running in Solid Sphere mode.")
 
     try:

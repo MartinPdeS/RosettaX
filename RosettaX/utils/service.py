@@ -344,6 +344,24 @@ def list_saved_calibrations_from_directory(
     return files
 
 def resolve_first_fcs_path(uploaded_fcs_path_data: Any) -> Optional[str]:
+    """
+    Extract the first non-empty FCS file path from an uploaded path payload.
+
+    Dash upload components may wrap the path in nested lists.  This helper
+    unwraps any level of list nesting, returning the first scalar string value
+    it finds.
+
+    Parameters
+    ----------
+    uploaded_fcs_path_data : Any
+        Raw upload payload – may be ``None``, a plain string, or a (nested)
+        list of strings.
+
+    Returns
+    -------
+    Optional[str]
+        The first non-empty path string, or ``None`` if nothing valid is found.
+    """
     if uploaded_fcs_path_data is None:
         return None
 
