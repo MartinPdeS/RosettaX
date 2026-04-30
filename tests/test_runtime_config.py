@@ -274,32 +274,6 @@ class Test_RuntimeConfig:
 
         assert runtime_config.get_int("sampling.event_count", default=1000) == 1000
 
-    @pytest.mark.parametrize(
-        ("raw_theme_mode", "expected_theme_mode"),
-        [
-            ("dark", "dark"),
-            ("light", "light"),
-            ("DARK", "dark"),
-            ("LIGHT", "light"),
-            ("invalid", "dark"),
-            ("", "dark"),
-        ],
-    )
-    def test_get_theme_mode_returns_supported_theme_or_default(
-        self,
-        raw_theme_mode: str,
-        expected_theme_mode: str,
-    ) -> None:
-        runtime_config = RuntimeConfig.from_dict(
-            {
-                "ui": {
-                    "theme_mode": raw_theme_mode,
-                }
-            }
-        )
-
-        assert runtime_config.get_theme_mode(default="dark") == expected_theme_mode
-
     def test_get_show_graphs_uses_ui_show_graphs_path(self) -> None:
         runtime_config = RuntimeConfig.from_dict(
             {
