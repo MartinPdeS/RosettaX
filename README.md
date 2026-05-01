@@ -10,8 +10,8 @@
 | RosettaX/pages/p03\_scattering/sections/s00\_header.py                      |       22 |       22 |        0 |        0 |      0.00% |     3-173 |
 | RosettaX/pages/p03\_scattering/sections/s01\_upload.py                      |       28 |       28 |        0 |        0 |      0.00% |      3-98 |
 | RosettaX/pages/p03\_scattering/sections/s02\_peaks.py                       |       36 |       36 |        2 |        0 |      0.00% |     3-134 |
-| RosettaX/pages/p03\_scattering/sections/s03\_model.py                       |      121 |      121 |        0 |        0 |      0.00% |    3-1082 |
-| RosettaX/pages/p03\_scattering/sections/s04\_table.py                       |      111 |      111 |        4 |        0 |      0.00% |     3-570 |
+| RosettaX/pages/p03\_scattering/sections/s03\_model.py                       |      127 |      127 |        2 |        0 |      0.00% |    3-1119 |
+| RosettaX/pages/p03\_scattering/sections/s04\_table.py                       |      111 |      111 |        4 |        0 |      0.00% |     3-573 |
 | RosettaX/pages/p03\_scattering/sections/s05\_calibration.py                 |      130 |      130 |       24 |        0 |      0.00% |     3-882 |
 | RosettaX/pages/p03\_scattering/sections/s06\_save.py                        |       24 |       24 |        0 |        0 |      0.00% |      3-80 |
 | RosettaX/pages/p03\_scattering/state.py                                     |       36 |       36 |        6 |        0 |      0.00% |     3-127 |
@@ -20,37 +20,38 @@
 | RosettaX/pages/p04\_calibrate/sections/s03\_file\_picker/services.py        |       80 |       80 |       38 |        0 |      0.00% |     3-300 |
 | RosettaX/pages/p04\_calibrate/sections/s04\_apply/services.py               |       57 |       57 |       16 |        0 |      0.00% |     3-282 |
 | RosettaX/pages/p04\_calibrate/state.py                                      |       29 |       29 |        4 |        0 |      0.00% |     3-106 |
-| RosettaX/pages/p05\_settings/sections/s01\_default/schema.py                |       27 |       27 |        2 |        0 |      0.00% |     3-488 |
-| RosettaX/pages/p05\_settings/sections/s01\_default/services.py              |      146 |      146 |       74 |        0 |      0.00% |     3-464 |
-| RosettaX/pages/p05\_settings/sections/s02\_create/services.py               |       35 |       35 |        8 |        0 |      0.00% |     3-128 |
-| RosettaX/pages/p05\_settings/sections/s03\_delete/services.py               |       23 |       23 |        6 |        0 |      0.00% |      3-68 |
-| RosettaX/pages/p05\_settings/state.py                                       |       28 |       28 |        4 |        0 |      0.00% |     3-103 |
-| RosettaX/pages/p05\_settings/utils.py                                       |       19 |       19 |        6 |        0 |      0.00% |      1-71 |
+| RosettaX/pages/p05\_settings/sections/s01\_default/schema.py                |       33 |        3 |        2 |        1 |     88.57% |47, 505, 514 |
+| RosettaX/pages/p05\_settings/sections/s01\_default/services.py              |      146 |       54 |       74 |       10 |     60.00% |20, 30, 33, 42, 48, 60, 75-84, 93-101, 108-120, 131-156, 234, 257, 267, 293-300, 316, 330-333, 356, 415, 454-464 |
+| RosettaX/pages/p05\_settings/sections/s02\_create/services.py               |       35 |       27 |        8 |        0 |     18.60% |28-96, 118-128 |
+| RosettaX/pages/p05\_settings/sections/s03\_delete/services.py               |       23 |       16 |        6 |        0 |     24.14% |     30-68 |
+| RosettaX/pages/p05\_settings/state.py                                       |       28 |       15 |        4 |        0 |     40.62% |30, 50-61, 72, 93-103 |
+| RosettaX/pages/p05\_settings/utils.py                                       |       19 |       13 |        6 |        0 |     24.00% |22-30, 47-48, 65-71 |
 | RosettaX/utils/fcs\_metadata.py                                             |       67 |       15 |       16 |        5 |     73.49% |46-51, 60-65, 72, 75, 128, 167-181 |
 | RosettaX/utils/io.py                                                        |       31 |       23 |        6 |        0 |     21.62% |46-78, 110-117, 141-154 |
 | RosettaX/utils/plottings.py                                                 |      112 |       96 |       32 |        0 |     11.11% |46, 84-121, 150-188, 246-313, 357-401, 412-430, 465-528 |
 | RosettaX/utils/reader.py                                                    |      541 |      251 |      174 |       36 |     49.51% |93, 111, 114, 141-147, 155, 160, 162-\>165, 222, 256, 273-\>284, 276-277, 284-\>exit, 287-288, 311-318, 329, 347-348, 354, 363-364, 397-399, 410, 421, 433-434, 440, 450, 453, 458-462, 499, 552-558, 569-573, 581-586, 592, 597-628, 637-642, 681-688, 708-\>717, 717-\>726, 731, 737, 740, 743, 746, 765-\>752, 776-783, 792-796, 835-863, 877-929, 947-956, 964-1015, 1018-1051, 1054-1059, 1065-1102, 1105-1143, 1146-1202, 1205-1224 |
-| RosettaX/utils/runtime\_config.py                                           |      345 |       29 |      136 |       20 |     88.98% |296-\>303, 311-312, 354-\>357, 383-384, 440, 458, 498, 520-528, 567-\>570, 577, 608, 615, 647, 652, 658-661, 759, 816, 849, 866-867, 949, 951-\>954, 961, 979-981 |
+| RosettaX/utils/runtime\_config.py                                           |      345 |       29 |      136 |       20 |     88.98% |306-\>313, 321-322, 364-\>367, 393-394, 450, 468, 508, 530-538, 577-\>580, 587, 618, 625, 657, 662, 668-671, 769, 826, 859, 876-877, 959, 961-\>964, 971, 989-991 |
 | RosettaX/utils/styling.py                                                   |       36 |       16 |        6 |        0 |     47.62% |277-283, 292-295, 304, 316, 329, 338, 389-393, 406-410 |
-| RosettaX/workflow/apply\_calibration/fluorescence.py                        |       46 |       46 |       16 |        0 |      0.00% |     3-187 |
-| RosettaX/workflow/apply\_calibration/io.py                                  |       81 |       81 |       30 |        0 |      0.00% |     3-297 |
-| RosettaX/workflow/apply\_calibration/scattering/dataframe\_apply.py         |       56 |       56 |        6 |        0 |      0.00% |     3-235 |
+| RosettaX/utils/ui\_forms.py                                                 |      117 |       88 |       48 |        0 |     17.58% |17-20, 29-35, 44-53, 67-73, 85-88, 103, 119, 135, 151, 177, 214-235, 254, 278, 305, 324, 345-357, 371, 390, 408, 435, 451, 479-522, 545-582, 608-642, 665-728 |
+| RosettaX/workflow/apply\_calibration/fluorescence.py                        |       46 |       42 |       16 |        0 |      6.45% |22-104, 121-187 |
+| RosettaX/workflow/apply\_calibration/io.py                                  |       81 |       62 |       30 |        0 |     17.12% |19-26, 35-52, 63-66, 84-100, 109-131, 142-158, 168-169, 184-201, 214-244, 255-269, 280-288, 297 |
+| RosettaX/workflow/apply\_calibration/scattering/dataframe\_apply.py         |       56 |       41 |        6 |        0 |     24.19% |27-59, 69-83, 106-187, 205-235 |
 | RosettaX/workflow/apply\_calibration/scattering/main.py                     |      213 |      213 |       58 |        0 |      0.00% |     3-905 |
-| RosettaX/workflow/apply\_calibration/scattering/mie\_relation\_builder.py   |       72 |       72 |       14 |        0 |      0.00% |     3-447 |
-| RosettaX/workflow/apply\_calibration/scattering/models.py                   |      156 |      156 |       26 |        0 |      0.00% |     3-571 |
-| RosettaX/workflow/apply\_calibration/scattering/monotonic.py                |      176 |      176 |       54 |        0 |      0.00% |     3-725 |
-| RosettaX/workflow/apply\_calibration/scattering/presets.py                  |       18 |       18 |        0 |        0 |      0.00% |     3-123 |
-| RosettaX/workflow/apply\_calibration/services.py                            |       68 |       68 |       20 |        0 |      0.00% |     3-404 |
+| RosettaX/workflow/apply\_calibration/scattering/mie\_relation\_builder.py   |       72 |       55 |       14 |        0 |     19.77% |41-73, 88-146, 165-235, 253-300, 309-369, 378-421, 436-447 |
+| RosettaX/workflow/apply\_calibration/scattering/models.py                   |      156 |       78 |       26 |        0 |     42.86% |35, 42, 49, 56, 62, 103, 110, 117, 124, 131, 138, 144, 185, 192, 199, 206, 213, 220, 227-233, 240-246, 253-259, 266-272, 278, 297-362, 380, 409, 415, 451-466, 477-485, 496-504, 515-529, 540-552, 564-571 |
+| RosettaX/workflow/apply\_calibration/scattering/monotonic.py                |      176 |      155 |       54 |        0 |      9.13% |30-94, 113-131, 142-187, 207-317, 331-343, 363-382, 402-449, 468-565, 579-637, 650-684, 695-725 |
+| RosettaX/workflow/apply\_calibration/scattering/presets.py                  |       18 |        4 |        0 |        0 |     77.78% |42, 117-123 |
+| RosettaX/workflow/apply\_calibration/services.py                            |       68 |       52 |       20 |        0 |     18.18% |53-147, 188-237, 264-317, 340-368, 397-404 |
 | RosettaX/workflow/calibration/fluorescence.py                               |      139 |      139 |       22 |        0 |      0.00% |     3-873 |
 | RosettaX/workflow/calibration/mie\_relation.py                              |      129 |      104 |       44 |        0 |     14.45% |43-91, 106-145, 157, 169-212, 268-271, 285-306, 321-359, 373-421, 431-449, 466-484, 506-514, 576-591, 610, 651 |
 | RosettaX/workflow/calibration/scattering.py                                 |      439 |      358 |       94 |        0 |     16.70% |145, 175-188, 194-203, 213-222, 295, 306-311, 324-333, 346-376, 385-416, 426-520, 566-591, 600-613, 633-702, 712-834, 844-1021, 1033-1085, 1099-1101, 1115-1143, 1164-1262, 1287-1413, 1430-1477, 1493-1526, 1545-1685, 1706-1896, 1909-1947, 1976-1994, 2007-2032, 2046-2076 |
 | RosettaX/workflow/calibration/scattering\_services.py                       |      188 |      188 |       52 |        0 |      0.00% |     3-918 |
-| RosettaX/workflow/model/scattering.py                                       |       99 |       19 |        8 |        0 |     78.50% |143, 199, 207, 247-251, 260, 269, 278, 377, 395, 415-418, 434, 450-461, 474 |
+| RosettaX/workflow/model/scattering.py                                       |      113 |       20 |       16 |        1 |     80.62% |143, 199, 207, 247-251, 260, 269, 278, 294, 409-\>408, 428, 446, 466-469, 485, 501-512, 525 |
 | RosettaX/workflow/parameters/detector\_configuration.py                     |       26 |       16 |        6 |        0 |     31.25% |22, 35, 45-48, 67-123, 135-143 |
 | RosettaX/workflow/parameters/loader.py                                      |       38 |       29 |       10 |        0 |     18.75% |20-75, 82-84, 101-106 |
 | RosettaX/workflow/parameters/model.py                                       |      105 |       22 |       28 |        4 |     80.45% |137-141, 275-279, 298-299, 302-303, 318-319, 338-342, 426-430, 478-482, 504 |
 | RosettaX/workflow/parameters/optical\_preview.py                            |      219 |      191 |       38 |        0 |     10.89% |36-130, 148-196, 214-266, 297-400, 409-463, 473-505, 519-564, 571-591, 601-626, 636-647, 654-656, 674-676, 695-713, 721-741, 751-766, 794-867, 883, 901-912, 923-950 |
-| RosettaX/workflow/parameters/table.py                                       |      131 |       71 |       38 |        4 |     42.60% |125-138, 153-160, 176-179, 192-212, 226-251, 268-301, 320-357, 372-388, 403-415, 442, 469-478, 493, 502, 521-522, 524-\>513, 549, 567-615 |
+| RosettaX/workflow/parameters/table.py                                       |      131 |       51 |       38 |        8 |     59.17% |130, 153-160, 192-212, 242, 268-301, 352, 355, 372-388, 403-415, 442, 469-478, 493, 502, 521-522, 524-\>513, 549, 567-615 |
 | RosettaX/workflow/peak/adapters/base.py                                     |      236 |      185 |      156 |        2 |     15.56% |122-\>125, 126, 138, 150-160, 170-178, 189-195, 207-216, 234, 247-301, 312-329, 339-396, 406-415, 425-435, 447-474, 487-492, 502-517, 527, 542-561, 574-623, 635-639, 649-718 |
 | RosettaX/workflow/peak/adapters/fluorescence.py                             |      170 |      143 |      106 |        0 |      9.78% |89-93, 109-137, 156-207, 218-241, 260-282, 292-366, 379-414, 427-435, 445-457, 471-509, 525-587, 599-617, 630-647, 653 |
 | RosettaX/workflow/peak/adapters/main.py                                     |       22 |       22 |        4 |        0 |      0.00% |      3-88 |
@@ -63,17 +64,17 @@
 | RosettaX/workflow/peak/callbacks/visibility.py                              |       71 |       61 |       26 |        0 |     10.31% |17-33, 44-62, 73-132, 146-184, 195-216, 233-277, 293-331 |
 | RosettaX/workflow/peak/core/detectors.py                                    |       66 |       56 |       28 |        0 |     10.64% |27-38, 70-166, 186-203, 231-243, 271-301 |
 | RosettaX/workflow/peak/core/graphing.py                                     |      495 |      412 |      224 |        1 |     13.07% |55, 73-143, 167-189, 215, 281-309, 315-347, 355-377, 383, 393-403, 413-416, 422, 432-449, 457-517, 523-539, 556-678, 694-791, 800-802, 829-858, 871-883, 893-905, 919-947, 961-989, 1002-1057, 1069-1128, 1153-1212, 1238-1245, 1275-1282, 1313-1359, 1372, 1392, 1404, 1422, 1438-1460, 1466-1509, 1515-1590, 1600-1620, 1635-1639, 1651-1717, 1729-1751, 1757, 1771, 1785-1807, 1818-1826, 1832, 1843, 1854, 1863, 1877-1897, 1908-1925, 1938-1952, 1962-1982, 1998-2024 |
-| RosettaX/workflow/peak/registry.py                                          |      113 |       91 |       52 |        0 |     13.33% |32-43, 63-135, 145-147, 169-202, 214, 233, 248, 267-274, 294-310, 322, 344-347, 375-399 |
-| RosettaX/workflow/peak/scripts/automatic\_1d\_peaks.py                      |      195 |      195 |       54 |        0 |      0.00% |    3-1208 |
-| RosettaX/workflow/peak/scripts/automatic\_2d\_peaks.py                      |      146 |      146 |       52 |        0 |      0.00% |     3-637 |
-| RosettaX/workflow/peak/scripts/base.py                                      |      108 |      108 |       22 |        0 |      0.00% |     3-472 |
-| RosettaX/workflow/peak/scripts/k\_mean\_1d.py                               |      180 |      180 |       42 |        0 |      0.00% |     3-963 |
-| RosettaX/workflow/peak/scripts/k\_mean\_2d.py                               |      206 |      206 |       46 |        0 |      0.00% |    3-1142 |
-| RosettaX/workflow/peak/scripts/manual\_1d\_click.py                         |       71 |       71 |       14 |        0 |      0.00% |     3-428 |
-| RosettaX/workflow/peak/scripts/manual\_2d\_click.py                         |       98 |       98 |       22 |        0 |      0.00% |     3-635 |
-| RosettaX/workflow/peak/scripts/proeminence\_1d.py                           |      195 |      195 |       60 |        0 |      0.00% |     3-997 |
-| RosettaX/workflow/peak/scripts/prominence\_2d.py                            |      235 |      235 |       60 |        0 |      0.00% |    3-1305 |
-| RosettaX/workflow/peak/scripts/rosetta\_mix.py                              |      195 |      195 |       66 |        0 |      0.00% |     3-865 |
+| RosettaX/workflow/peak/registry.py                                          |      113 |       57 |       52 |        7 |     45.45% |32-43, 68-74, 82, 94-100, 107-112, 119-120, 145-147, 182, 185, 188, 193, 196, 233, 248, 267-274, 294-310, 344-347, 375-399 |
+| RosettaX/workflow/peak/scripts/automatic\_1d\_peaks.py                      |      195 |      144 |       54 |        0 |     20.48% |60, 82, 135, 171-181, 231-236, 289-324, 355-379, 399, 455-509, 537-543, 581-588, 615-666, 688-693, 715-724, 743, 765, 794-829, 865-926, 948-954, 984-1008, 1035-1052, 1078-1095, 1129-1153, 1176, 1199 |
+| RosettaX/workflow/peak/scripts/automatic\_2d\_peaks.py                      |      146 |      118 |       52 |        0 |     14.14% |40, 49, 58, 132-245, 265-308, 314, 326, 342-357, 384-494, 505-545, 555-596, 609-634 |
+| RosettaX/workflow/peak/scripts/base.py                                      |      108 |       68 |       22 |        1 |     31.54% |102, 113, 135-138, 160, 183, 218, 244-249, 262, 302-307, 318, 337-345, 359, 378-389, 401-409, 420-440, 451-472 |
+| RosettaX/workflow/peak/scripts/k\_mean\_1d.py                               |      180 |      139 |       42 |        0 |     18.47% |54, 62, 70, 173-254, 266, 278, 305-348, 368-375, 386-406, 453, 481-486, 497-580, 603-628, 643-663, 676-697, 713-781, 792-815, 833-882, 898-902, 926-944, 953 |
+| RosettaX/workflow/peak/scripts/k\_mean\_2d.py                               |      206 |      164 |       46 |        0 |     16.67% |53, 62, 71, 192-301, 313, 325, 359-411, 433-442, 453-493, 542, 574-581, 593-691, 712-727, 742-762, 777-789, 804-825, 841-904, 915-938, 957-1024, 1040-1047, 1072-1120, 1130 |
+| RosettaX/workflow/peak/scripts/manual\_1d\_click.py                         |       71 |       43 |       14 |        0 |     32.94% |48, 70, 108, 140, 191, 239-283, 302, 328, 359-376, 395-425 |
+| RosettaX/workflow/peak/scripts/manual\_2d\_click.py                         |       98 |       65 |       22 |        0 |     27.50% |49, 72, 118, 150, 201, 247, 286, 334-380, 402, 428-443, 474-484, 506-530, 554-579, 598-632 |
+| RosettaX/workflow/peak/scripts/proeminence\_1d.py                           |      195 |      153 |       60 |        0 |     16.47% |53, 61, 69, 224-303, 315, 327, 350-357, 404-412, 424-460, 510, 539-544, 555-688, 711-714, 725-750, 764-769, 783-803, 817-850, 864-884, 895-945, 959-980, 987 |
+| RosettaX/workflow/peak/scripts/prominence\_2d.py                            |      235 |      192 |       60 |        0 |     14.58% |58, 67, 76, 294-402, 414, 426, 454-471, 520-532, 544-600, 666, 701-708, 726-731, 743-910, 931-980, 996-1001, 1015-1035, 1049-1097, 1108-1159, 1172-1226, 1240-1265, 1276-1284, 1293 |
+| RosettaX/workflow/peak/scripts/rosetta\_mix.py                              |      195 |      163 |       66 |        0 |     12.26% |50, 59, 110-320, 337, 348, 367-381, 394-411, 425-493, 512-573, 593-674, 689-754, 767-789, 802-832, 846-862 |
 | RosettaX/workflow/peak/services.py                                          |       37 |       37 |        8 |        0 |      0.00% |     3-170 |
 | RosettaX/workflow/plotting/scatter2d.py                                     |       91 |       55 |       24 |        0 |     31.30% |86-108, 135-165, 192-206, 226-317, 339-395, 406-433 |
 | RosettaX/workflow/save/adapters.py                                          |       22 |       22 |        4 |        0 |      0.00% |      3-88 |
@@ -82,11 +83,11 @@
 | RosettaX/workflow/sidebar/services.py                                       |       64 |       64 |       12 |        0 |      0.00% |     3-153 |
 | RosettaX/workflow/table/fluorescence.py                                     |       70 |       70 |       14 |        0 |      0.00% |     3-268 |
 | RosettaX/workflow/table/scattering.py                                       |       80 |       80 |        4 |        0 |      0.00% |     3-478 |
-| RosettaX/workflow/table/services.py                                         |      115 |       97 |       62 |        0 |     10.17% |13-29, 39-58, 68-84, 94, 105-111, 122-130, 141-158, 168, 186-189, 202, 216-221, 237-248, 259, 277-291, 306-340, 351-366, 381 |
+| RosettaX/workflow/table/services.py                                         |      115 |       91 |       62 |        2 |     15.82% |13-29, 39-58, 69, 75, 94, 105-111, 122-130, 141-158, 168, 186-189, 202, 216-221, 237-248, 259, 277-291, 306-340, 351-366, 381 |
 | RosettaX/workflow/upload/adapters.py                                        |       33 |       15 |        2 |        0 |     51.43% |61, 72, 81, 93, 117-118, 127, 138, 147, 159-178 |
 | RosettaX/workflow/upload/models.py                                          |       15 |        1 |        0 |        0 |     93.33% |        63 |
 | RosettaX/workflow/upload/services.py                                        |       82 |       34 |       24 |        0 |     60.38% |139-158, 174-205, 224-286 |
-| **TOTAL**                                                                   | **9227** | **7316** | **2780** |   **76** | **18.85%** |           |
+| **TOTAL**                                                                   | **9370** | **6637** | **2838** |  **102** | **25.93%** |           |
 
 7 files skipped due to complete coverage.
 
