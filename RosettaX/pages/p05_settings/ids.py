@@ -59,6 +59,7 @@ class Ids:
 
         default_fluorescence_peak_process = f"{PAGE_NAME}-default-fluorescence-peak-process"
 
+        default_scatterer_preset = f"{PAGE_NAME}-default-scatterer-preset"
         medium_refractive_index = f"{PAGE_NAME}-medium-refractive-index"
         core_refractive_index = f"{PAGE_NAME}-core-refractive-index"
         shell_refractive_index = f"{PAGE_NAME}-shell-refractive-index"
@@ -73,6 +74,7 @@ class Ids:
         default_scattering_peak_process = f"{PAGE_NAME}-default-scattering-peak-process"
         default_gating_channel = f"{PAGE_NAME}-default-gating-channel"
         default_gating_threshold = f"{PAGE_NAME}-default-gating-threshold"
+        default_apply_target_model_preset = f"{PAGE_NAME}-default-apply-target-model-preset"
 
         max_events_for_analysis = f"{PAGE_NAME}-max-events-for-analysis"
         n_bins = f"{PAGE_NAME}-n-bins-for-plots"

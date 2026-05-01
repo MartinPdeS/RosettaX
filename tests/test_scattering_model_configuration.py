@@ -89,3 +89,36 @@ class Test_ScatteringModelConfigurationScattererPresets:
             "300",
             "500",
         ]
+
+    def test_rosetta_mix_preset_preserves_other_table_columns(self):
+        columns, rows = ScatteringModelConfiguration.build_table_state_from_scatterer_preset(
+            preset_name=ROSETTA_MIX_PRESET_NAME,
+            current_rows=[
+                {
+                    "particle_diameter_nm": "999",
+                    "measured_peak_position": "12.3",
+                    "expected_coupling": "45.6",
+                },
+                {
+                    "particle_diameter_nm": "888",
+                    "measured_peak_position": "78.9",
+                    "expected_coupling": "10.11",
+                },
+            ],
+        )
+
+        assert [column["id"] for column in columns] == [
+            "particle_diameter_nm",
+            "measured_peak_position",
+            "expected_coupling",
+        ]
+        assert rows[0] == {
+            "particle_diameter_nm": "70",
+            "measured_peak_position": "12.3",
+            "expected_coupling": "45.6",
+        }
+        assert rows[1] == {
+            "particle_diameter_nm": "100",
+            "measured_peak_position": "78.9",
+            "expected_coupling": "10.11",
+        }

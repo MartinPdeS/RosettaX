@@ -199,13 +199,16 @@ class ReferenceTable:
                 allow_duplicate=True,
             ),
             dash.Input(self.page.ids.Parameters.scatterer_preset, "value"),
+            dash.State(self.ids.bead_table, "data"),
             prevent_initial_call=True,
         )
         def populate_table_from_scatterer_preset(
             scatterer_preset: Any,
+            current_rows: Any,
         ) -> tuple[Any, Any]:
             preset_table_state = ScatteringModelConfiguration.build_table_state_from_scatterer_preset(
                 preset_name=scatterer_preset,
+                current_rows=current_rows,
             )
 
             if preset_table_state is None:

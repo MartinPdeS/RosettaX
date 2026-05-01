@@ -285,6 +285,17 @@ class ScatteringModelConfiguration:
         return build_scattering_calibration_scatterer_preset_options()
 
     @staticmethod
+    def resolve_runtime_scatterer_preset(
+        preset_name: Any,
+    ) -> str:
+        """
+        Resolve a persisted scatterer preset name to a known preset.
+        """
+        return get_scattering_calibration_scatterer_preset(
+            preset_name,
+        ).name
+
+    @staticmethod
     def resolve_scatterer_preset_values(
         *,
         preset_name: Any,
@@ -340,6 +351,7 @@ class ScatteringModelConfiguration:
     def build_table_state_from_scatterer_preset(
         *,
         preset_name: Any,
+        current_rows: Optional[list[dict[str, Any]]] = None,
     ) -> Optional[tuple[list[dict[str, Any]], list[dict[str, str]]]]:
         """
         Build calibration table columns and rows from a scatterer preset.
@@ -363,6 +375,45 @@ class ScatteringModelConfiguration:
             runtime_core_diameters_nm=preset.core_diameters_nm,
             runtime_shell_thicknesses_nm=preset.shell_thicknesses_nm,
         )
+
+        if current_rows is not None:
+            preserved_rows = parameters_table.remap_table_rows_to_model(
+                mie_model=preset.mie_model,
+                current_rows=current_rows,
+            )
+
+            geometry_column_ids = (
+                [
+                    parameters_table.COLUMN_CORE_DIAMETER_NM,
+                    parameters_table.COLUMN_SHELL_THICKNESS_NM,
+                    parameters_table.COLUMN_OUTER_DIAMETER_NM,
+                ]
+                if preset.mie_model == parameters_table.MIE_MODEL_CORE_SHELL_SPHERE
+                else [
+                    parameters_table.COLUMN_PARTICLE_DIAMETER_NM,
+                ]
+            )
+
+            merged_rows: list[dict[str, str]] = []
+
+            for row_index, preset_row in enumerate(rows):
+                merged_row = dict(
+                    preserved_rows[row_index]
+                    if row_index < len(preserved_rows)
+                    else parameters_table.build_empty_row_for_model(
+                        preset.mie_model,
+                    )
+                )
+
+                for column_id in geometry_column_ids:
+                    if column_id in preset_row:
+                        merged_row[column_id] = preset_row[column_id]
+
+                merged_rows.append(
+                    merged_row,
+                )
+
+            rows = merged_rows
 
         return columns, rows
 

@@ -1,68 +1,64 @@
 {
-  "calibration": {
-    "mesf_values": [
-      1.0,
-      3.0,
-      4.0,
-      5.0
-    ],
+  "fluorescence_calibration": {
+    "mesf_values": [],
     "peak_count": 4,
-    "histogram_scale": "log",
-    "target_mie_relation_xscale": "linear",
-    "target_mie_relation_yscale": "log",
-    "default_fluorescence_peak_process": "2D manual click",
-    "default_scattering_peak_process": "1D automatic peaks",
-    "default_gating_channel": null,
-    "default_gating_threshold": null,
-    "max_events_for_analysis": 10000,
-    "default_output_suffix": "_calibrated"
-  },
-  "optics": {
-    "medium_refractive_index": 1.334,
-    "wavelength_nm": 488.0
+    "default_peak_process": "Automatic 1D"
   },
   "particle_model": {
+    "scatterer_preset": "Rosetta Mix",
     "core_refractive_index": 1.5,
     "shell_refractive_index": 1.5,
     "particle_refractive_index": 1.602,
-    "shell_thickness_nm": [
-      20.0
-    ],
-    "core_diameter_nm": [
-      100.0
-    ],
-    "particle_diameter_nm": [
-      70.0,
-      100.0,
-      125.0,
-      150.0,
-      194.0,
-      203.0,
-      296.0,
-      400.0,
-      600.0,
-      799.0,
-      994.0
-    ],
+    "shell_thickness_nm": 10.0,
+    "core_diameter_nm": 80.0,
+    "particle_diameter_nm": 100.0,
     "mie_model": "Solid Sphere"
+  },
+  "optics": {
+    "medium_refractive_index": 1.334,
+    "wavelength_nm": 488.0,
+    "detector_numerical_aperture": 0.45,
+    "detector_cache_numerical_aperture": 0.45,
+    "detector_sampling": 1000
+  },
+  "scattering_calibration": {
+    "default_peak_process": "Automatic 1D",
+    "default_gating_channel": null,
+    "default_gating_threshold": null,
+    "target_mie_relation_xscale": "linear",
+    "target_mie_relation_yscale": "log"
+  },
+  "calibration": {
+    "target_model_preset": "Extracellular Vesicles",
+    "histogram_xscale": "linear",
+    "histogram_yscale": "log",
+    "max_events_for_analysis": 10000,
+    "default_output_suffix": "_calibrated",
+    "mesf_values": [],
+    "peak_count": 6,
+    "histogram_scale": "log",
+    "default_gating_channel": "",
+    "default_gating_threshold": 0.0,
+    "n_bins_for_plots": 256,
+    "show_calibration_plot_by_default": true
   },
   "metadata": {
     "operator_name": null,
     "instrument_name": null
   },
   "visualization": {
-    "n_bins": 200,
+    "graph_height": "700px",
     "default_marker_size": 10.0,
+    "n_bins": 200,
+    "show_calibration": true,
     "default_line_width": 3.0,
     "default_font_size": 24.0,
     "default_tick_size": 12.0,
-    "show_grid_by_default": false,
-    "graph_height": "700px",
-    "show_calibration": true
+    "show_grid_by_default": false
   },
   "files": {
-    "fluorescence_fcs_file_path": null,
-    "scattering_fcs_file_path": null
+    "fluorescence_fcs_file_path": "",
+    "scattering_fcs_file_path": ""
   },
   "ui": {
     "theme_mode": "light",

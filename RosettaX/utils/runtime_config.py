@@ -171,6 +171,11 @@ class RuntimeConfig:
             default=True,
             description="Whether calibration plots are visible by default.",
         ),
+        "calibration.target_model_preset": RuntimeConfigField(
+            expected_type=str,
+            default="Custom",
+            description="Default target model preset for the apply calibration page.",
+        ),
         # ---------------------------------------------------------------------
         # Optics
         # ---------------------------------------------------------------------
@@ -214,6 +219,11 @@ class RuntimeConfig:
             default="Solid Sphere",
             choices=("Solid Sphere", "Core/Shell Sphere"),
             description="Scattering particle model.",
+        ),
+        "particle_model.scatterer_preset": RuntimeConfigField(
+            expected_type=str,
+            default="Custom",
+            description="Default scatterer preset for the scattering calibration page.",
         ),
         "particle_model.particle_refractive_index": RuntimeConfigField(
             expected_type=float,

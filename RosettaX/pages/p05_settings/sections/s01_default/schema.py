@@ -4,7 +4,11 @@ from dataclasses import dataclass
 from typing import Any, Optional
 import logging
 
+from RosettaX.workflow.apply_calibration.scattering import CUSTOM_PRESET_NAME
+from RosettaX.workflow.apply_calibration.scattering import build_scattering_target_model_preset_options
 from RosettaX.workflow.peak import registry
+from RosettaX.workflow.model.scattering import CUSTOM_SCATTERER_PRESET_NAME
+from RosettaX.workflow.model.scattering import build_scattering_calibration_scatterer_preset_options
 
 
 logger = logging.getLogger(__name__)
@@ -58,6 +62,8 @@ PROFILE_SECTION_ORDER: list[tuple[str, str]] = [
 
 
 PEAK_PROCESS_OPTIONS = build_peak_process_dropdown_options()
+SCATTERING_PRESET_OPTIONS = build_scattering_calibration_scatterer_preset_options()
+APPLY_TARGET_PRESET_OPTIONS = build_scattering_target_model_preset_options()
 
 
 AXIS_SCALE_OPTIONS: list[dict[str, str]] = [
@@ -115,6 +121,16 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         runtime_path="fluorescence_calibration.default_peak_process",
         default=registry.DEFAULT_PROCESS_NAME,
         options=PEAK_PROCESS_OPTIONS,
+    ),
+    FieldDefinition(
+        name="default_scatterer_preset",
+        section="scattering",
+        label="Default scatterer preset:",
+        component_kind="dropdown",
+        value_kind="choice",
+        runtime_path="particle_model.scatterer_preset",
+        default=CUSTOM_SCATTERER_PRESET_NAME,
+        options=SCATTERING_PRESET_OPTIONS,
     ),
     FieldDefinition(
         name="medium_refractive_index",
@@ -251,6 +267,16 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         value_kind="string",
         runtime_path="scattering_calibration.default_gating_threshold",
         default="",
+    ),
+    FieldDefinition(
+        name="default_apply_target_model_preset",
+        section="calibration",
+        label="Default apply target preset:",
+        component_kind="dropdown",
+        value_kind="choice",
+        runtime_path="calibration.target_model_preset",
+        default=CUSTOM_PRESET_NAME,
+        options=APPLY_TARGET_PRESET_OPTIONS,
     ),
     FieldDefinition(
         name="target_mie_relation_xscale",

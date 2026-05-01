@@ -8,6 +8,7 @@ import dash_bootstrap_components as dbc
 
 from RosettaX.utils import styling
 from RosettaX.utils import ui_forms
+from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.model.scattering import ScatteringModelConfiguration
 
 
@@ -722,9 +723,45 @@ class Model:
                 runtime_config_data,
             )
 
+            runtime_config = RuntimeConfig.from_dict(
+                runtime_config_data if isinstance(runtime_config_data, dict) else None
+            )
+
             resolved_values = self.model_configuration.build_defaults_from_runtime_config(
                 runtime_config_data,
             ).to_callback_values()
+
+            scatterer_preset = self.model_configuration.resolve_runtime_scatterer_preset(
+                runtime_config.get_str(
+                    "particle_model.scatterer_preset",
+                    default=self.model_configuration.custom_scatterer_preset_name,
+                )
+            )
+
+            if scatterer_preset != self.model_configuration.custom_scatterer_preset_name:
+                (
+                    resolved_mie_model,
+                    resolved_medium_refractive_index,
+                    resolved_particle_refractive_index,
+                    resolved_core_refractive_index,
+                    resolved_shell_refractive_index,
+                ) = self.model_configuration.resolve_scatterer_preset_values(
+                    preset_name=scatterer_preset,
+                    current_mie_model=resolved_values[0],
+                    current_medium_refractive_index=resolved_values[1],
+                    current_particle_refractive_index=resolved_values[2],
+                    current_core_refractive_index=resolved_values[3],
+                    current_shell_refractive_index=resolved_values[4],
+                )
+
+                resolved_values = (
+                    resolved_mie_model,
+                    resolved_medium_refractive_index,
+                    resolved_particle_refractive_index,
+                    resolved_core_refractive_index,
+                    resolved_shell_refractive_index,
+                    *resolved_values[5:],
+                )
 
             logger.debug(
                 "sync_parameters_from_runtime_config returning resolved_values=%r",
@@ -732,7 +769,7 @@ class Model:
             )
 
             return (
-                self.model_configuration.custom_scatterer_preset_name,
+                scatterer_preset,
                 *resolved_values,
             )
 

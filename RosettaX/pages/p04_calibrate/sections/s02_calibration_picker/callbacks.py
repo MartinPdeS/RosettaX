@@ -42,11 +42,42 @@ class CalibrationPickerCallbacks:
         self._register_selected_calibration_store_callback()
         self._register_selected_calibration_summary_callback()
         self._register_scattering_target_model_visibility_callback()
+        self._register_target_model_preset_runtime_sync_callback()
         self._register_target_model_preset_callback()
         self._register_target_model_preset_disabled_state_callback()
         self._register_target_model_parameter_visibility_callback()
         self._register_target_mie_relation_preview_callback()
         self._register_target_mie_relation_axis_scale_runtime_sync_callback()
+
+    def _register_target_model_preset_runtime_sync_callback(self) -> None:
+        """
+        Synchronize the target model preset selection from the active runtime profile.
+        """
+
+        @dash.callback(
+            dash.Output(
+                self.page.ids.CalibrationPicker.target_model_preset,
+                "value",
+            ),
+            dash.Input(
+                "runtime-config-store",
+                "data",
+            ),
+            prevent_initial_call=False,
+        )
+        def sync_target_model_preset_from_runtime_config(
+            runtime_config_data: Any,
+        ) -> str:
+            runtime_config = RuntimeConfig.from_dict(
+                runtime_config_data if isinstance(runtime_config_data, dict) else None
+            )
+
+            return get_scattering_target_model_preset(
+                runtime_config.get_str(
+                    "calibration.target_model_preset",
+                    default=CUSTOM_PRESET_NAME,
+                )
+            ).name
 
     def _register_target_model_preset_callback(self) -> None:
         """
