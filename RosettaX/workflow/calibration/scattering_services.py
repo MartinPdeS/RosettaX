@@ -10,6 +10,7 @@ import plotly.graph_objs as go
 from RosettaX.pages.p03_scattering.backend import BackEnd
 from RosettaX.utils import plottings
 from .scattering import OpticalParameters
+from .scattering import build_core_shell_scattering_calibration_from_standard_data
 from .scattering import build_solid_sphere_scattering_calibration_from_standard_data
 from .scattering import parse_core_shell_rows_for_fit
 from .scattering import parse_optical_parameters
@@ -89,6 +90,7 @@ def build_instrument_response_figure(
         & np.isfinite(particle_diameters_nm)
         & (measured_peak_positions > 0.0)
         & (expected_coupling_values > 0.0)
+        & (particle_diameters_nm > 0.0)
     )
 
     measured_peak_positions = measured_peak_positions[valid_mask]
@@ -134,7 +136,6 @@ def build_instrument_response_figure(
             ],
             dtype=float,
         )
-
     else:
         fit_x_values = np.linspace(
             x_min,
@@ -147,6 +148,7 @@ def build_instrument_response_figure(
     fit_mask = (
         np.isfinite(fit_x_values)
         & np.isfinite(fit_y_values)
+        & (fit_x_values > 0.0)
         & (fit_y_values > 0.0)
     )
 
@@ -172,74 +174,14 @@ def build_instrument_response_figure(
     return figure
 
 
-def build_core_shell_placeholder_figure(
-    *,
-    measured_peak_positions: np.ndarray,
-    outer_diameters_nm: np.ndarray,
-) -> go.Figure:
-    """
-    Build a temporary diagnostic figure for core shell calibration rows.
-    """
-    figure = go.Figure()
-
-    measured_peak_positions = np.asarray(
-        measured_peak_positions,
-        dtype=float,
-    ).reshape(-1)
-
-    outer_diameters_nm = np.asarray(
-        outer_diameters_nm,
-        dtype=float,
-    ).reshape(-1)
-
-    valid_mask = (
-        np.isfinite(measured_peak_positions)
-        & np.isfinite(outer_diameters_nm)
-        & (measured_peak_positions > 0.0)
-        & (outer_diameters_nm > 0.0)
-    )
-
-    measured_peak_positions = measured_peak_positions[valid_mask]
-    outer_diameters_nm = outer_diameters_nm[valid_mask]
-
-    if measured_peak_positions.size == 0:
-        return plottings._make_info_figure(
-            "No valid core shell standard rows available."
-        )
-
-    figure.add_trace(
-        go.Scatter(
-            x=measured_peak_positions,
-            y=outer_diameters_nm,
-            mode="markers+text",
-            text=[
-                f"{float(value):.6g} nm"
-                for value in outer_diameters_nm
-            ],
-            textposition="top center",
-            name="Parsed rows",
-        )
-    )
-
-    figure.update_layout(
-        title="Core shell standard rows",
-        xaxis_title="Measured peak position [a.u.]",
-        yaxis_title="Outer diameter [nm]",
-        separators=".,",
-        hovermode="closest",
-    )
-
-    return figure
-
-
-def build_dense_simulated_coupling_curve(
+def build_solid_sphere_dense_simulated_coupling_curve(
     *,
     particle_diameters_nm: np.ndarray,
     optical_parameters: OpticalParameters,
     simulated_curve_point_count: int,
 ) -> tuple[np.ndarray, np.ndarray]:
     """
-    Build a dense calibration standard Mie relation for the right graph.
+    Build a dense solid sphere Mie relation for the right graph.
     """
     particle_diameters_nm = np.asarray(
         particle_diameters_nm,
@@ -275,14 +217,14 @@ def build_dense_simulated_coupling_curve(
     if diameter_max == diameter_min:
         diameter_max = diameter_min * 1.01
 
-    dense_diameter_values = np.linspace(
+    dense_particle_diameters_nm = np.linspace(
         diameter_min,
         diameter_max,
         int(simulated_curve_point_count),
     )
 
     dense_modeled_coupling_result = BackEnd.compute_modeled_coupling_from_diameters(
-        particle_diameters_nm=dense_diameter_values,
+        particle_diameters_nm=dense_particle_diameters_nm,
         wavelength_nm=optical_parameters.wavelength_nm,
         source_numerical_aperture=optical_parameters.source_numerical_aperture,
         optical_power_watt=optical_parameters.optical_power_watt,
@@ -290,6 +232,139 @@ def build_dense_simulated_coupling_curve(
         medium_refractive_index=optical_parameters.medium_refractive_index,
         particle_refractive_index=float(
             optical_parameters.particle_refractive_index,
+        ),
+        detector_cache_numerical_aperture=optical_parameters.detector_cache_numerical_aperture,
+        detector_phi_offset_degree=optical_parameters.detector_phi_angle_degree,
+        detector_gamma_offset_degree=optical_parameters.detector_gamma_angle_degree,
+        polarization_angle_degree=optical_parameters.polarization_angle_degree,
+        detector_sampling=optical_parameters.detector_sampling,
+    )
+
+    return (
+        np.asarray(
+            dense_modeled_coupling_result.particle_diameters_nm,
+            dtype=float,
+        ).reshape(-1),
+        np.asarray(
+            dense_modeled_coupling_result.expected_coupling_values,
+            dtype=float,
+        ).reshape(-1),
+    )
+
+
+def build_core_shell_dense_simulated_coupling_curve(
+    *,
+    core_diameters_nm: np.ndarray,
+    shell_thicknesses_nm: np.ndarray,
+    optical_parameters: OpticalParameters,
+    simulated_curve_point_count: int,
+) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Build a dense core shell Mie relation for the right graph.
+
+    The relation is displayed against outer diameter. To generate a one
+    dimensional curve, the shell thickness is kept fixed at the median shell
+    thickness of the valid calibration standards, and the core diameter is
+    swept so that the outer diameter covers the standards' outer diameter range.
+    """
+    core_diameters_nm = np.asarray(
+        core_diameters_nm,
+        dtype=float,
+    ).reshape(-1)
+
+    shell_thicknesses_nm = np.asarray(
+        shell_thicknesses_nm,
+        dtype=float,
+    ).reshape(-1)
+
+    valid_mask = (
+        np.isfinite(core_diameters_nm)
+        & np.isfinite(shell_thicknesses_nm)
+        & (core_diameters_nm > 0.0)
+        & (shell_thicknesses_nm > 0.0)
+    )
+
+    core_diameters_nm = core_diameters_nm[valid_mask]
+    shell_thicknesses_nm = shell_thicknesses_nm[valid_mask]
+
+    if core_diameters_nm.size == 0:
+        return np.asarray([], dtype=float), np.asarray([], dtype=float)
+
+    if optical_parameters.core_refractive_index is None:
+        raise ValueError(
+            "core_refractive_index is required for Core/Shell Sphere calibration."
+        )
+
+    if optical_parameters.shell_refractive_index is None:
+        raise ValueError(
+            "shell_refractive_index is required for Core/Shell Sphere calibration."
+        )
+
+    outer_diameters_nm = core_diameters_nm + 2.0 * shell_thicknesses_nm
+
+    outer_diameter_min = float(
+        np.min(
+            outer_diameters_nm,
+        )
+    )
+
+    outer_diameter_max = float(
+        np.max(
+            outer_diameters_nm,
+        )
+    )
+
+    if outer_diameter_min <= 0.0:
+        return np.asarray([], dtype=float), np.asarray([], dtype=float)
+
+    if outer_diameter_max <= 0.0:
+        return np.asarray([], dtype=float), np.asarray([], dtype=float)
+
+    if outer_diameter_max == outer_diameter_min:
+        outer_diameter_max = outer_diameter_min * 1.01
+
+    dense_outer_diameters_nm = np.linspace(
+        outer_diameter_min,
+        outer_diameter_max,
+        int(simulated_curve_point_count),
+    )
+
+    fixed_shell_thickness_nm = float(
+        np.median(
+            shell_thicknesses_nm,
+        )
+    )
+
+    dense_core_diameters_nm = dense_outer_diameters_nm - 2.0 * fixed_shell_thickness_nm
+
+    valid_dense_mask = (
+        np.isfinite(dense_core_diameters_nm)
+        & (dense_core_diameters_nm > 0.0)
+    )
+
+    dense_core_diameters_nm = dense_core_diameters_nm[valid_dense_mask]
+    dense_shell_thicknesses_nm = np.full(
+        dense_core_diameters_nm.size,
+        fixed_shell_thickness_nm,
+        dtype=float,
+    )
+
+    if dense_core_diameters_nm.size == 0:
+        return np.asarray([], dtype=float), np.asarray([], dtype=float)
+
+    dense_modeled_coupling_result = BackEnd.compute_modeled_coupling_from_core_shell_dimensions(
+        core_diameters_nm=dense_core_diameters_nm,
+        shell_thicknesses_nm=dense_shell_thicknesses_nm,
+        wavelength_nm=optical_parameters.wavelength_nm,
+        source_numerical_aperture=optical_parameters.source_numerical_aperture,
+        optical_power_watt=optical_parameters.optical_power_watt,
+        detector_numerical_aperture=optical_parameters.detector_numerical_aperture,
+        medium_refractive_index=optical_parameters.medium_refractive_index,
+        core_refractive_index=float(
+            optical_parameters.core_refractive_index,
+        ),
+        shell_refractive_index=float(
+            optical_parameters.shell_refractive_index,
         ),
         detector_cache_numerical_aperture=optical_parameters.detector_cache_numerical_aperture,
         detector_phi_offset_degree=optical_parameters.detector_phi_angle_degree,
@@ -411,7 +486,7 @@ def build_calibration_standard_mie_relation_figure(
 
     figure.update_layout(
         title="Calibration standard Mie relation",
-        xaxis_title="Standard particle diameter [nm]",
+        xaxis_title="Standard outer diameter [nm]",
         yaxis_title="Modeled optical coupling",
         separators=".,",
         hovermode="closest",
@@ -444,63 +519,6 @@ def build_missing_input_result(
         intercept_out="",
         r_squared_out="",
         apply_status=message,
-    )
-
-
-def run_core_shell_calibration_placeholder(
-    *,
-    current_table_rows: list[dict[str, Any]],
-    resolved_core_refractive_index: float,
-    resolved_shell_refractive_index: float,
-) -> CalibrationResult:
-    """
-    Temporary core shell calibration branch.
-    """
-    parsed_core_shell_rows = parse_core_shell_rows_for_fit(
-        rows=current_table_rows,
-    )
-
-    if parsed_core_shell_rows.row_count < 2:
-        left_figure = plottings._make_info_figure(
-            "Enter at least 2 valid core shell standard rows with measured peak positions."
-        )
-
-        right_figure = plottings._make_info_figure(
-            "Enter at least 2 valid core shell standard rows with measured peak positions."
-        )
-
-        return CalibrationResult(
-            figure_store=left_figure.to_dict(),
-            model_figure_store=right_figure.to_dict(),
-            calibration_store=None,
-            bead_table_data=None,
-            slope_out="",
-            intercept_out="",
-            r_squared_out="",
-            apply_status="Need at least 2 valid core shell standard rows.",
-        )
-
-    left_figure = build_core_shell_placeholder_figure(
-        measured_peak_positions=parsed_core_shell_rows.measured_peak_positions,
-        outer_diameters_nm=parsed_core_shell_rows.outer_diameters_nm,
-    )
-
-    right_figure = plottings._make_info_figure(
-        "Core/Shell Sphere instrument response fitting is not implemented yet."
-    )
-
-    return CalibrationResult(
-        figure_store=left_figure.to_dict(),
-        model_figure_store=right_figure.to_dict(),
-        calibration_store=None,
-        bead_table_data=current_table_rows,
-        slope_out="",
-        intercept_out="",
-        r_squared_out="",
-        apply_status=(
-            f"Core/Shell rows parsed successfully with core RI={resolved_core_refractive_index:.6g} "
-            f"and shell RI={resolved_shell_refractive_index:.6g}, but fitting is not implemented yet."
-        ),
     )
 
 
@@ -579,7 +597,7 @@ def run_solid_sphere_calibration(
         dtype=float,
     ).reshape(-1)
 
-    dense_particle_diameters_nm, dense_expected_coupling_values = build_dense_simulated_coupling_curve(
+    dense_particle_diameters_nm, dense_expected_coupling_values = build_solid_sphere_dense_simulated_coupling_curve(
         particle_diameters_nm=particle_diameters_nm,
         optical_parameters=optical_parameters,
         simulated_curve_point_count=simulated_curve_point_count,
@@ -634,6 +652,155 @@ def run_solid_sphere_calibration(
         intercept_out=f"{build_result.instrument_response.intercept:.6g}",
         r_squared_out=f"{build_result.instrument_response.r_squared:.6g}",
         apply_status="Instrument response fitted successfully.",
+    )
+
+
+def run_core_shell_calibration(
+    *,
+    uploaded_fcs_path: str,
+    detector_column: str,
+    current_table_rows: list[dict[str, Any]],
+    optical_parameters: OpticalParameters,
+    simulated_curve_point_count: int,
+) -> CalibrationResult:
+    """
+    Run core shell sphere scattering instrument response calibration.
+
+    The calibration standards are fitted against the modeled coupling of the
+    actual row wise core shell geometry. The standard diameter stored in the
+    one dimensional Mie relation is the outer diameter.
+    """
+    if optical_parameters.core_refractive_index is None:
+        raise ValueError(
+            "core_refractive_index is required for Core/Shell Sphere calibration."
+        )
+
+    if optical_parameters.shell_refractive_index is None:
+        raise ValueError(
+            "shell_refractive_index is required for Core/Shell Sphere calibration."
+        )
+
+    scattering_backend = BackEnd()
+    scattering_backend.fcs_file_path = uploaded_fcs_path
+
+    parsed_core_shell_rows = parse_core_shell_rows_for_fit(
+        rows=current_table_rows,
+    )
+
+    if parsed_core_shell_rows.row_count < 2:
+        left_figure = plottings._make_info_figure(
+            "Enter at least 2 valid core shell standard rows with measured peak positions."
+        )
+
+        right_figure = plottings._make_info_figure(
+            "You may need to click Compute Standard Coupling first."
+        )
+
+        return CalibrationResult(
+            figure_store=left_figure.to_dict(),
+            model_figure_store=right_figure.to_dict(),
+            calibration_store=None,
+            bead_table_data=None,
+            slope_out="",
+            intercept_out="",
+            r_squared_out="",
+            apply_status="Need at least 2 valid core shell standard rows.",
+        )
+
+    modeled_coupling_result = scattering_backend.compute_modeled_coupling_from_core_shell_dimensions(
+        core_diameters_nm=parsed_core_shell_rows.core_diameters_nm,
+        shell_thicknesses_nm=parsed_core_shell_rows.shell_thicknesses_nm,
+        wavelength_nm=optical_parameters.wavelength_nm,
+        source_numerical_aperture=optical_parameters.source_numerical_aperture,
+        optical_power_watt=optical_parameters.optical_power_watt,
+        detector_numerical_aperture=optical_parameters.detector_numerical_aperture,
+        medium_refractive_index=optical_parameters.medium_refractive_index,
+        core_refractive_index=float(
+            optical_parameters.core_refractive_index,
+        ),
+        shell_refractive_index=float(
+            optical_parameters.shell_refractive_index,
+        ),
+        detector_cache_numerical_aperture=optical_parameters.detector_cache_numerical_aperture,
+        detector_phi_offset_degree=optical_parameters.detector_phi_angle_degree,
+        detector_gamma_offset_degree=optical_parameters.detector_gamma_angle_degree,
+        polarization_angle_degree=optical_parameters.polarization_angle_degree,
+        detector_sampling=optical_parameters.detector_sampling,
+    )
+
+    measured_peak_positions = np.asarray(
+        parsed_core_shell_rows.measured_peak_positions,
+        dtype=float,
+    ).reshape(-1)
+
+    outer_diameters_nm = np.asarray(
+        modeled_coupling_result.particle_diameters_nm,
+        dtype=float,
+    ).reshape(-1)
+
+    expected_coupling_values = np.asarray(
+        modeled_coupling_result.expected_coupling_values,
+        dtype=float,
+    ).reshape(-1)
+
+    dense_outer_diameters_nm, dense_expected_coupling_values = build_core_shell_dense_simulated_coupling_curve(
+        core_diameters_nm=parsed_core_shell_rows.core_diameters_nm,
+        shell_thicknesses_nm=parsed_core_shell_rows.shell_thicknesses_nm,
+        optical_parameters=optical_parameters,
+        simulated_curve_point_count=simulated_curve_point_count,
+    )
+
+    metadata = {
+        "measured_channel": str(
+            detector_column,
+        ),
+        "uploaded_fcs_path": str(
+            uploaded_fcs_path,
+        ),
+    }
+
+    build_result = build_core_shell_scattering_calibration_from_standard_data(
+        detector_column=str(
+            detector_column,
+        ),
+        current_table_rows=current_table_rows,
+        measured_peak_positions=measured_peak_positions,
+        core_diameters_nm=parsed_core_shell_rows.core_diameters_nm,
+        shell_thicknesses_nm=parsed_core_shell_rows.shell_thicknesses_nm,
+        outer_diameters_nm=outer_diameters_nm,
+        expected_coupling_values=expected_coupling_values,
+        dense_outer_diameters_nm=dense_outer_diameters_nm,
+        dense_expected_coupling_values=dense_expected_coupling_values,
+        optical_parameters=optical_parameters,
+        metadata=metadata,
+        force_zero_intercept=True,
+    )
+
+    left_figure = build_instrument_response_figure(
+        measured_peak_positions=build_result.measured_peak_positions,
+        expected_coupling_values=build_result.standard_coupling_values,
+        particle_diameters_nm=build_result.standard_diameters_nm,
+        slope=build_result.instrument_response.slope,
+        intercept=build_result.instrument_response.intercept,
+    )
+
+    right_figure = build_calibration_standard_mie_relation_figure(
+        particle_diameters_nm=outer_diameters_nm,
+        expected_coupling_values=expected_coupling_values,
+        dense_particle_diameters_nm=dense_outer_diameters_nm,
+        dense_expected_coupling_values=dense_expected_coupling_values,
+        simulated_curve_point_count=simulated_curve_point_count,
+    )
+
+    return CalibrationResult(
+        figure_store=left_figure.to_dict(),
+        model_figure_store=right_figure.to_dict(),
+        calibration_store=build_result.calibration.to_dict(),
+        bead_table_data=build_result.updated_table_rows,
+        slope_out=f"{build_result.instrument_response.slope:.6g}",
+        intercept_out=f"{build_result.instrument_response.intercept:.6g}",
+        r_squared_out=f"{build_result.instrument_response.r_squared:.6g}",
+        apply_status="Core shell instrument response fitted successfully.",
     )
 
 
@@ -713,24 +880,16 @@ def run_scattering_calibration(
         )
 
         if resolved_mie_model == "Core/Shell Sphere":
-            if optical_parameters.core_refractive_index is None:
-                raise ValueError(
-                    "core_refractive_index is required for Core/Shell Sphere."
-                )
-
-            if optical_parameters.shell_refractive_index is None:
-                raise ValueError(
-                    "shell_refractive_index is required for Core/Shell Sphere."
-                )
-
-            return run_core_shell_calibration_placeholder(
+            return run_core_shell_calibration(
+                uploaded_fcs_path=str(
+                    uploaded_fcs_path,
+                ),
+                detector_column=str(
+                    detector_column,
+                ),
                 current_table_rows=current_table_rows,
-                resolved_core_refractive_index=float(
-                    optical_parameters.core_refractive_index,
-                ),
-                resolved_shell_refractive_index=float(
-                    optical_parameters.shell_refractive_index,
-                ),
+                optical_parameters=optical_parameters,
+                simulated_curve_point_count=simulated_curve_point_count,
             )
 
         return run_solid_sphere_calibration(

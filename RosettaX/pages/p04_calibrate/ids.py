@@ -18,40 +18,76 @@ class Ids:
     class Header:
         container = f"{page_name}-header-container"
 
-
     class CalibrationPicker:
         dropdown = f"{page_name}-calibration-dropdown"
         refresh_button = f"{page_name}-refresh-button"
-
-        target_mie_relation_axis_scale_toggle = (
-            f"{page_name}-calibration-picker-target-mie-relation-axis-scale-toggle"
-        )
 
         scattering_target_model_container = (
             f"{page_name}-calibration-picker-scattering-target-model-container"
         )
 
+        target_solid_sphere_parameter_container = (
+            f"{page_name}-calibration-picker-target-solid-sphere-parameter-container"
+        )
+
+        target_core_shell_parameter_container = (
+            f"{page_name}-calibration-picker-target-core-shell-parameter-container"
+        )
+
         target_mie_model = f"{page_name}-calibration-picker-target-mie-model"
+
         target_medium_refractive_index = (
             f"{page_name}-calibration-picker-target-medium-refractive-index"
         )
+
         target_particle_refractive_index = (
             f"{page_name}-calibration-picker-target-particle-refractive-index"
         )
+
+        target_solid_sphere_diameter_min_nm = (
+            f"{page_name}-calibration-picker-target-solid-sphere-diameter-min-nm"
+        )
+
+        target_solid_sphere_diameter_max_nm = (
+            f"{page_name}-calibration-picker-target-solid-sphere-diameter-max-nm"
+        )
+
+        target_solid_sphere_diameter_count = (
+            f"{page_name}-calibration-picker-target-solid-sphere-diameter-count"
+        )
+
         target_core_refractive_index = (
             f"{page_name}-calibration-picker-target-core-refractive-index"
         )
+
         target_shell_refractive_index = (
             f"{page_name}-calibration-picker-target-shell-refractive-index"
         )
 
-        target_diameter_min_nm = f"{page_name}-calibration-picker-target-diameter-min-nm"
-        target_diameter_max_nm = f"{page_name}-calibration-picker-target-diameter-max-nm"
-        target_diameter_count = f"{page_name}-calibration-picker-target-diameter-count"
+        target_shell_thickness_nm = (
+            f"{page_name}-calibration-picker-target-shell-thickness-nm"
+        )
+
+        target_core_shell_core_diameter_min_nm = (
+            f"{page_name}-calibration-picker-target-core-shell-core-diameter-min-nm"
+        )
+
+        target_core_shell_core_diameter_max_nm = (
+            f"{page_name}-calibration-picker-target-core-shell-core-diameter-max-nm"
+        )
+
+        target_core_shell_core_diameter_count = (
+            f"{page_name}-calibration-picker-target-core-shell-core-diameter-count"
+        )
+
+        target_mie_relation_axis_scale_toggle = (
+            f"{page_name}-calibration-picker-target-mie-relation-axis-scale-toggle"
+        )
 
         target_mie_relation_graph = (
             f"{page_name}-calibration-picker-target-mie-relation-graph"
         )
+
         target_mie_relation_status = (
             f"{page_name}-calibration-picker-target-mie-relation-status"
         )

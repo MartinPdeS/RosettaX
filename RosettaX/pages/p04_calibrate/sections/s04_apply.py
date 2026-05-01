@@ -451,15 +451,39 @@ class Apply:
                 "value",
             ),
             dash.State(
-                self.page.ids.CalibrationPicker.target_diameter_min_nm,
+                self.page.ids.CalibrationPicker.target_solid_sphere_diameter_min_nm,
                 "value",
             ),
             dash.State(
-                self.page.ids.CalibrationPicker.target_diameter_max_nm,
+                self.page.ids.CalibrationPicker.target_solid_sphere_diameter_max_nm,
                 "value",
             ),
             dash.State(
-                self.page.ids.CalibrationPicker.target_diameter_count,
+                self.page.ids.CalibrationPicker.target_solid_sphere_diameter_count,
+                "value",
+            ),
+            dash.State(
+                self.page.ids.CalibrationPicker.target_core_refractive_index,
+                "value",
+            ),
+            dash.State(
+                self.page.ids.CalibrationPicker.target_shell_refractive_index,
+                "value",
+            ),
+            dash.State(
+                self.page.ids.CalibrationPicker.target_shell_thickness_nm,
+                "value",
+            ),
+            dash.State(
+                self.page.ids.CalibrationPicker.target_core_shell_core_diameter_min_nm,
+                "value",
+            ),
+            dash.State(
+                self.page.ids.CalibrationPicker.target_core_shell_core_diameter_max_nm,
+                "value",
+            ),
+            dash.State(
+                self.page.ids.CalibrationPicker.target_core_shell_core_diameter_count,
                 "value",
             ),
             prevent_initial_call=True,
@@ -473,17 +497,29 @@ class Apply:
             target_mie_model: Any,
             target_medium_refractive_index: Any,
             target_particle_refractive_index: Any,
-            target_diameter_min_nm: Any,
-            target_diameter_max_nm: Any,
-            target_diameter_count: Any,
+            target_solid_sphere_diameter_min_nm: Any,
+            target_solid_sphere_diameter_max_nm: Any,
+            target_solid_sphere_diameter_count: Any,
+            target_core_refractive_index: Any,
+            target_shell_refractive_index: Any,
+            target_shell_thickness_nm: Any,
+            target_core_shell_core_diameter_min_nm: Any,
+            target_core_shell_core_diameter_max_nm: Any,
+            target_core_shell_core_diameter_count: Any,
         ) -> tuple:
             logger.debug(
                 "apply_and_export_calibration called with n_clicks=%r "
                 "uploaded_fcs_path=%r selected_calibration=%r export_columns=%r "
                 "selected_calibration_summary=%r target_mie_model=%r "
                 "target_medium_refractive_index=%r target_particle_refractive_index=%r "
-                "target_diameter_min_nm=%r target_diameter_max_nm=%r "
-                "target_diameter_count=%r",
+                "target_solid_sphere_diameter_min_nm=%r "
+                "target_solid_sphere_diameter_max_nm=%r "
+                "target_solid_sphere_diameter_count=%r "
+                "target_core_refractive_index=%r target_shell_refractive_index=%r "
+                "target_shell_thickness_nm=%r "
+                "target_core_shell_core_diameter_min_nm=%r "
+                "target_core_shell_core_diameter_max_nm=%r "
+                "target_core_shell_core_diameter_count=%r",
                 n_clicks,
                 uploaded_fcs_path,
                 selected_calibration,
@@ -492,9 +528,15 @@ class Apply:
                 target_mie_model,
                 target_medium_refractive_index,
                 target_particle_refractive_index,
-                target_diameter_min_nm,
-                target_diameter_max_nm,
-                target_diameter_count,
+                target_solid_sphere_diameter_min_nm,
+                target_solid_sphere_diameter_max_nm,
+                target_solid_sphere_diameter_count,
+                target_core_refractive_index,
+                target_shell_refractive_index,
+                target_shell_thickness_nm,
+                target_core_shell_core_diameter_min_nm,
+                target_core_shell_core_diameter_max_nm,
+                target_core_shell_core_diameter_count,
             )
 
             del n_clicks
@@ -525,9 +567,15 @@ class Apply:
                     target_mie_model=target_mie_model,
                     target_medium_refractive_index=target_medium_refractive_index,
                     target_particle_refractive_index=target_particle_refractive_index,
-                    target_diameter_min_nm=target_diameter_min_nm,
-                    target_diameter_max_nm=target_diameter_max_nm,
-                    target_diameter_count=target_diameter_count,
+                    target_solid_sphere_diameter_min_nm=target_solid_sphere_diameter_min_nm,
+                    target_solid_sphere_diameter_max_nm=target_solid_sphere_diameter_max_nm,
+                    target_solid_sphere_diameter_count=target_solid_sphere_diameter_count,
+                    target_core_refractive_index=target_core_refractive_index,
+                    target_shell_refractive_index=target_shell_refractive_index,
+                    target_shell_thickness_nm=target_shell_thickness_nm,
+                    target_core_shell_core_diameter_min_nm=target_core_shell_core_diameter_min_nm,
+                    target_core_shell_core_diameter_max_nm=target_core_shell_core_diameter_max_nm,
+                    target_core_shell_core_diameter_count=target_core_shell_core_diameter_count,
                 )
 
                 request = apply_calibration.ApplyCalibrationRequest(
@@ -581,17 +629,53 @@ class Apply:
         target_mie_model: Any,
         target_medium_refractive_index: Any,
         target_particle_refractive_index: Any,
-        target_diameter_min_nm: Any,
-        target_diameter_max_nm: Any,
-        target_diameter_count: Any,
+        target_solid_sphere_diameter_min_nm: Any,
+        target_solid_sphere_diameter_max_nm: Any,
+        target_solid_sphere_diameter_count: Any,
+        target_core_refractive_index: Any,
+        target_shell_refractive_index: Any,
+        target_shell_thickness_nm: Any,
+        target_core_shell_core_diameter_min_nm: Any,
+        target_core_shell_core_diameter_max_nm: Any,
+        target_core_shell_core_diameter_count: Any,
     ) -> Optional[apply_calibration.ScatteringTargetModelParameters]:
         """
         Build scattering target model parameters when the selected calibration requires them.
         """
+        logger.debug(
+            "_build_scattering_target_model_parameters_if_required called with "
+            "selected_calibration_summary=%r target_mie_model=%r "
+            "target_medium_refractive_index=%r target_particle_refractive_index=%r "
+            "target_solid_sphere_diameter_min_nm=%r "
+            "target_solid_sphere_diameter_max_nm=%r "
+            "target_solid_sphere_diameter_count=%r "
+            "target_core_refractive_index=%r target_shell_refractive_index=%r "
+            "target_shell_thickness_nm=%r "
+            "target_core_shell_core_diameter_min_nm=%r "
+            "target_core_shell_core_diameter_max_nm=%r "
+            "target_core_shell_core_diameter_count=%r",
+            selected_calibration_summary,
+            target_mie_model,
+            target_medium_refractive_index,
+            target_particle_refractive_index,
+            target_solid_sphere_diameter_min_nm,
+            target_solid_sphere_diameter_max_nm,
+            target_solid_sphere_diameter_count,
+            target_core_refractive_index,
+            target_shell_refractive_index,
+            target_shell_thickness_nm,
+            target_core_shell_core_diameter_min_nm,
+            target_core_shell_core_diameter_max_nm,
+            target_core_shell_core_diameter_count,
+        )
+
         if not isinstance(
             selected_calibration_summary,
             dict,
         ):
+            logger.debug(
+                "No scattering target model parameters required because selected_calibration_summary is not a dict."
+            )
             return None
 
         requires_target_model = bool(
@@ -602,13 +686,75 @@ class Apply:
         )
 
         if not requires_target_model:
+            logger.debug(
+                "No scattering target model parameters required because requires_target_model=False."
+            )
             return None
 
-        return apply_calibration.ScatteringTargetModelParameters.from_raw_values(
-            target_mie_model=target_mie_model,
+        resolved_target_mie_model = Apply._resolve_target_mie_model(
+            target_mie_model,
+        )
+
+        is_core_shell_model = resolved_target_mie_model == "Core/Shell Sphere"
+
+        if is_core_shell_model:
+            resolved_target_diameter_min_nm = target_core_shell_core_diameter_min_nm
+            resolved_target_diameter_max_nm = target_core_shell_core_diameter_max_nm
+            resolved_target_diameter_count = target_core_shell_core_diameter_count
+
+        else:
+            resolved_target_diameter_min_nm = target_solid_sphere_diameter_min_nm
+            resolved_target_diameter_max_nm = target_solid_sphere_diameter_max_nm
+            resolved_target_diameter_count = target_solid_sphere_diameter_count
+
+        logger.debug(
+            "Resolved scattering target diameter controls for mie_model=%r "
+            "diameter_min_nm=%r diameter_max_nm=%r diameter_count=%r",
+            resolved_target_mie_model,
+            resolved_target_diameter_min_nm,
+            resolved_target_diameter_max_nm,
+            resolved_target_diameter_count,
+        )
+
+        target_model_parameters = apply_calibration.ScatteringTargetModelParameters.from_raw_values(
+            target_mie_model=resolved_target_mie_model,
             target_medium_refractive_index=target_medium_refractive_index,
             target_particle_refractive_index=target_particle_refractive_index,
-            target_diameter_min_nm=target_diameter_min_nm,
-            target_diameter_max_nm=target_diameter_max_nm,
-            target_diameter_count=target_diameter_count,
+            target_core_refractive_index=target_core_refractive_index,
+            target_shell_refractive_index=target_shell_refractive_index,
+            target_shell_thickness_nm=target_shell_thickness_nm,
+            target_diameter_min_nm=resolved_target_diameter_min_nm,
+            target_diameter_max_nm=resolved_target_diameter_max_nm,
+            target_diameter_count=resolved_target_diameter_count,
         )
+
+        logger.debug(
+            "Built scattering target model parameters=%r",
+            target_model_parameters,
+        )
+
+        return target_model_parameters
+
+    @staticmethod
+    def _resolve_target_mie_model(
+        target_mie_model: Any,
+    ) -> str:
+        """
+        Normalize the target Mie model value.
+        """
+        target_mie_model_string = str(
+            target_mie_model or "Solid Sphere",
+        ).strip()
+
+        normalized_target_mie_model = target_mie_model_string.lower()
+
+        if normalized_target_mie_model in {
+            "core/shell sphere",
+            "core shell sphere",
+            "core-shell sphere",
+            "coreshell sphere",
+            "core_shell_sphere",
+        }:
+            return "Core/Shell Sphere"
+
+        return "Solid Sphere"

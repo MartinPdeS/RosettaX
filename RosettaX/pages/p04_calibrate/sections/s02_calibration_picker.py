@@ -331,7 +331,7 @@ class CalibrationPicker:
                             },
                         ),
                         dash.html.Div(
-                            "Particle type, refractive indices, and diameter sampling range.",
+                            "Particle type, refractive indices, and model specific diameter range.",
                             style=ui_forms.build_workflow_section_subtitle_style(
                                 font_size="0.84rem",
                                 opacity=0.72,
@@ -356,7 +356,7 @@ class CalibrationPicker:
                                     "width": "220px",
                                 },
                             ),
-                            label_width_px=210,
+                            label_width_px=230,
                             margin_top=False,
                         ),
                         self._build_numeric_input_row(
@@ -367,34 +367,94 @@ class CalibrationPicker:
                             max_value=2.5,
                             step=0.001,
                         ),
-                        self._build_numeric_input_row(
-                            label="Particle refractive index:",
-                            component_id=self.page.ids.CalibrationPicker.target_particle_refractive_index,
-                            value=1.39,
-                            min_value=1.0,
-                            max_value=2.5,
-                            step=0.001,
+                        dash.html.Div(
+                            [
+                                self._build_numeric_input_row(
+                                    label="Particle refractive index:",
+                                    component_id=self.page.ids.CalibrationPicker.target_particle_refractive_index,
+                                    value=1.39,
+                                    min_value=1.0,
+                                    max_value=2.5,
+                                    step=0.001,
+                                ),
+                                self._build_numeric_input_row(
+                                    label="Particle diameter min [nm]:",
+                                    component_id=self.page.ids.CalibrationPicker.target_solid_sphere_diameter_min_nm,
+                                    value=30,
+                                    min_value=1,
+                                    step=1,
+                                ),
+                                self._build_numeric_input_row(
+                                    label="Particle diameter max [nm]:",
+                                    component_id=self.page.ids.CalibrationPicker.target_solid_sphere_diameter_max_nm,
+                                    value=1000,
+                                    min_value=1,
+                                    step=1,
+                                ),
+                                self._build_numeric_input_row(
+                                    label="Particle diameter points:",
+                                    component_id=self.page.ids.CalibrationPicker.target_solid_sphere_diameter_count,
+                                    value=500,
+                                    min_value=2,
+                                    step=1,
+                                ),
+                            ],
+                            id=self.page.ids.CalibrationPicker.target_solid_sphere_parameter_container,
+                            style=self._build_target_parameter_container_style(
+                                is_visible=True,
+                            ),
                         ),
-                        self._build_numeric_input_row(
-                            label="Diameter min [nm]:",
-                            component_id=self.page.ids.CalibrationPicker.target_diameter_min_nm,
-                            value=30,
-                            min_value=1,
-                            step=1,
-                        ),
-                        self._build_numeric_input_row(
-                            label="Diameter max [nm]:",
-                            component_id=self.page.ids.CalibrationPicker.target_diameter_max_nm,
-                            value=1000,
-                            min_value=1,
-                            step=1,
-                        ),
-                        self._build_numeric_input_row(
-                            label="Diameter points:",
-                            component_id=self.page.ids.CalibrationPicker.target_diameter_count,
-                            value=500,
-                            min_value=2,
-                            step=1,
+                        dash.html.Div(
+                            [
+                                self._build_numeric_input_row(
+                                    label="Core refractive index:",
+                                    component_id=self.page.ids.CalibrationPicker.target_core_refractive_index,
+                                    value=1.45,
+                                    min_value=1.0,
+                                    max_value=2.5,
+                                    step=0.001,
+                                ),
+                                self._build_numeric_input_row(
+                                    label="Shell refractive index:",
+                                    component_id=self.page.ids.CalibrationPicker.target_shell_refractive_index,
+                                    value=1.39,
+                                    min_value=1.0,
+                                    max_value=2.5,
+                                    step=0.001,
+                                ),
+                                self._build_numeric_input_row(
+                                    label="Shell thickness [nm]:",
+                                    component_id=self.page.ids.CalibrationPicker.target_shell_thickness_nm,
+                                    value=20,
+                                    min_value=0,
+                                    step=1,
+                                ),
+                                self._build_numeric_input_row(
+                                    label="Core diameter min [nm]:",
+                                    component_id=self.page.ids.CalibrationPicker.target_core_shell_core_diameter_min_nm,
+                                    value=30,
+                                    min_value=1,
+                                    step=1,
+                                ),
+                                self._build_numeric_input_row(
+                                    label="Core diameter max [nm]:",
+                                    component_id=self.page.ids.CalibrationPicker.target_core_shell_core_diameter_max_nm,
+                                    value=1000,
+                                    min_value=1,
+                                    step=1,
+                                ),
+                                self._build_numeric_input_row(
+                                    label="Core diameter points:",
+                                    component_id=self.page.ids.CalibrationPicker.target_core_shell_core_diameter_count,
+                                    value=500,
+                                    min_value=2,
+                                    step=1,
+                                ),
+                            ],
+                            id=self.page.ids.CalibrationPicker.target_core_shell_parameter_container,
+                            style=self._build_target_parameter_container_style(
+                                is_visible=False,
+                            ),
                         ),
                     ],
                     style=ui_forms.build_workflow_panel_body_style(
@@ -412,6 +472,18 @@ class CalibrationPicker:
                 "minWidth": "420px",
             },
         )
+
+    @staticmethod
+    def _build_target_parameter_container_style(
+        *,
+        is_visible: bool,
+    ) -> dict[str, str]:
+        """
+        Build the target parameter group visibility style.
+        """
+        return {
+            "display": "block" if is_visible else "none",
+        }
 
     def _build_target_mie_relation_preview_panel(self) -> dbc.Card:
         """
@@ -513,7 +585,7 @@ class CalibrationPicker:
                     "width": "180px",
                 },
             ),
-            label_width_px=210,
+            label_width_px=230,
             margin_top=True,
         )
 
@@ -540,8 +612,59 @@ class CalibrationPicker:
         self._register_selected_calibration_store_callback()
         self._register_selected_calibration_summary_callback()
         self._register_scattering_target_model_visibility_callback()
+        self._register_target_model_parameter_visibility_callback()
         self._register_target_mie_relation_preview_callback()
         self._register_target_mie_relation_axis_scale_runtime_sync_callback()
+
+    def _register_target_model_parameter_visibility_callback(self) -> None:
+        """
+        Show only the parameter controls required by the selected target Mie model.
+        """
+
+        @dash.callback(
+            dash.Output(
+                self.page.ids.CalibrationPicker.target_solid_sphere_parameter_container,
+                "style",
+            ),
+            dash.Output(
+                self.page.ids.CalibrationPicker.target_core_shell_parameter_container,
+                "style",
+            ),
+            dash.Input(
+                self.page.ids.CalibrationPicker.target_mie_model,
+                "value",
+            ),
+            prevent_initial_call=False,
+        )
+        def toggle_target_model_parameter_groups(
+            target_mie_model: Any,
+        ) -> tuple[dict[str, str], dict[str, str]]:
+            logger.debug(
+                "toggle_target_model_parameter_groups called with target_mie_model=%r",
+                target_mie_model,
+            )
+
+            resolved_target_mie_model = self._resolve_target_mie_model(
+                target_mie_model,
+            )
+
+            is_core_shell_model = resolved_target_mie_model == "Core/Shell Sphere"
+
+            solid_sphere_style = self._build_target_parameter_container_style(
+                is_visible=not is_core_shell_model,
+            )
+
+            core_shell_style = self._build_target_parameter_container_style(
+                is_visible=is_core_shell_model,
+            )
+
+            logger.debug(
+                "toggle_target_model_parameter_groups returning solid_sphere_style=%r core_shell_style=%r",
+                solid_sphere_style,
+                core_shell_style,
+            )
+
+            return solid_sphere_style, core_shell_style
 
     def _register_target_mie_relation_axis_scale_runtime_sync_callback(self) -> None:
         """
@@ -930,15 +1053,39 @@ class CalibrationPicker:
                 "value",
             ),
             dash.Input(
-                self.page.ids.CalibrationPicker.target_diameter_min_nm,
+                self.page.ids.CalibrationPicker.target_solid_sphere_diameter_min_nm,
                 "value",
             ),
             dash.Input(
-                self.page.ids.CalibrationPicker.target_diameter_max_nm,
+                self.page.ids.CalibrationPicker.target_solid_sphere_diameter_max_nm,
                 "value",
             ),
             dash.Input(
-                self.page.ids.CalibrationPicker.target_diameter_count,
+                self.page.ids.CalibrationPicker.target_solid_sphere_diameter_count,
+                "value",
+            ),
+            dash.Input(
+                self.page.ids.CalibrationPicker.target_core_refractive_index,
+                "value",
+            ),
+            dash.Input(
+                self.page.ids.CalibrationPicker.target_shell_refractive_index,
+                "value",
+            ),
+            dash.Input(
+                self.page.ids.CalibrationPicker.target_shell_thickness_nm,
+                "value",
+            ),
+            dash.Input(
+                self.page.ids.CalibrationPicker.target_core_shell_core_diameter_min_nm,
+                "value",
+            ),
+            dash.Input(
+                self.page.ids.CalibrationPicker.target_core_shell_core_diameter_max_nm,
+                "value",
+            ),
+            dash.Input(
+                self.page.ids.CalibrationPicker.target_core_shell_core_diameter_count,
                 "value",
             ),
             dash.Input(
@@ -952,24 +1099,43 @@ class CalibrationPicker:
             target_mie_model: Any,
             target_medium_refractive_index: Any,
             target_particle_refractive_index: Any,
-            target_diameter_min_nm: Any,
-            target_diameter_max_nm: Any,
-            target_diameter_count: Any,
+            target_solid_sphere_diameter_min_nm: Any,
+            target_solid_sphere_diameter_max_nm: Any,
+            target_solid_sphere_diameter_count: Any,
+            target_core_refractive_index: Any,
+            target_shell_refractive_index: Any,
+            target_shell_thickness_nm: Any,
+            target_core_shell_core_diameter_min_nm: Any,
+            target_core_shell_core_diameter_max_nm: Any,
+            target_core_shell_core_diameter_count: Any,
             axis_scale_toggle_values: Any,
         ) -> tuple[Any, str, str]:
             logger.debug(
                 "update_target_mie_relation_preview called with "
                 "selected_calibration_summary=%r target_mie_model=%r "
                 "target_medium_refractive_index=%r target_particle_refractive_index=%r "
-                "target_diameter_min_nm=%r target_diameter_max_nm=%r "
-                "target_diameter_count=%r axis_scale_toggle_values=%r",
+                "target_solid_sphere_diameter_min_nm=%r "
+                "target_solid_sphere_diameter_max_nm=%r "
+                "target_solid_sphere_diameter_count=%r "
+                "target_core_refractive_index=%r target_shell_refractive_index=%r "
+                "target_shell_thickness_nm=%r "
+                "target_core_shell_core_diameter_min_nm=%r "
+                "target_core_shell_core_diameter_max_nm=%r "
+                "target_core_shell_core_diameter_count=%r "
+                "axis_scale_toggle_values=%r",
                 selected_calibration_summary,
                 target_mie_model,
                 target_medium_refractive_index,
                 target_particle_refractive_index,
-                target_diameter_min_nm,
-                target_diameter_max_nm,
-                target_diameter_count,
+                target_solid_sphere_diameter_min_nm,
+                target_solid_sphere_diameter_max_nm,
+                target_solid_sphere_diameter_count,
+                target_core_refractive_index,
+                target_shell_refractive_index,
+                target_shell_thickness_nm,
+                target_core_shell_core_diameter_min_nm,
+                target_core_shell_core_diameter_max_nm,
+                target_core_shell_core_diameter_count,
                 axis_scale_toggle_values,
             )
 
@@ -1006,13 +1172,33 @@ class CalibrationPicker:
                     calibration_file_path,
                 )
 
+                resolved_target_mie_model = self._resolve_target_mie_model(
+                    target_mie_model,
+                )
+
+                is_core_shell_model = resolved_target_mie_model == "Core/Shell Sphere"
+
+                if is_core_shell_model:
+                    resolved_target_diameter_min_nm = target_core_shell_core_diameter_min_nm
+                    resolved_target_diameter_max_nm = target_core_shell_core_diameter_max_nm
+                    resolved_target_diameter_count = target_core_shell_core_diameter_count
+                    x_axis_title = "Target core diameter [nm]"
+                else:
+                    resolved_target_diameter_min_nm = target_solid_sphere_diameter_min_nm
+                    resolved_target_diameter_max_nm = target_solid_sphere_diameter_max_nm
+                    resolved_target_diameter_count = target_solid_sphere_diameter_count
+                    x_axis_title = "Target particle diameter [nm]"
+
                 target_model_parameters = ScatteringTargetModelParameters.from_raw_values(
-                    target_mie_model=target_mie_model,
+                    target_mie_model=resolved_target_mie_model,
                     target_medium_refractive_index=target_medium_refractive_index,
                     target_particle_refractive_index=target_particle_refractive_index,
-                    target_diameter_min_nm=target_diameter_min_nm,
-                    target_diameter_max_nm=target_diameter_max_nm,
-                    target_diameter_count=target_diameter_count,
+                    target_core_refractive_index=target_core_refractive_index,
+                    target_shell_refractive_index=target_shell_refractive_index,
+                    target_shell_thickness_nm=target_shell_thickness_nm,
+                    target_diameter_min_nm=resolved_target_diameter_min_nm,
+                    target_diameter_max_nm=resolved_target_diameter_max_nm,
+                    target_diameter_count=resolved_target_diameter_count,
                 )
 
                 full_target_mie_relation = build_target_mie_relation(
@@ -1060,6 +1246,7 @@ class CalibrationPicker:
                         selected_coupling_values=selected_coupling_values,
                         show_selected_branch=True,
                         axis_scale_toggle_values=axis_scale_toggle_values,
+                        x_axis_title=x_axis_title,
                     )
 
                     selected_interval = relation_resolution.selected_interval
@@ -1087,6 +1274,7 @@ class CalibrationPicker:
                     selected_coupling_values=selected_coupling_values,
                     show_selected_branch=False,
                     axis_scale_toggle_values=axis_scale_toggle_values,
+                    x_axis_title=x_axis_title,
                 )
 
                 return (
@@ -1331,6 +1519,30 @@ class CalibrationPicker:
         return selected_calibration
 
     @staticmethod
+    def _resolve_target_mie_model(
+        target_mie_model: Any,
+    ) -> str:
+        """
+        Normalize the target Mie model value.
+        """
+        target_mie_model_string = str(
+            target_mie_model or "Solid Sphere",
+        ).strip()
+
+        normalized_target_mie_model = target_mie_model_string.lower()
+
+        if normalized_target_mie_model in {
+            "core/shell sphere",
+            "core shell sphere",
+            "core-shell sphere",
+            "coreshell sphere",
+            "core_shell_sphere",
+        }:
+            return "Core/Shell Sphere"
+
+        return "Solid Sphere"
+
+    @staticmethod
     def _build_empty_target_mie_relation_figure() -> Any:
         """
         Build an empty target Mie relation preview figure.
@@ -1348,6 +1560,7 @@ class CalibrationPicker:
         selected_coupling_values: Any,
         show_selected_branch: bool,
         axis_scale_toggle_values: Any,
+        x_axis_title: str,
     ) -> Any:
         """
         Build the target Mie relation preview figure.
@@ -1378,7 +1591,7 @@ class CalibrationPicker:
         return scatter2d.Scatter2DGraph.build_figure(
             traces=traces,
             title="Target Mie relation preview",
-            x_axis_title="Target diameter [nm]",
+            x_axis_title=x_axis_title,
             y_axis_title="Theoretical optical coupling",
             axis_scale_toggle_values=axis_scale_toggle_values,
             show_grid=True,
