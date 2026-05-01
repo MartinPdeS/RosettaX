@@ -217,6 +217,15 @@ After installation, launch RosettaX with:
 
 This starts the local graphical calibration application.
 
+Common CLI options:
+
+.. code-block:: bash
+
+   rosettax --host 0.0.0.0 --port 8050
+   rosettax --no-browser
+   rosettax --fcs-file-path /path/to/sample.fcs
+   rosettax --version
+
 The application opens a browser based interface served from the local machine.
 It is intended for local calibration workflows and does not require a remote
 server.
