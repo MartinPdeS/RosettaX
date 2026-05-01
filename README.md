@@ -123,9 +123,9 @@
 | RosettaX/workflow/upload/layout.py                                      |       32 |       32 |        4 |        0 |     0.00% |     3-122 |
 | RosettaX/workflow/upload/models.py                                      |       15 |       15 |        0 |        0 |     0.00% |      3-63 |
 | RosettaX/workflow/upload/services.py                                    |       82 |       82 |       24 |        0 |     0.00% |     3-286 |
-| **TOTAL**                                                               | **9844** | **9061** | **2632** |   **61** | **8.10%** |           |
+| **TOTAL**                                                               | **9867** | **9061** | **2632** |   **61** | **8.26%** |           |
 
-1 file skipped due to complete coverage.
+2 files skipped due to complete coverage.
 
 
 ## Setup coverage badge
