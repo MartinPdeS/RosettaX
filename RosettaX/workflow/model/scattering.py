@@ -8,6 +8,109 @@ import plotly.graph_objs as go
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.parameters import particle_presets
 from RosettaX.workflow.parameters import services as parameter_services
+from RosettaX.workflow.parameters import table as parameters_table
+
+
+CUSTOM_SCATTERER_PRESET_NAME = "Custom"
+ROSETTA_MIX_PRESET_NAME = "Rosetta Mix"
+SMALL_PARTICLE_STANDARD_PRESET_NAME = "Small particle standard"
+BROAD_PARTICLE_STANDARD_PRESET_NAME = "Broad particle standard"
+
+
+@dataclass(frozen=True)
+class ScatteringCalibrationScattererPreset:
+    """
+    Preset values for scattering calibration standards.
+    """
+
+    name: str
+    mie_model: str
+    medium_refractive_index: float
+    particle_refractive_index: float
+    core_refractive_index: float
+    shell_refractive_index: float
+    particle_diameters_nm: tuple[float, ...] = ()
+    core_diameters_nm: tuple[float, ...] = ()
+    shell_thicknesses_nm: tuple[float, ...] = ()
+    description: str = ""
+
+
+def build_scattering_calibration_scatterer_presets() -> dict[str, ScatteringCalibrationScattererPreset]:
+    """
+    Build presets used when creating scattering calibration standards.
+    """
+    return {
+        CUSTOM_SCATTERER_PRESET_NAME: ScatteringCalibrationScattererPreset(
+            name=CUSTOM_SCATTERER_PRESET_NAME,
+            mie_model="Solid Sphere",
+            medium_refractive_index=1.333,
+            particle_refractive_index=1.59,
+            core_refractive_index=1.47,
+            shell_refractive_index=1.46,
+            description="Manual scatterer and calibration-standard table configuration.",
+        ),
+        ROSETTA_MIX_PRESET_NAME: ScatteringCalibrationScattererPreset(
+            name=ROSETTA_MIX_PRESET_NAME,
+            mie_model="Solid Sphere",
+            medium_refractive_index=1.333,
+            particle_refractive_index=1.59,
+            core_refractive_index=1.47,
+            shell_refractive_index=1.46,
+            particle_diameters_nm=(70.0, 100.0, 150.0, 200.0, 300.0, 500.0),
+            description="Six-bead Rosetta mix spanning 70 nm to 500 nm.",
+        ),
+        SMALL_PARTICLE_STANDARD_PRESET_NAME: ScatteringCalibrationScattererPreset(
+            name=SMALL_PARTICLE_STANDARD_PRESET_NAME,
+            mie_model="Solid Sphere",
+            medium_refractive_index=1.333,
+            particle_refractive_index=1.45,
+            core_refractive_index=1.45,
+            shell_refractive_index=1.45,
+            particle_diameters_nm=(80.0, 100.0, 125.0, 150.0, 200.0, 240.0),
+            description="Compact small-particle calibration standard.",
+        ),
+        BROAD_PARTICLE_STANDARD_PRESET_NAME: ScatteringCalibrationScattererPreset(
+            name=BROAD_PARTICLE_STANDARD_PRESET_NAME,
+            mie_model="Solid Sphere",
+            medium_refractive_index=1.333,
+            particle_refractive_index=1.59,
+            core_refractive_index=1.59,
+            shell_refractive_index=1.59,
+            particle_diameters_nm=(100.0, 200.0, 300.0, 400.0, 600.0, 800.0),
+            description="Broad dynamic-range bead standard.",
+        ),
+    }
+
+
+def build_scattering_calibration_scatterer_preset_options() -> list[dict[str, str]]:
+    """
+    Build Dash dropdown options for calibration scatterer presets.
+    """
+    return [
+        {
+            "label": preset.name,
+            "value": preset.name,
+        }
+        for preset in build_scattering_calibration_scatterer_presets().values()
+    ]
+
+
+def get_scattering_calibration_scatterer_preset(
+    preset_name: Any,
+) -> ScatteringCalibrationScattererPreset:
+    """
+    Resolve one calibration scatterer preset by name.
+    """
+    presets = build_scattering_calibration_scatterer_presets()
+
+    preset_name_string = str(
+        preset_name or CUSTOM_SCATTERER_PRESET_NAME,
+    ).strip()
+
+    return presets.get(
+        preset_name_string,
+        presets[CUSTOM_SCATTERER_PRESET_NAME],
+    )
 
 
 @dataclass(frozen=True)
@@ -126,6 +229,7 @@ class ScatteringModelConfiguration:
     """
 
     custom_detector_preset_name = parameter_services.CUSTOM_DETECTOR_PRESET_NAME
+    custom_scatterer_preset_name = CUSTOM_SCATTERER_PRESET_NAME
 
     mie_model_options = particle_presets.MIE_MODEL_OPTIONS
     medium_refractive_index_presets = particle_presets.MEDIUM_REFRACTIVE_INDEX_PRESETS
@@ -172,6 +276,95 @@ class ScatteringModelConfiguration:
         Build detector preset dropdown options.
         """
         return parameter_services.build_detector_preset_options()
+
+    @staticmethod
+    def build_scatterer_preset_options() -> list[dict[str, Any]]:
+        """
+        Build scatterer preset dropdown options.
+        """
+        return build_scattering_calibration_scatterer_preset_options()
+
+    @staticmethod
+    def resolve_scatterer_preset_values(
+        *,
+        preset_name: Any,
+        current_mie_model: Any,
+        current_medium_refractive_index: Any,
+        current_particle_refractive_index: Any,
+        current_core_refractive_index: Any,
+        current_shell_refractive_index: Any,
+    ) -> tuple[Any, Any, Any, Any, Any]:
+        """
+        Resolve the page control values from the selected scatterer preset.
+
+        Selecting the custom preset preserves the current manual values.
+        """
+        preset_name_string = str(
+            preset_name or CUSTOM_SCATTERER_PRESET_NAME,
+        ).strip()
+
+        if preset_name_string == CUSTOM_SCATTERER_PRESET_NAME:
+            return (
+                current_mie_model,
+                current_medium_refractive_index,
+                current_particle_refractive_index,
+                current_core_refractive_index,
+                current_shell_refractive_index,
+            )
+
+        preset = get_scattering_calibration_scatterer_preset(
+            preset_name_string,
+        )
+
+        return (
+            preset.mie_model,
+            preset.medium_refractive_index,
+            preset.particle_refractive_index,
+            preset.core_refractive_index,
+            preset.shell_refractive_index,
+        )
+
+    @staticmethod
+    def scatterer_preset_disables_manual_controls(
+        *,
+        preset_name: Any,
+    ) -> bool:
+        """
+        Return whether scatterer preset selection should lock manual controls.
+        """
+        return str(
+            preset_name or CUSTOM_SCATTERER_PRESET_NAME,
+        ).strip() != CUSTOM_SCATTERER_PRESET_NAME
+
+    @staticmethod
+    def build_table_state_from_scatterer_preset(
+        *,
+        preset_name: Any,
+    ) -> Optional[tuple[list[dict[str, Any]], list[dict[str, str]]]]:
+        """
+        Build calibration table columns and rows from a scatterer preset.
+
+        The custom preset returns ``None`` so user-edited rows are preserved.
+        """
+        preset = get_scattering_calibration_scatterer_preset(
+            preset_name,
+        )
+
+        if preset.name == CUSTOM_SCATTERER_PRESET_NAME:
+            return None
+
+        columns = parameters_table.get_table_columns_for_model(
+            preset.mie_model,
+        )
+
+        rows = parameters_table.populate_table_from_runtime_defaults(
+            mie_model=preset.mie_model,
+            runtime_particle_diameters_nm=preset.particle_diameters_nm,
+            runtime_core_diameters_nm=preset.core_diameters_nm,
+            runtime_shell_thicknesses_nm=preset.shell_thicknesses_nm,
+        )
+
+        return columns, rows
 
     @staticmethod
     def resolve_detector_configuration_visibility_style(

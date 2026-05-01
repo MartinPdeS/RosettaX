@@ -10,6 +10,7 @@ from RosettaX.pages.p00_sidebar.ids import SidebarIds
 from RosettaX.pages.p03_scattering.state import ScatteringPageState
 from RosettaX.utils import styling
 from RosettaX.utils import ui_forms
+from RosettaX.workflow.model.scattering import ScatteringModelConfiguration
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.parameters import table as parameters_table
 from RosettaX.workflow.table.layout import ReferenceTableActionConfig
@@ -177,8 +178,40 @@ class ReferenceTable:
 
         self._register_table_default_population_callback()
         self._register_table_callbacks()
+        self._register_scatterer_preset_table_callback()
         self._register_compute_model_callback()
         self._register_post_compute_cleanup_callback()
+
+    def _register_scatterer_preset_table_callback(self) -> None:
+        """
+        Populate the calibration standard table from the selected scatterer preset.
+        """
+
+        @dash.callback(
+            dash.Output(
+                self.ids.bead_table,
+                "columns",
+                allow_duplicate=True,
+            ),
+            dash.Output(
+                self.ids.bead_table,
+                "data",
+                allow_duplicate=True,
+            ),
+            dash.Input(self.page.ids.Parameters.scatterer_preset, "value"),
+            prevent_initial_call=True,
+        )
+        def populate_table_from_scatterer_preset(
+            scatterer_preset: Any,
+        ) -> tuple[Any, Any]:
+            preset_table_state = ScatteringModelConfiguration.build_table_state_from_scatterer_preset(
+                preset_name=scatterer_preset,
+            )
+
+            if preset_table_state is None:
+                return dash.no_update, dash.no_update
+
+            return preset_table_state
 
     def _register_table_default_population_callback(self) -> None:
         """

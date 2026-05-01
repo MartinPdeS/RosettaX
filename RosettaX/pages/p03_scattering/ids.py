@@ -23,6 +23,10 @@ class ParameterSectionIds:
         return f"{self.prefix}-mie-model"
 
     @property
+    def scatterer_preset(self) -> str:
+        return f"{self.prefix}-scatterer-preset"
+
+    @property
     def wavelength_nm(self) -> str:
         return f"{self.prefix}-wavelength-nm"
 

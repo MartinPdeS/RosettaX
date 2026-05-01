@@ -57,6 +57,9 @@ class Model:
         self.particle_configuration_tooltip_target_id = f"{self.ids.mie_model}-particle-info-target"
         self.particle_configuration_tooltip_id = f"{self.ids.mie_model}-particle-info-tooltip"
 
+        self.scatterer_preset_tooltip_target_id = f"{self.ids.scatterer_preset}-info-target"
+        self.scatterer_preset_tooltip_id = f"{self.ids.scatterer_preset}-info-tooltip"
+
         self.detector_preset_tooltip_target_id = f"{self.ids.detector_configuration_preset}-info-target"
         self.detector_preset_tooltip_id = f"{self.ids.detector_configuration_preset}-info-tooltip"
 
@@ -428,6 +431,49 @@ class Model:
         return dash.html.Div(
             [
                 ui_forms.build_inline_row(
+                    label="Scatterer preset:",
+                    control=dash.html.Div(
+                        [
+                            dash.dcc.Dropdown(
+                                id=self.ids.scatterer_preset,
+                                options=self.model_configuration.build_scatterer_preset_options(),
+                                value=self.model_configuration.custom_scatterer_preset_name,
+                                clearable=False,
+                                searchable=False,
+                                persistence=True,
+                                persistence_type="session",
+                                style={
+                                    "width": "320px",
+                                },
+                            ),
+                            ui_forms.build_info_badge(
+                                tooltip_target_id=self.scatterer_preset_tooltip_target_id,
+                            ),
+                            dbc.Tooltip(
+                                (
+                                        "Use a scatterer preset to load a predefined bead set and "
+                                        "matching refractive index defaults for calibration setup."
+                                ),
+                                id=self.scatterer_preset_tooltip_id,
+                                target=self.scatterer_preset_tooltip_target_id,
+                                placement="right",
+                            ),
+                        ],
+                        style={
+                            "display": "flex",
+                            "alignItems": "center",
+                            "overflow": "visible",
+                        },
+                    ),
+                    margin_top=False,
+                    row_style_overrides={
+                        "overflow": "visible",
+                    },
+                    control_wrapper_style_overrides={
+                        "overflow": "visible",
+                    },
+                ),
+                ui_forms.build_inline_row(
                     label="Particle type:",
                     control=dash.dcc.Dropdown(
                         id=self.ids.mie_model,
@@ -459,24 +505,40 @@ class Model:
                 dash.html.Div(
                     self._build_solid_sphere_parameters_block(),
                     id=self.ids.solid_sphere_container,
-                    style={
-                        "display": "block",
-                        "overflow": "visible",
-                    },
+                    style=self._build_parameter_group_style(
+                        is_visible=True,
+                    ),
                 ),
                 dash.html.Div(
                     self._build_core_shell_parameters_block(),
                     id=self.ids.core_shell_container,
-                    style={
-                        "display": "none",
-                        "overflow": "visible",
-                    },
+                    style=self._build_parameter_group_style(
+                        is_visible=False,
+                    ),
                 ),
             ],
             style={
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "12px",
                 "overflow": "visible",
             },
         )
+
+    def _build_parameter_group_style(
+        self,
+        *,
+        is_visible: bool,
+    ) -> dict[str, str]:
+        """
+        Build a consistent layout style for model-specific parameter groups.
+        """
+        return {
+            "display": "flex" if is_visible else "none",
+            "flexDirection": "column",
+            "gap": "12px",
+            "overflow": "visible",
+        }
 
     def _build_solid_sphere_parameters_block(self) -> list[Any]:
         """
@@ -624,6 +686,7 @@ class Model:
         logger.debug("Registering Parameters callbacks.")
 
         self._register_visibility_callbacks()
+        self._register_scatterer_preset_callbacks()
         self._register_refractive_index_callbacks()
         self._register_detector_configuration_callbacks()
         self._register_optical_configuration_preview_callback()
@@ -635,6 +698,7 @@ class Model:
         """
 
         @dash.callback(
+            dash.Output(self.ids.scatterer_preset, "value"),
             dash.Output(self.ids.mie_model, "value"),
             dash.Output(self.ids.medium_refractive_index_custom, "value"),
             dash.Output(self.ids.particle_refractive_index_custom, "value"),
@@ -667,7 +731,105 @@ class Model:
                 resolved_values,
             )
 
-            return resolved_values
+            return (
+                self.model_configuration.custom_scatterer_preset_name,
+                *resolved_values,
+            )
+
+    def _register_scatterer_preset_callbacks(self) -> None:
+        """
+        Register scatterer preset callbacks.
+        """
+
+        @dash.callback(
+            dash.Output(self.ids.mie_model, "value", allow_duplicate=True),
+            dash.Output(self.ids.medium_refractive_index_source, "value", allow_duplicate=True),
+            dash.Output(self.ids.medium_refractive_index_custom, "value", allow_duplicate=True),
+            dash.Output(self.ids.particle_refractive_index_source, "value", allow_duplicate=True),
+            dash.Output(self.ids.particle_refractive_index_custom, "value", allow_duplicate=True),
+            dash.Output(self.ids.core_refractive_index_source, "value", allow_duplicate=True),
+            dash.Output(self.ids.core_refractive_index_custom, "value", allow_duplicate=True),
+            dash.Output(self.ids.shell_refractive_index_source, "value", allow_duplicate=True),
+            dash.Output(self.ids.shell_refractive_index_custom, "value", allow_duplicate=True),
+            dash.Input(self.ids.scatterer_preset, "value"),
+            dash.State(self.ids.mie_model, "value"),
+            dash.State(self.ids.medium_refractive_index_custom, "value"),
+            dash.State(self.ids.particle_refractive_index_custom, "value"),
+            dash.State(self.ids.core_refractive_index_custom, "value"),
+            dash.State(self.ids.shell_refractive_index_custom, "value"),
+            prevent_initial_call=True,
+        )
+        def apply_scatterer_preset(
+            preset_name: Any,
+            current_mie_model: Any,
+            current_medium_refractive_index: Any,
+            current_particle_refractive_index: Any,
+            current_core_refractive_index: Any,
+            current_shell_refractive_index: Any,
+        ) -> tuple[Any, ...]:
+            logger.debug(
+                "apply_scatterer_preset called with preset_name=%r",
+                preset_name,
+            )
+
+            (
+                resolved_mie_model,
+                resolved_medium_refractive_index,
+                resolved_particle_refractive_index,
+                resolved_core_refractive_index,
+                resolved_shell_refractive_index,
+            ) = self.model_configuration.resolve_scatterer_preset_values(
+                preset_name=preset_name,
+                current_mie_model=current_mie_model,
+                current_medium_refractive_index=current_medium_refractive_index,
+                current_particle_refractive_index=current_particle_refractive_index,
+                current_core_refractive_index=current_core_refractive_index,
+                current_shell_refractive_index=current_shell_refractive_index,
+            )
+
+            return (
+                resolved_mie_model,
+                None,
+                resolved_medium_refractive_index,
+                None,
+                resolved_particle_refractive_index,
+                None,
+                resolved_core_refractive_index,
+                None,
+                resolved_shell_refractive_index,
+            )
+
+        @dash.callback(
+            dash.Output(self.ids.mie_model, "disabled"),
+            dash.Output(self.ids.medium_refractive_index_source, "disabled"),
+            dash.Output(self.ids.medium_refractive_index_custom, "disabled"),
+            dash.Output(self.ids.particle_refractive_index_source, "disabled"),
+            dash.Output(self.ids.particle_refractive_index_custom, "disabled"),
+            dash.Output(self.ids.core_refractive_index_source, "disabled"),
+            dash.Output(self.ids.core_refractive_index_custom, "disabled"),
+            dash.Output(self.ids.shell_refractive_index_source, "disabled"),
+            dash.Output(self.ids.shell_refractive_index_custom, "disabled"),
+            dash.Input(self.ids.scatterer_preset, "value"),
+            prevent_initial_call=False,
+        )
+        def sync_scatterer_preset_disabled_state(
+            preset_name: Any,
+        ) -> tuple[bool, ...]:
+            is_locked = self.model_configuration.scatterer_preset_disables_manual_controls(
+                preset_name=preset_name,
+            )
+
+            return (
+                is_locked,
+                is_locked,
+                is_locked,
+                is_locked,
+                is_locked,
+                is_locked,
+                is_locked,
+                is_locked,
+                is_locked,
+            )
 
     def _register_visibility_callbacks(self) -> None:
         """
@@ -683,8 +845,17 @@ class Model:
         def toggle_parameter_blocks(
             mie_model_value: Optional[str],
         ) -> tuple[dict[str, str], dict[str, str]]:
-            resolved_styles = self.model_configuration.build_visibility_styles_for_mie_model(
-                mie_model=mie_model_value,
+            resolved_mie_model = self.model_configuration.resolve_mie_model(
+                mie_model_value,
+            )
+
+            resolved_styles = (
+                self._build_parameter_group_style(
+                    is_visible=resolved_mie_model != "Core/Shell Sphere",
+                ),
+                self._build_parameter_group_style(
+                    is_visible=resolved_mie_model == "Core/Shell Sphere",
+                ),
             )
 
             logger.debug(
