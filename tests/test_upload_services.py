@@ -74,7 +74,7 @@ class Test_build_loaded_filename_text:
         """Test build_loaded_filename_text with empty filename."""
         result = build_loaded_filename_text("")
         assert result == "No file loaded."
-        
+
         result = build_loaded_filename_text("   ")
         assert result == "No file loaded."
 
@@ -87,7 +87,7 @@ class Test_build_loaded_filename_text:
         """Test build_loaded_filename_text with valid filename."""
         result = build_loaded_filename_text("data.fcs")
         assert result == "Loaded file: data.fcs"
-        
+
         result = build_loaded_filename_text("experiment_data.fcs")
         assert result == "Loaded file: experiment_data.fcs"
 
@@ -119,7 +119,7 @@ class Test_sanitize_filename:
         """Test sanitize_filename with valid filename."""
         result = sanitize_filename("data.fcs")
         assert result == "data.fcs"
-        
+
         result = sanitize_filename("experiment_data.fcs")
         assert result == "experiment_data.fcs"
 
@@ -127,7 +127,7 @@ class Test_sanitize_filename:
         """Test sanitize_filename strips path components."""
         result = sanitize_filename("/path/to/data.fcs")
         assert result == "data.fcs"
-        
+
         result = sanitize_filename("../../dangerous/path/data.fcs")
         assert result == "data.fcs"
 
@@ -135,7 +135,7 @@ class Test_sanitize_filename:
         """Test sanitize_filename handles special characters."""
         result = sanitize_filename("data@#$%.fcs")
         assert result == "data_.fcs"
-        
+
         result = sanitize_filename("data with spaces.fcs")
         assert result == "data_with_spaces.fcs"
 
@@ -143,7 +143,7 @@ class Test_sanitize_filename:
         """Test sanitize_filename strips leading/trailing dots and underscores."""
         result = sanitize_filename("._data.fcs_.")
         assert result == "data.fcs"
-        
+
         result = sanitize_filename("...data...")
         assert result == "data"
 
@@ -151,7 +151,7 @@ class Test_sanitize_filename:
         """Test sanitize_filename with only special characters."""
         result = sanitize_filename("@#$%^&*()")
         assert result == "uploaded_file.fcs"
-        
+
         result = sanitize_filename("@#$%^&*()", fallback_filename="fallback.dat")
         assert result == "fallback.dat"
 
@@ -159,7 +159,7 @@ class Test_sanitize_filename:
         """Test sanitize_filename with unicode characters."""
         result = sanitize_filename("dataé.fcs")
         assert result == "data_.fcs"
-        
+
         result = sanitize_filename("测试.fcs")
         assert result == "fcs"
 
@@ -191,7 +191,7 @@ class Test_decode_dash_upload_contents:
         test_data = b"Hello, World!"
         encoded_data = base64.b64encode(test_data).decode('ascii')
         contents = f"data:text/plain;base64,{encoded_data}"
-        
+
         result = decode_dash_upload_contents(contents)
         assert result == test_data
 
@@ -200,7 +200,7 @@ class Test_decode_dash_upload_contents:
         test_data = b"Binary data content"
         encoded_data = base64.b64encode(test_data).decode('ascii')
         contents = f"data:application/octet-stream;base64,{encoded_data}"
-        
+
         result = decode_dash_upload_contents(contents)
         assert result == test_data
 
@@ -218,7 +218,7 @@ class Test_decode_dash_upload_contents:
     def test_decode_dash_upload_contents_invalid_base64(self):
         """Test decode_dash_upload_contents with invalid base64."""
         contents = "data:text/plain;base64,invalid!base64@content"
-        
+
         with pytest.raises(ValueError, match="Upload contents could not be decoded"):
             decode_dash_upload_contents(contents)
 
@@ -227,7 +227,7 @@ class Test_decode_dash_upload_contents:
         test_data = b"Content,with,commas"
         encoded_data = base64.b64encode(test_data).decode('ascii')
         contents = f"data:text/plain;base64,{encoded_data}"
-        
+
         result = decode_dash_upload_contents(contents)
         assert result == test_data
 
@@ -236,7 +236,7 @@ class Test_decode_dash_upload_contents:
         test_data = b"Complex binary data"
         encoded_data = base64.b64encode(test_data).decode('ascii')
         contents = f"data:application/vnd.some-format+json;charset=utf-8;base64,{encoded_data}"
-        
+
         result = decode_dash_upload_contents(contents)
         assert result == test_data
 
@@ -246,7 +246,7 @@ class Test_decode_dash_upload_contents:
         test_data = b'\x46\x43\x53\x33\x2e\x30\x20\x20\x20\x20\x20\x20'  # FCS3.0 header
         encoded_data = base64.b64encode(test_data).decode('ascii')
         contents = f"data:application/octet-stream;base64,{encoded_data}"
-        
+
         result = decode_dash_upload_contents(contents)
         assert result == test_data
 
@@ -263,7 +263,7 @@ class Test_resolve_upload_directory:
     def test_default_upload_directory_constant(self):
         """Test that DEFAULT_UPLOAD_DIRECTORY is properly defined."""
         assert isinstance(DEFAULT_UPLOAD_DIRECTORY, Path)
-        assert str(DEFAULT_UPLOAD_DIRECTORY).endswith("/.rosettax/uploads")
+        assert DEFAULT_UPLOAD_DIRECTORY.parts[-2:] == (".rosettax", "uploads")
 
     def test_resolve_upload_directory_basic(self, mock_upload_config):
         """Test resolve_upload_directory basic functionality."""
@@ -276,7 +276,7 @@ class Test_resolve_upload_directory:
         # Mock the config to have a custom upload directory
         custom_path = Path("/custom/upload/path")
         mock_upload_config.upload_directory = custom_path
-        
+
         try:
             result = resolve_upload_directory(mock_upload_config)
             # The function might use the custom path or transform it somehow
@@ -293,15 +293,15 @@ class Test_upload_services_integration:
         """Test complete filename processing pipeline."""
         # Simulate processing a user-uploaded filename
         user_filename = "  My Data File (version 2).fcs  "
-        
+
         # Clean the filename
         cleaned = clean_optional_string(user_filename)
         assert cleaned == "My Data File (version 2).fcs"
-        
+
         # Sanitize for filesystem
         sanitized = sanitize_filename(cleaned)
         assert sanitized == "My_Data_File_version_2_.fcs"
-        
+
         # Build display text
         display_text = build_loaded_filename_text(cleaned)
         assert display_text == "Loaded file: My Data File (version 2).fcs"
@@ -311,16 +311,16 @@ class Test_upload_services_integration:
         # Simulate Dash upload data
         original_filename = "experiment_data.fcs"
         file_content = b"FCS3.0    \x00\x00\x00\x00\x00\x00"
-        
+
         # Encode as Dash would
         encoded_content = base64.b64encode(file_content).decode('ascii')
         dash_contents = f"data:application/octet-stream;base64,{encoded_content}"
-        
+
         # Process the upload
         decoded_content = decode_dash_upload_contents(dash_contents)
         safe_filename = sanitize_filename(original_filename)
         display_text = build_loaded_filename_text(original_filename)
-        
+
         # Verify results
         assert decoded_content == file_content
         assert safe_filename == "experiment_data.fcs"
