@@ -38,9 +38,18 @@ from .monotonic import resolve_monotonic_target_mie_relation
 from .monotonic import select_largest_monotonic_interval
 from .monotonic import validate_target_mie_relation_for_diameter_inversion
 
+from .presets import CUSTOM_PRESET_NAME
+from .presets import EXTRACELLULAR_VESICLES_PRESET_NAME
+from .presets import ScatteringTargetModelPreset
+from .presets import build_scattering_target_model_preset_options
+from .presets import build_scattering_target_model_presets
+from .presets import get_scattering_target_model_preset
+
 
 __all__ = [
     "CORE_SHELL_SPHERE_MODEL_NAME",
+    "CUSTOM_PRESET_NAME",
+    "EXTRACELLULAR_VESICLES_PRESET_NAME",
     "SOLID_SPHERE_MODEL_NAME",
     "CoreShellSphereTargetModel",
     "MonotonicDiameterInterval",
@@ -49,12 +58,15 @@ __all__ = [
     "ScatteringOutputColumns",
     "ScatteringTargetModel",
     "ScatteringTargetModelParameters",
+    "ScatteringTargetModelPreset",
     "SolidSphereTargetModel",
     "apply_scattering_calibration_to_dataframe",
     "build_core_shell_target_mie_relation",
     "build_interval_if_valid",
     "build_monotonic_branch_mie_relation",
     "build_scattering_output_columns",
+    "build_scattering_target_model_preset_options",
+    "build_scattering_target_model_presets",
     "build_solid_sphere_target_mie_relation",
     "build_target_mie_relation",
     "calibration_is_scattering_v2",
@@ -64,6 +76,7 @@ __all__ = [
     "format_monotonic_interval_suggestions",
     "get_calibration_standard_parameters",
     "get_finite_positive_mie_relation_arrays",
+    "get_scattering_target_model_preset",
     "parse_finite_float",
     "parse_non_negative_float",
     "parse_optical_geometry_from_calibration_standard_parameters",

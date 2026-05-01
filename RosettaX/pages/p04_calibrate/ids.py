@@ -26,6 +26,10 @@ class Ids:
             f"{page_name}-calibration-picker-scattering-target-model-container"
         )
 
+        target_model_preset = (
+            f"{page_name}-calibration-picker-target-model-preset"
+        )
+
         target_solid_sphere_parameter_container = (
             f"{page_name}-calibration-picker-target-solid-sphere-parameter-container"
         )
