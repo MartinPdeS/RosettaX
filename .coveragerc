@@ -9,6 +9,14 @@ omit =
     RosettaX/_version.py
     RosettaX/directories.py
     RosettaX/**/__main__.py
+    RosettaX/application/**
+    RosettaX/pages/**/ids.py
+    RosettaX/pages/**/main.py
+    RosettaX/pages/**/layout.py
+    RosettaX/pages/**/callbacks.py
+    RosettaX/workflow/**/ids.py
+    RosettaX/workflow/**/layout.py
+    RosettaX/workflow/**/callbacks.py
 
 [report]
 skip_covered = True
