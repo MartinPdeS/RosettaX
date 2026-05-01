@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Source code &#8212; RosettaX  documentation</title>
+    <title>API reference &#8212; RosettaX  documentation</title>
   
   
   
@@ -59,7 +59,7 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Examples" href="gallery/index.html" />
+    <link rel="next" title="Application API" href="api/application.html" />
     <link rel="prev" title="Theoretical background" href="theory.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -154,7 +154,7 @@
 
 <li class="nav-item current active">
   <a class="nav-link nav-internal" href="#">
-    Source code
+    API reference
   </a>
 </li>
 
@@ -306,7 +306,7 @@
 
 <li class="nav-item current active">
   <a class="nav-link nav-internal" href="#">
-    Source code
+    API reference
   </a>
 </li>
 
@@ -410,7 +410,13 @@
 <nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"></div>
+  <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="api/application.html">Application API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/utilities.html">Utilities API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/workflows.html">Workflow API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/pages.html">Pages API</a></li>
+</ul>
+</div>
 </nav></div>
     </div>
   
@@ -449,7 +455,7 @@
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Source code</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">API reference</span></li>
   </ul>
 </nav>
 </div>
@@ -466,8 +472,81 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="source-code">
-<span id="id1"></span><h1>Source code<a class="headerlink" href="#source-code" title="Link to this heading">#</a></h1>
+  <section id="api-reference">
+<span id="source-code"></span><h1>API reference<a class="headerlink" href="#api-reference" title="Link to this heading">#</a></h1>
+<p>This section documents the main Python interfaces exposed by RosettaX.</p>
+<p>The package is organized into four major layers:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">RosettaX.application</span></code> bootstraps the Dash application and global routes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RosettaX.pages</span></code> contains page-specific user interface composition.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RosettaX.workflow</span></code> contains the calibration, upload, parameter, peak, and save workflows.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RosettaX.utils</span></code> contains reusable configuration, parsing, I/O, and data helpers.</p></li>
+</ul>
+<p>For most integrations and internal extensions, the most relevant modules are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">RosettaX.application.main</span></code> for application startup.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RosettaX.utils.runtime_config</span></code> for typed runtime configuration.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RosettaX.utils.reader</span></code> and <code class="docutils literal notranslate"><span class="pre">RosettaX.utils.fcs_metadata</span></code> for FCS file handling.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RosettaX.workflow.upload.services</span></code> for upload payload normalization and persistence.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RosettaX.workflow.parameters</span></code> for scattering-model parameter normalization.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RosettaX.workflow.calibration</span></code> for calibration model construction.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RosettaX.workflow.apply_calibration</span></code> for applying stored calibrations to files.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RosettaX.workflow.peak</span></code> for peak detection and graph helpers.</p></li>
+</ul>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/application.html">Application API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/application.html#main-entry-point">Main entry point</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/application.html#supporting-registration-modules">Supporting registration modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/application.html#usage-notes">Usage notes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/utilities.html">Utilities API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/utilities.html#runtime-configuration">Runtime configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/utilities.html#fcs-file-handling">FCS file handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/utilities.html#module-RosettaX.utils.parser">Parsing and serialization helpers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/utilities.html#related-helper-modules">Related helper modules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/workflows.html">Workflow API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/workflows.html#module-RosettaX.workflow.upload.models">Upload workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/workflows.html#parameter-workflow">Parameter workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/workflows.html#calibration-workflow">Calibration workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/workflows.html#module-RosettaX.workflow.apply_calibration.services">Apply-calibration workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/workflows.html#peak-workflow">Peak workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/workflows.html#module-RosettaX.workflow.save.services">Save and export workflow</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/pages.html">Pages API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/pages.html#page-map">Page map</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/pages.html#representative-page-modules">Representative page modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/pages.html#extension-guidance">Extension guidance</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<section id="module-RosettaX">
+<span id="package-root"></span><h2>Package root<a class="headerlink" href="#module-RosettaX" title="Link to this heading">#</a></h2>
+<p>PyMieSim package initialization.</p>
+</section>
+<section id="top-level-package-map">
+<h2>Top-level package map<a class="headerlink" href="#top-level-package-map" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">RosettaX.application</span></code></dt><dd><p>Application bootstrap, layout registration, callback registration, and server routes.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">RosettaX.pages</span></code></dt><dd><p>Dash pages and section-level composition for fluorescence, scattering, calibration, settings, and help views.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">RosettaX.workflow</span></code></dt><dd><p>Domain logic for data upload, parameter normalization, peak handling, calibration generation, calibration application, and exports.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">RosettaX.utils</span></code></dt><dd><p>Shared helpers used across both the workflow and application layers.</p>
+</dd>
+</dl>
+</section>
+<section id="documentation-conventions">
+<h2>Documentation conventions<a class="headerlink" href="#documentation-conventions" title="Link to this heading">#</a></h2>
+<p>The API pages below focus on the modules that define behavior or stable extension points.
+Pure wiring modules such as page IDs, Dash layout-only wrappers, and callback registration shims are documented at a higher level rather than exhaustively listing every symbol.</p>
+</section>
 </section>
 
 
@@ -484,6 +563,20 @@
                 <dialog id="pst-secondary-sidebar-modal"></dialog>
                 <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-RosettaX">Package root</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#top-level-package-map">Top-level package map</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#documentation-conventions">Documentation conventions</a></li>
+</ul>
+  </nav></div>
 
   <div class="sidebar-secondary-item">
 
