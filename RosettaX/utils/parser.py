@@ -1,5 +1,8 @@
 import argparse
 
+from RosettaX import __version__
+
+
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog="RosettaX")
 
@@ -11,6 +14,11 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Do not open a browser tab on startup.",
     )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
+    )
 
     # ----------------------------
     # Helpers
@@ -19,6 +27,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         group = parser.add_mutually_exclusive_group()
         group.add_argument(
             f"--{name}",
+            f"--{name.replace('_', '-')}",
             dest=dest,
             action="store_true",
             default=argparse.SUPPRESS,
@@ -26,6 +35,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         )
         group.add_argument(
             f"--no_{name}",
+            f"--no-{name.replace('_', '-')}",
             dest=dest,
             action="store_false",
             default=argparse.SUPPRESS,
@@ -91,10 +101,10 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
     parser.add_argument(
         "--fcs_file_path",
+        "--fcs-file-path",
         type=str,
         default=argparse.SUPPRESS,
         help="Path to an FCS file to load on startup for the fluorescence page.",
     )
-
 
     return parser.parse_args(argv)
