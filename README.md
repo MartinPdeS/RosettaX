@@ -28,13 +28,13 @@
 | RosettaX/pages/p02\_fluorescence/sections/s03\_table/layout.py          |       15 |       15 |        0 |        0 |     0.00% |      3-55 |
 | RosettaX/pages/p02\_fluorescence/sections/s03\_table/main.py            |       34 |       34 |        0 |        0 |     0.00% |     3-112 |
 | RosettaX/pages/p02\_fluorescence/sections/s04\_calibration/callbacks.py |       61 |       61 |       20 |        0 |     0.00% |     3-255 |
-| RosettaX/pages/p02\_fluorescence/sections/s04\_calibration/layout.py    |       46 |       46 |        2 |        0 |     0.00% |     3-395 |
+| RosettaX/pages/p02\_fluorescence/sections/s04\_calibration/layout.py    |       44 |       44 |        2 |        0 |     0.00% |     3-369 |
 | RosettaX/pages/p02\_fluorescence/sections/s04\_calibration/main.py      |       24 |       24 |        0 |        0 |     0.00% |      3-71 |
 | RosettaX/pages/p02\_fluorescence/sections/s05\_save/callbacks.py        |        5 |        5 |        0 |        0 |     0.00% |      3-15 |
 | RosettaX/pages/p02\_fluorescence/sections/s05\_save/layout.py           |        7 |        7 |        0 |        0 |     0.00% |      3-19 |
 | RosettaX/pages/p02\_fluorescence/sections/s05\_save/main.py             |       22 |       22 |        0 |        0 |     0.00% |      3-77 |
 | RosettaX/pages/p02\_fluorescence/state.py                               |       82 |       82 |       30 |        0 |     0.00% |     3-332 |
-| RosettaX/pages/p03\_scattering/backend.py                               |      111 |      111 |       24 |        0 |     0.00% |     3-383 |
+| RosettaX/pages/p03\_scattering/backend.py                               |      202 |      202 |       66 |        0 |     0.00% |     3-852 |
 | RosettaX/pages/p03\_scattering/ids.py                                   |      141 |      141 |        0 |        0 |     0.00% |     3-236 |
 | RosettaX/pages/p03\_scattering/main.py                                  |       19 |       19 |        2 |        0 |     0.00% |     2-109 |
 | RosettaX/pages/p03\_scattering/sections/s00\_header.py                  |       22 |       22 |        0 |        0 |     0.00% |     3-173 |
@@ -45,12 +45,12 @@
 | RosettaX/pages/p03\_scattering/sections/s05\_calibration.py             |      130 |      130 |       24 |        0 |     0.00% |     3-882 |
 | RosettaX/pages/p03\_scattering/sections/s06\_save.py                    |       24 |       24 |        0 |        0 |     0.00% |      3-80 |
 | RosettaX/pages/p03\_scattering/state.py                                 |       36 |       36 |        6 |        0 |     0.00% |     3-127 |
-| RosettaX/pages/p04\_calibrate/ids.py                                    |       37 |       37 |        0 |        0 |     0.00% |      3-69 |
+| RosettaX/pages/p04\_calibrate/ids.py                                    |       43 |       43 |        0 |        0 |     0.00% |     3-105 |
 | RosettaX/pages/p04\_calibrate/main.py                                   |       33 |       33 |        2 |        0 |     0.00% |     3-168 |
 | RosettaX/pages/p04\_calibrate/sections/s01\_header.py                   |       10 |       10 |        0 |        0 |     0.00% |      3-40 |
-| RosettaX/pages/p04\_calibrate/sections/s02\_calibration\_picker.py      |      239 |      239 |       52 |        0 |     0.00% |    3-1378 |
+| RosettaX/pages/p04\_calibrate/sections/s02\_calibration\_picker.py      |      271 |      271 |       56 |        0 |     0.00% |    3-1591 |
 | RosettaX/pages/p04\_calibrate/sections/s03\_file\_picker.py             |      128 |      128 |       40 |        0 |     0.00% |     3-547 |
-| RosettaX/pages/p04\_calibrate/sections/s04\_apply.py                    |       92 |       92 |       12 |        0 |     0.00% |     3-607 |
+| RosettaX/pages/p04\_calibrate/sections/s04\_apply.py                    |      114 |      114 |       16 |        0 |     0.00% |     3-760 |
 | RosettaX/pages/p04\_calibrate/state.py                                  |       29 |       29 |        4 |        0 |     0.00% |     3-106 |
 | RosettaX/pages/p05\_settings/ids.py                                     |       56 |       56 |        0 |        0 |     0.00% |     4-114 |
 | RosettaX/pages/p05\_settings/main.py                                    |       20 |       20 |        2 |        0 |     0.00% |      3-56 |
@@ -69,16 +69,16 @@
 | RosettaX/utils/runtime\_config.py                                       |      345 |       29 |      136 |       20 |    88.98% |296-\>303, 311-312, 354-\>357, 383-384, 440, 458, 498, 520-528, 567-\>570, 577, 608, 615, 647, 652, 658-661, 759, 816, 849, 866-867, 949, 951-\>954, 961, 979-981 |
 | RosettaX/workflow/apply\_calibration/fluorescence.py                    |       46 |       46 |       16 |        0 |     0.00% |     3-187 |
 | RosettaX/workflow/apply\_calibration/io.py                              |       81 |       81 |       30 |        0 |     0.00% |     3-297 |
-| RosettaX/workflow/apply\_calibration/scattering.py                      |      236 |      236 |       76 |        0 |     0.00% |    3-1061 |
+| RosettaX/workflow/apply\_calibration/scattering.py                      |      369 |      369 |      100 |        0 |     0.00% |    3-1696 |
 | RosettaX/workflow/apply\_calibration/services.py                        |       68 |       68 |       20 |        0 |     0.00% |     3-404 |
 | RosettaX/workflow/calibration/fluorescence.py                           |      139 |      139 |       22 |        0 |     0.00% |     3-873 |
 | RosettaX/workflow/calibration/mie\_relation.py                          |      129 |      129 |       44 |        0 |     0.00% |     3-651 |
-| RosettaX/workflow/calibration/scattering.py                             |      255 |      255 |       80 |        0 |     0.00% |    3-1195 |
-| RosettaX/workflow/calibration/scattering\_services.py                   |      159 |      159 |       40 |        0 |     0.00% |     3-759 |
+| RosettaX/workflow/calibration/scattering.py                             |      439 |      439 |       94 |        0 |     0.00% |    3-2076 |
+| RosettaX/workflow/calibration/scattering\_services.py                   |      188 |      188 |       52 |        0 |     0.00% |     3-918 |
 | RosettaX/workflow/model/scattering.py                                   |       58 |       58 |        4 |        0 |     0.00% |     3-281 |
 | RosettaX/workflow/parameters/detector\_configuration.py                 |       26 |       26 |        6 |        0 |     0.00% |     3-143 |
 | RosettaX/workflow/parameters/loader.py                                  |       38 |       38 |       10 |        0 |     0.00% |     2-106 |
-| RosettaX/workflow/parameters/model.py                                   |       86 |       86 |       20 |        0 |     0.00% |     3-427 |
+| RosettaX/workflow/parameters/model.py                                   |      105 |      105 |       28 |        0 |     0.00% |     3-520 |
 | RosettaX/workflow/parameters/optical\_preview.py                        |      219 |      219 |       38 |        0 |     0.00% |     3-950 |
 | RosettaX/workflow/parameters/particle\_presets.py                       |        8 |        8 |        0 |        0 |     0.00% |      3-64 |
 | RosettaX/workflow/parameters/services.py                                |        6 |        6 |        0 |        0 |     0.00% |      1-24 |
@@ -122,7 +122,7 @@
 | RosettaX/workflow/upload/layout.py                                      |       32 |       32 |        4 |        0 |     0.00% |     3-122 |
 | RosettaX/workflow/upload/models.py                                      |       15 |       15 |        0 |        0 |     0.00% |      3-63 |
 | RosettaX/workflow/upload/services.py                                    |       82 |       82 |       24 |        0 |     0.00% |     3-286 |
-| **TOTAL**                                                               | **9933** | **9031** | **2648** |   **61** | **9.26%** |           |
+| **TOTAL**                                                               | **10447** | **9545** | **2756** |   **61** | **8.82%** |           |
 
 4 files skipped due to complete coverage.
 
