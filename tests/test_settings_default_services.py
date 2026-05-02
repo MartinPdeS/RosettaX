@@ -85,3 +85,33 @@ class Test_SettingsDefaultServicesPeakTableSortOrder:
             nested_profile_payload["scattering_calibration"]["peak_table_sort_order"]
             == "descending"
         )
+
+
+class Test_SettingsDefaultServicesCanonicalSharedPaths:
+    def test_build_nested_profile_payload_saves_shared_calibration_fields_to_canonical_paths(self):
+        nested_profile_payload = services.build_nested_profile_payload(
+            {
+                "mesf_values": "100, 200, 300",
+                "peak_count": 5,
+                "default_fluorescence_peak_process": "manual_1d",
+                "default_gating_channel": "SSC-A",
+                "default_gating_threshold": 123.4,
+                "target_mie_relation_xscale": "log",
+                "target_mie_relation_yscale": "linear",
+                "n_bins": 128,
+                "show_calibration": "no",
+            }
+        )
+
+        assert nested_profile_payload["calibration"]["mesf_values"] == [100.0, 200.0, 300.0]
+        assert nested_profile_payload["calibration"]["peak_count"] == 5
+        assert (
+            nested_profile_payload["calibration"]["default_fluorescence_peak_process"]
+            == "manual_1d"
+        )
+        assert nested_profile_payload["calibration"]["default_gating_channel"] == "SSC-A"
+        assert nested_profile_payload["calibration"]["default_gating_threshold"] == 123.4
+        assert nested_profile_payload["calibration"]["target_mie_relation_xscale"] == "log"
+        assert nested_profile_payload["calibration"]["target_mie_relation_yscale"] == "linear"
+        assert nested_profile_payload["calibration"]["n_bins_for_plots"] == 128
+        assert nested_profile_payload["calibration"]["show_calibration_plot_by_default"] is False

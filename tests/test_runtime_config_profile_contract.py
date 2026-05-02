@@ -82,8 +82,11 @@ class Test_RuntimeConfigProfileContract:
             "ui",
             "files",
             "calibration",
+            "fluorescence_calibration",
             "optics",
             "particle_model",
+            "scattering_calibration",
+            "metadata",
             "visualization",
         }
 

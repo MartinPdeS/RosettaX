@@ -467,20 +467,20 @@ class DefaultProfile:
         Return a short description for one settings section.
         """
         descriptions = {
-            "fluorescence": (
-                "Defaults specific to MESF based fluorescence calibration."
-            ),
-            "scattering": (
-                "Defaults specific to Mie based scattering calibration."
+            "miscellaneous": (
+                "General application preferences, startup files, and profile-wide defaults."
             ),
             "calibration": (
-                "Shared workflow parameters used by calibration routines."
+                "Shared controls reused by calibration, peak detection, and apply-calibration workflows."
+            ),
+            "fluorescence": (
+                "Defaults used by the fluorescence peak-detection and MESF workflow."
+            ),
+            "scattering": (
+                "Defaults for scattering peak detection, particle tables, and Mie-model setup."
             ),
             "visualization": (
                 "Plot appearance, graph sizing, and display defaults."
-            ),
-            "miscellaneous": (
-                "File paths, theme, and general application preferences."
             ),
         }
 

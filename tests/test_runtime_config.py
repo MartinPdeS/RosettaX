@@ -64,6 +64,9 @@ class Test_RuntimeConfig:
 
         assert exported_payload["particle_model"]["mie_model"] == "Solid Sphere"
         assert exported_payload["particle_model"]["particle_refractive_index"] == pytest.approx(1.45)
+        assert exported_payload["particle_model"]["particle_diameter_nm"] == []
+        assert exported_payload["particle_model"]["core_diameter_nm"] == []
+        assert exported_payload["particle_model"]["shell_thickness_nm"] == []
 
         assert exported_payload["visualization"]["default_line_width"] == pytest.approx(2.0)
         assert exported_payload["visualization"]["show_grid_by_default"] is True
@@ -345,6 +348,59 @@ class Test_RuntimeConfig:
 
         assert exported_payload["ui"]["theme_mode"] == "dark"
         assert exported_payload["optics"]["wavelength_nm"] == pytest.approx(488.0)
+
+    def test_from_dict_migrates_legacy_profile_paths_and_normalizes_values(self) -> None:
+        runtime_config = RuntimeConfig.from_dict(
+            {
+                "fluorescence_calibration": {
+                    "mesf_values": [1.0, 2.0, 3.0],
+                    "peak_count": 4,
+                    "default_peak_process": "manual_1d",
+                },
+                "scattering_calibration": {
+                    "default_gating_channel": None,
+                    "default_gating_threshold": None,
+                    "target_mie_relation_xscale": "log",
+                    "target_mie_relation_yscale": "linear",
+                },
+                "visualization": {
+                    "n_bins": 128,
+                    "show_calibration": False,
+                },
+                "files": {
+                    "fluorescence_fcs_file_path": None,
+                },
+                "particle_model": {
+                    "particle_diameter_nm": 100.0,
+                    "core_diameter_nm": 80.0,
+                    "shell_thickness_nm": 10.0,
+                },
+            }
+        )
+
+        exported_payload = runtime_config.to_dict()
+
+        assert exported_payload["calibration"]["mesf_values"] == [1.0, 2.0, 3.0]
+        assert exported_payload["calibration"]["peak_count"] == 4
+        assert exported_payload["calibration"]["default_fluorescence_peak_process"] == "manual_1d"
+        assert exported_payload["calibration"]["default_gating_channel"] == ""
+        assert exported_payload["calibration"]["default_gating_threshold"] == pytest.approx(0.0)
+        assert exported_payload["calibration"]["target_mie_relation_xscale"] == "log"
+        assert exported_payload["calibration"]["target_mie_relation_yscale"] == "linear"
+        assert exported_payload["calibration"]["n_bins_for_plots"] == 128
+        assert exported_payload["calibration"]["show_calibration_plot_by_default"] is False
+        assert exported_payload["files"]["fluorescence_fcs_file_path"] == ""
+        assert exported_payload["particle_model"]["particle_diameter_nm"] == [100.0]
+        assert exported_payload["particle_model"]["core_diameter_nm"] == [80.0]
+        assert exported_payload["particle_model"]["shell_thickness_nm"] == [10.0]
+
+        assert "mesf_values" not in exported_payload["fluorescence_calibration"]
+        assert "peak_count" not in exported_payload["fluorescence_calibration"]
+        assert "default_peak_process" not in exported_payload["fluorescence_calibration"]
+        assert "default_gating_channel" not in exported_payload["scattering_calibration"]
+        assert "default_gating_threshold" not in exported_payload["scattering_calibration"]
+        assert "target_mie_relation_xscale" not in exported_payload["scattering_calibration"]
+        assert "target_mie_relation_yscale" not in exported_payload["scattering_calibration"]
 
     def test_validate_raises_for_invalid_known_value_after_direct_data_mutation(self) -> None:
         runtime_config = RuntimeConfig.from_dict({})
