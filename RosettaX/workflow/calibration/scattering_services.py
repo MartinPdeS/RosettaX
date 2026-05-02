@@ -496,6 +496,159 @@ def build_calibration_standard_mie_relation_figure(
     return figure
 
 
+def build_calibration_standard_mie_relation_figure_store(
+    *,
+    mie_model: Any,
+    current_table_rows: Optional[list[dict[str, Any]]],
+    medium_refractive_index: Any,
+    particle_refractive_index: Any,
+    core_refractive_index: Any,
+    shell_refractive_index: Any,
+    wavelength_nm: Any,
+    detector_numerical_aperture: Any,
+    detector_cache_numerical_aperture: Any,
+    blocker_bar_numerical_aperture: Any,
+    detector_sampling: Any,
+    detector_phi_angle_degree: Any,
+    detector_gamma_angle_degree: Any,
+    simulated_curve_point_count: int,
+    logger: logging.Logger,
+) -> dict[str, Any]:
+    """
+    Build a serialized calibration standard Mie relation figure from table rows.
+    """
+    try:
+        resolved_mie_model = resolve_mie_model(
+            mie_model,
+        )
+
+        optical_parameters = parse_optical_parameters(
+            medium_refractive_index=medium_refractive_index,
+            particle_refractive_index=particle_refractive_index,
+            core_refractive_index=core_refractive_index,
+            shell_refractive_index=shell_refractive_index,
+            wavelength_nm=wavelength_nm,
+            detector_numerical_aperture=detector_numerical_aperture,
+            detector_cache_numerical_aperture=detector_cache_numerical_aperture,
+            blocker_bar_numerical_aperture=blocker_bar_numerical_aperture,
+            detector_sampling=detector_sampling,
+            detector_phi_angle_degree=detector_phi_angle_degree,
+            detector_gamma_angle_degree=detector_gamma_angle_degree,
+        )
+
+        if resolved_mie_model == "Core/Shell Sphere":
+            core_diameters_nm: list[float] = []
+            shell_thicknesses_nm: list[float] = []
+            outer_diameters_nm: list[float] = []
+            expected_coupling_values: list[float] = []
+
+            for row in current_table_rows or []:
+                if not isinstance(row, dict):
+                    continue
+
+                try:
+                    core_diameter_nm = float(row.get("core_diameter_nm"))
+                    shell_thickness_nm = float(row.get("shell_thickness_nm"))
+                    expected_coupling = float(row.get("expected_coupling"))
+                except (TypeError, ValueError):
+                    continue
+
+                if (
+                    core_diameter_nm <= 0.0
+                    or shell_thickness_nm <= 0.0
+                    or expected_coupling <= 0.0
+                ):
+                    continue
+
+                core_diameters_nm.append(core_diameter_nm)
+                shell_thicknesses_nm.append(shell_thickness_nm)
+                outer_diameters_nm.append(
+                    core_diameter_nm + 2.0 * shell_thickness_nm,
+                )
+                expected_coupling_values.append(expected_coupling)
+
+            dense_outer_diameters_nm, dense_expected_coupling_values = build_core_shell_dense_simulated_coupling_curve(
+                core_diameters_nm=np.asarray(
+                    core_diameters_nm,
+                    dtype=float,
+                ),
+                shell_thicknesses_nm=np.asarray(
+                    shell_thicknesses_nm,
+                    dtype=float,
+                ),
+                optical_parameters=optical_parameters,
+                simulated_curve_point_count=simulated_curve_point_count,
+            )
+
+            figure = build_calibration_standard_mie_relation_figure(
+                particle_diameters_nm=np.asarray(
+                    outer_diameters_nm,
+                    dtype=float,
+                ),
+                expected_coupling_values=np.asarray(
+                    expected_coupling_values,
+                    dtype=float,
+                ),
+                dense_particle_diameters_nm=dense_outer_diameters_nm,
+                dense_expected_coupling_values=dense_expected_coupling_values,
+                simulated_curve_point_count=simulated_curve_point_count,
+            )
+
+        else:
+            particle_diameters_nm: list[float] = []
+            expected_coupling_values: list[float] = []
+
+            for row in current_table_rows or []:
+                if not isinstance(row, dict):
+                    continue
+
+                try:
+                    particle_diameter_nm = float(row.get("particle_diameter_nm"))
+                    expected_coupling = float(row.get("expected_coupling"))
+                except (TypeError, ValueError):
+                    continue
+
+                if particle_diameter_nm <= 0.0 or expected_coupling <= 0.0:
+                    continue
+
+                particle_diameters_nm.append(particle_diameter_nm)
+                expected_coupling_values.append(expected_coupling)
+
+            dense_particle_diameters_nm, dense_expected_coupling_values = build_solid_sphere_dense_simulated_coupling_curve(
+                particle_diameters_nm=np.asarray(
+                    particle_diameters_nm,
+                    dtype=float,
+                ),
+                optical_parameters=optical_parameters,
+                simulated_curve_point_count=simulated_curve_point_count,
+            )
+
+            figure = build_calibration_standard_mie_relation_figure(
+                particle_diameters_nm=np.asarray(
+                    particle_diameters_nm,
+                    dtype=float,
+                ),
+                expected_coupling_values=np.asarray(
+                    expected_coupling_values,
+                    dtype=float,
+                ),
+                dense_particle_diameters_nm=dense_particle_diameters_nm,
+                dense_expected_coupling_values=dense_expected_coupling_values,
+                simulated_curve_point_count=simulated_curve_point_count,
+            )
+
+        return figure.to_dict()
+
+    except Exception:
+        logger.exception(
+            "Failed to build calibration standard Mie relation figure store from current_table_rows=%r",
+            current_table_rows,
+        )
+        return plottings._make_info_figure(
+            "Failed to render calibration standard Mie relation graph."
+        ).to_dict()
+
+
 def build_missing_input_result(
     message: str,
 ) -> CalibrationResult:

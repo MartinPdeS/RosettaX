@@ -83,6 +83,7 @@ def _build_body(section) -> dbc.CardBody:
                     "height": "18px",
                 },
             ),
+            _build_graph_block(section),
             dash.html.Div(
                 style={
                     "height": "12px",
@@ -199,6 +200,34 @@ def _build_action_panel(section) -> dbc.Card:
                 0.04,
             ),
         ),
+    )
+
+
+def _build_graph_block(section) -> dash.html.Div:
+    """
+    Build the calibration graph panel.
+    """
+    return dash.html.Div(
+        [
+            _build_graph_panel_card(
+                section,
+                title="Fluorescence calibration fit",
+                subtitle=(
+                    "Measured fluorescence peak positions mapped to calibrated "
+                    "MESF units."
+                ),
+                graph_id=section.ids.graph_calibration,
+                footer_content=_build_calibration_footer(section),
+            ),
+        ],
+        style={
+            "display": "flex",
+            "gap": "24px",
+            "alignItems": "stretch",
+            "width": "100%",
+            "overflowX": "auto",
+            "overflowY": "visible",
+        },
     )
 
 
