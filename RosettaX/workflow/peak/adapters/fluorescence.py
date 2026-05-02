@@ -501,7 +501,7 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
             descending=descending,
         )
 
-        for x_value in normalized_x_values:
+        for normalized_x_value in normalized_x_values:
             empty_row_index = self.find_first_empty_value_row_index(
                 rows=rows,
                 column_name=target_column_name,
@@ -513,7 +513,7 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
                 )
                 empty_row_index = len(rows) - 1
 
-            rows[empty_row_index][target_column_name] = x_value
+            rows[empty_row_index][target_column_name] = normalized_x_value
 
         return self.normalize_table_data(
             table_data=rows,

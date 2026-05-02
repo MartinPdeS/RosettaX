@@ -55,6 +55,26 @@ class Test_FluorescencePeakTableSortOrder:
 
 
 class Test_ScatteringPeakTableSortOrder:
+    def test_apply_peak_process_result_to_table_sorts_values_ascending_by_default(self):
+        adapter = ScatteringPeakWorkflowAdapter()
+
+        table_result = adapter.apply_peak_process_result_to_table(
+            table_data=[
+                {"particle_diameter_nm": "100", "measured_peak_position": ""},
+                {"particle_diameter_nm": "200", "measured_peak_position": ""},
+                {"particle_diameter_nm": "300", "measured_peak_position": ""},
+            ],
+            result={
+                "new_peak_positions": [30, 10, 20],
+            },
+            context={
+                "mie_model": "Solid Sphere",
+            },
+            logger=logger,
+        )
+
+        assert [row["measured_peak_position"] for row in table_result] == [10, 20, 30]
+
     def test_apply_peak_process_result_to_table_sorts_values_descending_from_runtime_config(
         self,
     ):
