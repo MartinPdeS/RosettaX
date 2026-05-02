@@ -7,14 +7,11 @@ import dash
 import dash_bootstrap_components as dbc
 from dash import Input, Output, State, callback, html
 
-from ...state import SettingsPageState
-from RosettaX.utils import styling
-from RosettaX.utils import ui_forms
+from RosettaX.utils import styling, ui_forms
 from RosettaX.utils.runtime_config import RuntimeConfig
 
-from . import schema
-from . import services
-
+from ...state import SettingsPageState
+from . import schema, services
 
 logger = logging.getLogger(__name__)
 
@@ -479,9 +476,7 @@ class DefaultProfile:
             "scattering": (
                 "Defaults for scattering peak detection, particle tables, and Mie-model setup."
             ),
-            "visualization": (
-                "Plot appearance, graph sizing, and display defaults."
-            ),
+            "visualization": ("Plot appearance, graph sizing, and display defaults."),
         }
 
         return descriptions.get(
@@ -523,8 +518,7 @@ class DefaultProfile:
         Build callback outputs for all form values.
         """
         return [
-            Output(field_ids[field_name], "value")
-            for field_name in ordered_field_names
+            Output(field_ids[field_name], "value") for field_name in ordered_field_names
         ]
 
     def _build_form_value_inputs(
@@ -537,8 +531,7 @@ class DefaultProfile:
         Build callback inputs for all form values.
         """
         return [
-            Input(field_ids[field_name], "value")
-            for field_name in ordered_field_names
+            Input(field_ids[field_name], "value") for field_name in ordered_field_names
         ]
 
     def _build_page_state(
@@ -576,9 +569,7 @@ class DefaultProfile:
         """
         Build no update response for the profile load callback.
         """
-        return tuple(
-            [dash.no_update] * len(ordered_field_names)
-        ) + (dash.no_update,)
+        return tuple([dash.no_update] * len(ordered_field_names)) + (dash.no_update,)
 
     def _build_no_update_save_response(self) -> tuple[Any, Any, Any, Any]:
         """
@@ -655,9 +646,12 @@ class DefaultProfile:
                     ordered_field_names=ordered_field_names,
                 )
 
-            saved_profile = services.get_saved_profile(
-                dropdown_value,
-            ) or {}
+            saved_profile = (
+                services.get_saved_profile(
+                    dropdown_value,
+                )
+                or {}
+            )
 
             runtime_config = RuntimeConfig.from_dict(
                 saved_profile,

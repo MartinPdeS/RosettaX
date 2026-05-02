@@ -148,7 +148,7 @@ class RuntimeConfig:
         ),
         "calibration.default_fluorescence_peak_process": RuntimeConfigField(
             expected_type=str,
-            default="automatic_1d",
+            default="Automatic 1D",
             description="Preferred fluorescence peak detection process.",
         ),
         "calibration.histogram_scale": RuntimeConfigField(
@@ -238,7 +238,7 @@ class RuntimeConfig:
         ),
         "scattering_calibration.default_peak_process": RuntimeConfigField(
             expected_type=str,
-            default="automatic_1d",
+            default="Automatic 1D",
             description="Preferred scattering peak detection process.",
         ),
         # ---------------------------------------------------------------------

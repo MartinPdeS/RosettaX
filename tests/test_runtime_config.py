@@ -59,16 +59,24 @@ class Test_RuntimeConfig:
         assert exported_payload["calibration"]["n_bins_for_plots"] == 256
 
         assert exported_payload["optics"]["wavelength_nm"] == pytest.approx(488.0)
-        assert exported_payload["optics"]["medium_refractive_index"] == pytest.approx(1.333)
-        assert exported_payload["optics"]["detector_numerical_aperture"] == pytest.approx(0.45)
+        assert exported_payload["optics"]["medium_refractive_index"] == pytest.approx(
+            1.333
+        )
+        assert exported_payload["optics"][
+            "detector_numerical_aperture"
+        ] == pytest.approx(0.45)
 
         assert exported_payload["particle_model"]["mie_model"] == "Solid Sphere"
-        assert exported_payload["particle_model"]["particle_refractive_index"] == pytest.approx(1.45)
+        assert exported_payload["particle_model"][
+            "particle_refractive_index"
+        ] == pytest.approx(1.45)
         assert exported_payload["particle_model"]["particle_diameter_nm"] == []
         assert exported_payload["particle_model"]["core_diameter_nm"] == []
         assert exported_payload["particle_model"]["shell_thickness_nm"] == []
 
-        assert exported_payload["visualization"]["default_line_width"] == pytest.approx(2.0)
+        assert exported_payload["visualization"]["default_line_width"] == pytest.approx(
+            2.0
+        )
         assert exported_payload["visualization"]["show_grid_by_default"] is True
 
     def test_unknown_paths_are_preserved_by_default(self) -> None:
@@ -125,25 +133,35 @@ class Test_RuntimeConfig:
     def test_get_path_returns_explicit_default_for_missing_unknown_value(self) -> None:
         runtime_config = RuntimeConfig.from_dict({})
 
-        assert runtime_config.get_path("unknown.path", default=532.0) == pytest.approx(532.0)
+        assert runtime_config.get_path("unknown.path", default=532.0) == pytest.approx(
+            532.0
+        )
 
-    def test_get_path_returns_default_when_intermediate_value_is_not_dictionary(self) -> None:
+    def test_get_path_returns_default_when_intermediate_value_is_not_dictionary(
+        self,
+    ) -> None:
         runtime_config = RuntimeConfig.from_dict(
             {
                 "custom": 488.0,
             }
         )
 
-        assert runtime_config.get_path("custom.wavelength_nm", default=532.0) == pytest.approx(532.0)
+        assert runtime_config.get_path(
+            "custom.wavelength_nm", default=532.0
+        ) == pytest.approx(532.0)
 
     def test_set_path_creates_nested_dictionaries_for_unknown_path(self) -> None:
         runtime_config = RuntimeConfig.from_dict({})
 
         runtime_config.set_path("custom.detector.numerical_aperture", 0.75)
 
-        assert runtime_config.get_path("custom.detector.numerical_aperture") == pytest.approx(0.75)
+        assert runtime_config.get_path(
+            "custom.detector.numerical_aperture"
+        ) == pytest.approx(0.75)
 
-    def test_set_path_replaces_non_dictionary_intermediate_value_for_unknown_path(self) -> None:
+    def test_set_path_replaces_non_dictionary_intermediate_value_for_unknown_path(
+        self,
+    ) -> None:
         runtime_config = RuntimeConfig.from_dict(
             {
                 "custom": "invalid intermediate value",
@@ -152,7 +170,9 @@ class Test_RuntimeConfig:
 
         runtime_config.set_path("custom.detector.numerical_aperture", 0.75)
 
-        assert runtime_config.get_path("custom.detector.numerical_aperture") == pytest.approx(0.75)
+        assert runtime_config.get_path(
+            "custom.detector.numerical_aperture"
+        ) == pytest.approx(0.75)
 
     def test_empty_path_raises_value_error(self) -> None:
         runtime_config = RuntimeConfig.from_dict({})
@@ -229,7 +249,9 @@ class Test_RuntimeConfig:
         )
 
         assert runtime_config.get_float("optics.wavelength_nm") == pytest.approx(532.5)
-        assert runtime_config.to_dict()["optics"]["wavelength_nm"] == pytest.approx(532.5)
+        assert runtime_config.to_dict()["optics"]["wavelength_nm"] == pytest.approx(
+            532.5
+        )
 
     def test_get_float_returns_default_for_invalid_unknown_value(self) -> None:
         runtime_config = RuntimeConfig.from_dict(
@@ -240,7 +262,9 @@ class Test_RuntimeConfig:
             }
         )
 
-        assert runtime_config.get_float("custom.wavelength_nm", default=488.0) == pytest.approx(488.0)
+        assert runtime_config.get_float(
+            "custom.wavelength_nm", default=488.0
+        ) == pytest.approx(488.0)
 
     def test_get_int_coerces_known_integer_like_string(self) -> None:
         runtime_config = RuntimeConfig.from_dict(
@@ -304,7 +328,9 @@ class Test_RuntimeConfig:
     def test_set_path_rejects_invalid_histogram_scale(self) -> None:
         runtime_config = RuntimeConfig.from_dict({})
 
-        with pytest.raises(RuntimeConfigValidationError, match="calibration.histogram_scale"):
+        with pytest.raises(
+            RuntimeConfigValidationError, match="calibration.histogram_scale"
+        ):
             runtime_config.set_path("calibration.histogram_scale", "sqrt")
 
     def test_set_path_rejects_negative_wavelength(self) -> None:
@@ -316,21 +342,31 @@ class Test_RuntimeConfig:
     def test_set_path_rejects_invalid_numerical_aperture_above_maximum(self) -> None:
         runtime_config = RuntimeConfig.from_dict({})
 
-        with pytest.raises(RuntimeConfigValidationError, match="optics.detector_numerical_aperture"):
+        with pytest.raises(
+            RuntimeConfigValidationError, match="optics.detector_numerical_aperture"
+        ):
             runtime_config.set_path("optics.detector_numerical_aperture", 2.0)
 
     def test_set_path_rejects_non_integer_peak_count(self) -> None:
         runtime_config = RuntimeConfig.from_dict({})
 
-        with pytest.raises(RuntimeConfigValidationError, match="calibration.peak_count"):
+        with pytest.raises(
+            RuntimeConfigValidationError, match="calibration.peak_count"
+        ):
             runtime_config.set_path("calibration.peak_count", 4.2)
 
     def test_set_path_accepts_numpy_array_for_known_list_path(self) -> None:
         runtime_config = RuntimeConfig.from_dict({})
 
-        runtime_config.set_path("calibration.mesf_values", np.asarray([100.0, 200.0, 300.0]))
+        runtime_config.set_path(
+            "calibration.mesf_values", np.asarray([100.0, 200.0, 300.0])
+        )
 
-        assert runtime_config.get_path("calibration.mesf_values") == [100.0, 200.0, 300.0]
+        assert runtime_config.get_path("calibration.mesf_values") == [
+            100.0,
+            200.0,
+            300.0,
+        ]
 
     def test_from_dict_falls_back_to_default_for_invalid_known_values(self) -> None:
         runtime_config = RuntimeConfig.from_dict(
@@ -349,7 +385,9 @@ class Test_RuntimeConfig:
         assert exported_payload["ui"]["theme_mode"] == "dark"
         assert exported_payload["optics"]["wavelength_nm"] == pytest.approx(488.0)
 
-    def test_from_dict_migrates_legacy_profile_paths_and_normalizes_values(self) -> None:
+    def test_from_dict_migrates_legacy_profile_paths_and_normalizes_values(
+        self,
+    ) -> None:
         runtime_config = RuntimeConfig.from_dict(
             {
                 "fluorescence_calibration": {
@@ -382,13 +420,20 @@ class Test_RuntimeConfig:
 
         assert exported_payload["calibration"]["mesf_values"] == [1.0, 2.0, 3.0]
         assert exported_payload["calibration"]["peak_count"] == 4
-        assert exported_payload["calibration"]["default_fluorescence_peak_process"] == "manual_1d"
+        assert (
+            exported_payload["calibration"]["default_fluorescence_peak_process"]
+            == "manual_1d"
+        )
         assert exported_payload["calibration"]["default_gating_channel"] == ""
-        assert exported_payload["calibration"]["default_gating_threshold"] == pytest.approx(0.0)
+        assert exported_payload["calibration"][
+            "default_gating_threshold"
+        ] == pytest.approx(0.0)
         assert exported_payload["calibration"]["target_mie_relation_xscale"] == "log"
         assert exported_payload["calibration"]["target_mie_relation_yscale"] == "linear"
         assert exported_payload["calibration"]["n_bins_for_plots"] == 128
-        assert exported_payload["calibration"]["show_calibration_plot_by_default"] is False
+        assert (
+            exported_payload["calibration"]["show_calibration_plot_by_default"] is False
+        )
         assert exported_payload["files"]["fluorescence_fcs_file_path"] == ""
         assert exported_payload["particle_model"]["particle_diameter_nm"] == [100.0]
         assert exported_payload["particle_model"]["core_diameter_nm"] == [80.0]
@@ -396,13 +441,27 @@ class Test_RuntimeConfig:
 
         assert "mesf_values" not in exported_payload["fluorescence_calibration"]
         assert "peak_count" not in exported_payload["fluorescence_calibration"]
-        assert "default_peak_process" not in exported_payload["fluorescence_calibration"]
-        assert "default_gating_channel" not in exported_payload["scattering_calibration"]
-        assert "default_gating_threshold" not in exported_payload["scattering_calibration"]
-        assert "target_mie_relation_xscale" not in exported_payload["scattering_calibration"]
-        assert "target_mie_relation_yscale" not in exported_payload["scattering_calibration"]
+        assert (
+            "default_peak_process" not in exported_payload["fluorescence_calibration"]
+        )
+        assert (
+            "default_gating_channel" not in exported_payload["scattering_calibration"]
+        )
+        assert (
+            "default_gating_threshold" not in exported_payload["scattering_calibration"]
+        )
+        assert (
+            "target_mie_relation_xscale"
+            not in exported_payload["scattering_calibration"]
+        )
+        assert (
+            "target_mie_relation_yscale"
+            not in exported_payload["scattering_calibration"]
+        )
 
-    def test_validate_raises_for_invalid_known_value_after_direct_data_mutation(self) -> None:
+    def test_validate_raises_for_invalid_known_value_after_direct_data_mutation(
+        self,
+    ) -> None:
         runtime_config = RuntimeConfig.from_dict({})
 
         runtime_config.data["ui"]["theme_mode"] = "pink"
@@ -425,7 +484,9 @@ class Test_RuntimeConfig:
         normalized_runtime_config = runtime_config.normalized()
 
         assert normalized_runtime_config.get_path("ui.theme_mode") == "light"
-        assert normalized_runtime_config.get_path("optics.wavelength_nm") == pytest.approx(640.0)
+        assert normalized_runtime_config.get_path(
+            "optics.wavelength_nm"
+        ) == pytest.approx(640.0)
         assert normalized_runtime_config.get_path("calibration.peak_count") == 6
 
     def test_update_preserves_backward_compatible_flat_keys(self) -> None:
@@ -456,7 +517,9 @@ class Test_RuntimeConfig:
     def test_update_paths_rejects_invalid_known_value(self) -> None:
         runtime_config = RuntimeConfig.from_dict({})
 
-        with pytest.raises(RuntimeConfigValidationError, match="particle_model.mie_model"):
+        with pytest.raises(
+            RuntimeConfigValidationError, match="particle_model.mie_model"
+        ):
             runtime_config.update_paths(
                 **{
                     "particle_model.mie_model": "Cylinder",
@@ -495,7 +558,9 @@ class Test_RuntimeConfig:
         assert runtime_config.get_path("theme_mode") == "dark"
         assert updated_runtime_config.get_path("theme_mode") == "light"
 
-    def test_with_path_updates_returns_modified_copy_without_mutating_original(self) -> None:
+    def test_with_path_updates_returns_modified_copy_without_mutating_original(
+        self,
+    ) -> None:
         runtime_config = RuntimeConfig.from_dict(
             {
                 "ui": {
@@ -663,8 +728,12 @@ class Test_RuntimeConfig:
             encoding="utf-8",
         )
 
-        monkeypatch.setattr(runtime_config_module.directories, "default_profile", default_profile_path)
-        monkeypatch.setattr(runtime_config_module.directories, "profiles", profiles_directory)
+        monkeypatch.setattr(
+            runtime_config_module.directories, "default_profile", default_profile_path
+        )
+        monkeypatch.setattr(
+            runtime_config_module.directories, "profiles", profiles_directory
+        )
 
         runtime_config = RuntimeConfig.from_default_profile()
 
@@ -691,8 +760,14 @@ class Test_RuntimeConfig:
             encoding="utf-8",
         )
 
-        monkeypatch.setattr(runtime_config_module.directories, "default_profile", missing_default_profile_path)
-        monkeypatch.setattr(runtime_config_module.directories, "profiles", profiles_directory)
+        monkeypatch.setattr(
+            runtime_config_module.directories,
+            "default_profile",
+            missing_default_profile_path,
+        )
+        monkeypatch.setattr(
+            runtime_config_module.directories, "profiles", profiles_directory
+        )
 
         runtime_config = RuntimeConfig.from_default_profile()
 
@@ -703,8 +778,14 @@ class Test_RuntimeConfig:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        monkeypatch.setattr(runtime_config_module.directories, "default_profile", tmp_path / "missing.json")
-        monkeypatch.setattr(runtime_config_module.directories, "profiles", tmp_path / "missing_profiles")
+        monkeypatch.setattr(
+            runtime_config_module.directories,
+            "default_profile",
+            tmp_path / "missing.json",
+        )
+        monkeypatch.setattr(
+            runtime_config_module.directories, "profiles", tmp_path / "missing_profiles"
+        )
 
         runtime_config = RuntimeConfig.from_default_profile()
 
