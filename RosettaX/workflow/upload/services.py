@@ -82,17 +82,17 @@ def sanitize_filename(
 
 
 def parse_allowed_upload_extensions(
-    accepted_file_extensions: str | None,
+    allowed_extensions: str | None,
 ) -> frozenset[str]:
     """
     Parse a comma-separated extension string into a normalized set.
     """
-    if accepted_file_extensions is None:
+    if allowed_extensions is None:
         return DEFAULT_ALLOWED_UPLOAD_EXTENSIONS
 
     extensions = {
         f".{part.lower().lstrip('.')}"
-        for chunk in str(accepted_file_extensions).split(",")
+        for chunk in str(allowed_extensions).split(",")
         for part in [chunk.strip()]
         if part
     }

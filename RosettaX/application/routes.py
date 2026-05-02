@@ -78,12 +78,10 @@ def build_calibration_json_document(
 """
 
 
-def build_calibration_json_error_document(exception: Exception) -> str:
+def build_calibration_json_error_document() -> str:
     """
-    Build the standalone HTML error document used when calibration JSON loading fails.
+    Build a generic standalone HTML error document for calibration JSON failures.
     """
-    del exception
-
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -139,6 +137,6 @@ def register_server_routes(app: Dash) -> None:
                 file_name,
             )
 
-            error_document = build_calibration_json_error_document(exception)
+            error_document = build_calibration_json_error_document()
 
             return Response(error_document, mimetype="text/html", status=400)

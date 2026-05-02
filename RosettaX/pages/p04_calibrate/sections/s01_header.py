@@ -40,4 +40,4 @@ class Header:
         """
         This section is static and does not register Dash callbacks.
         """
-        return None
+        return
