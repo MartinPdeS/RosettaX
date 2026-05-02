@@ -6,8 +6,7 @@ from typing import Any
 import dash_bootstrap_components as dbc
 from dash import html
 
-from RosettaX.utils import styling
-
+from RosettaX.utils import styling, ui_forms
 
 logger = logging.getLogger(__name__)
 
@@ -44,21 +43,44 @@ class Header:
         return dbc.Card(
             dbc.CardBody(
                 [
-                    self._build_title_block(),
-                    html.Div(
-                        style={
-                            "height": "14px",
-                        },
+                    ui_forms.build_section_intro(
+                        title="Scattering calibration",
+                        title_component="H2",
+                        description=(
+                            "Create a scattering calibration from bead FCS data by "
+                            "detecting bead populations, configuring the Mie model, "
+                            "computing coupling values, fitting the response, and saving "
+                            "the result for reuse."
+                        ),
                     ),
-                    self._build_workflow_steps(),
-                    html.Div(
-                        style={
-                            "height": "12px",
-                        },
+                    dbc.Row(
+                        [
+                            dbc.Col(
+                                self._build_step_card(
+                                    number=step["number"],
+                                    title=step["title"],
+                                    description=step["description"],
+                                    color_name=step["color_name"],
+                                ),
+                                xs=12,
+                                md=6,
+                                lg=4,
+                                xl=2,
+                                style={
+                                    "marginBottom": "10px",
+                                },
+                            )
+                            for step in self._build_steps()
+                        ],
+                        className="g-2",
                     ),
-                ]
+                ],
+                style=ui_forms.build_workflow_section_body_style(),
             ),
             style={
+                **ui_forms.build_workflow_section_card_style(
+                    color_name=self.card_color,
+                ),
                 "marginBottom": "16px",
             },
         )
@@ -69,26 +91,11 @@ class Header:
         """
         return None
 
-    def _build_title_block(self) -> html.Div:
+    def _build_steps(self) -> list[dict[str, str]]:
         """
-        Build the page title and short explanation.
+        Build the workflow step metadata.
         """
-        return html.Div(
-            [
-                html.H3(
-                    "Scattering calibration",
-                    style={
-                        "marginBottom": "6px",
-                    },
-                ),
-            ]
-        )
-
-    def _build_workflow_steps(self) -> dbc.Row:
-        """
-        Build the visual step boxes.
-        """
-        steps = [
+        return [
             {
                 "number": "1",
                 "title": "Upload bead FCS",
@@ -96,6 +103,7 @@ class Header:
                     "Load the scattering bead file acquired on the instrument. "
                     "This file becomes the source for detector selection and peak detection."
                 ),
+                "color_name": styling.get_workflow_section_color(1),
             },
             {
                 "number": "2",
@@ -104,6 +112,7 @@ class Header:
                     "Select the scattering detector channel, inspect the event distribution, "
                     "and detect the bead population peaks from the uploaded FCS file."
                 ),
+                "color_name": styling.get_workflow_section_color(2),
             },
             {
                 "number": "3",
@@ -112,6 +121,7 @@ class Header:
                     "Set the optical and particle model parameters, including wavelength, "
                     "medium refractive index, particle refractive index, and particle type."
                 ),
+                "color_name": styling.get_workflow_section_color(3),
             },
             {
                 "number": "4",
@@ -120,6 +130,7 @@ class Header:
                     "Enter the particle diameters and compute the expected scattering "
                     "coupling from the selected Mie model."
                 ),
+                "color_name": styling.get_workflow_section_color(4),
             },
             {
                 "number": "5",
@@ -128,6 +139,7 @@ class Header:
                     "Match detected peak positions to the computed coupling values and fit "
                     "the scattering calibration relation."
                 ),
+                "color_name": styling.get_workflow_section_color(5),
             },
             {
                 "number": "6",
@@ -136,29 +148,9 @@ class Header:
                     "Save the fitted calibration so it can be reused later when applying "
                     "calibration to experimental FCS files."
                 ),
+                "color_name": styling.get_workflow_section_color(6),
             },
         ]
-
-        return dbc.Row(
-            [
-                dbc.Col(
-                    self._build_step_card(
-                        number=step["number"],
-                        title=step["title"],
-                        description=step["description"],
-                    ),
-                    xs=12,
-                    md=6,
-                    lg=4,
-                    xl=2,
-                    style={
-                        "marginBottom": "10px",
-                    },
-                )
-                for step in steps
-            ],
-            className="g-2",
-        )
 
     def _build_step_card(
         self,
@@ -166,6 +158,7 @@ class Header:
         number: str,
         title: str,
         description: str,
+        color_name: str,
     ) -> dbc.Card:
         """
         Build one workflow step card.
@@ -185,13 +178,10 @@ class Header:
                             "fontWeight": "700",
                             "fontSize": "0.9rem",
                             "backgroundColor": styling.build_rgba(
-                                self.card_color,
+                                color_name,
                                 0.12,
                             ),
-                            "border": (
-                                "1px solid "
-                                f"{styling.build_rgba(self.card_color, 0.35)}"
-                            ),
+                            "border": f"1px solid {styling.build_rgba(color_name, 0.35)}",
                             "marginBottom": "10px",
                         },
                     ),
@@ -215,8 +205,10 @@ class Header:
                     "padding": "14px",
                 },
             ),
-            style={
-                "height": "100%",
-                "borderRadius": "12px",
-            },
+            style=ui_forms.build_workflow_subpanel_card_style(
+                color_name=color_name,
+                style_overrides={
+                    "height": "100%",
+                },
+            ),
         )
