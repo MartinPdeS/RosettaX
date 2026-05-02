@@ -6,6 +6,7 @@ from typing import Any, Optional, Sequence
 import dash
 import dash_bootstrap_components as dbc
 
+from RosettaX.utils.casting import as_optional_float
 from RosettaX.utils import styling
 from RosettaX.utils import ui_forms
 from RosettaX.utils.runtime_config import RuntimeConfig
@@ -13,6 +14,9 @@ from RosettaX.workflow.model.scattering import ScatteringModelConfiguration
 
 
 logger = logging.getLogger(__name__)
+
+
+DETECTOR_NUMERICAL_APERTURE_EPSILON = 1e-6
 
 
 class Model:
@@ -266,7 +270,7 @@ class Model:
                             placeholder="Detector cache NA",
                             value=self.default_values.detector_cache_numerical_aperture,
                             min_value=0.0,
-                            max_value=1.5,
+                            max_value=self.default_values.detector_numerical_aperture,
                             step=0.001,
                             width_px=220,
                         ),
@@ -680,6 +684,44 @@ class Model:
             },
         )
 
+    @staticmethod
+    def _clamp_detector_cache_numerical_aperture(
+        detector_numerical_aperture: Any,
+        detector_cache_numerical_aperture: Any,
+    ) -> Any:
+        """
+        Keep detector cache numerical aperture within the detector aperture.
+        """
+        resolved_detector_numerical_aperture = as_optional_float(
+            detector_numerical_aperture
+        )
+        resolved_detector_cache_numerical_aperture = as_optional_float(
+            detector_cache_numerical_aperture
+        )
+
+        if resolved_detector_numerical_aperture is None:
+            return detector_cache_numerical_aperture
+
+        if resolved_detector_cache_numerical_aperture is None:
+            return detector_cache_numerical_aperture
+
+        strict_upper_bound = max(
+            0.0,
+            resolved_detector_numerical_aperture - DETECTOR_NUMERICAL_APERTURE_EPSILON,
+        )
+
+        if resolved_detector_cache_numerical_aperture < resolved_detector_numerical_aperture:
+            return detector_cache_numerical_aperture
+
+        logger.debug(
+            "Clamping detector cache numerical aperture from %r to strict upper bound %r below detector numerical aperture %r.",
+            detector_cache_numerical_aperture,
+            strict_upper_bound,
+            detector_numerical_aperture,
+        )
+
+        return strict_upper_bound
+
     def register_callbacks(self) -> None:
         """
         Register parameter callbacks.
@@ -731,6 +773,23 @@ class Model:
                 runtime_config_data,
             ).to_callback_values()
 
+            resolved_detector_values = (
+                self.model_configuration.resolve_detector_configuration_values(
+                    preset_name=self.model_configuration.custom_detector_preset_name,
+                    current_detector_numerical_aperture=resolved_values[6],
+                    current_detector_cache_numerical_aperture=resolved_values[7],
+                    current_blocker_bar_numerical_aperture=resolved_values[8],
+                    current_detector_sampling=resolved_values[9],
+                    current_detector_phi_angle_degree=resolved_values[10],
+                    current_detector_gamma_angle_degree=resolved_values[11],
+                )
+            )
+
+            resolved_values = (
+                *resolved_values[:6],
+                *resolved_detector_values,
+            )
+
             scatterer_preset = self.model_configuration.resolve_runtime_scatterer_preset(
                 runtime_config.get_str(
                     "particle_model.scatterer_preset",
@@ -762,6 +821,15 @@ class Model:
                     resolved_shell_refractive_index,
                     *resolved_values[5:],
                 )
+
+            resolved_values = (
+                *resolved_values[:7],
+                self._clamp_detector_cache_numerical_aperture(
+                    resolved_values[6],
+                    resolved_values[7],
+                ),
+                *resolved_values[8:],
+            )
 
             logger.debug(
                 "sync_parameters_from_runtime_config returning resolved_values=%r",
@@ -1078,7 +1146,74 @@ class Model:
                 resolved_values,
             )
 
+            resolved_values = (
+                resolved_values[0],
+                self._clamp_detector_cache_numerical_aperture(
+                    resolved_values[0],
+                    resolved_values[1],
+                ),
+                *resolved_values[2:],
+            )
+
             return resolved_values
+
+        @dash.callback(
+            dash.Output(
+                self.ids.detector_cache_numerical_aperture,
+                "max",
+            ),
+            dash.Input(self.ids.detector_numerical_aperture, "value"),
+            prevent_initial_call=False,
+        )
+        def sync_detector_cache_numerical_aperture_max(
+            detector_numerical_aperture: Any,
+        ) -> Any:
+            resolved_detector_numerical_aperture = as_optional_float(
+                detector_numerical_aperture
+            )
+
+            resolved_cache_max = None
+
+            if resolved_detector_numerical_aperture is not None:
+                resolved_cache_max = max(
+                    0.0,
+                    resolved_detector_numerical_aperture
+                    - DETECTOR_NUMERICAL_APERTURE_EPSILON,
+                )
+
+            logger.debug(
+                "sync_detector_cache_numerical_aperture_max called with detector_numerical_aperture=%r resolved_max=%r",
+                detector_numerical_aperture,
+                resolved_cache_max,
+            )
+
+            return resolved_cache_max
+
+        @dash.callback(
+            dash.Output(
+                self.ids.detector_cache_numerical_aperture,
+                "value",
+                allow_duplicate=True,
+            ),
+            dash.Input(self.ids.detector_numerical_aperture, "value"),
+            dash.State(self.ids.detector_cache_numerical_aperture, "value"),
+            prevent_initial_call=True,
+        )
+        def clamp_detector_cache_numerical_aperture_after_detector_change(
+            detector_numerical_aperture: Any,
+            detector_cache_numerical_aperture: Any,
+        ) -> Any:
+            resolved_detector_cache_numerical_aperture = (
+                self._clamp_detector_cache_numerical_aperture(
+                    detector_numerical_aperture,
+                    detector_cache_numerical_aperture,
+                )
+            )
+
+            if resolved_detector_cache_numerical_aperture == detector_cache_numerical_aperture:
+                return dash.no_update
+
+            return resolved_detector_cache_numerical_aperture
 
     def _register_optical_configuration_preview_callback(self) -> None:
         """

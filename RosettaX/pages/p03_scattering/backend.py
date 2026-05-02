@@ -704,42 +704,19 @@ class BackEnd:
         smaller detector sampling value. This keeps the previous backend
         behavior while sharing it across scatterer models.
         """
-        try:
-            return BackEnd._run_coupling_simulation(
-                scatterer_set_builder=scatterer_set_builder,
-                wavelength_nm=wavelength_nm,
-                source_numerical_aperture=source_numerical_aperture,
-                optical_power_watt=optical_power_watt,
-                detector_numerical_aperture=detector_numerical_aperture,
-                detector_cache_numerical_aperture=detector_cache_numerical_aperture,
-                detector_phi_offset_degree=detector_phi_offset_degree,
-                detector_gamma_offset_degree=detector_gamma_offset_degree,
-                polarization_angle_degree=polarization_angle_degree,
-                detector_sampling=int(detector_sampling),
-            )
-        except Exception:
-            logger.exception(
-                "Primary coupling computation failed with detector_sampling=%r. Retrying with a smaller sampling value.",
-                detector_sampling,
-            )
+        return BackEnd._run_coupling_simulation(
+            scatterer_set_builder=scatterer_set_builder,
+            wavelength_nm=wavelength_nm,
+            source_numerical_aperture=source_numerical_aperture,
+            optical_power_watt=optical_power_watt,
+            detector_numerical_aperture=detector_numerical_aperture,
+            detector_cache_numerical_aperture=detector_cache_numerical_aperture,
+            detector_phi_offset_degree=detector_phi_offset_degree,
+            detector_gamma_offset_degree=detector_gamma_offset_degree,
+            polarization_angle_degree=polarization_angle_degree,
+            detector_sampling=int(detector_sampling),
+        )
 
-            fallback_sampling = max(50, min(200, int(detector_sampling)))
-
-            if fallback_sampling == int(detector_sampling):
-                fallback_sampling = 100
-
-            return BackEnd._run_coupling_simulation(
-                scatterer_set_builder=scatterer_set_builder,
-                wavelength_nm=wavelength_nm,
-                source_numerical_aperture=source_numerical_aperture,
-                optical_power_watt=optical_power_watt,
-                detector_numerical_aperture=detector_numerical_aperture,
-                detector_cache_numerical_aperture=detector_cache_numerical_aperture,
-                detector_phi_offset_degree=detector_phi_offset_degree,
-                detector_gamma_offset_degree=detector_gamma_offset_degree,
-                polarization_angle_degree=polarization_angle_degree,
-                detector_sampling=fallback_sampling,
-            )
 
     @staticmethod
     def _run_coupling_simulation(
@@ -778,11 +755,11 @@ class BackEnd:
         logger.debug("Building PhotodiodeSet.")
 
         detector_set = PyMieSim.detector_set.PhotodiodeSet(
-            numerical_aperture=[float(detector_numerical_aperture)],
-            cache_numerical_aperture=[float(detector_cache_numerical_aperture)],
-            phi_offset=[float(detector_phi_offset_degree)] * ureg.degree,
-            gamma_offset=[float(detector_gamma_offset_degree)] * ureg.degree,
-            sampling=[int(detector_sampling)],
+            numerical_aperture=float(detector_numerical_aperture),
+            cache_numerical_aperture=float(detector_cache_numerical_aperture),
+            phi_offset=float(detector_phi_offset_degree) * ureg.degree,
+            gamma_offset=float(detector_gamma_offset_degree) * ureg.degree,
+            sampling=int(detector_sampling),
         )
 
         logger.debug("Building Setup.")

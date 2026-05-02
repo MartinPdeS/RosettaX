@@ -9,7 +9,7 @@ from . import loader
 logger = logging.getLogger(__name__)
 
 
-CUSTOM_DETECTOR_PRESET_NAME = "Custom detector"
+CUSTOM_DETECTOR_PRESET_NAME = "Generic detector"
 
 
 def build_detector_preset_options() -> list[dict[str, str]]:
@@ -74,7 +74,22 @@ def resolve_detector_configuration_values(
     )
 
     if detector_preset_is_custom(preset_name):
-        return current_values
+        resolved_custom_values = (
+            current_detector_numerical_aperture,
+            0.0,
+            current_blocker_bar_numerical_aperture,
+            current_detector_sampling,
+            current_detector_phi_angle_degree,
+            current_detector_gamma_angle_degree,
+        )
+
+        logger.debug(
+            "Resolved custom detector preset values for preset_name=%r values=%r",
+            preset_name,
+            resolved_custom_values,
+        )
+
+        return resolved_custom_values
 
     preset = loader.load_detector_configuration_preset(
         preset_name,
