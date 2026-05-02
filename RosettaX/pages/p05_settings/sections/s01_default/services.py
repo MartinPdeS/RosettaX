@@ -365,16 +365,16 @@ def _coerce_field_value_for_save(
     value_kind = field_definition.value_kind
 
     if value_kind == "float":
-        coerced_value = casting.as_optional_float(
+        coerced_float = casting.as_optional_float(
             raw_value,
         )
-        return field_definition.default if coerced_value is None else coerced_value
+        return field_definition.default if coerced_float is None else coerced_float
 
     if value_kind == "int":
-        coerced_value = casting.as_optional_int(
+        coerced_int = casting.as_optional_int(
             raw_value,
         )
-        return field_definition.default if coerced_value is None else coerced_value
+        return field_definition.default if coerced_int is None else coerced_int
 
     if value_kind == "float_list":
         return casting.as_float_list(
@@ -385,7 +385,11 @@ def _coerce_field_value_for_save(
         coerced_value = casting.coerce_optional_string(
             raw_value,
         )
-        return coerced_value or str(field_definition.default or "")
+        return (
+            coerced_value
+            if coerced_value is not None
+            else str(field_definition.default or "")
+        )
 
     if value_kind == "yes_no_bool":
         return (
