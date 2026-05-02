@@ -3,12 +3,11 @@
 from typing import Self
 
 import dash
-import dash_bootstrap_components as dbc
-from dash import dcc
 
-from . import sections
 from .ids import Ids
-from .state import ApplyCalibrationPageState
+from .sections import callbacks as section_callbacks
+from .sections import layout as section_layout
+from .sections import services as section_services
 
 
 class ApplyCalibrationPage:
@@ -48,27 +47,7 @@ class ApplyCalibrationPage:
 
         self.ids = Ids()
 
-        self.sections = [
-            sections.Header(
-                page=self,
-                card_color=self.header_color,
-            ),
-            sections.CalibrationPicker(
-                page=self,
-                section_number=1,
-                card_color=self.calibration_picker_color,
-            ),
-            sections.FilePicker(
-                page=self,
-                section_number=2,
-                card_color=self.file_picker_color,
-            ),
-            sections.Apply(
-                page=self,
-                section_number=3,
-                card_color=self.apply_color,
-            ),
-        ]
+        self.sections = section_services.build_sections(self)
 
     def register_callbacks(self) -> Self:
         """
@@ -79,12 +58,10 @@ class ApplyCalibrationPage:
         Self
             Current page instance.
         """
-        for section in self.sections:
-            section.register_callbacks()
-
+        section_callbacks.register_callbacks(self.sections)
         return self
 
-    def layout(self, **_kwargs) -> dbc.Container:
+    def layout(self, **_kwargs):
         """
         Build the apply calibration page layout.
 
@@ -93,73 +70,7 @@ class ApplyCalibrationPage:
         dbc.Container
             Page layout.
         """
-        return dbc.Container(
-            [
-                dcc.Location(
-                    id=self.ids.Page.location,
-                    refresh=False,
-                ),
-                self._build_page_state_store(),
-                self._build_selected_calibration_path_store(),
-                self._build_selected_calibration_summary_store(),
-                self._build_uploaded_fcs_path_store(),
-                dbc.Container(
-                    [
-                        section.get_layout()
-                        for section in self.sections
-                    ],
-                    fluid=True,
-                    style={
-                        "display": "flex",
-                        "flexDirection": "column",
-                        "gap": "18px",
-                        "padding": "0px",
-                    },
-                ),
-            ],
-            fluid=True,
-            style=self.container_style,
-        )
-
-    def _build_page_state_store(self) -> dcc.Store:
-        """
-        Build the serialized page state store.
-        """
-        return dcc.Store(
-            id=self.ids.State.page_state_store,
-            data=ApplyCalibrationPageState.empty().to_dict(),
-            storage_type="session",
-        )
-
-    def _build_selected_calibration_path_store(self) -> dcc.Store:
-        """
-        Build the selected calibration path store.
-        """
-        return dcc.Store(
-            id=self.ids.Stores.selected_calibration_path_store,
-            data=None,
-            storage_type="session",
-        )
-
-    def _build_selected_calibration_summary_store(self) -> dcc.Store:
-        """
-        Build the selected calibration summary store.
-        """
-        return dcc.Store(
-            id=self.ids.Stores.selected_calibration_summary_store,
-            data=None,
-            storage_type="session",
-        )
-
-    def _build_uploaded_fcs_path_store(self) -> dcc.Store:
-        """
-        Build the uploaded FCS path store.
-        """
-        return dcc.Store(
-            id=self.ids.Stores.uploaded_fcs_path_store,
-            data=None,
-            storage_type="session",
-        )
+        return section_layout.build_page_layout(self, self.sections)
 
 
 _page = ApplyCalibrationPage().register_callbacks()

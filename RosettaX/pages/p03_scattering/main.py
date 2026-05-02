@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 import dash
 
-from . import sections
 from .ids import Ids
-from .state import ScatteringPageState
+from .sections import callbacks as section_callbacks
+from .sections import layout as section_layout
+from .sections import services as section_services
 
 
 class ScatterCalibrationPage:
@@ -21,42 +22,7 @@ class ScatterCalibrationPage:
         self.ids = Ids()
         self.backend = None
 
-        self.sections = [
-            sections.Header(
-                page=self,
-                card_color="white",
-            ),
-            sections.Upload(
-                page=self,
-                section_number=1,
-                card_color="pink",
-            ),
-            sections.Peaks(
-                page=self,
-                section_number=2,
-                card_color="blue",
-            ),
-            sections.Model(
-                page=self,
-                section_number=3,
-                card_color="orange",
-            ),
-            sections.ReferenceTable(
-                page=self,
-                section_number=4,
-                card_color="green",
-            ),
-            sections.Calibration(
-                page=self,
-                section_number=5,
-                card_color="yellow",
-            ),
-            sections.Save(
-                page=self,
-                section_number=6,
-                card_color="gray",
-            ),
-        ]
+        self.sections = section_services.build_sections(self)
 
     def register_callbacks(self) -> "ScatterCalibrationPage":
         """
@@ -67,9 +33,7 @@ class ScatterCalibrationPage:
         ScatterCalibrationPage
             Current page instance.
         """
-        for section in self.sections:
-            section.register_callbacks()
-
+        section_callbacks.register_callbacks(self.sections)
         return self
 
     def layout(self) -> dash.html.Div:
@@ -81,26 +45,7 @@ class ScatterCalibrationPage:
         dash.html.Div
             Page layout.
         """
-        return dash.html.Div(
-            [
-                dash.dcc.Store(
-                    id=self.ids.State.page_state_store,
-                    data=ScatteringPageState.empty().to_dict(),
-                    storage_type="session",
-                ),
-                dash.html.Div(
-                    [
-                        section.get_layout()
-                        for section in self.sections
-                    ],
-                    style={
-                        "display": "flex",
-                        "flexDirection": "column",
-                        "gap": "18px",
-                    },
-                ),
-            ]
-        )
+        return section_layout.build_page_layout(self, self.sections)
 
 
 _page = ScatterCalibrationPage().register_callbacks()
