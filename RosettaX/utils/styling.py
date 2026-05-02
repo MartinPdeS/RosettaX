@@ -182,11 +182,11 @@ WORKFLOW_PAGE_COLOR_SCHEME = {
     "header": "green",
     "sections": {
         1: "yellow",
-        2: "orange",
-        3: "red",
+        2: "blue",
+        3: "orange",
         4: "cyan",
-        5: "blue",
-        6: "purple",
+        5: "purple",
+        6: "gray",
     },
 }
 
