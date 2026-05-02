@@ -31,7 +31,7 @@ class Test_ApplicationRoutes:
         )
 
         assert response.status_code == 400
-        assert "Invalid calibration file path" in response.get_data(as_text=True)
+        assert "could not be opened" in response.get_data(as_text=True)
 
     def test_calibration_json_route_returns_error_document_for_malformed_json(
         self,
@@ -62,4 +62,4 @@ class Test_ApplicationRoutes:
 
         assert response.status_code == 400
         assert "Could not open calibration" in response.get_data(as_text=True)
-        assert "JSONDecodeError" in response.get_data(as_text=True)
+        assert "could not be opened" in response.get_data(as_text=True)

@@ -97,7 +97,19 @@ def resolve_calibration_file_path(
     """
     Resolve a selected dropdown value into a calibration file path.
     """
-    del folder_definitions
+    selected_calibration_string = str(selected_calibration).strip()
+    known_folder_keys = {
+        str(folder_key).strip()
+        for folder_key, _folder_label, _folder_path in folder_definitions
+        if str(folder_key).strip()
+    }
+
+    if known_folder_keys and "/" in selected_calibration_string:
+        selected_folder_key = selected_calibration_string.split("/", 1)[0]
+        if selected_folder_key not in known_folder_keys:
+            raise ValueError(
+                f"Unsupported calibration folder key: {selected_folder_key!r}."
+            )
 
     return resolve_selected_calibration_file_path(
         selected_calibration,

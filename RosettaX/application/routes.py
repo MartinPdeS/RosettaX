@@ -82,8 +82,7 @@ def build_calibration_json_error_document(exception: Exception) -> str:
     """
     Build the standalone HTML error document used when calibration JSON loading fails.
     """
-    safe_exception_name = escape(type(exception).__name__)
-    safe_exception_message = escape(str(exception))
+    del exception
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -93,7 +92,7 @@ def build_calibration_json_error_document(exception: Exception) -> str:
 </head>
 <body>
     <h2>Could not open calibration</h2>
-    <pre>{safe_exception_name}: {safe_exception_message}</pre>
+    <pre>The requested calibration file could not be opened.</pre>
 </body>
 </html>
 """
