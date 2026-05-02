@@ -16,15 +16,23 @@ def build_page_layout(page, sections) -> dash.html.Div:
                 data=FluorescencePageState.empty().to_dict(),
                 storage_type="session",
             ),
-            dash.html.Br(),
-            *[
-                section.get_layout()
-                for section in sections
-            ],
+            dash.html.Div(
+                [
+                    dash.html.Br(),
+                    *[
+                        section.get_layout()
+                        for section in sections
+                    ],
+                ],
+                style={
+                    "display": "flex",
+                    "flexDirection": "column",
+                    "gap": "18px",
+                },
+            ),
         ],
         style={
             "display": "flex",
             "flexDirection": "column",
-            "gap": "18px",
         },
     )

@@ -16,10 +16,7 @@ def build_page_layout(page, sections) -> dbc.Container:
                 id=page.ids.Page.location,
                 refresh=False,
             ),
-            _build_page_state_store(page),
-            _build_selected_calibration_path_store(page),
-            _build_selected_calibration_summary_store(page),
-            _build_uploaded_fcs_path_store(page),
+            *_build_stores(page),
             dbc.Container(
                 [
                     section.get_layout()
@@ -37,6 +34,18 @@ def build_page_layout(page, sections) -> dbc.Container:
         fluid=True,
         style=page.container_style,
     )
+
+
+def _build_stores(page) -> list[dcc.Store]:
+    """
+    Build the apply calibration page stores.
+    """
+    return [
+        _build_page_state_store(page),
+        _build_selected_calibration_path_store(page),
+        _build_selected_calibration_summary_store(page),
+        _build_uploaded_fcs_path_store(page),
+    ]
 
 
 def _build_page_state_store(page) -> dcc.Store:
