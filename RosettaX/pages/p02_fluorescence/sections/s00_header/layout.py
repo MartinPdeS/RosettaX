@@ -3,7 +3,7 @@
 import dash_bootstrap_components as dbc
 from dash import html
 
-from RosettaX.utils import styling
+from RosettaX.utils import styling, ui_forms
 
 
 def get_layout(section) -> dbc.Card:
@@ -13,47 +13,53 @@ def get_layout(section) -> dbc.Card:
     return dbc.Card(
         dbc.CardBody(
             [
-                _build_title_block(),
-                html.Div(
-                    style={
-                        "height": "14px",
-                    },
+                ui_forms.build_section_intro(
+                    title="Fluorescence calibration",
+                    title_component="H2",
+                    description=(
+                        "Create a fluorescence calibration from bead FCS data by "
+                        "detecting bead populations, entering known MESF references, "
+                        "fitting the calibration relation, and saving the result for "
+                        "reuse."
+                    ),
                 ),
-                _build_workflow_steps(section),
-                html.Div(
-                    style={
-                        "height": "12px",
-                    },
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            _build_step_card(
+                                number=step["number"],
+                                title=step["title"],
+                                description=step["description"],
+                                color_name=step["color_name"],
+                            ),
+                            xs=12,
+                            md=6,
+                            xl=True,
+                            style={
+                                "marginBottom": "10px",
+                            },
+                        )
+                        for step in _build_steps()
+                    ],
+                    className="g-2",
                 ),
-            ]
+            ],
+            style=ui_forms.build_workflow_section_body_style(),
         ),
         style={
+            **ui_forms.build_workflow_section_card_style(
+                color_name=section.card_color,
+            ),
             "marginBottom": "16px",
         },
     )
 
 
-def _build_title_block() -> html.Div:
+def _build_steps() -> list[dict[str, str]]:
     """
-    Build the page title and short explanation.
+    Build the workflow step metadata.
     """
-    return html.Div(
-        [
-            html.H3(
-                "Fluorescence calibration",
-                style={
-                    "marginBottom": "6px",
-                },
-            ),
-        ]
-    )
-
-
-def _build_workflow_steps(section) -> dbc.Row:
-    """
-    Build the visual step boxes.
-    """
-    steps = [
+    return [
         {
             "number": "1",
             "title": "Upload bead FCS",
@@ -61,6 +67,7 @@ def _build_workflow_steps(section) -> dbc.Row:
                 "Load the fluorescence bead file acquired on the instrument. "
                 "This file becomes the source for detector selection and peak detection."
             ),
+            "color_name": styling.get_workflow_section_color(1),
         },
         {
             "number": "2",
@@ -69,6 +76,7 @@ def _build_workflow_steps(section) -> dbc.Row:
                 "Select the fluorescence detector channel, inspect the event distribution, "
                 "and detect the bead population peaks from the uploaded FCS file."
             ),
+            "color_name": styling.get_workflow_section_color(2),
         },
         {
             "number": "3",
@@ -77,6 +85,7 @@ def _build_workflow_steps(section) -> dbc.Row:
                 "Enter the known MESF values for the bead populations. These values "
                 "define the calibrated fluorescence scale."
             ),
+            "color_name": styling.get_workflow_section_color(3),
         },
         {
             "number": "4",
@@ -85,6 +94,7 @@ def _build_workflow_steps(section) -> dbc.Row:
                 "Match detected peak positions to the entered MESF values and fit the "
                 "fluorescence calibration relation."
             ),
+            "color_name": styling.get_workflow_section_color(4),
         },
         {
             "number": "5",
@@ -93,37 +103,17 @@ def _build_workflow_steps(section) -> dbc.Row:
                 "Save the fitted calibration so it can be reused later when applying "
                 "calibration to experimental FCS files."
             ),
+            "color_name": styling.get_workflow_section_color(5),
         },
     ]
 
-    return dbc.Row(
-        [
-            dbc.Col(
-                _build_step_card(
-                    section=section,
-                    number=step["number"],
-                    title=step["title"],
-                    description=step["description"],
-                ),
-                xs=12,
-                md=6,
-                xl=True,
-                style={
-                    "marginBottom": "10px",
-                },
-            )
-            for step in steps
-        ],
-        className="g-2",
-    )
-
 
 def _build_step_card(
-    section,
     *,
     number: str,
     title: str,
     description: str,
+    color_name: str,
 ) -> dbc.Card:
     """
     Build one workflow step card.
@@ -143,12 +133,11 @@ def _build_step_card(
                         "fontWeight": "700",
                         "fontSize": "0.9rem",
                         "backgroundColor": styling.build_rgba(
-                            section.card_color,
+                            color_name,
                             0.12,
                         ),
                         "border": (
-                            "1px solid "
-                            f"{styling.build_rgba(section.card_color, 0.35)}"
+                            "1px solid " f"{styling.build_rgba(color_name, 0.35)}"
                         ),
                         "marginBottom": "10px",
                     },
@@ -173,8 +162,10 @@ def _build_step_card(
                 "padding": "14px",
             },
         ),
-        style={
-            "height": "100%",
-            "borderRadius": "12px",
-        },
+        style=ui_forms.build_workflow_subpanel_card_style(
+            color_name=color_name,
+            style_overrides={
+                "height": "100%",
+            },
+        ),
     )

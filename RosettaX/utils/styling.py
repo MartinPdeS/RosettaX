@@ -168,12 +168,26 @@ COLOR_SCHEME = {
     "gray": "108, 117, 125",
     "green": "25, 135, 84",
     "red": "220, 53, 69",
-    "orange": "255, 193, 7",
+    "yellow": "255, 193, 7",
+    "orange": "253, 126, 20",
     "cyan": "13, 202, 240",
     "pink": "214, 51, 132",
     "purple": "111, 66, 193",
     "dark": "33, 37, 41",
     "light": "248, 249, 250",
+}
+
+
+WORKFLOW_PAGE_COLOR_SCHEME = {
+    "header": "green",
+    "sections": {
+        1: "yellow",
+        2: "blue",
+        3: "orange",
+        4: "cyan",
+        5: "purple",
+        6: "gray",
+    },
 }
 
 
@@ -316,6 +330,25 @@ def get_section_color_name(
     return SECTION_COLOR_BY_KEY.get(
         section_key,
         "blue",
+    )
+
+
+def get_workflow_page_header_color() -> str:
+    """
+    Return the shared workflow page header color name.
+    """
+    return WORKFLOW_PAGE_COLOR_SCHEME["header"]
+
+
+def get_workflow_section_color(
+    section_number: int,
+) -> str:
+    """
+    Return the shared workflow section color for a numbered section.
+    """
+    return WORKFLOW_PAGE_COLOR_SCHEME["sections"].get(
+        int(section_number),
+        "gray",
     )
 
 

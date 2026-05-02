@@ -5,6 +5,8 @@ from typing import Self
 import dash
 import dash_bootstrap_components as dbc
 
+from RosettaX.utils import styling
+
 from .ids import Ids
 from .sections import callbacks as section_callbacks
 from .sections import layout as section_layout
@@ -36,10 +38,10 @@ class ApplyCalibrationPage:
       Uploaded input FCS path or paths.
     """
 
-    header_color = "green"
-    calibration_picker_color = "pink"
-    file_picker_color = "blue"
-    apply_color = "orange"
+    header_color = styling.get_workflow_page_header_color()
+    calibration_picker_color = styling.get_workflow_section_color(1)
+    file_picker_color = styling.get_workflow_section_color(2)
+    apply_color = styling.get_workflow_section_color(3)
 
     def __init__(self) -> None:
         self.container_style = {
