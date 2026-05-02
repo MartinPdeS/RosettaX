@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 
+import logging
 from dataclasses import dataclass
 from typing import Any, Optional
-import logging
 
 import dash
 import numpy as np
+
+from RosettaX.utils.runtime_config import RuntimeConfig
 
 
 @dataclass
@@ -50,6 +52,7 @@ class BasePeakWorkflowAdapter:
     )
 
     default_peak_lines_payload_key: str = "peak_lines_payload"
+    peak_table_sort_order_runtime_config_path: Optional[str] = None
 
     delta_peak_value_names: tuple[str, ...] = (
         "new_peak_positions",
@@ -286,9 +289,7 @@ class BasePeakWorkflowAdapter:
 
         peak_lines_payload = self.get_first_attribute_or_key(
             source=result,
-            names=(
-                "peak_lines_payload",
-            ),
+            names=("peak_lines_payload",),
         )
 
         if peak_lines_payload is not None:
@@ -716,3 +717,111 @@ class BasePeakWorkflowAdapter:
             return ""
 
         return str(value)
+
+    def resolve_peak_table_sort_order(
+        self,
+        *,
+        context: Optional[dict[str, Any]],
+        default: str = "ascending",
+    ) -> str:
+        """
+        Resolve the configured peak table sort order from runtime config context.
+        """
+        runtime_config_path = self.peak_table_sort_order_runtime_config_path
+
+        if not runtime_config_path:
+            return default
+
+        runtime_config_data = None
+
+        if isinstance(context, dict):
+            runtime_config_data = context.get("runtime_config_data")
+
+        runtime_config = RuntimeConfig.from_dict(
+            runtime_config_data if isinstance(runtime_config_data, dict) else None,
+        )
+
+        configured_value = runtime_config.get_str(
+            runtime_config_path,
+            default=default,
+        ).lower()
+
+        if configured_value == "descending":
+            return "descending"
+
+        return "ascending"
+
+    def sort_peak_table_values(
+        self,
+        *,
+        values: list[Any],
+        descending: bool,
+    ) -> list[Any]:
+        """
+        Sort peak values for table insertion while keeping empty values out.
+        """
+        sortable_entries = [
+            (
+                self.build_peak_table_sort_key(
+                    value=value,
+                ),
+                index,
+                value,
+            )
+            for index, value in enumerate(values)
+        ]
+
+        sortable_entries = [entry for entry in sortable_entries if entry[0] is not None]
+
+        sortable_entries.sort(
+            key=lambda entry: entry[0],
+            reverse=descending,
+        )
+
+        return [entry[2] for entry in sortable_entries]
+
+    def build_peak_table_sort_key(
+        self,
+        *,
+        value: Any,
+    ) -> Optional[tuple[int, Any]]:
+        """
+        Build a stable sort key for one peak table value.
+        """
+        normalized_value = self.normalize_datatable_value(
+            value=value,
+        )
+
+        if normalized_value in {
+            None,
+            "",
+        }:
+            return None
+
+        if isinstance(normalized_value, bool):
+            return (0, int(normalized_value))
+
+        if isinstance(normalized_value, (int, float)):
+            if isinstance(normalized_value, float) and not np.isfinite(
+                normalized_value
+            ):
+                return None
+
+            return (0, float(normalized_value))
+
+        normalized_text = str(
+            normalized_value,
+        ).strip()
+
+        if not normalized_text:
+            return None
+
+        try:
+            numeric_value = float(normalized_text)
+        except ValueError:
+            return (1, normalized_text.casefold())
+
+        if not np.isfinite(numeric_value):
+            return None
+
+        return (0, numeric_value)

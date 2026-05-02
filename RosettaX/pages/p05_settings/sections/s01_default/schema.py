@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
 
+import logging
 from dataclasses import dataclass
 from typing import Any, Optional
-import logging
 
-from RosettaX.workflow.apply_calibration.scattering import CUSTOM_PRESET_NAME
-from RosettaX.workflow.apply_calibration.scattering import build_scattering_target_model_preset_options
+from RosettaX.workflow.apply_calibration.scattering import (
+    CUSTOM_PRESET_NAME,
+    build_scattering_target_model_preset_options,
+)
+from RosettaX.workflow.model.scattering import (
+    CUSTOM_SCATTERER_PRESET_NAME,
+    build_scattering_calibration_scatterer_preset_options,
+)
 from RosettaX.workflow.peak import registry
-from RosettaX.workflow.model.scattering import CUSTOM_SCATTERER_PRESET_NAME
-from RosettaX.workflow.model.scattering import build_scattering_calibration_scatterer_preset_options
-
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +93,18 @@ YES_NO_OPTIONS: list[dict[str, str]] = [
 ]
 
 
+PEAK_TABLE_SORT_ORDER_OPTIONS: list[dict[str, str]] = [
+    {
+        "label": "Small to large",
+        "value": "ascending",
+    },
+    {
+        "label": "Large to small",
+        "value": "descending",
+    },
+]
+
+
 FIELD_DEFINITIONS: list[FieldDefinition] = [
     FieldDefinition(
         name="mesf_values",
@@ -121,6 +136,16 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         runtime_path="fluorescence_calibration.default_peak_process",
         default=registry.DEFAULT_PROCESS_NAME,
         options=PEAK_PROCESS_OPTIONS,
+    ),
+    FieldDefinition(
+        name="fluorescence_peak_table_sort_order",
+        section="fluorescence",
+        label="Fluorescence peak table order:",
+        component_kind="dropdown",
+        value_kind="choice",
+        runtime_path="fluorescence_calibration.peak_table_sort_order",
+        default="ascending",
+        options=PEAK_TABLE_SORT_ORDER_OPTIONS,
     ),
     FieldDefinition(
         name="default_scatterer_preset",
@@ -249,6 +274,16 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         runtime_path="scattering_calibration.default_peak_process",
         default=registry.DEFAULT_PROCESS_NAME,
         options=PEAK_PROCESS_OPTIONS,
+    ),
+    FieldDefinition(
+        name="scattering_peak_table_sort_order",
+        section="scattering",
+        label="Scattering peak table order:",
+        component_kind="dropdown",
+        value_kind="choice",
+        runtime_path="scattering_calibration.peak_table_sort_order",
+        default="ascending",
+        options=PEAK_TABLE_SORT_ORDER_OPTIONS,
     ),
     FieldDefinition(
         name="default_gating_channel",
@@ -496,23 +531,15 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
 
 
 FIELD_DEFINITION_BY_NAME: dict[str, FieldDefinition] = {
-    field.name: field
-    for field in FIELD_DEFINITIONS
+    field.name: field for field in FIELD_DEFINITIONS
 }
 
 
 def ordered_field_names() -> list[str]:
-    return [
-        field.name
-        for field in FIELD_DEFINITIONS
-    ]
+    return [field.name for field in FIELD_DEFINITIONS]
 
 
 def section_field_names(
     section_key: str,
 ) -> list[str]:
-    return [
-        field.name
-        for field in FIELD_DEFINITIONS
-        if field.section == section_key
-    ]
+    return [field.name for field in FIELD_DEFINITIONS if field.section == section_key]

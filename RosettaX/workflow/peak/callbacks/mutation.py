@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
 
-from typing import Any, Optional
 import inspect
 import logging
 import time
 import uuid
+from typing import Any, Optional
 
 import dash
 
-from ..core import detectors
-from .. import registry
 from RosettaX.utils import casting
 from RosettaX.utils.runtime_config import RuntimeConfig
 
+from .. import registry
+from ..core import detectors
 
 logger = logging.getLogger(__name__)
 
@@ -172,6 +172,7 @@ def register_mutation_callbacks(
                 detector_dropdown_values=detector_dropdown_values,
                 table_data=unpacked_state["table_data"],
                 mie_model=unpacked_state["mie_model"],
+                runtime_config_data=unpacked_state["runtime_config_data"],
                 status_component_ids=unpacked_state["status_component_ids"],
             )
 
@@ -278,9 +279,7 @@ def trigger_is_action_button(
     pattern = ids.process_action_button_pattern()
 
     if not isinstance(pattern, dict):
-        raise TypeError(
-            "ids.process_action_button_pattern() must return a dictionary."
-        )
+        raise TypeError("ids.process_action_button_pattern() must return a dictionary.")
 
     return triggered_id.get("type") == pattern.get("type")
 
@@ -335,6 +334,7 @@ def handle_manual_graph_click(
     detector_dropdown_values: list[Any],
     table_data: Optional[list[dict[str, Any]]],
     mie_model: Any,
+    runtime_config_data: Any,
     status_component_ids: list[dict[str, Any]],
 ) -> tuple[Any, Any, list[Any]]:
     """
@@ -414,6 +414,7 @@ def handle_manual_graph_click(
         context={
             "mie_model": mie_model,
             "process_name": resolved_process_name,
+            "runtime_config_data": runtime_config_data,
         },
         logger=logger,
     )
@@ -491,6 +492,7 @@ def handle_process_action(
             page_state=page_state,
             table_data=table_data,
             mie_model=mie_model,
+            runtime_config_data=runtime_config_data,
             status_component_ids=status_component_ids,
         )
 
@@ -525,6 +527,7 @@ def handle_clear_action(
     page_state: Any,
     table_data: Optional[list[dict[str, Any]]],
     mie_model: Any,
+    runtime_config_data: Any,
     status_component_ids: list[dict[str, Any]],
 ) -> tuple[Any, Any, list[Any]]:
     """
@@ -550,6 +553,7 @@ def handle_clear_action(
         context={
             "mie_model": mie_model,
             "process_name": target_process_name,
+            "runtime_config_data": runtime_config_data,
         },
         logger=logger,
     )
@@ -638,11 +642,9 @@ def handle_run_action(
         max_value=5_000_000,
     )
 
-
     backend = adapter.get_backend(
         uploaded_fcs_path=uploaded_fcs_path,
     )
-
 
     result = call_run_automatic_action_with_supported_arguments(
         process=process,
@@ -679,6 +681,7 @@ def handle_run_action(
         context={
             "mie_model": mie_model,
             "process_name": target_process_name,
+            "runtime_config_data": runtime_config_data,
         },
         logger=logger,
     )
@@ -934,10 +937,7 @@ def build_no_update_status_children(
     """
     Build a valid no update list for wildcard status outputs.
     """
-    return [
-        dash.no_update
-        for _ in (status_component_ids or [])
-    ]
+    return [dash.no_update for _ in (status_component_ids or [])]
 
 
 def build_no_update_callback_result(

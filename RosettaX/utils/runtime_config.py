@@ -10,7 +10,6 @@ import numpy as np
 
 from RosettaX.utils import directories
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -177,6 +176,24 @@ class RuntimeConfig:
             description="Default target model preset for the apply calibration page.",
         ),
         # ---------------------------------------------------------------------
+        # Fluorescence calibration
+        # ---------------------------------------------------------------------
+        "fluorescence_calibration.peak_table_sort_order": RuntimeConfigField(
+            expected_type=str,
+            default="ascending",
+            choices=("ascending", "descending"),
+            description="Preferred fluorescence peak table ordering.",
+        ),
+        # ---------------------------------------------------------------------
+        # Scattering calibration
+        # ---------------------------------------------------------------------
+        "scattering_calibration.peak_table_sort_order": RuntimeConfigField(
+            expected_type=str,
+            default="ascending",
+            choices=("ascending", "descending"),
+            description="Preferred scattering peak table ordering.",
+        ),
+        # ---------------------------------------------------------------------
         # Optics
         # ---------------------------------------------------------------------
         "optics.wavelength_nm": RuntimeConfigField(
@@ -335,7 +352,9 @@ class RuntimeConfig:
         Build a RuntimeConfig from a JSON file path.
         """
         resolved_json_path = Path(json_path).expanduser().resolve()
-        logger.debug("RuntimeConfig.from_json_path called with path=%r", str(resolved_json_path))
+        logger.debug(
+            "RuntimeConfig.from_json_path called with path=%r", str(resolved_json_path)
+        )
 
         with resolved_json_path.open("r", encoding="utf-8") as file_handle:
             payload = json.load(file_handle)
@@ -365,7 +384,9 @@ class RuntimeConfig:
             normalized_filename = f"{normalized_filename}.json"
 
         json_path = Path(directories.profiles) / normalized_filename
-        logger.debug("RuntimeConfig.from_profile_name resolved json_path=%r", str(json_path))
+        logger.debug(
+            "RuntimeConfig.from_profile_name resolved json_path=%r", str(json_path)
+        )
         return cls.from_json_path(json_path)
 
     @classmethod
@@ -383,7 +404,9 @@ class RuntimeConfig:
 
         for json_path in candidate_paths:
             if not json_path.exists():
-                logger.debug("Default profile candidate does not exist: %r", str(json_path))
+                logger.debug(
+                    "Default profile candidate does not exist: %r", str(json_path)
+                )
                 continue
 
             try:
@@ -396,7 +419,9 @@ class RuntimeConfig:
                     str(json_path),
                 )
 
-        logger.warning("No valid default profile could be loaded. Using empty RuntimeConfig.")
+        logger.warning(
+            "No valid default profile could be loaded. Using empty RuntimeConfig."
+        )
         return cls()
 
     @staticmethod
@@ -537,7 +562,10 @@ class RuntimeConfig:
                 )
             coerced_value = value
 
-        if config_field.choices is not None and coerced_value not in config_field.choices:
+        if (
+            config_field.choices is not None
+            and coerced_value not in config_field.choices
+        ):
             raise RuntimeConfigValidationError(
                 f"RuntimeConfig path {path!r} expected one of {config_field.choices!r}, "
                 f"got {coerced_value!r}."

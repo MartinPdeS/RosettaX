@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from typing import Any, Optional
 import logging
+from typing import Any, Optional
 
 import dash
 import numpy as np
 
 from .base import BasePeakWorkflowAdapter
-
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +41,9 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
     )
 
     default_peak_lines_payload_key: str = "scattering_peak_lines_payload"
+    peak_table_sort_order_runtime_config_path: str = (
+        "scattering_calibration.peak_table_sort_order"
+    )
 
     scattering_peak_column_name: str = "measured_peak_position"
 
@@ -131,9 +133,7 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
         )
 
         if not x_values_to_append:
-            logger.debug(
-                "Scattering peak process produced no x values to append."
-            )
+            logger.debug("Scattering peak process produced no x values to append.")
 
             return dash.no_update
 
@@ -143,10 +143,15 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
             x_values_to_append,
         )
 
+        peak_table_sort_order = self.resolve_peak_table_sort_order(
+            context=context,
+        )
+
         return self.append_x_values_to_scattering_table(
             table_data=table_data,
             x_values=x_values_to_append,
             mie_model=mie_model,
+            descending=peak_table_sort_order == "descending",
         )
 
     def extract_x_values_to_append(
@@ -464,6 +469,7 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
         table_data: Optional[list[dict[str, Any]]],
         x_values: list[Any],
         mie_model: str,
+        descending: bool,
     ) -> list[dict[str, Any]]:
         """
         Append x values to the next empty scattering table rows.
@@ -497,13 +503,12 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
             for x_value in x_values
         ]
 
-        normalized_x_values = [
-            normalized_x_value
-            for normalized_x_value in normalized_x_values
-            if normalized_x_value != ""
-        ]
+        normalized_x_values = self.sort_peak_table_values(
+            values=normalized_x_values,
+            descending=descending,
+        )
 
-        for x_value in normalized_x_values:
+        for normalized_x_value in normalized_x_values:
             empty_row_index = self.find_first_empty_value_row_index(
                 rows=rows,
                 column_name=target_column_name,
@@ -517,7 +522,7 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
                 )
                 empty_row_index = len(rows) - 1
 
-            rows[empty_row_index][target_column_name] = x_value
+            rows[empty_row_index][target_column_name] = normalized_x_value
 
             self.ensure_row_matches_mie_model(
                 row=rows[empty_row_index],
@@ -690,10 +695,13 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
             if value is None:
                 return row_index
 
-            if isinstance(
-                value,
-                str,
-            ) and not value.strip():
+            if (
+                isinstance(
+                    value,
+                    str,
+                )
+                and not value.strip()
+            ):
                 return row_index
 
         return None
@@ -747,10 +755,7 @@ def ensure_minimum_row_count(
     """
     Ensure a minimum number of table rows.
     """
-    next_rows = [
-        dict(row)
-        for row in rows
-    ]
+    next_rows = [dict(row) for row in rows]
 
     while len(next_rows) < int(
         minimum_row_count,

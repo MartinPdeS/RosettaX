@@ -52,12 +52,17 @@ class Ids:
 
         mesf_values = f"{PAGE_NAME}-mesf-values"
         peak_count = f"{PAGE_NAME}-peak-count"
+        fluorescence_peak_table_sort_order = (
+            f"{PAGE_NAME}-fluorescence-peak-table-sort-order"
+        )
 
         histogram_scale = f"{PAGE_NAME}-histogram-scale"
         histogram_xscale = f"{PAGE_NAME}-histogram-xscale"
         histogram_yscale = f"{PAGE_NAME}-histogram-yscale"
 
-        default_fluorescence_peak_process = f"{PAGE_NAME}-default-fluorescence-peak-process"
+        default_fluorescence_peak_process = (
+            f"{PAGE_NAME}-default-fluorescence-peak-process"
+        )
 
         default_scatterer_preset = f"{PAGE_NAME}-default-scatterer-preset"
         medium_refractive_index = f"{PAGE_NAME}-medium-refractive-index"
@@ -72,9 +77,14 @@ class Ids:
         mie_model = f"{PAGE_NAME}-mie-model"
 
         default_scattering_peak_process = f"{PAGE_NAME}-default-scattering-peak-process"
+        scattering_peak_table_sort_order = (
+            f"{PAGE_NAME}-scattering-peak-table-sort-order"
+        )
         default_gating_channel = f"{PAGE_NAME}-default-gating-channel"
         default_gating_threshold = f"{PAGE_NAME}-default-gating-threshold"
-        default_apply_target_model_preset = f"{PAGE_NAME}-default-apply-target-model-preset"
+        default_apply_target_model_preset = (
+            f"{PAGE_NAME}-default-apply-target-model-preset"
+        )
 
         max_events_for_analysis = f"{PAGE_NAME}-max-events-for-analysis"
         n_bins = f"{PAGE_NAME}-n-bins-for-plots"

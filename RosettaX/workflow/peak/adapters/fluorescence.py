@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from typing import Any, Optional
 import logging
+from typing import Any, Optional
 
 import dash
 import numpy as np
 
 from .base import BasePeakWorkflowAdapter
-
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +42,9 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
     )
 
     default_peak_lines_payload_key: str = "fluorescence_peak_lines_payload"
+    peak_table_sort_order_runtime_config_path: str = (
+        "fluorescence_calibration.peak_table_sort_order"
+    )
 
     fluorescence_intensity_column_name: str = "col2"
 
@@ -106,8 +108,6 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
         Manual graph clicks append exactly one scalar x value. Automatic peak
         detection appends one scalar x value for every detected peak.
         """
-        del context
-
         if getattr(
             result,
             "clear_existing_table_peaks",
@@ -122,9 +122,7 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
         )
 
         if not x_values_to_append:
-            logger.debug(
-                "Fluorescence peak process produced no x values to append."
-            )
+            logger.debug("Fluorescence peak process produced no x values to append.")
 
             return dash.no_update
 
@@ -134,9 +132,14 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
             x_values_to_append,
         )
 
+        peak_table_sort_order = self.resolve_peak_table_sort_order(
+            context=context,
+        )
+
         return self.append_x_values_to_fluorescence_table(
             table_data=table_data,
             x_values=x_values_to_append,
+            descending=peak_table_sort_order == "descending",
         )
 
     def extract_x_values_to_append(
@@ -461,6 +464,7 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
         *,
         table_data: Optional[list[dict[str, Any]]],
         x_values: list[Any],
+        descending: bool,
     ) -> list[dict[str, Any]]:
         """
         Append x values to the next empty fluorescence table rows.
@@ -485,14 +489,19 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
         if target_column_name is None:
             target_column_name = self.fluorescence_intensity_column_name
 
-        for x_value in x_values:
-            normalized_x_value = self.normalize_single_x_value_for_table(
+        normalized_x_values = [
+            self.normalize_single_x_value_for_table(
                 value=x_value,
             )
+            for x_value in x_values
+        ]
 
-            if normalized_x_value == "":
-                continue
+        normalized_x_values = self.sort_peak_table_values(
+            values=normalized_x_values,
+            descending=descending,
+        )
 
+        for normalized_x_value in normalized_x_values:
             empty_row_index = self.find_first_empty_value_row_index(
                 rows=rows,
                 column_name=target_column_name,
@@ -638,10 +647,13 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
             if value is None:
                 return row_index
 
-            if isinstance(
-                value,
-                str,
-            ) and not value.strip():
+            if (
+                isinstance(
+                    value,
+                    str,
+                )
+                and not value.strip()
+            ):
                 return row_index
 
         return None
