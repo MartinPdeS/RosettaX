@@ -90,6 +90,21 @@ class RuntimeConfig:
     validate_known_paths_on_init: bool = True
     preserve_unknown_paths: bool = True
 
+    LEGACY_PATH_ALIASES: ClassVar[dict[str, str]] = {
+        "fluorescence_calibration.mesf_values": "calibration.mesf_values",
+        "fluorescence_calibration.peak_count": "calibration.peak_count",
+        "fluorescence_calibration.default_peak_process": "calibration.default_fluorescence_peak_process",
+        "scattering_calibration.default_gating_channel": "calibration.default_gating_channel",
+        "scattering_calibration.default_gating_threshold": "calibration.default_gating_threshold",
+        "scattering_calibration.target_mie_relation_xscale": "calibration.target_mie_relation_xscale",
+        "scattering_calibration.target_mie_relation_yscale": "calibration.target_mie_relation_yscale",
+        # Older profiles stored the scattering peak process under calibration.
+        "calibration.default_scattering_peak_process": "scattering_calibration.default_peak_process",
+        "visualization.n_bins": "calibration.n_bins_for_plots",
+        "visualization.n_bins_for_plots": "calibration.n_bins_for_plots",
+        "visualization.show_calibration": "calibration.show_calibration_plot_by_default",
+    }
+
     SCHEMA: ClassVar[dict[str, RuntimeConfigField]] = {
         # ---------------------------------------------------------------------
         # UI
@@ -132,11 +147,28 @@ class RuntimeConfig:
             minimum=1,
             description="Default expected number of calibration peaks.",
         ),
+        "calibration.default_fluorescence_peak_process": RuntimeConfigField(
+            expected_type=str,
+            default="Automatic 1D",
+            description="Preferred fluorescence peak detection process.",
+        ),
         "calibration.histogram_scale": RuntimeConfigField(
             expected_type=str,
             default="log",
             choices=("linear", "log"),
             description="Default histogram count axis scale.",
+        ),
+        "calibration.histogram_xscale": RuntimeConfigField(
+            expected_type=str,
+            default="linear",
+            choices=("linear", "log"),
+            description="Default histogram x axis scale.",
+        ),
+        "calibration.histogram_yscale": RuntimeConfigField(
+            expected_type=str,
+            default="log",
+            choices=("linear", "log"),
+            description="Default histogram y axis scale.",
         ),
         "calibration.default_gating_channel": RuntimeConfigField(
             expected_type=str,
@@ -175,6 +207,18 @@ class RuntimeConfig:
             default="Custom",
             description="Default target model preset for the apply calibration page.",
         ),
+        "calibration.target_mie_relation_xscale": RuntimeConfigField(
+            expected_type=str,
+            default="linear",
+            choices=("linear", "log"),
+            description="Default target Mie relation x axis scale.",
+        ),
+        "calibration.target_mie_relation_yscale": RuntimeConfigField(
+            expected_type=str,
+            default="log",
+            choices=("linear", "log"),
+            description="Default target Mie relation y axis scale.",
+        ),
         # ---------------------------------------------------------------------
         # Fluorescence calibration
         # ---------------------------------------------------------------------
@@ -192,6 +236,11 @@ class RuntimeConfig:
             default="ascending",
             choices=("ascending", "descending"),
             description="Preferred scattering peak table ordering.",
+        ),
+        "scattering_calibration.default_peak_process": RuntimeConfigField(
+            expected_type=str,
+            default="Automatic 1D",
+            description="Preferred scattering peak detection process.",
         ),
         # ---------------------------------------------------------------------
         # Optics
@@ -261,26 +310,41 @@ class RuntimeConfig:
             description="Shell refractive index for core shell particles.",
         ),
         "particle_model.particle_diameter_nm": RuntimeConfigField(
-            expected_type=float,
-            default=100.0,
-            minimum=0.0,
-            description="Particle diameter in nanometers.",
+            expected_type=list,
+            default=[],
+            description="Default particle diameter list in nanometers.",
         ),
         "particle_model.core_diameter_nm": RuntimeConfigField(
-            expected_type=float,
-            default=80.0,
-            minimum=0.0,
-            description="Core diameter in nanometers.",
+            expected_type=list,
+            default=[],
+            description="Default core diameter list in nanometers.",
         ),
         "particle_model.shell_thickness_nm": RuntimeConfigField(
-            expected_type=float,
-            default=10.0,
-            minimum=0.0,
-            description="Shell thickness in nanometers.",
+            expected_type=list,
+            default=[],
+            description="Default shell thickness list in nanometers.",
+        ),
+        # ---------------------------------------------------------------------
+        # Metadata
+        # ---------------------------------------------------------------------
+        "metadata.operator_name": RuntimeConfigField(
+            expected_type=str,
+            default="",
+            description="Default operator name stored in generated outputs.",
+        ),
+        "metadata.instrument_name": RuntimeConfigField(
+            expected_type=str,
+            default="",
+            description="Default instrument name stored in generated outputs.",
         ),
         # ---------------------------------------------------------------------
         # Visualization
         # ---------------------------------------------------------------------
+        "visualization.graph_height": RuntimeConfigField(
+            expected_type=str,
+            default="850px",
+            description="Default graph height CSS value.",
+        ),
         "visualization.default_marker_size": RuntimeConfigField(
             expected_type=float,
             default=7.0,
@@ -467,6 +531,41 @@ class RuntimeConfig:
         current_dict[path_parts[-1]] = value
 
     @classmethod
+    def _delete_nested_path(cls, data: dict[str, Any], path: str) -> None:
+        path_parts = cls._split_path(path)
+        current_value: Any = data
+        parent_stack: list[tuple[dict[str, Any], str]] = []
+
+        for path_part in path_parts[:-1]:
+            if not isinstance(current_value, dict):
+                return
+
+            next_value = current_value.get(path_part)
+
+            if not isinstance(next_value, dict):
+                return
+
+            parent_stack.append((current_value, path_part))
+            current_value = next_value
+
+        if not isinstance(current_value, dict):
+            return
+
+        removed_value = current_value.pop(path_parts[-1], _MISSING)
+
+        if removed_value is _MISSING:
+            return
+
+        for parent_dict, parent_key in reversed(parent_stack):
+            child_value = parent_dict.get(parent_key)
+
+            if isinstance(child_value, dict) and not child_value:
+                parent_dict.pop(parent_key, None)
+                continue
+
+            break
+
+    @classmethod
     def _has_nested_path(cls, data: dict[str, Any], path: str) -> bool:
         current_value: Any = data
 
@@ -480,6 +579,47 @@ class RuntimeConfig:
         return True
 
     @classmethod
+    def _apply_legacy_aliases(cls, payload: dict[str, Any]) -> dict[str, Any]:
+        normalized_payload = copy.deepcopy(payload)
+
+        for source_path, target_path in cls.LEGACY_PATH_ALIASES.items():
+            if not cls._has_nested_path(normalized_payload, source_path):
+                continue
+
+            if cls._has_nested_path(normalized_payload, target_path):
+                cls._delete_nested_path(normalized_payload, source_path)
+                continue
+
+            source_value = cls._get_nested_value(normalized_payload, source_path)
+            cls._set_nested_value(
+                normalized_payload,
+                target_path,
+                copy.deepcopy(source_value),
+            )
+            cls._delete_nested_path(normalized_payload, source_path)
+
+        return normalized_payload
+
+    @classmethod
+    def _preprocess_known_value(
+        cls,
+        *,
+        path: str,
+        value: Any,
+        config_field: RuntimeConfigField,
+    ) -> Any:
+        if value is None and not config_field.allow_none:
+            return copy.deepcopy(config_field.default)
+
+        if config_field.expected_type is list and isinstance(
+            value,
+            (int, float, np.integer, np.floating),
+        ):
+            return [float(value)]
+
+        return value
+
+    @classmethod
     def _normalized_payload(
         cls,
         payload: dict[str, Any],
@@ -487,6 +627,8 @@ class RuntimeConfig:
         preserve_unknown_paths: bool,
         raise_on_invalid: bool,
     ) -> dict[str, Any]:
+        payload = cls._apply_legacy_aliases(payload)
+
         if preserve_unknown_paths:
             normalized_payload = copy.deepcopy(payload)
         else:
@@ -497,6 +639,12 @@ class RuntimeConfig:
                 raw_value = cls._get_nested_value(payload, path)
             else:
                 raw_value = config_field.default
+
+            raw_value = cls._preprocess_known_value(
+                path=path,
+                value=raw_value,
+                config_field=config_field,
+            )
 
             try:
                 coerced_value = cls._coerce_value(

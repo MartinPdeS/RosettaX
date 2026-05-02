@@ -1,17 +1,18 @@
 {
-  "fluorescence_calibration": {
-    "mesf_values": [],
-    "peak_count": 4,
-    "default_peak_process": "Automatic 1D"
-  },
   "particle_model": {
     "scatterer_preset": "Rosetta Mix",
     "core_refractive_index": 1.5,
     "shell_refractive_index": 1.5,
     "particle_refractive_index": 1.602,
-    "shell_thickness_nm": 10.0,
-    "core_diameter_nm": 80.0,
-    "particle_diameter_nm": 100.0,
+    "shell_thickness_nm": [
+      10.0
+    ],
+    "core_diameter_nm": [
+      80.0
+    ],
+    "particle_diameter_nm": [
+      100.0
+    ],
     "mie_model": "Solid Sphere"
   },
   "optics": {
@@ -23,10 +24,7 @@
   },
   "scattering_calibration": {
     "default_peak_process": "Automatic 1D",
-    "default_gating_channel": null,
-    "default_gating_threshold": null,
-    "target_mie_relation_xscale": "linear",
-    "target_mie_relation_yscale": "log"
+    "peak_table_sort_order": "ascending"
   },
   "calibration": {
     "target_model_preset": "Extracellular Vesicles",
@@ -40,17 +38,18 @@
     "default_gating_channel": "",
     "default_gating_threshold": 0.0,
     "n_bins_for_plots": 256,
-    "show_calibration_plot_by_default": true
+    "show_calibration_plot_by_default": true,
+    "default_fluorescence_peak_process": "Automatic 1D",
+    "target_mie_relation_xscale": "linear",
+    "target_mie_relation_yscale": "log"
   },
   "metadata": {
-    "operator_name": null,
-    "instrument_name": null
+    "operator_name": "",
+    "instrument_name": ""
   },
   "visualization": {
     "graph_height": "700px",
     "default_marker_size": 10.0,
-    "n_bins": 200,
-    "show_calibration": true,
     "default_line_width": 3.0,
     "default_font_size": 24.0,
     "default_tick_size": 12.0,
@@ -63,5 +62,8 @@
   "ui": {
     "theme_mode": "light",
     "show_graphs": false
+  },
+  "fluorescence_calibration": {
+    "peak_table_sort_order": "ascending"
   }
 }

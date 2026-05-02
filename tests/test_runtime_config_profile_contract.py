@@ -22,12 +22,12 @@ class Test_RuntimeConfigProfileContract:
     def test_profile_directory_exists(self) -> None:
         profile_directory = Path(directories.profiles)
 
-        assert profile_directory.exists(), (
-            f"Profile directory does not exist: {profile_directory}"
-        )
-        assert profile_directory.is_dir(), (
-            f"Profile path is not a directory: {profile_directory}"
-        )
+        assert (
+            profile_directory.exists()
+        ), f"Profile directory does not exist: {profile_directory}"
+        assert (
+            profile_directory.is_dir()
+        ), f"Profile path is not a directory: {profile_directory}"
 
     def test_at_least_one_profile_json_file_exists(self) -> None:
         profile_paths = collect_profile_paths()
@@ -35,16 +35,20 @@ class Test_RuntimeConfigProfileContract:
         assert profile_paths, "No profile JSON files were found."
 
     @pytest.mark.parametrize("profile_path", collect_profile_paths())
-    def test_profile_json_file_contains_dictionary_payload(self, profile_path: Path) -> None:
+    def test_profile_json_file_contains_dictionary_payload(
+        self, profile_path: Path
+    ) -> None:
         with profile_path.open("r", encoding="utf-8") as file_handle:
             payload = json.load(file_handle)
 
-        assert isinstance(payload, dict), (
-            f"Profile {profile_path.name} must contain a JSON object."
-        )
+        assert isinstance(
+            payload, dict
+        ), f"Profile {profile_path.name} must contain a JSON object."
 
     @pytest.mark.parametrize("profile_path", collect_profile_paths())
-    def test_profile_json_file_matches_runtime_config_schema(self, profile_path: Path) -> None:
+    def test_profile_json_file_matches_runtime_config_schema(
+        self, profile_path: Path
+    ) -> None:
         runtime_config = RuntimeConfig.from_json_path(profile_path)
 
         try:
@@ -82,8 +86,11 @@ class Test_RuntimeConfigProfileContract:
             "ui",
             "files",
             "calibration",
+            "fluorescence_calibration",
             "optics",
             "particle_model",
+            "scattering_calibration",
+            "metadata",
             "visualization",
         }
 
@@ -103,7 +110,9 @@ class Test_RuntimeConfigProfileContract:
         assert isinstance(payload["ui"]["show_graphs"], bool)
 
     @pytest.mark.parametrize("profile_path", collect_profile_paths())
-    def test_profile_json_file_has_valid_calibration_values(self, profile_path: Path) -> None:
+    def test_profile_json_file_has_valid_calibration_values(
+        self, profile_path: Path
+    ) -> None:
         runtime_config = RuntimeConfig.from_json_path(profile_path)
         payload = runtime_config.to_dict()
 
@@ -119,10 +128,14 @@ class Test_RuntimeConfigProfileContract:
         assert isinstance(payload["calibration"]["n_bins_for_plots"], int)
         assert payload["calibration"]["n_bins_for_plots"] >= 1
 
-        assert isinstance(payload["calibration"]["show_calibration_plot_by_default"], bool)
+        assert isinstance(
+            payload["calibration"]["show_calibration_plot_by_default"], bool
+        )
 
     @pytest.mark.parametrize("profile_path", collect_profile_paths())
-    def test_profile_json_file_has_valid_optics_values(self, profile_path: Path) -> None:
+    def test_profile_json_file_has_valid_optics_values(
+        self, profile_path: Path
+    ) -> None:
         runtime_config = RuntimeConfig.from_json_path(profile_path)
         payload = runtime_config.to_dict()
 
@@ -136,7 +149,9 @@ class Test_RuntimeConfigProfileContract:
         assert payload["optics"]["detector_sampling"] >= 1
 
     @pytest.mark.parametrize("profile_path", collect_profile_paths())
-    def test_profile_json_file_has_valid_particle_model_values(self, profile_path: Path) -> None:
+    def test_profile_json_file_has_valid_particle_model_values(
+        self, profile_path: Path
+    ) -> None:
         runtime_config = RuntimeConfig.from_json_path(profile_path)
         payload = runtime_config.to_dict()
 
@@ -149,12 +164,29 @@ class Test_RuntimeConfigProfileContract:
         assert payload["particle_model"]["core_refractive_index"] >= 1.0
         assert payload["particle_model"]["shell_refractive_index"] >= 1.0
 
-        assert payload["particle_model"]["particle_diameter_nm"] >= 0.0
-        assert payload["particle_model"]["core_diameter_nm"] >= 0.0
-        assert payload["particle_model"]["shell_thickness_nm"] >= 0.0
+        assert isinstance(payload["particle_model"]["particle_diameter_nm"], list)
+        assert isinstance(payload["particle_model"]["core_diameter_nm"], list)
+        assert isinstance(payload["particle_model"]["shell_thickness_nm"], list)
+
+        assert all(
+            particle_diameter_nm >= 0.0
+            for particle_diameter_nm in payload["particle_model"][
+                "particle_diameter_nm"
+            ]
+        )
+        assert all(
+            core_diameter_nm >= 0.0
+            for core_diameter_nm in payload["particle_model"]["core_diameter_nm"]
+        )
+        assert all(
+            shell_thickness_nm >= 0.0
+            for shell_thickness_nm in payload["particle_model"]["shell_thickness_nm"]
+        )
 
     @pytest.mark.parametrize("profile_path", collect_profile_paths())
-    def test_profile_json_file_has_valid_visualization_values(self, profile_path: Path) -> None:
+    def test_profile_json_file_has_valid_visualization_values(
+        self, profile_path: Path
+    ) -> None:
         runtime_config = RuntimeConfig.from_json_path(profile_path)
         payload = runtime_config.to_dict()
 

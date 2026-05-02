@@ -5,8 +5,7 @@ from typing import Any, Optional
 
 import numpy as np
 
-from RosettaX.utils import casting
-from RosettaX.utils import directories
+from RosettaX.utils import casting, directories
 from RosettaX.utils.runtime_config import RuntimeConfig
 
 from . import schema
@@ -33,22 +32,13 @@ def _json_safe_value(value: Any) -> Any:
         return value.item()
 
     if isinstance(value, list):
-        return [
-            _json_safe_value(item)
-            for item in value
-        ]
+        return [_json_safe_value(item) for item in value]
 
     if isinstance(value, tuple):
-        return [
-            _json_safe_value(item)
-            for item in value
-        ]
+        return [_json_safe_value(item) for item in value]
 
     if isinstance(value, dict):
-        return {
-            str(key): _json_safe_value(item)
-            for key, item in value.items()
-        }
+        return {str(key): _json_safe_value(item) for key, item in value.items()}
 
     return value
 
@@ -81,9 +71,7 @@ def resolve_default_profile_value(
         if option_value in {"default_profile", "default_profile.json"}:
             return option_value
 
-    return str(
-        profile_options[0].get("value") or ""
-    )
+    return str(profile_options[0].get("value") or "")
 
 
 def normalize_profile_filename(profile_name: str) -> str:
@@ -149,8 +137,7 @@ def build_form_field_ids(page) -> dict[str, str]:
         )
 
         raise AttributeError(
-            "Missing settings ID(s) for schema field(s): "
-            f"{missing_field_names_text}"
+            "Missing settings ID(s) for schema field(s): " f"{missing_field_names_text}"
         )
 
     return field_ids
@@ -208,9 +195,12 @@ def _read_runtime_value(
             raw_value,
         )
 
-        return casting.coerce_optional_string(
-            raw_value,
-        ) or ""
+        return (
+            casting.coerce_optional_string(
+                raw_value,
+            )
+            or ""
+        )
 
     if value_kind == "yes_no_bool":
         resolved_bool = runtime_config.get_bool(
@@ -231,9 +221,7 @@ def _read_runtime_value(
             raw_value=raw_value,
         )
 
-    raise ValueError(
-        f"Unsupported value_kind: {value_kind!r}"
-    )
+    raise ValueError(f"Unsupported value_kind: {value_kind!r}")
 
 
 def coerce_choice_value(
@@ -249,8 +237,7 @@ def coerce_choice_value(
     ).strip()
 
     valid_values = {
-        str(option.get("value"))
-        for option in (field_definition.options or [])
+        str(option.get("value")) for option in (field_definition.options or [])
     }
 
     if not valid_values:
@@ -346,11 +333,7 @@ def _set_nested_value(
     """
     Set a value in a nested dictionary using a dotted path.
     """
-    path_parts = [
-        part
-        for part in str(dotted_path).split(".")
-        if part
-    ]
+    path_parts = [part for part in str(dotted_path).split(".") if part]
 
     if not path_parts:
         raise ValueError("dotted_path cannot be empty.")
@@ -382,29 +365,41 @@ def _coerce_field_value_for_save(
     value_kind = field_definition.value_kind
 
     if value_kind == "float":
-        return casting.as_optional_float(
+        coerced_float = casting.as_optional_float(
             raw_value,
         )
+        return field_definition.default if coerced_float is None else coerced_float
 
     if value_kind == "int":
-        return casting.as_optional_int(
+        coerced_int = casting.as_optional_int(
             raw_value,
         )
+        return field_definition.default if coerced_int is None else coerced_int
 
     if value_kind == "float_list":
         return casting.as_float_list(
             raw_value,
-        )
+        ).tolist()
 
     if value_kind == "string":
-        return casting.coerce_optional_string(
+        coerced_value = casting.coerce_optional_string(
             raw_value,
+        )
+        return (
+            coerced_value
+            if coerced_value is not None
+            else str(field_definition.default or "")
         )
 
     if value_kind == "yes_no_bool":
-        return str(
-            raw_value or "no",
-        ).strip().lower() == "yes"
+        return (
+            str(
+                raw_value or "no",
+            )
+            .strip()
+            .lower()
+            == "yes"
+        )
 
     if value_kind == "choice":
         return coerce_choice_value(
@@ -412,9 +407,7 @@ def _coerce_field_value_for_save(
             raw_value=raw_value,
         )
 
-    raise ValueError(
-        f"Unsupported value_kind: {value_kind!r}"
-    )
+    raise ValueError(f"Unsupported value_kind: {value_kind!r}")
 
 
 def build_nested_profile_payload(
