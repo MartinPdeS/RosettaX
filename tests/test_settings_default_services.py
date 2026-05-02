@@ -2,7 +2,9 @@
 
 from RosettaX.pages.p05_settings.sections.s01_default import services
 from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.workflow.apply_calibration.scattering import EXTRACELLULAR_VESICLES_PRESET_NAME
+from RosettaX.workflow.apply_calibration.scattering import (
+    EXTRACELLULAR_VESICLES_PRESET_NAME,
+)
 from RosettaX.workflow.model.scattering import ROSETTA_MIX_PRESET_NAME
 
 
@@ -37,8 +39,49 @@ class Test_SettingsDefaultServicesPresetPreferences:
             }
         )
 
-        assert nested_profile_payload["particle_model"]["scatterer_preset"] == ROSETTA_MIX_PRESET_NAME
+        assert (
+            nested_profile_payload["particle_model"]["scatterer_preset"]
+            == ROSETTA_MIX_PRESET_NAME
+        )
         assert (
             nested_profile_payload["calibration"]["target_model_preset"]
             == EXTRACELLULAR_VESICLES_PRESET_NAME
+        )
+
+
+class Test_SettingsDefaultServicesPeakTableSortOrder:
+    def test_build_form_store_reads_saved_peak_table_sort_order_preferences(self):
+        runtime_config = RuntimeConfig.from_dict(
+            {
+                "fluorescence_calibration": {
+                    "peak_table_sort_order": "descending",
+                },
+                "scattering_calibration": {
+                    "peak_table_sort_order": "descending",
+                },
+            }
+        )
+
+        form_store = services.build_form_store_from_runtime_config(
+            runtime_config,
+        )
+
+        assert form_store["fluorescence_peak_table_sort_order"] == "descending"
+        assert form_store["scattering_peak_table_sort_order"] == "descending"
+
+    def test_build_nested_profile_payload_saves_peak_table_sort_order_preferences(self):
+        nested_profile_payload = services.build_nested_profile_payload(
+            {
+                "fluorescence_peak_table_sort_order": "descending",
+                "scattering_peak_table_sort_order": "descending",
+            }
+        )
+
+        assert (
+            nested_profile_payload["fluorescence_calibration"]["peak_table_sort_order"]
+            == "descending"
+        )
+        assert (
+            nested_profile_payload["scattering_calibration"]["peak_table_sort_order"]
+            == "descending"
         )
