@@ -15,6 +15,14 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Do not open a browser tab on startup.",
     )
     parser.add_argument(
+        "--log-level",
+        type=str,
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        default="INFO",
+        help="Application log level. Use DEBUG for verbose local troubleshooting.",
+    )
+
+    parser.add_argument(
         "--version",
         action="version",
         version=f"%(prog)s {__version__}",

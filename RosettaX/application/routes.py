@@ -8,7 +8,9 @@ from pathlib import Path
 from dash import Dash
 from flask import Response
 
-from RosettaX.utils import directories
+from RosettaX.utils.paths import (
+    resolve_calibration_file_path as resolve_safe_calibration_file_path,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -18,22 +20,10 @@ def resolve_calibration_file_path(folder: str, file_name: str) -> Path:
     """
     Resolve a calibration JSON file path safely within the allowed calibration folders.
     """
-    normalized_folder = str(folder).strip().lower()
-
-    if normalized_folder == "fluorescence":
-        base_directory = Path(directories.fluorescence_calibration)
-    elif normalized_folder == "scattering":
-        base_directory = Path(directories.scattering_calibration)
-    else:
-        raise ValueError(f"Unsupported calibration folder: {folder}")
-
-    resolved_base_directory = base_directory.resolve()
-    resolved_path = (resolved_base_directory / file_name).resolve()
-
-    if resolved_base_directory not in resolved_path.parents:
-        raise ValueError("Invalid calibration file path.")
-
-    return resolved_path
+    return resolve_safe_calibration_file_path(
+        folder=folder,
+        file_name=file_name,
+    )
 
 
 def build_calibration_json_document(

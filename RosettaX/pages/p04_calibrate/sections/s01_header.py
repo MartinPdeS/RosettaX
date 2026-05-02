@@ -37,4 +37,7 @@ class Header:
         )
 
     def register_callbacks(self) -> None:
-        pass
+        """
+        This section is static and does not register Dash callbacks.
+        """
+        return None

@@ -6,7 +6,7 @@ import io
 import json
 import zipfile
 
-from RosettaX.utils import directories
+from RosettaX.utils.paths import resolve_selected_calibration_file_path
 from RosettaX.utils.reader import FCSFile
 
 
@@ -106,30 +106,8 @@ def resolve_calibration_file_path(
     """
     Resolve a calibration picker value into an on disk path.
     """
-    selected_calibration_string = str(
+    return resolve_selected_calibration_file_path(
         selected_calibration,
-    ).strip()
-
-    if not selected_calibration_string:
-        raise ValueError("Selected calibration path is empty.")
-
-    folder_name, file_name = selected_calibration_string.split(
-        "/",
-        1,
-    )
-
-    if folder_name == "fluorescence":
-        return Path(
-            directories.fluorescence_calibration,
-        ) / file_name
-
-    if folder_name == "scattering":
-        return Path(
-            directories.scattering_calibration,
-        ) / file_name
-
-    raise ValueError(
-        f'Unsupported calibration folder "{folder_name}".'
     )
 
 

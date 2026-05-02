@@ -7,6 +7,7 @@ from typing import Any, Optional
 from urllib.parse import parse_qs
 
 from RosettaX.utils import directories
+from RosettaX.utils.paths import resolve_selected_calibration_file_path
 from RosettaX.workflow.plotting import scatter2d
 
 
@@ -101,29 +102,10 @@ def resolve_calibration_file_path(
     """
     Resolve a selected dropdown value into a calibration file path.
     """
-    selected_calibration_string = str(
+    del folder_definitions
+
+    return resolve_selected_calibration_file_path(
         selected_calibration,
-    ).strip()
-
-    if not selected_calibration_string:
-        raise ValueError("Selected calibration path is empty.")
-
-    if "/" not in selected_calibration_string:
-        raise ValueError(
-            f"Invalid selected calibration value: {selected_calibration_string!r}."
-        )
-
-    folder_key, file_name = selected_calibration_string.split(
-        "/",
-        1,
-    )
-
-    for known_folder_key, _folder_label, folder_path in folder_definitions:
-        if folder_key == known_folder_key:
-            return folder_path / file_name
-
-    raise ValueError(
-        f"Unsupported calibration folder key: {folder_key!r}."
     )
 
 

@@ -472,15 +472,23 @@ def apply_default_visual_style(
         if marker is not None:
             try:
                 marker.size = resolved_marker_size
-            except Exception:
-                pass
+            except (AttributeError, TypeError, ValueError):
+                logger.debug(
+                    "Could not apply marker size to trace_type=%s",
+                    type(trace).__name__,
+                    exc_info=True,
+                )
 
         line = getattr(trace, "line", None)
         if line is not None:
             try:
                 line.width = resolved_line_width
-            except Exception:
-                pass
+            except (AttributeError, TypeError, ValueError):
+                logger.debug(
+                    "Could not apply line width to trace_type=%s",
+                    type(trace).__name__,
+                    exc_info=True,
+                )
 
     if fig.layout.shapes:
         updated_shapes = []

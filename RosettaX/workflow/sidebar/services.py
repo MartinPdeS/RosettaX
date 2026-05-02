@@ -6,6 +6,8 @@ from typing import Any
 from urllib.parse import quote
 
 from RosettaX.utils import directories
+from RosettaX.utils.paths import normalize_profile_filename as normalize_safe_profile_filename
+from RosettaX.utils.paths import resolve_profile_file_path
 
 
 logger = logging.getLogger(__name__)
@@ -21,15 +23,7 @@ def normalize_profile_filename(filename: str) -> str:
     """
     Normalize a profile file name to a .json file name.
     """
-    normalized_filename = str(filename or "").strip()
-
-    if not normalized_filename:
-        raise ValueError("Profile filename cannot be empty.")
-
-    if not normalized_filename.endswith(".json"):
-        normalized_filename = f"{normalized_filename}.json"
-
-    return normalized_filename
+    return normalize_safe_profile_filename(filename)
 
 
 def resolve_selected_profile(selected_profile: str | None) -> tuple[str | None, str]:
@@ -44,8 +38,8 @@ def resolve_selected_profile(selected_profile: str | None) -> tuple[str | None, 
     if not selected_profile_name:
         return None, "No profile selected."
 
-    selected_profile_file_name = normalize_profile_filename(selected_profile_name)
-    resolved_profile_path = Path(directories.profiles).resolve() / selected_profile_file_name
+    resolved_profile_path = resolve_profile_file_path(selected_profile_name)
+    selected_profile_file_name = resolved_profile_path.name
 
     if not resolved_profile_path.exists():
         raise FileNotFoundError(f"Profile does not exist: {resolved_profile_path}")

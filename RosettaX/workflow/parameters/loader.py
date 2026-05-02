@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import copy
 import json
 import logging
 from pathlib import Path
@@ -8,6 +9,35 @@ from RosettaX.utils import directories
 
 
 logger = logging.getLogger(__name__)
+_DETECTOR_PRESET_CACHE: dict[Path, tuple[int, dict[str, Any]]] = {}
+
+
+def _load_detector_preset_from_file(
+    detector_preset_path: Path,
+) -> dict[str, Any]:
+    """
+    Load one detector preset JSON file with mtime-based caching.
+    """
+    resolved_detector_preset_path = Path(detector_preset_path).resolve()
+    file_stat = resolved_detector_preset_path.stat()
+    cached_entry = _DETECTOR_PRESET_CACHE.get(resolved_detector_preset_path)
+
+    if cached_entry is not None and cached_entry[0] == file_stat.st_mtime_ns:
+        return copy.deepcopy(cached_entry[1])
+
+    detector_preset = json.loads(
+        resolved_detector_preset_path.read_text(encoding="utf-8")
+    )
+
+    if not isinstance(detector_preset, dict):
+        raise TypeError("Detector preset JSON root must be an object.")
+
+    _DETECTOR_PRESET_CACHE[resolved_detector_preset_path] = (
+        file_stat.st_mtime_ns,
+        copy.deepcopy(detector_preset),
+    )
+
+    return copy.deepcopy(detector_preset)
 
 
 def load_detector_configuration_presets() -> dict[str, dict[str, Any]]:
@@ -30,19 +60,16 @@ def load_detector_configuration_presets() -> dict[str, dict[str, Any]]:
 
     for detector_preset_path in sorted(detector_directory.glob("*.json")):
         try:
-            detector_preset = json.loads(
-                detector_preset_path.read_text(encoding="utf-8")
-            )
-        except Exception:
-            logger.exception(
-                "Failed to load detector preset JSON file: %s",
+            detector_preset = _load_detector_preset_from_file(detector_preset_path)
+        except TypeError:
+            logger.warning(
+                "Ignoring detector preset because JSON root is not an object: %s",
                 detector_preset_path,
             )
             continue
-
-        if not isinstance(detector_preset, dict):
-            logger.warning(
-                "Ignoring detector preset because JSON root is not an object: %s",
+        except Exception:
+            logger.exception(
+                "Failed to load detector preset JSON file: %s",
                 detector_preset_path,
             )
             continue
