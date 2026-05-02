@@ -3,6 +3,7 @@
 from typing import Self
 
 import dash
+import dash_bootstrap_components as dbc
 
 from .ids import Ids
 from .sections import callbacks as section_callbacks
@@ -61,7 +62,7 @@ class ApplyCalibrationPage:
         section_callbacks.register_callbacks(self.sections)
         return self
 
-    def layout(self, **_kwargs):
+    def layout(self, **_kwargs) -> dbc.Container:
         """
         Build the apply calibration page layout.
 
