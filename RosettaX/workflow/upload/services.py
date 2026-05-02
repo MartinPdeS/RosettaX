@@ -7,11 +7,11 @@ import re
 from pathlib import Path
 from typing import Any, Optional
 
-from RosettaX.workflow.upload.models import UploadConfig
-from RosettaX.workflow.upload.models import UploadState
-
+from RosettaX.workflow.upload.models import UploadConfig, UploadState
 
 DEFAULT_UPLOAD_DIRECTORY = Path.home() / ".rosettax" / "uploads"
+DEFAULT_MAX_UPLOAD_BYTES = 100 * 1024 * 1024
+DEFAULT_ALLOWED_UPLOAD_EXTENSIONS = frozenset({".fcs"})
 
 
 def clean_optional_string(
@@ -73,9 +73,7 @@ def sanitize_filename(
         filename_only,
     )
 
-    safe_filename = safe_filename.strip(
-        "._"
-    )
+    safe_filename = safe_filename.strip("._")
 
     if not safe_filename:
         return fallback_filename
@@ -83,8 +81,56 @@ def sanitize_filename(
     return safe_filename
 
 
+def parse_allowed_upload_extensions(
+    allowed_extensions: str | None,
+) -> frozenset[str]:
+    """
+    Parse a comma-separated extension string into a normalized set.
+    """
+    if allowed_extensions is None:
+        return DEFAULT_ALLOWED_UPLOAD_EXTENSIONS
+
+    extensions = {
+        f".{part.lower().lstrip('.')}"
+        for chunk in str(allowed_extensions).split(",")
+        for part in [chunk.strip()]
+        if part
+    }
+
+    if not extensions:
+        return DEFAULT_ALLOWED_UPLOAD_EXTENSIONS
+
+    return frozenset(extensions)
+
+
+def validate_upload_filename(
+    filename: Optional[str],
+    *,
+    allowed_extensions: frozenset[str],
+) -> str:
+    """
+    Validate and sanitize an uploaded filename.
+    """
+    safe_filename = sanitize_filename(
+        filename,
+    )
+
+    suffix = Path(safe_filename).suffix.lower()
+
+    if suffix not in allowed_extensions:
+        allowed_extensions_text = ", ".join(sorted(allowed_extensions))
+        raise ValueError(
+            f"Unsupported uploaded file type {suffix or '<none>'}. "
+            f"Allowed file types: {allowed_extensions_text}."
+        )
+
+    return safe_filename
+
+
 def decode_dash_upload_contents(
     contents: str,
+    *,
+    max_upload_bytes: int = DEFAULT_MAX_UPLOAD_BYTES,
 ) -> bytes:
     """
     Decode Dash upload contents.
@@ -93,9 +139,7 @@ def decode_dash_upload_contents(
         data:<mime>;base64,<payload>
     """
     if "," not in contents:
-        raise ValueError(
-            "Upload contents are malformed."
-        )
+        raise ValueError("Upload contents are malformed.")
 
     _metadata, encoded_payload = contents.split(
         ",",
@@ -103,14 +147,19 @@ def decode_dash_upload_contents(
     )
 
     try:
-        return base64.b64decode(
+        decoded_bytes = base64.b64decode(
             encoded_payload,
             validate=True,
         )
     except binascii.Error as error:
+        raise ValueError("Upload contents could not be decoded.") from error
+
+    if len(decoded_bytes) > int(max_upload_bytes):
         raise ValueError(
-            "Upload contents could not be decoded."
-        ) from error
+            f"Upload exceeds the maximum supported size of {int(max_upload_bytes)} bytes."
+        )
+
+    return decoded_bytes
 
 
 def resolve_upload_directory(
@@ -132,6 +181,8 @@ def save_uploaded_file(
     contents: str,
     filename: Optional[str],
     upload_directory: Path,
+    allowed_extensions: frozenset[str] = DEFAULT_ALLOWED_UPLOAD_EXTENSIONS,
+    max_upload_bytes: int = DEFAULT_MAX_UPLOAD_BYTES,
 ) -> Path:
     """
     Save one uploaded file and return its path.
@@ -141,14 +192,16 @@ def save_uploaded_file(
         exist_ok=True,
     )
 
-    safe_filename = sanitize_filename(
+    safe_filename = validate_upload_filename(
         filename,
+        allowed_extensions=allowed_extensions,
     )
 
     file_path = upload_directory / safe_filename
 
     file_bytes = decode_dash_upload_contents(
         contents,
+        max_upload_bytes=max_upload_bytes,
     )
 
     file_path.write_bytes(
@@ -171,15 +224,9 @@ def set_nested_dict_value(
     -------
     files.fluorescence_fcs_file_path
     """
-    next_data = dict(
-        data or {}
-    )
+    next_data = dict(data or {})
 
-    path_parts = [
-        part.strip()
-        for part in dotted_path.split(".")
-        if part.strip()
-    ]
+    path_parts = [part.strip() for part in dotted_path.split(".") if part.strip()]
 
     if not path_parts:
         return next_data
@@ -222,9 +269,7 @@ def build_upload_state(
     Otherwise, the previous stored values are reused.
     """
     runtime_config_payload = (
-        dict(runtime_config_data)
-        if isinstance(runtime_config_data, dict)
-        else {}
+        dict(runtime_config_data) if isinstance(runtime_config_data, dict) else {}
     )
 
     clean_contents = clean_optional_string(
@@ -262,11 +307,15 @@ def build_upload_state(
     upload_directory = resolve_upload_directory(
         config,
     )
+    allowed_extensions = parse_allowed_upload_extensions(
+        config.accepted_file_extensions,
+    )
 
     saved_file_path = save_uploaded_file(
         contents=clean_contents,
         filename=clean_filename,
         upload_directory=upload_directory,
+        allowed_extensions=allowed_extensions,
     )
 
     next_uploaded_filename = clean_filename or saved_file_path.name

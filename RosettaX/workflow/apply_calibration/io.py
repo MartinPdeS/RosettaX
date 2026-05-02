@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from pathlib import Path
-from typing import Any, Callable, Optional
 import io
 import json
 import zipfile
+from pathlib import Path
+from typing import Any, Callable, Optional
 
-from RosettaX.utils import directories
+from RosettaX.utils.paths import resolve_selected_calibration_file_path
 from RosettaX.utils.reader import FCSFile
 
 
@@ -36,11 +36,7 @@ def resolve_uploaded_fcs_paths(
         return []
 
     if isinstance(uploaded_fcs_path, list):
-        return [
-            str(path)
-            for path in uploaded_fcs_path
-            if str(path).strip()
-        ]
+        return [str(path) for path in uploaded_fcs_path if str(path).strip()]
 
     resolved_single_path = str(
         uploaded_fcs_path,
@@ -63,11 +59,7 @@ def normalize_export_columns(
     if not isinstance(export_columns, list):
         return []
 
-    return [
-        str(column)
-        for column in export_columns
-        if str(column).strip()
-    ]
+    return [str(column) for column in export_columns if str(column).strip()]
 
 
 def build_input_export_columns(
@@ -106,30 +98,8 @@ def resolve_calibration_file_path(
     """
     Resolve a calibration picker value into an on disk path.
     """
-    selected_calibration_string = str(
+    return resolve_selected_calibration_file_path(
         selected_calibration,
-    ).strip()
-
-    if not selected_calibration_string:
-        raise ValueError("Selected calibration path is empty.")
-
-    folder_name, file_name = selected_calibration_string.split(
-        "/",
-        1,
-    )
-
-    if folder_name == "fluorescence":
-        return Path(
-            directories.fluorescence_calibration,
-        ) / file_name
-
-    if folder_name == "scattering":
-        return Path(
-            directories.scattering_calibration,
-        ) / file_name
-
-    raise ValueError(
-        f'Unsupported calibration folder "{folder_name}".'
     )
 
 
@@ -166,10 +136,7 @@ def get_fcs_column_names(
     Read FCS column names.
     """
     with FCSFile(str(uploaded_fcs_path), writable=False) as fcs_file:
-        return [
-            str(name)
-            for name in fcs_file.get_column_names()
-        ]
+        return [str(name) for name in fcs_file.get_column_names()]
 
 
 def build_exported_fcs_bytes(

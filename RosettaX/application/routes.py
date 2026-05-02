@@ -8,8 +8,9 @@ from pathlib import Path
 from dash import Dash
 from flask import Response
 
-from RosettaX.utils import directories
-
+from RosettaX.utils.paths import (
+    resolve_calibration_file_path as resolve_safe_calibration_file_path,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -18,22 +19,10 @@ def resolve_calibration_file_path(folder: str, file_name: str) -> Path:
     """
     Resolve a calibration JSON file path safely within the allowed calibration folders.
     """
-    normalized_folder = str(folder).strip().lower()
-
-    if normalized_folder == "fluorescence":
-        base_directory = Path(directories.fluorescence_calibration)
-    elif normalized_folder == "scattering":
-        base_directory = Path(directories.scattering_calibration)
-    else:
-        raise ValueError(f"Unsupported calibration folder: {folder}")
-
-    resolved_base_directory = base_directory.resolve()
-    resolved_path = (resolved_base_directory / file_name).resolve()
-
-    if resolved_base_directory not in resolved_path.parents:
-        raise ValueError("Invalid calibration file path.")
-
-    return resolved_path
+    return resolve_safe_calibration_file_path(
+        folder=folder,
+        file_name=file_name,
+    )
 
 
 def build_calibration_json_document(
@@ -89,13 +78,10 @@ def build_calibration_json_document(
 """
 
 
-def build_calibration_json_error_document(exception: Exception) -> str:
+def build_calibration_json_error_document() -> str:
     """
-    Build the standalone HTML error document used when calibration JSON loading fails.
+    Build a generic standalone HTML error document for calibration JSON failures.
     """
-    safe_exception_name = escape(type(exception).__name__)
-    safe_exception_message = escape(str(exception))
-
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -104,7 +90,7 @@ def build_calibration_json_error_document(exception: Exception) -> str:
 </head>
 <body>
     <h2>Could not open calibration</h2>
-    <pre>{safe_exception_name}: {safe_exception_message}</pre>
+    <pre>The requested calibration file could not be opened.</pre>
 </body>
 </html>
 """
@@ -151,6 +137,6 @@ def register_server_routes(app: Dash) -> None:
                 file_name,
             )
 
-            error_document = build_calibration_json_error_document(exception)
+            error_document = build_calibration_json_error_document()
 
             return Response(error_document, mimetype="text/html", status=400)

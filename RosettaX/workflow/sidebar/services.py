@@ -6,7 +6,10 @@ from typing import Any
 from urllib.parse import quote
 
 from RosettaX.utils import directories
-
+from RosettaX.utils.paths import (
+    normalize_profile_filename as normalize_safe_profile_filename,
+)
+from RosettaX.utils.paths import resolve_profile_file_path
 
 logger = logging.getLogger(__name__)
 
@@ -21,15 +24,7 @@ def normalize_profile_filename(filename: str) -> str:
     """
     Normalize a profile file name to a .json file name.
     """
-    normalized_filename = str(filename or "").strip()
-
-    if not normalized_filename:
-        raise ValueError("Profile filename cannot be empty.")
-
-    if not normalized_filename.endswith(".json"):
-        normalized_filename = f"{normalized_filename}.json"
-
-    return normalized_filename
+    return normalize_safe_profile_filename(filename)
 
 
 def resolve_selected_profile(selected_profile: str | None) -> tuple[str | None, str]:
@@ -44,8 +39,8 @@ def resolve_selected_profile(selected_profile: str | None) -> tuple[str | None, 
     if not selected_profile_name:
         return None, "No profile selected."
 
-    selected_profile_file_name = normalize_profile_filename(selected_profile_name)
-    resolved_profile_path = Path(directories.profiles).resolve() / selected_profile_file_name
+    resolved_profile_path = resolve_profile_file_path(selected_profile_name)
+    selected_profile_file_name = resolved_profile_path.name
 
     if not resolved_profile_path.exists():
         raise FileNotFoundError(f"Profile does not exist: {resolved_profile_path}")
@@ -74,11 +69,7 @@ def list_saved_calibrations() -> dict[str, list[str]]:
             directory_path.mkdir(parents=True, exist_ok=True)
 
             file_names = sorted(
-                [
-                    path.name
-                    for path in directory_path.glob("*.json")
-                    if path.is_file()
-                ],
+                [path.name for path in directory_path.glob("*.json") if path.is_file()],
                 key=str.lower,
             )
 
@@ -110,7 +101,9 @@ def build_saved_profile_options() -> list[dict[str, str]]:
 
     try:
         setting_files = directories.list_profiles()
-        options = [{"label": file_name, "value": file_name} for file_name in setting_files]
+        options = [
+            {"label": file_name, "value": file_name} for file_name in setting_files
+        ]
         logger.debug("Built %d saved profile options.", len(options))
         return options
 
@@ -124,14 +117,18 @@ def build_apply_href(folder: str, file_name: str) -> str:
     Build the internal apply calibration link.
     """
     selected_calibration_value = f"{folder}/{file_name}"
-    return f"/calibrate?selected_calibration={quote(selected_calibration_value, safe='')}"
+    return (
+        f"/calibrate?selected_calibration={quote(selected_calibration_value, safe='')}"
+    )
 
 
 def open_saved_calibrations_root() -> str:
     """
     Open the root folder that contains the calibration directories.
     """
-    calibration_root_directory = Path(directories.fluorescence_calibration).resolve().parent
+    calibration_root_directory = (
+        Path(directories.fluorescence_calibration).resolve().parent
+    )
     directories.open_directory(calibration_root_directory)
     return f"Opened calibration folder: {calibration_root_directory}"
 
