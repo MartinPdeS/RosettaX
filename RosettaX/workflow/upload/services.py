@@ -7,9 +7,7 @@ import re
 from pathlib import Path
 from typing import Any, Optional
 
-from RosettaX.workflow.upload.models import UploadConfig
-from RosettaX.workflow.upload.models import UploadState
-
+from RosettaX.workflow.upload.models import UploadConfig, UploadState
 
 DEFAULT_UPLOAD_DIRECTORY = Path.home() / ".rosettax" / "uploads"
 DEFAULT_MAX_UPLOAD_BYTES = 100 * 1024 * 1024
@@ -75,9 +73,7 @@ def sanitize_filename(
         filename_only,
     )
 
-    safe_filename = safe_filename.strip(
-        "._"
-    )
+    safe_filename = safe_filename.strip("._")
 
     if not safe_filename:
         return fallback_filename
@@ -85,7 +81,9 @@ def sanitize_filename(
     return safe_filename
 
 
-def parse_allowed_upload_extensions(accepted_file_extensions: str | None) -> frozenset[str]:
+def parse_allowed_upload_extensions(
+    accepted_file_extensions: str | None,
+) -> frozenset[str]:
     """
     Parse a comma-separated extension string into a normalized set.
     """
@@ -141,9 +139,7 @@ def decode_dash_upload_contents(
         data:<mime>;base64,<payload>
     """
     if "," not in contents:
-        raise ValueError(
-            "Upload contents are malformed."
-        )
+        raise ValueError("Upload contents are malformed.")
 
     _metadata, encoded_payload = contents.split(
         ",",
@@ -156,9 +152,7 @@ def decode_dash_upload_contents(
             validate=True,
         )
     except binascii.Error as error:
-        raise ValueError(
-            "Upload contents could not be decoded."
-        ) from error
+        raise ValueError("Upload contents could not be decoded.") from error
 
     if len(decoded_bytes) > int(max_upload_bytes):
         raise ValueError(
@@ -230,15 +224,9 @@ def set_nested_dict_value(
     -------
     files.fluorescence_fcs_file_path
     """
-    next_data = dict(
-        data or {}
-    )
+    next_data = dict(data or {})
 
-    path_parts = [
-        part.strip()
-        for part in dotted_path.split(".")
-        if part.strip()
-    ]
+    path_parts = [part.strip() for part in dotted_path.split(".") if part.strip()]
 
     if not path_parts:
         return next_data
@@ -281,9 +269,7 @@ def build_upload_state(
     Otherwise, the previous stored values are reused.
     """
     runtime_config_payload = (
-        dict(runtime_config_data)
-        if isinstance(runtime_config_data, dict)
-        else {}
+        dict(runtime_config_data) if isinstance(runtime_config_data, dict) else {}
     )
 
     clean_contents = clean_optional_string(

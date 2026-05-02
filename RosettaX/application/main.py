@@ -9,12 +9,13 @@ from typing import Optional
 
 import dash
 
+from RosettaX.pages.p00_sidebar.main import register_sidebar_callbacks
+from RosettaX.utils.parser import _parse_args
+
 from .callbacks import register_application_callbacks
 from .layout import build_application_layout
 from .pages import register_pages
 from .routes import register_server_routes
-from RosettaX.pages.p00_sidebar.main import register_sidebar_callbacks
-from RosettaX.utils.parser import _parse_args
 
 logger = logging.getLogger(__name__)
 

@@ -10,7 +10,6 @@ from RosettaX.utils import directories
 from RosettaX.utils.paths import resolve_selected_calibration_file_path
 from RosettaX.workflow.plotting import scatter2d
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -56,11 +55,7 @@ def build_dropdown_options(
             )
 
             calibration_file_paths = sorted(
-                [
-                    path
-                    for path in folder_path.glob("*.json")
-                    if path.is_file()
-                ],
+                [path for path in folder_path.glob("*.json") if path.is_file()],
                 key=lambda path: path.name.lower(),
             )
 

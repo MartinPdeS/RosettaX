@@ -7,7 +7,6 @@ from typing import Any
 
 from RosettaX.utils import directories
 
-
 logger = logging.getLogger(__name__)
 _DETECTOR_PRESET_CACHE: dict[Path, tuple[int, dict[str, Any]]] = {}
 

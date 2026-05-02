@@ -12,7 +12,6 @@ from RosettaX.utils.paths import (
     resolve_calibration_file_path as resolve_safe_calibration_file_path,
 )
 
-
 logger = logging.getLogger(__name__)
 
 

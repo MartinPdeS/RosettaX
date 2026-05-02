@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from typing import Optional, Any
 import logging
 from dataclasses import dataclass
+from typing import Any, Optional
 
 import numpy as np
 import plotly.graph_objs as go
+
 from RosettaX.utils.io import load_signal
 
 logger = logging.getLogger(__name__)
@@ -188,8 +189,6 @@ def build_histogram_figure(
     return figure
 
 
-
-
 def make_histogram_with_lines(
     *,
     values: np.ndarray,
@@ -249,7 +248,9 @@ def make_histogram_with_lines(
     overlay_histogram_values = None
     if overlay_values is not None:
         overlay_histogram_values = np.asarray(overlay_values, dtype=float)
-        overlay_histogram_values = overlay_histogram_values[np.isfinite(overlay_histogram_values)]
+        overlay_histogram_values = overlay_histogram_values[
+            np.isfinite(overlay_histogram_values)
+        ]
 
     figure = go.Figure()
 
@@ -513,7 +514,10 @@ def apply_default_visual_style(
         fig.update_layout(annotations=updated_annotations)
 
     current_title_text = ""
-    if fig.layout.title is not None and getattr(fig.layout.title, "text", None) is not None:
+    if (
+        fig.layout.title is not None
+        and getattr(fig.layout.title, "text", None) is not None
+    ):
         current_title_text = fig.layout.title.text
 
     fig.update_layout(

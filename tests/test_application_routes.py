@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import dash
+from dash import html
 
 from RosettaX.application.routes import register_server_routes
 
@@ -21,10 +22,13 @@ class Test_ApplicationRoutes:
         )
 
         app = dash.Dash(__name__)
+        app.layout = html.Div()
         register_server_routes(app)
 
         client = app.server.test_client()
-        response = client.get("/calibration-json/fluorescence/%2E%2E/%2E%2E/secret.json")
+        response = client.get(
+            "/calibration-json/fluorescence/%2E%2E/%2E%2E/secret.json"
+        )
 
         assert response.status_code == 400
         assert "Invalid calibration file path" in response.get_data(as_text=True)
@@ -36,7 +40,9 @@ class Test_ApplicationRoutes:
     ) -> None:
         fluorescence_directory = tmp_path / "fluorescence"
         fluorescence_directory.mkdir()
-        (fluorescence_directory / "broken.json").write_text("{not valid json", encoding="utf-8")
+        (fluorescence_directory / "broken.json").write_text(
+            "{not valid json", encoding="utf-8"
+        )
 
         monkeypatch.setattr(
             "RosettaX.utils.directories.fluorescence_calibration",
@@ -48,6 +54,7 @@ class Test_ApplicationRoutes:
         )
 
         app = dash.Dash(__name__)
+        app.layout = html.Div()
         register_server_routes(app)
 
         client = app.server.test_client()

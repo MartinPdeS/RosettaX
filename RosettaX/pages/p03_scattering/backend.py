@@ -1,16 +1,14 @@
 # -*- coding: utf-8 -*-
 
+import logging
+import time
 from dataclasses import dataclass
 from functools import lru_cache
 from typing import Any, Callable, Optional
-import logging
-import time
 
 import numpy as np
-
-from PyMieSim.units import ureg
 from PyMieSim import experiment as PyMieSim
-
+from PyMieSim.units import ureg
 
 logger = logging.getLogger(__name__)
 
@@ -166,15 +164,21 @@ class BackEnd:
         logger.debug(
             "compute_modeled_coupling called with mie_model=%r particle_diameters_nm=%r core_diameters_nm=%r shell_thicknesses_nm=%r wavelength_nm=%r source_numerical_aperture=%r optical_power_watt=%r detector_numerical_aperture=%r medium_refractive_index=%r particle_refractive_index=%r core_refractive_index=%r shell_refractive_index=%r detector_cache_numerical_aperture=%r detector_phi_offset_degree=%r detector_gamma_offset_degree=%r polarization_angle_degree=%r detector_sampling=%r",
             resolved_mie_model,
-            None
-            if particle_diameters_nm is None
-            else BackEnd._summarize_numeric_array(particle_diameters_nm),
-            None
-            if core_diameters_nm is None
-            else BackEnd._summarize_numeric_array(core_diameters_nm),
-            None
-            if shell_thicknesses_nm is None
-            else BackEnd._summarize_numeric_array(shell_thicknesses_nm),
+            (
+                None
+                if particle_diameters_nm is None
+                else BackEnd._summarize_numeric_array(particle_diameters_nm)
+            ),
+            (
+                None
+                if core_diameters_nm is None
+                else BackEnd._summarize_numeric_array(core_diameters_nm)
+            ),
+            (
+                None
+                if shell_thicknesses_nm is None
+                else BackEnd._summarize_numeric_array(shell_thicknesses_nm)
+            ),
             wavelength_nm,
             source_numerical_aperture,
             optical_power_watt,
@@ -192,10 +196,14 @@ class BackEnd:
 
         if resolved_mie_model == SOLID_SPHERE_MODEL_NAME:
             if particle_diameters_nm is None:
-                raise ValueError("particle_diameters_nm must be provided for the Solid Sphere model.")
+                raise ValueError(
+                    "particle_diameters_nm must be provided for the Solid Sphere model."
+                )
 
             if particle_refractive_index is None:
-                raise ValueError("particle_refractive_index must be provided for the Solid Sphere model.")
+                raise ValueError(
+                    "particle_refractive_index must be provided for the Solid Sphere model."
+                )
 
             return BackEnd.compute_modeled_coupling_from_diameters(
                 particle_diameters_nm=particle_diameters_nm,
@@ -214,16 +222,24 @@ class BackEnd:
 
         if resolved_mie_model == CORE_SHELL_SPHERE_MODEL_NAME:
             if core_diameters_nm is None:
-                raise ValueError("core_diameters_nm must be provided for the Core/Shell Sphere model.")
+                raise ValueError(
+                    "core_diameters_nm must be provided for the Core/Shell Sphere model."
+                )
 
             if shell_thicknesses_nm is None:
-                raise ValueError("shell_thicknesses_nm must be provided for the Core/Shell Sphere model.")
+                raise ValueError(
+                    "shell_thicknesses_nm must be provided for the Core/Shell Sphere model."
+                )
 
             if core_refractive_index is None:
-                raise ValueError("core_refractive_index must be provided for the Core/Shell Sphere model.")
+                raise ValueError(
+                    "core_refractive_index must be provided for the Core/Shell Sphere model."
+                )
 
             if shell_refractive_index is None:
-                raise ValueError("shell_refractive_index must be provided for the Core/Shell Sphere model.")
+                raise ValueError(
+                    "shell_refractive_index must be provided for the Core/Shell Sphere model."
+                )
 
             return BackEnd.compute_modeled_coupling_from_core_shell_dimensions(
                 core_diameters_nm=core_diameters_nm,
@@ -291,9 +307,11 @@ class BackEnd:
         if particle_diameters_nm.size == 0:
             raise ValueError("No valid positive particle diameters were provided.")
 
-        resolved_detector_cache_numerical_aperture = BackEnd._resolve_detector_cache_numerical_aperture(
-            detector_numerical_aperture=detector_numerical_aperture,
-            detector_cache_numerical_aperture=detector_cache_numerical_aperture,
+        resolved_detector_cache_numerical_aperture = (
+            BackEnd._resolve_detector_cache_numerical_aperture(
+                detector_numerical_aperture=detector_numerical_aperture,
+                detector_cache_numerical_aperture=detector_cache_numerical_aperture,
+            )
         )
 
         logger.debug(
@@ -303,14 +321,18 @@ class BackEnd:
 
         coupling_values = np.asarray(
             BackEnd._compute_cached_solid_sphere_coupling(
-                particle_diameters_nm=tuple(float(value) for value in particle_diameters_nm.tolist()),
+                particle_diameters_nm=tuple(
+                    float(value) for value in particle_diameters_nm.tolist()
+                ),
                 wavelength_nm=float(wavelength_nm),
                 source_numerical_aperture=float(source_numerical_aperture),
                 optical_power_watt=float(optical_power_watt),
                 detector_numerical_aperture=float(detector_numerical_aperture),
                 medium_refractive_index=float(medium_refractive_index),
                 particle_refractive_index=float(particle_refractive_index),
-                detector_cache_numerical_aperture=float(resolved_detector_cache_numerical_aperture),
+                detector_cache_numerical_aperture=float(
+                    resolved_detector_cache_numerical_aperture
+                ),
                 detector_phi_offset_degree=float(detector_phi_offset_degree),
                 detector_gamma_offset_degree=float(detector_gamma_offset_degree),
                 polarization_angle_degree=float(polarization_angle_degree),
@@ -331,7 +353,9 @@ class BackEnd:
             "source_numerical_aperture": float(source_numerical_aperture),
             "optical_power_watt": float(optical_power_watt),
             "detector_numerical_aperture": float(detector_numerical_aperture),
-            "detector_cache_numerical_aperture": float(resolved_detector_cache_numerical_aperture),
+            "detector_cache_numerical_aperture": float(
+                resolved_detector_cache_numerical_aperture
+            ),
             "detector_phi_offset_degree": float(detector_phi_offset_degree),
             "detector_gamma_offset_degree": float(detector_gamma_offset_degree),
             "polarization_angle_degree": float(polarization_angle_degree),
@@ -348,7 +372,9 @@ class BackEnd:
 
         logger.debug(
             "compute_modeled_coupling_from_diameters returning expected_coupling_values=%r",
-            BackEnd._summarize_numeric_array(modeled_coupling_result.expected_coupling_values),
+            BackEnd._summarize_numeric_array(
+                modeled_coupling_result.expected_coupling_values
+            ),
         )
 
         return modeled_coupling_result
@@ -397,7 +423,10 @@ class BackEnd:
             detector_sampling=detector_sampling,
         )
 
-        return tuple(float(value) for value in np.asarray(coupling_values, dtype=float).reshape(-1))
+        return tuple(
+            float(value)
+            for value in np.asarray(coupling_values, dtype=float).reshape(-1)
+        )
 
     @staticmethod
     def compute_modeled_coupling_from_core_shell_dimensions(
@@ -457,11 +486,13 @@ class BackEnd:
             require_positive_values=True,
         )
 
-        core_diameters_nm, shell_thicknesses_nm = BackEnd._broadcast_two_positive_arrays(
-            first_values=core_diameters_nm,
-            second_values=shell_thicknesses_nm,
-            first_name="core_diameters_nm",
-            second_name="shell_thicknesses_nm",
+        core_diameters_nm, shell_thicknesses_nm = (
+            BackEnd._broadcast_two_positive_arrays(
+                first_values=core_diameters_nm,
+                second_values=shell_thicknesses_nm,
+                first_name="core_diameters_nm",
+                second_name="shell_thicknesses_nm",
+            )
         )
 
         if core_diameters_nm.size == 0:
@@ -479,9 +510,11 @@ class BackEnd:
             BackEnd._summarize_numeric_array(particle_diameters_nm),
         )
 
-        resolved_detector_cache_numerical_aperture = BackEnd._resolve_detector_cache_numerical_aperture(
-            detector_numerical_aperture=detector_numerical_aperture,
-            detector_cache_numerical_aperture=detector_cache_numerical_aperture,
+        resolved_detector_cache_numerical_aperture = (
+            BackEnd._resolve_detector_cache_numerical_aperture(
+                detector_numerical_aperture=detector_numerical_aperture,
+                detector_cache_numerical_aperture=detector_cache_numerical_aperture,
+            )
         )
 
         logger.debug(
@@ -491,8 +524,12 @@ class BackEnd:
 
         expected_coupling_values_array = np.asarray(
             BackEnd._compute_cached_core_shell_coupling(
-                core_diameters_nm=tuple(float(value) for value in core_diameters_nm.tolist()),
-                shell_thicknesses_nm=tuple(float(value) for value in shell_thicknesses_nm.tolist()),
+                core_diameters_nm=tuple(
+                    float(value) for value in core_diameters_nm.tolist()
+                ),
+                shell_thicknesses_nm=tuple(
+                    float(value) for value in shell_thicknesses_nm.tolist()
+                ),
                 wavelength_nm=float(wavelength_nm),
                 source_numerical_aperture=float(source_numerical_aperture),
                 optical_power_watt=float(optical_power_watt),
@@ -500,7 +537,9 @@ class BackEnd:
                 medium_refractive_index=float(medium_refractive_index),
                 core_refractive_index=float(core_refractive_index),
                 shell_refractive_index=float(shell_refractive_index),
-                detector_cache_numerical_aperture=float(resolved_detector_cache_numerical_aperture),
+                detector_cache_numerical_aperture=float(
+                    resolved_detector_cache_numerical_aperture
+                ),
                 detector_phi_offset_degree=float(detector_phi_offset_degree),
                 detector_gamma_offset_degree=float(detector_gamma_offset_degree),
                 polarization_angle_degree=float(polarization_angle_degree),
@@ -521,7 +560,9 @@ class BackEnd:
             "source_numerical_aperture": float(source_numerical_aperture),
             "optical_power_watt": float(optical_power_watt),
             "detector_numerical_aperture": float(detector_numerical_aperture),
-            "detector_cache_numerical_aperture": float(resolved_detector_cache_numerical_aperture),
+            "detector_cache_numerical_aperture": float(
+                resolved_detector_cache_numerical_aperture
+            ),
             "detector_phi_offset_degree": float(detector_phi_offset_degree),
             "detector_gamma_offset_degree": float(detector_gamma_offset_degree),
             "polarization_angle_degree": float(polarization_angle_degree),
@@ -542,7 +583,9 @@ class BackEnd:
 
         logger.debug(
             "compute_modeled_coupling_from_core_shell_dimensions returning expected_coupling_values=%r",
-            BackEnd._summarize_numeric_array(modeled_coupling_result.expected_coupling_values),
+            BackEnd._summarize_numeric_array(
+                modeled_coupling_result.expected_coupling_values
+            ),
         )
 
         return modeled_coupling_result
@@ -853,20 +896,28 @@ class BackEnd:
         second_values = np.asarray(second_values, dtype=float).reshape(-1)
 
         if first_values.size == 0:
-            raise ValueError(f"No valid positive values were provided for {first_name}.")
+            raise ValueError(
+                f"No valid positive values were provided for {first_name}."
+            )
 
         if second_values.size == 0:
-            raise ValueError(f"No valid positive values were provided for {second_name}.")
+            raise ValueError(
+                f"No valid positive values were provided for {second_name}."
+            )
 
         if first_values.size == second_values.size:
             return first_values, second_values
 
         if first_values.size == 1:
-            first_values = np.full(second_values.size, float(first_values[0]), dtype=float)
+            first_values = np.full(
+                second_values.size, float(first_values[0]), dtype=float
+            )
             return first_values, second_values
 
         if second_values.size == 1:
-            second_values = np.full(first_values.size, float(second_values[0]), dtype=float)
+            second_values = np.full(
+                first_values.size, float(second_values[0]), dtype=float
+            )
             return first_values, second_values
 
         raise ValueError(

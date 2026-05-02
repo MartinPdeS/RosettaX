@@ -4,14 +4,18 @@ import base64
 
 import pytest
 
-from RosettaX.workflow.upload.services import decode_dash_upload_contents
-from RosettaX.workflow.upload.services import parse_allowed_upload_extensions
-from RosettaX.workflow.upload.services import save_uploaded_file
+from RosettaX.workflow.upload.services import (
+    decode_dash_upload_contents,
+    parse_allowed_upload_extensions,
+    save_uploaded_file,
+)
 
 
 class Test_UploadServiceGuardrails:
     def test_parse_allowed_upload_extensions_parses_csv_values(self) -> None:
-        assert parse_allowed_upload_extensions(".fcs, .csv") == frozenset({".fcs", ".csv"})
+        assert parse_allowed_upload_extensions(".fcs, .csv") == frozenset(
+            {".fcs", ".csv"}
+        )
 
     def test_save_uploaded_file_rejects_unsupported_extension(
         self,

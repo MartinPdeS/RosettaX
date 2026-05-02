@@ -33,7 +33,10 @@ def resolve_named_file_within_directory(
 
     resolved_path = (resolved_directory / normalized_file_name).resolve()
 
-    if resolved_path == resolved_directory or resolved_directory not in resolved_path.parents:
+    if (
+        resolved_path == resolved_directory
+        or resolved_directory not in resolved_path.parents
+    ):
         raise ValueError(f"Invalid {description} path.")
 
     if allowed_suffixes is not None:

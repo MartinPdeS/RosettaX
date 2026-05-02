@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 
+import importlib
 from types import SimpleNamespace
 
-from RosettaX.application.main import configure_logging
-from RosettaX.application.main import main
+application_main = importlib.import_module("RosettaX.application.main")
 
 
 class Test_ApplicationMain:
     def test_configure_logging_uses_info_by_default(self) -> None:
-        resolved_log_level = configure_logging(
+        resolved_log_level = application_main.configure_logging(
             debug=False,
             log_level="INFO",
         )
@@ -16,7 +16,7 @@ class Test_ApplicationMain:
         assert resolved_log_level == 20
 
     def test_configure_logging_promotes_debug_flag(self) -> None:
-        resolved_log_level = configure_logging(
+        resolved_log_level = application_main.configure_logging(
             debug=True,
             log_level="ERROR",
         )
@@ -38,7 +38,8 @@ class Test_ApplicationMain:
                 application_run_calls.append(True)
 
         monkeypatch.setattr(
-            "RosettaX.application.main._parse_args",
+            application_main,
+            "_parse_args",
             lambda argv: SimpleNamespace(
                 host="0.0.0.0",
                 port=9000,
@@ -47,12 +48,9 @@ class Test_ApplicationMain:
                 log_level="WARNING",
             ),
         )
-        monkeypatch.setattr(
-            "RosettaX.application.main.RosettaXApplication",
-            _FakeApplication,
-        )
+        monkeypatch.setattr(application_main, "RosettaXApplication", _FakeApplication)
 
-        main(["--debug"])
+        application_main.main(["--debug"])
 
         assert captured_application_kwargs == {
             "host": "0.0.0.0",
