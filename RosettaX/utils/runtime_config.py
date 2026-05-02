@@ -98,6 +98,7 @@ class RuntimeConfig:
         "scattering_calibration.default_gating_threshold": "calibration.default_gating_threshold",
         "scattering_calibration.target_mie_relation_xscale": "calibration.target_mie_relation_xscale",
         "scattering_calibration.target_mie_relation_yscale": "calibration.target_mie_relation_yscale",
+        # Older profiles stored the scattering peak process under calibration.
         "calibration.default_scattering_peak_process": "scattering_calibration.default_peak_process",
         "visualization.n_bins": "calibration.n_bins_for_plots",
         "visualization.n_bins_for_plots": "calibration.n_bins_for_plots",
