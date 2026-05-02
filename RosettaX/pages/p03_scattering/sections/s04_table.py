@@ -10,6 +10,7 @@ from RosettaX.pages.p00_sidebar.ids import SidebarIds
 from RosettaX.pages.p03_scattering.state import ScatteringPageState
 from RosettaX.utils import styling
 from RosettaX.utils import ui_forms
+from RosettaX.workflow.calibration import scattering_services
 from RosettaX.workflow.model.scattering import ScatteringModelConfiguration
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.parameters import table as parameters_table
@@ -45,6 +46,7 @@ class ReferenceTable:
 
     sphere_table_columns = ScatteringCalibrationStandardTable.sphere_table_columns
     core_shell_table_columns = ScatteringCalibrationStandardTable.core_shell_table_columns
+    simulated_curve_point_count = 200
 
     def __init__(
         self,
@@ -522,10 +524,6 @@ class ReferenceTable:
                 page_state_payload if isinstance(page_state_payload, dict) else None
             )
 
-            page_state = page_state.update(
-                scattering_parameters_payload=calibration_standard_parameters_payload,
-            )
-
             computed_rows = ScatteringCalibrationStandardTable.compute_model_for_rows(
                 mie_model=resolved_mie_model,
                 current_rows=current_rows,
@@ -541,6 +539,27 @@ class ReferenceTable:
                 detector_phi_angle_degree=detector_phi_angle_degree,
                 detector_gamma_angle_degree=detector_gamma_angle_degree,
                 logger=logger,
+            )
+
+            page_state = page_state.update(
+                scattering_parameters_payload=calibration_standard_parameters_payload,
+                calibration_model_graph_payload=scattering_services.build_calibration_standard_mie_relation_figure_store(
+                    mie_model=resolved_mie_model,
+                    current_table_rows=computed_rows,
+                    medium_refractive_index=medium_refractive_index,
+                    particle_refractive_index=particle_refractive_index,
+                    core_refractive_index=core_refractive_index,
+                    shell_refractive_index=shell_refractive_index,
+                    wavelength_nm=wavelength_nm,
+                    detector_numerical_aperture=detector_numerical_aperture,
+                    detector_cache_numerical_aperture=detector_cache_numerical_aperture,
+                    blocker_bar_numerical_aperture=blocker_bar_numerical_aperture,
+                    detector_sampling=detector_sampling,
+                    detector_phi_angle_degree=detector_phi_angle_degree,
+                    detector_gamma_angle_degree=detector_gamma_angle_degree,
+                    simulated_curve_point_count=self.simulated_curve_point_count,
+                    logger=logger,
+                ),
             )
 
             logger.debug(
