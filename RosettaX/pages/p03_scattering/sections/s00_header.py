@@ -181,9 +181,7 @@ class Header:
                                 color_name,
                                 0.12,
                             ),
-                            "border": (
-                                "1px solid " f"{styling.build_rgba(color_name, 0.35)}"
-                            ),
+                            "border": f"1px solid {styling.build_rgba(color_name, 0.35)}",
                             "marginBottom": "10px",
                         },
                     ),
