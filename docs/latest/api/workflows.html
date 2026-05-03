@@ -52,7 +52,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/MartinPdeS/RosettaX/documentation_page/version_switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'v0.0.13';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'v0.0.14';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -63,7 +63,7 @@
     <link rel="prev" title="Utilities API" href="utilities.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.13" />
+  <meta name="docsearch:version" content="0.0.14" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -488,12 +488,13 @@
 <section id="calibration-workflow">
 <span id="module-RosettaX.workflow.parameters.services"></span><span id="module-RosettaX.workflow.parameters.detector_configuration"></span><span id="module-RosettaX.workflow.parameters.model"></span><span id="module-RosettaX.workflow.parameters.table"></span><h2>Calibration workflow<a class="headerlink" href="#calibration-workflow" title="Link to this heading">#</a></h2>
 <p>The calibration modules define optical parameter models and the fitted relationships used for fluorescence and scattering calibration.</p>
+<p id="module-RosettaX.workflow.calibration.scattering"><span id="module-RosettaX.workflow.calibration.mie_relation"></span>Compatibility shim for shared scattering calibration helpers.</p>
 </section>
 <section id="module-RosettaX.workflow.apply_calibration.services">
-<span id="apply-calibration-workflow"></span><span id="module-RosettaX.workflow.calibration.fluorescence"></span><span id="module-RosettaX.workflow.calibration.scattering"></span><span id="module-RosettaX.workflow.calibration.mie_relation"></span><h2>Apply-calibration workflow<a class="headerlink" href="#module-RosettaX.workflow.apply_calibration.services" title="Link to this heading">#</a></h2>
+<span id="apply-calibration-workflow"></span><span id="module-RosettaX.workflow.calibration.fluorescence"></span><h2>Apply-calibration workflow<a class="headerlink" href="#module-RosettaX.workflow.apply_calibration.services" title="Link to this heading">#</a></h2>
 </section>
 <section id="peak-workflow">
-<span id="module-RosettaX.workflow.apply_calibration.scattering.main"></span><span id="module-RosettaX.workflow.apply_calibration.fluorescence"></span><h2>Peak workflow<a class="headerlink" href="#peak-workflow" title="Link to this heading">#</a></h2>
+<span id="module-RosettaX.workflow.apply_calibration.fluorescence"></span><h2>Peak workflow<a class="headerlink" href="#peak-workflow" title="Link to this heading">#</a></h2>
 <p>Peak detection and annotation are distributed across adapters, registry helpers, plotting helpers, and lower-level scripts.</p>
 </section>
 <section id="module-RosettaX.workflow.save.services">
