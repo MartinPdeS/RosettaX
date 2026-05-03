@@ -1,63 +1,73 @@
 {
-  "calibration": {
-    "mesf_values": [],
-    "peak_count": 6,
-    "default_fluorescence_peak_process": "Automatic 1D",
-    "default_gating_channel": "",
-    "default_gating_threshold": 0.0,
-    "target_model_preset": "Custom",
-    "target_mie_relation_xscale": "linear",
-    "target_mie_relation_yscale": "log",
-    "histogram_xscale": "linear",
-    "histogram_yscale": "log",
-    "max_events_for_analysis": 100000,
-    "default_output_suffix": "_calibrated",
-    "n_bins_for_plots": 256,
-    "show_calibration_plot_by_default": true,
-    "histogram_scale": "log"
+  "fluorescence": {
+    "calibration": {
+      "mesf_values": [],
+      "peak_count": 6,
+      "default_fluorescence_peak_process": "Automatic 1D",
+      "peak_table_sort_order": "ascending"
+    },
+    "files": {
+      "fcs_file_path": ""
+    }
   },
-  "fluorescence_calibration": {
-    "peak_table_sort_order": "ascending"
+  "scattering": {
+    "optics": {
+      "medium_refractive_index": 1.334,
+      "wavelength_nm": 488.0,
+      "detector_numerical_aperture": 0.45,
+      "detector_cache_numerical_aperture": 0.45,
+      "detector_sampling": 1000
+    },
+    "particle_model": {
+      "scatterer_preset": "Rosetta Mix",
+      "core_refractive_index": 1.5,
+      "shell_refractive_index": 1.5,
+      "particle_refractive_index": 1.602,
+      "shell_thickness_nm": [],
+      "core_diameter_nm": [],
+      "particle_diameter_nm": [],
+      "mie_model": "Solid Sphere"
+    },
+    "calibration": {
+      "default_peak_process": "Automatic 1D",
+      "peak_table_sort_order": "descending",
+      "default_gating_channel": "",
+      "default_gating_threshold": 0.0
+    },
+    "files": {
+      "fcs_file_path": ""
+    }
   },
-  "particle_model": {
-    "scatterer_preset": "Custom",
-    "core_refractive_index": 1.45,
-    "shell_refractive_index": 1.4,
-    "particle_refractive_index": 1.45,
-    "shell_thickness_nm": [],
-    "core_diameter_nm": [],
-    "particle_diameter_nm": [],
-    "mie_model": "Solid Sphere"
+  "apply_calibration": {
+    "calibration": {
+      "target_model_preset": "Extracellular Vesicles",
+      "target_mie_relation_xscale": "linear",
+      "target_mie_relation_yscale": "log",
+      "histogram_xscale": "linear",
+      "histogram_yscale": "log",
+      "max_events_for_analysis": 10000,
+      "default_output_suffix": "_calibrated",
+      "n_bins_for_plots": 256,
+      "show_calibration_plot_by_default": true,
+      "histogram_scale": "log"
+    },
+    "metadata": {
+      "operator_name": "",
+      "instrument_name": ""
+    },
+    "visualization": {
+      "graph_height": "700px",
+      "default_marker_size": 10.0,
+      "default_line_width": 3.0,
+      "default_font_size": 24.0,
+      "default_tick_size": 12.0,
+      "show_grid_by_default": false
+    }
   },
-  "optics": {
-    "medium_refractive_index": 1.333,
-    "wavelength_nm": 488.0,
-    "detector_numerical_aperture": 0.45,
-    "detector_cache_numerical_aperture": 0.45,
-    "detector_sampling": 1000
-  },
-  "scattering_calibration": {
-    "default_peak_process": "Automatic 1D",
-    "peak_table_sort_order": "ascending"
-  },
-  "metadata": {
-    "operator_name": "",
-    "instrument_name": ""
-  },
-  "visualization": {
-    "graph_height": "850px",
-    "default_marker_size": 7.0,
-    "default_line_width": 2.0,
-    "default_font_size": 14.0,
-    "default_tick_size": 12.0,
-    "show_grid_by_default": true
-  },
-  "files": {
-    "fluorescence_fcs_file_path": "",
-    "scattering_fcs_file_path": ""
-  },
-  "ui": {
-    "theme_mode": "light",
-    "show_graphs": true
+  "misc": {
+    "ui": {
+      "theme_mode": "light",
+      "show_graphs": false
+    }
   }
 }

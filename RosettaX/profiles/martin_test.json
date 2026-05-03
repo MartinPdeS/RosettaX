@@ -1,14 +1,9 @@
 {
   "fluorescence": {
     "calibration": {
-      "mesf_values": [
-        1.0,
-        3.0,
-        4.0,
-        5.0
-      ],
-      "peak_count": 4,
-      "default_fluorescence_peak_process": "2D manual click",
+      "mesf_values": [],
+      "peak_count": 6,
+      "default_fluorescence_peak_process": "Automatic 1D",
       "peak_table_sort_order": "ascending"
     },
     "files": {
@@ -24,26 +19,18 @@
       "detector_sampling": 1000
     },
     "particle_model": {
+      "scatterer_preset": "Rosetta Mix",
       "core_refractive_index": 1.5,
       "shell_refractive_index": 1.5,
       "particle_refractive_index": 1.602,
-      "shell_thickness_nm": [
-        20.0
-      ],
-      "core_diameter_nm": [
-        100.0
-      ],
-      "particle_diameter_nm": [
-        100.0,
-        200.0,
-        300.0
-      ],
-      "mie_model": "Solid Sphere",
-      "scatterer_preset": "Custom"
+      "shell_thickness_nm": [],
+      "core_diameter_nm": [],
+      "particle_diameter_nm": [],
+      "mie_model": "Solid Sphere"
     },
     "calibration": {
-      "default_peak_process": "1D automatic peaks",
-      "peak_table_sort_order": "ascending",
+      "default_peak_process": "Automatic 1D",
+      "peak_table_sort_order": "descending",
       "default_gating_channel": "",
       "default_gating_threshold": 0.0
     },
@@ -53,28 +40,28 @@
   },
   "apply_calibration": {
     "calibration": {
-      "histogram_scale": "log",
+      "target_model_preset": "Extracellular Vesicles",
       "target_mie_relation_xscale": "linear",
       "target_mie_relation_yscale": "log",
-      "max_events_for_analysis": 10000,
-      "default_output_suffix": "_calibrated",
-      "n_bins_for_plots": 200,
-      "show_calibration_plot_by_default": true,
       "histogram_xscale": "linear",
       "histogram_yscale": "log",
-      "target_model_preset": "Custom"
+      "max_events_for_analysis": 10000,
+      "default_output_suffix": "_calibrated",
+      "n_bins_for_plots": 256,
+      "show_calibration_plot_by_default": true,
+      "histogram_scale": "log"
     },
     "metadata": {
       "operator_name": "",
       "instrument_name": ""
     },
     "visualization": {
+      "graph_height": "700px",
       "default_marker_size": 10.0,
       "default_line_width": 3.0,
       "default_font_size": 24.0,
       "default_tick_size": 12.0,
-      "show_grid_by_default": false,
-      "graph_height": "700px"
+      "show_grid_by_default": false
     }
   },
   "misc": {
