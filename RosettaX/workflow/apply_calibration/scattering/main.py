@@ -8,7 +8,7 @@ import numpy as np
 from RosettaX.workflow.calibration.mie_relation import MieRelation
 from RosettaX.workflow.calibration.mie_relation import build_mie_relation_from_arrays
 from RosettaX.workflow.calibration.mie_relation import relation_is_strictly_monotonic
-from RosettaX.workflow.calibration.scattering import ScatteringCalibration
+from RosettaX.scattering.calibration import ScatteringCalibration
 
 from .mie_relation_builder import build_target_mie_relation
 from .models import MonotonicDiameterInterval

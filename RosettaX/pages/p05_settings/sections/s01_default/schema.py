@@ -8,7 +8,7 @@ from RosettaX.workflow.apply_calibration.scattering import (
     CUSTOM_PRESET_NAME,
     build_scattering_target_model_preset_options,
 )
-from RosettaX.workflow.model.scattering import (
+from RosettaX.scattering.model import (
     CUSTOM_SCATTERER_PRESET_NAME,
     build_scattering_calibration_scatterer_preset_options,
 )

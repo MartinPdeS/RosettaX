@@ -5,7 +5,7 @@ import logging
 
 import numpy as np
 
-from RosettaX.workflow.calibration.scattering import ScatteringCalibration
+from RosettaX.scattering.calibration import ScatteringCalibration
 
 from .mie_relation_builder import build_target_mie_relation
 from .models import ScatteringApplyResult

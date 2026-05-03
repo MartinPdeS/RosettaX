@@ -10,7 +10,7 @@ from RosettaX.utils.casting import as_optional_float
 from RosettaX.utils import styling
 from RosettaX.utils import ui_forms
 from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.workflow.model.scattering import ScatteringModelConfiguration
+from RosettaX.scattering.model import ScatteringModelConfiguration
 
 
 logger = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ class Model:
     This section owns only the visual parameter inputs.
 
     The reusable scattering model logic lives in
-    RosettaX.workflow.model.scattering.
+    RosettaX.scattering.model.
     """
 
     model_configuration = ScatteringModelConfiguration

@@ -12,7 +12,7 @@ from RosettaX.pages.p03_scattering.state import ScatteringPageState
 from RosettaX.utils import plottings
 from RosettaX.utils import styling
 from RosettaX.utils import ui_forms
-from RosettaX.workflow.calibration import scattering_services as services
+from . import services
 
 
 logger = logging.getLogger(__name__)

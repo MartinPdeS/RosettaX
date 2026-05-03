@@ -10,14 +10,15 @@ from RosettaX.pages.p00_sidebar.ids import SidebarIds
 from RosettaX.pages.p03_scattering.state import ScatteringPageState
 from RosettaX.utils import styling
 from RosettaX.utils import ui_forms
-from RosettaX.workflow.calibration import scattering_services
-from RosettaX.workflow.model.scattering import ScatteringModelConfiguration
+from RosettaX.scattering.model import ScatteringModelConfiguration
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.parameters import table as parameters_table
 from RosettaX.workflow.table.layout import ReferenceTableActionConfig
 from RosettaX.workflow.table.layout import ReferenceTableConfig
 from RosettaX.workflow.table.layout import ReferenceTableLayout
-from RosettaX.workflow.table.scattering import ScatteringCalibrationStandardTable
+
+from ..s05_calibration import services as calibration_services
+from .services import ScatteringCalibrationStandardTable
 
 
 logger = logging.getLogger(__name__)
@@ -543,7 +544,7 @@ class ReferenceTable:
 
             page_state = page_state.update(
                 scattering_parameters_payload=calibration_standard_parameters_payload,
-                calibration_model_graph_payload=scattering_services.build_calibration_standard_mie_relation_figure_store(
+                calibration_model_graph_payload=calibration_services.build_calibration_standard_mie_relation_figure_store(
                     mie_model=resolved_mie_model,
                     current_table_rows=computed_rows,
                     medium_refractive_index=medium_refractive_index,
