@@ -2,7 +2,7 @@
   "fluorescence": {
     "calibration": {
       "mesf_values": [],
-      "peak_count": 4,
+      "peak_count": 6,
       "default_fluorescence_peak_process": "Automatic 1D",
       "peak_table_sort_order": "ascending"
     },
@@ -19,26 +19,18 @@
       "detector_sampling": 1000
     },
     "particle_model": {
+      "scatterer_preset": "Rosetta Mix",
       "core_refractive_index": 1.5,
       "shell_refractive_index": 1.5,
       "particle_refractive_index": 1.602,
-      "shell_thickness_nm": [
-        20.0
-      ],
-      "core_diameter_nm": [
-        100.0
-      ],
-      "particle_diameter_nm": [
-        100.0,
-        200.0,
-        300.0
-      ],
-      "mie_model": "Solid Sphere",
-      "scatterer_preset": "Custom"
+      "shell_thickness_nm": [],
+      "core_diameter_nm": [],
+      "particle_diameter_nm": [],
+      "mie_model": "Solid Sphere"
     },
     "calibration": {
       "default_peak_process": "Automatic 1D",
-      "peak_table_sort_order": "ascending",
+      "peak_table_sort_order": "descending",
       "default_gating_channel": "",
       "default_gating_threshold": 0.0
     },
@@ -48,16 +40,16 @@
   },
   "apply_calibration": {
     "calibration": {
+      "target_model_preset": "Extracellular Vesicles",
+      "target_mie_relation_xscale": "linear",
+      "target_mie_relation_yscale": "log",
       "histogram_xscale": "linear",
       "histogram_yscale": "log",
       "max_events_for_analysis": 10000,
       "default_output_suffix": "_calibrated",
-      "target_mie_relation_xscale": "linear",
-      "target_mie_relation_yscale": "log",
-      "n_bins_for_plots": 200,
+      "n_bins_for_plots": 256,
       "show_calibration_plot_by_default": true,
-      "histogram_scale": "log",
-      "target_model_preset": "Custom"
+      "histogram_scale": "log"
     },
     "metadata": {
       "operator_name": "",
@@ -74,7 +66,7 @@
   },
   "misc": {
     "ui": {
-      "theme_mode": "dark",
+      "theme_mode": "light",
       "show_graphs": false
     }
   }

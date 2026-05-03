@@ -5,7 +5,7 @@ from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.apply_calibration.scattering import (
     EXTRACELLULAR_VESICLES_PRESET_NAME,
 )
-from RosettaX.workflow.model.scattering import ROSETTA_MIX_PRESET_NAME
+from RosettaX.workflow.scattering.model import ROSETTA_MIX_PRESET_NAME
 
 
 class Test_SettingsDefaultServicesPresetPreferences:
@@ -40,11 +40,11 @@ class Test_SettingsDefaultServicesPresetPreferences:
         )
 
         assert (
-            nested_profile_payload["particle_model"]["scatterer_preset"]
+            nested_profile_payload["scattering"]["particle_model"]["scatterer_preset"]
             == ROSETTA_MIX_PRESET_NAME
         )
         assert (
-            nested_profile_payload["calibration"]["target_model_preset"]
+            nested_profile_payload["apply_calibration"]["calibration"]["target_model_preset"]
             == EXTRACELLULAR_VESICLES_PRESET_NAME
         )
 
@@ -78,11 +78,11 @@ class Test_SettingsDefaultServicesPeakTableSortOrder:
         )
 
         assert (
-            nested_profile_payload["fluorescence_calibration"]["peak_table_sort_order"]
+            nested_profile_payload["fluorescence"]["calibration"]["peak_table_sort_order"]
             == "descending"
         )
         assert (
-            nested_profile_payload["scattering_calibration"]["peak_table_sort_order"]
+            nested_profile_payload["scattering"]["calibration"]["peak_table_sort_order"]
             == "descending"
         )
 
@@ -105,31 +105,31 @@ class Test_SettingsDefaultServicesCanonicalSharedPaths:
             }
         )
 
-        assert nested_profile_payload["calibration"]["mesf_values"] == [
+        assert nested_profile_payload["fluorescence"]["calibration"]["mesf_values"] == [
             100.0,
             200.0,
             300.0,
         ]
-        assert nested_profile_payload["calibration"]["peak_count"] == 5
+        assert nested_profile_payload["fluorescence"]["calibration"]["peak_count"] == 5
         assert (
-            nested_profile_payload["calibration"]["default_fluorescence_peak_process"]
+            nested_profile_payload["fluorescence"]["calibration"]["default_fluorescence_peak_process"]
             == "Manual 1D"
         )
         assert (
-            nested_profile_payload["calibration"]["default_gating_channel"] == "SSC-A"
+            nested_profile_payload["scattering"]["calibration"]["default_gating_channel"] == "SSC-A"
         )
         assert (
-            nested_profile_payload["calibration"]["default_gating_threshold"] == 123.4
+            nested_profile_payload["scattering"]["calibration"]["default_gating_threshold"] == 123.4
         )
         assert (
-            nested_profile_payload["calibration"]["target_mie_relation_xscale"] == "log"
+            nested_profile_payload["apply_calibration"]["calibration"]["target_mie_relation_xscale"] == "log"
         )
         assert (
-            nested_profile_payload["calibration"]["target_mie_relation_yscale"]
+            nested_profile_payload["apply_calibration"]["calibration"]["target_mie_relation_yscale"]
             == "linear"
         )
-        assert nested_profile_payload["calibration"]["n_bins_for_plots"] == 128
+        assert nested_profile_payload["apply_calibration"]["calibration"]["n_bins_for_plots"] == 128
         assert (
-            nested_profile_payload["calibration"]["show_calibration_plot_by_default"]
+            nested_profile_payload["apply_calibration"]["calibration"]["show_calibration_plot_by_default"]
             is False
         )

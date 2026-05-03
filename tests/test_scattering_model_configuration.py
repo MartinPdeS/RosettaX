@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from RosettaX.workflow.model.scattering import (
+from RosettaX.workflow.scattering.model import (
     BROAD_PARTICLE_STANDARD_PRESET_NAME,
     CUSTOM_SCATTERER_PRESET_NAME,
     ROSETTA_MIX_PRESET_NAME,
@@ -82,12 +82,17 @@ class Test_ScatteringModelConfigurationScattererPresets:
             "expected_coupling",
         ]
         assert [row["particle_diameter_nm"] for row in rows] == [
-            "70",
-            "100",
-            "150",
-            "200",
-            "300",
-            "500",
+            '994',
+            '799',
+            '600',
+            '400',
+            '296',
+            '203',
+            '194',
+            '150',
+            '125',
+            '100',
+            '70',
         ]
 
     def test_rosetta_mix_preset_preserves_other_table_columns(self):
@@ -113,12 +118,12 @@ class Test_ScatteringModelConfigurationScattererPresets:
             "expected_coupling",
         ]
         assert rows[0] == {
-            "particle_diameter_nm": "70",
+            "particle_diameter_nm": "994",
             "measured_peak_position": "12.3",
             "expected_coupling": "45.6",
         }
         assert rows[1] == {
-            "particle_diameter_nm": "100",
+            "particle_diameter_nm": "799",
             "measured_peak_position": "78.9",
             "expected_coupling": "10.11",
         }
