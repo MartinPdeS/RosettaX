@@ -195,8 +195,10 @@ SECTION_COLOR_BY_KEY = {
     "fluorescence": "pink",
     "scattering": "blue",
     "calibration": "orange",
+    "apply_calibration": "orange",
     "visualization": "green",
     "miscellaneous": "gray",
+    "misc": "gray",
 }
 
 

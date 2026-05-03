@@ -6,9 +6,7 @@ from typing import Any
 import dash_bootstrap_components as dbc
 
 from RosettaX.pages.p03_scattering.state import ScatteringPageState
-from RosettaX.utils import directories
-from RosettaX.utils import styling
-from RosettaX.utils import ui_forms
+from RosettaX.utils import directories, styling, ui_forms
 from RosettaX.workflow import save
 
 

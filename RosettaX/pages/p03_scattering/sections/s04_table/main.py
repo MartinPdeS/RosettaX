@@ -8,14 +8,8 @@ import dash_bootstrap_components as dbc
 
 from RosettaX.pages.p00_sidebar.ids import SidebarIds
 from RosettaX.pages.p03_scattering.state import ScatteringPageState
-from RosettaX.utils import styling
-from RosettaX.utils import ui_forms
-from RosettaX.scattering.model import ScatteringModelConfiguration
-from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.workflow.parameters import table as parameters_table
-from RosettaX.workflow.table.layout import ReferenceTableActionConfig
-from RosettaX.workflow.table.layout import ReferenceTableConfig
-from RosettaX.workflow.table.layout import ReferenceTableLayout
+from RosettaX.utils import styling, ui_forms, RuntimeConfig
+from RosettaX.workflow import table, parameters, scattering
 
 from ..s05_calibration import services as calibration_services
 from .services import ScatteringCalibrationStandardTable
@@ -68,7 +62,7 @@ class ReferenceTable:
 
         default_columns, default_rows = self._build_default_table_state()
 
-        self.config = ReferenceTableConfig(
+        self.config = table.layout.ReferenceTableConfig(
             card_title=self._build_card_title(),
             table_title=None,
             description=None,
@@ -77,7 +71,7 @@ class ReferenceTable:
             show_table_title=True,
         )
 
-        self.action_config = ReferenceTableActionConfig(
+        self.action_config = table.layout.ReferenceTableActionConfig(
             button_id=self.ids.compute_model_btn,
             button_label="Compute model",
             description=self._build_compute_model_description(),
@@ -87,7 +81,7 @@ class ReferenceTable:
             },
         )
 
-        self.layout_builder = ReferenceTableLayout(
+        self.layout_builder = table.layout.ReferenceTableLayout(
             ids=self.ids,
             config=self.config,
             table_columns=default_columns,
@@ -209,7 +203,7 @@ class ReferenceTable:
             scatterer_preset: Any,
             current_rows: Any,
         ) -> tuple[Any, Any]:
-            preset_table_state = ScatteringModelConfiguration.build_table_state_from_scatterer_preset(
+            preset_table_state = scattering.model.ScatteringModelConfiguration.build_table_state_from_scatterer_preset(
                 preset_name=scatterer_preset,
                 current_rows=current_rows,
             )
@@ -258,10 +252,10 @@ class ReferenceTable:
                 runtime_config_data if isinstance(runtime_config_data, dict) else None
             )
 
-            resolved_mie_model = parameters_table.resolve_mie_model(
+            resolved_mie_model = parameters.table.resolve_mie_model(
                 runtime_config.get_str(
                     "particle_model.mie_model",
-                    default=mie_model or parameters_table.MIE_MODEL_SOLID_SPHERE,
+                    default=mie_model or parameters.table.MIE_MODEL_SOLID_SPHERE,
                 )
             )
 
@@ -338,7 +332,7 @@ class ReferenceTable:
             mie_model: Any,
             current_rows: Optional[list[dict[str, Any]]],
         ) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
-            resolved_mie_model = parameters_table.resolve_mie_model(
+            resolved_mie_model = parameters.table.resolve_mie_model(
                 mie_model,
             )
 
@@ -384,7 +378,7 @@ class ReferenceTable:
                 None if rows is None else len(rows),
             )
 
-            resolved_mie_model = parameters_table.resolve_mie_model(
+            resolved_mie_model = parameters.table.resolve_mie_model(
                 mie_model,
             )
 
@@ -425,7 +419,7 @@ class ReferenceTable:
                 None if current_rows is None else len(current_rows),
             )
 
-            resolved_mie_model = parameters_table.resolve_mie_model(
+            resolved_mie_model = parameters.table.resolve_mie_model(
                 mie_model,
             )
 
@@ -500,7 +494,7 @@ class ReferenceTable:
                 None if current_rows is None else len(current_rows),
             )
 
-            resolved_mie_model = parameters_table.resolve_mie_model(
+            resolved_mie_model = parameters.table.resolve_mie_model(
                 mie_model,
             )
 

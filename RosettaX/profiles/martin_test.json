@@ -1,76 +1,86 @@
 {
-  "calibration": {
-    "mesf_values": [
-      1.0,
-      3.0,
-      4.0,
-      5.0
-    ],
-    "peak_count": 4,
-    "histogram_scale": "log",
-    "target_mie_relation_xscale": "linear",
-    "target_mie_relation_yscale": "log",
-    "default_fluorescence_peak_process": "2D manual click",
-    "default_gating_channel": "",
-    "default_gating_threshold": 0.0,
-    "max_events_for_analysis": 10000,
-    "default_output_suffix": "_calibrated",
-    "n_bins_for_plots": 200,
-    "show_calibration_plot_by_default": true,
-    "histogram_xscale": "linear",
-    "histogram_yscale": "log",
-    "target_model_preset": "Custom"
+  "fluorescence": {
+    "calibration": {
+      "mesf_values": [
+        1.0,
+        3.0,
+        4.0,
+        5.0
+      ],
+      "peak_count": 4,
+      "default_fluorescence_peak_process": "2D manual click",
+      "peak_table_sort_order": "ascending"
+    },
+    "files": {
+      "fcs_file_path": ""
+    }
   },
-  "optics": {
-    "medium_refractive_index": 1.334,
-    "wavelength_nm": 488.0,
-    "detector_numerical_aperture": 0.45,
-    "detector_cache_numerical_aperture": 0.45,
-    "detector_sampling": 1000
+  "scattering": {
+    "optics": {
+      "medium_refractive_index": 1.334,
+      "wavelength_nm": 488.0,
+      "detector_numerical_aperture": 0.45,
+      "detector_cache_numerical_aperture": 0.45,
+      "detector_sampling": 1000
+    },
+    "particle_model": {
+      "core_refractive_index": 1.5,
+      "shell_refractive_index": 1.5,
+      "particle_refractive_index": 1.602,
+      "shell_thickness_nm": [
+        20.0
+      ],
+      "core_diameter_nm": [
+        100.0
+      ],
+      "particle_diameter_nm": [
+        100.0,
+        200.0,
+        300.0
+      ],
+      "mie_model": "Solid Sphere",
+      "scatterer_preset": "Custom"
+    },
+    "calibration": {
+      "default_peak_process": "1D automatic peaks",
+      "peak_table_sort_order": "ascending",
+      "default_gating_channel": "",
+      "default_gating_threshold": 0.0
+    },
+    "files": {
+      "fcs_file_path": ""
+    }
   },
-  "particle_model": {
-    "core_refractive_index": 1.5,
-    "shell_refractive_index": 1.5,
-    "particle_refractive_index": 1.602,
-    "shell_thickness_nm": [
-      20.0
-    ],
-    "core_diameter_nm": [
-      100.0
-    ],
-    "particle_diameter_nm": [
-      100.0,
-      200.0,
-      300.0
-    ],
-    "mie_model": "Solid Sphere",
-    "scatterer_preset": "Custom"
+  "apply_calibration": {
+    "calibration": {
+      "histogram_scale": "log",
+      "target_mie_relation_xscale": "linear",
+      "target_mie_relation_yscale": "log",
+      "max_events_for_analysis": 10000,
+      "default_output_suffix": "_calibrated",
+      "n_bins_for_plots": 200,
+      "show_calibration_plot_by_default": true,
+      "histogram_xscale": "linear",
+      "histogram_yscale": "log",
+      "target_model_preset": "Custom"
+    },
+    "metadata": {
+      "operator_name": "",
+      "instrument_name": ""
+    },
+    "visualization": {
+      "default_marker_size": 10.0,
+      "default_line_width": 3.0,
+      "default_font_size": 24.0,
+      "default_tick_size": 12.0,
+      "show_grid_by_default": false,
+      "graph_height": "700px"
+    }
   },
-  "metadata": {
-    "operator_name": "",
-    "instrument_name": ""
-  },
-  "visualization": {
-    "default_marker_size": 10.0,
-    "default_line_width": 3.0,
-    "default_font_size": 24.0,
-    "default_tick_size": 12.0,
-    "show_grid_by_default": false,
-    "graph_height": "700px"
-  },
-  "files": {
-    "fluorescence_fcs_file_path": "",
-    "scattering_fcs_file_path": ""
-  },
-  "ui": {
-    "theme_mode": "light",
-    "show_graphs": false
-  },
-  "scattering_calibration": {
-    "default_peak_process": "1D automatic peaks",
-    "peak_table_sort_order": "ascending"
-  },
-  "fluorescence_calibration": {
-    "peak_table_sort_order": "ascending"
+  "misc": {
+    "ui": {
+      "theme_mode": "light",
+      "show_graphs": false
+    }
   }
 }

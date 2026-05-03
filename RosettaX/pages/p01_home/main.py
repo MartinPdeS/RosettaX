@@ -390,7 +390,7 @@ class HomePage:
                                 ),
                                 dbc.Col(
                                     self._resource_button(
-                                        label="Support",
+                                        label="Support Developer",
                                         href=self.support_url,
                                         color="warning",
                                         outline=False,

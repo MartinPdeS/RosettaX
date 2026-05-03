@@ -7,8 +7,7 @@ import dash
 import dash_bootstrap_components as dbc
 
 from ...state import ScatteringPageState
-from RosettaX.utils import styling
-from RosettaX.utils import ui_forms
+from RosettaX.utils import styling, ui_forms
 from RosettaX.workflow import upload
 
 

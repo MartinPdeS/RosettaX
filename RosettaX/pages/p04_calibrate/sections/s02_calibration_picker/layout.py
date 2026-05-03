@@ -13,7 +13,7 @@ from RosettaX.workflow.apply_calibration.scattering import (
     CUSTOM_PRESET_NAME,
     build_scattering_target_model_preset_options,
 )
-from RosettaX.scattering.model import ScatteringModelConfiguration
+from RosettaX.workflow.scattering.model import ScatteringModelConfiguration
 from RosettaX.workflow.plotting import scatter2d
 
 from . import services

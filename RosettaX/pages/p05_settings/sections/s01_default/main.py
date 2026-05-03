@@ -76,12 +76,12 @@ class DefaultProfile:
             dbc.CardBody(
                 [
                     ui_forms.build_section_intro(
-                        title="Default values and profiles",
+                        title="Default values by page",
                         title_component="H2",
                         description=(
-                            "Define the startup defaults used across RosettaX. "
-                            "Profiles let you keep different configurations for "
-                            "different instruments, datasets, or workflows."
+                            "Define startup defaults grouped by page so each profile "
+                            "captures fluorescence, scattering, apply-calibration, "
+                            "and miscellaneous behavior in one place."
                         ),
                     ),
                 ],
@@ -115,7 +115,7 @@ class DefaultProfile:
                 dbc.CardBody(
                     [
                         html.Div(
-                            "Choose a saved profile to load its values into the fields below.",
+                            "Choose a saved profile to load its page-specific defaults below.",
                             style={
                                 "opacity": 0.78,
                                 "fontSize": "0.92rem",
@@ -464,19 +464,18 @@ class DefaultProfile:
         Return a short description for one settings section.
         """
         descriptions = {
-            "miscellaneous": (
-                "General application preferences, startup files, and profile-wide defaults."
-            ),
-            "calibration": (
-                "Shared controls reused by calibration, peak detection, and apply-calibration workflows."
-            ),
             "fluorescence": (
-                "Defaults used by the fluorescence peak-detection and MESF workflow."
+                "Defaults used when opening the fluorescence page, including MESF inputs, peak detection, and startup file selection."
             ),
             "scattering": (
-                "Defaults for scattering peak detection, particle tables, and Mie-model setup."
+                "Defaults for the scattering page, including particle models, peak detection, gating, and startup file selection."
             ),
-            "visualization": ("Plot appearance, graph sizing, and display defaults."),
+            "apply_calibration": (
+                "Defaults for the apply-calibration page, including target model presets, plot axes, export metadata, and graph display settings."
+            ),
+            "misc": (
+                "Global application preferences that are not owned by a single workflow page."
+            ),
         }
 
         return descriptions.get(

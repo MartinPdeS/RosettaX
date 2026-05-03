@@ -6,11 +6,8 @@ from typing import Any, Optional, Sequence
 import dash
 import dash_bootstrap_components as dbc
 
-from RosettaX.utils.casting import as_optional_float
-from RosettaX.utils import styling
-from RosettaX.utils import ui_forms
-from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.scattering.model import ScatteringModelConfiguration
+from RosettaX.utils import styling, ui_forms, RuntimeConfig, casting
+from RosettaX.workflow.scattering.model import ScatteringModelConfiguration
 
 
 logger = logging.getLogger(__name__)
@@ -36,7 +33,7 @@ class Model:
     This section owns only the visual parameter inputs.
 
     The reusable scattering model logic lives in
-    RosettaX.scattering.model.
+    RosettaX.workflow.scattering.model.
     """
 
     model_configuration = ScatteringModelConfiguration
@@ -692,10 +689,10 @@ class Model:
         """
         Keep detector cache numerical aperture within the detector aperture.
         """
-        resolved_detector_numerical_aperture = as_optional_float(
+        resolved_detector_numerical_aperture = casting.as_optional_float(
             detector_numerical_aperture
         )
-        resolved_detector_cache_numerical_aperture = as_optional_float(
+        resolved_detector_cache_numerical_aperture = casting.as_optional_float(
             detector_cache_numerical_aperture
         )
 
@@ -1168,7 +1165,7 @@ class Model:
         def sync_detector_cache_numerical_aperture_max(
             detector_numerical_aperture: Any,
         ) -> Any:
-            resolved_detector_numerical_aperture = as_optional_float(
+            resolved_detector_numerical_aperture = casting.as_optional_float(
                 detector_numerical_aperture
             )
 

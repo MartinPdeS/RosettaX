@@ -9,9 +9,7 @@ import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
 
 from RosettaX.pages.p03_scattering.state import ScatteringPageState
-from RosettaX.utils import plottings
-from RosettaX.utils import styling
-from RosettaX.utils import ui_forms
+from RosettaX.utils import plottings, styling, ui_forms
 from . import services
 
 

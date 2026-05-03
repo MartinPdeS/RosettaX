@@ -3,11 +3,8 @@
 import logging
 from typing import Any, Optional
 
-from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.workflow.calibration.mie_relation import build_mie_parameter_payload
-from RosettaX.workflow.parameters import services as parameters_services
-from RosettaX.workflow.parameters import table as parameters_table
-from RosettaX.workflow.table import services as table_services
+from RosettaX.utils import RuntimeConfig
+from RosettaX.workflow import table, parameters, calibration
 
 logger = logging.getLogger(__name__)
 
@@ -17,8 +14,8 @@ class ScatteringCalibrationStandardTable:
     Helpers for the scattering calibration standard table section.
     """
 
-    sphere_table_columns = parameters_table.sphere_table_columns
-    core_shell_table_columns = parameters_table.core_shell_table_columns
+    sphere_table_columns = parameters.table.sphere_table_columns
+    core_shell_table_columns = parameters.table.core_shell_table_columns
 
     @classmethod
     def build_state_from_runtime_config(
@@ -29,18 +26,18 @@ class ScatteringCalibrationStandardTable:
         """
         Build scattering calibration standard table columns and rows from runtime configuration.
         """
-        resolved_mie_model = parameters_table.resolve_mie_model(
+        resolved_mie_model = parameters.table.resolve_mie_model(
             runtime_config.get_str(
                 "particle_model.mie_model",
-                default=parameters_table.MIE_MODEL_SOLID_SPHERE,
+                default=parameters.table.MIE_MODEL_SOLID_SPHERE,
             )
         )
 
-        columns = parameters_table.get_table_columns_for_model(
+        columns = parameters.table.get_table_columns_for_model(
             resolved_mie_model,
         )
 
-        rows = parameters_table.populate_table_from_runtime_defaults(
+        rows = parameters.table.populate_table_from_runtime_defaults(
             mie_model=resolved_mie_model,
             runtime_particle_diameters_nm=runtime_config.get_path(
                 "particle_model.particle_diameter_nm",
@@ -57,7 +54,7 @@ class ScatteringCalibrationStandardTable:
         )
 
         if not rows:
-            rows = parameters_table.build_empty_rows_for_model(
+            rows = parameters.table.build_empty_rows_for_model(
                 resolved_mie_model,
                 row_count=3,
             )
@@ -79,7 +76,7 @@ class ScatteringCalibrationStandardTable:
         """
         Return scattering calibration standard table columns for a Mie model.
         """
-        return parameters_table.get_table_columns_for_model(
+        return parameters.table.get_table_columns_for_model(
             mie_model,
         )
 
@@ -91,12 +88,12 @@ class ScatteringCalibrationStandardTable:
         """
         Return table columns that should count as user data for a Mie model.
         """
-        resolved_mie_model = parameters_table.resolve_mie_model(
+        resolved_mie_model = parameters.table.resolve_mie_model(
             mie_model,
         )
 
-        return table_services.get_column_ids(
-            columns=parameters_table.get_table_columns_for_model(
+        return table.services.get_column_ids(
+            columns=parameters.table.get_table_columns_for_model(
                 resolved_mie_model,
             ),
         )
@@ -111,8 +108,8 @@ class ScatteringCalibrationStandardTable:
         """
         Normalize scattering table rows for a Mie model.
         """
-        return parameters_table.normalize_table_rows(
-            mie_model=parameters_table.resolve_mie_model(
+        return parameters.table.normalize_table_rows(
+            mie_model=parameters.table.resolve_mie_model(
                 mie_model,
             ),
             current_rows=rows,
@@ -128,11 +125,11 @@ class ScatteringCalibrationStandardTable:
         """
         Return whether the scattering calibration standard table has no useful data.
         """
-        resolved_mie_model = parameters_table.resolve_mie_model(
+        resolved_mie_model = parameters.table.resolve_mie_model(
             mie_model,
         )
 
-        return table_services.table_is_effectively_empty(
+        return table.services.table_is_effectively_empty(
             rows=cls.normalize_rows(
                 mie_model=resolved_mie_model,
                 rows=rows,
@@ -153,12 +150,12 @@ class ScatteringCalibrationStandardTable:
         """
         Decide whether a runtime configuration update should overwrite the table.
         """
-        resolved_mie_model = parameters_table.resolve_mie_model(
+        resolved_mie_model = parameters.table.resolve_mie_model(
             mie_model,
         )
 
-        return table_services.should_rebuild_table_from_runtime_config(
-            profile_load_was_requested=table_services.profile_load_was_requested(
+        return table.services.should_rebuild_table_from_runtime_config(
+            profile_load_was_requested=table.services.profile_load_was_requested(
                 profile_load_event_data=profile_load_event_data,
             ),
             current_rows=cls.normalize_rows(
@@ -180,8 +177,8 @@ class ScatteringCalibrationStandardTable:
         """
         Remap current table rows to a Mie model schema.
         """
-        return parameters_table.remap_table_rows_to_model(
-            mie_model=parameters_table.resolve_mie_model(
+        return parameters.table.remap_table_rows_to_model(
+            mie_model=parameters.table.resolve_mie_model(
                 mie_model,
             ),
             current_rows=current_rows,
@@ -197,13 +194,13 @@ class ScatteringCalibrationStandardTable:
         """
         Add one empty scattering calibration standard row.
         """
-        resolved_mie_model = parameters_table.resolve_mie_model(
+        resolved_mie_model = parameters.table.resolve_mie_model(
             mie_model,
         )
 
-        return table_services.append_empty_row(
+        return table.services.append_empty_row(
             rows=rows,
-            empty_row=parameters_table.build_empty_row_for_model(
+            empty_row=parameters.table.build_empty_row_for_model(
                 resolved_mie_model,
             ),
         )
@@ -218,8 +215,8 @@ class ScatteringCalibrationStandardTable:
         """
         Reset the scattering calibration standard table.
         """
-        return parameters_table.build_empty_rows_for_model(
-            parameters_table.resolve_mie_model(
+        return parameters.table.build_empty_rows_for_model(
+            parameters.table.resolve_mie_model(
                 mie_model,
             ),
             row_count=row_count,
@@ -234,10 +231,10 @@ class ScatteringCalibrationStandardTable:
         """
         Clear measured peak positions.
         """
-        return table_services.clear_columns(
+        return table.services.clear_columns(
             rows=rows,
             column_ids=[
-                parameters_table.COLUMN_MEASURED_PEAK_POSITION,
+                parameters.table.COLUMN_MEASURED_PEAK_POSITION,
             ],
         )
 
@@ -250,10 +247,10 @@ class ScatteringCalibrationStandardTable:
         """
         Clear expected coupling values.
         """
-        return table_services.clear_columns(
+        return table.services.clear_columns(
             rows=rows,
             column_ids=[
-                parameters_table.COLUMN_EXPECTED_COUPLING,
+                parameters.table.COLUMN_EXPECTED_COUPLING,
             ],
         )
 
@@ -277,11 +274,11 @@ class ScatteringCalibrationStandardTable:
         """
         Build the serializable calibration standard Mie parameter payload.
         """
-        resolved_mie_model = parameters_table.resolve_mie_model(
+        resolved_mie_model = parameters.table.resolve_mie_model(
             mie_model,
         )
 
-        return build_mie_parameter_payload(
+        return calibration.mie_relation.build_mie_parameter_payload(
             mie_model=resolved_mie_model,
             medium_refractive_index=medium_refractive_index,
             particle_refractive_index=particle_refractive_index,
@@ -318,17 +315,17 @@ class ScatteringCalibrationStandardTable:
         """
         Compute modeled coupling values for the scattering calibration standard rows.
         """
-        resolved_mie_model = parameters_table.resolve_mie_model(
+        resolved_mie_model = parameters.table.resolve_mie_model(
             mie_model,
         )
 
         if not current_rows:
-            return parameters_table.build_empty_rows_for_model(
+            return parameters.table.build_empty_rows_for_model(
                 resolved_mie_model,
                 row_count=3,
             )
 
-        return parameters_services.compute_model_for_rows(
+        return parameters.services.compute_model_for_rows(
             mie_model=resolved_mie_model,
             current_rows=current_rows,
             medium_refractive_index=medium_refractive_index,

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import json
 from pathlib import Path
 from typing import Any, Optional
 
@@ -430,7 +431,7 @@ def build_nested_profile_payload(
 
         _set_nested_value(
             nested_payload=nested_profile_payload,
-            dotted_path=field_definition.runtime_path,
+            dotted_path=field_definition.profile_path,
             value=coerced_value,
         )
 
@@ -456,6 +457,7 @@ def save_profile(
 
     RuntimeConfig.from_dict(
         nested_profile_payload,
-    ).to_json_path(
-        profile_path,
     )
+
+    with profile_path.open("w", encoding="utf-8") as file_handle:
+        json.dump(nested_profile_payload, file_handle, indent=2, ensure_ascii=False)

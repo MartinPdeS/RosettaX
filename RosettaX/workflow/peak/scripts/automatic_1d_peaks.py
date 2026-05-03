@@ -42,8 +42,8 @@ class Automatic1DPeaksProcess(BasePeakProcess):
     dropdown_option_height_px = 50
     dropdown_menu_max_height_px = 500
 
-    default_peak_count = 3
-    default_histogram_bin_count = 512
+    default_peak_count = 5
+    default_histogram_bin_count = 200
     default_smoothing_window_fraction = 0.012
     default_minimum_prominence_fraction = 0.035
     default_minimum_distance_fraction = 0.035
