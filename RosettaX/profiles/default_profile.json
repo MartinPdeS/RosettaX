@@ -19,7 +19,7 @@
       "detector_sampling": 1000
     },
     "particle_model": {
-      "scatterer_preset": "Rosetta Mix",
+      "scatterer_preset": "Custom",
       "core_refractive_index": 1.5,
       "shell_refractive_index": 1.5,
       "particle_refractive_index": 1.602,

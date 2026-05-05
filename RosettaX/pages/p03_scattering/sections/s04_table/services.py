@@ -5,6 +5,7 @@ from typing import Any, Optional
 
 from RosettaX.utils import RuntimeConfig
 from RosettaX.workflow import table, parameters, calibration
+from RosettaX.workflow.scattering import model as scattering_model
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +27,25 @@ class ScatteringCalibrationStandardTable:
         """
         Build scattering calibration standard table columns and rows from runtime configuration.
         """
+        resolved_scatterer_preset = scattering_model.ScatteringModelConfiguration.resolve_runtime_scatterer_preset(
+            runtime_config.get_str(
+                "particle_model.scatterer_preset",
+                default=scattering_model.CUSTOM_SCATTERER_PRESET_NAME,
+            )
+        )
+
+        if resolved_scatterer_preset != scattering_model.CUSTOM_SCATTERER_PRESET_NAME:
+            preset_table_state = scattering_model.ScatteringModelConfiguration.build_table_state_from_scatterer_preset(
+                preset_name=resolved_scatterer_preset,
+            )
+
+            if preset_table_state is not None:
+                logger.debug(
+                    "Built scattering calibration standard table state from scatterer preset stored in runtime config. resolved_scatterer_preset=%r",
+                    resolved_scatterer_preset,
+                )
+                return preset_table_state
+
         resolved_mie_model = parameters.table.resolve_mie_model(
             runtime_config.get_str(
                 "particle_model.mie_model",

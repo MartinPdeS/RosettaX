@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+from RosettaX.utils.runtime_config import RuntimeConfig
+from RosettaX.pages.p03_scattering.sections.s04_table.services import (
+    ScatteringCalibrationStandardTable,
+)
 from RosettaX.workflow.scattering.model import (
     BROAD_PARTICLE_STANDARD_PRESET_NAME,
     CUSTOM_SCATTERER_PRESET_NAME,
@@ -66,26 +70,6 @@ class Test_ScatteringModelConfigurationScattererPresets:
             preset_name=ROSETTA_MIX_PRESET_NAME,
         ) is True
 
-    def test_selection_event_can_override_same_dropdown_value(self):
-        assert ScatteringModelConfiguration.resolve_selected_scatterer_preset_name(
-            preset_name=CUSTOM_SCATTERER_PRESET_NAME,
-            selection_event_data={
-                "preset_name": ROSETTA_MIX_PRESET_NAME,
-                "nonce": 1,
-            },
-            prefer_selection_event=True,
-        ) == ROSETTA_MIX_PRESET_NAME
-
-    def test_dropdown_value_is_used_when_selection_event_is_not_preferred(self):
-        assert ScatteringModelConfiguration.resolve_selected_scatterer_preset_name(
-            preset_name=ROSETTA_MIX_PRESET_NAME,
-            selection_event_data={
-                "preset_name": SMALL_PARTICLE_STANDARD_PRESET_NAME,
-                "nonce": 1,
-            },
-            prefer_selection_event=False,
-        ) == ROSETTA_MIX_PRESET_NAME
-
     def test_custom_preset_does_not_override_table(self):
         assert ScatteringModelConfiguration.build_table_state_from_scatterer_preset(
             preset_name=CUSTOM_SCATTERER_PRESET_NAME,
@@ -147,3 +131,89 @@ class Test_ScatteringModelConfigurationScattererPresets:
             "measured_peak_position": "78.9",
             "expected_coupling": "10.11",
         }
+
+
+class Test_ScatteringCalibrationStandardTable:
+    def test_runtime_config_uses_scatterer_preset_when_geometry_lists_are_empty(self):
+        columns, rows = ScatteringCalibrationStandardTable.build_state_from_runtime_config(
+            runtime_config=RuntimeConfig.from_dict(
+                {
+                    "particle_model": {
+                        "scatterer_preset": ROSETTA_MIX_PRESET_NAME,
+                        "mie_model": "Solid Sphere",
+                        "particle_diameter_nm": [],
+                        "core_diameter_nm": [],
+                        "shell_thickness_nm": [],
+                    }
+                }
+            ),
+        )
+
+        assert [column["id"] for column in columns] == [
+            "particle_diameter_nm",
+            "measured_peak_position",
+            "expected_coupling",
+        ]
+        assert [row["particle_diameter_nm"] for row in rows] == [
+            "994",
+            "799",
+            "600",
+            "400",
+            "296",
+            "203",
+            "194",
+            "150",
+            "125",
+            "100",
+            "70",
+        ]
+
+    def test_runtime_config_uses_scatterer_preset_over_explicit_geometry_lists(self):
+        _columns, rows = ScatteringCalibrationStandardTable.build_state_from_runtime_config(
+            runtime_config=RuntimeConfig.from_dict(
+                {
+                    "particle_model": {
+                        "scatterer_preset": ROSETTA_MIX_PRESET_NAME,
+                        "mie_model": "Solid Sphere",
+                        "particle_diameter_nm": [111.0, 222.0],
+                        "core_diameter_nm": [],
+                        "shell_thickness_nm": [],
+                    }
+                }
+            ),
+        )
+
+        assert [row["particle_diameter_nm"] for row in rows] == [
+            "994",
+            "799",
+            "600",
+            "400",
+            "296",
+            "203",
+            "194",
+            "150",
+            "125",
+            "100",
+            "70",
+        ]
+
+    def test_runtime_config_uses_explicit_geometry_lists_for_custom_preset(self):
+        _columns, rows = ScatteringCalibrationStandardTable.build_state_from_runtime_config(
+            runtime_config=RuntimeConfig.from_dict(
+                {
+                    "particle_model": {
+                        "scatterer_preset": CUSTOM_SCATTERER_PRESET_NAME,
+                        "mie_model": "Solid Sphere",
+                        "particle_diameter_nm": [111.0, 222.0],
+                        "core_diameter_nm": [],
+                        "shell_thickness_nm": [],
+                    }
+                }
+            ),
+        )
+
+        assert [row["particle_diameter_nm"] for row in rows] == [
+            "111",
+            "222",
+            "",
+        ]
