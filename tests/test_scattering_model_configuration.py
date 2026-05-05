@@ -66,6 +66,26 @@ class Test_ScatteringModelConfigurationScattererPresets:
             preset_name=ROSETTA_MIX_PRESET_NAME,
         ) is True
 
+    def test_selection_event_can_override_same_dropdown_value(self):
+        assert ScatteringModelConfiguration.resolve_selected_scatterer_preset_name(
+            preset_name=CUSTOM_SCATTERER_PRESET_NAME,
+            selection_event_data={
+                "preset_name": ROSETTA_MIX_PRESET_NAME,
+                "nonce": 1,
+            },
+            prefer_selection_event=True,
+        ) == ROSETTA_MIX_PRESET_NAME
+
+    def test_dropdown_value_is_used_when_selection_event_is_not_preferred(self):
+        assert ScatteringModelConfiguration.resolve_selected_scatterer_preset_name(
+            preset_name=ROSETTA_MIX_PRESET_NAME,
+            selection_event_data={
+                "preset_name": SMALL_PARTICLE_STANDARD_PRESET_NAME,
+                "nonce": 1,
+            },
+            prefer_selection_event=False,
+        ) == ROSETTA_MIX_PRESET_NAME
+
     def test_custom_preset_does_not_override_table(self):
         assert ScatteringModelConfiguration.build_table_state_from_scatterer_preset(
             preset_name=CUSTOM_SCATTERER_PRESET_NAME,

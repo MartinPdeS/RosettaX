@@ -432,6 +432,11 @@ class Model:
         """
         return dash.html.Div(
             [
+                dash.dcc.Store(
+                    id=self.ids.scatterer_preset_selection_event_store,
+                    data=None,
+                    storage_type="memory",
+                ),
                 ui_forms.build_inline_row(
                     label="Scatterer preset:",
                     control=dash.html.Div(
@@ -853,6 +858,7 @@ class Model:
             dash.Output(self.ids.core_refractive_index_custom, "value", allow_duplicate=True),
             dash.Output(self.ids.shell_refractive_index_source, "value", allow_duplicate=True),
             dash.Output(self.ids.shell_refractive_index_custom, "value", allow_duplicate=True),
+            dash.Input(self.ids.scatterer_preset_selection_event_store, "data"),
             dash.Input(self.ids.scatterer_preset, "value"),
             dash.State(self.ids.mie_model, "value"),
             dash.State(self.ids.medium_refractive_index_custom, "value"),
@@ -862,6 +868,7 @@ class Model:
             prevent_initial_call=True,
         )
         def apply_scatterer_preset(
+            scatterer_preset_selection_event: Any,
             preset_name: Any,
             current_mie_model: Any,
             current_medium_refractive_index: Any,
@@ -870,8 +877,18 @@ class Model:
             current_shell_refractive_index: Any,
         ) -> tuple[Any, ...]:
             logger.debug(
-                "apply_scatterer_preset called with preset_name=%r",
+                "apply_scatterer_preset called with triggered_id=%r preset_name=%r selection_event=%r",
+                dash.ctx.triggered_id,
                 preset_name,
+                scatterer_preset_selection_event,
+            )
+
+            selected_preset_name = self.model_configuration.resolve_selected_scatterer_preset_name(
+                preset_name=preset_name,
+                selection_event_data=scatterer_preset_selection_event,
+                prefer_selection_event=(
+                    dash.ctx.triggered_id == self.ids.scatterer_preset_selection_event_store
+                ),
             )
 
             (
@@ -881,7 +898,7 @@ class Model:
                 resolved_core_refractive_index,
                 resolved_shell_refractive_index,
             ) = self.model_configuration.resolve_scatterer_preset_values(
-                preset_name=preset_name,
+                preset_name=selected_preset_name,
                 current_mie_model=current_mie_model,
                 current_medium_refractive_index=current_medium_refractive_index,
                 current_particle_refractive_index=current_particle_refractive_index,

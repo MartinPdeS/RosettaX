@@ -113,6 +113,32 @@ def get_scattering_calibration_scatterer_preset(
     )
 
 
+def resolve_selected_scattering_calibration_scatterer_preset_name(
+    *,
+    preset_name: Any,
+    selection_event_data: Any = None,
+    prefer_selection_event: bool = False,
+) -> str:
+    """
+    Resolve the effective scatterer preset name for callback handling.
+
+    When a same-value dropdown reselection is captured client-side, the event
+    payload is preferred so preset-dependent callbacks can rerun even though
+    the Dash dropdown value itself did not change.
+    """
+    if prefer_selection_event and isinstance(selection_event_data, dict):
+        event_preset_name = selection_event_data.get("preset_name")
+
+        if event_preset_name not in (None, ""):
+            return get_scattering_calibration_scatterer_preset(
+                event_preset_name,
+            ).name
+
+    return get_scattering_calibration_scatterer_preset(
+        preset_name,
+    ).name
+
+
 @dataclass(frozen=True)
 class ScatteringModelDefaults:
     """
@@ -294,6 +320,22 @@ class ScatteringModelConfiguration:
         return get_scattering_calibration_scatterer_preset(
             preset_name,
         ).name
+
+    @staticmethod
+    def resolve_selected_scatterer_preset_name(
+        *,
+        preset_name: Any,
+        selection_event_data: Any = None,
+        prefer_selection_event: bool = False,
+    ) -> str:
+        """
+        Resolve the effective scatterer preset name for triggered callbacks.
+        """
+        return resolve_selected_scattering_calibration_scatterer_preset_name(
+            preset_name=preset_name,
+            selection_event_data=selection_event_data,
+            prefer_selection_event=prefer_selection_event,
+        )
 
     @staticmethod
     def resolve_scatterer_preset_values(

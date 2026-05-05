@@ -27,6 +27,10 @@ class ParameterSectionIds:
         return f"{self.prefix}-scatterer-preset"
 
     @property
+    def scatterer_preset_selection_event_store(self) -> str:
+        return f"{self.prefix}-scatterer-preset-selection-event-store"
+
+    @property
     def wavelength_nm(self) -> str:
         return f"{self.prefix}-wavelength-nm"
 

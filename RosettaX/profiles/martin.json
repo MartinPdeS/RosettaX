@@ -11,13 +11,6 @@
     }
   },
   "scattering": {
-    "optics": {
-      "medium_refractive_index": 1.334,
-      "wavelength_nm": 488.0,
-      "detector_numerical_aperture": 0.45,
-      "detector_cache_numerical_aperture": 0.45,
-      "detector_sampling": 1000
-    },
     "particle_model": {
       "scatterer_preset": "Rosetta Mix",
       "core_refractive_index": 1.5,
@@ -27,6 +20,10 @@
       "core_diameter_nm": [],
       "particle_diameter_nm": [],
       "mie_model": "Solid Sphere"
+    },
+    "optics": {
+      "medium_refractive_index": 1.334,
+      "wavelength_nm": 488.0
     },
     "calibration": {
       "default_peak_process": "Automatic 1D",
@@ -48,8 +45,7 @@
       "max_events_for_analysis": 10000,
       "default_output_suffix": "_calibrated",
       "n_bins_for_plots": 256,
-      "show_calibration_plot_by_default": true,
-      "histogram_scale": "log"
+      "show_calibration_plot_by_default": true
     },
     "metadata": {
       "operator_name": "",
@@ -66,7 +62,7 @@
   },
   "misc": {
     "ui": {
-      "theme_mode": "light",
+      "theme_mode": "dark",
       "show_graphs": false
     }
   }

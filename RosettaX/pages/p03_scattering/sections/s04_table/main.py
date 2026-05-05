@@ -195,16 +195,30 @@ class ReferenceTable:
                 "data",
                 allow_duplicate=True,
             ),
+            dash.Input(
+                self.page.ids.Parameters.scatterer_preset_selection_event_store,
+                "data",
+            ),
             dash.Input(self.page.ids.Parameters.scatterer_preset, "value"),
             dash.State(self.ids.bead_table, "data"),
             prevent_initial_call=True,
         )
         def populate_table_from_scatterer_preset(
+            scatterer_preset_selection_event: Any,
             scatterer_preset: Any,
             current_rows: Any,
         ) -> tuple[Any, Any]:
-            preset_table_state = scattering.model.ScatteringModelConfiguration.build_table_state_from_scatterer_preset(
+            selected_preset_name = scattering.model.ScatteringModelConfiguration.resolve_selected_scatterer_preset_name(
                 preset_name=scatterer_preset,
+                selection_event_data=scatterer_preset_selection_event,
+                prefer_selection_event=(
+                    dash.ctx.triggered_id
+                    == self.page.ids.Parameters.scatterer_preset_selection_event_store
+                ),
+            )
+
+            preset_table_state = scattering.model.ScatteringModelConfiguration.build_table_state_from_scatterer_preset(
+                preset_name=selected_preset_name,
                 current_rows=current_rows,
             )
 
