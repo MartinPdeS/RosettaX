@@ -13,6 +13,7 @@ from .optical_preview import build_optical_configuration_preview_figure
 from .detector_configuration import (
     build_detector_preset_options,
     CUSTOM_DETECTOR_PRESET_NAME,
+    resolve_detector_angular_weights,
     resolve_detector_configuration_visibility_style,
     resolve_detector_configuration_values
 )
@@ -32,6 +33,7 @@ __all__ = [
     "build_optical_configuration_preview_figure",
     "build_detector_preset_options",
     "CUSTOM_DETECTOR_PRESET_NAME",
+    "resolve_detector_angular_weights",
     "resolve_detector_configuration_visibility_style",
     "resolve_detector_configuration_values",
     "compute_model_for_rows",

@@ -317,6 +317,19 @@ class Model:
                         "overflow": "visible",
                     },
                 ),
+                dbc.Alert(
+                    "",
+                    id=self.ids.detector_numerical_aperture_warning,
+                    color="warning",
+                    is_open=False,
+                    style={
+                        "marginTop": "12px",
+                        "marginBottom": "0px",
+                        "borderRadius": "10px",
+                        "padding": "8px 12px",
+                        "fontSize": "0.9rem",
+                    },
+                ),
             ],
             style={
                 "flex": "1 1 520px",
@@ -364,6 +377,8 @@ class Model:
                                 medium_refractive_index=self.default_values.medium_refractive_index,
                                 detector_phi_angle_degree=self.default_values.detector_phi_angle_degree,
                                 detector_gamma_angle_degree=self.default_values.detector_gamma_angle_degree,
+                                detector_sampling=self.default_values.detector_sampling,
+                                detector_configuration_preset=self.model_configuration.custom_detector_preset_name,
                             ),
                             style={
                                 **styling.PLOTLY_GRAPH_STYLE,
@@ -729,6 +744,7 @@ class Model:
         self._register_scatterer_preset_callbacks()
         self._register_refractive_index_callbacks()
         self._register_detector_configuration_callbacks()
+        self._register_detector_numerical_aperture_warning_callback()
         self._register_optical_configuration_preview_callback()
         self._register_runtime_sync_callbacks()
 
@@ -1213,6 +1229,49 @@ class Model:
 
             return resolved_detector_cache_numerical_aperture
 
+    def _register_detector_numerical_aperture_warning_callback(self) -> None:
+        """
+        Register a warning callback when detector NA exceeds the medium index.
+        """
+
+        @dash.callback(
+            dash.Output(self.ids.detector_numerical_aperture_warning, "children"),
+            dash.Output(self.ids.detector_numerical_aperture_warning, "is_open"),
+            dash.Input(self.ids.detector_numerical_aperture, "value"),
+            dash.Input(self.ids.medium_refractive_index_custom, "value"),
+            prevent_initial_call=False,
+        )
+        def update_detector_numerical_aperture_warning(
+            detector_numerical_aperture: Any,
+            medium_refractive_index: Any,
+        ) -> tuple[str, bool]:
+            resolved_detector_numerical_aperture = casting.as_optional_float(
+                detector_numerical_aperture,
+            )
+            resolved_medium_refractive_index = casting.as_optional_float(
+                medium_refractive_index,
+            )
+
+            if (
+                resolved_detector_numerical_aperture is None
+                or resolved_medium_refractive_index is None
+                or resolved_detector_numerical_aperture <= resolved_medium_refractive_index
+            ):
+                return "", False
+
+            warning_message = (
+                f"Detector NA ({resolved_detector_numerical_aperture:.3f}) exceeds the medium refractive index "
+                f"({resolved_medium_refractive_index:.3f}). Physically, NA should satisfy NA <= n_medium."
+            )
+
+            logger.debug(
+                "update_detector_numerical_aperture_warning opening alert with detector_numerical_aperture=%r medium_refractive_index=%r",
+                resolved_detector_numerical_aperture,
+                resolved_medium_refractive_index,
+            )
+
+            return warning_message, True
+
     def _register_optical_configuration_preview_callback(self) -> None:
         """
         Register optical configuration preview callback.
@@ -1228,6 +1287,8 @@ class Model:
             dash.Input(self.ids.medium_refractive_index_custom, "value"),
             dash.Input(self.ids.detector_phi_angle_degree, "value"),
             dash.Input(self.ids.detector_gamma_angle_degree, "value"),
+            dash.Input(self.ids.detector_sampling, "value"),
+            dash.Input(self.ids.detector_configuration_preset, "value"),
             prevent_initial_call=False,
         )
         def update_optical_configuration_preview(
@@ -1236,17 +1297,22 @@ class Model:
             medium_refractive_index: Any,
             detector_phi_angle_degree: Any,
             detector_gamma_angle_degree: Any,
+            detector_sampling: Any,
+            detector_configuration_preset: Any,
         ):
             logger.debug(
                 "update_optical_configuration_preview called with "
                 "detector_numerical_aperture=%r blocker_bar_numerical_aperture=%r "
                 "medium_refractive_index=%r detector_phi_angle_degree=%r "
-                "detector_gamma_angle_degree=%r",
+                "detector_gamma_angle_degree=%r detector_sampling=%r "
+                "detector_configuration_preset=%r",
                 detector_numerical_aperture,
                 blocker_bar_numerical_aperture,
                 medium_refractive_index,
                 detector_phi_angle_degree,
                 detector_gamma_angle_degree,
+                detector_sampling,
+                detector_configuration_preset,
             )
 
             return self.model_configuration.build_optical_configuration_preview_figure(
@@ -1255,4 +1321,6 @@ class Model:
                 medium_refractive_index=medium_refractive_index,
                 detector_phi_angle_degree=detector_phi_angle_degree,
                 detector_gamma_angle_degree=detector_gamma_angle_degree,
+                detector_sampling=detector_sampling,
+                detector_configuration_preset=detector_configuration_preset,
             )

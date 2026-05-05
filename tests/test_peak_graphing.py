@@ -5,7 +5,12 @@ import pytest
 from unittest.mock import patch, MagicMock
 import plotly.graph_objs as go
 
+from RosettaX.workflow.peak.callbacks.graph import (
+    add_grouped_2d_scatter_traces,
+    sanitize_group_points,
+)
 from RosettaX.workflow.peak.core.graphing import (
+    PeakWorkflowGraphBuilder,
     is_enabled,
     scale_selection_is_log
 )
@@ -146,7 +151,7 @@ class Test_GraphingUtilities:
         # Test the function handles legacy input formats
         assert scale_selection_is_log("log") is True
         assert scale_selection_is_log("linear") is False
-        
+
         # Edge cases for backwards compatibility
         assert scale_selection_is_log("") is False
         assert scale_selection_is_log(None) is False
@@ -194,14 +199,14 @@ class Test_GraphingFunctionIntegration:
         # Test realistic combination of settings
         graph_enabled = is_enabled("enabled")
         log_scale = scale_selection_is_log("log")
-        
+
         assert graph_enabled is True
         assert log_scale is True
-        
+
         # Test disabled graph with linear scale
         graph_disabled = is_enabled("disabled")
         linear_scale = scale_selection_is_log("linear")
-        
+
         assert graph_disabled is False
         assert linear_scale is False
 
@@ -210,15 +215,15 @@ class Test_GraphingFunctionIntegration:
         # Simulate typical Dash callback inputs
         checklist_enabled = ["enabled", "show_legend"]
         scale_dropdown = "log"
-        
+
         # Test the functions handle these inputs correctly
         assert is_enabled(checklist_enabled) is True
         assert scale_selection_is_log(scale_dropdown) is True
-        
+
         # Test empty/disabled states
         checklist_empty = []
         scale_linear = "linear"
-        
+
         assert is_enabled(checklist_empty) is False
         assert scale_selection_is_log(scale_linear) is False
 
@@ -231,12 +236,12 @@ class Test_GraphingFunctionIntegration:
             [1, 2, 3],        # List of numbers
             object(),         # Arbitrary object
         ]
-        
+
         for weird_input in weird_inputs:
             # Should not raise exceptions
             result = is_enabled(weird_input)
             assert isinstance(result, bool)
-            
+
             log_result = scale_selection_is_log(weird_input)
             assert isinstance(log_result, bool)
 
@@ -250,7 +255,7 @@ class Test_GraphingModuleConstants:
         assert isinstance(is_enabled("enabled"), bool)
         assert isinstance(is_enabled("disabled"), bool)
         assert isinstance(is_enabled(None), bool)
-        
+
         # Test scale_selection_is_log always returns boolean
         assert isinstance(scale_selection_is_log("log"), bool)
         assert isinstance(scale_selection_is_log("linear"), bool)
@@ -258,6 +263,55 @@ class Test_GraphingModuleConstants:
 
     def test_function_consistency(self):
         """Test that functions behave consistently across multiple calls."""
+
+
+class Test_Grouped2DScatterTraces:
+    def test_sanitize_group_points_excludes_zero_and_non_finite_values(self):
+        x_values, y_values = sanitize_group_points(
+            group_points={
+                "x_values": [1.0, 0.0, 2.0, np.nan],
+                "y_values": [3.0, 4.0, 0.0, 5.0],
+            },
+            x_log_scale=False,
+            y_log_scale=False,
+        )
+
+        assert x_values.tolist() == [1.0]
+        assert y_values.tolist() == [3.0]
+
+    def test_add_grouped_2d_scatter_traces_uses_black_markers(self):
+        figure = add_grouped_2d_scatter_traces(
+            figure=go.Figure(),
+            peak_lines_payload={
+                "group_points": [
+                    {
+                        "x_values": [1.0, 2.0],
+                        "y_values": [3.0, 4.0],
+                    }
+                ],
+                "group_labels": ["Group 1"],
+            },
+            x_log_scale=False,
+            y_log_scale=False,
+        )
+
+        assert len(figure.data) == 1
+        assert figure.data[0].marker.color == "black"
+
+
+class Test_PeakWorkflowGraphBuilder2DFiltering:
+    def test_filter_2d_values_for_axis_scale_excludes_zero_values(self):
+        builder = PeakWorkflowGraphBuilder.__new__(PeakWorkflowGraphBuilder)
+        builder.xscale_selection = "linear"
+        builder.yscale_selection = "linear"
+
+        filtered_x_values, filtered_y_values = builder._filter_2d_values_for_axis_scale(
+            x_values=np.array([0.0, 1.0, 2.0, np.nan]),
+            y_values=np.array([5.0, 0.0, 3.0, 4.0]),
+        )
+
+        assert filtered_x_values.tolist() == [2.0]
+        assert filtered_y_values.tolist() == [3.0]
         # Test idempotency
         for _ in range(5):
             assert is_enabled("enabled") is True

@@ -43,6 +43,10 @@ class ParameterSectionIds:
         return f"{self.prefix}-detector-configuration-custom-values-container"
 
     @property
+    def detector_numerical_aperture_warning(self) -> str:
+        return f"{self.prefix}-detector-numerical-aperture-warning"
+
+    @property
     def detector_numerical_aperture(self) -> str:
         return f"{self.prefix}-detector-numerical-aperture"
 

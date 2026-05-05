@@ -182,6 +182,7 @@ def build_solid_sphere_dense_simulated_coupling_curve(
         detector_gamma_offset_degree=optical_parameters.detector_gamma_angle_degree,
         polarization_angle_degree=optical_parameters.polarization_angle_degree,
         detector_sampling=optical_parameters.detector_sampling,
+        detector_angular_weights=optical_parameters.detector_angular_weights,
     )
 
     return (
@@ -257,6 +258,7 @@ def build_core_shell_dense_simulated_coupling_curve(
         detector_gamma_offset_degree=optical_parameters.detector_gamma_angle_degree,
         polarization_angle_degree=optical_parameters.polarization_angle_degree,
         detector_sampling=optical_parameters.detector_sampling,
+        detector_angular_weights=optical_parameters.detector_angular_weights,
     )
 
     return (
@@ -359,6 +361,7 @@ def build_calibration_standard_mie_relation_figure_store(
     detector_sampling: Any,
     detector_phi_angle_degree: Any,
     detector_gamma_angle_degree: Any,
+    detector_configuration_preset: Any = None,
     simulated_curve_point_count: int,
     logger: logging.Logger,
 ) -> dict[str, Any]:
@@ -379,6 +382,7 @@ def build_calibration_standard_mie_relation_figure_store(
             detector_sampling=detector_sampling,
             detector_phi_angle_degree=detector_phi_angle_degree,
             detector_gamma_angle_degree=detector_gamma_angle_degree,
+            detector_configuration_preset=detector_configuration_preset,
         )
 
         if resolved_mie_model == "Core/Shell Sphere":
@@ -529,6 +533,7 @@ def run_solid_sphere_calibration(
         detector_gamma_offset_degree=optical_parameters.detector_gamma_angle_degree,
         polarization_angle_degree=optical_parameters.polarization_angle_degree,
         detector_sampling=optical_parameters.detector_sampling,
+        detector_angular_weights=optical_parameters.detector_angular_weights,
     )
 
     measured_peak_positions = np.asarray(parsed_sphere_rows.measured_peak_positions, dtype=float).reshape(-1)
@@ -638,6 +643,7 @@ def run_core_shell_calibration(
         detector_gamma_offset_degree=optical_parameters.detector_gamma_angle_degree,
         polarization_angle_degree=optical_parameters.polarization_angle_degree,
         detector_sampling=optical_parameters.detector_sampling,
+        detector_angular_weights=optical_parameters.detector_angular_weights,
     )
 
     measured_peak_positions = np.asarray(parsed_core_shell_rows.measured_peak_positions, dtype=float).reshape(-1)
@@ -715,6 +721,7 @@ def run_scattering_calibration(
     detector_sampling: Any,
     detector_phi_angle_degree: Any,
     detector_gamma_angle_degree: Any,
+    detector_configuration_preset: Any = None,
     simulated_curve_point_count: int,
     logger: logging.Logger,
 ) -> CalibrationResult:
@@ -751,6 +758,7 @@ def run_scattering_calibration(
             detector_sampling=detector_sampling,
             detector_phi_angle_degree=detector_phi_angle_degree,
             detector_gamma_angle_degree=detector_gamma_angle_degree,
+            detector_configuration_preset=detector_configuration_preset,
         )
 
         logger.debug("Resolved optical parameters=%r", optical_parameters)

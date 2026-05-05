@@ -843,6 +843,8 @@ class PeakWorkflowGraphBuilder:
             & np.isfinite(
                 y_array,
             )
+            & (x_array != 0.0)
+            & (y_array != 0.0)
         )
 
         if self._x_axis_is_log():

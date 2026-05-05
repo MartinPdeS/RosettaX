@@ -20,6 +20,8 @@ def build_optical_configuration_preview_figure(
     detector_gamma_angle_degree: Any,
     scatter_coordinates: Any = None,
     camera: Optional[dict[str, Any]] = None,
+    detector_sampling: Any = 200,
+    detector_angular_weights: Optional[np.ndarray] = None,
 ) -> go.Figure:
     """
     Build an interactive 3D optical configuration preview.
@@ -58,17 +60,36 @@ def build_optical_configuration_preview_figure(
         default=0.0,
         name="detector_gamma_angle_degree",
     )
+    resolved_detector_sampling = _coerce_int(
+        detector_sampling,
+        default=200,
+        name="detector_sampling",
+    )
+
+    detector_visible_mask: Optional[tuple[bool, ...]] = None
+
+    if detector_angular_weights is not None:
+        detector_visible_mask = tuple(
+            bool(value != 0.0)
+            for value in np.asarray(
+                detector_angular_weights,
+                dtype=np.complex128,
+            ).reshape(-1)
+        )
 
     logger.debug(
         "Building optical preview figure with detector_numerical_aperture=%r, "
         "blocker_bar_numerical_aperture=%r, medium_refractive_index=%r, "
         "detector_phi_angle_degree=%r, detector_gamma_angle_degree=%r, "
+        "detector_sampling=%r, detector_angular_weights_provided=%r, "
         "scatter_coordinates_provided=%r",
         resolved_detector_numerical_aperture,
         resolved_blocker_bar_numerical_aperture,
         resolved_medium_refractive_index,
         resolved_detector_phi_angle_degree,
         resolved_detector_gamma_angle_degree,
+        resolved_detector_sampling,
+        detector_angular_weights is not None,
         scatter_coordinates is not None,
     )
 
@@ -79,6 +100,8 @@ def build_optical_configuration_preview_figure(
         medium_refractive_index=resolved_medium_refractive_index,
         detector_phi_angle_degree=resolved_detector_phi_angle_degree,
         detector_gamma_angle_degree=resolved_detector_gamma_angle_degree,
+        detector_sampling=resolved_detector_sampling,
+        detector_visible_mask=detector_visible_mask,
     )
 
     _log_coordinate_summary(
@@ -138,6 +161,8 @@ def resolve_scatter_coordinates(
     medium_refractive_index: float,
     detector_phi_angle_degree: float,
     detector_gamma_angle_degree: float,
+    detector_sampling: int,
+    detector_visible_mask: Optional[tuple[bool, ...]],
 ) -> np.ndarray:
     """
     Resolve scatter coordinates for the optical preview.
@@ -153,6 +178,8 @@ def resolve_scatter_coordinates(
             medium_refractive_index=medium_refractive_index,
             detector_phi_angle_degree=detector_phi_angle_degree,
             detector_gamma_angle_degree=detector_gamma_angle_degree,
+            detector_sampling=detector_sampling,
+            detector_visible_mask=detector_visible_mask,
         )
 
     logger.debug(
@@ -204,6 +231,8 @@ def build_detector_mesh_coordinates(
     medium_refractive_index: float,
     detector_phi_angle_degree: float,
     detector_gamma_angle_degree: float,
+    detector_sampling: int = 200,
+    detector_visible_mask: Optional[tuple[bool, ...]] = None,
 ) -> np.ndarray:
     """
     Build detector scatter coordinates from PyMieSim's Photodiode mesh.
@@ -214,12 +243,14 @@ def build_detector_mesh_coordinates(
     logger.debug(
         "Building detector mesh coordinates with detector_numerical_aperture=%r, "
         "blocker_bar_numerical_aperture=%r, medium_refractive_index=%r, "
-        "detector_phi_angle_degree=%r, detector_gamma_angle_degree=%r",
+        "detector_phi_angle_degree=%r, detector_gamma_angle_degree=%r, "
+        "detector_sampling=%r",
         detector_numerical_aperture,
         blocker_bar_numerical_aperture,
         medium_refractive_index,
         detector_phi_angle_degree,
         detector_gamma_angle_degree,
+        detector_sampling,
     )
 
     coordinate_array = build_pymiesim_photodiode_mesh_coordinates(
@@ -227,7 +258,24 @@ def build_detector_mesh_coordinates(
         medium_refractive_index=medium_refractive_index,
         detector_phi_angle_degree=detector_phi_angle_degree,
         detector_gamma_angle_degree=detector_gamma_angle_degree,
+        detector_sampling=detector_sampling,
     )
+
+    if detector_visible_mask is not None:
+        visible_mask = np.asarray(detector_visible_mask, dtype=bool).reshape(-1)
+
+        if visible_mask.size != coordinate_array.shape[0]:
+            raise ValueError(
+                "detector_visible_mask size must match detector mesh coordinate count. "
+                f"Got {visible_mask.size} flags for {coordinate_array.shape[0]} coordinates."
+            )
+
+        coordinate_array = coordinate_array[visible_mask]
+
+        _log_coordinate_summary(
+            name="weight_filtered_pymiesim_mesh_coordinates",
+            coordinate_array=coordinate_array,
+        )
 
     _log_coordinate_summary(
         name="raw_pymiesim_mesh_coordinates",
@@ -272,6 +320,7 @@ def build_pymiesim_photodiode_mesh_coordinates(
     medium_refractive_index: float,
     detector_phi_angle_degree: float,
     detector_gamma_angle_degree: float,
+    detector_sampling: int = 200,
 ) -> np.ndarray:
     """
     Build detector coordinates from PyMieSim's Photodiode mesh.
@@ -335,6 +384,7 @@ def build_pymiesim_photodiode_mesh_coordinates(
         phi_offset=float(detector_phi_angle_degree) * ureg.degree,
         polarization_filter=0.0 * ureg.degree,
         medium=float(medium_refractive_index),
+        sampling=int(detector_sampling),
     )
 
     setup = Setup(
@@ -770,7 +820,7 @@ def _build_scatter_points_trace(
         mode="markers",
         marker={
             "size": 5.0,
-            "color": "#0057ff",
+            "color": "black",
             "opacity": 1.0,
             "line": {
                 "width": 0.0,
@@ -910,6 +960,29 @@ def _coerce_float(
             default,
         )
         return default
+
+
+def _coerce_int(
+    value: Any,
+    *,
+    default: int,
+    name: str,
+) -> int:
+    """
+    Convert a value to int, falling back to a default when conversion fails.
+    """
+    try:
+        resolved_value = int(value)
+        logger.debug("Coerced %s=%r to int=%r", name, value, resolved_value)
+        return resolved_value
+    except (TypeError, ValueError):
+        logger.warning(
+            "Could not coerce %s=%r to int. Using default=%r",
+            name,
+            value,
+            default,
+        )
+        return int(default)
 
 
 def _log_coordinate_summary(

@@ -7,6 +7,7 @@ import numpy as np
 
 from RosettaX.pages.p03_scattering.backend import BackEnd
 from RosettaX.utils.casting import as_optional_float, as_required_float, as_required_int
+from .detector_configuration import resolve_detector_angular_weights
 from . import table
 
 
@@ -29,6 +30,7 @@ def compute_model_for_rows(
     detector_sampling: Any,
     detector_phi_angle_degree: Any,
     detector_gamma_angle_degree: Any,
+    detector_configuration_preset: Any = None,
     logger: logging.Logger,
 ) -> list[dict[str, str]]:
     """
@@ -173,6 +175,7 @@ def compute_model_for_rows(
             detector_sampling=resolved_detector_sampling,
             detector_phi_angle_degree=resolved_detector_phi_angle_degree,
             detector_gamma_angle_degree=resolved_detector_gamma_angle_degree,
+            detector_configuration_preset=detector_configuration_preset,
             logger=logger,
         )
 
@@ -187,6 +190,7 @@ def compute_model_for_rows(
         detector_sampling=resolved_detector_sampling,
         detector_phi_angle_degree=resolved_detector_phi_angle_degree,
         detector_gamma_angle_degree=resolved_detector_gamma_angle_degree,
+        detector_configuration_preset=detector_configuration_preset,
         logger=logger,
     )
 
@@ -204,6 +208,7 @@ def _compute_core_shell_model_for_rows(
     detector_sampling: int,
     detector_phi_angle_degree: float,
     detector_gamma_angle_degree: float,
+    detector_configuration_preset: Any,
     logger: logging.Logger,
 ) -> list[dict[str, str]]:
     """
@@ -318,6 +323,11 @@ def _compute_core_shell_model_for_rows(
         logger.debug("compute_model_for_rows found no valid core shell rows.")
         return updated_rows
 
+    detector_angular_weights = resolve_detector_angular_weights(
+        preset_name=detector_configuration_preset,
+        detector_sampling=detector_sampling,
+    )
+
     try:
         modeled_coupling_result = BackEnd.compute_modeled_coupling_from_core_shell_dimensions(
             core_diameters_nm=np.asarray(core_diameters_nm, dtype=float),
@@ -334,6 +344,7 @@ def _compute_core_shell_model_for_rows(
             detector_gamma_offset_degree=detector_gamma_angle_degree,
             polarization_angle_degree=0.0,
             detector_sampling=detector_sampling,
+            detector_angular_weights=detector_angular_weights,
         )
     except Exception:
         logger.exception(
@@ -368,6 +379,7 @@ def _compute_solid_sphere_model_for_rows(
     detector_sampling: int,
     detector_phi_angle_degree: float,
     detector_gamma_angle_degree: float,
+    detector_configuration_preset: Any,
     logger: logging.Logger,
 ) -> list[dict[str, str]]:
     """
@@ -460,6 +472,11 @@ def _compute_solid_sphere_model_for_rows(
         logger.debug("compute_model_for_rows found no valid solid sphere rows.")
         return updated_rows
 
+    detector_angular_weights = resolve_detector_angular_weights(
+        preset_name=detector_configuration_preset,
+        detector_sampling=detector_sampling,
+    )
+
     try:
         modeled_coupling_result = BackEnd.compute_modeled_coupling_from_diameters(
             particle_diameters_nm=np.asarray(particle_diameters_nm, dtype=float),
@@ -474,6 +491,7 @@ def _compute_solid_sphere_model_for_rows(
             detector_gamma_offset_degree=detector_gamma_angle_degree,
             polarization_angle_degree=0.0,
             detector_sampling=detector_sampling,
+            detector_angular_weights=detector_angular_weights,
         )
     except Exception:
         logger.exception(

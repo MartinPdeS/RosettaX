@@ -10,6 +10,7 @@ from RosettaX.utils import casting
 from RosettaX.workflow.calibration.mie_relation import MieRelation
 from RosettaX.workflow.calibration.mie_relation import build_mie_parameter_payload
 from RosettaX.workflow.calibration.mie_relation import build_mie_relation_from_arrays
+from RosettaX.workflow.parameters.detector_configuration import resolve_detector_angular_weights
 
 
 logger = logging.getLogger(__name__)
@@ -38,6 +39,8 @@ class OpticalParameters:
     optical_power_watt: float = 1.0
     source_numerical_aperture: float = 0.1
     polarization_angle_degree: float = 0.0
+    detector_configuration_preset_name: str = ""
+    detector_angular_weights: Optional[np.ndarray] = None
 
     def to_parameter_payload(
         self,
@@ -626,6 +629,7 @@ def parse_optical_parameters(
     detector_sampling: Any,
     detector_phi_angle_degree: Any,
     detector_gamma_angle_degree: Any,
+    detector_configuration_preset: Any = None,
 ) -> OpticalParameters:
     """
     Parse raw callback values into typed optical parameters.
@@ -648,6 +652,12 @@ def parse_optical_parameters(
         detector_sampling,
         detector_phi_angle_degree,
         detector_gamma_angle_degree,
+        detector_configuration_preset,
+    )
+
+    resolved_detector_sampling = casting.as_required_int(
+        detector_sampling,
+        "detector_sampling",
     )
 
     optical_parameters = OpticalParameters(
@@ -680,10 +690,7 @@ def parse_optical_parameters(
             blocker_bar_numerical_aperture,
             "blocker_bar_numerical_aperture",
         ),
-        detector_sampling=casting.as_required_int(
-            detector_sampling,
-            "detector_sampling",
-        ),
+        detector_sampling=resolved_detector_sampling,
         detector_phi_angle_degree=casting.as_required_float(
             detector_phi_angle_degree,
             "detector_phi_angle_degree",
@@ -691,6 +698,15 @@ def parse_optical_parameters(
         detector_gamma_angle_degree=casting.as_required_float(
             detector_gamma_angle_degree,
             "detector_gamma_angle_degree",
+        ),
+        detector_configuration_preset_name=(
+            ""
+            if detector_configuration_preset is None
+            else str(detector_configuration_preset)
+        ),
+        detector_angular_weights=resolve_detector_angular_weights(
+            preset_name=detector_configuration_preset,
+            detector_sampling=resolved_detector_sampling,
         ),
     )
 

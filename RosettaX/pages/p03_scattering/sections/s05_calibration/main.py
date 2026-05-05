@@ -658,6 +658,7 @@ class Calibration:
             dash.State(self.page.ids.Parameters.detector_sampling, "value"),
             dash.State(self.page.ids.Parameters.detector_phi_angle_degree, "value"),
             dash.State(self.page.ids.Parameters.detector_gamma_angle_degree, "value"),
+            dash.State(self.page.ids.Parameters.detector_configuration_preset, "value"),
             prevent_initial_call=True,
         )
         def fit_scattering_instrument_response(
@@ -679,6 +680,7 @@ class Calibration:
             detector_sampling: Any,
             detector_phi_angle_degree: Any,
             detector_gamma_angle_degree: Any,
+            detector_configuration_preset: Any,
         ) -> tuple[Any, Any, Any, Any, Any, Any]:
             del n_clicks
 
@@ -719,6 +721,7 @@ class Calibration:
                 detector_sampling=detector_sampling,
                 detector_phi_angle_degree=detector_phi_angle_degree,
                 detector_gamma_angle_degree=detector_gamma_angle_degree,
+                detector_configuration_preset=detector_configuration_preset,
                 simulated_curve_point_count=self.simulated_curve_point_count,
                 logger=logger,
             )

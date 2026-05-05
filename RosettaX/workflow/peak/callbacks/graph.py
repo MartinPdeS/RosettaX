@@ -458,6 +458,7 @@ def add_grouped_2d_scatter_traces(
                 marker={
                     "size": 4,
                     "opacity": 0.72,
+                    "color": "black",
                 },
             )
         )
@@ -643,6 +644,8 @@ def sanitize_group_points(
         & np.isfinite(
             y_values,
         )
+        & (x_values != 0.0)
+        & (y_values != 0.0)
     )
 
     if x_log_scale:

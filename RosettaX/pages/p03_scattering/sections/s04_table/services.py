@@ -330,6 +330,7 @@ class ScatteringCalibrationStandardTable:
         detector_sampling: Any,
         detector_phi_angle_degree: Any,
         detector_gamma_angle_degree: Any,
+        detector_configuration_preset: Any = None,
         logger: logging.Logger,
     ) -> list[dict[str, str]]:
         """
@@ -359,6 +360,7 @@ class ScatteringCalibrationStandardTable:
             detector_sampling=detector_sampling,
             detector_phi_angle_degree=detector_phi_angle_degree,
             detector_gamma_angle_degree=detector_gamma_angle_degree,
+            detector_configuration_preset=detector_configuration_preset,
             logger=logger,
         )
 
@@ -449,6 +451,7 @@ def compute_model_for_rows(
     detector_sampling: Any,
     detector_phi_angle_degree: Any,
     detector_gamma_angle_degree: Any,
+    detector_configuration_preset: Any = None,
     logger: logging.Logger,
 ) -> list[dict[str, str]]:
     """
@@ -468,6 +471,7 @@ def compute_model_for_rows(
         detector_sampling=detector_sampling,
         detector_phi_angle_degree=detector_phi_angle_degree,
         detector_gamma_angle_degree=detector_gamma_angle_degree,
+        detector_configuration_preset=detector_configuration_preset,
         logger=logger,
     )
 

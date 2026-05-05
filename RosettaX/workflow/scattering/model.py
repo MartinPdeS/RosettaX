@@ -478,16 +478,25 @@ class ScatteringModelConfiguration:
         medium_refractive_index: Any,
         detector_phi_angle_degree: Any,
         detector_gamma_angle_degree: Any,
+        detector_sampling: Any,
+        detector_configuration_preset: Any,
     ) -> go.Figure:
         """
         Build the optical configuration preview figure.
         """
+        detector_angular_weights = parameter_services.resolve_detector_angular_weights(
+            preset_name=detector_configuration_preset,
+            detector_sampling=detector_sampling,
+        )
+
         return parameter_services.build_optical_configuration_preview_figure(
             detector_numerical_aperture=detector_numerical_aperture,
             blocker_bar_numerical_aperture=blocker_bar_numerical_aperture,
             medium_refractive_index=medium_refractive_index,
             detector_phi_angle_degree=detector_phi_angle_degree,
             detector_gamma_angle_degree=detector_gamma_angle_degree,
+            detector_sampling=detector_sampling,
+            detector_angular_weights=detector_angular_weights,
         )
 
     @staticmethod

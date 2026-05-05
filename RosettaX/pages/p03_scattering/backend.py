@@ -140,6 +140,7 @@ class BackEnd:
         detector_gamma_offset_degree: float = 0.0,
         polarization_angle_degree: float = 0.0,
         detector_sampling: int = 600,
+        detector_angular_weights: Optional[np.ndarray] = None,
     ) -> ModeledCouplingResult:
         """
         Compute modeled coupling values for the selected Mie scatterer model.
@@ -218,6 +219,7 @@ class BackEnd:
                 detector_gamma_offset_degree=detector_gamma_offset_degree,
                 polarization_angle_degree=polarization_angle_degree,
                 detector_sampling=detector_sampling,
+                detector_angular_weights=detector_angular_weights,
             )
 
         if resolved_mie_model == CORE_SHELL_SPHERE_MODEL_NAME:
@@ -256,6 +258,7 @@ class BackEnd:
                 detector_gamma_offset_degree=detector_gamma_offset_degree,
                 polarization_angle_degree=polarization_angle_degree,
                 detector_sampling=detector_sampling,
+                detector_angular_weights=detector_angular_weights,
             )
 
         raise ValueError(f"Unsupported scattering model: {mie_model!r}")
@@ -274,6 +277,7 @@ class BackEnd:
         detector_gamma_offset_degree: float = 0.0,
         polarization_angle_degree: float = 0.0,
         detector_sampling: int = 600,
+        detector_angular_weights: Optional[np.ndarray] = None,
     ) -> ModeledCouplingResult:
         """
         Compute modeled coupling values for solid sphere particle diameters.
@@ -337,6 +341,17 @@ class BackEnd:
                 detector_gamma_offset_degree=float(detector_gamma_offset_degree),
                 polarization_angle_degree=float(polarization_angle_degree),
                 detector_sampling=int(detector_sampling),
+                detector_angular_weights=(
+                    None
+                    if detector_angular_weights is None
+                    else tuple(
+                        complex(value)
+                        for value in np.asarray(
+                            detector_angular_weights,
+                            dtype=np.complex128,
+                        ).reshape(-1)
+                    )
+                ),
             ),
             dtype=float,
         )
@@ -360,6 +375,7 @@ class BackEnd:
             "detector_gamma_offset_degree": float(detector_gamma_offset_degree),
             "polarization_angle_degree": float(polarization_angle_degree),
             "detector_sampling": int(detector_sampling),
+            "detector_has_angular_weights": detector_angular_weights is not None,
             "medium_refractive_index": float(medium_refractive_index),
             "particle_refractive_index": float(particle_refractive_index),
         }
@@ -395,6 +411,7 @@ class BackEnd:
         detector_gamma_offset_degree: float,
         polarization_angle_degree: float,
         detector_sampling: int,
+        detector_angular_weights: tuple[complex, ...] | None,
     ) -> tuple[float, ...]:
         """
         Cache solid-sphere coupling computations for deterministic inputs.
@@ -410,18 +427,35 @@ class BackEnd:
                 medium=[float(medium_refractive_index)],
             )
 
-        coupling_values = BackEnd._compute_coupling_values_with_fallback(
-            scatterer_set_builder=build_solid_sphere_scatterer_set,
-            wavelength_nm=wavelength_nm,
-            source_numerical_aperture=source_numerical_aperture,
-            optical_power_watt=optical_power_watt,
-            detector_numerical_aperture=detector_numerical_aperture,
-            detector_cache_numerical_aperture=detector_cache_numerical_aperture,
-            detector_phi_offset_degree=detector_phi_offset_degree,
-            detector_gamma_offset_degree=detector_gamma_offset_degree,
-            polarization_angle_degree=polarization_angle_degree,
-            detector_sampling=detector_sampling,
-        )
+        if detector_angular_weights is None:
+            coupling_values = BackEnd._compute_coupling_values_with_fallback(
+                scatterer_set_builder=build_solid_sphere_scatterer_set,
+                wavelength_nm=wavelength_nm,
+                source_numerical_aperture=source_numerical_aperture,
+                optical_power_watt=optical_power_watt,
+                detector_numerical_aperture=detector_numerical_aperture,
+                detector_cache_numerical_aperture=detector_cache_numerical_aperture,
+                detector_phi_offset_degree=detector_phi_offset_degree,
+                detector_gamma_offset_degree=detector_gamma_offset_degree,
+                polarization_angle_degree=polarization_angle_degree,
+                detector_sampling=detector_sampling,
+            )
+        else:
+            coupling_values = BackEnd._compute_weighted_solid_sphere_coupling(
+                particle_diameter_array=particle_diameter_array,
+                wavelength_nm=wavelength_nm,
+                source_numerical_aperture=source_numerical_aperture,
+                optical_power_watt=optical_power_watt,
+                detector_numerical_aperture=detector_numerical_aperture,
+                medium_refractive_index=medium_refractive_index,
+                particle_refractive_index=particle_refractive_index,
+                detector_cache_numerical_aperture=detector_cache_numerical_aperture,
+                detector_phi_offset_degree=detector_phi_offset_degree,
+                detector_gamma_offset_degree=detector_gamma_offset_degree,
+                polarization_angle_degree=polarization_angle_degree,
+                detector_sampling=detector_sampling,
+                detector_angular_weights=np.asarray(detector_angular_weights, dtype=np.complex128),
+            )
 
         return tuple(
             float(value)
@@ -444,6 +478,7 @@ class BackEnd:
         detector_gamma_offset_degree: float = 0.0,
         polarization_angle_degree: float = 0.0,
         detector_sampling: int = 600,
+        detector_angular_weights: Optional[np.ndarray] = None,
     ) -> ModeledCouplingResult:
         """
         Compute modeled coupling values for paired core shell sphere rows.
@@ -544,6 +579,17 @@ class BackEnd:
                 detector_gamma_offset_degree=float(detector_gamma_offset_degree),
                 polarization_angle_degree=float(polarization_angle_degree),
                 detector_sampling=int(detector_sampling),
+                detector_angular_weights=(
+                    None
+                    if detector_angular_weights is None
+                    else tuple(
+                        complex(value)
+                        for value in np.asarray(
+                            detector_angular_weights,
+                            dtype=np.complex128,
+                        ).reshape(-1)
+                    )
+                ),
             ),
             dtype=float,
         )
@@ -567,6 +613,7 @@ class BackEnd:
             "detector_gamma_offset_degree": float(detector_gamma_offset_degree),
             "polarization_angle_degree": float(polarization_angle_degree),
             "detector_sampling": int(detector_sampling),
+            "detector_has_angular_weights": detector_angular_weights is not None,
             "medium_refractive_index": float(medium_refractive_index),
             "core_refractive_index": float(core_refractive_index),
             "shell_refractive_index": float(shell_refractive_index),
@@ -608,6 +655,7 @@ class BackEnd:
         detector_gamma_offset_degree: float,
         polarization_angle_degree: float,
         detector_sampling: int,
+        detector_angular_weights: tuple[complex, ...] | None,
     ) -> tuple[float, ...]:
         """
         Cache row-wise core-shell coupling computations for deterministic inputs.
@@ -638,18 +686,37 @@ class BackEnd:
                     medium=[float(medium_refractive_index)],
                 )
 
-            coupling_values = BackEnd._compute_coupling_values_with_fallback(
-                scatterer_set_builder=build_core_shell_scatterer_set,
-                wavelength_nm=wavelength_nm,
-                source_numerical_aperture=source_numerical_aperture,
-                optical_power_watt=optical_power_watt,
-                detector_numerical_aperture=detector_numerical_aperture,
-                detector_cache_numerical_aperture=detector_cache_numerical_aperture,
-                detector_phi_offset_degree=detector_phi_offset_degree,
-                detector_gamma_offset_degree=detector_gamma_offset_degree,
-                polarization_angle_degree=polarization_angle_degree,
-                detector_sampling=detector_sampling,
-            )
+            if detector_angular_weights is None:
+                coupling_values = BackEnd._compute_coupling_values_with_fallback(
+                    scatterer_set_builder=build_core_shell_scatterer_set,
+                    wavelength_nm=wavelength_nm,
+                    source_numerical_aperture=source_numerical_aperture,
+                    optical_power_watt=optical_power_watt,
+                    detector_numerical_aperture=detector_numerical_aperture,
+                    detector_cache_numerical_aperture=detector_cache_numerical_aperture,
+                    detector_phi_offset_degree=detector_phi_offset_degree,
+                    detector_gamma_offset_degree=detector_gamma_offset_degree,
+                    polarization_angle_degree=polarization_angle_degree,
+                    detector_sampling=detector_sampling,
+                )
+            else:
+                coupling_values = BackEnd._compute_weighted_core_shell_row_coupling(
+                    core_diameter_nm=float(core_diameter_nm),
+                    shell_thickness_nm=float(shell_thickness_nm),
+                    wavelength_nm=wavelength_nm,
+                    source_numerical_aperture=source_numerical_aperture,
+                    optical_power_watt=optical_power_watt,
+                    detector_numerical_aperture=detector_numerical_aperture,
+                    medium_refractive_index=medium_refractive_index,
+                    core_refractive_index=core_refractive_index,
+                    shell_refractive_index=shell_refractive_index,
+                    detector_cache_numerical_aperture=detector_cache_numerical_aperture,
+                    detector_phi_offset_degree=detector_phi_offset_degree,
+                    detector_gamma_offset_degree=detector_gamma_offset_degree,
+                    polarization_angle_degree=polarization_angle_degree,
+                    detector_sampling=detector_sampling,
+                    detector_angular_weights=np.asarray(detector_angular_weights, dtype=np.complex128),
+                )
 
             if coupling_values.size != 1:
                 raise ValueError(
@@ -716,6 +783,136 @@ class BackEnd:
             polarization_angle_degree=polarization_angle_degree,
             detector_sampling=int(detector_sampling),
         )
+
+
+    @staticmethod
+    def _compute_weighted_solid_sphere_coupling(
+        *,
+        particle_diameter_array: np.ndarray,
+        wavelength_nm: float,
+        source_numerical_aperture: float,
+        optical_power_watt: float,
+        detector_numerical_aperture: float,
+        medium_refractive_index: float,
+        particle_refractive_index: float,
+        detector_cache_numerical_aperture: float,
+        detector_phi_offset_degree: float,
+        detector_gamma_offset_degree: float,
+        polarization_angle_degree: float,
+        detector_sampling: int,
+        detector_angular_weights: np.ndarray,
+    ) -> np.ndarray:
+        """
+        Compute weighted solid-sphere coupling values with sequential sets.
+        """
+        target_size = int(particle_diameter_array.size)
+
+        polarization_set = PyMieSim.polarization_set.PolarizationSet(
+            angles=np.full(target_size, float(polarization_angle_degree)) * ureg.degree,
+        )
+
+        source_set = PyMieSim.source_set.GaussianSet.build_sequential(
+            target_size=target_size,
+            wavelength=np.full(target_size, float(wavelength_nm)) * ureg.nanometer,
+            polarization=polarization_set,
+            optical_power=np.full(target_size, float(optical_power_watt)) * ureg.watt,
+            numerical_aperture=np.full(target_size, float(source_numerical_aperture)),
+        )
+
+        scatterer_set = PyMieSim.scatterer_set.SphereSet.build_sequential(
+            target_size=target_size,
+            diameter=particle_diameter_array * ureg.nanometer,
+            material=np.full(target_size, complex(float(particle_refractive_index), 0.0), dtype=np.complex128),
+            medium=np.full(target_size, float(medium_refractive_index)),
+        )
+
+        detector_set = PyMieSim.detector_set.PhotodiodeSet.build_sequential(
+            target_size=target_size,
+            numerical_aperture=np.full(target_size, float(detector_numerical_aperture)),
+            cache_numerical_aperture=np.full(target_size, float(detector_cache_numerical_aperture)),
+            phi_offset=np.full(target_size, float(detector_phi_offset_degree)) * ureg.degree,
+            gamma_offset=np.full(target_size, float(detector_gamma_offset_degree)) * ureg.degree,
+            sampling=np.full(target_size, int(detector_sampling)),
+            polarization_filter=np.zeros(target_size) * ureg.degree,
+            medium=np.full(target_size, float(medium_refractive_index)),
+            angular_weights=np.asarray(detector_angular_weights, dtype=np.complex128),
+        )
+
+        experiment = PyMieSim.Setup(
+            scatterer_set=scatterer_set,
+            source_set=source_set,
+            detector_set=detector_set,
+        )
+
+        coupling_values = experiment.get_sequential("coupling")
+        coupling_values = np.real_if_close(coupling_values, tol=1000)
+        return np.asarray(coupling_values, dtype=float).reshape(-1)
+
+
+    @staticmethod
+    def _compute_weighted_core_shell_row_coupling(
+        *,
+        core_diameter_nm: float,
+        shell_thickness_nm: float,
+        wavelength_nm: float,
+        source_numerical_aperture: float,
+        optical_power_watt: float,
+        detector_numerical_aperture: float,
+        medium_refractive_index: float,
+        core_refractive_index: float,
+        shell_refractive_index: float,
+        detector_cache_numerical_aperture: float,
+        detector_phi_offset_degree: float,
+        detector_gamma_offset_degree: float,
+        polarization_angle_degree: float,
+        detector_sampling: int,
+        detector_angular_weights: np.ndarray,
+    ) -> np.ndarray:
+        """
+        Compute one weighted core-shell coupling value with sequential sets.
+        """
+        polarization_set = PyMieSim.polarization_set.PolarizationSet(
+            angles=[float(polarization_angle_degree)] * ureg.degree,
+        )
+
+        source_set = PyMieSim.source_set.GaussianSet.build_sequential(
+            target_size=1,
+            wavelength=[float(wavelength_nm)] * ureg.nanometer,
+            polarization=polarization_set,
+            optical_power=[float(optical_power_watt)] * ureg.watt,
+            numerical_aperture=[float(source_numerical_aperture)],
+        )
+
+        scatterer_set = PyMieSim.scatterer_set.CoreShellSet.build_sequential(
+            target_size=1,
+            core_diameter=[float(core_diameter_nm)] * ureg.nanometer,
+            shell_thickness=[float(shell_thickness_nm)] * ureg.nanometer,
+            core_material=[complex(float(core_refractive_index), 0.0)],
+            shell_material=[complex(float(shell_refractive_index), 0.0)],
+            medium=[float(medium_refractive_index)],
+        )
+
+        detector_set = PyMieSim.detector_set.PhotodiodeSet.build_sequential(
+            target_size=1,
+            numerical_aperture=[float(detector_numerical_aperture)],
+            cache_numerical_aperture=[float(detector_cache_numerical_aperture)],
+            phi_offset=[float(detector_phi_offset_degree)] * ureg.degree,
+            gamma_offset=[float(detector_gamma_offset_degree)] * ureg.degree,
+            sampling=[int(detector_sampling)],
+            polarization_filter=[0.0] * ureg.degree,
+            medium=[float(medium_refractive_index)],
+            angular_weights=np.asarray(detector_angular_weights, dtype=np.complex128),
+        )
+
+        experiment = PyMieSim.Setup(
+            scatterer_set=scatterer_set,
+            source_set=source_set,
+            detector_set=detector_set,
+        )
+
+        coupling_values = experiment.get_sequential("coupling")
+        coupling_values = np.real_if_close(coupling_values, tol=1000)
+        return np.asarray(coupling_values, dtype=float).reshape(-1)
 
 
     @staticmethod

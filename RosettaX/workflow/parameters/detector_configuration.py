@@ -3,7 +3,10 @@
 from typing import Any
 import logging
 
+import numpy as np
+
 from . import loader
+from .optical_preview import build_pymiesim_photodiode_mesh_coordinates
 
 
 logger = logging.getLogger(__name__)
@@ -136,6 +139,201 @@ def resolve_detector_configuration_values(
     )
 
     return resolved_values
+
+
+def resolve_detector_angular_weights(
+    *,
+    preset_name: Any,
+    detector_sampling: Any,
+) -> np.ndarray | None:
+    """
+    Resolve optional angular weights for a detector preset.
+
+    Supported preset fields are:
+
+    - ``detector_angular_weights``: explicit complex-valued vector
+    - ``detector_angular_weight_profile``: named ad hoc generator
+    """
+    if detector_preset_is_custom(preset_name):
+        return None
+
+    preset = loader.load_detector_configuration_preset(
+        preset_name,
+    )
+
+    if not preset:
+        return None
+
+    sampling_size = int(detector_sampling)
+
+    explicit_weights = preset.get("detector_angular_weights")
+
+    if explicit_weights is not None:
+        angular_weights = np.asarray(
+            explicit_weights,
+            dtype=np.complex128,
+        ).reshape(-1)
+
+        if angular_weights.size != sampling_size:
+            raise ValueError(
+                "Preset detector_angular_weights length must match detector_sampling. "
+                f"Got {angular_weights.size} weights for sampling={sampling_size}."
+            )
+
+        return angular_weights
+
+    profile_name = preset.get("detector_angular_weight_profile")
+
+    if profile_name in (None, ""):
+        return None
+
+    normalized_profile_name = str(profile_name).strip().lower()
+
+    if normalized_profile_name == "first-half-zero":
+        angular_weights = np.ones(
+            sampling_size,
+            dtype=np.complex128,
+        )
+        angular_weights[: sampling_size // 2] = 0.0
+        return angular_weights
+
+    if normalized_profile_name == "zero-x-positive":
+        coordinate_array = _build_profile_coordinate_array(
+            preset=preset,
+            sampling_size=sampling_size,
+        )
+
+        angular_weights = np.ones(
+            sampling_size,
+            dtype=np.complex128,
+        )
+        angular_weights[coordinate_array[:, 0] > 0.0] = 0.0
+        return angular_weights
+
+    if normalized_profile_name in {
+        "local-split-positive-side",
+        "local-split-negative-side",
+    }:
+        coordinate_array = _build_profile_coordinate_array(
+            preset=preset,
+            sampling_size=sampling_size,
+        )
+        split_metric = _build_local_split_metric(coordinate_array)
+
+        angular_weights = np.ones(
+            sampling_size,
+            dtype=np.complex128,
+        )
+
+        if normalized_profile_name == "local-split-positive-side":
+            angular_weights[split_metric <= 0.0] = 0.0
+        else:
+            angular_weights[split_metric >= 0.0] = 0.0
+
+        return angular_weights
+
+    if normalized_profile_name in {
+        "split-side-half",
+        "split-forward-half",
+    }:
+        coordinate_array = _build_profile_coordinate_array(
+            preset=preset,
+            sampling_size=sampling_size,
+        )
+        split_metric = coordinate_array[:, 0] - coordinate_array[:, 2]
+
+        angular_weights = np.ones(
+            sampling_size,
+            dtype=np.complex128,
+        )
+
+        if normalized_profile_name == "split-side-half":
+            angular_weights[split_metric <= 0.0] = 0.0
+        else:
+            angular_weights[split_metric >= 0.0] = 0.0
+
+        return angular_weights
+
+    raise ValueError(
+        f"Unsupported detector_angular_weight_profile: {profile_name!r}"
+    )
+
+
+def _build_profile_coordinate_array(
+    *,
+    preset: dict[str, Any],
+    sampling_size: int,
+) -> np.ndarray:
+    detector_numerical_aperture = float(
+        preset.get(
+            "detector_numerical_aperture",
+            0.4,
+        )
+    )
+    detector_phi_angle_degree = float(
+        preset.get(
+            "detector_phi_angle_degree",
+            0.0,
+        )
+    )
+    detector_gamma_angle_degree = float(
+        preset.get(
+            "detector_gamma_angle_degree",
+            0.0,
+        )
+    )
+    medium_refractive_index = float(
+        preset.get(
+            "medium_refractive_index",
+            1.333,
+        )
+    )
+
+    coordinate_array = build_pymiesim_photodiode_mesh_coordinates(
+        detector_numerical_aperture=detector_numerical_aperture,
+        medium_refractive_index=medium_refractive_index,
+        detector_phi_angle_degree=detector_phi_angle_degree,
+        detector_gamma_angle_degree=detector_gamma_angle_degree,
+        detector_sampling=sampling_size,
+    )
+
+    if coordinate_array.shape[0] != sampling_size:
+        raise ValueError(
+            "PyMieSim detector mesh size does not match detector_sampling for angular weight generation. "
+            f"Got {coordinate_array.shape[0]} mesh points for sampling={sampling_size}."
+        )
+
+    return coordinate_array
+
+
+def _build_local_split_metric(
+    coordinate_array: np.ndarray,
+) -> np.ndarray:
+    axis_vector = np.asarray(
+        coordinate_array.mean(axis=0),
+        dtype=float,
+    )
+    axis_norm = np.linalg.norm(axis_vector)
+
+    if axis_norm == 0.0:
+        raise ValueError("Cannot build a local detector split from a zero-length axis vector.")
+
+    axis_vector = axis_vector / axis_norm
+
+    reference_vector = np.array([0.0, 0.0, 1.0], dtype=float)
+
+    if abs(float(np.dot(axis_vector, reference_vector))) > 0.99:
+        reference_vector = np.array([1.0, 0.0, 0.0], dtype=float)
+
+    split_normal = np.cross(reference_vector, axis_vector)
+    split_normal_norm = np.linalg.norm(split_normal)
+
+    if split_normal_norm == 0.0:
+        raise ValueError("Cannot build a local detector split normal for this detector orientation.")
+
+    split_normal = split_normal / split_normal_norm
+
+    return coordinate_array @ split_normal
 
 
 def _resolve_preset_value(

@@ -6,6 +6,8 @@ from types import SimpleNamespace
 from unittest.mock import patch, Mock
 import logging
 
+from RosettaX.workflow.parameters.optical_preview import build_pymiesim_photodiode_mesh_coordinates
+from RosettaX.workflow.parameters.detector_configuration import resolve_detector_angular_weights
 from RosettaX.workflow.parameters.model import (
     SOLID_SPHERE_MODEL_NAME,
     CORE_SHELL_SPHERE_MODEL_NAME,
@@ -70,7 +72,7 @@ class Test_compute_model_for_rows:
 
     @patch('RosettaX.workflow.parameters.model.table')
     @patch('RosettaX.workflow.parameters.model.BackEnd.compute_modeled_coupling_from_diameters')
-    def test_compute_model_for_rows_solid_sphere_success(self, mock_compute_coupling, mock_table, valid_optical_parameters, 
+    def test_compute_model_for_rows_solid_sphere_success(self, mock_compute_coupling, mock_table, valid_optical_parameters,
                                                         valid_solid_sphere_rows, mock_logger):
         """Test compute_model_for_rows with valid solid sphere parameters."""
         mock_table.normalize_table_rows.return_value = [dict(row) for row in valid_solid_sphere_rows]
@@ -90,7 +92,7 @@ class Test_compute_model_for_rows:
             current_rows=valid_solid_sphere_rows,
         )
         mock_compute_coupling.assert_called_once()
-        
+
         assert len(result) == 3
         assert result[0]['expected_coupling'] == '1234.5'
         assert result[1]['expected_coupling'] == '2468'
@@ -98,7 +100,7 @@ class Test_compute_model_for_rows:
 
     @patch('RosettaX.workflow.parameters.model.table')
     @patch('RosettaX.workflow.parameters.model.BackEnd.compute_modeled_coupling_from_core_shell_dimensions')
-    def test_compute_model_for_rows_core_shell_sphere_success(self, mock_compute_coupling, mock_table, valid_optical_parameters, 
+    def test_compute_model_for_rows_core_shell_sphere_success(self, mock_compute_coupling, mock_table, valid_optical_parameters,
                                                              valid_core_shell_rows, mock_logger):
         """Test compute_model_for_rows with valid core-shell sphere parameters."""
         valid_optical_parameters.update({
@@ -132,7 +134,7 @@ class Test_compute_model_for_rows:
             current_rows=valid_core_shell_rows,
         )
         mock_compute_coupling.assert_called_once()
-        
+
         assert len(result) == 3
         assert result[0]['expected_coupling'] == '987.6'
         assert result[1]['expected_coupling'] == '1975.2'
@@ -168,7 +170,7 @@ class Test_compute_model_for_rows:
 
         assert result == []
 
-    def test_compute_model_for_rows_invalid_mie_model(self, valid_optical_parameters, 
+    def test_compute_model_for_rows_invalid_mie_model(self, valid_optical_parameters,
                                                      valid_solid_sphere_rows, mock_logger):
         """Unknown model names fall back to the solid sphere branch."""
         with patch('RosettaX.workflow.parameters.model.table.normalize_table_rows', return_value=[dict(row) for row in valid_solid_sphere_rows]) as mock_normalize, patch(
@@ -195,7 +197,7 @@ class Test_compute_model_for_rows:
         """Test that compute_model_for_rows validates parameters using casting functions."""
         # Mock the casting functions
         mock_as_required_float.side_effect = lambda x, name: float(x) if x is not None else None
-        
+
         mock_table.normalize_table_rows.return_value = valid_solid_sphere_rows
 
         compute_model_for_rows(
@@ -242,8 +244,8 @@ class Test_compute_model_for_rows:
         'detector_sampling'
     ])
     @patch('RosettaX.workflow.parameters.model.table')
-    def test_compute_model_for_rows_missing_required_parameters(self, mock_table, missing_param, 
-                                                              valid_optical_parameters, 
+    def test_compute_model_for_rows_missing_required_parameters(self, mock_table, missing_param,
+                                                              valid_optical_parameters,
                                                               valid_solid_sphere_rows, mock_logger):
         """Test compute_model_for_rows with missing required parameters."""
         # Remove a required parameter
@@ -258,7 +260,7 @@ class Test_compute_model_for_rows:
             )
 
     @patch('RosettaX.workflow.parameters.model.table')
-    def test_compute_model_for_rows_logging(self, mock_table, valid_optical_parameters, 
+    def test_compute_model_for_rows_logging(self, mock_table, valid_optical_parameters,
                                           valid_solid_sphere_rows, mock_logger):
         """Test that compute_model_for_rows performs appropriate logging."""
         mock_table.normalize_table_rows.return_value = valid_solid_sphere_rows
@@ -272,6 +274,65 @@ class Test_compute_model_for_rows:
 
         # Verify logger was used
         assert mock_logger.debug.called or mock_logger.info.called or mock_logger.warning.called
+
+    @patch('RosettaX.workflow.parameters.model.table')
+    @patch('RosettaX.workflow.parameters.model.BackEnd.compute_modeled_coupling_from_diameters')
+    def test_compute_model_for_rows_weighted_detector_preset_passes_angular_weights(self, mock_compute_coupling, mock_table, valid_optical_parameters,
+                                                                                     valid_solid_sphere_rows, mock_logger):
+        mock_table.normalize_table_rows.return_value = [dict(row) for row in valid_solid_sphere_rows]
+        valid_optical_parameters['detector_sampling'] = 1000
+        mock_compute_coupling.return_value = SimpleNamespace(
+            expected_coupling_values=np.asarray([1.0, 2.0, 3.0], dtype=float)
+        )
+
+        compute_model_for_rows(
+            mie_model=SOLID_SPHERE_MODEL_NAME,
+            current_rows=valid_solid_sphere_rows,
+            detector_configuration_preset='Apogee - Side',
+            logger=mock_logger,
+            **valid_optical_parameters
+        )
+
+        detector_angular_weights = mock_compute_coupling.call_args.kwargs['detector_angular_weights']
+        coordinate_array = build_pymiesim_photodiode_mesh_coordinates(
+            detector_numerical_aperture=1.2,
+            medium_refractive_index=1.333,
+            detector_phi_angle_degree=45.0,
+            detector_gamma_angle_degree=0.0,
+            detector_sampling=1000,
+        )
+        expected_zero_mask = coordinate_array[:, 0] <= coordinate_array[:, 2]
+
+        assert detector_angular_weights.shape == (1000,)
+        assert np.allclose(detector_angular_weights[expected_zero_mask], 0.0)
+        assert np.allclose(detector_angular_weights[~expected_zero_mask], 1.0)
+
+    def test_resolve_detector_angular_weights_apogee_half_lens_split_presets(self):
+        side_weights = resolve_detector_angular_weights(
+            preset_name='Apogee - Side',
+            detector_sampling=1000,
+        )
+        forward_weights = resolve_detector_angular_weights(
+            preset_name='Apogee - Forward',
+            detector_sampling=1000,
+        )
+
+        coordinate_array = build_pymiesim_photodiode_mesh_coordinates(
+            detector_numerical_aperture=1.2,
+            medium_refractive_index=1.333,
+            detector_phi_angle_degree=45.0,
+            detector_gamma_angle_degree=0.0,
+            detector_sampling=1000,
+        )
+        split_metric = coordinate_array[:, 0] - coordinate_array[:, 2]
+
+        assert np.allclose(side_weights[split_metric > 0.0], 1.0)
+        assert np.allclose(side_weights[split_metric < 0.0], 0.0)
+        assert np.allclose(forward_weights[split_metric < 0.0], 1.0)
+        assert np.allclose(forward_weights[split_metric > 0.0], 0.0)
+        assert int(np.count_nonzero(side_weights)) == 500
+        assert int(np.count_nonzero(forward_weights)) == 500
+        assert np.allclose(side_weights + forward_weights, 1.0)
 
     @patch('RosettaX.workflow.parameters.model.table')
     def test_compute_model_for_rows_parameter_types(self, mock_table, mock_logger):
