@@ -1,0 +1,14 @@
+{
+  "name": "BD FACSCanto II FSC",
+  "manufacturer": "BD Biosciences",
+  "instrument": "FACSCanto II",
+  "channel": "FSC",
+  "description": "Forward scatter detector preset for BD FACSCanto II style modeling. Public documentation describes FSC as a photodiode with 488/10 BP filtering; the numerical aperture values here are modeling assumptions.",
+  "detector_type": "photodiode",
+  "detector_numerical_aperture": 0.18,
+  "detector_cache_numerical_aperture": 0.1,
+  "detector_sampling": 600,
+  "blocker_bar_numerical_aperture": 0.0,
+  "detector_phi_angle_degree": 0.0,
+  "detector_gamma_angle_degree": 0.0
+}

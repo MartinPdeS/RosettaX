@@ -1,0 +1,9 @@
+{
+  "name": "Generic detector",
+  "detector_numerical_aperture": 0.4,
+  "detector_cache_numerical_aperture": 0.0,
+  "detector_sampling": 600,
+  "blocker_bar_numerical_aperture": 0.0,
+  "detector_phi_angle_degree": 0.0,
+  "detector_gamma_angle_degree": 0.0
+}

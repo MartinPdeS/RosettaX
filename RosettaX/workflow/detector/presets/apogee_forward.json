@@ -1,0 +1,19 @@
+{
+  "name": "Apogee - Forward",
+  "manufacturer": "RosettaX",
+  "instrument": "Ad hoc",
+  "channel": "Weighted",
+  "description": "Apogee forward detector modeled as the forward half of a large phi=45 degree collection lens.",
+  "detector_type": "photodiode",
+  "detector_numerical_aperture": 1.2,
+  "detector_cache_numerical_aperture": 0.0,
+  "detector_sampling": 1000,
+  "blocker_bar_numerical_aperture": 0.0,
+  "detector_phi_angle_degree": 45.0,
+  "detector_gamma_angle_degree": 0.0,
+  "detector_angular_weighting": {
+    "mode": "split",
+    "metric": "x-minus-z",
+    "keep": "negative"
+  }
+}

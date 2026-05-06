@@ -1,0 +1,14 @@
+{
+  "name": "Beckman Coulter CytoFLEX Fluorescence",
+  "manufacturer": "Beckman Coulter Life Sciences",
+  "instrument": "CytoFLEX",
+  "channel": "Fluorescence",
+  "description": "Generic fluorescence detector preset for CytoFLEX style modeling. CytoFLEX systems are available with up to 3 lasers and 13 color research configurations; the numerical aperture values here are effective modeling assumptions.",
+  "detector_type": "avalanche_photodiode",
+  "detector_numerical_aperture": 0.50,
+  "detector_cache_numerical_aperture": 0.0,
+  "detector_sampling": 1000,
+  "blocker_bar_numerical_aperture": 0.0,
+  "detector_phi_angle_degree": 0.0,
+  "detector_gamma_angle_degree": 0.0
+}
