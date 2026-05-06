@@ -88,6 +88,49 @@ class ScatteringCalibrationStandardTable:
         return columns, rows
 
     @classmethod
+    def build_state_for_model_selection(
+        cls,
+        *,
+        mie_model: Any,
+        scatterer_preset: Any,
+        current_rows: Optional[list[dict[str, Any]]],
+    ) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
+        """
+        Build the table state for a Mie model change.
+
+        When a non-custom scatterer preset is active, the preset remains the
+        source of truth for geometry rows. This avoids a later model-sync
+        callback remapping stale rows back over preset geometry.
+        """
+        resolved_mie_model = parameters.table.resolve_mie_model(
+            mie_model,
+        )
+
+        resolved_scatterer_preset = scattering.ModelConfiguration.resolve_runtime_scatterer_preset(
+            scatterer_preset,
+        )
+
+        if resolved_scatterer_preset != scattering.CUSTOM_SCATTERER_PRESET_NAME:
+            preset_table_state = scattering.ModelConfiguration.build_table_state_from_scatterer_preset(
+                preset_name=resolved_scatterer_preset,
+                current_rows=current_rows,
+            )
+
+            if preset_table_state is not None:
+                return preset_table_state
+
+        next_columns = cls.get_columns_for_model(
+            resolved_mie_model,
+        )
+
+        next_rows = cls.remap_rows_to_model(
+            mie_model=resolved_mie_model,
+            current_rows=current_rows,
+        )
+
+        return next_columns, next_rows
+
+    @classmethod
     def get_columns_for_model(
         cls,
         mie_model: Any,

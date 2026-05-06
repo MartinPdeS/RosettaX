@@ -183,9 +183,9 @@ WORKFLOW_PAGE_COLOR_SCHEME = {
     "sections": {
         1: "yellow",
         2: "blue",
-        3: "orange",
-        4: "cyan",
-        5: "purple",
+        3: "green",
+        4: "purple",
+        5: "cyan",
         6: "gray",
     },
 }

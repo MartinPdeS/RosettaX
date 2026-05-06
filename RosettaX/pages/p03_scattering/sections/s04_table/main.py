@@ -325,30 +325,28 @@ class ReferenceTable:
                 allow_duplicate=True,
             ),
             dash.Input(self.page.ids.Parameters.mie_model, "value"),
+            dash.State(self.page.ids.Parameters.scatterer_preset, "value"),
             dash.State(self.ids.bead_table, "data"),
             prevent_initial_call=True,
         )
         def sync_table_schema_from_model(
             mie_model: Any,
+            scatterer_preset: Any,
             current_rows: Optional[list[dict[str, Any]]],
         ) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
-            resolved_mie_model = parameters.table.resolve_mie_model(
-                mie_model,
-            )
+            resolved_mie_model = parameters.table.resolve_mie_model(mie_model)
 
-            next_columns = ScatteringCalibrationStandardTable.get_columns_for_model(
-                resolved_mie_model,
-            )
-
-            next_rows = ScatteringCalibrationStandardTable.remap_rows_to_model(
+            next_columns, next_rows = ScatteringCalibrationStandardTable.build_state_for_model_selection(
                 mie_model=resolved_mie_model,
+                scatterer_preset=scatterer_preset,
                 current_rows=current_rows,
             )
 
             logger.debug(
-                "sync_table_schema_from_model returning resolved_mie_model=%r "
+                "sync_table_schema_from_model returning resolved_mie_model=%r scatterer_preset=%r "
                 "column_count=%d row_count=%d",
                 resolved_mie_model,
+                scatterer_preset,
                 len(next_columns),
                 len(next_rows),
             )

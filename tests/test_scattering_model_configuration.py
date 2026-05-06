@@ -5,18 +5,17 @@ from RosettaX.pages.p03_scattering.sections.s04_table.services import (
     ScatteringCalibrationStandardTable,
 )
 
-from RosettaX.workflow.scattering_model import (
+from RosettaX.workflow.scattering import CUSTOM_SCATTERER_PRESET_NAME, ModelConfiguration
+from RosettaX.workflow.scattering.model import (
     BROAD_PARTICLE_STANDARD_PRESET_NAME,
-    CUSTOM_SCATTERER_PRESET_NAME,
     ROSETTA_MIX_PRESET_NAME,
     SMALL_PARTICLE_STANDARD_PRESET_NAME,
-    ScatteringModelConfiguration,
 )
 
 
 class Test_ScatteringModelConfigurationScattererPresets:
     def test_build_scatterer_preset_options_includes_expected_presets(self):
-        options = ScatteringModelConfiguration.build_scatterer_preset_options()
+        options = ModelConfiguration.build_scatterer_preset_options()
 
         values = {option["value"] for option in options}
 
@@ -26,7 +25,7 @@ class Test_ScatteringModelConfigurationScattererPresets:
         assert BROAD_PARTICLE_STANDARD_PRESET_NAME in values
 
     def test_custom_scatterer_preset_preserves_current_values(self):
-        result = ScatteringModelConfiguration.resolve_scatterer_preset_values(
+        result = ModelConfiguration.resolve_scatterer_preset_values(
             preset_name=CUSTOM_SCATTERER_PRESET_NAME,
             current_mie_model="Solid Sphere",
             current_medium_refractive_index=1.335,
@@ -44,7 +43,7 @@ class Test_ScatteringModelConfigurationScattererPresets:
         )
 
     def test_rosetta_mix_preset_applies_expected_values(self):
-        result = ScatteringModelConfiguration.resolve_scatterer_preset_values(
+        result = ModelConfiguration.resolve_scatterer_preset_values(
             preset_name=ROSETTA_MIX_PRESET_NAME,
             current_mie_model="Solid Sphere",
             current_medium_refractive_index=1.0,
@@ -62,22 +61,22 @@ class Test_ScatteringModelConfigurationScattererPresets:
         )
 
     def test_custom_scatterer_preset_does_not_lock_controls(self):
-        assert ScatteringModelConfiguration.scatterer_preset_disables_manual_controls(
+        assert ModelConfiguration.scatterer_preset_disables_manual_controls(
             preset_name=CUSTOM_SCATTERER_PRESET_NAME,
         ) is False
 
     def test_non_custom_scatterer_preset_locks_controls(self):
-        assert ScatteringModelConfiguration.scatterer_preset_disables_manual_controls(
+        assert ModelConfiguration.scatterer_preset_disables_manual_controls(
             preset_name=ROSETTA_MIX_PRESET_NAME,
         ) is True
 
     def test_custom_preset_does_not_override_table(self):
-        assert ScatteringModelConfiguration.build_table_state_from_scatterer_preset(
+        assert ModelConfiguration.build_table_state_from_scatterer_preset(
             preset_name=CUSTOM_SCATTERER_PRESET_NAME,
         ) is None
 
     def test_rosetta_mix_preset_populates_reference_table(self):
-        columns, rows = ScatteringModelConfiguration.build_table_state_from_scatterer_preset(
+        columns, rows = ModelConfiguration.build_table_state_from_scatterer_preset(
             preset_name=ROSETTA_MIX_PRESET_NAME,
         )
 
@@ -101,7 +100,7 @@ class Test_ScatteringModelConfigurationScattererPresets:
         ]
 
     def test_rosetta_mix_preset_preserves_other_table_columns(self):
-        columns, rows = ScatteringModelConfiguration.build_table_state_from_scatterer_preset(
+        columns, rows = ModelConfiguration.build_table_state_from_scatterer_preset(
             preset_name=ROSETTA_MIX_PRESET_NAME,
             current_rows=[
                 {
@@ -218,3 +217,65 @@ class Test_ScatteringCalibrationStandardTable:
             "222",
             "",
         ]
+
+    def test_model_selection_uses_preset_geometry_when_preset_is_active(self):
+        columns, rows = ScatteringCalibrationStandardTable.build_state_for_model_selection(
+            mie_model="Solid Sphere",
+            scatterer_preset=ROSETTA_MIX_PRESET_NAME,
+            current_rows=[
+                {
+                    "particle_diameter_nm": "111",
+                    "measured_peak_position": "12.3",
+                    "expected_coupling": "45.6",
+                },
+                {
+                    "particle_diameter_nm": "222",
+                    "measured_peak_position": "78.9",
+                    "expected_coupling": "10.11",
+                },
+            ],
+        )
+
+        assert [column["id"] for column in columns] == [
+            "particle_diameter_nm",
+            "measured_peak_position",
+            "expected_coupling",
+        ]
+        assert rows[0] == {
+            "particle_diameter_nm": "994",
+            "measured_peak_position": "12.3",
+            "expected_coupling": "45.6",
+        }
+        assert rows[1] == {
+            "particle_diameter_nm": "799",
+            "measured_peak_position": "78.9",
+            "expected_coupling": "10.11",
+        }
+
+    def test_model_selection_remaps_current_rows_for_custom_preset(self):
+        columns, rows = ScatteringCalibrationStandardTable.build_state_for_model_selection(
+            mie_model="Core/Shell Sphere",
+            scatterer_preset=CUSTOM_SCATTERER_PRESET_NAME,
+            current_rows=[
+                {
+                    "particle_diameter_nm": "111",
+                    "measured_peak_position": "12.3",
+                    "expected_coupling": "45.6",
+                },
+            ],
+        )
+
+        assert [column["id"] for column in columns] == [
+            "core_diameter_nm",
+            "shell_thickness_nm",
+            "outer_diameter_nm",
+            "measured_peak_position",
+            "expected_coupling",
+        ]
+        assert rows[0] == {
+            "core_diameter_nm": "111",
+            "shell_thickness_nm": "",
+            "outer_diameter_nm": "",
+            "measured_peak_position": "12.3",
+            "expected_coupling": "45.6",
+        }
