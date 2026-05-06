@@ -6,8 +6,11 @@ import logging
 import numpy as np
 
 from RosettaX.pages.p03_scattering.backend import BackEnd
+from RosettaX.workflow.detector import (
+    resolve_detector_angular_weights,
+    resolve_detector_modeling_geometry_values,
+)
 from RosettaX.utils.casting import as_optional_float, as_required_float, as_required_int
-from .detector_configuration import resolve_detector_angular_weights
 from . import table
 
 
@@ -327,6 +330,11 @@ def _compute_core_shell_model_for_rows(
         preset_name=detector_configuration_preset,
         detector_sampling=detector_sampling,
     )
+    resolved_detector_cache_numerical_aperture, _ = resolve_detector_modeling_geometry_values(
+        preset_name=detector_configuration_preset,
+        current_detector_cache_numerical_aperture=detector_cache_numerical_aperture,
+        current_blocker_bar_numerical_aperture=0.0,
+    )
 
     try:
         modeled_coupling_result = BackEnd.compute_modeled_coupling_from_core_shell_dimensions(
@@ -339,7 +347,7 @@ def _compute_core_shell_model_for_rows(
             medium_refractive_index=medium_refractive_index,
             core_refractive_index=resolved_core_refractive_index,
             shell_refractive_index=resolved_shell_refractive_index,
-            detector_cache_numerical_aperture=detector_cache_numerical_aperture,
+            detector_cache_numerical_aperture=resolved_detector_cache_numerical_aperture,
             detector_phi_offset_degree=detector_phi_angle_degree,
             detector_gamma_offset_degree=detector_gamma_angle_degree,
             polarization_angle_degree=0.0,
@@ -476,6 +484,11 @@ def _compute_solid_sphere_model_for_rows(
         preset_name=detector_configuration_preset,
         detector_sampling=detector_sampling,
     )
+    resolved_detector_cache_numerical_aperture, _ = resolve_detector_modeling_geometry_values(
+        preset_name=detector_configuration_preset,
+        current_detector_cache_numerical_aperture=detector_cache_numerical_aperture,
+        current_blocker_bar_numerical_aperture=0.0,
+    )
 
     try:
         modeled_coupling_result = BackEnd.compute_modeled_coupling_from_diameters(
@@ -486,7 +499,7 @@ def _compute_solid_sphere_model_for_rows(
             detector_numerical_aperture=detector_numerical_aperture,
             medium_refractive_index=medium_refractive_index,
             particle_refractive_index=resolved_particle_refractive_index,
-            detector_cache_numerical_aperture=detector_cache_numerical_aperture,
+            detector_cache_numerical_aperture=resolved_detector_cache_numerical_aperture,
             detector_phi_offset_degree=detector_phi_angle_degree,
             detector_gamma_offset_degree=detector_gamma_angle_degree,
             polarization_angle_degree=0.0,

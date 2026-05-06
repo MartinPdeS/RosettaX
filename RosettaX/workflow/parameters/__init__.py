@@ -11,14 +11,6 @@ from .table import (
     normalize_table_rows
 )
 
-from .detector_configuration import (
-    build_detector_preset_options,
-    CUSTOM_DETECTOR_PRESET_NAME,
-    resolve_detector_angular_weights,
-    resolve_detector_configuration_visibility_style,
-    resolve_detector_configuration_values
-)
-
 from .model import compute_model_for_rows
 
 
@@ -48,11 +40,6 @@ __all__ = [
     "remap_table_rows_to_model",
     "normalize_table_rows",
     "build_optical_configuration_preview_figure",
-    "build_detector_preset_options",
-    "CUSTOM_DETECTOR_PRESET_NAME",
-    "resolve_detector_angular_weights",
-    "resolve_detector_configuration_visibility_style",
-    "resolve_detector_configuration_values",
     "compute_model_for_rows",
     "table",
     "particle_presets",

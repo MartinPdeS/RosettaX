@@ -8,8 +8,10 @@ import numpy as np
 
 from RosettaX.utils import casting
 from RosettaX.workflow import scattering
-
-from RosettaX.workflow.parameters.detector_configuration import resolve_detector_angular_weights
+from RosettaX.workflow.detector import (
+    resolve_detector_angular_weights,
+    resolve_detector_modeling_geometry_values,
+)
 from .mie_relation import build_mie_parameter_payload, build_mie_relation_from_arrays
 
 logger = logging.getLogger(__name__)
@@ -40,6 +42,22 @@ class OpticalParameters:
     polarization_angle_degree: float = 0.0
     detector_configuration_preset_name: str = ""
     detector_angular_weights: Optional[np.ndarray] = None
+    effective_detector_cache_numerical_aperture: Optional[float] = None
+    effective_blocker_bar_numerical_aperture: Optional[float] = None
+
+    @property
+    def modeling_detector_cache_numerical_aperture(self) -> float:
+        if self.effective_detector_cache_numerical_aperture is None:
+            return self.detector_cache_numerical_aperture
+
+        return self.effective_detector_cache_numerical_aperture
+
+    @property
+    def modeling_blocker_bar_numerical_aperture(self) -> float:
+        if self.effective_blocker_bar_numerical_aperture is None:
+            return self.blocker_bar_numerical_aperture
+
+        return self.effective_blocker_bar_numerical_aperture
 
     def to_parameter_payload(
         self,
@@ -659,6 +677,26 @@ def parse_optical_parameters(
         detector_sampling,
         "detector_sampling",
     )
+    resolved_detector_configuration_preset_name = (
+        ""
+        if detector_configuration_preset is None
+        else str(detector_configuration_preset)
+    )
+    resolved_detector_cache_numerical_aperture = casting.as_required_float(
+        detector_cache_numerical_aperture,
+        "detector_cache_numerical_aperture",
+    )
+    resolved_blocker_bar_numerical_aperture = casting.as_required_float(
+        blocker_bar_numerical_aperture,
+        "blocker_bar_numerical_aperture",
+    )
+    effective_detector_cache_numerical_aperture, effective_blocker_bar_numerical_aperture = (
+        resolve_detector_modeling_geometry_values(
+            preset_name=resolved_detector_configuration_preset_name,
+            current_detector_cache_numerical_aperture=resolved_detector_cache_numerical_aperture,
+            current_blocker_bar_numerical_aperture=resolved_blocker_bar_numerical_aperture,
+        )
+    )
 
     optical_parameters = OpticalParameters(
         medium_refractive_index=casting.as_required_float(
@@ -682,14 +720,8 @@ def parse_optical_parameters(
             detector_numerical_aperture,
             "detector_numerical_aperture",
         ),
-        detector_cache_numerical_aperture=casting.as_required_float(
-            detector_cache_numerical_aperture,
-            "detector_cache_numerical_aperture",
-        ),
-        blocker_bar_numerical_aperture=casting.as_required_float(
-            blocker_bar_numerical_aperture,
-            "blocker_bar_numerical_aperture",
-        ),
+        detector_cache_numerical_aperture=resolved_detector_cache_numerical_aperture,
+        blocker_bar_numerical_aperture=resolved_blocker_bar_numerical_aperture,
         detector_sampling=resolved_detector_sampling,
         detector_phi_angle_degree=casting.as_required_float(
             detector_phi_angle_degree,
@@ -699,14 +731,16 @@ def parse_optical_parameters(
             detector_gamma_angle_degree,
             "detector_gamma_angle_degree",
         ),
-        detector_configuration_preset_name=(
-            ""
-            if detector_configuration_preset is None
-            else str(detector_configuration_preset)
-        ),
+        detector_configuration_preset_name=resolved_detector_configuration_preset_name,
         detector_angular_weights=resolve_detector_angular_weights(
             preset_name=detector_configuration_preset,
             detector_sampling=resolved_detector_sampling,
+        ),
+        effective_detector_cache_numerical_aperture=float(
+            effective_detector_cache_numerical_aperture
+        ),
+        effective_blocker_bar_numerical_aperture=float(
+            effective_blocker_bar_numerical_aperture
         ),
     )
 

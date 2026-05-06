@@ -6,7 +6,7 @@ from typing import Any, Optional, Sequence
 import plotly.graph_objs as go
 
 from RosettaX.utils import RuntimeConfig
-from RosettaX.workflow import parameters
+from RosettaX.workflow import detector, parameters
 
 
 CUSTOM_SCATTERER_PRESET_NAME = "Custom"
@@ -226,7 +226,7 @@ class ModelConfiguration:
     page and by the apply calibration page when building target particle models.
     """
 
-    custom_detector_preset_name = parameters.CUSTOM_DETECTOR_PRESET_NAME
+    custom_detector_preset_name = detector.CUSTOM_DETECTOR_PRESET_NAME
     custom_scatterer_preset_name = CUSTOM_SCATTERER_PRESET_NAME
 
     mie_model_options = parameters.particle_presets.MIE_MODEL_OPTIONS
@@ -273,7 +273,7 @@ class ModelConfiguration:
         """
         Build detector preset dropdown options.
         """
-        return parameters.build_detector_preset_options()
+        return detector.build_detector_preset_options()
 
     @staticmethod
     def build_scatterer_preset_options() -> list[dict[str, Any]]:
@@ -423,7 +423,7 @@ class ModelConfiguration:
         """
         Return the custom detector configuration container style.
         """
-        return parameters.resolve_detector_configuration_visibility_style(
+        return detector.resolve_detector_configuration_visibility_style(
             preset_name=preset_name,
         )
 
@@ -441,7 +441,7 @@ class ModelConfiguration:
         """
         Resolve detector configuration values from a preset or current controls.
         """
-        return parameters.resolve_detector_configuration_values(
+        return detector.resolve_detector_configuration_values(
             preset_name=preset_name,
             current_detector_numerical_aperture=current_detector_numerical_aperture,
             current_detector_cache_numerical_aperture=current_detector_cache_numerical_aperture,
@@ -482,14 +482,19 @@ class ModelConfiguration:
         """
         Build the optical configuration preview figure.
         """
-        detector_angular_weights = parameters.resolve_detector_angular_weights(
+        detector_angular_weights = detector.resolve_detector_angular_weights(
             preset_name=detector_configuration_preset,
             detector_sampling=detector_sampling,
+        )
+        _, effective_blocker_bar_numerical_aperture = detector.resolve_detector_modeling_geometry_values(
+            preset_name=detector_configuration_preset,
+            current_detector_cache_numerical_aperture=0.0,
+            current_blocker_bar_numerical_aperture=blocker_bar_numerical_aperture,
         )
 
         return parameters.build_optical_configuration_preview_figure(
             detector_numerical_aperture=detector_numerical_aperture,
-            blocker_bar_numerical_aperture=blocker_bar_numerical_aperture,
+            blocker_bar_numerical_aperture=effective_blocker_bar_numerical_aperture,
             medium_refractive_index=medium_refractive_index,
             detector_phi_angle_degree=detector_phi_angle_degree,
             detector_gamma_angle_degree=detector_gamma_angle_degree,

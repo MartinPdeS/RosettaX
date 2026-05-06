@@ -7,7 +7,11 @@ from unittest.mock import patch, Mock
 import logging
 
 from RosettaX.pages.p03_scattering.sections.s03_model.optical_preview import build_pymiesim_photodiode_mesh_coordinates
-from RosettaX.workflow.parameters.detector_configuration import resolve_detector_angular_weights
+from RosettaX.workflow.detector import (
+    DetectorPresetLoader,
+    resolve_detector_angular_weights,
+    resolve_detector_modeling_geometry_values,
+)
 from RosettaX.workflow.parameters.model import (
     SOLID_SPHERE_MODEL_NAME,
     CORE_SHELL_SPHERE_MODEL_NAME,
@@ -333,6 +337,69 @@ class Test_compute_model_for_rows:
         assert int(np.count_nonzero(side_weights)) == 500
         assert int(np.count_nonzero(forward_weights)) == 500
         assert np.allclose(side_weights + forward_weights, 1.0)
+
+    def test_detector_preset_loader_normalizes_apogee_split_definition(self):
+        loader = DetectorPresetLoader()
+
+        apogee_side_preset = loader.load_preset('Apogee - Side')
+
+        assert apogee_side_preset['detector_angular_weighting'] == {
+            'mode': 'split',
+            'metric': 'x-minus-z',
+            'keep': 'positive',
+        }
+        assert 'workflow/detector/presets' in apogee_side_preset['_path']
+
+    @patch('RosettaX.workflow.detector.configuration._DETECTOR_PRESET_LOADER.load_preset')
+    def test_resolve_detector_angular_weights_applies_cache_and_blocker_geometry(self, mock_load_preset):
+        mock_load_preset.return_value = {
+            'name': 'Masked detector',
+            'detector_numerical_aperture': 1.2,
+            'detector_cache_numerical_aperture': 0.3,
+            'blocker_bar_numerical_aperture': 0.5,
+            'detector_phi_angle_degree': 0.0,
+            'detector_gamma_angle_degree': 0.0,
+            'medium_refractive_index': 1.333,
+        }
+
+        detector_angular_weights = resolve_detector_angular_weights(
+            preset_name='Masked detector',
+            detector_sampling=1000,
+        )
+
+        coordinate_array = build_pymiesim_photodiode_mesh_coordinates(
+            detector_numerical_aperture=1.2,
+            medium_refractive_index=1.333,
+            detector_phi_angle_degree=0.0,
+            detector_gamma_angle_degree=0.0,
+            detector_sampling=1000,
+        )
+        coordinate_array = coordinate_array / np.linalg.norm(coordinate_array, axis=1)[:, None]
+        local_numerical_aperture = 1.333 * np.sqrt(
+            coordinate_array[:, 1] ** 2 + coordinate_array[:, 2] ** 2
+        )
+
+        assert np.allclose(detector_angular_weights[local_numerical_aperture < 0.5], 0.0)
+        assert np.allclose(detector_angular_weights[local_numerical_aperture >= 0.5], 1.0)
+
+    @patch('RosettaX.workflow.detector.configuration._DETECTOR_PRESET_LOADER.load_preset')
+    def test_resolve_detector_modeling_geometry_values_zeroes_scalar_geometry_for_weighted_presets(self, mock_load_preset):
+        mock_load_preset.return_value = {
+            'name': 'Masked detector',
+            'detector_cache_numerical_aperture': 0.3,
+            'blocker_bar_numerical_aperture': 0.5,
+        }
+
+        resolved_detector_cache_numerical_aperture, resolved_blocker_bar_numerical_aperture = (
+            resolve_detector_modeling_geometry_values(
+                preset_name='Masked detector',
+                current_detector_cache_numerical_aperture=0.3,
+                current_blocker_bar_numerical_aperture=0.5,
+            )
+        )
+
+        assert resolved_detector_cache_numerical_aperture == 0.0
+        assert resolved_blocker_bar_numerical_aperture == 0.0
 
     @patch('RosettaX.workflow.parameters.model.table')
     def test_compute_model_for_rows_parameter_types(self, mock_table, mock_logger):
