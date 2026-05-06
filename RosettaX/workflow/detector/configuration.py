@@ -307,12 +307,18 @@ def _build_geometry_angular_weights(
 
     if detector_cache_numerical_aperture > 0.0:
         visible_mask &= (
-            local_numerical_aperture >= detector_cache_numerical_aperture
+            _build_detector_cache_numerical_aperture(
+                preset=preset,
+                coordinate_array=coordinate_array,
+            ) >= detector_cache_numerical_aperture
         )
 
     if blocker_bar_numerical_aperture > 0.0:
         visible_mask &= (
-            local_numerical_aperture >= blocker_bar_numerical_aperture
+            _build_blocker_bar_numerical_aperture(
+                preset=preset,
+                coordinate_array=coordinate_array,
+            ) >= blocker_bar_numerical_aperture
         )
 
     angular_weights = np.zeros(
@@ -328,6 +334,17 @@ def _build_local_numerical_aperture(
     preset: dict[str, Any],
     coordinate_array: np.ndarray,
 ) -> np.ndarray:
+    return _build_detector_cache_numerical_aperture(
+        preset=preset,
+        coordinate_array=coordinate_array,
+    )
+
+
+def _build_detector_cache_numerical_aperture(
+    *,
+    preset: dict[str, Any],
+    coordinate_array: np.ndarray,
+) -> np.ndarray:
     medium_refractive_index = float(
         preset.get(
             "medium_refractive_index",
@@ -337,11 +354,85 @@ def _build_local_numerical_aperture(
     normalized_coordinate_array = _normalize_coordinate_array(
         coordinate_array,
     )
+    _, first_transverse_projection, second_transverse_projection = _project_coordinates_to_local_detector_frame(
+        normalized_coordinate_array,
+    )
     radial_coordinate = np.sqrt(
-        normalized_coordinate_array[:, 1] ** 2
-        + normalized_coordinate_array[:, 2] ** 2
+        first_transverse_projection ** 2
+        + second_transverse_projection ** 2
     )
     return medium_refractive_index * radial_coordinate
+
+
+def _build_blocker_bar_numerical_aperture(
+    *,
+    preset: dict[str, Any],
+    coordinate_array: np.ndarray,
+) -> np.ndarray:
+    medium_refractive_index = float(
+        preset.get(
+            "medium_refractive_index",
+            1.333,
+        )
+    )
+    normalized_coordinate_array = _normalize_coordinate_array(
+        coordinate_array,
+    )
+    _, blocker_axis_projection, _ = _project_coordinates_to_local_detector_frame(
+        normalized_coordinate_array,
+    )
+    return medium_refractive_index * np.abs(blocker_axis_projection)
+
+
+def _project_coordinates_to_local_detector_frame(
+    normalized_coordinate_array: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    detector_axis_vector, first_transverse_axis, second_transverse_axis = _build_local_detector_basis(
+        normalized_coordinate_array,
+    )
+
+    return (
+        normalized_coordinate_array @ detector_axis_vector,
+        normalized_coordinate_array @ first_transverse_axis,
+        normalized_coordinate_array @ second_transverse_axis,
+    )
+
+
+def _build_local_detector_basis(
+    normalized_coordinate_array: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    detector_axis_vector = np.asarray(
+        normalized_coordinate_array.mean(axis=0),
+        dtype=float,
+    )
+    detector_axis_norm = np.linalg.norm(detector_axis_vector)
+
+    if detector_axis_norm == 0.0:
+        raise ValueError("Cannot build a detector-local basis from a zero-length axis vector.")
+
+    detector_axis_vector = detector_axis_vector / detector_axis_norm
+
+    reference_vector = np.array([0.0, 0.0, 1.0], dtype=float)
+
+    if abs(float(np.dot(detector_axis_vector, reference_vector))) > 0.99:
+        reference_vector = np.array([1.0, 0.0, 0.0], dtype=float)
+
+    first_transverse_axis = np.cross(reference_vector, detector_axis_vector)
+    first_transverse_axis_norm = np.linalg.norm(first_transverse_axis)
+
+    if first_transverse_axis_norm == 0.0:
+        raise ValueError("Cannot build the first detector transverse axis for this detector orientation.")
+
+    first_transverse_axis = first_transverse_axis / first_transverse_axis_norm
+    second_transverse_axis = np.cross(detector_axis_vector, first_transverse_axis)
+    second_transverse_axis_norm = np.linalg.norm(second_transverse_axis)
+
+    if second_transverse_axis_norm == 0.0:
+        raise ValueError("Cannot build the second detector transverse axis for this detector orientation.")
+
+    second_transverse_axis = second_transverse_axis / second_transverse_axis_norm
+
+    return detector_axis_vector, first_transverse_axis, second_transverse_axis
 
 
 def _normalize_coordinate_array(
@@ -566,31 +657,13 @@ def _build_profile_coordinate_array(
 def _build_local_split_metric(
     coordinate_array: np.ndarray,
 ) -> np.ndarray:
-    axis_vector = np.asarray(
-        coordinate_array.mean(axis=0),
-        dtype=float,
+    normalized_coordinate_array = _normalize_coordinate_array(
+        coordinate_array,
     )
-    axis_norm = np.linalg.norm(axis_vector)
-
-    if axis_norm == 0.0:
-        raise ValueError("Cannot build a local detector split from a zero-length axis vector.")
-
-    axis_vector = axis_vector / axis_norm
-
-    reference_vector = np.array([0.0, 0.0, 1.0], dtype=float)
-
-    if abs(float(np.dot(axis_vector, reference_vector))) > 0.99:
-        reference_vector = np.array([1.0, 0.0, 0.0], dtype=float)
-
-    split_normal = np.cross(reference_vector, axis_vector)
-    split_normal_norm = np.linalg.norm(split_normal)
-
-    if split_normal_norm == 0.0:
-        raise ValueError("Cannot build a local detector split normal for this detector orientation.")
-
-    split_normal = split_normal / split_normal_norm
-
-    return coordinate_array @ split_normal
+    _, split_normal, _ = _build_local_detector_basis(
+        normalized_coordinate_array,
+    )
+    return normalized_coordinate_array @ split_normal
 
 
 def _resolve_preset_value(

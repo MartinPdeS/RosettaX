@@ -12,6 +12,7 @@ from RosettaX.workflow.detector import (
     resolve_detector_angular_weights,
     resolve_detector_modeling_geometry_values,
 )
+from RosettaX.workflow.detector.configuration import _build_blocker_bar_numerical_aperture
 from RosettaX.workflow.parameters.model import (
     SOLID_SPHERE_MODEL_NAME,
     CORE_SHELL_SPHERE_MODEL_NAME,
@@ -305,13 +306,26 @@ class Test_compute_model_for_rows:
             detector_gamma_angle_degree=0.0,
             detector_sampling=1000,
         )
-        expected_zero_mask = coordinate_array[:, 0] <= coordinate_array[:, 2]
+        apogee_side_preset = DetectorPresetLoader().load_preset('Apogee - Side')
+        blocker_bar_numerical_aperture = _build_blocker_bar_numerical_aperture(
+            preset=apogee_side_preset,
+            coordinate_array=coordinate_array,
+        )
+        expected_visible_mask = (
+            (coordinate_array[:, 0] > coordinate_array[:, 2])
+            & (
+                blocker_bar_numerical_aperture
+                >= float(apogee_side_preset['blocker_bar_numerical_aperture'])
+            )
+        )
 
         assert detector_angular_weights.shape == (1000,)
-        assert np.allclose(detector_angular_weights[expected_zero_mask], 0.0)
-        assert np.allclose(detector_angular_weights[~expected_zero_mask], 1.0)
+        assert np.allclose(detector_angular_weights[~expected_visible_mask], 0.0)
+        assert np.allclose(detector_angular_weights[expected_visible_mask], 1.0)
 
     def test_resolve_detector_angular_weights_apogee_half_lens_split_presets(self):
+        apogee_side_preset = DetectorPresetLoader().load_preset('Apogee - Side')
+        apogee_forward_preset = DetectorPresetLoader().load_preset('Apogee - Forward')
         side_weights = resolve_detector_angular_weights(
             preset_name='Apogee - Side',
             detector_sampling=1000,
@@ -329,14 +343,30 @@ class Test_compute_model_for_rows:
             detector_sampling=1000,
         )
         split_metric = coordinate_array[:, 0] - coordinate_array[:, 2]
+        side_blocker_bar_numerical_aperture = _build_blocker_bar_numerical_aperture(
+            preset=apogee_side_preset,
+            coordinate_array=coordinate_array,
+        )
 
-        assert np.allclose(side_weights[split_metric > 0.0], 1.0)
+        side_visible_mask = (
+            (split_metric > 0.0)
+            & (
+                side_blocker_bar_numerical_aperture
+                >= float(apogee_side_preset['blocker_bar_numerical_aperture'])
+            )
+        )
+        forward_visible_mask = (
+            split_metric < 0.0
+        )
+
+        assert np.allclose(side_weights[side_visible_mask], 1.0)
+        assert np.allclose(side_weights[~side_visible_mask], 0.0)
+        assert np.allclose(forward_weights[forward_visible_mask], 1.0)
+        assert np.allclose(forward_weights[~forward_visible_mask], 0.0)
+        assert int(np.count_nonzero(side_weights)) == int(np.count_nonzero(side_visible_mask))
+        assert int(np.count_nonzero(forward_weights)) == int(np.count_nonzero(forward_visible_mask))
         assert np.allclose(side_weights[split_metric < 0.0], 0.0)
-        assert np.allclose(forward_weights[split_metric < 0.0], 1.0)
         assert np.allclose(forward_weights[split_metric > 0.0], 0.0)
-        assert int(np.count_nonzero(side_weights)) == 500
-        assert int(np.count_nonzero(forward_weights)) == 500
-        assert np.allclose(side_weights + forward_weights, 1.0)
 
     def test_detector_preset_loader_normalizes_apogee_split_definition(self):
         loader = DetectorPresetLoader()
@@ -374,13 +404,25 @@ class Test_compute_model_for_rows:
             detector_gamma_angle_degree=0.0,
             detector_sampling=1000,
         )
-        coordinate_array = coordinate_array / np.linalg.norm(coordinate_array, axis=1)[:, None]
-        local_numerical_aperture = 1.333 * np.sqrt(
+        cache_numerical_aperture = 1.333 * np.sqrt(
             coordinate_array[:, 1] ** 2 + coordinate_array[:, 2] ** 2
         )
+        blocker_bar_numerical_aperture = _build_blocker_bar_numerical_aperture(
+            preset=mock_load_preset.return_value,
+            coordinate_array=coordinate_array,
+        )
+        visible_mask = (
+            (cache_numerical_aperture >= 0.3)
+            & (blocker_bar_numerical_aperture >= 0.5)
+        )
 
-        assert np.allclose(detector_angular_weights[local_numerical_aperture < 0.5], 0.0)
-        assert np.allclose(detector_angular_weights[local_numerical_aperture >= 0.5], 1.0)
+        assert np.any(
+            (cache_numerical_aperture >= 0.5)
+            & (blocker_bar_numerical_aperture < 0.5)
+        )
+
+        assert np.allclose(detector_angular_weights[~visible_mask], 0.0)
+        assert np.allclose(detector_angular_weights[visible_mask], 1.0)
 
     @patch('RosettaX.workflow.detector.configuration._DETECTOR_PRESET_LOADER.load_preset')
     def test_resolve_detector_modeling_geometry_values_zeroes_scalar_geometry_for_weighted_presets(self, mock_load_preset):

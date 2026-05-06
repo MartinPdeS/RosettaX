@@ -8,7 +8,7 @@
   "detector_numerical_aperture": 1.2,
   "detector_cache_numerical_aperture": 0.0,
   "detector_sampling": 1000,
-  "blocker_bar_numerical_aperture": 0.0,
+  "blocker_bar_numerical_aperture": 0.1,
   "detector_phi_angle_degree": 45.0,
   "detector_gamma_angle_degree": 0.0,
   "detector_angular_weighting": {
