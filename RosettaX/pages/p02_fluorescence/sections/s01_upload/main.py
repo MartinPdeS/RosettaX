@@ -5,11 +5,9 @@ from typing import Any
 
 import dash_bootstrap_components as dbc
 
-from RosettaX.utils import ui_forms
 from RosettaX.workflow import upload
 
-from . import layout as _layout
-from . import callbacks as _callbacks
+from . import layout, callbacks
 
 
 logger = logging.getLogger(__name__)
@@ -46,7 +44,7 @@ class Upload:
         self.upload_tooltip_id = f"{self.ids.upload}-calibration-file-info-tooltip"
 
         self.config = upload.UploadConfig(
-            card_title=_layout.build_card_title(self),
+            card_title=layout.build_card_title(self),
             upload_link_text="Select bead FCS file",
             initial_runtime_config_path="files.fluorescence_fcs_file_path",
             runtime_config_output_path="files.fluorescence_fcs_file_path",
@@ -67,14 +65,14 @@ class Upload:
             page,
         )
 
-    def get_layout(self) -> dbc.Card:
+    def getlayout(self) -> dbc.Card:
         """
         Build the upload section layout.
         """
-        return _layout.get_layout(self)
+        return layout.getlayout(self)
 
     def register_callbacks(self) -> None:
         """
         Register callbacks for the fluorescence upload section.
         """
-        _callbacks.register_callbacks(self)
+        callbacks.register_callbacks(self)

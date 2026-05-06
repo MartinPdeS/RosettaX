@@ -5,14 +5,10 @@ import logging
 
 import dash_bootstrap_components as dbc
 
-from RosettaX.utils import ui_forms
-from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.workflow.table.fluorescence import FluorescenceReferenceTable
-from RosettaX.workflow.table.layout import ReferenceTableConfig
-from RosettaX.workflow.table.layout import ReferenceTableLayout
+from RosettaX.utils import RuntimeConfig
+from RosettaX.workflow import table
 
-from . import layout as _layout
-from . import callbacks as _callbacks
+from . import layout, callbacks
 
 
 logger = logging.getLogger(__name__)
@@ -37,11 +33,11 @@ class ReferenceTable:
     rendering is delegated to ``ReferenceTableLayout``.
     """
 
-    calibrated_intensity_column_name = FluorescenceReferenceTable.column_calibrated_intensity
-    measured_intensity_column_name = FluorescenceReferenceTable.column_measured_intensity
+    calibrated_intensity_column_name = table.FluorescenceReferenceTable.column_calibrated_intensity
+    measured_intensity_column_name = table.FluorescenceReferenceTable.column_measured_intensity
 
-    bead_table_columns = FluorescenceReferenceTable.columns
-    user_data_column_ids = FluorescenceReferenceTable.user_data_column_ids
+    bead_table_columns = table.FluorescenceReferenceTable.columns
+    user_data_column_ids = table.FluorescenceReferenceTable.user_data_column_ids
 
     def __init__(
         self,
@@ -57,8 +53,8 @@ class ReferenceTable:
         self.reference_table_tooltip_target_id = f"{self.ids.bead_table}-reference-table-info-target"
         self.reference_table_tooltip_id = f"{self.ids.bead_table}-reference-table-info-tooltip"
 
-        self.config = ReferenceTableConfig(
-            card_title=_layout.build_card_title(self),
+        self.config = table.ReferenceTableConfig(
+            card_title=layout.build_card_title(self),
             table_title=None,
             description=None,
             add_row_button_label="Add row",
@@ -66,11 +62,11 @@ class ReferenceTable:
             show_table_title=False,
         )
 
-        self.layout_builder = ReferenceTableLayout(
+        self.layout_builder = table.ReferenceTableLayout(
             ids=self.ids,
             config=self.config,
             table_columns=self.bead_table_columns,
-            table_data=_layout.build_default_bead_rows(),
+            table_data=layout.build_default_bead_rows(),
         )
 
         logger.debug(
@@ -82,13 +78,13 @@ class ReferenceTable:
         """
         Build the fluorescence reference table layout.
         """
-        return _layout.get_layout(self)
+        return layout.get_layout(self)
 
     def register_callbacks(self) -> None:
         """
         Register reference table callbacks.
         """
-        _callbacks.register_callbacks(self)
+        callbacks.register_callbacks(self)
 
     def build_bead_rows_from_runtime_config(
         self,
@@ -100,7 +96,7 @@ class ReferenceTable:
 
         Compatibility wrapper for older imports.
         """
-        rows = FluorescenceReferenceTable.build_rows_from_runtime_config(
+        rows = table.FluorescenceReferenceTable.build_rows_from_runtime_config(
             runtime_config=runtime_config,
         )
 

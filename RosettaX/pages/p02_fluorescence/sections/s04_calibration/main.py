@@ -5,8 +5,7 @@ import logging
 
 import dash_bootstrap_components as dbc
 
-from . import layout as _layout
-from . import callbacks as _callbacks
+from . import layout, callbacks
 
 
 logger = logging.getLogger(__name__)
@@ -62,10 +61,10 @@ class Calibration:
         """
         Build the calibration section layout.
         """
-        return _layout.get_layout(self)
+        return layout.get_layout(self)
 
     def register_callbacks(self) -> None:
         """
         Register calibration callbacks.
         """
-        _callbacks.register_callbacks(self)
+        callbacks.register_callbacks(self)

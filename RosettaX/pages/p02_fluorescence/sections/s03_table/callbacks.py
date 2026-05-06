@@ -6,7 +6,7 @@ import logging
 import dash
 
 from RosettaX.pages.p00_sidebar.ids import SidebarIds
-from RosettaX.utils.runtime_config import RuntimeConfig
+from RosettaX.utils import RuntimeConfig
 from RosettaX.workflow.table.fluorescence import FluorescenceReferenceTable
 
 

@@ -5,11 +5,9 @@ import logging
 
 import dash_bootstrap_components as dbc
 
-from RosettaX.utils import ui_forms
 from RosettaX.workflow import peak
 
-from . import layout as _layout
-from . import callbacks as _callbacks
+from . import layout, callbacks
 
 
 logger = logging.getLogger(__name__)
@@ -53,9 +51,9 @@ class Peaks:
         self.graph_tooltip_id = f"{self.ids.process_dropdown}-graph-info-tooltip"
 
         self.config = peak.PeakConfig(
-            header_title=_layout.build_section_title(self),
+            header_title=layout.build_section_title(self),
             process_dropdown_label="Peak process",
-            graph_title=_layout.build_graph_title(self),
+            graph_title=layout.build_graph_title(self),
             table_id=self.page.ids.Calibration.bead_table,
             page_state_store_id=self.page.ids.State.page_state_store,
             max_events_input_id=_get_max_events_input_id(self),
@@ -78,13 +76,13 @@ class Peaks:
         """
         Build the fluorescence peak section layout.
         """
-        return _layout.get_layout(self)
+        return layout.get_layout(self)
 
     def register_callbacks(self) -> None:
         """
         Register fluorescence peak workflow callbacks.
         """
-        _callbacks.register_callbacks(self)
+        callbacks.register_callbacks(self)
 
 
 def _get_max_events_input_id(section) -> Any:
