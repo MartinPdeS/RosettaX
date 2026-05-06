@@ -6,10 +6,8 @@ import logging
 import numpy as np
 
 from RosettaX.pages.p03_scattering.backend import BackEnd
-from RosettaX.workflow.calibration.mie_relation import MieRelation
-from RosettaX.workflow.calibration.mie_relation import build_diameter_grid
-from RosettaX.workflow.calibration.mie_relation import build_mie_parameter_payload
-from RosettaX.workflow.calibration.mie_relation import build_mie_relation_from_arrays
+from RosettaX.workflow import scattering
+
 from RosettaX.workflow.apply_calibration.scattering.models import (
     CORE_SHELL_SPHERE_MODEL_NAME,
     CoreShellSphereTargetModel,
@@ -25,7 +23,7 @@ def build_target_mie_relation(
     *,
     calibration_payload: dict[str, Any],
     target_model_parameters: ScatteringTargetModelParameters,
-) -> MieRelation:
+) -> scattering.MieRelation:
     """
     Build the target particle Mie relation used for diameter inversion.
 
@@ -79,7 +77,7 @@ def build_solid_sphere_target_mie_relation(
     *,
     calibration_standard_parameters: dict[str, Any],
     target_model: SolidSphereTargetModel,
-) -> MieRelation:
+) -> scattering.MieRelation:
     """
     Build a solid sphere target Mie relation.
 
@@ -90,7 +88,7 @@ def build_solid_sphere_target_mie_relation(
         target_model,
     )
 
-    diameter_grid_nm = build_diameter_grid(
+    diameter_grid_nm = scattering.build_diameter_grid(
         diameter_min_nm=target_model.particle_diameter_min_nm,
         diameter_max_nm=target_model.particle_diameter_max_nm,
         diameter_count=target_model.particle_diameter_count,
@@ -143,7 +141,7 @@ def build_solid_sphere_target_mie_relation(
         relation_diameter_nm.size,
     )
 
-    return build_mie_relation_from_arrays(
+    return scattering.build_mie_relation_from_arrays(
         diameter_nm=relation_diameter_nm,
         theoretical_coupling=theoretical_coupling,
         mie_model=target_model.mie_model,
@@ -156,7 +154,7 @@ def build_core_shell_target_mie_relation(
     *,
     calibration_standard_parameters: dict[str, Any],
     target_model: CoreShellSphereTargetModel,
-) -> MieRelation:
+) -> scattering.MieRelation:
     """
     Build a core shell target Mie relation.
 
@@ -167,7 +165,7 @@ def build_core_shell_target_mie_relation(
         target_model,
     )
 
-    core_diameter_grid_nm = build_diameter_grid(
+    core_diameter_grid_nm = scattering.build_diameter_grid(
         diameter_min_nm=target_model.core_diameter_min_nm,
         diameter_max_nm=target_model.core_diameter_max_nm,
         diameter_count=target_model.core_diameter_count,
@@ -232,7 +230,7 @@ def build_core_shell_target_mie_relation(
         target_model.shell_thickness_nm,
     )
 
-    return build_mie_relation_from_arrays(
+    return scattering.build_mie_relation_from_arrays(
         diameter_nm=relation_diameter_nm,
         theoretical_coupling=theoretical_coupling,
         mie_model=CORE_SHELL_SPHERE_MODEL_NAME,
@@ -250,7 +248,7 @@ def build_target_relation_parameter_payload(
     """
     Build the serializable parameter payload stored in the target Mie relation.
     """
-    parameter_payload = build_mie_parameter_payload(
+    parameter_payload = scattering.build_mie_parameter_payload(
         mie_model=target_model.mie_model,
         medium_refractive_index=target_model.medium_refractive_index,
         particle_refractive_index=(

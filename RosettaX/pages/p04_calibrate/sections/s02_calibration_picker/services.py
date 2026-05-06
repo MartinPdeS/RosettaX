@@ -8,7 +8,7 @@ from urllib.parse import parse_qs
 
 from RosettaX.utils import directories
 from RosettaX.utils.paths import resolve_selected_calibration_file_path
-from RosettaX.workflow.plotting import scatter2d
+from RosettaX.workflow import plotting
 
 logger = logging.getLogger(__name__)
 
@@ -338,12 +338,12 @@ def build_axis_scale_toggle_values(
 
     if str(xscale).strip().lower() == "log":
         axis_scale_toggle_values.append(
-            scatter2d.Scatter2DGraph.x_log_value,
+            plotting.scatter2d.Scatter2DGraph.x_log_value,
         )
 
     if str(yscale).strip().lower() == "log":
         axis_scale_toggle_values.append(
-            scatter2d.Scatter2DGraph.y_log_value,
+            plotting.scatter2d.Scatter2DGraph.y_log_value,
         )
 
     return axis_scale_toggle_values
@@ -353,7 +353,7 @@ def build_empty_target_mie_relation_figure() -> Any:
     """
     Build an empty target Mie relation preview figure.
     """
-    return scatter2d.Scatter2DGraph.build_empty_figure(
+    return plotting.scatter2d.Scatter2DGraph.build_empty_figure(
         message="Select a scattering calibration to compute the preview.",
     )
 
@@ -376,7 +376,7 @@ def build_target_mie_relation_figure(
     as a second curve.
     """
     traces = [
-        scatter2d.Scatter2DTrace(
+        plotting.scatter2d.Scatter2DTrace(
             x_values=full_diameter_values_nm,
             y_values=full_coupling_values,
             name="Full target Mie relation",
@@ -386,7 +386,7 @@ def build_target_mie_relation_figure(
 
     if show_selected_branch:
         traces.append(
-            scatter2d.Scatter2DTrace(
+            plotting.scatter2d.Scatter2DTrace(
                 x_values=selected_diameter_values_nm,
                 y_values=selected_coupling_values,
                 name="Auto selected largest monotonic branch",
@@ -394,7 +394,7 @@ def build_target_mie_relation_figure(
             )
         )
 
-    return scatter2d.Scatter2DGraph.build_figure(
+    return plotting.scatter2d.Scatter2DGraph.build_figure(
         traces=traces,
         title="Target Mie relation preview",
         x_axis_title=x_axis_title,

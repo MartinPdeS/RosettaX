@@ -7,11 +7,10 @@ import logging
 import numpy as np
 
 from RosettaX.utils import casting
-from RosettaX.workflow.calibration.mie_relation import MieRelation
-from RosettaX.workflow.calibration.mie_relation import build_mie_parameter_payload
-from RosettaX.workflow.calibration.mie_relation import build_mie_relation_from_arrays
-from RosettaX.workflow.parameters.detector_configuration import resolve_detector_angular_weights
+from RosettaX.workflow import scattering
 
+from RosettaX.workflow.parameters.detector_configuration import resolve_detector_angular_weights
+from .mie_relation import build_mie_relation_from_arrays
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +64,7 @@ class OpticalParameters:
             None if outer_diameter_nm is None else len(outer_diameter_nm),
         )
 
-        parameter_payload = build_mie_parameter_payload(
+        parameter_payload = scattering.build_mie_parameter_payload(
             mie_model=mie_model,
             medium_refractive_index=self.medium_refractive_index,
             particle_refractive_index=self.particle_refractive_index,
@@ -284,7 +283,7 @@ class ScatteringCalibration:
     """
 
     instrument_response: ScatteringInstrumentResponse
-    calibration_standard_mie_relation: MieRelation
+    calibration_standard_mie_relation: scattering.MieRelation
     reference_table: list[dict[str, Any]]
     metadata: dict[str, Any]
     calibration_type: str = "scattering"
@@ -319,7 +318,7 @@ class ScatteringCalibration:
         self,
         *,
         measured_values: np.ndarray,
-        target_mie_relation: MieRelation,
+        target_mie_relation: scattering.MieRelation,
     ) -> np.ndarray:
         """
         Convert measured values into target model equivalent diameter.
@@ -341,7 +340,7 @@ class ScatteringCalibration:
         self,
         *,
         measured_values: np.ndarray,
-        target_mie_relation: MieRelation,
+        target_mie_relation: scattering.MieRelation,
     ) -> dict[str, np.ndarray]:
         """
         Apply the scattering calibration to measured values.
@@ -522,7 +521,7 @@ class ScatteringCalibration:
 
         return cls(
             instrument_response=instrument_response,
-            calibration_standard_mie_relation=MieRelation.from_dict(
+            calibration_standard_mie_relation=scattering.MieRelation.from_dict(
                 payload.get(
                     "calibration_standard_mie_relation",
                     {},
@@ -543,7 +542,7 @@ class ScatteringCalibrationBuildResult:
 
     calibration: ScatteringCalibration
     instrument_response: ScatteringInstrumentResponse
-    calibration_standard_mie_relation: MieRelation
+    calibration_standard_mie_relation: scattering.MieRelation
     updated_table_rows: list[dict[str, str]]
     measured_peak_positions: np.ndarray
     standard_diameters_nm: np.ndarray
@@ -558,7 +557,7 @@ class ScatteringApplicationResult:
 
     estimated_coupling: list[float]
     mie_equivalent_diameter_nm: list[float]
-    target_mie_relation: MieRelation
+    target_mie_relation: scattering.MieRelation
     warnings: list[str]
     metadata: dict[str, Any]
 
@@ -1169,7 +1168,7 @@ def build_calibration_standard_mie_relation(
     optical_parameters: OpticalParameters,
     fallback_core_diameters_nm: Optional[np.ndarray] = None,
     fallback_shell_thicknesses_nm: Optional[np.ndarray] = None,
-) -> MieRelation:
+) -> scattering.MieRelation:
     """
     Build the calibration standard Mie relation stored in the calibration payload.
 
@@ -1498,7 +1497,7 @@ def build_scattering_calibration(
     measured_peak_values: np.ndarray,
     theoretical_coupling_values: np.ndarray,
     measured_channel: str,
-    calibration_standard_mie_relation: MieRelation,
+    calibration_standard_mie_relation: scattering.MieRelation,
     reference_table: list[dict[str, Any]],
     metadata: Optional[dict[str, Any]] = None,
     force_zero_intercept: bool = True,
@@ -1916,7 +1915,7 @@ def apply_scattering_calibration(
     *,
     calibration: ScatteringCalibration,
     measured_values: np.ndarray,
-    target_mie_relation: MieRelation,
+    target_mie_relation: scattering.MieRelation,
     metadata: Optional[dict[str, Any]] = None,
 ) -> ScatteringApplicationResult:
     """

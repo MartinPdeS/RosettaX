@@ -7,7 +7,7 @@ import numpy as np
 
 from RosettaX.pages.p02_fluorescence.ids import Ids as FluorescenceIds
 from RosettaX.pages.p02_fluorescence.sections.s04_calibration.main import Calibration
-from RosettaX.workflow.calibration import scattering_services
+from RosettaX.pages.p03_scattering.sections.s05_calibration import services as scattering_services
 
 
 def _collect_component_ids(component) -> set[str]:

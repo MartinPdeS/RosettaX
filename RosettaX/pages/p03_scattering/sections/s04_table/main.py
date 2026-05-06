@@ -203,7 +203,7 @@ class ReferenceTable:
             scatterer_preset: Any,
             current_rows: Any,
         ) -> tuple[Any, Any]:
-            preset_table_state = scattering.model.ScatteringModelConfiguration.build_table_state_from_scatterer_preset(
+            preset_table_state = scattering.ScatteringModelConfiguration.build_table_state_from_scatterer_preset(
                 preset_name=scatterer_preset,
                 current_rows=current_rows,
             )

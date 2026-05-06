@@ -10,7 +10,6 @@ import numpy as np
 import plotly.graph_objs as go
 
 from RosettaX.utils import casting
-from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.utils.reader import FCSFile
 from RosettaX.utils.plottings import _make_info_figure
 
@@ -101,24 +100,6 @@ class FluorescenceFitResult:
     r_squared: float
     intensity_au_log10: np.ndarray
     intensity_calibrated_units_log10: np.ndarray
-
-
-
-# def resolve_bead_rows_from_runtime_store(
-#     runtime_config_data: Any,
-# ) -> list[dict[str, str]]:
-#     runtime_config = RuntimeConfig.from_dict(
-#         runtime_config_data if isinstance(runtime_config_data, dict) else None
-#     )
-
-#     mesf_values = runtime_config.get_path(
-#         "calibration.mesf_values",
-#         default=[],
-#     )
-
-#     return build_bead_rows_from_mesf_values(
-#         mesf_values,
-#     )
 
 
 def rebuild_calibration_graph(

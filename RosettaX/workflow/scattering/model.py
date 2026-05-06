@@ -5,10 +5,8 @@ from typing import Any, Optional, Sequence
 
 import plotly.graph_objs as go
 
-from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.workflow.parameters import particle_presets
-from RosettaX.workflow.parameters import services as parameter_services
-from RosettaX.workflow.parameters import table as parameters_table
+from RosettaX.utils import RuntimeConfig
+from RosettaX.workflow import parameters
 
 
 CUSTOM_SCATTERER_PRESET_NAME = "Custom"
@@ -220,7 +218,7 @@ class ScatteringModelDefaults:
         )
 
 
-class ScatteringModelConfiguration:
+class ModelConfiguration:
     """
     Reusable scattering model configuration helpers.
 
@@ -228,14 +226,14 @@ class ScatteringModelConfiguration:
     page and by the apply calibration page when building target particle models.
     """
 
-    custom_detector_preset_name = parameter_services.CUSTOM_DETECTOR_PRESET_NAME
+    custom_detector_preset_name = parameters.CUSTOM_DETECTOR_PRESET_NAME
     custom_scatterer_preset_name = CUSTOM_SCATTERER_PRESET_NAME
 
-    mie_model_options = particle_presets.MIE_MODEL_OPTIONS
-    medium_refractive_index_presets = particle_presets.MEDIUM_REFRACTIVE_INDEX_PRESETS
-    particle_refractive_index_presets = particle_presets.PARTICLE_REFRACTIVE_INDEX_PRESETS
-    core_refractive_index_presets = particle_presets.CORE_REFRACTIVE_INDEX_PRESETS
-    shell_refractive_index_presets = particle_presets.SHELL_REFRACTIVE_INDEX_PRESETS
+    mie_model_options = parameters.particle_presets.MIE_MODEL_OPTIONS
+    medium_refractive_index_presets = parameters.particle_presets.MEDIUM_REFRACTIVE_INDEX_PRESETS
+    particle_refractive_index_presets = parameters.particle_presets.PARTICLE_REFRACTIVE_INDEX_PRESETS
+    core_refractive_index_presets = parameters.particle_presets.CORE_REFRACTIVE_INDEX_PRESETS
+    shell_refractive_index_presets = parameters.particle_presets.SHELL_REFRACTIVE_INDEX_PRESETS
 
     @staticmethod
     def build_defaults_from_runtime_config(
@@ -266,7 +264,7 @@ class ScatteringModelConfiguration:
         """
         Normalize the selected Mie model.
         """
-        return parameter_services.resolve_mie_model(
+        return parameters.resolve_mie_model(
             mie_model,
         )
 
@@ -275,7 +273,7 @@ class ScatteringModelConfiguration:
         """
         Build detector preset dropdown options.
         """
-        return parameter_services.build_detector_preset_options()
+        return parameters.build_detector_preset_options()
 
     @staticmethod
     def build_scatterer_preset_options() -> list[dict[str, Any]]:
@@ -365,11 +363,11 @@ class ScatteringModelConfiguration:
         if preset.name == CUSTOM_SCATTERER_PRESET_NAME:
             return None
 
-        columns = parameters_table.get_table_columns_for_model(
+        columns = parameters.table.get_table_columns_for_model(
             preset.mie_model,
         )
 
-        rows = parameters_table.populate_table_from_runtime_defaults(
+        rows = parameters.table.populate_table_from_runtime_defaults(
             mie_model=preset.mie_model,
             runtime_particle_diameters_nm=preset.particle_diameters_nm,
             runtime_core_diameters_nm=preset.core_diameters_nm,
@@ -377,20 +375,20 @@ class ScatteringModelConfiguration:
         )
 
         if current_rows is not None:
-            preserved_rows = parameters_table.remap_table_rows_to_model(
+            preserved_rows = parameters.table.remap_table_rows_to_model(
                 mie_model=preset.mie_model,
                 current_rows=current_rows,
             )
 
             geometry_column_ids = (
                 [
-                    parameters_table.COLUMN_CORE_DIAMETER_NM,
-                    parameters_table.COLUMN_SHELL_THICKNESS_NM,
-                    parameters_table.COLUMN_OUTER_DIAMETER_NM,
+                    parameters.table.COLUMN_CORE_DIAMETER_NM,
+                    parameters.table.COLUMN_SHELL_THICKNESS_NM,
+                    parameters.table.COLUMN_OUTER_DIAMETER_NM,
                 ]
-                if preset.mie_model == parameters_table.MIE_MODEL_CORE_SHELL_SPHERE
+                if preset.mie_model == parameters.table.MIE_MODEL_CORE_SHELL_SPHERE
                 else [
-                    parameters_table.COLUMN_PARTICLE_DIAMETER_NM,
+                    parameters.table.COLUMN_PARTICLE_DIAMETER_NM,
                 ]
             )
 
@@ -400,7 +398,7 @@ class ScatteringModelConfiguration:
                 merged_row = dict(
                     preserved_rows[row_index]
                     if row_index < len(preserved_rows)
-                    else parameters_table.build_empty_row_for_model(
+                    else parameters.table.build_empty_row_for_model(
                         preset.mie_model,
                     )
                 )
@@ -425,7 +423,7 @@ class ScatteringModelConfiguration:
         """
         Return the custom detector configuration container style.
         """
-        return parameter_services.resolve_detector_configuration_visibility_style(
+        return parameters.resolve_detector_configuration_visibility_style(
             preset_name=preset_name,
         )
 
@@ -443,7 +441,7 @@ class ScatteringModelConfiguration:
         """
         Resolve detector configuration values from a preset or current controls.
         """
-        return parameter_services.resolve_detector_configuration_values(
+        return parameters.resolve_detector_configuration_values(
             preset_name=preset_name,
             current_detector_numerical_aperture=current_detector_numerical_aperture,
             current_detector_cache_numerical_aperture=current_detector_cache_numerical_aperture,
@@ -484,12 +482,12 @@ class ScatteringModelConfiguration:
         """
         Build the optical configuration preview figure.
         """
-        detector_angular_weights = parameter_services.resolve_detector_angular_weights(
+        detector_angular_weights = parameters.resolve_detector_angular_weights(
             preset_name=detector_configuration_preset,
             detector_sampling=detector_sampling,
         )
 
-        return parameter_services.build_optical_configuration_preview_figure(
+        return parameters.build_optical_configuration_preview_figure(
             detector_numerical_aperture=detector_numerical_aperture,
             blocker_bar_numerical_aperture=blocker_bar_numerical_aperture,
             medium_refractive_index=medium_refractive_index,
@@ -507,7 +505,7 @@ class ScatteringModelConfiguration:
         """
         Build display styles for solid sphere and core shell control blocks.
         """
-        resolved_mie_model = ScatteringModelConfiguration.resolve_mie_model(
+        resolved_mie_model = ModelConfiguration.resolve_mie_model(
             mie_model,
         )
 

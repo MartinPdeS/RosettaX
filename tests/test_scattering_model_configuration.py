@@ -4,7 +4,8 @@ from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.pages.p03_scattering.sections.s04_table.services import (
     ScatteringCalibrationStandardTable,
 )
-from RosettaX.workflow.scattering.model import (
+
+from RosettaX.workflow.scattering_model import (
     BROAD_PARTICLE_STANDARD_PRESET_NAME,
     CUSTOM_SCATTERER_PRESET_NAME,
     ROSETTA_MIX_PRESET_NAME,

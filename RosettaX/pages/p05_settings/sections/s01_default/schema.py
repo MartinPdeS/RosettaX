@@ -4,15 +4,7 @@ import logging
 from dataclasses import dataclass
 from typing import Any, Optional
 
-from RosettaX.workflow.apply_calibration.scattering import (
-    CUSTOM_PRESET_NAME,
-    build_scattering_target_model_preset_options,
-)
-from RosettaX.workflow.scattering.model import (
-    CUSTOM_SCATTERER_PRESET_NAME,
-    build_scattering_calibration_scatterer_preset_options,
-)
-from RosettaX.workflow.peak import registry
+from RosettaX.workflow import scattering, peak, apply_calibration
 
 logger = logging.getLogger(__name__)
 
@@ -43,15 +35,15 @@ def build_peak_process_dropdown_options() -> list[dict[str, Any]]:
     list[dict[str, Any]]
         Peak process dropdown options.
     """
-    options = registry.build_peak_process_options()
+    options = peak.registry.build_peak_process_options()
 
     if options:
         return options
 
     return [
         {
-            "label": registry.DEFAULT_PROCESS_NAME,
-            "value": registry.DEFAULT_PROCESS_NAME,
+            "label": peak.registry.DEFAULT_PROCESS_NAME,
+            "value": peak.registry.DEFAULT_PROCESS_NAME,
         }
     ]
 
@@ -65,8 +57,8 @@ PROFILE_SECTION_ORDER: list[tuple[str, str]] = [
 
 
 PEAK_PROCESS_OPTIONS = build_peak_process_dropdown_options()
-SCATTERING_PRESET_OPTIONS = build_scattering_calibration_scatterer_preset_options()
-APPLY_TARGET_PRESET_OPTIONS = build_scattering_target_model_preset_options()
+SCATTERING_PRESET_OPTIONS = scattering.build_scattering_calibration_scatterer_preset_options()
+APPLY_TARGET_PRESET_OPTIONS = apply_calibration.scattering.build_scattering_target_model_preset_options()
 
 
 AXIS_SCALE_OPTIONS: list[dict[str, str]] = [
@@ -137,7 +129,7 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         value_kind="choice",
         runtime_path="calibration.default_fluorescence_peak_process",
         profile_path="fluorescence.calibration.default_fluorescence_peak_process",
-        default=registry.DEFAULT_PROCESS_NAME,
+        default=peak.registry.DEFAULT_PROCESS_NAME,
         options=PEAK_PROCESS_OPTIONS,
     ),
     FieldDefinition(
@@ -159,7 +151,7 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         value_kind="choice",
         runtime_path="particle_model.scatterer_preset",
         profile_path="scattering.particle_model.scatterer_preset",
-        default=CUSTOM_SCATTERER_PRESET_NAME,
+        default=scattering.CUSTOM_SCATTERER_PRESET_NAME,
         options=SCATTERING_PRESET_OPTIONS,
     ),
     FieldDefinition(
@@ -287,7 +279,7 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         value_kind="choice",
         runtime_path="scattering_calibration.default_peak_process",
         profile_path="scattering.calibration.default_peak_process",
-        default=registry.DEFAULT_PROCESS_NAME,
+        default=peak.registry.DEFAULT_PROCESS_NAME,
         options=PEAK_PROCESS_OPTIONS,
     ),
     FieldDefinition(
@@ -330,7 +322,7 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         value_kind="choice",
         runtime_path="calibration.target_model_preset",
         profile_path="apply_calibration.calibration.target_model_preset",
-        default=CUSTOM_PRESET_NAME,
+        default=apply_calibration.scattering.CUSTOM_PRESET_NAME,
         options=APPLY_TARGET_PRESET_OPTIONS,
     ),
     FieldDefinition(

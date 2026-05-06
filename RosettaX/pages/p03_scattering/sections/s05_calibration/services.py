@@ -9,13 +9,7 @@ import plotly.graph_objs as go
 
 from RosettaX.pages.p03_scattering.backend import BackEnd
 from RosettaX.utils import plottings
-from RosettaX.workflow.scattering.calibration import OpticalParameters
-from RosettaX.workflow.scattering.calibration import build_core_shell_scattering_calibration_from_standard_data
-from RosettaX.workflow.scattering.calibration import build_solid_sphere_scattering_calibration_from_standard_data
-from RosettaX.workflow.scattering.calibration import parse_core_shell_rows_for_fit
-from RosettaX.workflow.scattering.calibration import parse_optical_parameters
-from RosettaX.workflow.scattering.calibration import parse_sphere_rows_for_fit
-from RosettaX.workflow.scattering.calibration import resolve_mie_model
+from RosettaX.workflow import scattering
 
 
 logger = logging.getLogger(__name__)
@@ -144,7 +138,7 @@ def build_instrument_response_figure(
 def build_solid_sphere_dense_simulated_coupling_curve(
     *,
     particle_diameters_nm: np.ndarray,
-    optical_parameters: OpticalParameters,
+    optical_parameters: scattering.OpticalParameters,
     simulated_curve_point_count: int,
 ) -> tuple[np.ndarray, np.ndarray]:
     """
@@ -195,7 +189,7 @@ def build_core_shell_dense_simulated_coupling_curve(
     *,
     core_diameters_nm: np.ndarray,
     shell_thicknesses_nm: np.ndarray,
-    optical_parameters: OpticalParameters,
+    optical_parameters: scattering.OpticalParameters,
     simulated_curve_point_count: int,
 ) -> tuple[np.ndarray, np.ndarray]:
     """
@@ -369,8 +363,8 @@ def build_calibration_standard_mie_relation_figure_store(
     Build a serialized calibration standard Mie relation figure from table rows.
     """
     try:
-        resolved_mie_model = resolve_mie_model(mie_model)
-        optical_parameters = parse_optical_parameters(
+        resolved_mie_model = scattering.resolve_mie_model(mie_model)
+        optical_parameters = scattering.parse_optical_parameters(
             medium_refractive_index=medium_refractive_index,
             particle_refractive_index=particle_refractive_index,
             core_refractive_index=core_refractive_index,
@@ -491,7 +485,7 @@ def run_solid_sphere_calibration(
     uploaded_fcs_path: str,
     detector_column: str,
     current_table_rows: list[dict[str, Any]],
-    optical_parameters: OpticalParameters,
+    optical_parameters: scattering.OpticalParameters,
     simulated_curve_point_count: int,
 ) -> CalibrationResult:
     """
@@ -502,7 +496,7 @@ def run_solid_sphere_calibration(
 
     scattering_backend = BackEnd()
     scattering_backend.fcs_file_path = uploaded_fcs_path
-    parsed_sphere_rows = parse_sphere_rows_for_fit(rows=current_table_rows)
+    parsed_sphere_rows = scattering.parse_sphere_rows_for_fit(rows=current_table_rows)
 
     if parsed_sphere_rows.row_count < 2:
         left_figure = plottings._make_info_figure(
@@ -551,7 +545,7 @@ def run_solid_sphere_calibration(
         "uploaded_fcs_path": str(uploaded_fcs_path),
     }
 
-    build_result = build_solid_sphere_scattering_calibration_from_standard_data(
+    build_result = scattering.build_solid_sphere_scattering_calibration_from_standard_data(
         detector_column=str(detector_column),
         current_table_rows=current_table_rows,
         measured_peak_positions=measured_peak_positions,
@@ -596,7 +590,7 @@ def run_core_shell_calibration(
     uploaded_fcs_path: str,
     detector_column: str,
     current_table_rows: list[dict[str, Any]],
-    optical_parameters: OpticalParameters,
+    optical_parameters: scattering.OpticalParameters,
     simulated_curve_point_count: int,
 ) -> CalibrationResult:
     """
@@ -610,7 +604,7 @@ def run_core_shell_calibration(
 
     scattering_backend = BackEnd()
     scattering_backend.fcs_file_path = uploaded_fcs_path
-    parsed_core_shell_rows = parse_core_shell_rows_for_fit(rows=current_table_rows)
+    parsed_core_shell_rows = scattering.parse_core_shell_rows_for_fit(rows=current_table_rows)
 
     if parsed_core_shell_rows.row_count < 2:
         left_figure = plottings._make_info_figure(
@@ -662,7 +656,7 @@ def run_core_shell_calibration(
         "uploaded_fcs_path": str(uploaded_fcs_path),
     }
 
-    build_result = build_core_shell_scattering_calibration_from_standard_data(
+    build_result = scattering.build_core_shell_scattering_calibration_from_standard_data(
         detector_column=str(detector_column),
         current_table_rows=current_table_rows,
         measured_peak_positions=measured_peak_positions,
@@ -738,7 +732,7 @@ def run_scattering_calibration(
 
     try:
         current_table_rows = [dict(row) for row in (bead_table_data or []) if isinstance(row, dict)]
-        resolved_mie_model = resolve_mie_model(mie_model)
+        resolved_mie_model = scattering.resolve_mie_model(mie_model)
 
         if not uploaded_fcs_path:
             return build_missing_input_result("Missing FCS file.")
@@ -746,7 +740,7 @@ def run_scattering_calibration(
         if not detector_column:
             return build_missing_input_result("Missing scattering detector.")
 
-        optical_parameters = parse_optical_parameters(
+        optical_parameters = scattering.parse_optical_parameters(
             medium_refractive_index=medium_refractive_index,
             particle_refractive_index=particle_refractive_index,
             core_refractive_index=core_refractive_index,

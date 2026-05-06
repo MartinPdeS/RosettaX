@@ -7,7 +7,7 @@ import dash
 import plotly.graph_objs as go
 
 from RosettaX.pages.p02_fluorescence.state import FluorescencePageState
-from RosettaX.workflow.calibration import fluorescence as services
+from . import services
 
 
 logger = logging.getLogger(__name__)

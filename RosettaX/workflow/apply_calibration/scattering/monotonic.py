@@ -5,13 +5,13 @@ import logging
 
 import numpy as np
 
-from RosettaX.workflow.calibration.mie_relation import MieRelation
-from RosettaX.workflow.calibration.mie_relation import build_mie_relation_from_arrays
-from RosettaX.workflow.calibration.mie_relation import relation_is_strictly_monotonic
+from RosettaX.workflow import scattering
 
-from .models import MonotonicDiameterInterval
-from .models import MonotonicRelationResolution
-from .models import ScatteringTargetModelParameters
+from .models import (
+    MonotonicDiameterInterval,
+    MonotonicRelationResolution,
+    ScatteringTargetModelParameters,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 def resolve_monotonic_target_mie_relation(
     *,
-    target_mie_relation: MieRelation,
+    target_mie_relation: scattering.MieRelation,
 ) -> MonotonicRelationResolution:
     """
     Resolve the monotonic target relation used for diameter inversion.
@@ -37,7 +37,7 @@ def resolve_monotonic_target_mie_relation(
         target_mie_relation=target_mie_relation,
     )
 
-    if relation_is_strictly_monotonic(
+    if scattering.relation_is_strictly_monotonic(
         values=theoretical_coupling_values,
     ):
         logger.debug(
@@ -133,9 +133,9 @@ def select_largest_monotonic_interval(
 
 def build_monotonic_branch_mie_relation(
     *,
-    target_mie_relation: MieRelation,
+    target_mie_relation: scattering.MieRelation,
     selected_interval: MonotonicDiameterInterval,
-) -> MieRelation:
+) -> scattering.MieRelation:
     """
     Crop a Mie relation to one monotonic branch.
     """
@@ -161,7 +161,7 @@ def build_monotonic_branch_mie_relation(
             "Selected monotonic branch has fewer than two points."
         )
 
-    if not relation_is_strictly_monotonic(
+    if not scattering.relation_is_strictly_monotonic(
         values=branch_coupling_values,
     ):
         raise ValueError(
@@ -184,7 +184,7 @@ def build_monotonic_branch_mie_relation(
         }
     )
 
-    return build_mie_relation_from_arrays(
+    return scattering.build_mie_relation_from_arrays(
         diameter_nm=branch_diameter_values_nm,
         theoretical_coupling=branch_coupling_values,
         mie_model=target_mie_relation.mie_model,
@@ -195,7 +195,7 @@ def build_monotonic_branch_mie_relation(
 
 def coupling_to_diameter_with_linear_extrapolation(
     *,
-    target_mie_relation: MieRelation,
+    target_mie_relation: scattering.MieRelation,
     coupling_values: Any,
 ) -> np.ndarray:
     """
@@ -351,7 +351,7 @@ def extrapolate_linearly(
 
 def validate_target_mie_relation_for_diameter_inversion(
     *,
-    target_mie_relation: MieRelation,
+    target_mie_relation: scattering.MieRelation,
     target_model_parameters: ScatteringTargetModelParameters,
 ) -> None:
     """
@@ -364,7 +364,7 @@ def validate_target_mie_relation_for_diameter_inversion(
         target_mie_relation=target_mie_relation,
     )
 
-    if relation_is_strictly_monotonic(
+    if scattering.relation_is_strictly_monotonic(
         values=theoretical_coupling_values,
     ):
         return
@@ -394,7 +394,7 @@ def validate_target_mie_relation_for_diameter_inversion(
 
 def get_finite_positive_mie_relation_arrays(
     *,
-    target_mie_relation: MieRelation,
+    target_mie_relation: scattering.MieRelation,
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Return finite positive diameter and coupling arrays from a Mie relation.
@@ -593,7 +593,7 @@ def build_interval_if_valid(
     if interval_diameter_values_nm.size < minimum_point_count:
         return []
 
-    if not relation_is_strictly_monotonic(
+    if not scattering.relation_is_strictly_monotonic(
         values=interval_coupling_values,
     ):
         return []

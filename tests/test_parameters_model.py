@@ -6,7 +6,7 @@ from types import SimpleNamespace
 from unittest.mock import patch, Mock
 import logging
 
-from RosettaX.workflow.parameters.optical_preview import build_pymiesim_photodiode_mesh_coordinates
+from RosettaX.pages.p03_scattering.sections.s03_model.optical_preview import build_pymiesim_photodiode_mesh_coordinates
 from RosettaX.workflow.parameters.detector_configuration import resolve_detector_angular_weights
 from RosettaX.workflow.parameters.model import (
     SOLID_SPHERE_MODEL_NAME,

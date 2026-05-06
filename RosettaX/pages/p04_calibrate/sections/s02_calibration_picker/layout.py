@@ -6,15 +6,8 @@ from typing import Any, Optional
 import dash
 import dash_bootstrap_components as dbc
 
-from RosettaX.utils import styling
-from RosettaX.utils import ui_forms
-from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.workflow.apply_calibration.scattering import (
-    CUSTOM_PRESET_NAME,
-    build_scattering_target_model_preset_options,
-)
-from RosettaX.workflow.scattering.model import ScatteringModelConfiguration
-from RosettaX.workflow.plotting import scatter2d
+from RosettaX.utils import styling, ui_forms, RuntimeConfig
+from RosettaX.workflow import scattering, plotting, apply_calibration
 
 from . import services
 
@@ -27,7 +20,7 @@ class CalibrationPickerLayout:
     Layout builder for the calibration picker section.
     """
 
-    model_configuration = ScatteringModelConfiguration
+    model_configuration = scattering.ModelConfiguration
 
     def __init__(
         self,
@@ -323,8 +316,8 @@ class CalibrationPickerLayout:
                             label="Preset:",
                             control=ui_forms.persistent_dropdown(
                                 id=self.page.ids.CalibrationPicker.target_model_preset,
-                                options=build_scattering_target_model_preset_options(),
-                                value=CUSTOM_PRESET_NAME,
+                                options=apply_calibration.scattering.build_scattering_target_model_preset_options(),
+                                value=apply_calibration.scattering.CUSTOM_PRESET_NAME,
                                 clearable=False,
                                 searchable=False,
                                 style={
@@ -518,8 +511,8 @@ class CalibrationPickerLayout:
                                 "marginBottom": "10px",
                             },
                         ),
-                        scatter2d.Scatter2DGraph.build_component(
-                            component_ids=scatter2d.Scatter2DGraphIds(
+                        plotting.scatter2d.Scatter2DGraph.build_component(
+                            component_ids=plotting.scatter2d.Scatter2DGraphIds(
                                 graph=self.page.ids.CalibrationPicker.target_mie_relation_graph,
                                 axis_scale_toggle=self.page.ids.CalibrationPicker.target_mie_relation_axis_scale_toggle,
                             ),

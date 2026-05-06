@@ -5,7 +5,7 @@ from typing import Any, Optional, Union
 
 import numpy as np
 
-from RosettaX.workflow.calibration.mie_relation import MieRelation
+from RosettaX.workflow.scattering import MieRelation
 
 
 SOLID_SPHERE_MODEL_NAME = "Solid Sphere"

@@ -7,7 +7,7 @@ import dash
 import dash_bootstrap_components as dbc
 
 from RosettaX.utils import styling, ui_forms, RuntimeConfig, casting
-from RosettaX.workflow.scattering.model import ScatteringModelConfiguration
+from RosettaX.workflow import scattering
 
 
 logger = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ class Model:
     RosettaX.workflow.scattering.model.
     """
 
-    model_configuration = ScatteringModelConfiguration
+    model_configuration = scattering.ModelConfiguration
 
     def __init__(
         self,

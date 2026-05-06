@@ -6,7 +6,7 @@ import logging
 import numpy as np
 
 from . import loader
-from .optical_preview import build_pymiesim_photodiode_mesh_coordinates
+from ...pages.p03_scattering.sections.s03_model.optical_preview import build_pymiesim_photodiode_mesh_coordinates
 
 
 logger = logging.getLogger(__name__)

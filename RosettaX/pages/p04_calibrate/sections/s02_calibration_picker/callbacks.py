@@ -6,7 +6,7 @@ from typing import Any, Optional
 
 import dash
 
-from RosettaX.utils.runtime_config import RuntimeConfig
+from RosettaX.utils import RuntimeConfig
 from RosettaX.workflow.apply_calibration.scattering import (
     CUSTOM_PRESET_NAME,
     get_scattering_target_model_preset,
