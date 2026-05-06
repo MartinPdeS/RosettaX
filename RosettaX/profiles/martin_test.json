@@ -19,7 +19,7 @@
       "detector_sampling": 1000
     },
     "particle_model": {
-      "scatterer_preset": "Rosetta Mix",
+      "scatterer_preset": "",
       "core_refractive_index": 1.5,
       "shell_refractive_index": 1.5,
       "particle_refractive_index": 1.602,
@@ -40,7 +40,7 @@
   },
   "apply_calibration": {
     "calibration": {
-      "target_model_preset": "Extracellular Vesicles",
+      "target_model_preset": "",
       "target_mie_relation_xscale": "linear",
       "target_mie_relation_yscale": "log",
       "histogram_xscale": "linear",

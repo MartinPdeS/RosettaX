@@ -5,7 +5,7 @@ from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.apply_calibration.scattering import (
     EXTRACELLULAR_VESICLES_PRESET_NAME,
 )
-from RosettaX.workflow.scattering_model import ROSETTA_MIX_PRESET_NAME
+from RosettaX.workflow.scattering.model import ROSETTA_MIX_PRESET_NAME
 
 
 class Test_SettingsDefaultServicesPresetPreferences:

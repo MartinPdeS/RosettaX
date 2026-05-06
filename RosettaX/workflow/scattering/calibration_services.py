@@ -10,7 +10,7 @@ from RosettaX.utils import casting
 from RosettaX.workflow import scattering
 
 from RosettaX.workflow.parameters.detector_configuration import resolve_detector_angular_weights
-from .mie_relation import build_mie_relation_from_arrays
+from .mie_relation import build_mie_parameter_payload, build_mie_relation_from_arrays
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +64,7 @@ class OpticalParameters:
             None if outer_diameter_nm is None else len(outer_diameter_nm),
         )
 
-        parameter_payload = scattering.build_mie_parameter_payload(
+        parameter_payload = build_mie_parameter_payload(
             mie_model=mie_model,
             medium_refractive_index=self.medium_refractive_index,
             particle_refractive_index=self.particle_refractive_index,
@@ -639,7 +639,8 @@ def parse_optical_parameters(
         "shell_refractive_index=%r wavelength_nm=%r "
         "detector_numerical_aperture=%r detector_cache_numerical_aperture=%r "
         "blocker_bar_numerical_aperture=%r detector_sampling=%r "
-        "detector_phi_angle_degree=%r detector_gamma_angle_degree=%r",
+        "detector_phi_angle_degree=%r detector_gamma_angle_degree=%r "
+        "detector_configuration_preset=%r",
         medium_refractive_index,
         particle_refractive_index,
         core_refractive_index,
