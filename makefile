@@ -3,7 +3,7 @@ BUILD_DIR ?= build
 ROOT_DIR := $(CURDIR)
 PYBIND11_DIR := $(shell $(PYTHON) -m pybind11 --cmakedir)
 
-.PHONY: configure build install quick rebuild editable clean
+.PHONY: configure build install quick rebuild editable bundle clean
 
 configure:
 	cmake -S . -B $(BUILD_DIR) \
@@ -26,6 +26,10 @@ rebuild: configure build install
 
 editable:
 	$(PYTHON) -m pip install --no-build-isolation -Cbuild-dir=build -Ceditable.rebuild=false -Ceditable.mode=inplace -e .
+
+bundle:
+	$(PYTHON) -m pip install -e .[bundling]
+	$(PYTHON) -m PyInstaller rosettax.spec --clean
 
 clean:
 	rm -rf $(BUILD_DIR)

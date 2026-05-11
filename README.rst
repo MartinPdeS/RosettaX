@@ -252,6 +252,17 @@ Install the project in editable mode with development dependencies:
 
    pip install -e ".[dev,testing,documentation]"
 
+Build a local PyInstaller bundle with:
+
+.. code-block:: bash
+
+   pip install -e ".[bundling]"
+   pyinstaller rosettax.spec --clean
+
+This creates a standalone bundle under ``dist/rosettax`` for the current
+operating system. Cross platform bundles must still be built natively on each
+target operating system.
+
 Run the test suite with:
 
 .. code-block:: bash
