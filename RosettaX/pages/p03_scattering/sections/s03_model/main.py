@@ -762,6 +762,7 @@ class Model:
         """
 
         @dash.callback(
+            dash.Output(self.ids.detector_configuration_preset, "value"),
             dash.Output(self.ids.scatterer_preset, "value"),
             dash.Output(self.ids.mie_model, "value"),
             dash.Output(self.ids.medium_refractive_index_custom, "value"),
@@ -794,9 +795,16 @@ class Model:
                 runtime_config_data,
             ).to_callback_values()
 
+            detector_preset = self.model_configuration.resolve_runtime_detector_preset(
+                runtime_config.get_str(
+                    "optics.detector_configuration_preset",
+                    default=self.model_configuration.custom_detector_preset_name,
+                )
+            )
+
             resolved_detector_values = (
                 self.model_configuration.resolve_detector_configuration_values(
-                    preset_name=self.model_configuration.custom_detector_preset_name,
+                    preset_name=detector_preset,
                     current_detector_numerical_aperture=resolved_values[6],
                     current_detector_cache_numerical_aperture=resolved_values[7],
                     current_blocker_bar_numerical_aperture=resolved_values[8],
@@ -853,11 +861,13 @@ class Model:
             )
 
             logger.debug(
-                "sync_parameters_from_runtime_config returning resolved_values=%r",
+                "sync_parameters_from_runtime_config returning detector_preset=%r resolved_values=%r",
+                detector_preset,
                 resolved_values,
             )
 
             return (
+                detector_preset,
                 scatterer_preset,
                 *resolved_values,
             )

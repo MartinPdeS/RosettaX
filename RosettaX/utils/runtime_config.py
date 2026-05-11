@@ -101,9 +101,13 @@ class RuntimeConfig:
         "fluorescence.files.fcs_file_path": "files.fluorescence_fcs_file_path",
         "scattering.optics.medium_refractive_index": "optics.medium_refractive_index",
         "scattering.optics.wavelength_nm": "optics.wavelength_nm",
+        "scattering.optics.detector_configuration_preset": "optics.detector_configuration_preset",
         "scattering.optics.detector_numerical_aperture": "optics.detector_numerical_aperture",
         "scattering.optics.detector_cache_numerical_aperture": "optics.detector_cache_numerical_aperture",
+        "scattering.optics.blocker_bar_numerical_aperture": "optics.blocker_bar_numerical_aperture",
         "scattering.optics.detector_sampling": "optics.detector_sampling",
+        "scattering.optics.detector_phi_angle_degree": "optics.detector_phi_angle_degree",
+        "scattering.optics.detector_gamma_angle_degree": "optics.detector_gamma_angle_degree",
         "scattering.particle_model.scatterer_preset": "particle_model.scatterer_preset",
         "scattering.particle_model.core_refractive_index": "particle_model.core_refractive_index",
         "scattering.particle_model.shell_refractive_index": "particle_model.shell_refractive_index",
@@ -114,8 +118,6 @@ class RuntimeConfig:
         "scattering.particle_model.mie_model": "particle_model.mie_model",
         "scattering.calibration.default_peak_process": "scattering_calibration.default_peak_process",
         "scattering.calibration.peak_table_sort_order": "scattering_calibration.peak_table_sort_order",
-        "scattering.calibration.default_gating_channel": "calibration.default_gating_channel",
-        "scattering.calibration.default_gating_threshold": "calibration.default_gating_threshold",
         "scattering.files.fcs_file_path": "files.scattering_fcs_file_path",
         "apply_calibration.calibration.target_model_preset": "calibration.target_model_preset",
         "apply_calibration.calibration.target_mie_relation_xscale": "calibration.target_mie_relation_xscale",
@@ -123,13 +125,14 @@ class RuntimeConfig:
         "apply_calibration.calibration.histogram_xscale": "calibration.histogram_xscale",
         "apply_calibration.calibration.histogram_yscale": "calibration.histogram_yscale",
         "apply_calibration.calibration.max_events_for_analysis": "calibration.max_events_for_analysis",
-        "apply_calibration.calibration.default_output_suffix": "calibration.default_output_suffix",
         "apply_calibration.calibration.n_bins_for_plots": "calibration.n_bins_for_plots",
-        "apply_calibration.calibration.show_calibration_plot_by_default": "calibration.show_calibration_plot_by_default",
+        "apply_calibration.calibration.peak_graph_colormap_log": "calibration.peak_graph_colormap_log",
+        "apply_calibration.calibration.default_scattering_derived_output_mode": "calibration.default_scattering_derived_output_mode",
         "apply_calibration.calibration.histogram_scale": "calibration.histogram_scale",
         "apply_calibration.metadata.operator_name": "metadata.operator_name",
         "apply_calibration.metadata.instrument_name": "metadata.instrument_name",
         "apply_calibration.visualization.graph_height": "visualization.graph_height",
+        "apply_calibration.visualization.default_marker_opacity": "visualization.default_marker_opacity",
         "apply_calibration.visualization.default_marker_size": "visualization.default_marker_size",
         "apply_calibration.visualization.default_line_width": "visualization.default_line_width",
         "apply_calibration.visualization.default_font_size": "visualization.default_font_size",
@@ -137,15 +140,12 @@ class RuntimeConfig:
         "apply_calibration.visualization.show_grid_by_default": "visualization.show_grid_by_default",
         "misc.ui.theme_mode": "ui.theme_mode",
         "misc.ui.show_graphs": "ui.show_graphs",
-        "scattering_calibration.default_gating_channel": "calibration.default_gating_channel",
-        "scattering_calibration.default_gating_threshold": "calibration.default_gating_threshold",
         "scattering_calibration.target_mie_relation_xscale": "calibration.target_mie_relation_xscale",
         "scattering_calibration.target_mie_relation_yscale": "calibration.target_mie_relation_yscale",
         # Older profiles stored the scattering peak process under calibration.
         "calibration.default_scattering_peak_process": "scattering_calibration.default_peak_process",
         "visualization.n_bins": "calibration.n_bins_for_plots",
         "visualization.n_bins_for_plots": "calibration.n_bins_for_plots",
-        "visualization.show_calibration": "calibration.show_calibration_plot_by_default",
     }
 
     SCHEMA: ClassVar[dict[str, RuntimeConfigField]] = {
@@ -213,16 +213,6 @@ class RuntimeConfig:
             choices=("linear", "log"),
             description="Default histogram y axis scale.",
         ),
-        "calibration.default_gating_channel": RuntimeConfigField(
-            expected_type=str,
-            default="",
-            description="Default gating channel.",
-        ),
-        "calibration.default_gating_threshold": RuntimeConfigField(
-            expected_type=float,
-            default=0.0,
-            description="Default gating threshold.",
-        ),
         "calibration.max_events_for_analysis": RuntimeConfigField(
             expected_type=int,
             default=100000,
@@ -235,15 +225,16 @@ class RuntimeConfig:
             minimum=1,
             description="Default number of histogram bins.",
         ),
-        "calibration.default_output_suffix": RuntimeConfigField(
-            expected_type=str,
-            default="_calibrated",
-            description="Default suffix used for calibrated output files.",
-        ),
-        "calibration.show_calibration_plot_by_default": RuntimeConfigField(
+        "calibration.peak_graph_colormap_log": RuntimeConfigField(
             expected_type=bool,
-            default=True,
-            description="Whether calibration plots are visible by default.",
+            default=False,
+            description="Whether the shared 2D peak graph color scale is logarithmic by default.",
+        ),
+        "calibration.default_scattering_derived_output_mode": RuntimeConfigField(
+            expected_type=str,
+            default="both",
+            choices=("both", "estimated_coupling", "mie_equivalent_diameter_nm"),
+            description="Default scattering derived output columns exported by apply-calibration.",
         ),
         "calibration.target_model_preset": RuntimeConfigField(
             expected_type=str,
@@ -300,6 +291,11 @@ class RuntimeConfig:
             minimum=1.0,
             description="Medium refractive index.",
         ),
+        "optics.detector_configuration_preset": RuntimeConfigField(
+            expected_type=str,
+            default="Generic detector",
+            description="Default detector geometry preset for the scattering page.",
+        ),
         "optics.detector_numerical_aperture": RuntimeConfigField(
             expected_type=float,
             default=0.45,
@@ -314,11 +310,32 @@ class RuntimeConfig:
             maximum=1.49,
             description="Numerical aperture used for detector cache.",
         ),
+        "optics.blocker_bar_numerical_aperture": RuntimeConfigField(
+            expected_type=float,
+            default=0.0,
+            minimum=0.0,
+            maximum=1.49,
+            description="Numerical aperture blocked by the detector blocker bar.",
+        ),
         "optics.detector_sampling": RuntimeConfigField(
             expected_type=int,
             default=1000,
             minimum=1,
             description="Detector angular or numerical sampling.",
+        ),
+        "optics.detector_phi_angle_degree": RuntimeConfigField(
+            expected_type=float,
+            default=0.0,
+            minimum=-360.0,
+            maximum=360.0,
+            description="Detector phi rotation angle in degrees.",
+        ),
+        "optics.detector_gamma_angle_degree": RuntimeConfigField(
+            expected_type=float,
+            default=0.0,
+            minimum=-360.0,
+            maximum=360.0,
+            description="Detector gamma rotation angle in degrees.",
         ),
         # ---------------------------------------------------------------------
         # Particle model
@@ -387,6 +404,13 @@ class RuntimeConfig:
             expected_type=str,
             default="850px",
             description="Default graph height CSS value.",
+        ),
+        "visualization.default_marker_opacity": RuntimeConfigField(
+            expected_type=float,
+            default=0.72,
+            minimum=0.0,
+            maximum=1.0,
+            description="Default marker opacity for scatter-like plots.",
         ),
         "visualization.default_marker_size": RuntimeConfigField(
             expected_type=float,

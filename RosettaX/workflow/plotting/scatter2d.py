@@ -76,6 +76,7 @@ class Scatter2DGraph:
         x_log_enabled: bool = False,
         y_log_enabled: bool = False,
         colormap_log_toggle_enabled: bool = False,
+        colormap_log_enabled: bool = False,
         graph_style: Optional[dict[str, Any]] = None,
         bottom_controls: Optional[list[Any]] = None,
     ) -> dash.html.Div:
@@ -96,6 +97,11 @@ class Scatter2DGraph:
         if y_log_enabled:
             toggle_values.append(
                 cls.y_log_value,
+            )
+
+        if colormap_log_toggle_enabled and colormap_log_enabled:
+            toggle_values.append(
+                cls.colormap_log_value,
             )
 
         resolved_graph_style = {

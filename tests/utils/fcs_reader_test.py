@@ -159,6 +159,64 @@ def test_fcs_reader_respects_requested_number_of_events(sample_fcs_file_path: Pa
     assert 0 < len(dataframe) <= requested_number_of_events
 
 
+def test_builder_from_dataframe_matches_template_detectors_by_name_and_scrubs_derived_metadata() -> None:
+    """
+    Test that exported FCS detector metadata follows raw channel names rather
+    than output position, and that derived channels do not inherit acquisition
+    settings such as voltage or gain.
+    """
+
+    class _TemplateFCSFile:
+        def __init__(self) -> None:
+            self.text = {
+                "Keywords": {"$PAR": "2", "$MODE": "L", "$BYTEORD": "1,2,3,4", "$DATATYPE": "F"},
+                "Detectors": {
+                    1: {"N": "FSC-A", "V": "250", "G": "4.0", "S": "Forward Scatter"},
+                    2: {"N": "SSC-A", "V": "450", "G": "9.0", "S": "Side Scatter"},
+                },
+            }
+            self.delimiter = "|"
+            self.header = {"FCS version": "FCS3.1"}
+
+        def get_column_names(self) -> list[str]:
+            return ["FSC-A", "SSC-A"]
+
+    dataframe = pd.DataFrame(
+        {
+            "SSC-A_estimated_coupling": [1.0, 2.0],
+            "SSC-A": [3.0, 4.0],
+            "FSC-A": [5.0, 6.0],
+        }
+    )
+
+    builder = FCSFile.builder_from_dataframe(
+        dataframe,
+        template=_TemplateFCSFile(),
+        force_float32=True,
+    )
+
+    derived_detector = builder.detectors[1]
+    ssc_detector = builder.detectors[2]
+    fsc_detector = builder.detectors[3]
+
+    assert derived_detector["N"] == "SSC-A_estimated_coupling"
+    assert derived_detector["B"] == 32
+    assert derived_detector["R"] == pytest.approx(2.0)
+    assert derived_detector["V"] == ""
+    assert derived_detector["G"] == ""
+    assert derived_detector["E"] == ""
+
+    assert ssc_detector["N"] == "SSC-A"
+    assert ssc_detector["V"] == "450"
+    assert ssc_detector["G"] == "9.0"
+    assert ssc_detector["S"] == "Side Scatter"
+
+    assert fsc_detector["N"] == "FSC-A"
+    assert fsc_detector["V"] == "250"
+    assert fsc_detector["G"] == "4.0"
+    assert fsc_detector["S"] == "Forward Scatter"
+
+
 def test_fcs_reader_raises_for_missing_file() -> None:
     """
     Test that opening a missing FCS file fails explicitly.

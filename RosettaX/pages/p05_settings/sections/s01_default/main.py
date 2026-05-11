@@ -232,6 +232,7 @@ class DefaultProfile:
                 ),
                 dbc.CardBody(
                     self._build_section_fields(
+                        section_key=section_key,
                         section_field_names=section_field_names,
                         form_store_data=form_store_data,
                     ),
@@ -252,22 +253,54 @@ class DefaultProfile:
     def _build_section_fields(
         self,
         *,
+        section_key: str,
         section_field_names: list[str],
         form_store_data: dict[str, Any],
     ) -> html.Div:
         """
         Build all fields for one section.
         """
-        field_ids = self._build_field_ids()
-
         return html.Div(
+            [
+                self._build_section_field_group(
+                    section_key=section_key,
+                    group_title=group_title,
+                    group_field_names=group_field_names,
+                    form_store_data=form_store_data,
+                )
+                for group_title, group_field_names in schema.section_field_groups(
+                    section_key
+                )
+            ],
+            style={
+                "display": "grid",
+                "rowGap": "18px",
+            },
+        )
+
+    def _build_section_field_group(
+        self,
+        *,
+        section_key: str,
+        group_title: str,
+        group_field_names: list[str],
+        form_store_data: dict[str, Any],
+    ) -> html.Div:
+        """
+        Build one titled subgroup inside a settings section.
+        """
+        field_ids = self._build_field_ids()
+        use_group_card = self._should_render_group_as_card(
+            section_key=section_key,
+        )
+        fields_grid = html.Div(
             [
                 self._build_compact_field(
                     field_name=field_name,
                     field_ids=field_ids,
                     form_store_data=form_store_data,
                 )
-                for field_name in section_field_names
+                for field_name in group_field_names
             ],
             style={
                 "display": "grid",
@@ -276,6 +309,57 @@ class DefaultProfile:
                 "rowGap": "16px",
             },
         )
+
+        if use_group_card:
+            return dbc.Card(
+                [
+                    dbc.CardHeader(
+                        group_title,
+                        style={
+                            "fontSize": "0.9rem",
+                            "fontWeight": "700",
+                            "opacity": 0.88,
+                            "padding": "10px 14px",
+                        },
+                    ),
+                    dbc.CardBody(
+                        fields_grid,
+                        style={
+                            "padding": "14px",
+                        },
+                    ),
+                ],
+                style={
+                    "borderRadius": "12px",
+                    "border": "1px solid rgba(0, 0, 0, 0.08)",
+                    "background": "rgba(255, 255, 255, 0.55)",
+                },
+            )
+
+        return html.Div(
+            [
+                html.Div(
+                    group_title,
+                    style={
+                        "fontSize": "0.9rem",
+                        "fontWeight": "700",
+                        "opacity": 0.84,
+                        "marginBottom": "10px",
+                    },
+                ),
+                fields_grid,
+            ]
+        )
+
+    def _should_render_group_as_card(
+        self,
+        *,
+        section_key: str,
+    ) -> bool:
+        """
+        Render subgroup cards for sections that contain multiple logical groups.
+        """
+        return len(schema.section_field_groups(section_key)) > 1
 
     def _build_compact_field(
         self,
@@ -471,7 +555,13 @@ class DefaultProfile:
                 "Defaults for the scattering page, including particle models, peak detection, gating, and startup file selection."
             ),
             "apply_calibration": (
-                "Defaults for the apply-calibration page, including target model presets, plot axes, export metadata, and graph display settings."
+                "Defaults for the apply-calibration page, including target model presets, peak graph axes, and export behavior."
+            ),
+            "figure_style": (
+                "Shared plot appearance defaults such as height, opacity, marker size, fonts, and grid visibility."
+            ),
+            "metadata": (
+                "Default metadata values written into generated outputs when a workflow supports them."
             ),
             "misc": (
                 "Global application preferences that are not owned by a single workflow page."

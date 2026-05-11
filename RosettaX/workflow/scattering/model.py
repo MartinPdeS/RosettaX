@@ -294,6 +294,28 @@ class ModelConfiguration:
         ).name
 
     @staticmethod
+    def resolve_runtime_detector_preset(
+        preset_name: Any,
+    ) -> str:
+        """
+        Resolve a persisted detector preset name to a known preset.
+        """
+        preset_name_string = str(
+            preset_name or detector.CUSTOM_DETECTOR_PRESET_NAME,
+        ).strip()
+
+        allowed_preset_names = {
+            str(option.get("value"))
+            for option in detector.build_detector_preset_options()
+            if isinstance(option, dict) and option.get("value") is not None
+        }
+
+        if preset_name_string in allowed_preset_names:
+            return preset_name_string
+
+        return detector.CUSTOM_DETECTOR_PRESET_NAME
+
+    @staticmethod
     def resolve_scatterer_preset_values(
         *,
         preset_name: Any,

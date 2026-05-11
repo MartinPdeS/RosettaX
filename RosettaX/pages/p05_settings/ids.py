@@ -65,7 +65,14 @@ class Ids:
         )
 
         default_scatterer_preset = f"{PAGE_NAME}-default-scatterer-preset"
+        detector_configuration_preset = f"{PAGE_NAME}-detector-configuration-preset"
         medium_refractive_index = f"{PAGE_NAME}-medium-refractive-index"
+        detector_numerical_aperture = f"{PAGE_NAME}-detector-numerical-aperture"
+        detector_cache_numerical_aperture = f"{PAGE_NAME}-detector-cache-numerical-aperture"
+        blocker_bar_numerical_aperture = f"{PAGE_NAME}-blocker-bar-numerical-aperture"
+        detector_sampling = f"{PAGE_NAME}-detector-sampling"
+        detector_phi_angle_degree = f"{PAGE_NAME}-detector-phi-angle-degree"
+        detector_gamma_angle_degree = f"{PAGE_NAME}-detector-gamma-angle-degree"
         core_refractive_index = f"{PAGE_NAME}-core-refractive-index"
         shell_refractive_index = f"{PAGE_NAME}-shell-refractive-index"
         particle_refractive_index = f"{PAGE_NAME}-particle-refractive-index"
@@ -80,16 +87,12 @@ class Ids:
         scattering_peak_table_sort_order = (
             f"{PAGE_NAME}-scattering-peak-table-sort-order"
         )
-        default_gating_channel = f"{PAGE_NAME}-default-gating-channel"
-        default_gating_threshold = f"{PAGE_NAME}-default-gating-threshold"
         default_apply_target_model_preset = (
             f"{PAGE_NAME}-default-apply-target-model-preset"
         )
 
         max_events_for_analysis = f"{PAGE_NAME}-max-events-for-analysis"
         n_bins = f"{PAGE_NAME}-n-bins-for-plots"
-        show_calibration = f"{PAGE_NAME}-show-calibration-plot-by-default"
-        default_output_suffix = f"{PAGE_NAME}-default-output-suffix"
         operator_name = f"{PAGE_NAME}-operator-name"
         instrument_name = f"{PAGE_NAME}-instrument-name"
 
@@ -105,7 +108,12 @@ class Ids:
         show_graphs = f"{PAGE_NAME}-show-graphs"
         target_mie_relation_xscale = f"{PAGE_NAME}-target-mie-relation-xscale"
         target_mie_relation_yscale = f"{PAGE_NAME}-target-mie-relation-yscale"
+        peak_graph_colormap_log = f"{PAGE_NAME}-peak-graph-colormap-log"
+        default_scattering_derived_output_mode = (
+            f"{PAGE_NAME}-default-scattering-derived-output-mode"
+        )
         graph_height = f"{PAGE_NAME}-graph-height"
+        default_marker_opacity = f"{PAGE_NAME}-default-marker-opacity"
 
     class NewProfile:
         """

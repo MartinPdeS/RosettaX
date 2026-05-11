@@ -18,6 +18,13 @@ from RosettaX.utils.fcs_metadata import FCSMetadata
 logger = logging.getLogger(__name__)
 
 
+_NON_APPLICABLE_DERIVED_DETECTOR_FIELDS = {
+    "E": "",
+    "G": "",
+    "V": "",
+}
+
+
 @dataclass
 class FCSFile:
     """
@@ -887,6 +894,16 @@ class FCSFile:
                 parameter_index: dict(detector)
                 for parameter_index, detector in template.text["Detectors"].items()
             }
+            template_detector_names = list(template.get_column_names())
+            template_detectors_by_name = {
+                str(column_name): dict(
+                    detectors.get(parameter_index, {})
+                )
+                for parameter_index, column_name in enumerate(
+                    template_detector_names,
+                    start=1,
+                )
+            }
             delimiter = template.delimiter
             version = str(template.header.get("FCS version", "FCS3.1"))
         else:
@@ -896,6 +913,7 @@ class FCSFile:
                 "$DATATYPE": "F",
             }
             detectors = {}
+            template_detectors_by_name = {}
             delimiter = "|"
             version = "FCS3.1"
 
@@ -909,7 +927,16 @@ class FCSFile:
         rebuilt_detectors: Dict[int, Dict[str, Any]] = {}
 
         for parameter_index, column_name in enumerate(list(dataframe.columns), start=1):
-            detector = dict(detectors.get(parameter_index, {}))
+            detector = dict(
+                template_detectors_by_name.get(
+                    str(column_name),
+                    {},
+                )
+            )
+
+            if not detector:
+                detector.update(_NON_APPLICABLE_DERIVED_DETECTOR_FIELDS)
+
             detector["N"] = str(column_name)
 
             if force_float32:

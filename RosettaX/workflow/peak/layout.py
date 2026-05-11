@@ -796,6 +796,7 @@ class PeakLayout:
                     x_log_enabled=self._get_default_xscale() == "log",
                     y_log_enabled=self._get_default_yscale() == "log",
                     colormap_log_toggle_enabled=True,
+                    colormap_log_enabled=self._get_default_colormap_log(),
                     graph_style={
                         "height": self._get_default_graph_height(),
                         "width": "100%",
@@ -1181,6 +1182,17 @@ class PeakLayout:
                 ),
             ),
             default=self.config.default_yscale,
+        )
+
+    def _get_default_colormap_log(self) -> bool:
+        """
+        Return whether the 2D density colormap should be logarithmic by default.
+        """
+        runtime_config = self._get_default_runtime_config()
+
+        return runtime_config.get_bool(
+            self.config.colormap_log_runtime_config_path,
+            default=self.config.default_colormap_log,
         )
 
     def _normalize_axis_scale(

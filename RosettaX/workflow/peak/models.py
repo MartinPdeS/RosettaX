@@ -42,12 +42,16 @@ class PeakConfig:
         Dotted runtime-config path for the y-axis scale.
     yscale_fallback_runtime_config_path : str
         Fallback path used when *yscale_runtime_config_path* returns no value.
+    colormap_log_runtime_config_path : str
+        Dotted runtime-config path for the 2D density colormap log toggle.
     default_number_of_bins : int
         Default histogram bin count when no runtime value is found.
     default_xscale : str
         Default x-axis scale when no runtime value is found.
     default_yscale : str
         Default y-axis scale when no runtime value is found.
+    default_colormap_log : bool
+        Default 2D density colormap log setting.
     """
 
     header_title: Any
@@ -67,7 +71,9 @@ class PeakConfig:
     xscale_fallback_runtime_config_path: str = "calibration.xscale"
     yscale_runtime_config_path: str = "calibration.histogram_yscale"
     yscale_fallback_runtime_config_path: str = "calibration.histogram_scale"
+    colormap_log_runtime_config_path: str = "calibration.peak_graph_colormap_log"
 
     default_number_of_bins: int = 100
     default_xscale: str = "linear"
     default_yscale: str = "log"
+    default_colormap_log: bool = False

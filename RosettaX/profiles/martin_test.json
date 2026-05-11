@@ -57,7 +57,7 @@
     },
     "visualization": {
       "graph_height": "700px",
-      "default_marker_size": 10.0,
+      "default_marker_size": 5.0,
       "default_line_width": 3.0,
       "default_font_size": 24.0,
       "default_tick_size": 12.0,

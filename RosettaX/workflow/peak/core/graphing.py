@@ -626,7 +626,7 @@ class PeakWorkflowGraphBuilder:
                 name="Events",
                 marker={
                     "size": self._get_default_marker_size(),
-                    "opacity": 0.72,
+                    "opacity": self._get_default_marker_opacity(),
                     "color": density_values,
                     "colorscale": "Viridis",
                     "showscale": True,
@@ -1669,6 +1669,7 @@ class PeakWorkflowGraphBuilder:
         Apply profile visualization settings to a peak workflow figure.
         """
         default_marker_size = self._get_default_marker_size()
+        default_marker_opacity = self._get_default_marker_opacity()
 
         default_line_width = self._get_nested_config_float(
             path="visualization.default_line_width",
@@ -1729,6 +1730,7 @@ class PeakWorkflowGraphBuilder:
             self._apply_trace_visualization_settings(
                 trace=trace,
                 default_marker_size=default_marker_size,
+                default_marker_opacity=default_marker_opacity,
                 default_line_width=default_line_width,
             )
 
@@ -1741,6 +1743,7 @@ class PeakWorkflowGraphBuilder:
         *,
         trace: Any,
         default_marker_size: float,
+        default_marker_opacity: float,
         default_line_width: float,
     ) -> None:
         """
@@ -1758,6 +1761,7 @@ class PeakWorkflowGraphBuilder:
         ):
             if hasattr(trace, "marker"):
                 trace.marker.size = default_marker_size
+                trace.marker.opacity = default_marker_opacity
 
             if hasattr(trace, "line"):
                 trace.line.width = default_line_width
@@ -1874,6 +1878,15 @@ class PeakWorkflowGraphBuilder:
         return self._get_nested_config_float(
             path="visualization.default_marker_size",
             default=10.0,
+        )
+
+    def _get_default_marker_opacity(self) -> float:
+        """
+        Return default marker opacity from runtime config.
+        """
+        return self._get_nested_config_float(
+            path="visualization.default_marker_opacity",
+            default=0.72,
         )
 
     def _show_grid_by_default(self) -> bool:

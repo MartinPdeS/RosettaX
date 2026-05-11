@@ -140,6 +140,10 @@ class PeakWorkflowCallbacks:
             axis_scale_toggle_values = self.build_axis_scale_toggle_values(
                 xscale=histogram_xscale,
                 yscale=histogram_yscale,
+                colormap_log=runtime_config.get_bool(
+                    "calibration.peak_graph_colormap_log",
+                    default=False,
+                ),
             )
 
             return (
@@ -156,6 +160,7 @@ class PeakWorkflowCallbacks:
         *,
         xscale: Any,
         yscale: Any,
+        colormap_log: bool = False,
     ) -> list[str]:
         """
         Convert normalized x and y scale values into the shared scatter toggle
@@ -177,6 +182,11 @@ class PeakWorkflowCallbacks:
         ) == "log":
             axis_scale_toggle_values.append(
                 Scatter2DGraph.y_log_value,
+            )
+
+        if bool(colormap_log):
+            axis_scale_toggle_values.append(
+                Scatter2DGraph.colormap_log_value,
             )
 
         return axis_scale_toggle_values

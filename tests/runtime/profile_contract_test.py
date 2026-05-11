@@ -128,10 +128,6 @@ class Test_RuntimeConfigProfileContract:
         assert isinstance(payload["calibration"]["n_bins_for_plots"], int)
         assert payload["calibration"]["n_bins_for_plots"] >= 1
 
-        assert isinstance(
-            payload["calibration"]["show_calibration_plot_by_default"], bool
-        )
-
     @pytest.mark.parametrize("profile_path", collect_profile_paths())
     def test_profile_json_file_has_valid_optics_values(
         self, profile_path: Path

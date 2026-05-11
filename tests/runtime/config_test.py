@@ -396,14 +396,11 @@ class Test_RuntimeConfig:
                     "default_peak_process": "manual_1d",
                 },
                 "scattering_calibration": {
-                    "default_gating_channel": None,
-                    "default_gating_threshold": None,
                     "target_mie_relation_xscale": "log",
                     "target_mie_relation_yscale": "linear",
                 },
                 "visualization": {
                     "n_bins": 128,
-                    "show_calibration": False,
                 },
                 "files": {
                     "fluorescence_fcs_file_path": None,
@@ -424,16 +421,9 @@ class Test_RuntimeConfig:
             exported_payload["calibration"]["default_fluorescence_peak_process"]
             == "manual_1d"
         )
-        assert exported_payload["calibration"]["default_gating_channel"] == ""
-        assert exported_payload["calibration"][
-            "default_gating_threshold"
-        ] == pytest.approx(0.0)
         assert exported_payload["calibration"]["target_mie_relation_xscale"] == "log"
         assert exported_payload["calibration"]["target_mie_relation_yscale"] == "linear"
         assert exported_payload["calibration"]["n_bins_for_plots"] == 128
-        assert (
-            exported_payload["calibration"]["show_calibration_plot_by_default"] is False
-        )
         assert exported_payload["files"]["fluorescence_fcs_file_path"] == ""
         assert exported_payload["particle_model"]["particle_diameter_nm"] == [100.0]
         assert exported_payload["particle_model"]["core_diameter_nm"] == [80.0]
@@ -443,12 +433,6 @@ class Test_RuntimeConfig:
         assert "peak_count" not in exported_payload["fluorescence_calibration"]
         assert (
             "default_peak_process" not in exported_payload["fluorescence_calibration"]
-        )
-        assert (
-            "default_gating_channel" not in exported_payload["scattering_calibration"]
-        )
-        assert (
-            "default_gating_threshold" not in exported_payload["scattering_calibration"]
         )
         assert (
             "target_mie_relation_xscale"
