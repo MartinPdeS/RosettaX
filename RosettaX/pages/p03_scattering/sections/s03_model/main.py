@@ -121,15 +121,7 @@ class Model:
         Build parameter body.
         """
         return dbc.CardBody(
-            [
-                self._build_optical_configuration_panel(),
-                dash.html.Div(
-                    style={
-                        "height": "18px",
-                    },
-                ),
-                self._build_particle_configuration_panel(),
-            ],
+            [self._build_optical_configuration_panel()],
             style=ui_forms.build_workflow_section_body_style(),
         )
 

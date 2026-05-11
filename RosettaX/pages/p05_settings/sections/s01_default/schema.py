@@ -5,6 +5,10 @@ from dataclasses import dataclass
 from typing import Any, Optional
 
 from RosettaX.workflow import scattering, peak, apply_calibration, detector
+from RosettaX.workflow.table.fluorescence import (
+    CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME,
+    build_fluorescence_reference_preset_options,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +67,7 @@ PEAK_PROCESS_OPTIONS = build_peak_process_dropdown_options()
 SCATTERING_PRESET_OPTIONS = scattering.build_scattering_calibration_scatterer_preset_options()
 APPLY_TARGET_PRESET_OPTIONS = apply_calibration.scattering.build_scattering_target_model_preset_options()
 DETECTOR_PRESET_OPTIONS = detector.build_detector_preset_options()
+FLUORESCENCE_REFERENCE_PRESET_OPTIONS = build_fluorescence_reference_preset_options()
 
 
 AXIS_SCALE_OPTIONS: list[dict[str, str]] = [
@@ -119,29 +124,27 @@ PEAK_TABLE_SORT_ORDER_OPTIONS: list[dict[str, str]] = [
 
 FIELD_DEFINITIONS: list[FieldDefinition] = [
     FieldDefinition(
+        name="default_fluorescence_reference_preset",
+        section="fluorescence",
+        group="Calibration",
+        label="Default fluorescence reference preset:",
+        component_kind="dropdown",
+        value_kind="fluorescence_reference_preset",
+        runtime_path="calibration.mesf_values",
+        profile_path="",
+        default=CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME,
+        options=FLUORESCENCE_REFERENCE_PRESET_OPTIONS,
+    ),
+    FieldDefinition(
         name="mesf_values",
         section="fluorescence",
         group="Calibration",
-        label="MESF values:",
+        label="Custom MESF values:",
         component_kind="text",
         value_kind="float_list",
         runtime_path="calibration.mesf_values",
         profile_path="fluorescence.calibration.mesf_values",
         default=[],
-    ),
-    FieldDefinition(
-        name="peak_count",
-        section="fluorescence",
-        group="Calibration",
-        label="Peak count:",
-        component_kind="number",
-        value_kind="int",
-        runtime_path="calibration.peak_count",
-        profile_path="fluorescence.calibration.peak_count",
-        default=4,
-        min_value=1,
-        max_value=10,
-        step=1,
     ),
     FieldDefinition(
         name="default_fluorescence_peak_process",
@@ -170,7 +173,7 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
     FieldDefinition(
         name="default_scatterer_preset",
         section="scattering",
-        group="Particle model",
+        group="Calibration standard table",
         label="Default scatterer preset:",
         component_kind="dropdown",
         value_kind="choice",
@@ -291,7 +294,7 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
     FieldDefinition(
         name="core_refractive_index",
         section="scattering",
-        group="Particle model",
+        group="Calibration standard table",
         label="Core refractive index:",
         component_kind="number",
         value_kind="float",
@@ -305,7 +308,7 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
     FieldDefinition(
         name="shell_refractive_index",
         section="scattering",
-        group="Particle model",
+        group="Calibration standard table",
         label="Shell refractive index:",
         component_kind="number",
         value_kind="float",
@@ -319,7 +322,7 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
     FieldDefinition(
         name="particle_refractive_index",
         section="scattering",
-        group="Particle model",
+        group="Calibration standard table",
         label="Particle refractive index:",
         component_kind="number",
         value_kind="float",
@@ -346,7 +349,7 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
     FieldDefinition(
         name="shell_thickness_nm",
         section="scattering",
-        group="Particle model",
+        group="Calibration standard table",
         label="Default shell thickness list (nm):",
         component_kind="text",
         value_kind="float_list",
@@ -358,7 +361,7 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
     FieldDefinition(
         name="core_diameter_nm",
         section="scattering",
-        group="Particle model",
+        group="Calibration standard table",
         label="Default core diameter list (nm):",
         component_kind="text",
         value_kind="float_list",
@@ -370,7 +373,7 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
     FieldDefinition(
         name="particle_diameter_nm",
         section="scattering",
-        group="Particle model",
+        group="Calibration standard table",
         label="Default particle diameter list (nm):",
         component_kind="text",
         value_kind="float_list",
@@ -382,7 +385,7 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
     FieldDefinition(
         name="mie_model",
         section="scattering",
-        group="Particle model",
+        group="Calibration standard table",
         label="Particle type:",
         component_kind="dropdown",
         value_kind="choice",

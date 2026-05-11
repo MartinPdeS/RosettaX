@@ -117,8 +117,6 @@ class Test_RuntimeConfigProfileContract:
         payload = runtime_config.to_dict()
 
         assert isinstance(payload["calibration"]["mesf_values"], list)
-        assert isinstance(payload["calibration"]["peak_count"], int)
-        assert payload["calibration"]["peak_count"] >= 1
 
         assert payload["calibration"]["histogram_scale"] in {"linear", "log"}
 
@@ -201,7 +199,6 @@ class Test_RuntimeConfigProfileContract:
 
         assert payload["ui"]["theme_mode"] in {"dark", "light"}
         assert payload["optics"]["wavelength_nm"] > 0.0
-        assert payload["calibration"]["peak_count"] >= 1
         assert payload["particle_model"]["mie_model"] in {
             "Solid Sphere",
             "Core/Shell Sphere",

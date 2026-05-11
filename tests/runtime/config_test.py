@@ -54,7 +54,6 @@ class Test_RuntimeConfig:
         assert exported_payload["ui"]["theme_mode"] == "dark"
         assert exported_payload["ui"]["show_graphs"] is True
 
-        assert exported_payload["calibration"]["peak_count"] == 6
         assert exported_payload["calibration"]["histogram_scale"] == "log"
         assert exported_payload["calibration"]["n_bins_for_plots"] == 256
 
@@ -266,30 +265,6 @@ class Test_RuntimeConfig:
             "custom.wavelength_nm", default=488.0
         ) == pytest.approx(488.0)
 
-    def test_get_int_coerces_known_integer_like_string(self) -> None:
-        runtime_config = RuntimeConfig.from_dict(
-            {
-                "calibration": {
-                    "peak_count": "8",
-                }
-            }
-        )
-
-        assert runtime_config.get_int("calibration.peak_count") == 8
-        assert runtime_config.to_dict()["calibration"]["peak_count"] == 8
-
-    def test_get_int_coerces_known_integer_like_float(self) -> None:
-        runtime_config = RuntimeConfig.from_dict(
-            {
-                "calibration": {
-                    "peak_count": 8.0,
-                }
-            }
-        )
-
-        assert runtime_config.get_int("calibration.peak_count") == 8
-        assert runtime_config.to_dict()["calibration"]["peak_count"] == 8
-
     def test_get_int_returns_default_for_invalid_unknown_value(self) -> None:
         runtime_config = RuntimeConfig.from_dict(
             {
@@ -347,14 +322,6 @@ class Test_RuntimeConfig:
         ):
             runtime_config.set_path("optics.detector_numerical_aperture", 2.0)
 
-    def test_set_path_rejects_non_integer_peak_count(self) -> None:
-        runtime_config = RuntimeConfig.from_dict({})
-
-        with pytest.raises(
-            RuntimeConfigValidationError, match="calibration.peak_count"
-        ):
-            runtime_config.set_path("calibration.peak_count", 4.2)
-
     def test_set_path_accepts_numpy_array_for_known_list_path(self) -> None:
         runtime_config = RuntimeConfig.from_dict({})
 
@@ -392,7 +359,6 @@ class Test_RuntimeConfig:
             {
                 "fluorescence_calibration": {
                     "mesf_values": [1.0, 2.0, 3.0],
-                    "peak_count": 4,
                     "default_peak_process": "manual_1d",
                 },
                 "scattering_calibration": {
@@ -416,7 +382,6 @@ class Test_RuntimeConfig:
         exported_payload = runtime_config.to_dict()
 
         assert exported_payload["calibration"]["mesf_values"] == [1.0, 2.0, 3.0]
-        assert exported_payload["calibration"]["peak_count"] == 4
         assert (
             exported_payload["calibration"]["default_fluorescence_peak_process"]
             == "manual_1d"
@@ -430,7 +395,6 @@ class Test_RuntimeConfig:
         assert exported_payload["particle_model"]["shell_thickness_nm"] == [10.0]
 
         assert "mesf_values" not in exported_payload["fluorescence_calibration"]
-        assert "peak_count" not in exported_payload["fluorescence_calibration"]
         assert (
             "default_peak_process" not in exported_payload["fluorescence_calibration"]
         )
@@ -471,8 +435,6 @@ class Test_RuntimeConfig:
         assert normalized_runtime_config.get_path(
             "optics.wavelength_nm"
         ) == pytest.approx(640.0)
-        assert normalized_runtime_config.get_path("calibration.peak_count") == 6
-
     def test_update_preserves_backward_compatible_flat_keys(self) -> None:
         runtime_config = RuntimeConfig.from_dict({})
 
@@ -489,14 +451,12 @@ class Test_RuntimeConfig:
                 "ui.theme_mode": "light",
                 "ui.show_graphs": False,
                 "optics.wavelength_nm": "640",
-                "calibration.peak_count": "4",
             }
         )
 
         assert runtime_config.get_path("ui.theme_mode") == "light"
         assert runtime_config.get_path("ui.show_graphs") is False
         assert runtime_config.get_path("optics.wavelength_nm") == pytest.approx(640.0)
-        assert runtime_config.get_path("calibration.peak_count") == 4
 
     def test_update_paths_rejects_invalid_known_value(self) -> None:
         runtime_config = RuntimeConfig.from_dict({})

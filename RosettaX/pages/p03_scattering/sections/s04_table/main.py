@@ -11,6 +11,7 @@ from RosettaX.pages.p03_scattering.state import ScatteringPageState
 from RosettaX.utils import styling, ui_forms, RuntimeConfig
 from RosettaX.workflow import table, parameters, scattering
 
+from ..s03_model.main import Model as ScatteringModelSection
 from ..s05_calibration import services as calibration_services
 from .services import ScatteringCalibrationStandardTable
 
@@ -24,6 +25,7 @@ class ReferenceTable:
 
     Responsibilities
     ----------------
+    - Render particle configuration controls used to define the calibration standard.
     - Configure the scattering calibration standard table layout.
     - Populate the table from the default runtime profile at layout creation.
     - Rebuild the table from runtime profile values when a profile is loaded.
@@ -35,7 +37,8 @@ class ReferenceTable:
     Ownership rule
     --------------
     This section owns the calibration standard table and the standard coupling
-    computation action. Generic table rendering is delegated to
+    computation action. Particle configuration inputs are rendered here because
+    they define the same calibration standard as the table rows. Generic table rendering is delegated to
     ``ReferenceTableLayout``.
     """
 
@@ -59,6 +62,11 @@ class ReferenceTable:
 
         self.compute_model_tooltip_id = f"{self.ids.compute_model_btn}-info-tooltip"
         self.compute_model_tooltip_target_id = f"{self.ids.compute_model_btn}-info-target"
+        self.model_section = ScatteringModelSection(
+            page=page,
+            section_number=section_number,
+            card_color=card_color,
+        )
 
         default_columns, default_rows = self._build_default_table_state()
 
@@ -100,12 +108,24 @@ class ReferenceTable:
         """
         logger.debug("Building Scattering ReferenceTable layout.")
 
+        card = self.layout_builder.get_layout()
+        body = card.children[1]
+        body.children = [
+            self.model_section._build_particle_configuration_panel(),
+            dash.html.Div(
+                style={
+                    "height": "18px",
+                },
+            ),
+            *list(body.children),
+        ]
+
         section_style = styling.build_workflow_section_legacy_style(
             self.card_color,
         )
 
         return ui_forms.apply_workflow_section_card_style(
-            card=self.layout_builder.get_layout(),
+            card=card,
             header_background=section_style["header_background"],
             header_border=section_style["header_border"],
             left_border=section_style["left_border"],
@@ -122,11 +142,12 @@ class ReferenceTable:
             tooltip_target_id=self.description_tooltip_target_id,
             tooltip_id=self.description_tooltip_id,
             tooltip_text=(
-                "This table defines the calibration standard used to infer "
-                "the instrument response. Edit the standard particle geometry "
-                "directly here. Measured peak positions are optional at this "
-                "stage. First click Compute model to fill the modeled coupling "
-                "column. Then fit the instrument response in the next section."
+                "This section defines the calibration standard used to infer "
+                "the instrument response. Set the particle model and refractive "
+                "indices above, then edit the standard particle geometry in the "
+                "table. Measured peak positions are optional at this stage. First "
+                "click Compute model to fill the modeled coupling column. Then fit "
+                "the instrument response in the next section."
             ),
         )
 

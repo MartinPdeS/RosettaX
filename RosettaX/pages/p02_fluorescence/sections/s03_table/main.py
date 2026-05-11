@@ -4,6 +4,9 @@ from typing import Any
 import logging
 
 import dash_bootstrap_components as dbc
+from RosettaX.workflow.table.fluorescence import (
+    CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME,
+)
 
 from RosettaX.utils import RuntimeConfig
 from RosettaX.workflow import table
@@ -52,6 +55,13 @@ class ReferenceTable:
 
         self.reference_table_tooltip_target_id = f"{self.ids.bead_table}-reference-table-info-target"
         self.reference_table_tooltip_id = f"{self.ids.bead_table}-reference-table-info-tooltip"
+        self.reference_table_preset_tooltip_target_id = (
+            f"{self.ids.bead_table_preset_dropdown}-reference-preset-info-target"
+        )
+        self.reference_table_preset_tooltip_id = (
+            f"{self.ids.bead_table_preset_dropdown}-reference-preset-info-tooltip"
+        )
+        self.default_reference_preset_name = self._build_default_reference_preset_name()
 
         self.config = table.ReferenceTableConfig(
             card_title=layout.build_card_title(self),
@@ -72,6 +82,20 @@ class ReferenceTable:
         logger.debug(
             "Initialized Fluorescence ReferenceTable section with page=%r",
             page,
+        )
+
+    def _build_default_reference_preset_name(self) -> str:
+        """
+        Resolve the default preset selection from the default runtime profile.
+        """
+        runtime_config = RuntimeConfig.from_default_profile()
+
+        preset_name = table.FluorescenceReferenceTable.resolve_runtime_preset_name(
+            runtime_config=runtime_config,
+        )
+
+        return str(
+            preset_name or CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME,
         )
 
     def get_layout(self) -> dbc.Card:

@@ -20,6 +20,8 @@ def register_callbacks(section) -> None:
     logger.debug("Registering fluorescence reference table callbacks.")
 
     _register_runtime_table_sync_callback(section)
+    _register_preset_apply_callback(section)
+    _register_preset_sync_callback(section)
     _register_add_row_callback(section)
 
 
@@ -32,6 +34,11 @@ def _register_runtime_table_sync_callback(section) -> None:
         dash.Output(
             section.ids.bead_table,
             "data",
+            allow_duplicate=True,
+        ),
+        dash.Output(
+            section.ids.bead_table_preset_dropdown,
+            "value",
             allow_duplicate=True,
         ),
         dash.Input("runtime-config-store", "data"),
@@ -50,7 +57,7 @@ def _register_runtime_table_sync_callback(section) -> None:
                 "Keeping current table data."
             )
 
-            return dash.no_update
+            return dash.no_update, dash.no_update
 
         should_rebuild_table = FluorescenceReferenceTable.should_rebuild_from_runtime_config(
             profile_load_event_data=profile_load_event_data,
@@ -76,7 +83,7 @@ def _register_runtime_table_sync_callback(section) -> None:
                 "and no profile load was requested. Leaving it unchanged."
             )
 
-            return dash.no_update
+            return dash.no_update, dash.no_update
 
         runtime_config = RuntimeConfig.from_dict(
             runtime_config_data,
@@ -85,15 +92,81 @@ def _register_runtime_table_sync_callback(section) -> None:
         resolved_rows = FluorescenceReferenceTable.build_rows_from_runtime_config(
             runtime_config=runtime_config,
         )
+        resolved_preset_name = FluorescenceReferenceTable.resolve_runtime_preset_name(
+            runtime_config=runtime_config,
+        )
 
         logger.debug(
             "Rebuilt fluorescence reference table from runtime config. "
-            "row_count=%r rows=%r",
+            "preset=%r row_count=%r rows=%r",
+            resolved_preset_name,
             len(resolved_rows),
             resolved_rows,
         )
 
+        return resolved_rows, resolved_preset_name
+
+
+def _register_preset_apply_callback(section) -> None:
+    """
+    Register the preset-to-table callback.
+    """
+
+    @dash.callback(
+        dash.Output(
+            section.ids.bead_table,
+            "data",
+            allow_duplicate=True,
+        ),
+        dash.Input(section.ids.bead_table_preset_dropdown, "value"),
+        dash.State(section.ids.bead_table, "data"),
+        prevent_initial_call=True,
+    )
+    def apply_reference_preset(
+        preset_name: Any,
+        current_rows: Optional[list[dict[str, Any]]],
+    ) -> Any:
+        if dash.ctx.triggered_id != section.ids.bead_table_preset_dropdown:
+            return dash.no_update
+
+        resolved_rows = FluorescenceReferenceTable.build_rows_from_preset_name(
+            preset_name=preset_name,
+            current_rows=current_rows,
+        )
+
+        if resolved_rows == FluorescenceReferenceTable.normalize_rows(rows=current_rows):
+            return dash.no_update
+
         return resolved_rows
+
+
+def _register_preset_sync_callback(section) -> None:
+    """
+    Keep the preset dropdown aligned with the calibrated-intensity column.
+    """
+
+    @dash.callback(
+        dash.Output(
+            section.ids.bead_table_preset_dropdown,
+            "value",
+            allow_duplicate=True,
+        ),
+        dash.Input(section.ids.bead_table, "data"),
+        dash.State(section.ids.bead_table_preset_dropdown, "value"),
+        prevent_initial_call=True,
+    )
+    def sync_reference_preset_from_rows(
+        rows: Optional[list[dict[str, Any]]],
+        current_preset_name: Any,
+    ) -> Any:
+        resolved_preset_name = FluorescenceReferenceTable.resolve_matching_preset_name(
+            rows=rows,
+        )
+
+        if resolved_preset_name == str(current_preset_name or ""):
+            return dash.no_update
+
+        return resolved_preset_name
 
 
 def _register_add_row_callback(section) -> None:

@@ -4,7 +4,10 @@ import dash
 import dash_bootstrap_components as dbc
 
 from RosettaX.utils import styling, ui_forms, RuntimeConfig
-from RosettaX.workflow.table.fluorescence import FluorescenceReferenceTable
+from RosettaX.workflow.table.fluorescence import (
+    FluorescenceReferenceTable,
+    build_fluorescence_reference_preset_options,
+)
 
 
 def get_layout(section) -> dbc.Card:
@@ -12,6 +15,16 @@ def get_layout(section) -> dbc.Card:
     Build the fluorescence reference table layout.
     """
     card = section.layout_builder.get_layout()
+    body = card.children[1]
+    body.children = [
+        build_preset_controls(section),
+        dash.html.Div(
+            style={
+                "height": "14px",
+            },
+        ),
+        *list(body.children),
+    ]
 
     section_style = styling.build_workflow_section_legacy_style(
         section.card_color,
@@ -52,4 +65,51 @@ def build_default_bead_rows() -> list[dict[str, str]]:
 
     return FluorescenceReferenceTable.build_rows_from_runtime_config(
         runtime_config=runtime_config,
+    )
+
+
+def build_preset_controls(section) -> dash.html.Div:
+    """
+    Build fluorescence reference preset controls displayed above the table.
+    """
+    return ui_forms.build_inline_row(
+        label="Reference preset:",
+        control=dash.html.Div(
+            [
+                ui_forms.persistent_dropdown(
+                    id=section.ids.bead_table_preset_dropdown,
+                    options=build_fluorescence_reference_preset_options(),
+                    value=section.default_reference_preset_name,
+                    clearable=False,
+                    searchable=False,
+                    style={
+                        "width": "320px",
+                    },
+                ),
+                ui_forms.build_info_badge(
+                    tooltip_target_id=section.reference_table_preset_tooltip_target_id,
+                ),
+                dbc.Tooltip(
+                    (
+                        "Select a built-in fluorescence bead ladder to populate the "
+                        "calibrated-intensity column. Choose Custom to keep manual MESF edits."
+                    ),
+                    id=section.reference_table_preset_tooltip_id,
+                    target=section.reference_table_preset_tooltip_target_id,
+                    placement="right",
+                ),
+            ],
+            style={
+                "display": "flex",
+                "alignItems": "center",
+                "overflow": "visible",
+            },
+        ),
+        margin_top=False,
+        row_style_overrides={
+            "overflow": "visible",
+        },
+        control_wrapper_style_overrides={
+            "overflow": "visible",
+        },
     )

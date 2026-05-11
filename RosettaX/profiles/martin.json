@@ -2,7 +2,6 @@
   "fluorescence": {
     "calibration": {
       "mesf_values": [],
-      "peak_count": 6,
       "default_fluorescence_peak_process": "Automatic 1D",
       "peak_table_sort_order": "ascending"
     },
@@ -62,7 +61,7 @@
   },
   "misc": {
     "ui": {
-      "theme_mode": "light",
+      "theme_mode": "dark",
       "show_graphs": false
     }
   }

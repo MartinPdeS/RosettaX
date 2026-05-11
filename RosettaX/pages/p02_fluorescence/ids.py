@@ -33,6 +33,10 @@ class CalibrationSectionIds:
         return f"{self.prefix}-calibration-bead-table"
 
     @property
+    def bead_table_preset_dropdown(self) -> str:
+        return f"{self.prefix}-calibration-bead-table-preset-dropdown"
+
+    @property
     def add_row_btn(self) -> str:
         return f"{self.prefix}-calibration-add-row-button"
 

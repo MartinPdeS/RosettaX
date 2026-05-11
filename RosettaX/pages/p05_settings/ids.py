@@ -50,8 +50,10 @@ class Ids:
         save_changes_button = f"{PAGE_NAME}-save-changes-button"
         save_confirmation = f"{PAGE_NAME}-save-confirmation"
 
+        default_fluorescence_reference_preset = (
+            f"{PAGE_NAME}-default-fluorescence-reference-preset"
+        )
         mesf_values = f"{PAGE_NAME}-mesf-values"
-        peak_count = f"{PAGE_NAME}-peak-count"
         fluorescence_peak_table_sort_order = (
             f"{PAGE_NAME}-fluorescence-peak-table-sort-order"
         )

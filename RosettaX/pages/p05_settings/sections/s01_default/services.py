@@ -8,6 +8,11 @@ import numpy as np
 
 from RosettaX.utils import casting, directories
 from RosettaX.utils.runtime_config import RuntimeConfig
+from RosettaX.workflow.table.fluorescence import (
+    CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME,
+    FluorescenceReferenceTable,
+    get_fluorescence_reference_preset,
+)
 
 from . import schema
 
@@ -222,6 +227,11 @@ def _read_runtime_value(
             raw_value=raw_value,
         )
 
+    if value_kind == "fluorescence_reference_preset":
+        return FluorescenceReferenceTable.resolve_runtime_preset_name(
+            runtime_config=runtime_config,
+        )
+
     raise ValueError(f"Unsupported value_kind: {value_kind!r}")
 
 
@@ -408,7 +418,40 @@ def _coerce_field_value_for_save(
             raw_value=raw_value,
         )
 
+    if value_kind == "fluorescence_reference_preset":
+        return coerce_choice_value(
+            field_definition=field_definition,
+            raw_value=raw_value,
+        )
+
     raise ValueError(f"Unsupported value_kind: {value_kind!r}")
+
+
+def _resolve_fluorescence_mesf_values_for_save(
+    flat_runtime_payload: dict[str, Any],
+) -> Optional[list[float]]:
+    """
+    Resolve the MESF values that should be saved from the preset selector.
+    """
+    selected_preset_name = str(
+        flat_runtime_payload.get(
+            "default_fluorescence_reference_preset",
+            CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME,
+        )
+        or CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME
+    ).strip()
+
+    if selected_preset_name == CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME:
+        return None
+
+    preset = get_fluorescence_reference_preset(
+        selected_preset_name,
+    )
+
+    if preset is None:
+        return None
+
+    return list(preset.mesf_values)
 
 
 def build_nested_profile_payload(
@@ -418,16 +461,28 @@ def build_nested_profile_payload(
     Build a nested profile payload from flat form values.
     """
     nested_profile_payload: dict[str, Any] = {}
+    fluorescence_preset_mesf_values = _resolve_fluorescence_mesf_values_for_save(
+        flat_runtime_payload,
+    )
 
     for field_definition in schema.FIELD_DEFINITIONS:
+        if field_definition.value_kind == "fluorescence_reference_preset":
+            continue
+
         raw_value = flat_runtime_payload.get(
             field_definition.name,
         )
 
-        coerced_value = _coerce_field_value_for_save(
-            field_definition=field_definition,
-            raw_value=raw_value,
-        )
+        if (
+            field_definition.name == "mesf_values"
+            and fluorescence_preset_mesf_values is not None
+        ):
+            coerced_value = fluorescence_preset_mesf_values
+        else:
+            coerced_value = _coerce_field_value_for_save(
+                field_definition=field_definition,
+                raw_value=raw_value,
+            )
 
         _set_nested_value(
             nested_payload=nested_profile_payload,

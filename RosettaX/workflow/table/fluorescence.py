@@ -1,10 +1,92 @@
 # -*- coding: utf-8 -*-
 
+from dataclasses import dataclass
 from typing import Any, Optional
 
 from RosettaX.utils import casting
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.table import services as table_services
+
+
+CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME = "Custom"
+GENERIC_FLUORESCENCE_REFERENCE_PRESET_NAME = "Generic"
+ROSETTA_MIX_FLUORESCENCE_REFERENCE_PRESET_NAME = "Rosetta Mix"
+RAINBOW_SIX_FLUORESCENCE_REFERENCE_PRESET_NAME = "Rainbow 6"
+BROAD_EIGHT_FLUORESCENCE_REFERENCE_PRESET_NAME = "Broad 8"
+
+
+@dataclass(frozen=True)
+class FluorescenceReferencePreset:
+    """
+    Preset MESF values for fluorescence calibration standards.
+    """
+
+    name: str
+    mesf_values: list[float]
+    description: str = ""
+
+
+def build_fluorescence_reference_presets() -> dict[str, FluorescenceReferencePreset]:
+    """
+    Build built-in fluorescence reference presets.
+    """
+    return {
+        GENERIC_FLUORESCENCE_REFERENCE_PRESET_NAME: FluorescenceReferencePreset(
+            name=GENERIC_FLUORESCENCE_REFERENCE_PRESET_NAME,
+            mesf_values=[1.0e3, 1.0e4, 1.0e5, 1.0e6],
+            description="Generic four-point MESF ladder.",
+        ),
+        ROSETTA_MIX_FLUORESCENCE_REFERENCE_PRESET_NAME: FluorescenceReferencePreset(
+            name=ROSETTA_MIX_FLUORESCENCE_REFERENCE_PRESET_NAME,
+            mesf_values=[5.0e2, 5.0e3, 5.0e4, 5.0e5, 5.0e6, 5.0e7],
+            description="Rosetta Mix fluorescence ladder.",
+        ),
+        RAINBOW_SIX_FLUORESCENCE_REFERENCE_PRESET_NAME: FluorescenceReferencePreset(
+            name=RAINBOW_SIX_FLUORESCENCE_REFERENCE_PRESET_NAME,
+            mesf_values=[2.0e2, 2.0e3, 2.0e4, 2.0e5, 2.0e6, 2.0e7],
+            description="Six-population rainbow-style MESF ladder.",
+        ),
+        BROAD_EIGHT_FLUORESCENCE_REFERENCE_PRESET_NAME: FluorescenceReferencePreset(
+            name=BROAD_EIGHT_FLUORESCENCE_REFERENCE_PRESET_NAME,
+            mesf_values=[1.0e2, 5.0e2, 2.0e3, 1.0e4, 5.0e4, 2.0e5, 1.0e6, 5.0e6],
+            description="Broad eight-population MESF ladder.",
+        ),
+    }
+
+
+def build_fluorescence_reference_preset_options() -> list[dict[str, str]]:
+    """
+    Build dropdown options for fluorescence reference presets.
+    """
+    options = [
+        {
+            "label": CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME,
+            "value": CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME,
+        }
+    ]
+
+    options.extend(
+        {
+            "label": preset.name,
+            "value": preset.name,
+        }
+        for preset in build_fluorescence_reference_presets().values()
+    )
+
+    return options
+
+
+def get_fluorescence_reference_preset(
+    preset_name: Any,
+) -> Optional[FluorescenceReferencePreset]:
+    """
+    Resolve one built-in fluorescence reference preset by name.
+    """
+    preset_name_string = str(preset_name or "").strip()
+
+    return build_fluorescence_reference_presets().get(
+        preset_name_string,
+    )
 
 
 class FluorescenceReferenceTable:
@@ -63,6 +145,38 @@ class FluorescenceReferenceTable:
 
         return cls.build_rows_from_mesf_values(
             mesf_values,
+        )
+
+    @classmethod
+    def build_rows_from_preset_name(
+        cls,
+        *,
+        preset_name: Any,
+        current_rows: Optional[list[dict[str, Any]]] = None,
+    ) -> list[dict[str, Any]]:
+        """
+        Build fluorescence calibration rows from a selected preset.
+        """
+        preset_name_string = str(
+            preset_name or CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME,
+        ).strip()
+
+        if preset_name_string == CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME:
+            return cls.normalize_rows(
+                rows=current_rows,
+            )
+
+        preset = get_fluorescence_reference_preset(
+            preset_name_string,
+        )
+
+        if preset is None:
+            return cls.normalize_rows(
+                rows=current_rows,
+            )
+
+        return cls.build_rows_from_mesf_values(
+            preset.mesf_values,
         )
 
     @classmethod
@@ -141,6 +255,55 @@ class FluorescenceReferenceTable:
         """
         return table_services.normalize_table_rows(
             rows=rows,
+        )
+
+    @classmethod
+    def resolve_matching_preset_name(
+        cls,
+        *,
+        rows: Optional[list[dict[str, Any]]],
+    ) -> str:
+        """
+        Resolve the selected preset name from the table calibrated-intensity column.
+        """
+        normalized_rows = cls.normalize_rows(
+            rows=rows,
+        )
+
+        calibrated_values = cls.parse_mesf_values(
+            [
+                row.get(cls.column_calibrated_intensity, "")
+                for row in normalized_rows
+                if isinstance(row, dict)
+            ]
+        )
+
+        if not calibrated_values:
+            return CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME
+
+        for preset in build_fluorescence_reference_presets().values():
+            preset_values = cls.parse_mesf_values(
+                preset.mesf_values,
+            )
+
+            if calibrated_values == preset_values:
+                return preset.name
+
+        return CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME
+
+    @classmethod
+    def resolve_runtime_preset_name(
+        cls,
+        *,
+        runtime_config: RuntimeConfig,
+    ) -> str:
+        """
+        Resolve the fluorescence preset that matches the runtime MESF values.
+        """
+        return cls.resolve_matching_preset_name(
+            rows=cls.build_rows_from_runtime_config(
+                runtime_config=runtime_config,
+            ),
         )
 
     @classmethod

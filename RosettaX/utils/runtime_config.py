@@ -92,10 +92,8 @@ class RuntimeConfig:
 
     LEGACY_PATH_ALIASES: ClassVar[dict[str, str]] = {
         "fluorescence_calibration.mesf_values": "calibration.mesf_values",
-        "fluorescence_calibration.peak_count": "calibration.peak_count",
         "fluorescence_calibration.default_peak_process": "calibration.default_fluorescence_peak_process",
         "fluorescence.calibration.mesf_values": "calibration.mesf_values",
-        "fluorescence.calibration.peak_count": "calibration.peak_count",
         "fluorescence.calibration.default_fluorescence_peak_process": "calibration.default_fluorescence_peak_process",
         "fluorescence.calibration.peak_table_sort_order": "fluorescence_calibration.peak_table_sort_order",
         "fluorescence.files.fcs_file_path": "files.fluorescence_fcs_file_path",
@@ -183,12 +181,6 @@ class RuntimeConfig:
             expected_type=list,
             default=[],
             description="Default MESF reference values.",
-        ),
-        "calibration.peak_count": RuntimeConfigField(
-            expected_type=int,
-            default=6,
-            minimum=1,
-            description="Default expected number of calibration peaks.",
         ),
         "calibration.default_fluorescence_peak_process": RuntimeConfigField(
             expected_type=str,

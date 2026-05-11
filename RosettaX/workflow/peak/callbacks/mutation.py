@@ -622,15 +622,7 @@ def handle_run_action(
         process_name=target_process_name,
     )
 
-    resolved_peak_count = casting.as_int(
-        process_settings.get("peak_count"),
-        default=runtime_config.get_int(
-            "calibration.peak_count",
-            default=3,
-        ),
-        min_value=1,
-        max_value=50,
-    )
+    resolved_peak_count = process_settings.get("peak_count")
 
     resolved_max_events = casting.as_int(
         max_events_for_plots,
