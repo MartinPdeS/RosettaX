@@ -7,12 +7,8 @@ import logging
 import numpy as np
 
 from RosettaX.utils import casting
-from RosettaX.workflow import scattering
-from RosettaX.workflow.detector import (
-    resolve_detector_angular_weights,
-    resolve_detector_modeling_geometry_values,
-)
-from .mie_relation import build_mie_parameter_payload, build_mie_relation_from_arrays
+from RosettaX.workflow import scattering, detector
+from . import mie_relation
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +78,7 @@ class OpticalParameters:
             None if outer_diameter_nm is None else len(outer_diameter_nm),
         )
 
-        parameter_payload = build_mie_parameter_payload(
+        parameter_payload = mie_relation.build_mie_parameter_payload(
             mie_model=mie_model,
             medium_refractive_index=self.medium_refractive_index,
             particle_refractive_index=self.particle_refractive_index,
@@ -691,7 +687,7 @@ def parse_optical_parameters(
         "blocker_bar_numerical_aperture",
     )
     effective_detector_cache_numerical_aperture, effective_blocker_bar_numerical_aperture = (
-        resolve_detector_modeling_geometry_values(
+        detector.resolve_detector_modeling_geometry_values(
             preset_name=resolved_detector_configuration_preset_name,
             current_detector_cache_numerical_aperture=resolved_detector_cache_numerical_aperture,
             current_blocker_bar_numerical_aperture=resolved_blocker_bar_numerical_aperture,
@@ -732,9 +728,27 @@ def parse_optical_parameters(
             "detector_gamma_angle_degree",
         ),
         detector_configuration_preset_name=resolved_detector_configuration_preset_name,
-        detector_angular_weights=resolve_detector_angular_weights(
+        detector_angular_weights=detector.resolve_detector_angular_weights(
             preset_name=detector_configuration_preset,
             detector_sampling=resolved_detector_sampling,
+            current_detector_numerical_aperture=casting.as_required_float(
+                detector_numerical_aperture,
+                "detector_numerical_aperture",
+            ),
+            current_detector_cache_numerical_aperture=resolved_detector_cache_numerical_aperture,
+            current_blocker_bar_numerical_aperture=resolved_blocker_bar_numerical_aperture,
+            current_detector_phi_angle_degree=casting.as_required_float(
+                detector_phi_angle_degree,
+                "detector_phi_angle_degree",
+            ),
+            current_detector_gamma_angle_degree=casting.as_required_float(
+                detector_gamma_angle_degree,
+                "detector_gamma_angle_degree",
+            ),
+            current_medium_refractive_index=casting.as_required_float(
+                medium_refractive_index,
+                "medium_refractive_index",
+            ),
         ),
         effective_detector_cache_numerical_aperture=float(
             effective_detector_cache_numerical_aperture
@@ -1309,7 +1323,7 @@ def build_calibration_standard_mie_relation(
         sorted(parameter_payload.keys()),
     )
 
-    return build_mie_relation_from_arrays(
+    return mie_relation.build_mie_relation_from_arrays(
         diameter_nm=diameter_values,
         theoretical_coupling=coupling_values,
         mie_model=mie_model,

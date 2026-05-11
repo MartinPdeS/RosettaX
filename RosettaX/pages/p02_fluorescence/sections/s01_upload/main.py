@@ -65,11 +65,11 @@ class Upload:
             page,
         )
 
-    def getlayout(self) -> dbc.Card:
+    def get_layout(self) -> dbc.Card:
         """
         Build the upload section layout.
         """
-        return layout.getlayout(self)
+        return layout.get_layout(self)
 
     def register_callbacks(self) -> None:
         """

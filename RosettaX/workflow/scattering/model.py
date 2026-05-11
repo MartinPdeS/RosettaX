@@ -472,12 +472,14 @@ class ModelConfiguration:
     def build_optical_configuration_preview_figure(
         *,
         detector_numerical_aperture: Any,
+        detector_cache_numerical_aperture: Any,
         blocker_bar_numerical_aperture: Any,
         medium_refractive_index: Any,
         detector_phi_angle_degree: Any,
         detector_gamma_angle_degree: Any,
         detector_sampling: Any,
         detector_configuration_preset: Any,
+        camera: Any = None,
     ) -> go.Figure:
         """
         Build the optical configuration preview figure.
@@ -485,10 +487,16 @@ class ModelConfiguration:
         detector_angular_weights = detector.resolve_detector_angular_weights(
             preset_name=detector_configuration_preset,
             detector_sampling=detector_sampling,
+            current_detector_numerical_aperture=detector_numerical_aperture,
+            current_detector_cache_numerical_aperture=detector_cache_numerical_aperture,
+            current_blocker_bar_numerical_aperture=blocker_bar_numerical_aperture,
+            current_detector_phi_angle_degree=detector_phi_angle_degree,
+            current_detector_gamma_angle_degree=detector_gamma_angle_degree,
+            current_medium_refractive_index=medium_refractive_index,
         )
-        _, effective_blocker_bar_numerical_aperture = detector.resolve_detector_modeling_geometry_values(
+        effective_detector_cache_numerical_aperture, effective_blocker_bar_numerical_aperture = detector.resolve_detector_modeling_geometry_values(
             preset_name=detector_configuration_preset,
-            current_detector_cache_numerical_aperture=0.0,
+            current_detector_cache_numerical_aperture=detector_cache_numerical_aperture,
             current_blocker_bar_numerical_aperture=blocker_bar_numerical_aperture,
         )
 
@@ -500,6 +508,7 @@ class ModelConfiguration:
             detector_gamma_angle_degree=detector_gamma_angle_degree,
             detector_sampling=detector_sampling,
             detector_angular_weights=detector_angular_weights,
+            camera=camera,
         )
 
     @staticmethod

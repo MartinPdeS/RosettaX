@@ -612,6 +612,7 @@ class PeakWorkflowGraphBuilder:
             y_values=filtered_y_values,
             x_log_scale=self._x_axis_is_log(),
             y_log_scale=self._y_axis_is_log(),
+            colormap_log_scale=self._colormap_is_log(),
             number_of_bins=self._resolve_density_colormap_number_of_bins(),
         )
 
@@ -686,6 +687,7 @@ class PeakWorkflowGraphBuilder:
         y_values: Any,
         x_log_scale: bool,
         y_log_scale: bool,
+        colormap_log_scale: bool,
         number_of_bins: int,
     ) -> np.ndarray:
         """
@@ -740,6 +742,7 @@ class PeakWorkflowGraphBuilder:
                 y_values=y_array[finite_mask],
                 x_log_scale=x_log_scale,
                 y_log_scale=y_log_scale,
+                colormap_log_scale=colormap_log_scale,
                 number_of_bins=number_of_bins,
             )
 
@@ -788,8 +791,14 @@ class PeakWorkflowGraphBuilder:
             y_bin_indices,
         ]
 
-        return np.log10(
-            raw_density_values + 1.0,
+        if colormap_log_scale:
+            return np.log10(
+                raw_density_values + 1.0,
+            )
+
+        return raw_density_values.astype(
+            float,
+            copy=False,
         )
 
 
@@ -883,6 +892,15 @@ class PeakWorkflowGraphBuilder:
             )
 
         return axis_scale_toggle_values
+
+    def _colormap_is_log(self) -> bool:
+        """
+        Return whether the 2D density colormap should use logarithmic scaling.
+        """
+        if isinstance(self.xscale_selection, (list, tuple, set)):
+            return Scatter2DGraph.colormap_log_value in self.xscale_selection
+
+        return False
 
     def _add_2d_overlays(
         self,

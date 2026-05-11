@@ -443,6 +443,55 @@ class Test_compute_model_for_rows:
         assert resolved_detector_cache_numerical_aperture == 0.0
         assert resolved_blocker_bar_numerical_aperture == 0.0
 
+    def test_resolve_detector_angular_weights_generic_detector_applies_blocker_bar_geometry(self):
+        detector_angular_weights = resolve_detector_angular_weights(
+            preset_name='Generic detector',
+            detector_sampling=1000,
+            current_detector_numerical_aperture=1.2,
+            current_detector_cache_numerical_aperture=0.0,
+            current_blocker_bar_numerical_aperture=0.1,
+            current_detector_phi_angle_degree=45.0,
+            current_detector_gamma_angle_degree=0.0,
+            current_medium_refractive_index=1.333,
+        )
+
+        coordinate_array = build_pymiesim_photodiode_mesh_coordinates(
+            detector_numerical_aperture=1.2,
+            medium_refractive_index=1.333,
+            detector_phi_angle_degree=45.0,
+            detector_gamma_angle_degree=0.0,
+            detector_sampling=1000,
+        )
+        blocker_bar_numerical_aperture = _build_blocker_bar_numerical_aperture(
+            preset={
+                'detector_numerical_aperture': 1.2,
+                'detector_cache_numerical_aperture': 0.0,
+                'blocker_bar_numerical_aperture': 0.1,
+                'detector_phi_angle_degree': 45.0,
+                'detector_gamma_angle_degree': 0.0,
+                'medium_refractive_index': 1.333,
+            },
+            coordinate_array=coordinate_array,
+        )
+
+        visible_mask = blocker_bar_numerical_aperture >= 0.1
+
+        assert detector_angular_weights.shape == (1000,)
+        assert np.allclose(detector_angular_weights[visible_mask], 1.0)
+        assert np.allclose(detector_angular_weights[~visible_mask], 0.0)
+
+    def test_resolve_detector_modeling_geometry_values_zeroes_scalar_geometry_for_generic_detector_blocker_bar(self):
+        resolved_detector_cache_numerical_aperture, resolved_blocker_bar_numerical_aperture = (
+            resolve_detector_modeling_geometry_values(
+                preset_name='Generic detector',
+                current_detector_cache_numerical_aperture=0.0,
+                current_blocker_bar_numerical_aperture=0.1,
+            )
+        )
+
+        assert resolved_detector_cache_numerical_aperture == 0.0
+        assert resolved_blocker_bar_numerical_aperture == 0.0
+
     @patch('RosettaX.workflow.parameters.model.table')
     def test_compute_model_for_rows_parameter_types(self, mock_table, mock_logger):
         """Test compute_model_for_rows handles different parameter types correctly."""

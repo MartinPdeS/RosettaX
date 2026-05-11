@@ -162,6 +162,12 @@ def resolve_detector_modeling_geometry_values(
     PyMieSim and the preview are neutralized to avoid double-applying the mask.
     """
     if detector_preset_is_custom(preset_name):
+        if (
+            float(current_detector_cache_numerical_aperture) > 0.0
+            or float(current_blocker_bar_numerical_aperture) > 0.0
+        ):
+            return 0.0, 0.0
+
         return (
             current_detector_cache_numerical_aperture,
             current_blocker_bar_numerical_aperture,
@@ -184,6 +190,12 @@ def resolve_detector_angular_weights(
     *,
     preset_name: Any,
     detector_sampling: Any,
+    current_detector_numerical_aperture: Any = None,
+    current_detector_cache_numerical_aperture: Any = None,
+    current_blocker_bar_numerical_aperture: Any = None,
+    current_detector_phi_angle_degree: Any = None,
+    current_detector_gamma_angle_degree: Any = None,
+    current_medium_refractive_index: Any = None,
 ) -> np.ndarray | None:
     """
     Resolve optional angular weights for a detector preset.
@@ -196,7 +208,22 @@ def resolve_detector_angular_weights(
         - ``detector_angular_weight_profile``: named ad hoc generator
     """
     if detector_preset_is_custom(preset_name):
-        return None
+        custom_geometry_preset = _build_custom_geometry_preset(
+            current_detector_numerical_aperture=current_detector_numerical_aperture,
+            current_detector_cache_numerical_aperture=current_detector_cache_numerical_aperture,
+            current_blocker_bar_numerical_aperture=current_blocker_bar_numerical_aperture,
+            current_detector_phi_angle_degree=current_detector_phi_angle_degree,
+            current_detector_gamma_angle_degree=current_detector_gamma_angle_degree,
+            current_medium_refractive_index=current_medium_refractive_index,
+        )
+
+        if custom_geometry_preset is None:
+            return None
+
+        return _build_geometry_angular_weights(
+            preset=custom_geometry_preset,
+            sampling_size=int(detector_sampling),
+        )
 
     preset = _DETECTOR_PRESET_LOADER.load_preset(
         preset_name,
@@ -269,6 +296,44 @@ def _combine_detector_angular_weights(
         configured_angular_weights,
         dtype=np.complex128,
     )
+
+
+def _build_custom_geometry_preset(
+    *,
+    current_detector_numerical_aperture: Any,
+    current_detector_cache_numerical_aperture: Any,
+    current_blocker_bar_numerical_aperture: Any,
+    current_detector_phi_angle_degree: Any,
+    current_detector_gamma_angle_degree: Any,
+    current_medium_refractive_index: Any,
+) -> dict[str, Any] | None:
+    detector_cache_numerical_aperture = float(
+        current_detector_cache_numerical_aperture or 0.0,
+    )
+    blocker_bar_numerical_aperture = float(
+        current_blocker_bar_numerical_aperture or 0.0,
+    )
+
+    if detector_cache_numerical_aperture <= 0.0 and blocker_bar_numerical_aperture <= 0.0:
+        return None
+
+    return {
+        "name": CUSTOM_DETECTOR_PRESET_NAME,
+        "detector_numerical_aperture": float(
+            current_detector_numerical_aperture or 0.0,
+        ),
+        "detector_cache_numerical_aperture": detector_cache_numerical_aperture,
+        "blocker_bar_numerical_aperture": blocker_bar_numerical_aperture,
+        "detector_phi_angle_degree": float(
+            current_detector_phi_angle_degree or 0.0,
+        ),
+        "detector_gamma_angle_degree": float(
+            current_detector_gamma_angle_degree or 0.0,
+        ),
+        "medium_refractive_index": float(
+            current_medium_refractive_index or 1.333,
+        ),
+    }
 
 
 def _build_geometry_angular_weights(

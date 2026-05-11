@@ -8,6 +8,7 @@ import dash_bootstrap_components as dbc
 
 from RosettaX.utils import styling, ui_forms, RuntimeConfig, casting
 from RosettaX.workflow import scattering
+from . import optical_preview
 
 
 logger = logging.getLogger(__name__)
@@ -373,6 +374,7 @@ class Model:
                             id=self.ids.optical_configuration_preview,
                             figure=self.model_configuration.build_optical_configuration_preview_figure(
                                 detector_numerical_aperture=self.default_values.detector_numerical_aperture,
+                                detector_cache_numerical_aperture=self.default_values.detector_cache_numerical_aperture,
                                 blocker_bar_numerical_aperture=self.default_values.blocker_bar_numerical_aperture,
                                 medium_refractive_index=self.default_values.medium_refractive_index,
                                 detector_phi_angle_degree=self.default_values.detector_phi_angle_degree,
@@ -384,7 +386,13 @@ class Model:
                                 **styling.PLOTLY_GRAPH_STYLE,
                                 "height": "30vh",
                             },
-                            config=styling.PLOTLY_GRAPH_CONFIG,
+                            config={
+                                **styling.PLOTLY_GRAPH_CONFIG,
+                                "modeBarButtonsToRemove": [
+                                    *styling.PLOTLY_GRAPH_CONFIG.get("modeBarButtonsToRemove", []),
+                                    "pan3d",
+                                ],
+                            },
                             className="optical-configuration-preview-graph",
                         ),
                     ],
@@ -1283,44 +1291,55 @@ class Model:
                 "figure",
             ),
             dash.Input(self.ids.detector_numerical_aperture, "value"),
+            dash.Input(self.ids.detector_cache_numerical_aperture, "value"),
             dash.Input(self.ids.blocker_bar_numerical_aperture, "value"),
             dash.Input(self.ids.medium_refractive_index_custom, "value"),
             dash.Input(self.ids.detector_phi_angle_degree, "value"),
             dash.Input(self.ids.detector_gamma_angle_degree, "value"),
             dash.Input(self.ids.detector_sampling, "value"),
             dash.Input(self.ids.detector_configuration_preset, "value"),
+            dash.State(self.ids.optical_configuration_preview, "relayoutData"),
             prevent_initial_call=False,
         )
         def update_optical_configuration_preview(
             detector_numerical_aperture: Any,
+            detector_cache_numerical_aperture: Any,
             blocker_bar_numerical_aperture: Any,
             medium_refractive_index: Any,
             detector_phi_angle_degree: Any,
             detector_gamma_angle_degree: Any,
             detector_sampling: Any,
             detector_configuration_preset: Any,
+            relayout_data: Any,
         ):
             logger.debug(
                 "update_optical_configuration_preview called with "
-                "detector_numerical_aperture=%r blocker_bar_numerical_aperture=%r "
+                "detector_numerical_aperture=%r detector_cache_numerical_aperture=%r "
+                "blocker_bar_numerical_aperture=%r "
                 "medium_refractive_index=%r detector_phi_angle_degree=%r "
                 "detector_gamma_angle_degree=%r detector_sampling=%r "
-                "detector_configuration_preset=%r",
+                "detector_configuration_preset=%r relayout_data=%r",
                 detector_numerical_aperture,
+                detector_cache_numerical_aperture,
                 blocker_bar_numerical_aperture,
                 medium_refractive_index,
                 detector_phi_angle_degree,
                 detector_gamma_angle_degree,
                 detector_sampling,
                 detector_configuration_preset,
+                relayout_data,
             )
 
             return self.model_configuration.build_optical_configuration_preview_figure(
                 detector_numerical_aperture=detector_numerical_aperture,
+                detector_cache_numerical_aperture=detector_cache_numerical_aperture,
                 blocker_bar_numerical_aperture=blocker_bar_numerical_aperture,
                 medium_refractive_index=medium_refractive_index,
                 detector_phi_angle_degree=detector_phi_angle_degree,
                 detector_gamma_angle_degree=detector_gamma_angle_degree,
                 detector_sampling=detector_sampling,
                 detector_configuration_preset=detector_configuration_preset,
+                camera=optical_preview.resolve_locked_camera_from_relayout_data(
+                    relayout_data=relayout_data,
+                ),
             )

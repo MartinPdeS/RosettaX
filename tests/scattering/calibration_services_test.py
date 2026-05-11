@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 from RosettaX.workflow.scattering.calibration_services import (
     OpticalParameters,
-    ParsedSphereStandardRows
+    ParsedSphereStandardRows,
 )
 
 

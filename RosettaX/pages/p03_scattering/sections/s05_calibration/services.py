@@ -59,7 +59,7 @@ def build_instrument_response_figure(
     intercept: float,
 ) -> go.Figure:
     """
-    Build the measured signal to modeled coupling instrument response figure.
+    Build the measured signal to modeled coupling-in-watts instrument response figure.
 
     Axis scaling is intentionally not forced here. The Dash graph callbacks
     apply the selected linear or log display mode.
@@ -126,7 +126,7 @@ def build_instrument_response_figure(
     figure.update_layout(
         title="Instrument response calibration",
         xaxis_title="Measured standard peak intensity [a.u.]",
-        yaxis_title="Modeled optical coupling",
+        yaxis_title="Coupling [W]",
         separators=".,",
         hovermode="closest",
         uirevision="scattering_instrument_response_graph",
@@ -331,7 +331,7 @@ def build_calibration_standard_mie_relation_figure(
     figure.update_layout(
         title="Calibration standard Mie relation",
         xaxis_title="Standard outer diameter [nm]",
-        yaxis_title="Modeled optical coupling",
+        yaxis_title="Coupling [W]",
         separators=".,",
         hovermode="closest",
         uirevision="scattering_standard_mie_relation_graph",

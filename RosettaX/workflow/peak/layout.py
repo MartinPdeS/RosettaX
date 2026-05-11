@@ -795,6 +795,7 @@ class PeakLayout:
                     ),
                     x_log_enabled=self._get_default_xscale() == "log",
                     y_log_enabled=self._get_default_yscale() == "log",
+                    colormap_log_toggle_enabled=True,
                     graph_style={
                         "height": self._get_default_graph_height(),
                         "width": "100%",

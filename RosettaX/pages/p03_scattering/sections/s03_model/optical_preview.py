@@ -835,91 +835,115 @@ def _build_incident_wave_traces() -> list[Any]:
     Build incident wave annotation traces.
 
     k:
-        Red propagation vector coming from the bottom toward the origin.
+        Red propagation vector coming from below the sphere toward the origin.
 
     E:
         Blue electric field vector, perpendicular to k.
-        Since k is along +z here, E is drawn along +x.
+        Since k is along +z here, E is drawn along +x from the same origin.
     """
-    k_shaft_trace = go.Scatter3d(
-        x=[0.0, 0.0],
-        y=[0.0, 0.0],
-        z=[-1.20, -0.18],
+    shared_origin = np.asarray(
+        [0.0, 0.0, -0.78],
+        dtype=float,
+    )
+
+    k_traces = _build_incident_vector_traces(
+        label="k",
+        origin=shared_origin,
+        tip=np.asarray([0.0, 0.0, -0.14], dtype=float),
+        color="#d62728",
+        label_offset=np.asarray([0.07, 0.0, 0.02], dtype=float),
+        cone_size_reference=0.17,
+    )
+
+    electric_field_traces = _build_incident_vector_traces(
+        label="E",
+        origin=shared_origin,
+        tip=np.asarray([0.52, 0.0, -0.78], dtype=float),
+        color="#1f77b4",
+        label_offset=np.asarray([0.08, 0.0, 0.05], dtype=float),
+        cone_size_reference=0.15,
+    )
+
+    return [
+        *k_traces,
+        *electric_field_traces,
+    ]
+
+
+def _build_incident_vector_traces(
+    *,
+    label: str,
+    origin: np.ndarray,
+    tip: np.ndarray,
+    color: str,
+    label_offset: np.ndarray,
+    cone_size_reference: float,
+) -> list[Any]:
+    """
+    Build matched shaft, cone head, and label traces for one incident vector.
+    """
+    origin = np.asarray(origin, dtype=float).reshape(3)
+    tip = np.asarray(tip, dtype=float).reshape(3)
+    label_offset = np.asarray(label_offset, dtype=float).reshape(3)
+
+    vector = tip - origin
+    vector_length = float(np.linalg.norm(vector))
+
+    if vector_length == 0.0:
+        raise ValueError("Incident vector origin and tip must not be identical.")
+
+    unit_vector = vector / vector_length
+    cone_vector = unit_vector * min(0.22, vector_length * 0.34)
+    shaft_tip = tip - cone_vector * 0.62
+    label_position = tip + label_offset
+
+    shaft_trace = go.Scatter3d(
+        x=[float(origin[0]), float(shaft_tip[0])],
+        y=[float(origin[1]), float(shaft_tip[1])],
+        z=[float(origin[2]), float(shaft_tip[2])],
         mode="lines",
         line={
-            "width": 8,
-            "color": "#d62728",
+            "width": 9,
+            "color": color,
         },
         hoverinfo="skip",
     )
 
-    k_arrow_trace = go.Cone(
-        x=[0.0],
-        y=[0.0],
-        z=[-0.10],
-        u=[0.0],
-        v=[0.0],
-        w=[0.22],
+    arrow_trace = go.Cone(
+        x=[float(tip[0])],
+        y=[float(tip[1])],
+        z=[float(tip[2])],
+        u=[float(cone_vector[0])],
+        v=[float(cone_vector[1])],
+        w=[float(cone_vector[2])],
         sizemode="absolute",
-        sizeref=0.18,
+        sizeref=cone_size_reference,
         anchor="tip",
         showscale=False,
         colorscale=[
-            [0.0, "#d62728"],
-            [1.0, "#d62728"],
+            [0.0, color],
+            [1.0, color],
         ],
         hoverinfo="skip",
     )
 
-    electric_field_shaft_trace = go.Scatter3d(
-        x=[-0.34, 0.24],
-        y=[0.0, 0.0],
-        z=[-0.72, -0.72],
-        mode="lines",
-        line={
-            "width": 8,
-            "color": "#1f77b4",
-        },
-        hoverinfo="skip",
-    )
-
-    electric_field_arrow_trace = go.Cone(
-        x=[0.32],
-        y=[0.0],
-        z=[-0.72],
-        u=[0.18],
-        v=[0.0],
-        w=[0.0],
-        sizemode="absolute",
-        sizeref=0.16,
-        anchor="tip",
-        showscale=False,
-        colorscale=[
-            [0.0, "#1f77b4"],
-            [1.0, "#1f77b4"],
-        ],
-        hoverinfo="skip",
-    )
-
-    electric_field_label_trace = go.Scatter3d(
-        x=[0.42],
-        y=[0.0],
-        z=[-0.72],
+    label_trace = go.Scatter3d(
+        x=[float(label_position[0])],
+        y=[float(label_position[1])],
+        z=[float(label_position[2])],
         mode="text",
-        text=["E"],
+        text=[label],
         textfont={
-            "size": 16,
-            "color": "#1f77b4",
+            "size": 18,
+            "color": color,
         },
         hoverinfo="skip",
     )
 
     return [
-        k_shaft_trace,
-        k_arrow_trace,
-        electric_field_shaft_trace,
-        electric_field_arrow_trace,
-        electric_field_label_trace,
+        shaft_trace,
+        arrow_trace,
+        label_trace,
     ]
 
 

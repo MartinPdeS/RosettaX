@@ -175,6 +175,7 @@ def compute_model_for_rows(
             wavelength_nm=resolved_wavelength_nm,
             detector_numerical_aperture=resolved_detector_numerical_aperture,
             detector_cache_numerical_aperture=resolved_detector_cache_numerical_aperture,
+            blocker_bar_numerical_aperture=resolved_blocker_bar_numerical_aperture,
             detector_sampling=resolved_detector_sampling,
             detector_phi_angle_degree=resolved_detector_phi_angle_degree,
             detector_gamma_angle_degree=resolved_detector_gamma_angle_degree,
@@ -190,6 +191,7 @@ def compute_model_for_rows(
         wavelength_nm=resolved_wavelength_nm,
         detector_numerical_aperture=resolved_detector_numerical_aperture,
         detector_cache_numerical_aperture=resolved_detector_cache_numerical_aperture,
+        blocker_bar_numerical_aperture=resolved_blocker_bar_numerical_aperture,
         detector_sampling=resolved_detector_sampling,
         detector_phi_angle_degree=resolved_detector_phi_angle_degree,
         detector_gamma_angle_degree=resolved_detector_gamma_angle_degree,
@@ -208,6 +210,7 @@ def _compute_core_shell_model_for_rows(
     wavelength_nm: float,
     detector_numerical_aperture: float,
     detector_cache_numerical_aperture: float,
+    blocker_bar_numerical_aperture: float,
     detector_sampling: int,
     detector_phi_angle_degree: float,
     detector_gamma_angle_degree: float,
@@ -329,11 +332,17 @@ def _compute_core_shell_model_for_rows(
     detector_angular_weights = resolve_detector_angular_weights(
         preset_name=detector_configuration_preset,
         detector_sampling=detector_sampling,
+        current_detector_numerical_aperture=detector_numerical_aperture,
+        current_detector_cache_numerical_aperture=detector_cache_numerical_aperture,
+        current_blocker_bar_numerical_aperture=blocker_bar_numerical_aperture,
+        current_detector_phi_angle_degree=detector_phi_angle_degree,
+        current_detector_gamma_angle_degree=detector_gamma_angle_degree,
+        current_medium_refractive_index=medium_refractive_index,
     )
     resolved_detector_cache_numerical_aperture, _ = resolve_detector_modeling_geometry_values(
         preset_name=detector_configuration_preset,
         current_detector_cache_numerical_aperture=detector_cache_numerical_aperture,
-        current_blocker_bar_numerical_aperture=0.0,
+        current_blocker_bar_numerical_aperture=blocker_bar_numerical_aperture,
     )
 
     try:
@@ -384,6 +393,7 @@ def _compute_solid_sphere_model_for_rows(
     wavelength_nm: float,
     detector_numerical_aperture: float,
     detector_cache_numerical_aperture: float,
+    blocker_bar_numerical_aperture: float,
     detector_sampling: int,
     detector_phi_angle_degree: float,
     detector_gamma_angle_degree: float,
@@ -483,11 +493,17 @@ def _compute_solid_sphere_model_for_rows(
     detector_angular_weights = resolve_detector_angular_weights(
         preset_name=detector_configuration_preset,
         detector_sampling=detector_sampling,
+        current_detector_numerical_aperture=detector_numerical_aperture,
+        current_detector_cache_numerical_aperture=detector_cache_numerical_aperture,
+        current_blocker_bar_numerical_aperture=blocker_bar_numerical_aperture,
+        current_detector_phi_angle_degree=detector_phi_angle_degree,
+        current_detector_gamma_angle_degree=detector_gamma_angle_degree,
+        current_medium_refractive_index=medium_refractive_index,
     )
     resolved_detector_cache_numerical_aperture, _ = resolve_detector_modeling_geometry_values(
         preset_name=detector_configuration_preset,
         current_detector_cache_numerical_aperture=detector_cache_numerical_aperture,
-        current_blocker_bar_numerical_aperture=0.0,
+        current_blocker_bar_numerical_aperture=blocker_bar_numerical_aperture,
     )
 
     try:

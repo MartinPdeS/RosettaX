@@ -96,7 +96,7 @@ class Calibration:
                     tooltip_id=self.header_tooltip_id,
                     tooltip_text=(
                         "This section fits the relation between the measured standard "
-                        "peak positions and the modeled optical coupling values from "
+                        "peak positions and the modeled coupling values in watts from "
                         "the calibration standard table."
                     ),
                 ),
@@ -159,7 +159,7 @@ class Calibration:
                                     dash.html.Div(
                                         (
                                             "Use the current measured peak positions and modeled "
-                                            "standard coupling values to compute the scattering "
+                                            "standard coupling values in watts to compute the scattering "
                                             "instrument response."
                                         ),
                                         style={
@@ -187,7 +187,7 @@ class Calibration:
                                     dbc.Tooltip(
                                         (
                                             "Compute the fitted instrument response from the measured "
-                                            "standard peak positions and the modeled optical coupling "
+                                            "standard peak positions and the modeled coupling values in watts "
                                             "values currently present in the calibration standard table."
                                         ),
                                         id=self.compute_model_tooltip_id,
@@ -233,12 +233,12 @@ class Calibration:
             [
                 self._build_graph_panel_card(
                     title="Instrument response calibration",
-                    subtitle="Measured standard signal mapped to modeled optical coupling.",
+                    subtitle="Measured standard signal mapped to coupling [W].",
                     tooltip_target_id=self.instrument_response_tooltip_target_id,
                     tooltip_id=self.instrument_response_tooltip_id,
                     tooltip_text=(
                         "This graph shows the fitted relation between measured "
-                        "standard peak intensity and modeled optical coupling. "
+                        "standard peak intensity and modeled coupling in watts. "
                         "The fitted slope is the instrument gain."
                     ),
                     graph_id=self.ids.graph_calibration,
@@ -250,12 +250,12 @@ class Calibration:
                 ),
                 self._build_graph_panel_card(
                     title="Calibration standard Mie relation",
-                    subtitle="Modeled coupling curve for the selected calibration standard.",
+                    subtitle="Modeled coupling [W] curve for the selected calibration standard.",
                     tooltip_target_id=self.mie_relation_tooltip_target_id,
                     tooltip_id=self.mie_relation_tooltip_id,
                     tooltip_text=(
                         "This graph shows the modeled relation between standard "
-                        "particle diameter and modeled optical coupling for the "
+                        "particle diameter and modeled coupling in watts for the "
                         "calibration standard."
                     ),
                     graph_id=self.ids.graph_model,

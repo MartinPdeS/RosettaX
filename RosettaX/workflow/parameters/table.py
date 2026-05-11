@@ -30,7 +30,7 @@ sphere_table_columns = [
         "editable": True,
     },
     {
-        "name": "Expected coupling",
+        "name": "Coupling [W]",
         "id": COLUMN_EXPECTED_COUPLING,
         "editable": False,
     },
@@ -58,7 +58,7 @@ core_shell_table_columns = [
         "editable": True,
     },
     {
-        "name": "Expected coupling",
+        "name": "Coupling [W]",
         "id": COLUMN_EXPECTED_COUPLING,
         "editable": False,
     },

@@ -47,6 +47,7 @@ class Scatter2DGraph:
     - Never render a graph title inside the Plotly canvas.
     - Put the legend inside the graph when traces have names.
     - Provide a compact x log and y log toggle box below the graph.
+    - Optionally expose a log-colormap toggle for density-colored 2D plots.
     - Optionally render graph specific controls in the same bottom control row.
     - Convert Dash toggle values into Plotly axis scale settings.
 
@@ -59,6 +60,7 @@ class Scatter2DGraph:
 
     x_log_value = "x_log"
     y_log_value = "y_log"
+    colormap_log_value = "colormap_log"
 
     default_height = "52vh"
     default_marker_size = 5.0
@@ -73,6 +75,7 @@ class Scatter2DGraph:
         figure: Optional[go.Figure] = None,
         x_log_enabled: bool = False,
         y_log_enabled: bool = False,
+        colormap_log_toggle_enabled: bool = False,
         graph_style: Optional[dict[str, Any]] = None,
         bottom_controls: Optional[list[Any]] = None,
     ) -> dash.html.Div:
@@ -116,6 +119,7 @@ class Scatter2DGraph:
                 cls.build_axis_scale_control(
                     component_id=component_ids.axis_scale_toggle,
                     value=toggle_values,
+                    colormap_log_toggle_enabled=colormap_log_toggle_enabled,
                     bottom_controls=bottom_controls,
                 ),
             ]
@@ -127,24 +131,35 @@ class Scatter2DGraph:
         *,
         component_id: str,
         value: Optional[list[str]] = None,
+        colormap_log_toggle_enabled: bool = False,
         bottom_controls: Optional[list[Any]] = None,
     ) -> dbc.Card:
         """
         Build the compact x log and y log toggle box below the graph.
         """
+        options = [
+            {
+                "label": "x log",
+                "value": cls.x_log_value,
+            },
+            {
+                "label": "y log",
+                "value": cls.y_log_value,
+            },
+        ]
+
+        if colormap_log_toggle_enabled:
+            options.append(
+                {
+                    "label": "color log",
+                    "value": cls.colormap_log_value,
+                }
+            )
+
         controls: list[Any] = [
             dbc.Checklist(
                 id=component_id,
-                options=[
-                    {
-                        "label": "x log",
-                        "value": cls.x_log_value,
-                    },
-                    {
-                        "label": "y log",
-                        "value": cls.y_log_value,
-                    },
-                ],
+                options=options,
                 value=value if isinstance(value, list) else [],
                 inline=True,
                 switch=True,
