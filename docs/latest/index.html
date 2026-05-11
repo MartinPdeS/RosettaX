@@ -643,6 +643,14 @@ more detailed usage information.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[dev,testing,documentation]&quot;</span>
 </pre></div>
 </div>
+<p>Build a local PyInstaller bundle with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[bundling]&quot;</span>
+pyinstaller<span class="w"> </span>rosettax.spec<span class="w"> </span>--clean
+</pre></div>
+</div>
+<p>This creates a standalone bundle under <code class="docutils literal notranslate"><span class="pre">dist/rosettax</span></code> for the current
+operating system. Cross platform bundles must still be built natively on each
+target operating system.</p>
 <p>Run the test suite with:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pytest
 </pre></div>
