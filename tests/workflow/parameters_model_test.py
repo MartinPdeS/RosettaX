@@ -347,6 +347,10 @@ class Test_compute_model_for_rows:
             preset=apogee_side_preset,
             coordinate_array=coordinate_array,
         )
+        forward_blocker_bar_numerical_aperture = _build_blocker_bar_numerical_aperture(
+            preset=apogee_forward_preset,
+            coordinate_array=coordinate_array,
+        )
 
         side_visible_mask = (
             (split_metric > 0.0)
@@ -356,7 +360,11 @@ class Test_compute_model_for_rows:
             )
         )
         forward_visible_mask = (
-            split_metric < 0.0
+            (split_metric < 0.0)
+            & (
+                forward_blocker_bar_numerical_aperture
+                >= float(apogee_forward_preset['blocker_bar_numerical_aperture'])
+            )
         )
 
         assert np.allclose(side_weights[side_visible_mask], 1.0)

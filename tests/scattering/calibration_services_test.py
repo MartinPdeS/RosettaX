@@ -89,7 +89,7 @@ class Test_OpticalParameters:
         with pytest.raises(FrozenInstanceError, match="cannot assign to field"):
             params.wavelength_nm = 532.0
 
-    @patch('RosettaX.workflow.scattering.calibration_services.build_mie_parameter_payload')
+    @patch('RosettaX.workflow.scattering.calibration_services.mie_relation.build_mie_parameter_payload')
     def test_to_parameter_payload_solid_sphere(self, mock_build_mie, valid_optical_params):
         """Test to_parameter_payload method for solid sphere model."""
         mock_build_mie.return_value = {'base': 'payload'}
@@ -123,7 +123,7 @@ class Test_OpticalParameters:
         assert result['polarization_angle_degree'] == 0.0
         assert result['particle_diameter_nm'] == [100.0, 200.0, 300.0]
 
-    @patch('RosettaX.workflow.scattering.calibration_services.build_mie_parameter_payload')
+    @patch('RosettaX.workflow.scattering.calibration_services.mie_relation.build_mie_parameter_payload')
     def test_to_parameter_payload_core_shell_sphere(self, mock_build_mie, core_shell_optical_params):
         """Test to_parameter_payload method for core-shell sphere model."""
         mock_build_mie.return_value = {'base': 'payload'}
@@ -157,7 +157,7 @@ class Test_OpticalParameters:
         assert result['shell_thickness_nm'] == [10.0, 20.0]
         assert result['outer_diameter_nm'] == [100.0, 200.0]
 
-    @patch('RosettaX.workflow.scattering.calibration_services.build_mie_parameter_payload')
+    @patch('RosettaX.workflow.scattering.calibration_services.mie_relation.build_mie_parameter_payload')
     def test_to_parameter_payload_no_particle_parameters(self, mock_build_mie, valid_optical_params):
         """Test to_parameter_payload method with no particle size parameters."""
         mock_build_mie.return_value = {'base': 'payload'}
