@@ -8,33 +8,6 @@ from dash import dcc, html
 from RosettaX.utils import styling
 
 
-def copy_style(
-    style: Any,
-) -> dict[str, Any]:
-    """
-    Return a mutable copy of a style dictionary.
-    """
-    if isinstance(style, dict):
-        return dict(style)
-
-    return {}
-
-
-def merge_style(
-    *styles: Any,
-) -> dict[str, Any]:
-    """
-    Merge style dictionaries while ignoring non dictionary values.
-    """
-    merged_style: dict[str, Any] = {}
-
-    for style in styles:
-        if isinstance(style, dict):
-            merged_style.update(style)
-
-    return merged_style
-
-
 def normalize_children(
     children: Any,
 ) -> list[Any]:
@@ -151,7 +124,7 @@ def build_info_badge(
     return html.Span(
         text,
         id=tooltip_target_id,
-        style=merge_style(
+        style=styling.merge_style(
             styling.WORKFLOW_SECTION["info_badge"],
             {
                 "userSelect": "none",
@@ -188,7 +161,7 @@ def build_title_with_info(
                 placement=placement,
             ),
         ],
-        style=merge_style(
+        style=styling.merge_style(
             styling.WORKFLOW_SECTION["title_with_info"],
             title_style_overrides,
         ),
@@ -251,7 +224,7 @@ def build_workflow_section_card_style(
     """
     Build the standard outer workflow section card style.
     """
-    return merge_style(
+    return styling.merge_style(
         {
             "borderRadius": f"{border_radius_px}px",
             "borderLeft": (
@@ -275,7 +248,7 @@ def build_workflow_section_header_style(
     """
     Build the standard outer workflow section header style.
     """
-    return merge_style(
+    return styling.merge_style(
         {
             "background": build_rgba_from_color_name(
                 color_name=color_name,
@@ -302,7 +275,7 @@ def build_workflow_section_body_style(
     """
     Build the standard outer workflow section body style.
     """
-    return merge_style(
+    return styling.merge_style(
         {
             "padding": "18px",
             "overflow": "visible",
@@ -321,7 +294,7 @@ def build_workflow_section_subtitle_style(
     """
     Build the standard subtitle style used under workflow section headers.
     """
-    return merge_style(
+    return styling.merge_style(
         {
             "fontSize": font_size,
             "opacity": opacity,
@@ -354,7 +327,7 @@ def build_workflow_panel_style(
     if background is not None:
         base_style["background"] = background
 
-    return merge_style(
+    return styling.merge_style(
         base_style,
         style_overrides,
     )
@@ -368,7 +341,7 @@ def build_workflow_panel_body_style(
     """
     Build a standard inner workflow panel body style.
     """
-    return merge_style(
+    return styling.merge_style(
         {
             "padding": padding,
             "overflow": "visible",
@@ -405,7 +378,7 @@ def build_workflow_subpanel_header_style(
     """
     Build a nested graph or form panel header style.
     """
-    return merge_style(
+    return styling.merge_style(
         {
             "background": build_rgba_from_color_name(
                 color_name=color_name,
@@ -432,7 +405,7 @@ def build_compact_control_panel_style(
     """
     Build a compact control strip style for toggles or graph controls.
     """
-    return merge_style(
+    return styling.merge_style(
         styling.WORKFLOW_SECTION["compact_control_box"],
         {
             "overflow": "visible",
@@ -448,7 +421,7 @@ def build_metric_box_style(
     """
     Build a compact metric display box style.
     """
-    return merge_style(
+    return styling.merge_style(
         {
             "padding": "8px 10px",
             "border": "1px solid rgba(128, 128, 128, 0.25)",
@@ -485,8 +458,8 @@ def apply_workflow_section_card_style(
     if left_border is not None:
         card_style["borderLeft"] = left_border
 
-    card.style = merge_style(
-        copy_style(getattr(card, "style", None)),
+    card.style = styling.merge_style(
+        styling.copy_style(getattr(card, "style", None)),
         card_style,
     )
 
@@ -503,8 +476,8 @@ def apply_workflow_section_card_style(
 
     for child in normalize_children(getattr(card, "children", None)):
         if isinstance(child, dbc.CardHeader):
-            child.style = merge_style(
-                copy_style(getattr(child, "style", None)),
+            child.style = styling.merge_style(
+                styling.copy_style(getattr(child, "style", None)),
                 build_workflow_section_header_style(
                     color_name=color_name,
                     accent_rgba=accent_rgba,
@@ -514,8 +487,8 @@ def apply_workflow_section_card_style(
             )
 
         if isinstance(child, dbc.CardBody):
-            child.style = merge_style(
-                copy_style(getattr(child, "style", None)),
+            child.style = styling.merge_style(
+                styling.copy_style(getattr(child, "style", None)),
                 build_workflow_section_body_style(),
             )
 
@@ -542,7 +515,7 @@ def build_labeled_row(
     """
     Build a standard two column form row with a fixed width label area.
     """
-    row_style = merge_style(
+    row_style = styling.merge_style(
         {
             "display": "flex",
             "alignItems": align_items,
@@ -553,7 +526,7 @@ def build_labeled_row(
         row_style_overrides,
     )
 
-    label_style = merge_style(
+    label_style = styling.merge_style(
         {
             "width": f"{int(label_width_px)}px",
             "minWidth": f"{int(label_width_px)}px",
@@ -574,7 +547,7 @@ def build_labeled_row(
     if component_align_items is not None:
         component_style["alignItems"] = component_align_items
 
-    component_style = merge_style(
+    component_style = styling.merge_style(
         component_style,
         component_style_overrides,
     )
@@ -615,12 +588,12 @@ def build_inline_row(
     if margin_top:
         row_style["marginTop"] = f"{int(margin_top_px)}px"
 
-    row_style = merge_style(
+    row_style = styling.merge_style(
         row_style,
         row_style_overrides,
     )
 
-    label_style = merge_style(
+    label_style = styling.merge_style(
         {
             "width": f"{int(label_width_px)}px",
             "minWidth": f"{int(label_width_px)}px",
@@ -629,7 +602,7 @@ def build_inline_row(
         label_style_overrides,
     )
 
-    control_wrapper_style = merge_style(
+    control_wrapper_style = styling.merge_style(
         {
             "flex": "1",
             "display": "flex",
@@ -704,7 +677,7 @@ def build_section_intro(
     children: list[Any] = [
         heading_factory(
             title,
-            style=merge_style(
+            style=styling.merge_style(
                 default_title_style,
                 title_style_overrides,
             ),
@@ -715,7 +688,7 @@ def build_section_intro(
         children.append(
             html.P(
                 description,
-                style=merge_style(
+                style=styling.merge_style(
                     {
                         "marginBottom": f"{int(description_margin_bottom_px)}px",
                         "opacity": description_opacity,
@@ -727,5 +700,5 @@ def build_section_intro(
 
     return html.Div(
         children,
-        style=copy_style(container_style),
+        style=styling.copy_style(container_style),
     )

@@ -408,26 +408,3 @@ COLUMN_MEASURED_INTENSITY = FluorescenceReferenceTable.column_measured_intensity
 
 fluorescence_table_columns = FluorescenceReferenceTable.columns
 user_data_column_ids = FluorescenceReferenceTable.user_data_column_ids
-
-
-def build_default_bead_rows(
-    *,
-    row_count: int = 3,
-) -> list[dict[str, str]]:
-    """
-    Compatibility wrapper.
-    """
-    return FluorescenceReferenceTable.build_default_rows(
-        row_count=row_count,
-    )
-
-
-def build_bead_rows_from_mesf_values(
-    mesf_values: Any,
-) -> list[dict[str, str]]:
-    """
-    Compatibility wrapper.
-    """
-    return FluorescenceReferenceTable.build_rows_from_mesf_values(
-        mesf_values,
-    )

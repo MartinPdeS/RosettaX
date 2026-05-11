@@ -415,33 +415,3 @@ def build_workflow_section_style(
     }
 
 
-def build_workflow_section_legacy_style(
-    color_name: str = "blue",
-) -> dict[str, str]:
-    """
-    Build the compact style dictionary used by older page code.
-    """
-    section_style = build_workflow_section_style(
-        color_name,
-    )
-
-    return {
-        "header_background": section_style["header"]["background"],
-        "header_border": section_style["header"]["borderBottom"],
-        "left_border": section_style["card"]["borderLeft"],
-    }
-
-
-def build_section_legacy_style(
-    section_key: str,
-) -> dict[str, str]:
-    """
-    Build card style from a semantic section key.
-    """
-    color_name = get_section_color_name(
-        section_key,
-    )
-
-    return build_workflow_section_legacy_style(
-        color_name,
-    )

@@ -111,9 +111,6 @@ class Ids:
         target_mie_relation_xscale = f"{PAGE_NAME}-target-mie-relation-xscale"
         target_mie_relation_yscale = f"{PAGE_NAME}-target-mie-relation-yscale"
         peak_graph_colormap_log = f"{PAGE_NAME}-peak-graph-colormap-log"
-        default_scattering_derived_output_mode = (
-            f"{PAGE_NAME}-default-scattering-derived-output-mode"
-        )
         graph_height = f"{PAGE_NAME}-graph-height"
         default_marker_opacity = f"{PAGE_NAME}-default-marker-opacity"
 

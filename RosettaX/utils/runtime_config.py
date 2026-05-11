@@ -125,7 +125,6 @@ class RuntimeConfig:
         "apply_calibration.calibration.max_events_for_analysis": "calibration.max_events_for_analysis",
         "apply_calibration.calibration.n_bins_for_plots": "calibration.n_bins_for_plots",
         "apply_calibration.calibration.peak_graph_colormap_log": "calibration.peak_graph_colormap_log",
-        "apply_calibration.calibration.default_scattering_derived_output_mode": "calibration.default_scattering_derived_output_mode",
         "apply_calibration.calibration.histogram_scale": "calibration.histogram_scale",
         "apply_calibration.metadata.operator_name": "metadata.operator_name",
         "apply_calibration.metadata.instrument_name": "metadata.instrument_name",
@@ -221,12 +220,6 @@ class RuntimeConfig:
             expected_type=bool,
             default=False,
             description="Whether the shared 2D peak graph color scale is logarithmic by default.",
-        ),
-        "calibration.default_scattering_derived_output_mode": RuntimeConfigField(
-            expected_type=str,
-            default="both",
-            choices=("both", "estimated_coupling", "mie_equivalent_diameter_nm"),
-            description="Default scattering derived output columns exported by apply-calibration.",
         ),
         "calibration.target_model_preset": RuntimeConfigField(
             expected_type=str,

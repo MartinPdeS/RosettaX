@@ -223,8 +223,8 @@ class DefaultProfile:
                         ),
                     ],
                     style={
-                        "background": section_style["header_background"],
-                        "borderBottom": section_style["header_border"],
+                        "background": section_style["header"]["background"],
+                        "borderBottom": section_style["header"]["borderBottom"],
                         "padding": "13px 18px",
                         "borderTopLeftRadius": "15px",
                         "borderTopRightRadius": "15px",
@@ -244,7 +244,7 @@ class DefaultProfile:
             ],
             style={
                 "borderRadius": "15px",
-                "borderLeft": section_style["left_border"],
+                "borderLeft": section_style["card"]["borderLeft"],
                 "boxShadow": "0 0.35rem 0.9rem rgba(0, 0, 0, 0.08)",
                 "overflow": "visible",
             },
@@ -532,12 +532,12 @@ class DefaultProfile:
     def _section_visual_style(
         self,
         section_key: str,
-    ) -> dict[str, str]:
+    ) -> dict[str, dict[str, str]]:
         """
         Return visual styling for one settings section.
         """
-        return styling.build_section_legacy_style(
-            section_key,
+        return styling.build_workflow_section_style(
+            styling.get_section_color_name(section_key),
         )
 
     def _section_description(

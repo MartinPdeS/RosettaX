@@ -513,18 +513,6 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         step=1,
     ),
     FieldDefinition(
-        name="default_scattering_derived_output_mode",
-        section="apply_calibration",
-        group="Export defaults",
-        label="Scattering derived export columns:",
-        component_kind="dropdown",
-        value_kind="choice",
-        runtime_path="calibration.default_scattering_derived_output_mode",
-        profile_path="apply_calibration.calibration.default_scattering_derived_output_mode",
-        default="both",
-        options=SCATTERING_DERIVED_OUTPUT_MODE_OPTIONS,
-    ),
-    FieldDefinition(
         name="operator_name",
         section="metadata",
         group="Metadata",

@@ -76,7 +76,9 @@ class ReferenceTable:
             ids=self.ids,
             config=self.config,
             table_columns=self.bead_table_columns,
-            table_data=layout.build_default_bead_rows(),
+            table_data=table.FluorescenceReferenceTable.build_rows_from_runtime_config(
+                runtime_config=RuntimeConfig.from_default_profile(),
+            ),
         )
 
         logger.debug(
@@ -109,24 +111,3 @@ class ReferenceTable:
         Register reference table callbacks.
         """
         callbacks.register_callbacks(self)
-
-    def build_bead_rows_from_runtime_config(
-        self,
-        *,
-        runtime_config: RuntimeConfig,
-    ) -> list[dict[str, str]]:
-        """
-        Build fluorescence calibration table rows from a runtime configuration.
-
-        Compatibility wrapper for older imports.
-        """
-        rows = table.FluorescenceReferenceTable.build_rows_from_runtime_config(
-            runtime_config=runtime_config,
-        )
-
-        logger.debug(
-            "Built fluorescence reference table rows from runtime config. rows=%r",
-            rows,
-        )
-
-        return rows

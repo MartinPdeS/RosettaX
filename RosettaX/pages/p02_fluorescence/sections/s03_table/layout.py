@@ -3,7 +3,7 @@
 import dash
 import dash_bootstrap_components as dbc
 
-from RosettaX.utils import styling, ui_forms, RuntimeConfig
+from RosettaX.utils import styling, ui_forms
 from RosettaX.workflow.table.fluorescence import (
     FluorescenceReferenceTable,
     build_fluorescence_reference_preset_options,
@@ -26,15 +26,9 @@ def get_layout(section) -> dbc.Card:
         *list(body.children),
     ]
 
-    section_style = styling.build_workflow_section_legacy_style(
-        section.card_color,
-    )
-
     return ui_forms.apply_workflow_section_card_style(
         card=card,
-        header_background=section_style["header_background"],
-        header_border=section_style["header_border"],
-        left_border=section_style["left_border"],
+        color_name=section.card_color,
         header_font_weight="750",
         header_font_size="1.02rem",
     )
@@ -54,17 +48,6 @@ def build_card_title(section) -> dash.html.Div:
             "the measured peak positions. This table is the source of truth "
             "for the fluorescence calibration fit."
         ),
-    )
-
-
-def build_default_bead_rows() -> list[dict[str, str]]:
-    """
-    Build initial table rows from the default runtime profile.
-    """
-    runtime_config = RuntimeConfig.from_default_profile()
-
-    return FluorescenceReferenceTable.build_rows_from_runtime_config(
-        runtime_config=runtime_config,
     )
 
 
