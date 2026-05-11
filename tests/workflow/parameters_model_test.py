@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from pathlib import Path
+
 import numpy as np
 import pytest
 from types import SimpleNamespace
@@ -380,13 +382,17 @@ class Test_compute_model_for_rows:
         loader = DetectorPresetLoader()
 
         apogee_side_preset = loader.load_preset('Apogee - Side')
+        preset_path = Path(apogee_side_preset['_path'])
 
         assert apogee_side_preset['detector_angular_weighting'] == {
             'mode': 'split',
             'metric': 'x-minus-z',
             'keep': 'positive',
         }
-        assert 'workflow/detector/presets' in apogee_side_preset['_path']
+        assert preset_path.name == 'apogee_side.json'
+        assert preset_path.parent.name == 'presets'
+        assert preset_path.parent.parent.name == 'detector'
+        assert preset_path.parent.parent.parent.name == 'workflow'
 
     @patch('RosettaX.workflow.detector.configuration._DETECTOR_PRESET_LOADER.load_preset')
     def test_resolve_detector_angular_weights_applies_cache_and_blocker_geometry(self, mock_load_preset):
