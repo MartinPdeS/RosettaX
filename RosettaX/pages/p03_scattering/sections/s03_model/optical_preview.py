@@ -323,98 +323,51 @@ def build_pymiesim_photodiode_mesh_coordinates(
     detector_sampling: int = 200,
 ) -> np.ndarray:
     """
-    Build detector coordinates from PyMieSim's Photodiode mesh.
+    Build detector coordinates from a PyMieSim-equivalent Fibonacci mesh.
 
-    Important
-    ---------
-    PyMieSim's detector mesh is populated after the detector is attached to a
-    Setup. Constructing Photodiode alone can leave:
-
-        detector.mesh.cartesian.x
-        detector.mesh.cartesian.y
-        detector.mesh.cartesian.z
-
-    empty.
-
-    This mirrors the working PyMieSim usage pattern:
-
-        setup = Setup(scatterer=scatterer, source=source, detector=detector)
-        detector.mesh.cartesian.x
-        detector.mesh.cartesian.y
-        detector.mesh.cartesian.z
+    The native PyMieSim detector mesh path currently segfaults on the
+    Python 3.13 macOS build used by this application when detector mesh
+    coordinate arrays are accessed. RosettaX only needs the mesh geometry for
+    preview rendering and detector angular masks, so this helper mirrors the
+    PyMieSim Fibonacci-cap construction in pure NumPy.
     """
-    logger.debug("Importing PyMieSim objects for detector mesh construction.")
-
-    from PyMieSim.units import ureg
-    from PyMieSim.single.scatterer import InfiniteCylinder
-    from PyMieSim.single.source import Gaussian
-    from PyMieSim.polarization import PolarizationState
-    from PyMieSim.single.detector import Photodiode
-    from PyMieSim.single import Setup
-
     logger.debug(
-        "Constructing PyMieSim setup with detector_numerical_aperture=%r, "
-        "block medium=%r, gamma_offset=%r degree, phi_offset=%r degree.",
+        "Building detector Fibonacci mesh with detector_numerical_aperture=%r, "
+        "medium=%r, gamma_offset=%r degree, phi_offset=%r degree.",
         detector_numerical_aperture,
         medium_refractive_index,
         detector_gamma_angle_degree,
         detector_phi_angle_degree,
     )
 
-    polarization_state = PolarizationState(
-        angle=0.0 * ureg.degree,
+    max_angle = _build_detector_collection_max_angle(
+        detector_numerical_aperture=float(detector_numerical_aperture),
+        medium_refractive_index=float(medium_refractive_index),
     )
 
-    source = Gaussian(
-        wavelength=1550.0 * ureg.nanometer,
-        polarization=polarization_state,
-        optical_power=1.0 * ureg.watt,
-        numerical_aperture=0.3,
-    )
-
-    scatterer = InfiniteCylinder(
-        diameter=1800.0 * ureg.nanometer,
-        medium=float(medium_refractive_index),
-        material=1.5,
-    )
-
-    detector = Photodiode(
-        numerical_aperture=float(detector_numerical_aperture),
-        gamma_offset=float(detector_gamma_angle_degree) * ureg.degree,
-        phi_offset=float(detector_phi_angle_degree) * ureg.degree,
-        polarization_filter=0.0 * ureg.degree,
-        medium=float(medium_refractive_index),
+    coordinate_array = _build_fibonacci_cap_coordinate_array(
         sampling=int(detector_sampling),
+        max_angle=max_angle,
+        min_angle=0.0,
+    )
+    coordinate_array = _rotate_coordinate_array_about_x(
+        coordinate_array,
+        np.deg2rad(float(detector_gamma_angle_degree)),
+    )
+    coordinate_array = _rotate_coordinate_array_about_y(
+        coordinate_array,
+        np.deg2rad(float(detector_phi_angle_degree)),
+    )
+    coordinate_array = _map_detector_frame_to_rosettax_frame(
+        coordinate_array,
     )
 
-    setup = Setup(
-        scatterer=scatterer,
-        source=source,
-        detector=detector,
-    )
+    x_coordinates = coordinate_array[:, 0]
+    y_coordinates = coordinate_array[:, 1]
+    z_coordinates = coordinate_array[:, 2]
 
     logger.debug(
-        "Constructed PyMieSim setup=%r. Reading detector mesh coordinates.",
-        setup,
-    )
-
-    x_coordinates = np.asarray(
-        detector.mesh.cartesian.x.magnitude,
-        dtype=float,
-    ).reshape(-1)
-
-    y_coordinates = np.asarray(
-        detector.mesh.cartesian.y.magnitude,
-        dtype=float,
-    ).reshape(-1)
-
-    z_coordinates = np.asarray(
-        detector.mesh.cartesian.z.magnitude,
-        dtype=float,
-    ).reshape(-1)
-
-    logger.debug(
-        "Extracted PyMieSim setup-initialized mesh coordinate arrays with sizes "
+        "Built local detector mesh coordinate arrays with sizes "
         "x=%d, y=%d, z=%d.",
         x_coordinates.size,
         y_coordinates.size,
@@ -423,15 +376,14 @@ def build_pymiesim_photodiode_mesh_coordinates(
 
     if not (x_coordinates.size == y_coordinates.size == z_coordinates.size):
         raise ValueError(
-            "PyMieSim detector mesh coordinate arrays have inconsistent sizes: "
+            "Detector mesh coordinate arrays have inconsistent sizes: "
             f"x={x_coordinates.size}, y={y_coordinates.size}, z={z_coordinates.size}."
         )
 
     if x_coordinates.size == 0:
         logger.warning(
-            "PyMieSim detector mesh is still empty after Setup construction. "
-            "Check whether Photodiode requires an explicit sampling parameter or "
-            "whether Setup initialization changed."
+            "Detector Fibonacci mesh is empty after local construction. "
+            "Check the sampling size and collection-angle bounds."
         )
 
     coordinate_array = np.column_stack(
@@ -448,6 +400,131 @@ def build_pymiesim_photodiode_mesh_coordinates(
     )
 
     return coordinate_array
+
+
+def _build_detector_collection_max_angle(
+    *,
+    detector_numerical_aperture: float,
+    medium_refractive_index: float,
+) -> float:
+    detector_medium_refractive_index = float(medium_refractive_index)
+
+    if detector_medium_refractive_index <= 0.0:
+        raise ValueError("medium_refractive_index must be positive.")
+
+    normalized_numerical_aperture = np.clip(
+        float(detector_numerical_aperture) / detector_medium_refractive_index,
+        -1.0,
+        1.0,
+    )
+    return float(np.arcsin(normalized_numerical_aperture))
+
+
+def _build_fibonacci_cap_coordinate_array(
+    *,
+    sampling: int,
+    max_angle: float,
+    min_angle: float,
+) -> np.ndarray:
+    if sampling <= 0:
+        raise ValueError("detector_sampling must be a positive integer.")
+
+    if sampling == 1:
+        return np.asarray([[0.0, 0.0, 1.0]], dtype=float)
+
+    solid_angle = 2.0 * np.pi * abs(np.cos(min_angle) - np.cos(max_angle))
+
+    if solid_angle <= 0.0:
+        raise ValueError("Detector collection solid angle must be positive.")
+
+    sampling_ratio = (4.0 * np.pi) / solid_angle
+    true_number_of_sample = max(int(sampling * sampling_ratio), sampling)
+    golden_angle = np.pi * (3.0 - np.sqrt(5.0))
+
+    coordinate_rows: list[list[float]] = []
+
+    for index in range(true_number_of_sample):
+        denominator = max(true_number_of_sample - 1, 1)
+        z_coordinate = 1.0 - (2.0 * index) / denominator
+        azimuthal_angle = golden_angle * index
+        radial_distance = np.sqrt(max(0.0, 1.0 - z_coordinate * z_coordinate))
+        polar_angle = (np.pi / 2.0) - np.arcsin(np.clip(z_coordinate, -1.0, 1.0))
+
+        if polar_angle < min_angle:
+            continue
+
+        coordinate_rows.append(
+            [
+                float(np.cos(azimuthal_angle) * radial_distance),
+                float(np.sin(azimuthal_angle) * radial_distance),
+                float(z_coordinate),
+            ]
+        )
+
+        if len(coordinate_rows) >= sampling:
+            break
+
+    if len(coordinate_rows) != sampling:
+        raise ValueError(
+            "Could not construct the requested number of detector mesh coordinates. "
+            f"Expected {sampling}, built {len(coordinate_rows)}."
+        )
+
+    return np.asarray(coordinate_rows, dtype=float)
+
+
+def _rotate_coordinate_array_about_x(
+    coordinate_array: np.ndarray,
+    angle_radian: float,
+) -> np.ndarray:
+    if angle_radian == 0.0:
+        return np.asarray(coordinate_array, dtype=float)
+
+    cosine = float(np.cos(angle_radian))
+    sine = float(np.sin(angle_radian))
+    rotation_matrix = np.asarray(
+        [
+            [1.0, 0.0, 0.0],
+            [0.0, cosine, -sine],
+            [0.0, sine, cosine],
+        ],
+        dtype=float,
+    )
+    return np.asarray(coordinate_array, dtype=float) @ rotation_matrix.T
+
+
+def _rotate_coordinate_array_about_y(
+    coordinate_array: np.ndarray,
+    angle_radian: float,
+) -> np.ndarray:
+    if angle_radian == 0.0:
+        return np.asarray(coordinate_array, dtype=float)
+
+    cosine = float(np.cos(angle_radian))
+    sine = float(np.sin(angle_radian))
+    rotation_matrix = np.asarray(
+        [
+            [cosine, 0.0, sine],
+            [0.0, 1.0, 0.0],
+            [-sine, 0.0, cosine],
+        ],
+        dtype=float,
+    )
+    return np.asarray(coordinate_array, dtype=float) @ rotation_matrix.T
+
+
+def _map_detector_frame_to_rosettax_frame(
+    coordinate_array: np.ndarray,
+) -> np.ndarray:
+    coordinate_array = np.asarray(coordinate_array, dtype=float)
+
+    return np.column_stack(
+        [
+            coordinate_array[:, 2],
+            coordinate_array[:, 1],
+            coordinate_array[:, 0],
+        ]
+    )
 
 
 def resolve_scatter_coordinates_from_mapping(

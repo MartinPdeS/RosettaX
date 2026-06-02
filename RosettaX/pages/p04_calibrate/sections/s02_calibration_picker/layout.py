@@ -111,33 +111,31 @@ class CalibrationPickerLayout:
         """
         Build the selected calibration picker panel.
         """
+        panel_tooltip_target_id = (
+            f"{self.page.ids.CalibrationPicker.dropdown}-picker-panel-info-target"
+        )
+        panel_tooltip_id = f"{self.page.ids.CalibrationPicker.dropdown}-picker-panel-info-tooltip"
+
         return dbc.Card(
             dbc.CardBody(
                 [
                     dash.html.Div(
                         [
                             dash.html.Div(
-                                [
-                                    dash.html.Div(
-                                        "Calibration file",
-                                        style={
-                                            "fontWeight": "700",
-                                            "fontSize": "1rem",
-                                        },
+                                ui_forms.build_title_with_info(
+                                    title="Calibration file",
+                                    tooltip_target_id=panel_tooltip_target_id,
+                                    tooltip_id=panel_tooltip_id,
+                                    tooltip_text=(
+                                        "Pick one saved calibration JSON file. The list is "
+                                        "built from the fluorescence and scattering calibration "
+                                        "folders."
                                     ),
-                                    dash.html.Div(
-                                        (
-                                            "Pick one saved calibration JSON file. "
-                                            "The list is built from the fluorescence "
-                                            "and scattering calibration folders."
-                                        ),
-                                        style=ui_forms.build_workflow_section_subtitle_style(
-                                            font_size="0.9rem",
-                                            opacity=0.72,
-                                            margin_top_px=2,
-                                        ),
-                                    ),
-                                ],
+                                    title_style_overrides={
+                                        "fontWeight": "700",
+                                        "fontSize": "1rem",
+                                    },
+                                ),
                                 style={
                                     "flex": "1 1 280px",
                                 },
@@ -229,19 +227,13 @@ class CalibrationPickerLayout:
                                         "target particle model used to convert calibrated "
                                         "optical coupling into equivalent diameter."
                                     ),
-                                    title_style_overrides={
-                                        "fontSize": "1rem",
-                                    },
-                                ),
-                                dash.html.Div(
-                                    (
+                                    subtitle=(
                                         "Configure the target Mie model used for scattering "
                                         "diameter inversion."
                                     ),
-                                    style=ui_forms.build_workflow_section_subtitle_style(
-                                        font_size="0.84rem",
-                                        opacity=0.72,
-                                    ),
+                                    title_style_overrides={
+                                        "fontSize": "1rem",
+                                    },
                                 ),
                             ],
                             style=ui_forms.build_workflow_subpanel_header_style(
@@ -287,23 +279,30 @@ class CalibrationPickerLayout:
         """
         Build the target model form controls panel.
         """
+        panel_tooltip_target_id = (
+            f"{self.page.ids.CalibrationPicker.target_model_preset}-model-parameters-info-target"
+        )
+        panel_tooltip_id = (
+            f"{self.page.ids.CalibrationPicker.target_model_preset}-model-parameters-info-tooltip"
+        )
+
         return dbc.Card(
             [
                 dbc.CardHeader(
                     [
-                        dash.html.Div(
-                            "Model parameters",
-                            style={
+                        ui_forms.build_title_with_info(
+                            title="Model parameters",
+                            tooltip_target_id=panel_tooltip_target_id,
+                            tooltip_id=panel_tooltip_id,
+                            tooltip_text=(
+                                "Configure the target-model preset, particle type, "
+                                "refractive indices, and the diameter range used for "
+                                "the inversion model."
+                            ),
+                            title_style_overrides={
                                 "fontWeight": "700",
                                 "fontSize": "0.98rem",
                             },
-                        ),
-                        dash.html.Div(
-                            "Preset, particle type, refractive indices, and model specific diameter range.",
-                            style=ui_forms.build_workflow_section_subtitle_style(
-                                font_size="0.84rem",
-                                opacity=0.72,
-                            ),
                         ),
                     ],
                     style=ui_forms.build_workflow_subpanel_header_style(
@@ -485,16 +484,10 @@ class CalibrationPickerLayout:
                                 "diameter inversion. If the full relation is not monotonic, "
                                 "RosettaX automatically selects the largest monotonic branch."
                             ),
+                            subtitle="Full relation and selected monotonic branch when needed.",
                             title_style_overrides={
                                 "fontSize": "0.98rem",
                             },
-                        ),
-                        dash.html.Div(
-                            "Full relation and selected monotonic branch when needed.",
-                            style=ui_forms.build_workflow_section_subtitle_style(
-                                font_size="0.84rem",
-                                opacity=0.72,
-                            ),
                         ),
                     ],
                     style=ui_forms.build_workflow_subpanel_header_style(

@@ -45,10 +45,10 @@ def _build_header(section) -> dbc.CardHeader:
                     "measured bead peak positions and the known MESF values in the "
                     "reference table."
                 ),
-            ),
-            dash.html.Div(
-                "Fit the fluorescence response from reference MESF values and measured bead peaks.",
-                style=ui_forms.build_workflow_section_subtitle_style(),
+                subtitle=(
+                    "Fit the fluorescence response from reference MESF values and "
+                    "measured bead peaks."
+                ),
             ),
         ],
         style=ui_forms.build_workflow_section_header_style(
@@ -132,18 +132,6 @@ def _build_action_panel(section) -> dbc.Card:
                                         "fontSize": "1rem",
                                     },
                                 ),
-                                dash.html.Div(
-                                    (
-                                        "Create the calibration by matching measured "
-                                        "fluorescence peak positions to known MESF "
-                                        "reference values."
-                                    ),
-                                    style={
-                                        "opacity": 0.72,
-                                        "fontSize": "0.9rem",
-                                        "marginTop": "2px",
-                                    },
-                                ),
                             ],
                             style={
                                 "flex": "1 1 auto",
@@ -164,7 +152,8 @@ def _build_action_panel(section) -> dbc.Card:
                                     (
                                         "Create the fluorescence calibration by matching the measured "
                                         "fluorescence peak positions to the known MESF values from "
-                                        "the reference table."
+                                        "the reference table. Use the current bead peaks and MESF "
+                                        "reference values to compute the fitted response."
                                     ),
                                     id=section.create_calibration_tooltip_id,
                                     target=section.create_calibration_tooltip_target_id,
@@ -254,15 +243,10 @@ def _build_graph_panel_card(
                             "fluorescence intensity and calibrated fluorescence units. "
                             "Review the fit before saving the calibration."
                         ),
+                        subtitle=subtitle,
                         title_style_overrides={
                             "fontSize": "0.98rem",
                         },
-                    ),
-                    dash.html.Div(
-                        subtitle,
-                        style=ui_forms.build_workflow_section_subtitle_style(
-                            font_size="0.84rem",
-                        ),
                     ),
                 ],
                 style=ui_forms.build_workflow_subpanel_header_style(

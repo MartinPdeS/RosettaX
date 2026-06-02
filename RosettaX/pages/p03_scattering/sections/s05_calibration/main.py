@@ -99,10 +99,7 @@ class Calibration:
                         "peak positions and the modeled coupling values in watts from "
                         "the calibration standard table."
                     ),
-                ),
-                dash.html.Div(
-                    "Estimate the instrument response from the calibration standard.",
-                    style=ui_forms.build_workflow_section_subtitle_style(),
+                    subtitle="Estimate the instrument response from the calibration standard.",
                 ),
             ],
             style=ui_forms.build_workflow_section_header_style(
@@ -156,18 +153,6 @@ class Calibration:
                                             "fontSize": "1rem",
                                         },
                                     ),
-                                    dash.html.Div(
-                                        (
-                                            "Use the current measured peak positions and modeled "
-                                            "standard coupling values in watts to compute the scattering "
-                                            "instrument response."
-                                        ),
-                                        style={
-                                            "opacity": 0.72,
-                                            "fontSize": "0.9rem",
-                                            "marginTop": "2px",
-                                        },
-                                    ),
                                 ],
                                 style={
                                     "flex": "1 1 auto",
@@ -188,7 +173,9 @@ class Calibration:
                                         (
                                             "Compute the fitted instrument response from the measured "
                                             "standard peak positions and the modeled coupling values in watts "
-                                            "values currently present in the calibration standard table."
+                                            "values currently present in the calibration standard table. "
+                                            "Use the current measured peak positions and modeled standard "
+                                            "coupling values to compute the scattering instrument response."
                                         ),
                                         id=self.compute_model_tooltip_id,
                                         target=self.compute_model_tooltip_target_id,
@@ -302,15 +289,10 @@ class Calibration:
                         tooltip_target_id=tooltip_target_id,
                         tooltip_id=tooltip_id,
                         tooltip_text=tooltip_text,
+                        subtitle=subtitle,
                         title_style_overrides={
                             "fontSize": "0.98rem",
                         },
-                    ),
-                    dash.html.Div(
-                        subtitle,
-                        style=ui_forms.build_workflow_section_subtitle_style(
-                            font_size="0.84rem",
-                        ),
                     ),
                 ],
                 style=ui_forms.build_workflow_subpanel_header_style(

@@ -135,15 +135,13 @@ class ApplyLayout:
                                 "Select optional channels to preserve in the exported "
                                 "files. The calibration source channel is always included."
                             ),
+                            subtitle=(
+                                "Choose additional raw channels to copy unchanged into "
+                                "the output files."
+                            ),
                             title_style_overrides={
                                 "fontSize": "0.98rem",
                             },
-                        ),
-                        dash.html.Div(
-                            "Choose additional raw channels to copy unchanged into the output files.",
-                            style=ui_forms.build_workflow_section_subtitle_style(
-                                font_size="0.84rem",
-                            ),
                         ),
                     ],
                     style=ui_forms.build_workflow_subpanel_header_style(
@@ -168,15 +166,6 @@ class ApplyLayout:
                         dash.html.Div(
                             style={
                                 "height": "8px",
-                            },
-                        ),
-                        dash.html.Small(
-                            (
-                                "The calibration source channel will always be included. "
-                                "These extra columns will be exported unchanged."
-                            ),
-                            style={
-                                "opacity": 0.75,
                             },
                         ),
                     ],
@@ -206,17 +195,6 @@ class ApplyLayout:
                                             "fontSize": "1rem",
                                         },
                                     ),
-                                    dash.html.Div(
-                                        (
-                                            "Apply the selected calibration to every uploaded "
-                                            "FCS file and package the calibrated outputs for download."
-                                        ),
-                                        style=ui_forms.build_workflow_section_subtitle_style(
-                                            font_size="0.9rem",
-                                            opacity=0.72,
-                                            margin_top_px=2,
-                                        ),
-                                    ),
                                 ],
                                 style={
                                     "flex": "1 1 auto",
@@ -236,7 +214,9 @@ class ApplyLayout:
                                     dbc.Tooltip(
                                         (
                                             "Run the calibration on the uploaded FCS files "
-                                            "and prepare the exported calibrated files for download."
+                                            "and prepare the exported calibrated files for download. "
+                                            "Apply the selected calibration to every uploaded FCS "
+                                            "file and package the calibrated outputs for download."
                                         ),
                                         id=self.apply_button_tooltip_id,
                                         target=self.apply_button_tooltip_target_id,

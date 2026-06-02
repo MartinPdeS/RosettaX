@@ -143,13 +143,10 @@ class Model:
                                 "bar numerical aperture, and angular sampling used by the "
                                 "scattering model."
                             ),
+                            subtitle="Illumination, detector geometry, and angular sampling.",
                             title_style_overrides={
                                 "fontSize": "1rem",
                             },
-                        ),
-                        dash.html.Div(
-                            "Illumination, detector geometry, and angular sampling.",
-                            style=ui_forms.build_workflow_section_subtitle_style(),
                         ),
                     ],
                     style=ui_forms.build_workflow_subpanel_header_style(
@@ -418,13 +415,10 @@ class Model:
                                 "indices used to compute the modeled optical coupling of "
                                 "the calibration standard."
                             ),
+                            subtitle="Particle model and refractive index parameters.",
                             title_style_overrides={
                                 "fontSize": "1rem",
                             },
-                        ),
-                        dash.html.Div(
-                            "Particle model and refractive index parameters.",
-                            style=ui_forms.build_workflow_section_subtitle_style(),
                         ),
                     ],
                     style=ui_forms.build_workflow_subpanel_header_style(

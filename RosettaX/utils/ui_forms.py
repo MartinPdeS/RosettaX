@@ -134,12 +134,20 @@ def build_info_badge(
     )
 
 
+def _merge_tooltip_text(*parts: Optional[str]) -> str:
+    """
+    Combine related help text into one compact tooltip string.
+    """
+    return " ".join(part.strip() for part in parts if part and part.strip())
+
+
 def build_title_with_info(
     *,
     title: str,
     tooltip_target_id: str,
     tooltip_id: str,
     tooltip_text: str,
+    subtitle: Optional[str] = None,
     placement: str = "right",
     title_style_overrides: Optional[dict[str, Any]] = None,
     badge_style_overrides: Optional[dict[str, Any]] = None,
@@ -147,6 +155,7 @@ def build_title_with_info(
     """
     Build a compact title with a hover help tooltip.
     """
+    tooltip_content = _merge_tooltip_text(tooltip_text, subtitle)
     return html.Div(
         [
             html.Span(title),
@@ -155,7 +164,7 @@ def build_title_with_info(
                 style_overrides=badge_style_overrides,
             ),
             dbc.Tooltip(
-                tooltip_text,
+                tooltip_content,
                 id=tooltip_id,
                 target=tooltip_target_id,
                 placement=placement,
@@ -190,20 +199,11 @@ def build_card_header_with_info(
             tooltip_target_id=tooltip_target_id,
             tooltip_id=tooltip_id,
             tooltip_text=tooltip_text,
+            subtitle=subtitle,
             placement=placement,
             title_style_overrides=title_style_overrides,
         )
     ]
-
-    if subtitle:
-        children.append(
-            html.Div(
-                subtitle,
-                style=build_workflow_section_subtitle_style(
-                    style_overrides=subtitle_style_overrides,
-                ),
-            )
-        )
 
     return dbc.CardHeader(
         children,

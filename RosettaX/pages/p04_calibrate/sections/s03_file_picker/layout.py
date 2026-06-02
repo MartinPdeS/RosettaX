@@ -96,33 +96,29 @@ class FilePickerLayout:
         """
         Build the upload panel.
         """
+        panel_tooltip_target_id = f"{self.page.ids.FilePicker.upload}-panel-info-target"
+        panel_tooltip_id = f"{self.page.ids.FilePicker.upload}-panel-info-tooltip"
+
         return dbc.Card(
             dbc.CardBody(
                 [
                     dash.html.Div(
                         [
                             dash.html.Div(
-                                [
-                                    dash.html.Div(
-                                        "Input FCS files",
-                                        style={
-                                            "fontWeight": "700",
-                                            "fontSize": "1rem",
-                                        },
+                                ui_forms.build_title_with_info(
+                                    title="Input FCS files",
+                                    tooltip_target_id=panel_tooltip_target_id,
+                                    tooltip_id=panel_tooltip_id,
+                                    tooltip_text=(
+                                        "Upload a single file or a batch of files. Uploaded "
+                                        "files are copied to the local RosettaX upload "
+                                        "directory for this session."
                                     ),
-                                    dash.html.Div(
-                                        (
-                                            "Upload a single file or a batch of files. "
-                                            "Uploaded files are copied to the local "
-                                            "RosettaX upload directory for this session."
-                                        ),
-                                        style=ui_forms.build_workflow_section_subtitle_style(
-                                            font_size="0.9rem",
-                                            opacity=0.72,
-                                            margin_top_px=2,
-                                        ),
-                                    ),
-                                ],
+                                    title_style_overrides={
+                                        "fontWeight": "700",
+                                        "fontSize": "1rem",
+                                    },
+                                ),
                                 style={
                                     "marginBottom": "12px",
                                 },

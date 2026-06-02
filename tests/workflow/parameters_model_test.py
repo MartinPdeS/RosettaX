@@ -535,3 +535,56 @@ class Test_compute_model_for_rows:
         )
 
         assert result == []
+
+
+class Test_build_pymiesim_photodiode_mesh_coordinates:
+    def test_returns_requested_sampling_on_unit_sphere(self):
+        coordinate_array = build_pymiesim_photodiode_mesh_coordinates(
+            detector_numerical_aperture=0.45,
+            medium_refractive_index=1.334,
+            detector_phi_angle_degree=0.0,
+            detector_gamma_angle_degree=0.0,
+            detector_sampling=256,
+        )
+
+        assert coordinate_array.shape == (256, 3)
+        assert np.allclose(np.linalg.norm(coordinate_array, axis=1), 1.0)
+
+    def test_uses_rosettax_detector_frame_with_default_axis_on_x(self):
+        coordinate_array = build_pymiesim_photodiode_mesh_coordinates(
+            detector_numerical_aperture=0.45,
+            medium_refractive_index=1.334,
+            detector_phi_angle_degree=0.0,
+            detector_gamma_angle_degree=0.0,
+            detector_sampling=512,
+        )
+
+        mean_axis = coordinate_array.mean(axis=0)
+        mean_axis = mean_axis / np.linalg.norm(mean_axis)
+
+        assert mean_axis[0] > 0.99
+        assert abs(mean_axis[1]) < 5e-4
+        assert abs(mean_axis[2]) < 5e-4
+
+    def test_applies_phi_offset_in_xz_plane(self):
+        coordinate_array = build_pymiesim_photodiode_mesh_coordinates(
+            detector_numerical_aperture=0.45,
+            medium_refractive_index=1.334,
+            detector_phi_angle_degree=45.0,
+            detector_gamma_angle_degree=0.0,
+            detector_sampling=512,
+        )
+
+        mean_axis = coordinate_array.mean(axis=0)
+        mean_axis = mean_axis / np.linalg.norm(mean_axis)
+
+        expected_axis = np.asarray(
+            [
+                np.sqrt(0.5),
+                0.0,
+                np.sqrt(0.5),
+            ],
+            dtype=float,
+        )
+
+        assert np.allclose(mean_axis, expected_axis, atol=3e-3)
