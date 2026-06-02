@@ -54,9 +54,6 @@ class Model:
         self.section_tooltip_target_id = f"{self.ids.mie_model}-section-info-target"
         self.section_tooltip_id = f"{self.ids.mie_model}-section-info-tooltip"
 
-        self.optical_configuration_tooltip_target_id = f"{self.ids.wavelength_nm}-optical-info-target"
-        self.optical_configuration_tooltip_id = f"{self.ids.wavelength_nm}-optical-info-tooltip"
-
         self.particle_configuration_tooltip_target_id = f"{self.ids.mie_model}-particle-info-target"
         self.particle_configuration_tooltip_id = f"{self.ids.mie_model}-particle-info-tooltip"
 
@@ -95,14 +92,18 @@ class Model:
         Build section header.
         """
         return ui_forms.build_card_header_with_info(
-            title=f"{self.section_number}. Set calculation parameters",
+            title=f"{self.section_number}. Set optical configuration",
             tooltip_target_id=self.section_tooltip_target_id,
             tooltip_id=self.section_tooltip_id,
             tooltip_text=(
-                "These parameters define the optical, detector, and particle "
-                "model used to compute the calibration standard coupling values."
+                "These controls define the illumination, detector geometry, and "
+                "angular sampling used to compute the calibration standard coupling "
+                "values."
             ),
-            subtitle="Configure the physical model used for scattering calibration.",
+            subtitle=(
+                "Configure the illumination, detector geometry, and angular sampling "
+                "used for scattering calibration."
+            ),
             color_name=self.card_color,
         )
 
@@ -121,61 +122,23 @@ class Model:
         Build parameter body.
         """
         return dbc.CardBody(
-            [self._build_optical_configuration_panel()],
-            style=ui_forms.build_workflow_section_body_style(),
-        )
-
-    def _build_optical_configuration_panel(self) -> dbc.Card:
-        """
-        Build the optical configuration subpanel.
-        """
-        return dbc.Card(
             [
-                dbc.CardHeader(
+                dash.html.Div(
                     [
-                        ui_forms.build_title_with_info(
-                            title="Optical configuration",
-                            tooltip_target_id=self.optical_configuration_tooltip_target_id,
-                            tooltip_id=self.optical_configuration_tooltip_id,
-                            tooltip_text=(
-                                "These controls define the illumination wavelength, detector "
-                                "acceptance geometry, collection numerical aperture, blocker "
-                                "bar numerical aperture, and angular sampling used by the "
-                                "scattering model."
-                            ),
-                            subtitle="Illumination, detector geometry, and angular sampling.",
-                            title_style_overrides={
-                                "fontSize": "1rem",
-                            },
-                        ),
+                        self._build_optical_configuration_controls(),
+                        self._build_optical_configuration_visualization(),
                     ],
-                    style=ui_forms.build_workflow_subpanel_header_style(
-                        color_name=self.card_color,
-                    ),
-                ),
-                dbc.CardBody(
-                    [
-                        dash.html.Div(
-                            [
-                                self._build_optical_configuration_controls(),
-                                self._build_optical_configuration_visualization(),
-                            ],
-                            style={
-                                "display": "flex",
-                                "gap": "24px",
-                                "alignItems": "flex-start",
-                                "width": "100%",
-                                "flexWrap": "wrap",
-                                "overflow": "visible",
-                            },
-                        ),
-                    ],
-                    style=ui_forms.build_workflow_panel_body_style(),
-                ),
+                    style={
+                        "display": "flex",
+                        "gap": "24px",
+                        "alignItems": "flex-start",
+                        "width": "100%",
+                        "flexWrap": "wrap",
+                        "overflow": "visible",
+                    },
+                )
             ],
-            style=ui_forms.build_workflow_subpanel_card_style(
-                color_name=self.card_color,
-            ),
+            style=ui_forms.build_workflow_section_body_style(),
         )
 
     def _build_optical_configuration_controls(self) -> dash.html.Div:
