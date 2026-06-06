@@ -3,13 +3,16 @@
 
 UPLOAD = {
     "width": "100%",
-    "height": "60px",
-    "lineHeight": "60px",
+    "minHeight": "64px",
+    "lineHeight": "64px",
     "borderWidth": "1px",
     "borderStyle": "dashed",
-    "borderRadius": "5px",
+    "borderRadius": "12px",
     "textAlign": "center",
-    "margin": "10px",
+    "cursor": "pointer",
+    "background": "rgba(128, 128, 128, 0.045)",
+    "borderColor": "rgba(128, 128, 128, 0.35)",
+    "transition": "border-color 120ms ease, background 120ms ease",
 }
 
 CARD = {

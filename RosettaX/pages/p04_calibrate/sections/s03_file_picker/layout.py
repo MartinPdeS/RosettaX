@@ -92,30 +92,18 @@ class FilePickerLayout:
             style=ui_forms.build_workflow_section_body_style(),
         )
 
-    def _build_upload_panel(self) -> dbc.Card:
+    def _build_upload_panel(self) -> dash.html.Div:
         """
         Build the upload panel.
         """
-        return dbc.Card(
-            dbc.CardBody(
-                [
-                    dash.html.Div(
-                        [
-                            self._build_upload_widget(),
-                        ]
-                    ),
-                ],
-                style={
-                    "padding": "14px 16px",
-                },
-            ),
-            style=ui_forms.build_workflow_panel_style(
-                color_name=self.card_color,
-                background=styling.build_rgba(
-                    self.card_color,
-                    0.04,
+        return dash.html.Div(
+            [
+                dash.html.Div(
+                    [
+                        self._build_upload_widget(),
+                    ]
                 ),
-            ),
+            ]
         )
 
     def _build_upload_widget(self) -> dash.dcc.Upload:
@@ -139,19 +127,7 @@ class FilePickerLayout:
                 ]
             ),
             multiple=True,
-            style={
-                "width": "100%",
-                "minHeight": "64px",
-                "lineHeight": "64px",
-                "borderWidth": "1px",
-                "borderStyle": "dashed",
-                "borderRadius": "12px",
-                "textAlign": "center",
-                "cursor": "pointer",
-                "background": "rgba(128, 128, 128, 0.045)",
-                "borderColor": "rgba(128, 128, 128, 0.35)",
-                "transition": "border-color 120ms ease, background 120ms ease",
-            },
+            style=styling.UPLOAD,
         )
 
     def _build_alert(self) -> dbc.Alert:

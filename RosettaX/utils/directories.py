@@ -30,13 +30,7 @@ profiles = root / "profiles"
 
 default_profile = profiles / "default_profile.json"
 
-calibration_directory = root / "calibrations"
-
 detectors = root / "workflow/detector/presets"
-
-fluorescence_calibration = calibration_directory / "fluorescence"
-
-scattering_calibration = calibration_directory / "scattering"
 
 asset_directory = root / "assets"
 

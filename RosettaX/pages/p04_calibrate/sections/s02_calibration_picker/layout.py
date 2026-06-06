@@ -107,45 +107,33 @@ class CalibrationPickerLayout:
             style=ui_forms.build_workflow_section_body_style(),
         )
 
-    def _build_picker_panel(self) -> dbc.Card:
+    def _build_picker_panel(self) -> dash.html.Div:
         """
         Build the selected calibration picker panel.
         """
-        return dbc.Card(
-            dbc.CardBody(
-                [
-                    dash.html.Div(
-                        [
-                            self._build_picker_row(),
-                        ],
-                        style={
-                            "display": "flex",
-                            "alignItems": "center",
-                            "justifyContent": "flex-start",
-                            "gap": "18px",
-                            "flexWrap": "wrap",
-                            "overflow": "visible",
-                        },
-                    ),
-                    dash.html.Div(
-                        style={
-                            "height": "10px",
-                        },
-                    ),
-                    self._build_picker_status(),
-                ],
-                style={
-                    "padding": "14px 16px",
-                    "overflow": "visible",
-                },
-            ),
-            style=ui_forms.build_workflow_panel_style(
-                color_name=self.card_color,
-                background=styling.build_rgba(
-                    self.card_color,
-                    0.04,
+        return dash.html.Div(
+            [
+                dash.html.Div(
+                    [
+                        self._build_picker_row(),
+                    ],
+                    style={
+                        "display": "flex",
+                        "alignItems": "center",
+                        "justifyContent": "flex-start",
+                        "gap": "18px",
+                        "flexWrap": "wrap",
+                        "overflow": "visible",
+                        "padding": "0px",
+                    },
                 ),
-            ),
+                dash.html.Div(
+                    style={
+                        "height": "10px",
+                    },
+                ),
+                self._build_picker_status(),
+            ]
         )
 
     def _build_picker_row(self) -> dash.html.Div:
@@ -170,19 +158,7 @@ class CalibrationPickerLayout:
                             ]
                         ),
                         multiple=False,
-                        style={
-                            "width": "100%",
-                            "minHeight": "64px",
-                            "lineHeight": "64px",
-                            "borderWidth": "1px",
-                            "borderStyle": "dashed",
-                            "borderRadius": "12px",
-                            "textAlign": "center",
-                            "cursor": "pointer",
-                            "background": "rgba(128, 128, 128, 0.045)",
-                            "borderColor": "rgba(128, 128, 128, 0.35)",
-                            "transition": "border-color 120ms ease, background 120ms ease",
-                        },
+                        style=styling.UPLOAD,
                     ),
                     style={
                         "flex": "1 1 420px",

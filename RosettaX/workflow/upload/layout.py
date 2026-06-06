@@ -74,6 +74,10 @@ class UploadLayout:
                                     "Drag and drop or ",
                                     html.A(
                                         self.config.upload_link_text,
+                                        style={
+                                            "fontWeight": "650",
+                                            "textDecoration": "none",
+                                        },
                                     ),
                                 ]
                             ),
@@ -86,6 +90,9 @@ class UploadLayout:
                             children=services.build_loaded_filename_text(
                                 initial_filename,
                             ),
+                            style={
+                                "marginTop": "10px",
+                            },
                         ),
                     ],
                     style=self._get_body_style(),
