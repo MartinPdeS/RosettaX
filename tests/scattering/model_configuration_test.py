@@ -1,5 +1,43 @@
 # -*- coding: utf-8 -*-
 
+import sys
+import types
+
+
+class _DashBootstrapComponentsSentinel:
+    def __call__(self, *args, **kwargs):
+        return None
+
+    def __getattr__(self, name):
+        return self
+
+
+class _DashBootstrapComponentsStub(types.ModuleType):
+    def __getattr__(self, name):
+        return _DashBootstrapComponentsSentinel()
+
+
+class _PyMieSimStub(types.ModuleType):
+    experiment = types.SimpleNamespace()
+
+
+class _PyMieSimUnitsStub(types.ModuleType):
+    ureg = types.SimpleNamespace()
+
+
+sys.modules.setdefault(
+    "dash_bootstrap_components",
+    _DashBootstrapComponentsStub("dash_bootstrap_components"),
+)
+sys.modules.setdefault(
+    "PyMieSim",
+    _PyMieSimStub("PyMieSim"),
+)
+sys.modules.setdefault(
+    "PyMieSim.units",
+    _PyMieSimUnitsStub("PyMieSim.units"),
+)
+
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.pages.p03_scattering.sections.s04_table.services import (
     ScatteringCalibrationStandardTable,
@@ -131,6 +169,20 @@ class Test_ScatteringModelConfigurationScattererPresets:
             "measured_peak_position": "78.9",
             "expected_coupling": "10.11",
         }
+
+    def test_optical_preview_uses_resolved_preset_sampling_when_current_sampling_is_missing(self):
+        figure = ModelConfiguration.build_optical_configuration_preview_figure(
+            detector_numerical_aperture=None,
+            detector_cache_numerical_aperture=None,
+            blocker_bar_numerical_aperture=None,
+            medium_refractive_index=1.333,
+            detector_phi_angle_degree=None,
+            detector_gamma_angle_degree=None,
+            detector_sampling=None,
+            detector_configuration_preset="Apogee - Side",
+        )
+
+        assert len(figure.data) >= 3
 
 
 class Test_ScatteringCalibrationStandardTable:

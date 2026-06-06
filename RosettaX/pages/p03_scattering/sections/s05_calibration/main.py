@@ -135,81 +135,41 @@ class Calibration:
             style=ui_forms.build_workflow_section_body_style(),
         )
 
-    def _build_action_panel(self) -> dbc.Card:
+    def _build_action_panel(self) -> dash.html.Div:
         """
         Build the instrument response computation action panel.
         """
-        return dbc.Card(
-            dbc.CardBody(
-                [
-                    dash.html.Div(
-                        [
-                            dash.html.Div(
-                                [
-                                    dash.html.Div(
-                                        "Instrument response fit",
-                                        style={
-                                            "fontWeight": "700",
-                                            "fontSize": "1rem",
-                                        },
-                                    ),
-                                ],
-                                style={
-                                    "flex": "1 1 auto",
-                                },
-                            ),
-                            dash.html.Div(
-                                [
-                                    dbc.Button(
-                                        "Create calibration",
-                                        id=self.ids.calibrate_btn,
-                                        n_clicks=0,
-                                        color="primary",
-                                    ),
-                                    ui_forms.build_info_badge(
-                                        tooltip_target_id=self.compute_model_tooltip_target_id,
-                                    ),
-                                    dbc.Tooltip(
-                                        (
-                                            "Compute the fitted instrument response from the measured "
-                                            "standard peak positions and the modeled coupling values in watts "
-                                            "values currently present in the calibration standard table. "
-                                            "Use the current measured peak positions and modeled standard "
-                                            "coupling values to compute the scattering instrument response."
-                                        ),
-                                        id=self.compute_model_tooltip_id,
-                                        target=self.compute_model_tooltip_target_id,
-                                        placement="right",
-                                    ),
-                                ],
-                                style={
-                                    "display": "flex",
-                                    "alignItems": "center",
-                                    "gap": "0px",
-                                    "flex": "0 0 auto",
-                                },
-                            ),
-                        ],
-                        style={
-                            "display": "flex",
-                            "alignItems": "center",
-                            "justifyContent": "space-between",
-                            "gap": "16px",
-                            "flexWrap": "wrap",
-                        },
-                    ),
-                ],
-                style={
-                    "padding": "14px 16px",
-                },
-            ),
-            style=ui_forms.build_workflow_panel_style(
-                color_name=self.card_color,
-                background=styling.build_rgba(
-                    self.card_color,
-                    0.04,
+        return dash.html.Div(
+            [
+                dbc.Button(
+                    "Create calibration",
+                    id=self.ids.calibrate_btn,
+                    n_clicks=0,
+                    color="primary",
                 ),
-            ),
+                ui_forms.build_info_badge(
+                    tooltip_target_id=self.compute_model_tooltip_target_id,
+                ),
+                dbc.Tooltip(
+                    (
+                        "Compute the fitted instrument response from the measured "
+                        "standard peak positions and the modeled coupling values in watts "
+                        "values currently present in the calibration standard table. "
+                        "Use the current measured peak positions and modeled standard "
+                        "coupling values to compute the scattering instrument response."
+                    ),
+                    id=self.compute_model_tooltip_id,
+                    target=self.compute_model_tooltip_target_id,
+                    placement="right",
+                ),
+            ],
+            style={
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "flex-start",
+                "gap": "0px",
+                "overflow": "visible",
+            },
         )
 
     def _build_graph_block(self) -> dash.html.Div:

@@ -7,6 +7,7 @@ import dash
 import dash_bootstrap_components as dbc
 
 from RosettaX.utils import styling, ui_forms, RuntimeConfig, casting
+from RosettaX.workflow.peak.core import detectors as peak_detectors
 from RosettaX.workflow import scattering
 from . import optical_preview
 
@@ -162,15 +163,31 @@ class Model:
                         [
                             dash.dcc.Dropdown(
                                 id=self.ids.detector_configuration_preset,
-                                options=self.model_configuration.build_detector_preset_options(),
-                                value=self.model_configuration.custom_detector_preset_name,
+                                options=[
+                                    {
+                                        "label": "No preset",
+                                        "value": "",
+                                    },
+                                    *self.model_configuration.build_detector_preset_options(),
+                                ],
+                                value="",
                                 placeholder="Select detector preset",
-                                clearable=False,
+                                clearable=True,
                                 searchable=False,
                                 persistence=True,
                                 persistence_type="session",
                                 style={
                                     "width": "320px",
+                                },
+                            ),
+                            dbc.Button(
+                                "Auto-detect",
+                                id=self.ids.detector_configuration_auto_detect_button,
+                                n_clicks=0,
+                                color="secondary",
+                                outline=True,
+                                style={
+                                    "marginLeft": "10px",
                                 },
                             ),
                             ui_forms.build_info_badge(
@@ -179,9 +196,11 @@ class Model:
                             dbc.Tooltip(
                                 (
                                     "Use a detector preset to load a predefined "
-                                    "collection geometry. Select the custom preset "
-                                    "when you want to edit each detector parameter "
-                                    "manually."
+                                    "collection geometry. Leave the preset empty to "
+                                    "keep the detector unconfigured, select Generic "
+                                    "detector to edit parameters manually, or click "
+                                    "Auto-detect to try matching the uploaded FCS "
+                                    "metadata to a known preset."
                                 ),
                                 id=self.detector_preset_tooltip_id,
                                 target=self.detector_preset_tooltip_target_id,
@@ -200,6 +219,19 @@ class Model:
                     },
                     control_wrapper_style_overrides={
                         "overflow": "visible",
+                    },
+                ),
+                dbc.Alert(
+                    "",
+                    id=self.ids.detector_configuration_auto_detect_status,
+                    color="info",
+                    is_open=False,
+                    style={
+                        "marginTop": "12px",
+                        "marginBottom": "0px",
+                        "borderRadius": "10px",
+                        "padding": "8px 12px",
+                        "fontSize": "0.9rem",
                     },
                 ),
                 dash.html.Div(
@@ -266,7 +298,7 @@ class Model:
                     ],
                     id=self.ids.detector_configuration_custom_values_container,
                     style={
-                        "display": "block",
+                        "display": "none",
                         "overflow": "visible",
                     },
                 ),
@@ -691,6 +723,30 @@ class Model:
 
         return strict_upper_bound
 
+    @staticmethod
+    def _resolve_selected_peak_detector_channel(
+        *,
+        selected_peak_process_name: Any,
+        detector_dropdown_ids: list[dict[str, Any]],
+        detector_dropdown_values: list[Any],
+    ) -> Any:
+        """
+        Resolve the peak detector channel currently driving scattering calibration.
+        """
+        channel_values = peak_detectors.resolve_detector_channels_for_process(
+            detector_dropdown_ids=detector_dropdown_ids,
+            detector_dropdown_values=detector_dropdown_values,
+            process_name=selected_peak_process_name,
+        )
+
+        for channel_name in ("primary", "scattering_axis", "x_axis", "x"):
+            resolved_channel = channel_values.get(channel_name)
+
+            if resolved_channel:
+                return resolved_channel
+
+        return None
+
     def register_callbacks(self) -> None:
         """
         Register parameter callbacks.
@@ -747,8 +803,8 @@ class Model:
             detector_preset = self.model_configuration.resolve_runtime_detector_preset(
                 runtime_config.get_str(
                     "optics.detector_configuration_preset",
-                    default=self.model_configuration.custom_detector_preset_name,
-                )
+                    default="",
+                ),
             )
 
             resolved_detector_values = (
@@ -816,7 +872,7 @@ class Model:
             )
 
             return (
-                detector_preset,
+                detector_preset or "",
                 scatterer_preset,
                 *resolved_values,
             )
@@ -1037,6 +1093,114 @@ class Model:
         """
         Register detector configuration callbacks.
         """
+
+        @dash.callback(
+            dash.Output(
+                self.ids.detector_configuration_preset,
+                "value",
+                allow_duplicate=True,
+            ),
+            dash.Output(
+                self.ids.wavelength_nm,
+                "value",
+                allow_duplicate=True,
+            ),
+            dash.Output(self.ids.detector_configuration_auto_detect_status, "children"),
+            dash.Output(self.ids.detector_configuration_auto_detect_status, "color"),
+            dash.Output(self.ids.detector_configuration_auto_detect_status, "is_open"),
+            dash.Input(self.ids.detector_configuration_auto_detect_button, "n_clicks"),
+            dash.State("runtime-config-store", "data"),
+            dash.State(self.page.ids.Scattering.process_dropdown, "value"),
+            dash.State(
+                self.page.ids.Scattering.process_detector_dropdown_pattern(),
+                "id",
+            ),
+            dash.State(
+                self.page.ids.Scattering.process_detector_dropdown_pattern(),
+                "value",
+            ),
+            dash.State(self.ids.wavelength_nm, "value"),
+            prevent_initial_call=True,
+        )
+        def auto_detect_detector_configuration_preset(
+            n_clicks: Any,
+            runtime_config_data: Any,
+            selected_peak_process_name: Any,
+            detector_dropdown_ids: list[dict[str, Any]],
+            detector_dropdown_values: list[Any],
+            current_wavelength_nm: Any,
+        ) -> tuple[Any, Any, str, str, bool]:
+            if not n_clicks:
+                return dash.no_update, dash.no_update, "", "info", False
+
+            runtime_config = RuntimeConfig.from_dict(
+                runtime_config_data if isinstance(runtime_config_data, dict) else None
+            )
+            uploaded_fcs_path = runtime_config.get_str(
+                "files.scattering_fcs_file_path",
+                default="",
+            )
+
+            if not str(uploaded_fcs_path or "").strip():
+                return (
+                    dash.no_update,
+                    dash.no_update,
+                    "Upload a scattering FCS file before running detector auto-detect.",
+                    "warning",
+                    True,
+                )
+
+            selected_detector_channel = self._resolve_selected_peak_detector_channel(
+                selected_peak_process_name=selected_peak_process_name,
+                detector_dropdown_ids=detector_dropdown_ids,
+                detector_dropdown_values=detector_dropdown_values,
+            )
+
+            if not str(selected_detector_channel or "").strip():
+                return (
+                    dash.no_update,
+                    dash.no_update,
+                    "Select the peak detector channel before running detector auto-detect.",
+                    "warning",
+                    True,
+                )
+
+            detected_preset = self.model_configuration.detect_detector_preset_from_uploaded_fcs(
+                uploaded_fcs_path=uploaded_fcs_path,
+                selected_detector_channel=selected_detector_channel,
+            )
+            detected_wavelength_nm = self.model_configuration.detect_wavelength_nm_from_detector_channel(
+                selected_detector_channel,
+            )
+
+            if not detected_preset:
+                return (
+                    dash.no_update,
+                    dash.no_update,
+                    (
+                        "No detector preset match was found for the uploaded FCS metadata "
+                        f"and selected peak detector channel ({selected_detector_channel})."
+                    ),
+                    "warning",
+                    True,
+                )
+
+            wavelength_status_text = ""
+
+            if detected_wavelength_nm is not None:
+                wavelength_status_text = f" Wavelength: {detected_wavelength_nm} nm."
+
+            return (
+                detected_preset,
+                detected_wavelength_nm if detected_wavelength_nm is not None else current_wavelength_nm,
+                (
+                    f"Auto-detected detector preset: {detected_preset} "
+                    f"from peak detector channel {selected_detector_channel}."
+                    f"{wavelength_status_text}"
+                ),
+                "info",
+                True,
+            )
 
         @dash.callback(
             dash.Output(

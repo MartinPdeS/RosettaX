@@ -40,6 +40,7 @@ def register_detector_dropdown_callbacks(
             "value",
         ),
         dash.Input(page_state_store_id, "data"),
+        dash.Input("runtime-config-store", "data"),
         dash.State(
             ids.process_detector_dropdown_pattern(),
             "id",
@@ -52,6 +53,7 @@ def register_detector_dropdown_callbacks(
     )
     def populate_detector_dropdowns(
         page_state_payload: Any,
+        runtime_config_data: Any,
         detector_dropdown_ids: list[dict[str, Any]],
         current_detector_values: list[Any],
     ) -> tuple[list[list[dict[str, Any]]], list[Any]]:
@@ -67,5 +69,11 @@ def register_detector_dropdown_callbacks(
             uploaded_fcs_path=uploaded_fcs_path,
             detector_dropdown_ids=detector_dropdown_ids,
             current_detector_values=current_detector_values,
+            runtime_config_data=runtime_config_data,
+            detector_selection_runtime_config_path=getattr(
+                adapter,
+                "detector_selection_runtime_config_path",
+                None,
+            ),
             logger=logger,
         )

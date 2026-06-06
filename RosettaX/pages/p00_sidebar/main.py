@@ -381,7 +381,7 @@ class Sidebar:
             [
                 dbc.Nav(
                     [
-                        self._nav_link("Home", "/home"),
+                        self._nav_link("Home", "/"),
                         self._nav_link("Help", "/help"),
                         self._nav_link("Fluorescence", "/fluorescence"),
                         self._nav_link("Scattering", "/scattering"),

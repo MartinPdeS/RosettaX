@@ -132,7 +132,7 @@ class RosettaXApplication:
         """
         Open the application in the default browser.
         """
-        application_url = f"http://{self.host}:{self.port}/home"
+        application_url = f"http://{self.host}:{self.port}/"
 
         logger.debug("Opening browser at application_url=%r", application_url)
 

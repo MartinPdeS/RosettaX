@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
 
 from typing import Any, Optional
+from pathlib import Path
+import json
 import logging
 
 from .. import registry
+from RosettaX.utils.fcs_metadata import FCSMetadata
 from RosettaX.utils.reader import FCSFile
+from RosettaX.utils.runtime_config import RuntimeConfig
 
 
 logger = logging.getLogger(__name__)
+DETECTOR_AUTO_DETECT_RULES_PATH = Path(__file__).parents[2] / "detector" / (
+    "detector_auto_detect_rules.json"
+)
 
 
 def clean_optional_string(value: Any) -> str:
@@ -43,6 +50,8 @@ def populate_peak_script_detector_dropdowns(
     uploaded_fcs_path: Any,
     detector_dropdown_ids: list[dict[str, Any]],
     current_detector_values: list[Any],
+    runtime_config_data: Any = None,
+    detector_selection_runtime_config_path: Optional[str] = None,
     logger: logging.Logger,
 ) -> tuple[list[list[dict[str, Any]]], list[Any]]:
     """
@@ -99,6 +108,7 @@ def populate_peak_script_detector_dropdowns(
     try:
         with FCSFile(uploaded_fcs_path_clean) as fcs_file:
             column_names = fcs_file.get_column_names()
+            metadata = fcs_file.get_metadata()
 
     except Exception:
         logger.exception(
@@ -130,8 +140,12 @@ def populate_peak_script_detector_dropdowns(
         for option in options
     }
 
-    default_value = infer_default_detector_channel(
-        column_names=column_names,
+    selection_mode = resolve_detector_selection_mode(
+        runtime_config_data=runtime_config_data,
+        detector_selection_runtime_config_path=detector_selection_runtime_config_path,
+    )
+    matched_rule = resolve_detector_auto_detect_rule(
+        metadata=metadata,
     )
 
     resolved_options: list[list[dict[str, Any]]] = []
@@ -152,6 +166,19 @@ def populate_peak_script_detector_dropdowns(
             )
             continue
 
+        detector_role = None
+
+        if isinstance(detector_dropdown_id, dict):
+            detector_role = detector_dropdown_id.get("channel")
+
+        default_value = infer_default_detector_channel(
+            column_names=column_names,
+            metadata=metadata,
+            detector_role=detector_role,
+            selection_mode=selection_mode,
+            matched_rule=matched_rule,
+        )
+
         resolved_values.append(
             default_value,
         )
@@ -169,6 +196,10 @@ def populate_peak_script_detector_dropdowns(
 def infer_default_detector_channel(
     *,
     column_names: list[str],
+    metadata: Optional[FCSMetadata] = None,
+    detector_role: Any = None,
+    selection_mode: str = "name-heuristic",
+    matched_rule: Optional[dict[str, Any]] = None,
 ) -> Optional[str]:
     """
     Infer a reasonable default detector channel.
@@ -182,6 +213,28 @@ def infer_default_detector_channel(
     -------
     Optional[str]
         Default channel name.
+    """
+    if selection_mode == "auto-detect":
+        auto_detected_channel = resolve_rule_based_detector_channel(
+            column_names=column_names,
+            detector_role=detector_role,
+            matched_rule=matched_rule or resolve_detector_auto_detect_rule(metadata=metadata),
+        )
+
+        if auto_detected_channel:
+            return auto_detected_channel
+
+    return infer_detector_channel_from_column_names(
+        column_names=column_names,
+    )
+
+
+def infer_detector_channel_from_column_names(
+    *,
+    column_names: list[str],
+) -> Optional[str]:
+    """
+    Infer a reasonable default detector channel from the available column names.
     """
     preferred_keywords = [
         "ssc",
@@ -201,6 +254,279 @@ def infer_default_detector_channel(
         return column_names[0]
 
     return None
+
+
+def resolve_detector_selection_mode(
+    *,
+    runtime_config_data: Any,
+    detector_selection_runtime_config_path: Optional[str],
+) -> str:
+    """
+    Resolve the detector dropdown defaulting mode for the current page.
+    """
+    if not detector_selection_runtime_config_path:
+        return "name-heuristic"
+
+    runtime_config = RuntimeConfig.from_dict(
+        runtime_config_data if isinstance(runtime_config_data, dict) else None
+    )
+
+    return str(
+        runtime_config.get_str(
+            detector_selection_runtime_config_path,
+            default="auto-detect",
+        )
+        or "auto-detect"
+    ).strip()
+
+
+def resolve_detector_auto_detect_rule(
+    *,
+    metadata: Optional[FCSMetadata],
+) -> Optional[dict[str, Any]]:
+    """
+    Resolve one detector auto-detect rule from FCS instrument metadata.
+    """
+    instrument_name = extract_instrument_name_from_metadata(
+        metadata=metadata,
+    )
+
+    if not instrument_name:
+        return None
+
+    normalized_instrument_name = normalize_lookup_token(
+        instrument_name,
+    )
+
+    for rule in load_detector_auto_detect_rules():
+        for instrument_alias in rule.get("instrument_aliases", []):
+            normalized_alias = normalize_lookup_token(
+                instrument_alias,
+            )
+
+            if not normalized_alias:
+                continue
+
+            if (
+                normalized_alias == normalized_instrument_name
+                or normalized_alias in normalized_instrument_name
+                or normalized_instrument_name in normalized_alias
+            ):
+                logger.debug(
+                    "Matched detector auto-detect rule=%r for instrument_name=%r",
+                    rule.get("name"),
+                    instrument_name,
+                )
+                return rule
+
+    logger.debug(
+        "No detector auto-detect rule matched instrument_name=%r",
+        instrument_name,
+    )
+
+    return None
+
+
+def resolve_rule_based_detector_channel(
+    *,
+    column_names: list[str],
+    detector_role: Any,
+    matched_rule: Optional[dict[str, Any]],
+) -> Optional[str]:
+    """
+    Resolve one detector channel from a matched instrument rule.
+    """
+    if not matched_rule:
+        return None
+
+    detector_channels = matched_rule.get("detector_channels")
+
+    if not isinstance(detector_channels, dict):
+        return None
+
+    role_name = clean_optional_string(
+        detector_role,
+    )
+
+    candidate_aliases = detector_channels.get(role_name) or detector_channels.get("default")
+
+    if not isinstance(candidate_aliases, list):
+        return None
+
+    for candidate_alias in candidate_aliases:
+        matched_channel = find_matching_column_name(
+            column_names=column_names,
+            candidate_name=candidate_alias,
+        )
+
+        if matched_channel:
+            logger.debug(
+                "Resolved detector channel=%r for role=%r from rule=%r",
+                matched_channel,
+                role_name,
+                matched_rule.get("name"),
+            )
+            return matched_channel
+
+    return None
+
+
+def load_detector_auto_detect_rules() -> list[dict[str, Any]]:
+    """
+    Load detector auto-detect rules from the shared JSON file.
+    """
+    if not DETECTOR_AUTO_DETECT_RULES_PATH.exists():
+        return []
+
+    try:
+        raw_payload = json.loads(
+            DETECTOR_AUTO_DETECT_RULES_PATH.read_text(encoding="utf-8")
+        )
+    except Exception:
+        logger.exception(
+            "Failed to load detector auto-detect rules from %s",
+            DETECTOR_AUTO_DETECT_RULES_PATH,
+        )
+        return []
+
+    if not isinstance(raw_payload, dict):
+        return []
+
+    raw_rules = raw_payload.get("rules")
+
+    if not isinstance(raw_rules, list):
+        return []
+
+    normalized_rules: list[dict[str, Any]] = []
+
+    for raw_rule in raw_rules:
+        if not isinstance(raw_rule, dict):
+            continue
+
+        instrument_aliases = raw_rule.get("instrument_aliases")
+        detector_channels = raw_rule.get("detector_channels")
+
+        if not isinstance(instrument_aliases, list) or not isinstance(detector_channels, dict):
+            continue
+
+        normalized_rules.append(
+            {
+                "name": clean_optional_string(raw_rule.get("name")) or "Unnamed detector rule",
+                "instrument_aliases": [
+                    clean_optional_string(instrument_alias)
+                    for instrument_alias in instrument_aliases
+                    if clean_optional_string(instrument_alias)
+                ],
+                "detector_channels": {
+                    clean_optional_string(role_name): [
+                        clean_optional_string(candidate_name)
+                        for candidate_name in candidate_names
+                        if clean_optional_string(candidate_name)
+                    ]
+                    for role_name, candidate_names in detector_channels.items()
+                    if clean_optional_string(role_name) and isinstance(candidate_names, list)
+                },
+            }
+        )
+
+    return normalized_rules
+
+
+def extract_instrument_name_from_metadata(
+    *,
+    metadata: Optional[FCSMetadata],
+) -> str:
+    """
+    Extract one instrument or system name from FCS metadata.
+    """
+    if metadata is None:
+        return ""
+
+    keyword_lookup = {
+        str(key).strip().lower(): value
+        for key, value in metadata.keywords.items()
+    }
+
+    preferred_keys = (
+        "$cyt",
+        "cyt",
+        "$inst",
+        "instrument",
+        "instrument name",
+        "system",
+        "machine",
+        "$src",
+    )
+
+    for preferred_key in preferred_keys:
+        instrument_name = clean_optional_string(
+            keyword_lookup.get(preferred_key),
+        )
+
+        if instrument_name:
+            return instrument_name
+
+    for keyword_name, keyword_value in keyword_lookup.items():
+        if any(
+            token in keyword_name
+            for token in ("cyt", "instrument", "system", "machine")
+        ):
+            instrument_name = clean_optional_string(
+                keyword_value,
+            )
+
+            if instrument_name:
+                return instrument_name
+
+    return ""
+
+
+def find_matching_column_name(
+    *,
+    column_names: list[str],
+    candidate_name: Any,
+) -> Optional[str]:
+    """
+    Find one FCS column name matching a rule candidate.
+    """
+    normalized_candidate = normalize_lookup_token(
+        candidate_name,
+    )
+
+    if not normalized_candidate:
+        return None
+
+    for column_name in column_names:
+        normalized_column_name = normalize_lookup_token(
+            column_name,
+        )
+
+        if normalized_column_name == normalized_candidate:
+            return column_name
+
+    for column_name in column_names:
+        normalized_column_name = normalize_lookup_token(
+            column_name,
+        )
+
+        if (
+            normalized_candidate in normalized_column_name
+            or normalized_column_name in normalized_candidate
+        ):
+            return column_name
+
+    return None
+
+
+def normalize_lookup_token(value: Any) -> str:
+    """
+    Normalize one free-text token for case-insensitive lookup.
+    """
+    return "".join(
+        character.lower()
+        for character in clean_optional_string(value)
+        if character.isalnum()
+    )
 
 
 def resolve_detector_channels_for_process(

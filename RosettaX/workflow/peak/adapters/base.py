@@ -53,6 +53,7 @@ class BasePeakWorkflowAdapter:
 
     default_peak_lines_payload_key: str = "peak_lines_payload"
     peak_table_sort_order_runtime_config_path: Optional[str] = None
+    detector_selection_runtime_config_path: Optional[str] = None
 
     delta_peak_value_names: tuple[str, ...] = (
         "new_peak_positions",

@@ -61,6 +61,7 @@ class Test_RuntimeConfig:
         assert exported_payload["optics"]["medium_refractive_index"] == pytest.approx(
             1.333
         )
+        assert exported_payload["optics"]["detector_configuration_preset"] == ""
         assert exported_payload["optics"][
             "detector_numerical_aperture"
         ] == pytest.approx(0.45)

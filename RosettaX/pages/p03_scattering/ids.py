@@ -35,6 +35,14 @@ class ParameterSectionIds:
         return f"{self.prefix}-detector-configuration-preset"
 
     @property
+    def detector_configuration_auto_detect_button(self) -> str:
+        return f"{self.prefix}-detector-configuration-auto-detect-button"
+
+    @property
+    def detector_configuration_auto_detect_status(self) -> str:
+        return f"{self.prefix}-detector-configuration-auto-detect-status"
+
+    @property
     def detector_configuration_preset_refresh_button(self) -> str:
         return f"{self.prefix}-detector-configuration-preset-refresh-button"
 

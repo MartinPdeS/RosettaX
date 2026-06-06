@@ -67,6 +67,13 @@ PEAK_PROCESS_OPTIONS = build_peak_process_dropdown_options()
 SCATTERING_PRESET_OPTIONS = scattering.build_scattering_calibration_scatterer_preset_options()
 APPLY_TARGET_PRESET_OPTIONS = apply_calibration.scattering.build_scattering_target_model_preset_options()
 DETECTOR_PRESET_OPTIONS = detector.build_detector_preset_options()
+SETTINGS_DETECTOR_PRESET_OPTIONS = [
+    {
+        "label": "No default",
+        "value": "",
+    },
+    *DETECTOR_PRESET_OPTIONS,
+]
 FLUORESCENCE_REFERENCE_PRESET_OPTIONS = build_fluorescence_reference_preset_options()
 
 
@@ -191,8 +198,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         value_kind="choice",
         runtime_path="optics.detector_configuration_preset",
         profile_path="scattering.optics.detector_configuration_preset",
-        default=detector.CUSTOM_DETECTOR_PRESET_NAME,
-        options=DETECTOR_PRESET_OPTIONS,
+        default="",
+        options=SETTINGS_DETECTOR_PRESET_OPTIONS,
     ),
     FieldDefinition(
         name="medium_refractive_index",

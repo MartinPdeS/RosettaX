@@ -115,6 +115,7 @@ class RuntimeConfig:
         "scattering.particle_model.particle_diameter_nm": "particle_model.particle_diameter_nm",
         "scattering.particle_model.mie_model": "particle_model.mie_model",
         "scattering.calibration.default_peak_process": "scattering_calibration.default_peak_process",
+        "scattering.calibration.default_detector_selection_mode": "scattering_calibration.default_detector_selection_mode",
         "scattering.calibration.peak_table_sort_order": "scattering_calibration.peak_table_sort_order",
         "scattering.files.fcs_file_path": "files.scattering_fcs_file_path",
         "apply_calibration.calibration.target_model_preset": "calibration.target_model_preset",
@@ -261,6 +262,16 @@ class RuntimeConfig:
             default="Automatic 1D",
             description="Preferred scattering peak detection process.",
         ),
+        "scattering_calibration.default_detector_selection_mode": RuntimeConfigField(
+            expected_type=str,
+            default="auto-detect",
+            choices=("auto-detect", "name-heuristic"),
+            description=(
+                "How scattering detector dropdowns choose their initial channel. "
+                "Auto-detect uses FCS instrument metadata and rule mappings before "
+                "falling back to the channel-name heuristic."
+            ),
+        ),
         # ---------------------------------------------------------------------
         # Optics
         # ---------------------------------------------------------------------
@@ -278,7 +289,7 @@ class RuntimeConfig:
         ),
         "optics.detector_configuration_preset": RuntimeConfigField(
             expected_type=str,
-            default="Generic detector",
+            default="",
             description="Default detector geometry preset for the scattering page.",
         ),
         "optics.detector_numerical_aperture": RuntimeConfigField(

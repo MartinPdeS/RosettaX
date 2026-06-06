@@ -3,11 +3,9 @@
 import dash
 import dash_bootstrap_components as dbc
 
-from RosettaX.utils import styling, ui_forms
-from RosettaX.workflow.table.fluorescence import (
-    FluorescenceReferenceTable,
-    build_fluorescence_reference_preset_options,
-)
+from RosettaX.utils import ui_forms
+from RosettaX.workflow.table.fluorescence import build_fluorescence_reference_preset_options
+
 
 
 def get_layout(section) -> dbc.Card:

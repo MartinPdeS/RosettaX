@@ -114,179 +114,68 @@ def _build_calibration_store(section) -> dash.dcc.Store:
     )
 
 
-def _build_action_panel(section) -> dbc.Card:
+def _build_action_panel(section) -> dash.html.Div:
     """
     Build calibration action controls.
     """
-    return dbc.Card(
-        dbc.CardBody(
-            [
-                dash.html.Div(
-                    [
-                        dash.html.Div(
-                            [
-                                dash.html.Div(
-                                    "Fluorescence calibration fit",
-                                    style={
-                                        "fontWeight": "700",
-                                        "fontSize": "1rem",
-                                    },
-                                ),
-                            ],
-                            style={
-                                "flex": "1 1 auto",
-                            },
-                        ),
-                        dash.html.Div(
-                            [
-                                dbc.Button(
-                                    "Create calibration",
-                                    id=section.ids.calibrate_btn,
-                                    n_clicks=0,
-                                    color="primary",
-                                ),
-                                ui_forms.build_info_badge(
-                                    tooltip_target_id=section.create_calibration_tooltip_target_id,
-                                ),
-                                dbc.Tooltip(
-                                    (
-                                        "Create the fluorescence calibration by matching the measured "
-                                        "fluorescence peak positions to the known MESF values from "
-                                        "the reference table. Use the current bead peaks and MESF "
-                                        "reference values to compute the fitted response."
-                                    ),
-                                    id=section.create_calibration_tooltip_id,
-                                    target=section.create_calibration_tooltip_target_id,
-                                    placement="right",
-                                ),
-                            ],
-                            style={
-                                "display": "flex",
-                                "alignItems": "center",
-                                "gap": "0px",
-                                "flex": "0 0 auto",
-                            },
-                        ),
-                    ],
-                    style={
-                        "display": "flex",
-                        "alignItems": "center",
-                        "justifyContent": "space-between",
-                        "gap": "16px",
-                        "flexWrap": "wrap",
-                    },
-                ),
-            ],
-            style={
-                "padding": "14px 16px",
-            },
-        ),
-        style=ui_forms.build_workflow_panel_style(
-            color_name=section.card_color,
-            background=styling.build_rgba(
-                section.card_color,
-                0.04,
+    return dash.html.Div(
+        [
+            dbc.Button(
+                "Create calibration",
+                id=section.ids.calibrate_btn,
+                n_clicks=0,
+                color="primary",
             ),
-        ),
+            ui_forms.build_info_badge(
+                tooltip_target_id=section.create_calibration_tooltip_target_id,
+            ),
+            dbc.Tooltip(
+                (
+                    "Create the fluorescence calibration by matching the measured "
+                    "fluorescence peak positions to the known MESF values from "
+                    "the reference table. Use the current bead peaks and MESF "
+                    "reference values to compute the fitted response."
+                ),
+                id=section.create_calibration_tooltip_id,
+                target=section.create_calibration_tooltip_target_id,
+                placement="right",
+            ),
+        ],
+        style={
+            "display": "flex",
+            "alignItems": "center",
+            "justifyContent": "flex-start",
+            "gap": "0px",
+            "overflow": "visible",
+        },
     )
 
 
 def _build_graph_block(section) -> dash.html.Div:
     """
-    Build the calibration graph panel.
+    Build the calibration graph content inside the main section card.
     """
     return dash.html.Div(
         [
-            _build_graph_panel_card(
-                section,
-                title="Fluorescence calibration fit",
-                subtitle=(
-                    "Measured fluorescence peak positions mapped to calibrated "
-                    "MESF units."
+            dash.dcc.Loading(
+                dash.dcc.Graph(
+                    id=section.ids.graph_calibration,
+                    style=_build_graph_style(section),
+                    config=styling.PLOTLY_GRAPH_CONFIG,
                 ),
-                graph_id=section.ids.graph_calibration,
-                footer_content=_build_calibration_footer(section),
+                type="default",
             ),
+            dash.html.Div(
+                style={
+                    "height": "12px",
+                },
+            ),
+            _build_calibration_footer(section),
         ],
         style={
-            "display": "flex",
-            "gap": "24px",
-            "alignItems": "stretch",
             "width": "100%",
-            "overflowX": "auto",
             "overflowY": "visible",
         },
-    )
-
-
-def _build_graph_panel_card(
-    section,
-    *,
-    title: str,
-    subtitle: str,
-    graph_id: str,
-    footer_content: Any,
-) -> dbc.Card:
-    """
-    Build one self contained graph panel card.
-    """
-    return dbc.Card(
-        [
-            dbc.CardHeader(
-                [
-                    ui_forms.build_title_with_info(
-                        title=title,
-                        tooltip_target_id=section.graph_tooltip_target_id,
-                        tooltip_id=section.graph_tooltip_id,
-                        tooltip_text=(
-                            "This graph shows the fitted relation between measured "
-                            "fluorescence intensity and calibrated fluorescence units. "
-                            "Review the fit before saving the calibration."
-                        ),
-                        subtitle=subtitle,
-                        title_style_overrides={
-                            "fontSize": "0.98rem",
-                        },
-                    ),
-                ],
-                style=ui_forms.build_workflow_subpanel_header_style(
-                    color_name=section.card_color,
-                ),
-            ),
-            dbc.CardBody(
-                [
-                    dash.dcc.Loading(
-                        dash.dcc.Graph(
-                            id=graph_id,
-                            style=_build_graph_style(section),
-                            config=styling.PLOTLY_GRAPH_CONFIG,
-                        ),
-                        type="default",
-                    ),
-                ],
-                style={
-                    "padding": "14px",
-                    "overflow": "visible",
-                },
-            ),
-            dbc.CardFooter(
-                footer_content,
-                style={
-                    "opacity": 0.95,
-                    "padding": "12px 14px",
-                    "borderTop": "1px solid rgba(128, 128, 128, 0.18)",
-                    "background": "rgba(128, 128, 128, 0.04)",
-                },
-            ),
-        ],
-        style={
-            **ui_forms.build_workflow_subpanel_card_style(
-                color_name=section.card_color,
-            ),
-            "flex": "1 1 0",
-            "minWidth": f"{section.graph_min_width_px}px",
-        },
-        class_name="h-100",
     )
 
 

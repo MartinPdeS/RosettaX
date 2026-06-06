@@ -1,7 +1,29 @@
 # -*- coding: utf-8 -*-
 
+import sys
+import types
+
 import dash
 from dash import html
+
+
+class _DashBootstrapComponentsSentinel:
+    def __call__(self, *args, **kwargs):
+        return None
+
+    def __getattr__(self, name):
+        return self
+
+
+class _DashBootstrapComponentsStub(types.ModuleType):
+    def __getattr__(self, name):
+        return _DashBootstrapComponentsSentinel()
+
+
+sys.modules.setdefault(
+    "dash_bootstrap_components",
+    _DashBootstrapComponentsStub("dash_bootstrap_components"),
+)
 
 from RosettaX.application.routes import register_server_routes
 

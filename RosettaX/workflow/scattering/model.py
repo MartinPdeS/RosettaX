@@ -296,24 +296,46 @@ class ModelConfiguration:
     @staticmethod
     def resolve_runtime_detector_preset(
         preset_name: Any,
-    ) -> str:
+        *,
+        runtime_config_data: Any = None,
+        uploaded_fcs_path: Any = None,
+        detector_selection_runtime_config_path: Optional[str] = None,
+    ) -> Optional[str]:
         """
         Resolve a persisted detector preset name to a known preset.
         """
-        preset_name_string = str(
-            preset_name or detector.CUSTOM_DETECTOR_PRESET_NAME,
-        ).strip()
+        return detector.resolve_runtime_detector_preset(
+            preset_name,
+            runtime_config_data=runtime_config_data,
+            uploaded_fcs_path=uploaded_fcs_path,
+            detector_selection_runtime_config_path=detector_selection_runtime_config_path,
+        )
 
-        allowed_preset_names = {
-            str(option.get("value"))
-            for option in detector.build_detector_preset_options()
-            if isinstance(option, dict) and option.get("value") is not None
-        }
+    @staticmethod
+    def detect_detector_preset_from_uploaded_fcs(
+        *,
+        uploaded_fcs_path: Any,
+        selected_detector_channel: Any,
+    ) -> Optional[str]:
+        """
+        Detect one scattering detector preset from uploaded FCS metadata and the
+        selected peak detector channel.
+        """
+        return detector.detect_detector_preset_from_uploaded_fcs(
+            uploaded_fcs_path=uploaded_fcs_path,
+            selected_detector_channel=selected_detector_channel,
+        )
 
-        if preset_name_string in allowed_preset_names:
-            return preset_name_string
-
-        return detector.CUSTOM_DETECTOR_PRESET_NAME
+    @staticmethod
+    def detect_wavelength_nm_from_detector_channel(
+        selected_detector_channel: Any,
+    ) -> Optional[int]:
+        """
+        Infer one laser wavelength from the selected peak detector channel.
+        """
+        return detector.detect_wavelength_nm_from_detector_channel(
+            selected_detector_channel,
+        )
 
     @staticmethod
     def resolve_scatterer_preset_values(
@@ -506,29 +528,46 @@ class ModelConfiguration:
         """
         Build the optical configuration preview figure.
         """
-        detector_angular_weights = detector.resolve_detector_angular_weights(
+        (
+            resolved_detector_numerical_aperture,
+            resolved_detector_cache_numerical_aperture,
+            resolved_blocker_bar_numerical_aperture,
+            resolved_detector_sampling,
+            resolved_detector_phi_angle_degree,
+            resolved_detector_gamma_angle_degree,
+        ) = detector.resolve_detector_configuration_values(
             preset_name=detector_configuration_preset,
-            detector_sampling=detector_sampling,
             current_detector_numerical_aperture=detector_numerical_aperture,
             current_detector_cache_numerical_aperture=detector_cache_numerical_aperture,
             current_blocker_bar_numerical_aperture=blocker_bar_numerical_aperture,
+            current_detector_sampling=detector_sampling,
             current_detector_phi_angle_degree=detector_phi_angle_degree,
             current_detector_gamma_angle_degree=detector_gamma_angle_degree,
+        )
+
+        detector_angular_weights = detector.resolve_detector_angular_weights(
+            preset_name=detector_configuration_preset,
+            detector_sampling=resolved_detector_sampling,
+            current_detector_numerical_aperture=resolved_detector_numerical_aperture,
+            current_detector_cache_numerical_aperture=resolved_detector_cache_numerical_aperture,
+            current_blocker_bar_numerical_aperture=resolved_blocker_bar_numerical_aperture,
+            current_detector_phi_angle_degree=resolved_detector_phi_angle_degree,
+            current_detector_gamma_angle_degree=resolved_detector_gamma_angle_degree,
             current_medium_refractive_index=medium_refractive_index,
         )
         effective_detector_cache_numerical_aperture, effective_blocker_bar_numerical_aperture = detector.resolve_detector_modeling_geometry_values(
             preset_name=detector_configuration_preset,
-            current_detector_cache_numerical_aperture=detector_cache_numerical_aperture,
-            current_blocker_bar_numerical_aperture=blocker_bar_numerical_aperture,
+            current_detector_cache_numerical_aperture=resolved_detector_cache_numerical_aperture,
+            current_blocker_bar_numerical_aperture=resolved_blocker_bar_numerical_aperture,
         )
 
         return parameters.build_optical_configuration_preview_figure(
-            detector_numerical_aperture=detector_numerical_aperture,
+            detector_numerical_aperture=resolved_detector_numerical_aperture,
             blocker_bar_numerical_aperture=effective_blocker_bar_numerical_aperture,
             medium_refractive_index=medium_refractive_index,
-            detector_phi_angle_degree=detector_phi_angle_degree,
-            detector_gamma_angle_degree=detector_gamma_angle_degree,
-            detector_sampling=detector_sampling,
+            detector_phi_angle_degree=resolved_detector_phi_angle_degree,
+            detector_gamma_angle_degree=resolved_detector_gamma_angle_degree,
+            detector_sampling=resolved_detector_sampling,
             detector_angular_weights=detector_angular_weights,
             camera=camera,
         )

@@ -473,7 +473,8 @@ layout = _page.layout
 
 dash.register_page(
     __name__,
-    path="/home",
+    path="/",
+    redirect_from=["/home"],
     name="Home",
     order=0,
     layout=layout,
