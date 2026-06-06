@@ -79,6 +79,53 @@ class SavedCalibrationInfo:
     path: Path
 
 
+def build_calibration_record(
+    *,
+    name: str,
+    payload: dict[str, Any],
+    calibration_kind: str,
+) -> dict[str, Any]:
+    """
+    Build the standard calibration JSON record.
+    """
+    return {
+        "schema": "rosettax_calibration_v1",
+        "kind": str(calibration_kind),
+        "created_at": datetime.now().isoformat(timespec="seconds"),
+        "name": str(name),
+        "payload": payload,
+    }
+
+
+def build_calibration_download_filename(
+    *,
+    name: str,
+) -> str:
+    """
+    Build the download filename for a calibration JSON file.
+    """
+    safe_name = sanitize_filename(name)
+    return f"{safe_name}.json"
+
+
+def serialize_calibration_record(
+    *,
+    name: str,
+    payload: dict[str, Any],
+    calibration_kind: str,
+) -> str:
+    """
+    Serialize a calibration JSON record.
+    """
+    record = build_calibration_record(
+        name=name,
+        payload=payload,
+        calibration_kind=calibration_kind,
+    )
+
+    return json.dumps(record, indent=2, sort_keys=True)
+
+
 def sanitize_filename(name: str) -> str:
     """
     Sanitize a user provided calibration name into a safe filename stem.
@@ -224,20 +271,17 @@ def save_calibration_to_file(
     SavedCalibrationInfo
         Saved file information.
     """
-    safe_name = sanitize_filename(name)
-    filename = f"{safe_name}.json"
+    filename = build_calibration_download_filename(
+        name=name,
+    )
     output_path = Path(output_directory) / filename
 
-    record = {
-        "schema": "rosettax_calibration_v1",
-        "kind": str(calibration_kind),
-        "created_at": datetime.now().isoformat(timespec="seconds"),
-        "name": str(name),
-        "payload": payload,
-    }
-
     output_path.write_text(
-        json.dumps(record, indent=2, sort_keys=True),
+        serialize_calibration_record(
+            name=name,
+            payload=payload,
+            calibration_kind=calibration_kind,
+        ),
         encoding="utf-8",
     )
 

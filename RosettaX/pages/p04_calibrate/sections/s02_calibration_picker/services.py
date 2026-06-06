@@ -1,154 +1,71 @@
 # -*- coding: utf-8 -*-
 
+import base64
 import json
 import logging
 from pathlib import Path
 from typing import Any, Optional
-from urllib.parse import parse_qs
 
 import numpy as np
 
-from RosettaX.utils import directories
-from RosettaX.utils.paths import resolve_selected_calibration_file_path
 from RosettaX.workflow import plotting
 
 logger = logging.getLogger(__name__)
 
 
-def build_default_folder_definitions() -> list[tuple[str, str, Path]]:
-    """
-    Build calibration folder definitions.
-
-    Returns
-    -------
-    list[tuple[str, str, Path]]
-        Tuples of folder key, display label, and filesystem path.
-    """
-    return [
-        (
-            "fluorescence",
-            "Fluorescence",
-            directories.fluorescence_calibration,
-        ),
-        (
-            "scattering",
-            "Scattering",
-            directories.scattering_calibration,
-        ),
-    ]
-
-
-def build_dropdown_options(
+def parse_uploaded_calibration(
     *,
-    folder_definitions: list[tuple[str, str, Path]],
-) -> list[dict[str, str]]:
+    contents: Any,
+    filename: Any,
+) -> tuple[str, dict[str, Any]]:
     """
-    Build calibration dropdown options from disk.
+    Parse and validate one uploaded calibration JSON file.
     """
-    logger.debug("Building calibration dropdown options from disk.")
+    resolved_filename = str(filename or "").strip()
 
-    dropdown_options: list[dict[str, str]] = []
+    if not resolved_filename:
+        raise ValueError("Uploaded calibration file name is missing.")
 
-    for folder_key, folder_label, folder_path in folder_definitions:
-        try:
-            folder_path.mkdir(
-                parents=True,
-                exist_ok=True,
-            )
+    if Path(resolved_filename).suffix.lower() != ".json":
+        raise ValueError("Calibration upload must be a .json file.")
 
-            calibration_file_paths = sorted(
-                [path for path in folder_path.glob("*.json") if path.is_file()],
-                key=lambda path: path.name.lower(),
-            )
+    if not isinstance(contents, str) or "," not in contents:
+        raise ValueError("Uploaded calibration file has a malformed Dash contents payload.")
 
-            logger.debug(
-                "Found %d calibration files in folder_key=%r folder_path=%r",
-                len(calibration_file_paths),
-                folder_key,
-                str(folder_path),
-            )
+    _, encoded_payload = contents.split(",", 1)
 
-            for calibration_file_path in calibration_file_paths:
-                dropdown_options.append(
-                    {
-                        "label": f"{folder_label} | {calibration_file_path.name}",
-                        "value": f"{folder_key}/{calibration_file_path.name}",
-                    }
-                )
-
-        except Exception:
-            logger.exception(
-                "Failed while building dropdown options for folder_key=%r folder_path=%r",
-                folder_key,
-                str(folder_path),
-            )
-
-    logger.debug(
-        "Returning %d total calibration dropdown options.",
-        len(dropdown_options),
+    raw_bytes = base64.b64decode(
+        encoded_payload,
+        validate=True,
     )
 
-    return dropdown_options
-
-
-def resolve_calibration_file_path(
-    *,
-    selected_calibration: Any,
-    folder_definitions: list[tuple[str, str, Path]],
-) -> Path:
-    """
-    Resolve a selected dropdown value into a calibration file path.
-    """
-    selected_calibration_string = str(selected_calibration).strip()
-    known_folder_keys = {
-        str(folder_key).strip()
-        for folder_key, _folder_label, _folder_path in folder_definitions
-        if str(folder_key).strip()
-    }
-
-    if known_folder_keys and "/" in selected_calibration_string:
-        selected_folder_key = selected_calibration_string.split("/", 1)[0]
-        if selected_folder_key not in known_folder_keys:
-            raise ValueError(
-                f"Unsupported calibration folder key: {selected_folder_key!r}."
-            )
-
-    return resolve_selected_calibration_file_path(
-        selected_calibration,
-    )
-
-
-def load_calibration_payload(
-    *,
-    calibration_file_path: Path,
-) -> dict[str, Any]:
-    """
-    Load the top level payload from a calibration JSON file.
-    """
     record = json.loads(
-        calibration_file_path.read_text(
-            encoding="utf-8",
-        )
+        raw_bytes.decode("utf-8"),
     )
 
     if not isinstance(record, dict):
         raise ValueError("Calibration file root record is invalid.")
 
-    payload = record.get(
-        "payload",
-    )
+    schema = str(record.get("schema", "")).strip()
+
+    if schema != "rosettax_calibration_v1":
+        raise ValueError(
+            f"Calibration file schema is unsupported: {schema or '<missing>'}."
+        )
+
+    payload = record.get("payload")
 
     if not isinstance(payload, dict):
         raise ValueError('Calibration file is missing top level "payload".')
 
-    return payload
+    return resolved_filename, payload
 
 
 def build_calibration_summary(
     *,
     selected_calibration: str,
-    calibration_file_path: Path,
     calibration_payload: dict[str, Any],
+    calibration_file_path: Optional[Path] = None,
 ) -> dict[str, Any]:
     """
     Build a lightweight calibration summary for UI decisions.
@@ -200,8 +117,12 @@ def build_calibration_summary(
 
     return {
         "selected_calibration": selected_calibration,
-        "file_name": calibration_file_path.name,
-        "file_path": str(calibration_file_path),
+        "file_name": (
+            calibration_file_path.name
+            if calibration_file_path is not None
+            else str(selected_calibration)
+        ),
+        "file_path": str(calibration_file_path) if calibration_file_path is not None else "",
         "calibration_type": calibration_type,
         "source_channel": source_channel,
         "output_quantity": output_quantity,
@@ -211,49 +132,8 @@ def build_calibration_summary(
         "requires_target_model": calibration_type == "scattering",
         "is_valid": bool(calibration_type),
         "error": "",
+        "calibration_payload": dict(calibration_payload),
     }
-
-
-def extract_selected_calibration_from_search(
-    *,
-    search: Optional[str],
-) -> Optional[str]:
-    """
-    Extract selected calibration value from the URL query string.
-    """
-    logger.debug(
-        "Extracting selected_calibration from search=%r",
-        search,
-    )
-
-    if not search:
-        return None
-
-    parsed_query = parse_qs(
-        search.lstrip("?"),
-    )
-
-    selected_calibration_values = parsed_query.get(
-        "selected_calibration",
-        [],
-    )
-
-    if not selected_calibration_values:
-        return None
-
-    selected_calibration = str(
-        selected_calibration_values[0],
-    ).strip()
-
-    if not selected_calibration:
-        return None
-
-    logger.debug(
-        "Extracted selected_calibration=%r from URL query string.",
-        selected_calibration,
-    )
-
-    return selected_calibration
 
 
 def resolve_target_mie_model(

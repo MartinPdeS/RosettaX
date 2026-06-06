@@ -55,65 +55,44 @@ def validate_save_inputs(
     )
 
 
-def compute_next_sidebar_refresh_signal(
-    *,
-    current_sidebar_refresh_signal: Any,
-) -> int:
-    """
-    Compute the next sidebar refresh signal.
-    """
-    try:
-        current_value = int(
-            current_sidebar_refresh_signal or 0
-        )
-    except (TypeError, ValueError):
-        current_value = 0
-
-    return current_value + 1
-
-
 def save_calibration_payload(
     *,
     inputs: SaveInputs,
     config: SaveConfig,
-    current_sidebar_refresh_signal: Any,
     logger: logging.Logger,
 ) -> SaveResult:
     """
-    Save a calibration payload to disk.
+    Build a calibration download payload.
     """
-    logger.debug(
-        "save_calibration_payload called with calibration_kind=%r "
-        "file_name=%r payload_keys=%r output_directory=%r",
-        config.calibration_kind,
-        inputs.file_name,
-        list(inputs.calibration_payload.keys()),
-        config.output_directory,
+    file_name = service.build_calibration_download_filename(
+        name=inputs.file_name,
     )
-
-    saved = service.save_calibration_to_file(
+    json_text = service.serialize_calibration_record(
         name=inputs.file_name,
         payload=dict(inputs.calibration_payload),
         calibration_kind=config.calibration_kind,
-        output_directory=config.output_directory,
     )
 
     logger.debug(
-        "save_calibration_payload saved successfully to folder=%r filename=%r",
-        saved.folder,
-        saved.filename,
+        "save_calibration_payload called with calibration_kind=%r "
+        "file_name=%r payload_keys=%r download_filename=%r",
+        config.calibration_kind,
+        inputs.file_name,
+        list(inputs.calibration_payload.keys()),
+        file_name,
     )
 
-    next_sidebar_refresh_signal = compute_next_sidebar_refresh_signal(
-        current_sidebar_refresh_signal=current_sidebar_refresh_signal,
+    logger.debug(
+        "save_calibration_payload prepared download successfully filename=%r",
+        file_name,
     )
 
     return SaveResult(
-        save_out=(
-            f'{config.saved_message_prefix} "{inputs.file_name}" '
-            f"as {saved.folder}/{saved.filename}"
+        save_out=f'{config.saved_message_prefix} "{file_name}".',
+        download_data=dash.dcc.send_string(
+            json_text,
+            file_name,
         ),
-        sidebar_refresh_signal=next_sidebar_refresh_signal,
     )
 
 
@@ -121,7 +100,6 @@ def run_save_workflow(
     *,
     file_name: str | None,
     calibration_payload: dict | None,
-    current_sidebar_refresh_signal: Any,
     config: SaveConfig,
     logger: logging.Logger,
 ) -> SaveResult:
@@ -141,7 +119,7 @@ def run_save_workflow(
 
         return SaveResult(
             save_out=validation_error,
-            sidebar_refresh_signal=dash.no_update,
+            download_data=dash.no_update,
         )
 
     if parsed_inputs is None:
@@ -151,14 +129,13 @@ def run_save_workflow(
 
         return SaveResult(
             save_out="Could not parse save inputs.",
-            sidebar_refresh_signal=dash.no_update,
+            download_data=dash.no_update,
         )
 
     try:
         return save_calibration_payload(
             inputs=parsed_inputs,
             config=config,
-            current_sidebar_refresh_signal=current_sidebar_refresh_signal,
             logger=logger,
         )
     except Exception:
@@ -172,5 +149,5 @@ def run_save_workflow(
 
         return SaveResult(
             save_out=config.failure_message,
-            sidebar_refresh_signal=dash.no_update,
+            download_data=dash.no_update,
         )

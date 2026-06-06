@@ -138,10 +138,6 @@ class ApplyCallbacks:
                 "data",
             ),
             dash.State(
-                self.page.ids.CalibrationPicker.dropdown,
-                "value",
-            ),
-            dash.State(
                 self.page.ids.Export.export_columns_dropdown,
                 "value",
             ),
@@ -202,7 +198,6 @@ class ApplyCallbacks:
         def apply_and_export_calibration(
             n_clicks: int,
             uploaded_fcs_path: Any,
-            selected_calibration: Any,
             export_columns: Any,
             selected_calibration_summary: Any,
             target_mie_model: Any,
@@ -220,7 +215,7 @@ class ApplyCallbacks:
         ) -> tuple:
             logger.debug(
                 "apply_and_export_calibration called with n_clicks=%r "
-                "uploaded_fcs_path=%r selected_calibration=%r export_columns=%r "
+                "uploaded_fcs_path=%r export_columns=%r "
                 "selected_calibration_summary=%r target_mie_model=%r "
                 "target_medium_refractive_index=%r target_particle_refractive_index=%r "
                 "target_solid_sphere_diameter_min_nm=%r "
@@ -233,7 +228,6 @@ class ApplyCallbacks:
                 "target_core_shell_core_diameter_count=%r",
                 n_clicks,
                 uploaded_fcs_path,
-                selected_calibration,
                 export_columns,
                 selected_calibration_summary,
                 target_mie_model,
@@ -255,7 +249,6 @@ class ApplyCallbacks:
             try:
                 request = services.build_apply_calibration_request(
                     uploaded_fcs_path=uploaded_fcs_path,
-                    selected_calibration=selected_calibration,
                     export_columns=export_columns,
                     selected_calibration_summary=selected_calibration_summary,
                     target_mie_model=target_mie_model,
@@ -278,10 +271,8 @@ class ApplyCallbacks:
 
             except Exception as exc:
                 logger.exception(
-                    "Failed to apply and export calibration for uploaded_fcs_path=%r "
-                    "selected_calibration=%r",
+                    "Failed to apply and export calibration for uploaded_fcs_path=%r",
                     uploaded_fcs_path,
-                    selected_calibration,
                 )
 
                 return (

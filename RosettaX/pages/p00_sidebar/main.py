@@ -24,8 +24,6 @@ class Sidebar:
     ----------------
     - Render the logo and main navigation.
     - Show saved profile controls.
-    - Show saved calibration files grouped by category.
-    - Let the user navigate to the calibration page with a selected calibration.
     - Expose small utility actions such as refresh and open folder.
 
     Notes
@@ -74,54 +72,6 @@ class Sidebar:
         Register all sidebar callbacks.
         """
         logger.debug("Registering sidebar callbacks.")
-
-        @dash.callback(
-            dash.Output(SidebarIds.saved_calibrations_body_container, "children"),
-            dash.Input(SidebarIds.saved_calibrations_refresh_button, "n_clicks"),
-            dash.Input(SidebarIds.saved_calibrations_refresh_store, "data"),
-            prevent_initial_call=True,
-        )
-        def refresh_saved_calibrations(
-            refresh_button_clicks: Optional[int],
-            refresh_signal: Any,
-        ):
-            logger.debug(
-                "refresh_saved_calibrations called with refresh_button_clicks=%r refresh_signal=%r",
-                refresh_button_clicks,
-                refresh_signal,
-            )
-
-            saved_calibrations = services.list_saved_calibrations()
-
-            logger.debug(
-                "Loaded saved calibrations from disk with fluorescence=%d scattering=%d",
-                len(saved_calibrations.get("fluorescence", [])),
-                len(saved_calibrations.get("scattering", [])),
-            )
-
-            return self._build_saved_calibrations_body(saved_calibrations)
-
-        @dash.callback(
-            dash.Output(SidebarIds.saved_calibrations_open_folder_status, "children"),
-            dash.Input(SidebarIds.saved_calibrations_open_folder_button, "n_clicks"),
-            prevent_initial_call=True,
-        )
-        def open_saved_calibrations_folder(
-            n_clicks: Optional[int],
-        ):
-            logger.debug(
-                "open_saved_calibrations_folder called with n_clicks=%r",
-                n_clicks,
-            )
-
-            del n_clicks
-
-            try:
-                return services.open_saved_calibrations_root()
-
-            except Exception as exc:
-                logger.exception("Failed to open calibration folder.")
-                return f"Could not open calibration folder: {type(exc).__name__}: {exc}"
 
         @dash.callback(
             dash.Output(SidebarIds.saved_profiles_dropdown, "options"),
@@ -308,9 +258,6 @@ class Sidebar:
             sidebar,
         )
 
-        if sidebar is None:
-            sidebar = services.list_saved_calibrations()
-
         saved_profile_options = services.build_saved_profile_options()
         initial_selected_profile = None
 
@@ -321,11 +268,6 @@ class Sidebar:
                 self._build_saved_profiles_section(
                     profile_options=saved_profile_options,
                     selected_profile=initial_selected_profile,
-                ),
-                self._build_saved_calibrations_section(sidebar),
-                dcc.Store(
-                    id=SidebarIds.saved_calibrations_refresh_store,
-                    data=0,
                 ),
                 dcc.Store(
                     id=SidebarIds.selected_profile_store,

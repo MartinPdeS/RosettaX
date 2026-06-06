@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import logging
-from pathlib import Path
 from typing import Any
 
 import dash_bootstrap_components as dbc
 
-from . import services
 from .callbacks import CalibrationPickerCallbacks
 from .layout import CalibrationPickerLayout
 
@@ -43,10 +41,6 @@ class CalibrationPicker:
         self.card_color = card_color
         self.secondary_card_color = "gray"
 
-        self.folder_definitions: list[tuple[str, str, Path]] = (
-            services.build_default_folder_definitions()
-        )
-
         self.layout_builder = CalibrationPickerLayout(
             page=self.page,
             section_number=self.section_number,
@@ -56,7 +50,6 @@ class CalibrationPicker:
 
         self.callback_registrar = CalibrationPickerCallbacks(
             page=self.page,
-            folder_definitions=self.folder_definitions,
         )
 
         logger.debug(
@@ -66,14 +59,6 @@ class CalibrationPicker:
             self.section_number,
             self.card_color,
             self.secondary_card_color,
-            [
-                (
-                    folder_key,
-                    folder_label,
-                    str(folder_path),
-                )
-                for folder_key, folder_label, folder_path in self.folder_definitions
-            ],
         )
 
     def get_layout(self) -> dbc.Card:

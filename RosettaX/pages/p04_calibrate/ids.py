@@ -19,8 +19,8 @@ class Ids:
         container = f"{page_name}-header-container"
 
     class CalibrationPicker:
-        dropdown = f"{page_name}-calibration-dropdown"
-        refresh_button = f"{page_name}-refresh-button"
+        upload = f"{page_name}-calibration-upload"
+        upload_status = f"{page_name}-calibration-upload-status"
 
         scattering_target_model_container = (
             f"{page_name}-calibration-picker-scattering-target-model-container"

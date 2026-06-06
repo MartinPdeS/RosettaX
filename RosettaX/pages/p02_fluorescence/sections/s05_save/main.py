@@ -6,7 +6,6 @@ import logging
 import dash_bootstrap_components as dbc
 
 from RosettaX.workflow import save
-from RosettaX.utils import directories
 
 from . import layout as _layout
 from . import callbacks as _callbacks
@@ -44,12 +43,11 @@ class Save:
 
         self.config = save.SaveConfig(
             calibration_kind="fluorescence",
-            output_directory=directories.fluorescence_calibration,
             header_title=f"{self.section_number}. Save calibration",
-            button_text="Save calibration",
+            button_text="Download calibration.json",
             file_name_placeholder="calibration name",
-            saved_message_prefix="Saved calibration",
-            failure_message="Failed to save calibration. See terminal logs for details.",
+            saved_message_prefix="Prepared calibration download",
+            failure_message="Failed to prepare calibration download. See terminal logs for details.",
         )
 
         self.adapter = save.CalibrationStoreSaveAdapter()

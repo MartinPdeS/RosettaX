@@ -5,7 +5,6 @@ import logging
 
 import dash
 
-from RosettaX.pages.p00_sidebar.ids import SidebarIds
 from . import services
 from .adapters import SaveAdapter
 from .models import SaveConfig
@@ -55,10 +54,6 @@ def _register_save_callback(
     """
     callback_states = [
         dash.State(ids.file_name, "value"),
-        dash.State(
-            SidebarIds.saved_calibrations_refresh_store,
-            "data",
-        ),
     ]
 
     if calibration_store_id is not None:
@@ -79,11 +74,7 @@ def _register_save_callback(
 
     @dash.callback(
         dash.Output(ids.save_out, "children"),
-        dash.Output(
-            SidebarIds.saved_calibrations_refresh_store,
-            "data",
-            allow_duplicate=True,
-        ),
+        dash.Output(ids.download, "data"),
         dash.Input(ids.save_calibration_btn, "n_clicks"),
         *callback_states,
         prevent_initial_call=True,
@@ -91,7 +82,6 @@ def _register_save_callback(
     def save_callback(
         n_clicks: int,
         file_name: str,
-        current_sidebar_refresh_signal: Any,
         *optional_state_payloads: Any,
     ) -> tuple[Any, Any]:
         del n_clicks
@@ -116,26 +106,25 @@ def _register_save_callback(
         logger.debug(
             "save_callback called with calibration_kind=%r file_name=%r "
             "calibration_payload_type=%s calibration_payload_keys=%r "
-            "current_sidebar_refresh_signal=%r",
+            "page_state_payload_type=%s",
             config.calibration_kind,
             file_name,
             type(calibration_payload).__name__,
             list(calibration_payload.keys()) if isinstance(calibration_payload, dict) else None,
-            current_sidebar_refresh_signal,
+            type(page_state_payload).__name__,
         )
 
         result = services.run_save_workflow(
             file_name=file_name,
             calibration_payload=calibration_payload,
-            current_sidebar_refresh_signal=current_sidebar_refresh_signal,
             config=config,
             logger=logger,
         )
 
         logger.debug(
-            "save_callback returning save_out=%r sidebar_refresh_signal=%r",
+            "save_callback returning save_out=%r download_data_type=%s",
             result.save_out,
-            result.sidebar_refresh_signal,
+            type(result.download_data).__name__,
         )
 
         return result.to_tuple()

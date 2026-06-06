@@ -6,7 +6,7 @@ from typing import Any
 import dash_bootstrap_components as dbc
 
 from RosettaX.pages.p03_scattering.state import ScatteringPageState
-from RosettaX.utils import directories, styling, ui_forms
+from RosettaX.utils import styling, ui_forms
 from RosettaX.workflow import save
 
 
@@ -31,12 +31,11 @@ class Save:
 
         self.config = save.SaveConfig(
             calibration_kind="scattering",
-            output_directory=directories.scattering_calibration,
             header_title=f"{self.section_number}. Save calibration",
-            button_text="Save calibration",
+            button_text="Download calibration.json",
             file_name_placeholder="calibration name",
-            saved_message_prefix="Saved calibration",
-            failure_message="Failed to save calibration. See terminal logs for details.",
+            saved_message_prefix="Prepared calibration download",
+            failure_message="Failed to prepare calibration download. See terminal logs for details.",
         )
 
         self.adapter = save.PageStateSaveAdapter(

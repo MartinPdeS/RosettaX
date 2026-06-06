@@ -29,3 +29,7 @@ class SaveIds:
     @property
     def save_out(self) -> str:
         return f"{self.prefix}-save-out"
+
+    @property
+    def download(self) -> str:
+        return f"{self.prefix}-save-download"

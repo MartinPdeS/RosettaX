@@ -24,6 +24,7 @@ class ApplyCalibrationRequest:
 
     uploaded_fcs_paths: list[str]
     selected_calibration: str
+    calibration_payload: dict[str, Any]
     export_columns: list[str]
     scattering_target_model_parameters: Optional[ScatteringTargetModelParameters] = None
 
@@ -56,13 +57,10 @@ def apply_calibration_to_fcs_files(
     if not request.selected_calibration:
         raise ValueError("A calibration file must be selected.")
 
-    calibration_file_path = io.resolve_calibration_file_path(
-        request.selected_calibration,
-    )
+    if not isinstance(request.calibration_payload, dict) or not request.calibration_payload:
+        raise ValueError("Uploaded calibration payload is missing.")
 
-    calibration_payload = io.load_calibration_payload(
-        calibration_file_path,
-    )
+    calibration_payload = dict(request.calibration_payload)
 
     source_channel = resolve_source_channel(
         calibration_payload,

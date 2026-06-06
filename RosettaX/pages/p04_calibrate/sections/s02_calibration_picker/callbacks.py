@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import logging
-from pathlib import Path
 from typing import Any, Optional
 
 import dash
@@ -27,10 +26,8 @@ class CalibrationPickerCallbacks:
         self,
         *,
         page: Any,
-        folder_definitions: list[tuple[str, str, Path]],
     ) -> None:
         self.page = page
-        self.folder_definitions = folder_definitions
 
     def register_callbacks(self) -> None:
         """
@@ -38,9 +35,7 @@ class CalibrationPickerCallbacks:
         """
         logger.debug("Registering CalibrationPicker callbacks.")
 
-        self._register_dropdown_refresh_callback()
-        self._register_selected_calibration_store_callback()
-        self._register_selected_calibration_summary_callback()
+        self._register_calibration_upload_callback()
         self._register_scattering_target_model_visibility_callback()
         self._register_target_model_preset_runtime_sync_callback()
         self._register_target_model_preset_callback()
@@ -370,134 +365,9 @@ class CalibrationPickerCallbacks:
                 yscale=yscale,
             )
 
-    def _register_dropdown_refresh_callback(self) -> None:
+    def _register_calibration_upload_callback(self) -> None:
         """
-        Register calibration dropdown refresh callback.
-        """
-
-        @dash.callback(
-            dash.Output(
-                self.page.ids.CalibrationPicker.dropdown,
-                "options",
-            ),
-            dash.Output(
-                self.page.ids.CalibrationPicker.dropdown,
-                "value",
-            ),
-            dash.Input(
-                self.page.ids.CalibrationPicker.refresh_button,
-                "n_clicks",
-            ),
-            dash.Input(
-                self.page.ids.Page.location,
-                "search",
-            ),
-            prevent_initial_call=False,
-        )
-        def refresh_calibration_picker(
-            refresh_button_clicks: Optional[int],
-            search: Optional[str],
-        ) -> tuple[list[dict[str, str]], Optional[str]]:
-            logger.debug(
-                "refresh_calibration_picker called with refresh_button_clicks=%r search=%r",
-                refresh_button_clicks,
-                search,
-            )
-
-            dropdown_options = services.build_dropdown_options(
-                folder_definitions=self.folder_definitions,
-            )
-
-            allowed_values = {
-                str(option["value"])
-                for option in dropdown_options
-                if isinstance(option, dict) and "value" in option
-            }
-
-            selected_calibration_from_url = services.extract_selected_calibration_from_search(
-                search=search,
-            )
-
-            if (
-                selected_calibration_from_url is not None
-                and selected_calibration_from_url in allowed_values
-            ):
-                resolved_dropdown_value = selected_calibration_from_url
-
-                logger.debug(
-                    "Using URL selected calibration=%r",
-                    resolved_dropdown_value,
-                )
-
-            elif dropdown_options:
-                resolved_dropdown_value = str(
-                    dropdown_options[0]["value"],
-                )
-
-                logger.debug(
-                    "Using first available calibration=%r",
-                    resolved_dropdown_value,
-                )
-
-            else:
-                resolved_dropdown_value = None
-
-                logger.debug(
-                    "No calibration files found. Dropdown will remain empty."
-                )
-
-            logger.debug(
-                "Returning calibration dropdown option_count=%d value=%r",
-                len(dropdown_options),
-                resolved_dropdown_value,
-            )
-
-            return dropdown_options, resolved_dropdown_value
-
-    def _register_selected_calibration_store_callback(self) -> None:
-        """
-        Register selected calibration path store callback.
-        """
-
-        @dash.callback(
-            dash.Output(
-                self.page.ids.Stores.selected_calibration_path_store,
-                "data",
-            ),
-            dash.Input(
-                self.page.ids.CalibrationPicker.dropdown,
-                "value",
-            ),
-            prevent_initial_call=False,
-        )
-        def sync_selected_calibration_store(
-            selected_dropdown_value: Optional[str],
-        ) -> Optional[str]:
-            logger.debug(
-                "sync_selected_calibration_store called with selected_dropdown_value=%r",
-                selected_dropdown_value,
-            )
-
-            if selected_dropdown_value is None:
-                return None
-
-            resolved_selected_dropdown_value = str(
-                selected_dropdown_value,
-            ).strip()
-
-            if not resolved_selected_dropdown_value:
-                return None
-
-            logger.debug(
-                "Updating selected_calibration_path_store=%r",
-                resolved_selected_dropdown_value,
-            )
-
-            return resolved_selected_dropdown_value
-
-    def _register_selected_calibration_summary_callback(self) -> None:
-        """
-        Register selected calibration summary store callback.
+        Register calibration upload parsing callback.
         """
 
         @dash.callback(
@@ -505,43 +375,48 @@ class CalibrationPickerCallbacks:
                 self.page.ids.Stores.selected_calibration_summary_store,
                 "data",
             ),
+            dash.Output(
+                self.page.ids.CalibrationPicker.upload_status,
+                "children",
+            ),
+            dash.Output(
+                self.page.ids.CalibrationPicker.upload_status,
+                "color",
+            ),
             dash.Input(
-                self.page.ids.CalibrationPicker.dropdown,
-                "value",
+                self.page.ids.CalibrationPicker.upload,
+                "contents",
+            ),
+            dash.State(
+                self.page.ids.CalibrationPicker.upload,
+                "filename",
             ),
             prevent_initial_call=False,
         )
-        def sync_selected_calibration_summary_store(
-            selected_dropdown_value: Optional[str],
-        ) -> Optional[dict[str, Any]]:
+        def sync_uploaded_calibration_summary(
+            uploaded_contents: Any,
+            uploaded_filename: Any,
+        ) -> tuple[Optional[dict[str, Any]], str, str]:
             logger.debug(
-                "sync_selected_calibration_summary_store called with selected_dropdown_value=%r",
-                selected_dropdown_value,
+                "sync_uploaded_calibration_summary called with uploaded_filename=%r",
+                uploaded_filename,
             )
 
-            if selected_dropdown_value is None:
-                return None
-
-            resolved_selected_dropdown_value = str(
-                selected_dropdown_value,
-            ).strip()
-
-            if not resolved_selected_dropdown_value:
-                return None
-
-            try:
-                calibration_file_path = services.resolve_calibration_file_path(
-                    selected_calibration=resolved_selected_dropdown_value,
-                    folder_definitions=self.folder_definitions,
+            if uploaded_contents is None:
+                return (
+                    None,
+                    "Upload a calibration.json file generated by RosettaX.",
+                    "secondary",
                 )
 
-                calibration_payload = services.load_calibration_payload(
-                    calibration_file_path=calibration_file_path,
+            try:
+                resolved_filename, calibration_payload = services.parse_uploaded_calibration(
+                    contents=uploaded_contents,
+                    filename=uploaded_filename,
                 )
 
                 calibration_summary = services.build_calibration_summary(
-                    selected_calibration=resolved_selected_dropdown_value,
-                    calibration_file_path=calibration_file_path,
+                    selected_calibration=resolved_filename,
                     calibration_payload=calibration_payload,
                 )
 
@@ -550,26 +425,23 @@ class CalibrationPickerCallbacks:
                     calibration_summary,
                 )
 
-                return calibration_summary
-
-            except Exception:
-                logger.exception(
-                    "Failed to load calibration summary for selected calibration=%r",
-                    resolved_selected_dropdown_value,
+                return (
+                    calibration_summary,
+                    f'Loaded calibration file "{resolved_filename}".',
+                    "success",
                 )
 
-                return {
-                    "selected_calibration": resolved_selected_dropdown_value,
-                    "calibration_type": "",
-                    "source_channel": "",
-                    "output_quantity": "",
-                    "version": None,
-                    "is_valid": False,
-                    "is_scattering": False,
-                    "is_fluorescence": False,
-                    "requires_target_model": False,
-                    "error": "Failed to read selected calibration JSON file.",
-                }
+            except Exception as exc:
+                logger.exception(
+                    "Failed to parse uploaded calibration filename=%r",
+                    uploaded_filename,
+                )
+
+                return (
+                    None,
+                    f"Failed to load calibration JSON: {type(exc).__name__}: {exc}",
+                    "danger",
+                )
 
     def _register_scattering_target_model_visibility_callback(self) -> None:
         """
@@ -742,7 +614,6 @@ class CalibrationPickerCallbacks:
                 )
 
             try:
-                from RosettaX.workflow.apply_calibration import io as apply_calibration_io
                 from RosettaX.workflow.apply_calibration.scattering import (
                     ScatteringTargetModelParameters,
                     build_target_mie_relation,
@@ -752,17 +623,12 @@ class CalibrationPickerCallbacks:
                     resolve_monotonic_target_mie_relation,
                 )
 
-                selected_calibration = selected_calibration_summary.get(
-                    "selected_calibration",
+                calibration_payload = selected_calibration_summary.get(
+                    "calibration_payload",
                 )
 
-                calibration_file_path = apply_calibration_io.resolve_calibration_file_path(
-                    selected_calibration,
-                )
-
-                calibration_payload = apply_calibration_io.load_calibration_payload(
-                    calibration_file_path,
-                )
+                if not isinstance(calibration_payload, dict) or not calibration_payload:
+                    raise ValueError("Uploaded calibration payload is missing.")
 
                 resolved_target_mie_model = services.resolve_target_mie_model(
                     target_mie_model=target_mie_model,

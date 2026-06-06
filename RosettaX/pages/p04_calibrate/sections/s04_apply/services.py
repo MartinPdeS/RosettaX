@@ -216,7 +216,6 @@ def build_export_column_options_and_values(
 def build_apply_calibration_request(
     *,
     uploaded_fcs_path: Any,
-    selected_calibration: Any,
     export_columns: Any,
     selected_calibration_summary: Any,
     target_mie_model: Any,
@@ -242,8 +241,13 @@ def build_apply_calibration_request(
     if not resolved_uploaded_fcs_paths:
         raise ValueError("Upload at least one input FCS file first.")
 
-    if not selected_calibration:
-        raise ValueError("Select a calibration first.")
+    if not isinstance(selected_calibration_summary, dict):
+        raise ValueError("Upload a calibration JSON file first.")
+
+    calibration_payload = selected_calibration_summary.get("calibration_payload")
+
+    if not isinstance(calibration_payload, dict) or not calibration_payload:
+        raise ValueError("Uploaded calibration payload is missing.")
 
     resolved_export_columns = apply_calibration.io.normalize_export_columns(
         export_columns,
@@ -268,8 +272,11 @@ def build_apply_calibration_request(
     request = apply_calibration.ApplyCalibrationRequest(
         uploaded_fcs_paths=resolved_uploaded_fcs_paths,
         selected_calibration=str(
-            selected_calibration,
+            selected_calibration_summary.get("file_name")
+            or selected_calibration_summary.get("selected_calibration")
+            or "uploaded calibration.json",
         ),
+        calibration_payload=dict(calibration_payload),
         export_columns=resolved_export_columns,
         scattering_target_model_parameters=scattering_target_model_parameters,
     )

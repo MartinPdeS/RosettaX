@@ -70,6 +70,9 @@ class SaveLayout:
                 self._build_save_row(),
                 dash.html.Hr(),
                 self._build_status_output(),
+                dash.dcc.Download(
+                    id=self.ids.download,
+                ),
             ]
         )
 

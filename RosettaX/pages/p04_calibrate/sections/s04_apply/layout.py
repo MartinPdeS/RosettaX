@@ -177,79 +177,42 @@ class ApplyLayout:
             ),
         )
 
-    def _build_action_panel(self) -> dbc.Card:
+    def _build_action_panel(self) -> dash.html.Div:
         """
         Build the apply and export action panel.
         """
-        return dbc.Card(
-            dbc.CardBody(
-                [
-                    dash.html.Div(
-                        [
-                            dash.html.Div(
-                                [
-                                    dash.html.Div(
-                                        "Calibration export",
-                                        style={
-                                            "fontWeight": "700",
-                                            "fontSize": "1rem",
-                                        },
-                                    ),
-                                ],
-                                style={
-                                    "flex": "1 1 auto",
-                                },
-                            ),
-                            dash.html.Div(
-                                [
-                                    dbc.Button(
-                                        "Apply & export",
-                                        id=self.page.ids.Export.apply_and_export_button,
-                                        n_clicks=0,
-                                        color="primary",
-                                    ),
-                                    ui_forms.build_info_badge(
-                                        tooltip_target_id=self.apply_button_tooltip_target_id,
-                                    ),
-                                    dbc.Tooltip(
-                                        (
-                                            "Run the calibration on the uploaded FCS files "
-                                            "and prepare the exported calibrated files for download. "
-                                            "Apply the selected calibration to every uploaded FCS "
-                                            "file and package the calibrated outputs for download."
-                                        ),
-                                        id=self.apply_button_tooltip_id,
-                                        target=self.apply_button_tooltip_target_id,
-                                        placement="right",
-                                    ),
-                                ],
-                                style={
-                                    "display": "flex",
-                                    "alignItems": "center",
-                                    "gap": "0px",
-                                    "flex": "0 0 auto",
-                                },
-                            ),
-                        ],
-                        style={
-                            "display": "flex",
-                            "alignItems": "center",
-                            "justifyContent": "space-between",
-                            "gap": "16px",
-                            "flexWrap": "wrap",
-                        },
+        return dash.html.Div(
+            [
+                dbc.Button(
+                    "Apply & export",
+                    id=self.page.ids.Export.apply_and_export_button,
+                    n_clicks=0,
+                    color="primary",
+                ),
+                ui_forms.build_info_badge(
+                    tooltip_target_id=self.apply_button_tooltip_target_id,
+                ),
+                dbc.Tooltip(
+                    (
+                        "Run the calibration on the uploaded FCS files "
+                        "and prepare the exported calibrated files for download. "
+                        "Apply the selected calibration to every uploaded FCS "
+                        "file and package the calibrated outputs for download."
                     ),
-                ],
-                style={
-                    "padding": "14px 16px",
-                },
-            ),
+                    id=self.apply_button_tooltip_id,
+                    target=self.apply_button_tooltip_target_id,
+                    placement="right",
+                ),
+            ],
             style=ui_forms.build_workflow_panel_style(
                 color_name=self.card_color,
                 background=styling.build_rgba(
                     self.card_color,
                     0.04,
                 ),
+                style_overrides={
+                    "padding": "14px 16px",
+                },
             ),
         )
 
