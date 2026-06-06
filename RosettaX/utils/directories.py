@@ -12,8 +12,6 @@ import RosettaX
 logger = logging.getLogger(__name__)
 
 
-
-
 root = Path(RosettaX.__path__[0])
 
 project = root.parents[0]
