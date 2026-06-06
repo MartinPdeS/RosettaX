@@ -111,41 +111,17 @@ class CalibrationPickerLayout:
         """
         Build the selected calibration picker panel.
         """
-        panel_tooltip_target_id = (
-            f"{self.page.ids.CalibrationPicker.dropdown}-picker-panel-info-target"
-        )
-        panel_tooltip_id = f"{self.page.ids.CalibrationPicker.dropdown}-picker-panel-info-tooltip"
-
         return dbc.Card(
             dbc.CardBody(
                 [
                     dash.html.Div(
                         [
-                            dash.html.Div(
-                                ui_forms.build_title_with_info(
-                                    title="Calibration file",
-                                    tooltip_target_id=panel_tooltip_target_id,
-                                    tooltip_id=panel_tooltip_id,
-                                    tooltip_text=(
-                                        "Pick one saved calibration JSON file. The list is "
-                                        "built from the fluorescence and scattering calibration "
-                                        "folders."
-                                    ),
-                                    title_style_overrides={
-                                        "fontWeight": "700",
-                                        "fontSize": "1rem",
-                                    },
-                                ),
-                                style={
-                                    "flex": "1 1 280px",
-                                },
-                            ),
                             self._build_picker_row(),
                         ],
                         style={
                             "display": "flex",
                             "alignItems": "center",
-                            "justifyContent": "space-between",
+                            "justifyContent": "flex-start",
                             "gap": "18px",
                             "flexWrap": "wrap",
                             "overflow": "visible",

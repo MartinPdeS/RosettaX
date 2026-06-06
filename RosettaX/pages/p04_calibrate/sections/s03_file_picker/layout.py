@@ -96,33 +96,11 @@ class FilePickerLayout:
         """
         Build the upload panel.
         """
-        panel_tooltip_target_id = f"{self.page.ids.FilePicker.upload}-panel-info-target"
-        panel_tooltip_id = f"{self.page.ids.FilePicker.upload}-panel-info-tooltip"
-
         return dbc.Card(
             dbc.CardBody(
                 [
                     dash.html.Div(
                         [
-                            dash.html.Div(
-                                ui_forms.build_title_with_info(
-                                    title="Input FCS files",
-                                    tooltip_target_id=panel_tooltip_target_id,
-                                    tooltip_id=panel_tooltip_id,
-                                    tooltip_text=(
-                                        "Upload a single file or a batch of files. Uploaded "
-                                        "files are copied to the local RosettaX upload "
-                                        "directory for this session."
-                                    ),
-                                    title_style_overrides={
-                                        "fontWeight": "700",
-                                        "fontSize": "1rem",
-                                    },
-                                ),
-                                style={
-                                    "marginBottom": "12px",
-                                },
-                            ),
                             self._build_upload_widget(),
                         ]
                     ),

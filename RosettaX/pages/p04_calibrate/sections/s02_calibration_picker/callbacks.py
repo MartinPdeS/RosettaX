@@ -809,13 +809,28 @@ class CalibrationPickerCallbacks:
                     target_mie_relation=full_target_mie_relation,
                 )
 
-                selected_diameter_values_nm, selected_coupling_values = (
-                    get_finite_positive_mie_relation_arrays(
+                if relation_resolution.used_auto_largest_branch:
+                    selected_interval = relation_resolution.selected_interval
+
+                    if selected_interval is None:
+                        raise ValueError(
+                            "Expected a selected monotonic interval for non-monotonic target Mie relation."
+                        )
+
+                    selected_diameter_values_nm = full_diameter_values_nm[
+                        selected_interval.start_index : selected_interval.end_index + 1
+                    ]
+                    selected_coupling_values = full_coupling_values[
+                        selected_interval.start_index : selected_interval.end_index + 1
+                    ]
+
+                    (
+                        approximation_diameter_values_nm,
+                        approximation_coupling_values,
+                    ) = get_finite_positive_mie_relation_arrays(
                         target_mie_relation=relation_resolution.target_mie_relation,
                     )
-                )
 
-                if relation_resolution.used_auto_largest_branch:
                     all_monotonic_intervals = find_strictly_monotonic_diameter_intervals(
                         diameter_nm=full_diameter_values_nm,
                         theoretical_coupling=full_coupling_values,
@@ -837,34 +852,40 @@ class CalibrationPickerCallbacks:
                         full_coupling_values=full_coupling_values,
                         selected_diameter_values_nm=selected_diameter_values_nm,
                         selected_coupling_values=selected_coupling_values,
+                        approximation_diameter_values_nm=approximation_diameter_values_nm,
+                        approximation_coupling_values=approximation_coupling_values,
+                        selected_interval=relation_resolution.selected_interval,
                         show_selected_branch=True,
                         axis_scale_toggle_values=axis_scale_toggle_values,
                         x_axis_title=x_axis_title,
                     )
 
-                    selected_interval = relation_resolution.selected_interval
-
-                    if selected_interval is None:
-                        selected_interval_message = "largest detected monotonic branch"
-
-                    else:
-                        selected_interval_message = selected_interval.to_message_fragment()
+                    selected_interval_message = selected_interval.to_message_fragment()
 
                     return (
                         figure,
                         (
                             "Target Mie relation is not monotonic over the full range. "
-                            "Using auto largest monotonic branch with linear extrapolation enabled: "
+                            "Using auto largest monotonic branch to build a monotone approximation: "
                             f"{selected_interval_message}."
                         ),
                         "warning",
                     )
+
+                selected_diameter_values_nm, selected_coupling_values = (
+                    get_finite_positive_mie_relation_arrays(
+                        target_mie_relation=relation_resolution.target_mie_relation,
+                    )
+                )
 
                 figure = services.build_target_mie_relation_figure(
                     full_diameter_values_nm=full_diameter_values_nm,
                     full_coupling_values=full_coupling_values,
                     selected_diameter_values_nm=selected_diameter_values_nm,
                     selected_coupling_values=selected_coupling_values,
+                    approximation_diameter_values_nm=None,
+                    approximation_coupling_values=None,
+                    selected_interval=None,
                     show_selected_branch=False,
                     axis_scale_toggle_values=axis_scale_toggle_values,
                     x_axis_title=x_axis_title,

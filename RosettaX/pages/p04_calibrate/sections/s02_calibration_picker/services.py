@@ -6,6 +6,8 @@ from pathlib import Path
 from typing import Any, Optional
 from urllib.parse import parse_qs
 
+import numpy as np
+
 from RosettaX.utils import directories
 from RosettaX.utils.paths import resolve_selected_calibration_file_path
 from RosettaX.workflow import plotting
@@ -364,6 +366,9 @@ def build_target_mie_relation_figure(
     full_coupling_values: Any,
     selected_diameter_values_nm: Any,
     selected_coupling_values: Any,
+    approximation_diameter_values_nm: Any = None,
+    approximation_coupling_values: Any = None,
+    selected_interval: Any = None,
     show_selected_branch: bool,
     axis_scale_toggle_values: Any,
     x_axis_title: str,
@@ -371,30 +376,97 @@ def build_target_mie_relation_figure(
     """
     Build the target Mie relation preview figure.
 
-    The full Mie relation is always shown. If the full relation is not
-    monotonic, the automatically selected largest monotonic branch is shown
-    as a second curve.
-    """
-    traces = [
-        plotting.scatter2d.Scatter2DTrace(
-            x_values=full_diameter_values_nm,
-            y_values=full_coupling_values,
-            name="Full target Mie relation",
-            mode="lines",
-        )
-    ]
+    If the full relation is monotonic, the full curve is shown in blue.
 
-    if show_selected_branch:
+    If the full relation is not monotonic, the selected valid monotonic branch
+    is shown in blue, the rejected non-monotonic regions are shown in red, and
+    the monotone approximation used for inversion is shown in green.
+    """
+    traces: list[plotting.scatter2d.Scatter2DTrace] = []
+
+    if show_selected_branch and selected_interval is not None:
+        full_diameter_array = np.asarray(
+            full_diameter_values_nm,
+            dtype=float,
+        ).reshape(-1)
+
+        full_coupling_array = np.asarray(
+            full_coupling_values,
+            dtype=float,
+        ).reshape(-1)
+
+        invalid_coupling_values = full_coupling_array.copy()
+        invalid_coupling_values[
+            selected_interval.start_index : selected_interval.end_index + 1
+        ] = np.nan
+
         traces.append(
             plotting.scatter2d.Scatter2DTrace(
                 x_values=selected_diameter_values_nm,
                 y_values=selected_coupling_values,
-                name="Auto selected largest monotonic branch",
+                name="Valid monotonic branch",
                 mode="lines",
+                color="#1f77b4",
             )
         )
 
-    return plotting.scatter2d.Scatter2DGraph.build_figure(
+        if np.any(np.isfinite(invalid_coupling_values)):
+            traces.append(
+                plotting.scatter2d.Scatter2DTrace(
+                    x_values=full_diameter_array,
+                    y_values=invalid_coupling_values,
+                    name="Invalid non-monotonic region",
+                    mode="lines",
+                    color="#d62728",
+                )
+            )
+
+        if (
+            approximation_diameter_values_nm is not None
+            and approximation_coupling_values is not None
+        ):
+            approximation_diameter_array = np.asarray(
+                approximation_diameter_values_nm,
+                dtype=float,
+            ).reshape(-1)
+            approximation_coupling_array = np.asarray(
+                approximation_coupling_values,
+                dtype=float,
+            ).reshape(-1)
+
+            if approximation_diameter_array.size != approximation_coupling_array.size:
+                raise ValueError(
+                    "Approximation diameter and coupling arrays must have the same length."
+                )
+
+            if approximation_coupling_array.size == invalid_coupling_values.size:
+                approximation_coupling_array = approximation_coupling_array.copy()
+                approximation_coupling_array[
+                    selected_interval.start_index : selected_interval.end_index + 1
+                ] = np.nan
+
+            traces.append(
+                plotting.scatter2d.Scatter2DTrace(
+                    x_values=approximation_diameter_array,
+                    y_values=approximation_coupling_array,
+                    name="Monotone approximation",
+                    mode="lines",
+                    color="#2ca02c",
+                )
+            )
+
+    else:
+        traces.append(
+            plotting.scatter2d.Scatter2DTrace(
+                x_values=full_diameter_values_nm,
+                y_values=full_coupling_values,
+                name="Valid monotonic relation",
+                mode="lines",
+                color="#1f77b4",
+            )
+        )
+
+    figure = plotting.scatter2d.Scatter2DGraph.build_figure(
         traces=traces,
         title="Target Mie relation preview",
         x_axis_title=x_axis_title,
@@ -404,3 +476,17 @@ def build_target_mie_relation_figure(
         hovermode="closest",
         uirevision="target_mie_relation_preview",
     )
+
+    figure.update_layout(
+        legend={
+            "x": 0.99,
+            "y": 0.01,
+            "xanchor": "right",
+            "yanchor": "bottom",
+            "bgcolor": "rgba(255, 255, 255, 0.72)",
+            "bordercolor": "rgba(0, 0, 0, 0.18)",
+            "borderwidth": 1,
+        },
+    )
+
+    return figure

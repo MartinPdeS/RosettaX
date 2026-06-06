@@ -25,7 +25,8 @@ def resolve_monotonic_target_mie_relation(
     Resolve the monotonic target relation used for diameter inversion.
 
     If the full relation is strictly monotonic, it is used directly. If not, the
-    widest strictly monotonic branch is selected automatically.
+    widest strictly monotonic branch is selected automatically and expanded into
+    a monotone approximation across the full diameter range.
     """
     logger.debug(
         "resolve_monotonic_target_mie_relation called with mie_model=%r relation_role=%r",
@@ -74,7 +75,7 @@ def resolve_monotonic_target_mie_relation(
         monotonic_intervals=monotonic_intervals,
     )
 
-    branch_mie_relation = build_monotonic_branch_mie_relation(
+    approximated_mie_relation = build_monotonic_approximation_mie_relation(
         target_mie_relation=target_mie_relation,
         selected_interval=selected_interval,
     )
@@ -82,8 +83,9 @@ def resolve_monotonic_target_mie_relation(
     warning = (
         "Target Mie relation was not strictly monotonic over the full selected "
         "diameter range. RosettaX automatically selected the largest monotonic "
-        f"branch: {selected_interval.to_message_fragment()}. Linear extrapolation "
-        "is enabled outside the selected branch coupling range."
+        f"branch: {selected_interval.to_message_fragment()}. A monotone "
+        "approximation based on that branch is used across the selected "
+        "diameter range."
     )
 
     logger.debug(
@@ -92,7 +94,7 @@ def resolve_monotonic_target_mie_relation(
     )
 
     return MonotonicRelationResolution(
-        target_mie_relation=branch_mie_relation,
+        target_mie_relation=approximated_mie_relation,
         selected_interval=selected_interval,
         used_auto_largest_branch=True,
         warnings=[
@@ -191,6 +193,126 @@ def build_monotonic_branch_mie_relation(
         parameters=parameters,
         relation_role=target_mie_relation.relation_role,
     )
+
+
+def build_monotonic_approximation_mie_relation(
+    *,
+    target_mie_relation: scattering.MieRelation,
+    selected_interval: MonotonicDiameterInterval,
+) -> scattering.MieRelation:
+    """
+    Build a monotone approximation of the full Mie relation.
+
+    The selected strictly monotonic branch is preserved exactly. Outside that
+    branch, the original curve is converted into a monotone envelope that keeps
+    following the same overall Mie-curve shape without introducing straight-line
+    segments across the whole rejected region.
+    """
+    diameter_values_nm, theoretical_coupling_values = get_finite_positive_mie_relation_arrays(
+        target_mie_relation=target_mie_relation,
+    )
+
+    approximated_coupling_values = build_monotonic_coupling_approximation(
+        theoretical_coupling_values=theoretical_coupling_values,
+        selected_interval=selected_interval,
+    )
+
+    parameters = dict(
+        target_mie_relation.parameters,
+    )
+
+    parameters.update(
+        {
+            "auto_largest_monotonic_branch": True,
+            "branch_diameter_min_nm": selected_interval.diameter_min_nm,
+            "branch_diameter_max_nm": selected_interval.diameter_max_nm,
+            "branch_coupling_min": selected_interval.coupling_min,
+            "branch_coupling_max": selected_interval.coupling_max,
+            "branch_trend": selected_interval.trend,
+            "extrapolation_enabled": True,
+            "monotonic_approximation_enabled": True,
+            "monotonic_approximation_strategy": "cumulative_envelope",
+        }
+    )
+
+    return scattering.build_mie_relation_from_arrays(
+        diameter_nm=diameter_values_nm,
+        theoretical_coupling=approximated_coupling_values,
+        mie_model=target_mie_relation.mie_model,
+        parameters=parameters,
+        relation_role=target_mie_relation.relation_role,
+    )
+
+
+def build_monotonic_coupling_approximation(
+    *,
+    theoretical_coupling_values: np.ndarray,
+    selected_interval: MonotonicDiameterInterval,
+) -> np.ndarray:
+    """
+    Build a monotone coupling envelope anchored on the selected branch.
+    """
+    coupling_values = np.asarray(
+        theoretical_coupling_values,
+        dtype=float,
+    ).reshape(-1)
+
+    approximated_coupling_values = coupling_values.copy()
+
+    branch_values = coupling_values[
+        selected_interval.start_index : selected_interval.end_index + 1
+    ]
+
+    if branch_values.size < 2:
+        raise ValueError("Selected monotonic branch has fewer than two points.")
+
+    if selected_interval.trend == "increasing":
+        left_values = coupling_values[: selected_interval.start_index]
+
+        if left_values.size > 0:
+            approximated_coupling_values[: selected_interval.start_index] = np.minimum(
+                np.maximum.accumulate(left_values),
+                branch_values[0],
+            )
+
+        right_values = coupling_values[selected_interval.end_index + 1 :]
+
+        if right_values.size > 0:
+            approximated_coupling_values[selected_interval.end_index + 1 :] = (
+                np.maximum.accumulate(
+                    np.concatenate(
+                        (
+                            np.asarray([branch_values[-1]], dtype=float),
+                            right_values,
+                        )
+                    )
+                )[1:]
+            )
+
+    else:
+        left_values = coupling_values[: selected_interval.start_index]
+
+        if left_values.size > 0:
+            approximated_coupling_values[: selected_interval.start_index] = np.maximum(
+                np.minimum.accumulate(left_values),
+                branch_values[0],
+            )
+
+        right_values = coupling_values[selected_interval.end_index + 1 :]
+
+        if right_values.size > 0:
+            approximated_coupling_values[selected_interval.end_index + 1 :] = (
+                np.minimum.accumulate(
+                    np.concatenate(
+                        (
+                            np.asarray([branch_values[-1]], dtype=float),
+                            right_values,
+                        )
+                    )
+                )[1:]
+            )
+
+    return approximated_coupling_values
 
 
 def coupling_to_diameter_with_linear_extrapolation(

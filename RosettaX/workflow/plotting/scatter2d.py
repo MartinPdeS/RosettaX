@@ -35,6 +35,7 @@ class Scatter2DTrace:
     marker_size: Optional[float] = None
     marker_opacity: float = 0.75
     mode: str = "markers"
+    color: Optional[str] = None
 
 
 class Scatter2DGraph:
@@ -302,6 +303,20 @@ class Scatter2DGraph:
                 if customdata_array.shape[0] == finite_mask.size:
                     customdata = customdata_array[finite_mask]
 
+            marker = {
+                "size": (
+                    cls.default_marker_size
+                    if trace.marker_size is None
+                    else float(trace.marker_size)
+                ),
+                "opacity": float(
+                    trace.marker_opacity,
+                ),
+            }
+
+            if trace.color is not None:
+                marker["color"] = trace.color
+
             figure.add_trace(
                 go.Scattergl(
                     x=x_values,
@@ -310,16 +325,14 @@ class Scatter2DGraph:
                     name=trace.name,
                     text=text_values,
                     customdata=customdata,
-                    marker={
-                        "size": (
-                            cls.default_marker_size
-                            if trace.marker_size is None
-                            else float(trace.marker_size)
-                        ),
-                        "opacity": float(
-                            trace.marker_opacity,
-                        ),
-                    },
+                    line=(
+                        {
+                            "color": trace.color,
+                        }
+                        if trace.color is not None
+                        else None
+                    ),
+                    marker=marker,
                 )
             )
 
