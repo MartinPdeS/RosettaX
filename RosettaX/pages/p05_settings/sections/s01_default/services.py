@@ -6,6 +6,7 @@ from typing import Any, Optional
 
 import numpy as np
 
+from RosettaX.utils.browser_profiles import BrowserProfileLibrary
 from RosettaX.utils import casting, directories
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.table.fluorescence import (
@@ -49,17 +50,15 @@ def _json_safe_value(value: Any) -> Any:
     return value
 
 
-def build_profile_options() -> list[dict[str, str]]:
+def build_profile_options(
+    browser_profiles_payload: Any = None,
+) -> list[dict[str, str]]:
     """
-    Build profile dropdown options from saved profile files.
+    Build profile dropdown options from browser-local profiles.
     """
-    return [
-        {
-            "label": file_name,
-            "value": file_name,
-        }
-        for file_name in directories.list_profiles()
-    ]
+    return BrowserProfileLibrary.from_dict(
+        browser_profiles_payload,
+    ).build_options()
 
 
 def resolve_default_profile_value(
@@ -95,25 +94,18 @@ def normalize_profile_filename(profile_name: str) -> str:
     return normalized_profile_name
 
 
-def get_saved_profile(profile_name: Optional[str]) -> Optional[dict[str, Any]]:
+def get_saved_profile(
+    profile_name: Optional[str],
+    browser_profiles_payload: Any = None,
+) -> Optional[dict[str, Any]]:
     """
     Load a saved profile as a dictionary.
     """
-    if not profile_name:
-        return None
-
-    normalized_profile_name = normalize_profile_filename(
+    return BrowserProfileLibrary.from_dict(
+        browser_profiles_payload,
+    ).get_profile_payload(
         profile_name,
     )
-
-    profile_path = Path(directories.profiles) / normalized_profile_name
-
-    if not profile_path.exists():
-        return None
-
-    return RuntimeConfig.from_json_path(
-        profile_path,
-    ).to_dict()
 
 
 def build_form_field_ids(page) -> dict[str, str]:
@@ -496,23 +488,15 @@ def build_nested_profile_payload(
 def save_profile(
     profile_name: str,
     nested_profile_payload: dict[str, Any],
-) -> None:
+    browser_profiles_payload: Any,
+) -> dict[str, Any]:
     """
-    Save a nested profile payload to disk.
+    Save a nested profile payload into browser-local storage.
     """
-    normalized_profile_name = normalize_profile_filename(
-        profile_name,
-    )
-
-    profile_path = Path(directories.profiles) / normalized_profile_name
-    profile_path.parent.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
-
-    RuntimeConfig.from_dict(
-        nested_profile_payload,
-    )
-
-    with profile_path.open("w", encoding="utf-8") as file_handle:
-        json.dump(nested_profile_payload, file_handle, indent=2, ensure_ascii=False)
+    return BrowserProfileLibrary.from_dict(
+        browser_profiles_payload,
+    ).with_saved_profile(
+        profile_name=profile_name,
+        profile_payload=nested_profile_payload,
+        select_profile=False,
+    ).to_dict()

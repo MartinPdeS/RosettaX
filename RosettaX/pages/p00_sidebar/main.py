@@ -10,6 +10,10 @@ from dash import dcc, html
 
 from .ids import SidebarIds
 from RosettaX.workflow.sidebar import services
+from RosettaX.utils.browser_profiles import (
+    BROWSER_PROFILES_STORE_ID,
+    BrowserProfileLibrary,
+)
 from RosettaX.utils import styling
 
 
@@ -36,7 +40,7 @@ class Sidebar:
         self.page_name = "sidebar"
         self.logo_src = "/assets/logo_light.svg"
         self.logo_max_height_px = 156
-        self.sidebar_width_px = 460
+        self.sidebar_width_px = 430
         self.style = styling.PAGE
 
         logger.debug(
@@ -75,32 +79,22 @@ class Sidebar:
 
         @dash.callback(
             dash.Output(SidebarIds.saved_profiles_dropdown, "options"),
-            dash.Input(SidebarIds.saved_profiles_refresh_button, "n_clicks"),
-            prevent_initial_call=True,
-        )
-        def refresh_saved_profiles(
-            n_clicks: Optional[int],
-        ):
-            logger.debug(
-                "refresh_saved_profiles called with n_clicks=%r",
-                n_clicks,
-            )
-
-            return services.build_saved_profile_options()
-
-        @dash.callback(
             dash.Output(SidebarIds.saved_profiles_dropdown, "value"),
             dash.Output(SidebarIds.selected_profile_store, "data"),
-            dash.Input(SidebarIds.saved_profiles_dropdown, "options"),
+            dash.Input(BROWSER_PROFILES_STORE_ID, "data"),
             dash.State(SidebarIds.saved_profiles_dropdown, "value"),
             dash.State(SidebarIds.selected_profile_store, "data"),
             prevent_initial_call=False,
         )
         def initialize_or_sync_selected_profile(
-            profile_options: Any,
+            browser_profiles_payload: Any,
             dropdown_value: Optional[str],
             selected_profile_store_data: Optional[str],
         ):
+            profile_options = services.build_saved_profile_options(
+                browser_profiles_payload,
+            )
+
             logger.debug(
                 "initialize_or_sync_selected_profile called with dropdown_value=%r "
                 "selected_profile_store_data=%r profile_options=%r",
@@ -110,7 +104,7 @@ class Sidebar:
             )
 
             if not isinstance(profile_options, list) or not profile_options:
-                return None, None
+                return [], None, None
 
             option_values = {
                 option.get("value")
@@ -130,9 +124,9 @@ class Sidebar:
                         dropdown_value,
                     )
 
-                    return dash.no_update, dropdown_value
+                    return profile_options, dash.no_update, dropdown_value
 
-                return dash.no_update, dash.no_update
+                return profile_options, dash.no_update, dash.no_update
 
             if selected_profile_store_data in option_values:
                 logger.debug(
@@ -140,29 +134,32 @@ class Sidebar:
                     selected_profile_store_data,
                 )
 
-                return selected_profile_store_data, dash.no_update
+                return profile_options, selected_profile_store_data, dash.no_update
 
-            resolved_default_profile = self._get_default_profile_name(
-                profile_options,
-            )
+            resolved_default_profile = BrowserProfileLibrary.from_dict(
+                browser_profiles_payload,
+            ).selected_profile or self._get_default_profile_name(profile_options)
 
             logger.debug(
                 "Initializing sidebar selected profile to resolved_default_profile=%r",
                 resolved_default_profile,
             )
 
-            return resolved_default_profile, resolved_default_profile
+            return profile_options, resolved_default_profile, resolved_default_profile
 
         @dash.callback(
             dash.Output(SidebarIds.selected_profile_store, "data", allow_duplicate=True),
+            dash.Output(BROWSER_PROFILES_STORE_ID, "data", allow_duplicate=True),
             dash.Output(SidebarIds.profile_load_event_store, "data"),
             dash.Input(SidebarIds.saved_profiles_load_button, "n_clicks"),
             dash.State(SidebarIds.saved_profiles_dropdown, "value"),
+            dash.State(BROWSER_PROFILES_STORE_ID, "data"),
             prevent_initial_call=True,
         )
         def load_selected_profile(
             n_clicks: Optional[int],
             selected_profile: Optional[str],
+            browser_profiles_payload: Any,
         ):
             logger.debug(
                 "load_selected_profile called with n_clicks=%r selected_profile=%r",
@@ -171,11 +168,17 @@ class Sidebar:
             )
 
             if not n_clicks:
-                return dash.no_update, dash.no_update
+                return dash.no_update, dash.no_update, dash.no_update
 
             try:
                 resolved_profile_name, status_message = services.resolve_selected_profile(
                     selected_profile,
+                    browser_profiles_payload,
+                )
+                browser_profiles = BrowserProfileLibrary.from_dict(
+                    browser_profiles_payload,
+                ).with_selected_profile(
+                    resolved_profile_name,
                 )
 
                 profile_load_event = {
@@ -191,7 +194,11 @@ class Sidebar:
                     profile_load_event,
                 )
 
-                return resolved_profile_name, profile_load_event
+                return (
+                    resolved_profile_name,
+                    browser_profiles.to_dict(),
+                    profile_load_event,
+                )
 
             except Exception:
                 logger.exception(
@@ -199,7 +206,7 @@ class Sidebar:
                     selected_profile,
                 )
 
-                return dash.no_update, dash.no_update
+                return dash.no_update, dash.no_update, dash.no_update
 
         @dash.callback(
             dash.Output(SidebarIds.saved_profiles_load_status, "children"),
@@ -219,28 +226,6 @@ class Sidebar:
 
             return f"Selected profile: {selected_profile}"
 
-        @dash.callback(
-            dash.Output(SidebarIds.saved_profiles_open_folder_status, "children"),
-            dash.Input(SidebarIds.saved_profiles_open_folder_button, "n_clicks"),
-            prevent_initial_call=True,
-        )
-        def open_saved_profiles_folder(
-            n_clicks: Optional[int],
-        ):
-            logger.debug(
-                "open_saved_profiles_folder called with n_clicks=%r",
-                n_clicks,
-            )
-
-            del n_clicks
-
-            try:
-                return services.open_profiles_directory()
-
-            except Exception as exc:
-                logger.exception("Failed to open profile folder.")
-                return f"Could not open profile folder: {type(exc).__name__}: {exc}"
-
     def layout(
         self,
         sidebar: Optional[dict[str, list[str]]] = None,
@@ -258,8 +243,9 @@ class Sidebar:
             sidebar,
         )
 
-        saved_profile_options = services.build_saved_profile_options()
-        initial_selected_profile = None
+        saved_profile_library = BrowserProfileLibrary.from_seed_data()
+        saved_profile_options = saved_profile_library.build_options()
+        initial_selected_profile = saved_profile_library.selected_profile
 
         return html.Div(
             [
@@ -271,8 +257,8 @@ class Sidebar:
                 ),
                 dcc.Store(
                     id=SidebarIds.selected_profile_store,
-                    data=None,
-                    storage_type="session",
+                    data=initial_selected_profile,
+                    storage_type="local",
                 ),
                 dcc.Store(
                     id=SidebarIds.profile_load_event_store,
@@ -324,11 +310,11 @@ class Sidebar:
                 dbc.Nav(
                     [
                         self._nav_link("Home", "/"),
-                        self._nav_link("Help", "/help"),
                         self._nav_link("Fluorescence", "/fluorescence"),
                         self._nav_link("Scattering", "/scattering"),
                         self._nav_link("Apply calibration", "/calibrate"),
                         self._nav_link("Settings", "/settings"),
+                        self._nav_link("Help", "/help"),
                     ],
                     vertical=True,
                     pills=True,
@@ -365,25 +351,11 @@ class Sidebar:
                 dbc.CardBody(
                     [
                         html.Div(
-                            [
-                                dbc.Button(
-                                    "Open folder",
-                                    id=SidebarIds.saved_profiles_open_folder_button,
-                                    size="sm",
-                                    color="secondary",
-                                ),
-                                dbc.Button(
-                                    "Refresh",
-                                    id=SidebarIds.saved_profiles_refresh_button,
-                                    size="sm",
-                                    color="secondary",
-                                ),
-                            ],
+                            "Profiles are saved in this browser.",
                             style={
-                                "display": "flex",
-                                "gap": "8px",
                                 "marginBottom": "10px",
-                                "flexWrap": "wrap",
+                                "opacity": 0.75,
+                                "fontSize": "0.88rem",
                             },
                         ),
                         html.Div(
@@ -423,17 +395,6 @@ class Sidebar:
                         ),
                         html.Small(
                             id=SidebarIds.saved_profiles_load_status,
-                            style={
-                                "opacity": 0.75,
-                            },
-                        ),
-                        html.Div(
-                            style={
-                                "height": "8px",
-                            }
-                        ),
-                        html.Small(
-                            id=SidebarIds.saved_profiles_open_folder_status,
                             style={
                                 "opacity": 0.75,
                             },

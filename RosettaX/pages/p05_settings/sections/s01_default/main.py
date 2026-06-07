@@ -7,6 +7,7 @@ import dash
 import dash_bootstrap_components as dbc
 from dash import Input, Output, State, callback, html
 
+from RosettaX.utils.browser_profiles import BROWSER_PROFILES_STORE_ID
 from RosettaX.utils import styling, ui_forms
 from RosettaX.utils.runtime_config import RuntimeConfig
 
@@ -660,11 +661,12 @@ class DefaultProfile:
         """
         return tuple([dash.no_update] * len(ordered_field_names)) + (dash.no_update,)
 
-    def _build_no_update_save_response(self) -> tuple[Any, Any, Any, Any]:
+    def _build_no_update_save_response(self) -> tuple[Any, Any, Any, Any, Any]:
         """
         Build no update response for the save callback.
         """
         return (
+            dash.no_update,
             dash.no_update,
             dash.no_update,
             dash.no_update,
@@ -677,7 +679,8 @@ class DefaultProfile:
         page_state: SettingsPageState,
         status_message: str,
         color: str,
-    ) -> tuple[str, bool, str, dict[str, Any]]:
+        browser_profiles_store_data: Any = dash.no_update,
+    ) -> tuple[str, bool, str, Any, dict[str, Any]]:
         """
         Build a save callback response and update page state status.
         """
@@ -689,6 +692,7 @@ class DefaultProfile:
             status_message,
             True,
             color,
+            browser_profiles_store_data,
             page_state.to_dict(),
         )
 
@@ -710,6 +714,37 @@ class DefaultProfile:
         )
 
         @callback(
+            Output(self.ids.values_profile_dropdown, "options"),
+            Output(self.ids.values_profile_dropdown, "value"),
+            Input(BROWSER_PROFILES_STORE_ID, "data"),
+            State(self.ids.values_profile_dropdown, "value"),
+            prevent_initial_call=False,
+        )
+        def sync_profile_dropdown(
+            browser_profiles_payload: Any,
+            current_value: Optional[str],
+        ) -> tuple[list[dict[str, str]], Optional[str]]:
+            profile_options = services.build_profile_options(
+                browser_profiles_payload,
+            )
+
+            option_values = {
+                option.get("value")
+                for option in profile_options
+                if isinstance(option, dict) and option.get("value")
+            }
+
+            if current_value in option_values:
+                return profile_options, dash.no_update
+
+            return (
+                profile_options,
+                services.resolve_default_profile_value(
+                    profile_options,
+                ),
+            )
+
+        @callback(
             *form_value_outputs,
             Output(
                 self.page.ids.State.page_state_store,
@@ -717,11 +752,13 @@ class DefaultProfile:
                 allow_duplicate=True,
             ),
             Input(self.ids.values_profile_dropdown, "value"),
+            State(BROWSER_PROFILES_STORE_ID, "data"),
             State(self.page.ids.State.page_state_store, "data"),
             prevent_initial_call=True,
         )
         def load_profile_defaults(
             dropdown_value: Optional[str],
+            browser_profiles_payload: Any,
             page_state_payload: Any,
         ):
             logger.debug(
@@ -738,6 +775,7 @@ class DefaultProfile:
             saved_profile = (
                 services.get_saved_profile(
                     dropdown_value,
+                    browser_profiles_payload,
                 )
                 or {}
             )
@@ -793,17 +831,20 @@ class DefaultProfile:
             Output(self.ids.save_confirmation, "children"),
             Output(self.ids.save_confirmation, "is_open"),
             Output(self.ids.save_confirmation, "color"),
+            Output(BROWSER_PROFILES_STORE_ID, "data", allow_duplicate=True),
             Output(
                 self.page.ids.State.page_state_store,
                 "data",
                 allow_duplicate=True,
             ),
             Input(self.ids.save_changes_button, "n_clicks"),
+            State(BROWSER_PROFILES_STORE_ID, "data"),
             State(self.page.ids.State.page_state_store, "data"),
             prevent_initial_call=True,
         )
         def edit_settings(
             n_clicks: Any,
+            browser_profiles_payload: Any,
             page_state_payload: Any,
         ):
             if dash.ctx.triggered_id != self.ids.save_changes_button:
@@ -828,15 +869,17 @@ class DefaultProfile:
                     form_data=page_state.form_data or {},
                 )
 
-                services.save_profile(
-                    page_state.selected_profile,
+                next_browser_profiles_payload = services.save_profile(
+                    page_state.selected_profile or "",
                     nested_profile_payload,
+                    browser_profiles_payload,
                 )
 
                 return self._build_save_response(
                     page_state=page_state,
                     status_message=f"Saved profile: {page_state.selected_profile}",
                     color="success",
+                    browser_profiles_store_data=next_browser_profiles_payload,
                 )
 
             except Exception as exc:

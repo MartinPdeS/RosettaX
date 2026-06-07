@@ -8,6 +8,10 @@ import dash_bootstrap_components as dbc
 from dash import dcc
 from dash import html
 
+from RosettaX.utils.browser_profiles import (
+    BROWSER_PROFILES_STORE_ID,
+    BrowserProfileLibrary,
+)
 from RosettaX.utils import styling
 from RosettaX.utils.runtime_config import RuntimeConfig
 
@@ -69,6 +73,11 @@ def build_stores() -> list[Any]:
         dcc.Store(
             id="theme-store",
             data={"theme": initial_theme_mode},
+            storage_type="local",
+        ),
+        dcc.Store(
+            id=BROWSER_PROFILES_STORE_ID,
+            data=BrowserProfileLibrary.from_seed_data().to_dict(),
             storage_type="local",
         ),
         dcc.Store(

@@ -5,11 +5,11 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import quote
 
+from RosettaX.utils.browser_profiles import BrowserProfileLibrary
 from RosettaX.utils import directories
 from RosettaX.utils.paths import (
     normalize_profile_filename as normalize_safe_profile_filename,
 )
-from RosettaX.utils.paths import resolve_profile_file_path
 
 logger = logging.getLogger(__name__)
 
@@ -27,25 +27,24 @@ def normalize_profile_filename(filename: str) -> str:
     return normalize_safe_profile_filename(filename)
 
 
-def resolve_selected_profile(selected_profile: str | None) -> tuple[str | None, str]:
+def resolve_selected_profile(
+    selected_profile: str | None,
+    browser_profiles_payload: Any,
+) -> tuple[str | None, str]:
     """
     Resolve a selected profile name into a normalized file name and status message.
     """
-    if not selected_profile:
+    browser_profiles = BrowserProfileLibrary.from_dict(
+        browser_profiles_payload,
+    )
+    resolved_profile_name = browser_profiles.with_selected_profile(
+        selected_profile,
+    ).selected_profile
+
+    if not resolved_profile_name:
         return None, "No profile selected."
 
-    selected_profile_name = str(selected_profile).strip()
-
-    if not selected_profile_name:
-        return None, "No profile selected."
-
-    resolved_profile_path = resolve_profile_file_path(selected_profile_name)
-    selected_profile_file_name = resolved_profile_path.name
-
-    if not resolved_profile_path.exists():
-        raise FileNotFoundError(f"Profile does not exist: {resolved_profile_path}")
-
-    return selected_profile_file_name, f"Selected profile: {selected_profile_file_name}"
+    return resolved_profile_name, f"Selected profile: {resolved_profile_name}"
 
 
 def list_saved_calibrations() -> dict[str, list[str]]:
@@ -93,17 +92,18 @@ def list_saved_calibrations() -> dict[str, list[str]]:
     return saved_calibrations
 
 
-def build_saved_profile_options() -> list[dict[str, str]]:
+def build_saved_profile_options(
+    browser_profiles_payload: Any,
+) -> list[dict[str, str]]:
     """
-    Build saved profile dropdown options from disk.
+    Build saved profile dropdown options from browser storage.
     """
-    logger.debug("Building saved profile options from disk.")
+    logger.debug("Building saved profile options from browser storage.")
 
     try:
-        setting_files = directories.list_profiles()
-        options = [
-            {"label": file_name, "value": file_name} for file_name in setting_files
-        ]
+        options = BrowserProfileLibrary.from_dict(
+            browser_profiles_payload,
+        ).build_options()
         logger.debug("Built %d saved profile options.", len(options))
         return options
 
@@ -135,11 +135,9 @@ def open_saved_calibrations_root() -> str:
 
 def open_profiles_directory() -> str:
     """
-    Open the profiles directory.
+    Explain that profiles now live in browser storage.
     """
-    resolved_profile_directory = Path(directories.profiles).resolve()
-    directories.open_directory(resolved_profile_directory)
-    return f"Opened profile folder: {resolved_profile_directory}"
+    return "Profiles are stored in this browser."
 
 
 def build_saved_calibrations_empty_state() -> str:

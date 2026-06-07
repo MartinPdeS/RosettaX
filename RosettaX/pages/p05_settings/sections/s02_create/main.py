@@ -8,8 +8,10 @@ import dash_bootstrap_components as dbc
 from dash import Input, Output, State, callback, html
 
 from ...state import SettingsPageState
-
-from . import services
+from RosettaX.utils.browser_profiles import (
+    BROWSER_PROFILES_STORE_ID,
+    BrowserProfileLibrary,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -39,8 +41,8 @@ class CreateProfile:
                     [
                         html.P(
                             (
-                                "Create a new settings profile to store a separate "
-                                "RosettaX configuration."
+                                "Create a new settings profile saved in this browser "
+                                "to keep a separate RosettaX configuration."
                             ),
                             style={
                                 "opacity": 0.8,
@@ -108,6 +110,7 @@ class CreateProfile:
         @callback(
             Output(self.ids.new_profile_status, "children"),
             Output(self.ids.new_profile_name, "value"),
+            Output(BROWSER_PROFILES_STORE_ID, "data", allow_duplicate=True),
             Output(
                 self.page.ids.State.page_state_store,
                 "data",
@@ -115,14 +118,16 @@ class CreateProfile:
             ),
             Input(self.ids.save_new_profile_button, "n_clicks"),
             State(self.ids.new_profile_name, "value"),
+            State(BROWSER_PROFILES_STORE_ID, "data"),
             State(self.page.ids.State.page_state_store, "data"),
             prevent_initial_call=True,
         )
         def create_new_profile(
             n_clicks: Any,
             name: Any,
+            browser_profiles_payload: Any,
             page_state_payload: Any,
-        ) -> tuple[str, Any, Any]:
+        ) -> tuple[str, Any, Any, Any]:
             logger.debug(
                 "create_new_profile called with n_clicks=%r name=%r",
                 n_clicks,
@@ -131,7 +136,7 @@ class CreateProfile:
 
             if not n_clicks:
                 logger.debug("No create profile click detected.")
-                return "", dash.no_update, dash.no_update
+                return "", dash.no_update, dash.no_update, dash.no_update
 
             profile_name = str(name or "").strip()
 
@@ -148,15 +153,30 @@ class CreateProfile:
 
                 logger.debug("Profile name is empty.")
 
-                return status_message, dash.no_update, page_state.to_dict()
+                return (
+                    status_message,
+                    dash.no_update,
+                    dash.no_update,
+                    page_state.to_dict(),
+                )
 
             try:
-                result_message = services.create_profile(
-                    profile_name,
+                browser_profiles = BrowserProfileLibrary.from_dict(
+                    browser_profiles_payload,
+                )
+                next_browser_profiles = browser_profiles.create_profile(
+                    profile_name=profile_name,
+                    source_profile_name=page_state.selected_profile,
+                    select_profile=True,
+                )
+                normalized_profile_name = next_browser_profiles.selected_profile or profile_name
+                result_message = (
+                    f"Profile '{normalized_profile_name}' created successfully in this browser."
                 )
 
                 page_state = page_state.update(
                     status_message=result_message,
+                    selected_profile=normalized_profile_name,
                 )
 
                 logger.debug(
@@ -165,7 +185,12 @@ class CreateProfile:
                     profile_name,
                 )
 
-                return result_message, "", page_state.to_dict()
+                return (
+                    result_message,
+                    "",
+                    next_browser_profiles.to_dict(),
+                    page_state.to_dict(),
+                )
 
             except Exception as exc:
                 logger.exception(
@@ -179,4 +204,9 @@ class CreateProfile:
                     status_message=status_message,
                 )
 
-                return status_message, dash.no_update, page_state.to_dict()
+                return (
+                    status_message,
+                    dash.no_update,
+                    dash.no_update,
+                    page_state.to_dict(),
+                )

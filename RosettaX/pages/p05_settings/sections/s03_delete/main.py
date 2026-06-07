@@ -8,9 +8,10 @@ import dash_bootstrap_components as dbc
 from dash import Input, Output, State, callback, html
 
 from ...state import SettingsPageState
-from RosettaX.utils import directories
-
-from . import services
+from RosettaX.utils.browser_profiles import (
+    BROWSER_PROFILES_STORE_ID,
+    BrowserProfileLibrary,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -36,26 +37,7 @@ class DeleteProfile:
         list[dict[str, str]]
             Profile dropdown options.
         """
-        options: list[dict[str, str]] = []
-
-        for profile_name in directories.list_profiles():
-            profile_file_name = str(profile_name).strip()
-
-            if not profile_file_name:
-                continue
-
-            profile_label = (
-                profile_file_name[:-5]
-                if profile_file_name.endswith(".json")
-                else profile_file_name
-            )
-
-            options.append(
-                {
-                    "label": profile_label,
-                    "value": profile_file_name,
-                }
-            )
+        options = BrowserProfileLibrary.from_seed_data().build_options()
 
         logger.debug("Built delete profile options=%r", options)
 
@@ -78,7 +60,7 @@ class DeleteProfile:
                 dbc.CardBody(
                     [
                         html.P(
-                            "Delete an existing settings profile and its configuration file.",
+                            "Delete an existing settings profile saved in this browser.",
                             style={
                                 "opacity": 0.8,
                                 "marginBottom": "14px",
@@ -144,9 +126,34 @@ class DeleteProfile:
         logger.debug("Registering delete profile callbacks.")
 
         @callback(
-            Output(self.ids.delete_profile_status, "children"),
             Output(self.ids.delete_profile_name, "options"),
             Output(self.ids.delete_profile_name, "value"),
+            Input(BROWSER_PROFILES_STORE_ID, "data"),
+            State(self.ids.delete_profile_name, "value"),
+            prevent_initial_call=False,
+        )
+        def sync_delete_profile_options(
+            browser_profiles_payload: Any,
+            current_value: Any,
+        ) -> tuple[list[dict[str, str]], Any]:
+            browser_profiles = BrowserProfileLibrary.from_dict(
+                browser_profiles_payload,
+            )
+            profile_options = browser_profiles.build_options()
+            option_values = {
+                option.get("value")
+                for option in profile_options
+                if isinstance(option, dict) and option.get("value")
+            }
+
+            if current_value in option_values:
+                return profile_options, dash.no_update
+
+            return profile_options, browser_profiles.selected_profile
+
+        @callback(
+            Output(self.ids.delete_profile_status, "children"),
+            Output(BROWSER_PROFILES_STORE_ID, "data", allow_duplicate=True),
             Output(
                 self.page.ids.State.page_state_store,
                 "data",
@@ -154,14 +161,16 @@ class DeleteProfile:
             ),
             Input(self.ids.delete_profile_button, "n_clicks"),
             State(self.ids.delete_profile_name, "value"),
+            State(BROWSER_PROFILES_STORE_ID, "data"),
             State(self.page.ids.State.page_state_store, "data"),
             prevent_initial_call=True,
         )
         def delete_selected_profile(
             n_clicks: Any,
             profile_name: Any,
+            browser_profiles_payload: Any,
             page_state_payload: Any,
-        ) -> tuple[str, list[dict[str, str]], Any, Any]:
+        ) -> tuple[str, Any, Any]:
             logger.debug(
                 "delete_selected_profile called with n_clicks=%r profile_name=%r",
                 n_clicks,
@@ -173,7 +182,6 @@ class DeleteProfile:
 
                 return (
                     "",
-                    dash.no_update,
                     dash.no_update,
                     dash.no_update,
                 )
@@ -196,21 +204,21 @@ class DeleteProfile:
                 return (
                     status_message,
                     dash.no_update,
-                    dash.no_update,
                     page_state.to_dict(),
                 )
 
             try:
-                result_message = services.delete_profile(
-                    normalized_profile_name,
+                browser_profiles = BrowserProfileLibrary.from_dict(
+                    browser_profiles_payload,
+                )
+                next_browser_profiles = browser_profiles.delete_profile(
+                    profile_name=normalized_profile_name,
+                )
+                result_message = (
+                    f"Profile '{normalized_profile_name}' deleted successfully from this browser."
                 )
 
-                options = self._build_profile_options()
-
-                next_value = None
-
-                if options:
-                    next_value = options[0]["value"]
+                next_value = next_browser_profiles.selected_profile
 
                 if page_state.selected_profile == normalized_profile_name:
                     page_state = page_state.update(
@@ -231,8 +239,7 @@ class DeleteProfile:
 
                 return (
                     result_message,
-                    options,
-                    next_value,
+                    next_browser_profiles.to_dict(),
                     page_state.to_dict(),
                 )
 
@@ -250,7 +257,6 @@ class DeleteProfile:
 
                 return (
                     status_message,
-                    dash.no_update,
                     dash.no_update,
                     page_state.to_dict(),
                 )

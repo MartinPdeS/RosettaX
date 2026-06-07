@@ -4,10 +4,14 @@ import logging
 from typing import Any, Optional
 
 import dash
-from dash import Dash, Input, Output
+from dash import Dash, Input, Output, State
 
 from RosettaX.application.layout import THEME_DARK, THEME_LIGHT
 from RosettaX.pages.p00_sidebar.main import SidebarIds, sidebar_html
+from RosettaX.utils.browser_profiles import (
+    BROWSER_PROFILES_STORE_ID,
+    BrowserProfileLibrary,
+)
 from RosettaX.utils.runtime_config import RuntimeConfig
 
 
@@ -69,12 +73,14 @@ def register_application_callbacks(app: Dash) -> None:
         return sidebar_html(None)
 
     @app.callback(
-        Output("runtime-config-store", "data", allow_duplicate=True),
+        Output("runtime-config-store", "data"),
         Input(SidebarIds.selected_profile_store, "data"),
-        prevent_initial_call=True,
+        State(BROWSER_PROFILES_STORE_ID, "data"),
+        prevent_initial_call=False,
     )
     def load_runtime_config_from_sidebar_profile(
         selected_profile_from_sidebar: Optional[str],
+        browser_profiles_payload: Any,
     ):
         logger.debug(
             "load_runtime_config_from_sidebar_profile called with selected_profile_from_sidebar=%r",
@@ -92,7 +98,21 @@ def register_application_callbacks(app: Dash) -> None:
                 logger.debug("Selected profile name is empty after stripping.")
                 return dash.no_update
 
-            runtime_config = RuntimeConfig.from_profile_name(selected_profile_name)
+            browser_profiles = BrowserProfileLibrary.from_dict(
+                browser_profiles_payload,
+            )
+            selected_profile_payload = browser_profiles.get_profile_payload(
+                selected_profile_name,
+            )
+
+            if selected_profile_payload is None:
+                logger.debug(
+                    "Selected browser profile was not found. Leaving runtime config unchanged. selected_profile_name=%r",
+                    selected_profile_name,
+                )
+                return dash.no_update
+
+            runtime_config = RuntimeConfig.from_dict(selected_profile_payload)
 
             logger.debug(
                 "Loaded runtime config payload from sidebar profile=%r",
