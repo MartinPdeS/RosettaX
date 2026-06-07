@@ -175,9 +175,34 @@ class FluorescenceReferenceTable:
                 rows=current_rows,
             )
 
-        return cls.build_rows_from_mesf_values(
+        preset_rows = cls.build_rows_from_mesf_values(
             preset.mesf_values,
         )
+
+        normalized_current_rows = cls.normalize_rows(
+            rows=current_rows,
+        )
+
+        if not normalized_current_rows:
+            return preset_rows
+
+        merged_rows: list[dict[str, Any]] = []
+
+        for row_index, preset_row in enumerate(preset_rows):
+            merged_row = dict(preset_row)
+
+            if row_index < len(normalized_current_rows):
+                merged_row[cls.column_measured_intensity] = str(
+                    normalized_current_rows[row_index].get(
+                        cls.column_measured_intensity,
+                        "",
+                    )
+                    or ""
+                ).strip()
+
+            merged_rows.append(merged_row)
+
+        return merged_rows
 
     @classmethod
     def build_rows_from_mesf_values(

@@ -28,6 +28,36 @@ class Test_FluorescenceReferencePresets:
             for row in rows
         )
 
+    def test_build_rows_from_named_preset_preserves_measured_intensity_column(self):
+        rows = FluorescenceReferenceTable.build_rows_from_preset_name(
+            preset_name=ROSETTA_MIX_FLUORESCENCE_REFERENCE_PRESET_NAME,
+            current_rows=[
+                {
+                    FluorescenceReferenceTable.column_calibrated_intensity: "1",
+                    FluorescenceReferenceTable.column_measured_intensity: "12.3",
+                },
+                {
+                    FluorescenceReferenceTable.column_calibrated_intensity: "2",
+                    FluorescenceReferenceTable.column_measured_intensity: "78.9",
+                },
+                {
+                    FluorescenceReferenceTable.column_calibrated_intensity: "3",
+                    FluorescenceReferenceTable.column_measured_intensity: "456.7",
+                },
+            ],
+        )
+
+        assert [row[FluorescenceReferenceTable.column_calibrated_intensity] for row in rows[:3]] == [
+            "500",
+            "5000",
+            "50000",
+        ]
+        assert [row[FluorescenceReferenceTable.column_measured_intensity] for row in rows[:3]] == [
+            "12.3",
+            "78.9",
+            "456.7",
+        ]
+
     def test_resolve_matching_preset_name_returns_custom_for_manual_values(self):
         rows = [
             {

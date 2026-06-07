@@ -7,6 +7,7 @@ import plotly.graph_objs as go
 
 from RosettaX.utils import RuntimeConfig
 from RosettaX.workflow import detector, parameters
+from RosettaX.workflow.table import services as table_services
 
 
 CUSTOM_SCATTERER_PRESET_NAME = "Custom"
@@ -419,45 +420,69 @@ class ModelConfiguration:
         )
 
         if current_rows is not None:
-            preserved_rows = parameters.table.remap_table_rows_to_model(
+            rows = ModelConfiguration._merge_preset_geometry_with_current_table_rows(
                 mie_model=preset.mie_model,
+                preset_rows=rows,
                 current_rows=current_rows,
             )
 
-            geometry_column_ids = (
-                [
-                    parameters.table.COLUMN_CORE_DIAMETER_NM,
-                    parameters.table.COLUMN_SHELL_THICKNESS_NM,
-                    parameters.table.COLUMN_OUTER_DIAMETER_NM,
-                ]
-                if preset.mie_model == parameters.table.MIE_MODEL_CORE_SHELL_SPHERE
-                else [
-                    parameters.table.COLUMN_PARTICLE_DIAMETER_NM,
-                ]
+        return columns, rows
+
+    @staticmethod
+    def _merge_preset_geometry_with_current_table_rows(
+        *,
+        mie_model: Any,
+        preset_rows: Optional[list[dict[str, Any]]],
+        current_rows: Optional[list[dict[str, Any]]],
+    ) -> list[dict[str, str]]:
+        """
+        Merge preset geometry rows with user-entered table values.
+
+        Geometry comes from the selected preset. User-entered measured peaks and
+        other non-geometry cells are preserved by row index.
+        """
+        resolved_mie_model = parameters.table.resolve_mie_model(
+            mie_model,
+        )
+
+        source_preset_rows = table_services.copy_table_rows(
+            rows=preset_rows,
+        )
+        preserved_rows = parameters.table.remap_table_rows_to_model(
+            mie_model=resolved_mie_model,
+            current_rows=current_rows,
+        )
+
+        geometry_column_ids = (
+            [
+                parameters.table.COLUMN_CORE_DIAMETER_NM,
+                parameters.table.COLUMN_SHELL_THICKNESS_NM,
+                parameters.table.COLUMN_OUTER_DIAMETER_NM,
+            ]
+            if resolved_mie_model == parameters.table.MIE_MODEL_CORE_SHELL_SPHERE
+            else [
+                parameters.table.COLUMN_PARTICLE_DIAMETER_NM,
+            ]
+        )
+
+        merged_rows: list[dict[str, str]] = []
+
+        for row_index, preset_row in enumerate(source_preset_rows):
+            merged_row = dict(
+                preserved_rows[row_index]
+                if row_index < len(preserved_rows)
+                else parameters.table.build_empty_row_for_model(
+                    resolved_mie_model,
+                )
             )
 
-            merged_rows: list[dict[str, str]] = []
+            for column_id in geometry_column_ids:
+                if column_id in preset_row:
+                    merged_row[column_id] = preset_row[column_id]
 
-            for row_index, preset_row in enumerate(rows):
-                merged_row = dict(
-                    preserved_rows[row_index]
-                    if row_index < len(preserved_rows)
-                    else parameters.table.build_empty_row_for_model(
-                        preset.mie_model,
-                    )
-                )
+            merged_rows.append(merged_row)
 
-                for column_id in geometry_column_ids:
-                    if column_id in preset_row:
-                        merged_row[column_id] = preset_row[column_id]
-
-                merged_rows.append(
-                    merged_row,
-                )
-
-            rows = merged_rows
-
-        return columns, rows
+        return merged_rows
 
     @staticmethod
     def resolve_detector_configuration_visibility_style(

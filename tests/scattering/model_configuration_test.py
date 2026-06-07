@@ -170,6 +170,37 @@ class Test_ScatteringModelConfigurationScattererPresets:
             "expected_coupling": "10.11",
         }
 
+    def test_rosetta_mix_preset_preserves_measured_peak_column_for_all_overlapping_rows(self):
+        _columns, rows = ModelConfiguration.build_table_state_from_scatterer_preset(
+            preset_name=ROSETTA_MIX_PRESET_NAME,
+            current_rows=[
+                {
+                    "particle_diameter_nm": "111",
+                    "measured_peak_position": "12.3",
+                    "expected_coupling": "45.6",
+                },
+                {
+                    "particle_diameter_nm": "222",
+                    "measured_peak_position": "78.9",
+                    "expected_coupling": "10.11",
+                },
+                {
+                    "particle_diameter_nm": "333",
+                    "measured_peak_position": "456.7",
+                    "expected_coupling": "11.12",
+                },
+            ],
+        )
+
+        assert [
+            row["measured_peak_position"]
+            for row in rows[:3]
+        ] == [
+            "12.3",
+            "78.9",
+            "456.7",
+        ]
+
     def test_optical_preview_uses_resolved_preset_sampling_when_current_sampling_is_missing(self):
         figure = ModelConfiguration.build_optical_configuration_preview_figure(
             detector_numerical_aperture=None,
