@@ -9,7 +9,12 @@ import dash_bootstrap_components as dbc
 from RosettaX.pages.p00_sidebar.ids import SidebarIds
 from RosettaX.pages.p03_scattering.state import ScatteringPageState
 from RosettaX.utils import styling, ui_forms, RuntimeConfig
-from RosettaX.workflow import table, parameters, scattering
+from RosettaX.workflow import parameters, scattering
+from RosettaX.workflow.table.layout import (
+    ReferenceTableActionConfig,
+    ReferenceTableConfig,
+    ReferenceTableLayout,
+)
 
 from ..s03_model.main import Model as ScatteringModelSection
 from ..s05_calibration import services as calibration_services
@@ -70,7 +75,7 @@ class ReferenceTable:
 
         default_columns, default_rows = self._build_default_table_state()
 
-        self.config = table.layout.ReferenceTableConfig(
+        self.config = ReferenceTableConfig(
             card_title=self._build_card_title(),
             table_title=None,
             description=None,
@@ -79,7 +84,7 @@ class ReferenceTable:
             show_table_title=True,
         )
 
-        self.action_config = table.layout.ReferenceTableActionConfig(
+        self.action_config = ReferenceTableActionConfig(
             button_id=self.ids.compute_model_btn,
             button_label="Compute model",
             description=self._build_compute_model_description(),
@@ -89,7 +94,7 @@ class ReferenceTable:
             },
         )
 
-        self.layout_builder = table.layout.ReferenceTableLayout(
+        self.layout_builder = ReferenceTableLayout(
             ids=self.ids,
             config=self.config,
             table_columns=default_columns,

@@ -4,7 +4,8 @@ import logging
 from dataclasses import dataclass
 from typing import Any, Optional
 
-from RosettaX.workflow import scattering, peak, apply_calibration, detector
+from RosettaX.workflow import scattering, apply_calibration, detector
+from RosettaX.workflow.peak import registry as peak_registry
 from RosettaX.workflow.table.fluorescence import (
     CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME,
     build_fluorescence_reference_preset_options,
@@ -40,15 +41,15 @@ def build_peak_process_dropdown_options() -> list[dict[str, Any]]:
     list[dict[str, Any]]
         Peak process dropdown options.
     """
-    options = peak.registry.build_peak_process_options()
+    options = peak_registry.build_peak_process_options()
 
     if options:
         return options
 
     return [
         {
-            "label": peak.registry.DEFAULT_PROCESS_NAME,
-            "value": peak.registry.DEFAULT_PROCESS_NAME,
+            "label": peak_registry.DEFAULT_PROCESS_NAME,
+            "value": peak_registry.DEFAULT_PROCESS_NAME,
         }
     ]
 
@@ -162,7 +163,7 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         value_kind="choice",
         runtime_path="calibration.default_fluorescence_peak_process",
         profile_path="fluorescence.calibration.default_fluorescence_peak_process",
-        default=peak.registry.DEFAULT_PROCESS_NAME,
+        default=peak_registry.DEFAULT_PROCESS_NAME,
         options=PEAK_PROCESS_OPTIONS,
     ),
     FieldDefinition(
@@ -419,7 +420,7 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         value_kind="choice",
         runtime_path="scattering_calibration.default_peak_process",
         profile_path="scattering.calibration.default_peak_process",
-        default=peak.registry.DEFAULT_PROCESS_NAME,
+        default=peak_registry.DEFAULT_PROCESS_NAME,
         options=PEAK_PROCESS_OPTIONS,
     ),
     FieldDefinition(

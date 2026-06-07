@@ -7,7 +7,10 @@ import dash_bootstrap_components as dbc
 
 from RosettaX.pages.p03_scattering.state import ScatteringPageState
 from RosettaX.utils import styling, ui_forms
-from RosettaX.workflow import save
+from RosettaX.workflow.save.adapters import PageStateSaveAdapter
+from RosettaX.workflow.save.callbacks import register_save_callbacks
+from RosettaX.workflow.save.layout import SaveLayout
+from RosettaX.workflow.save.models import SaveConfig
 
 
 logger = logging.getLogger(__name__)
@@ -29,7 +32,7 @@ class Save:
         self.section_number = section_number
         self.card_color = card_color
 
-        self.config = save.SaveConfig(
+        self.config = SaveConfig(
             calibration_kind="scattering",
             header_title=f"{self.section_number}. Save calibration",
             button_text="Download calibration.json",
@@ -38,12 +41,12 @@ class Save:
             failure_message="Failed to prepare calibration download. See terminal logs for details.",
         )
 
-        self.adapter = save.PageStateSaveAdapter(
+        self.adapter = PageStateSaveAdapter(
             state_class=ScatteringPageState,
             calibration_payload_attribute="calibration_payload",
         )
 
-        self.layout_builder = save.SaveLayout(
+        self.layout_builder = SaveLayout(
             ids=self.ids,
             config=self.config,
         )
@@ -68,7 +71,7 @@ class Save:
         """
         Register callbacks for the scattering save section.
         """
-        save.register_save_callbacks(
+        register_save_callbacks(
             page=self.page,
             ids=self.ids,
             adapter=self.adapter,

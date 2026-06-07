@@ -4,8 +4,9 @@ from typing import Any
 import logging
 
 import dash_bootstrap_components as dbc
-
-from RosettaX.workflow import save
+from RosettaX.workflow.save.adapters import CalibrationStoreSaveAdapter
+from RosettaX.workflow.save.layout import SaveLayout
+from RosettaX.workflow.save.models import SaveConfig
 
 from . import layout as _layout
 from . import callbacks as _callbacks
@@ -41,7 +42,7 @@ class Save:
         self.section_number = section_number
         self.card_color = card_color
 
-        self.config = save.SaveConfig(
+        self.config = SaveConfig(
             calibration_kind="fluorescence",
             header_title=f"{self.section_number}. Save calibration",
             button_text="Download calibration.json",
@@ -50,9 +51,9 @@ class Save:
             failure_message="Failed to prepare calibration download. See terminal logs for details.",
         )
 
-        self.adapter = save.CalibrationStoreSaveAdapter()
+        self.adapter = CalibrationStoreSaveAdapter()
 
-        self.layout_builder = save.SaveLayout(
+        self.layout_builder = SaveLayout(
             ids=self.ids,
             config=self.config,
         )

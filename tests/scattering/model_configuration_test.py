@@ -362,3 +362,32 @@ class Test_ScatteringCalibrationStandardTable:
             "measured_peak_position": "12.3",
             "expected_coupling": "45.6",
         }
+
+    def test_clear_measured_peak_positions_preserves_geometry_and_expected_coupling(self):
+        rows = ScatteringCalibrationStandardTable.clear_measured_peak_positions(
+            rows=[
+                {
+                    "particle_diameter_nm": "111",
+                    "measured_peak_position": "12.3",
+                    "expected_coupling": "45.6",
+                },
+                {
+                    "particle_diameter_nm": "222",
+                    "measured_peak_position": "78.9",
+                    "expected_coupling": "10.11",
+                },
+            ],
+        )
+
+        assert rows == [
+            {
+                "particle_diameter_nm": "111",
+                "measured_peak_position": "",
+                "expected_coupling": "45.6",
+            },
+            {
+                "particle_diameter_nm": "222",
+                "measured_peak_position": "",
+                "expected_coupling": "10.11",
+            },
+        ]

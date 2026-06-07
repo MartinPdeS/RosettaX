@@ -4,8 +4,9 @@ from typing import Any
 import logging
 
 import dash_bootstrap_components as dbc
-
-from RosettaX.workflow import peak
+from RosettaX.workflow.peak.adapters.fluorescence import FluorescencePeakWorkflowAdapter
+from RosettaX.workflow.peak.layout import PeakLayout
+from RosettaX.workflow.peak.models import PeakConfig
 
 from . import layout, callbacks
 
@@ -42,7 +43,7 @@ class Peaks:
         self.ids = page.ids.Fluorescence
         self.section_number = section_number
         self.card_color = card_color
-        self.adapter = peak.FluorescencePeakWorkflowAdapter()
+        self.adapter = FluorescencePeakWorkflowAdapter()
 
         self.section_tooltip_target_id = f"{self.ids.process_dropdown}-section-info-target"
         self.section_tooltip_id = f"{self.ids.process_dropdown}-section-info-tooltip"
@@ -50,7 +51,7 @@ class Peaks:
         self.graph_tooltip_target_id = f"{self.ids.process_dropdown}-graph-info-target"
         self.graph_tooltip_id = f"{self.ids.process_dropdown}-graph-info-tooltip"
 
-        self.config = peak.PeakConfig(
+        self.config = PeakConfig(
             header_title=layout.build_section_title(self),
             process_dropdown_label="Peak process",
             graph_title=layout.build_graph_title(self),
@@ -62,7 +63,7 @@ class Peaks:
             default_process_runtime_config_path="calibration.default_fluorescence_peak_process",
         )
 
-        self.layout_builder = peak.PeakLayout(
+        self.layout_builder = PeakLayout(
             ids=self.ids,
             config=self.config,
         )

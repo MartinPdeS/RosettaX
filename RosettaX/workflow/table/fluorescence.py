@@ -5,7 +5,8 @@ from typing import Any, Optional
 
 from RosettaX.utils import casting
 from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.workflow.table import services as table_services
+
+from . import services as table_services
 
 
 CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME = "Custom"

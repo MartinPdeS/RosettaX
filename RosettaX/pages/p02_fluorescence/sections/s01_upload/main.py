@@ -4,8 +4,9 @@ import logging
 from typing import Any
 
 import dash_bootstrap_components as dbc
-
-from RosettaX.workflow import upload
+from RosettaX.workflow.upload.adapters import FluorescenceUploadAdapter
+from RosettaX.workflow.upload.layout import UploadLayout
+from RosettaX.workflow.upload.models import UploadConfig
 
 from . import layout, callbacks
 
@@ -43,7 +44,7 @@ class Upload:
         self.upload_tooltip_target_id = f"{self.ids.upload}-calibration-file-info-target"
         self.upload_tooltip_id = f"{self.ids.upload}-calibration-file-info-tooltip"
 
-        self.config = upload.UploadConfig(
+        self.config = UploadConfig(
             card_title=layout.build_card_title(self),
             upload_link_text="Select bead FCS file",
             initial_runtime_config_path="files.fluorescence_fcs_file_path",
@@ -53,9 +54,9 @@ class Upload:
             body_style_key="body_scroll",
         )
 
-        self.adapter = upload.FluorescenceUploadAdapter()
+        self.adapter = FluorescenceUploadAdapter()
 
-        self.layout_builder = upload.UploadLayout(
+        self.layout_builder = UploadLayout(
             ids=self.ids,
             config=self.config,
         )

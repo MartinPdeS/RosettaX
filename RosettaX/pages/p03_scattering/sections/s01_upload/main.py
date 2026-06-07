@@ -8,7 +8,10 @@ import dash_bootstrap_components as dbc
 
 from ...state import ScatteringPageState
 from RosettaX.utils import styling, ui_forms
-from RosettaX.workflow import upload
+from RosettaX.workflow.upload.adapters import ScatteringUploadAdapter
+from RosettaX.workflow.upload.callbacks import register_upload_callbacks
+from RosettaX.workflow.upload.layout import UploadLayout
+from RosettaX.workflow.upload.models import UploadConfig
 
 
 logger = logging.getLogger(__name__)
@@ -33,7 +36,7 @@ class Upload:
         self.upload_tooltip_target_id = f"{self.ids.upload}-calibration-file-info-target"
         self.upload_tooltip_id = f"{self.ids.upload}-calibration-file-info-tooltip"
 
-        self.config = upload.UploadConfig(
+        self.config = UploadConfig(
             card_title=self._build_card_title(),
             upload_link_text="Select bead FCS file",
             initial_runtime_config_path="files.scattering_fcs_file_path",
@@ -43,11 +46,11 @@ class Upload:
             body_style_key="card_body_scroll",
         )
 
-        self.adapter = upload.ScatteringUploadAdapter(
+        self.adapter = ScatteringUploadAdapter(
             state_class=ScatteringPageState,
         )
 
-        self.layout_builder = upload.UploadLayout(
+        self.layout_builder = UploadLayout(
             ids=self.ids,
             config=self.config,
         )
@@ -88,7 +91,7 @@ class Upload:
         """
         Register callbacks for the scattering upload section.
         """
-        upload.register_upload_callbacks(
+        register_upload_callbacks(
             page=self.page,
             ids=self.ids,
             adapter=self.adapter,

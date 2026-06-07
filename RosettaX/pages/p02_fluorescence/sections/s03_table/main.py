@@ -4,12 +4,13 @@ from typing import Any
 import logging
 
 import dash_bootstrap_components as dbc
+from RosettaX.workflow.table.layout import ReferenceTableConfig, ReferenceTableLayout
 from RosettaX.workflow.table.fluorescence import (
     CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME,
+    FluorescenceReferenceTable,
 )
 
 from RosettaX.utils import RuntimeConfig
-from RosettaX.workflow import table
 
 from . import layout, callbacks
 
@@ -36,11 +37,11 @@ class ReferenceTable:
     rendering is delegated to ``ReferenceTableLayout``.
     """
 
-    calibrated_intensity_column_name = table.FluorescenceReferenceTable.column_calibrated_intensity
-    measured_intensity_column_name = table.FluorescenceReferenceTable.column_measured_intensity
+    calibrated_intensity_column_name = FluorescenceReferenceTable.column_calibrated_intensity
+    measured_intensity_column_name = FluorescenceReferenceTable.column_measured_intensity
 
-    bead_table_columns = table.FluorescenceReferenceTable.columns
-    user_data_column_ids = table.FluorescenceReferenceTable.user_data_column_ids
+    bead_table_columns = FluorescenceReferenceTable.columns
+    user_data_column_ids = FluorescenceReferenceTable.user_data_column_ids
 
     def __init__(
         self,
@@ -63,7 +64,7 @@ class ReferenceTable:
         )
         self.default_reference_preset_name = self._build_default_reference_preset_name()
 
-        self.config = table.ReferenceTableConfig(
+        self.config = ReferenceTableConfig(
             card_title=layout.build_card_title(self),
             table_title=None,
             description=None,
@@ -72,11 +73,11 @@ class ReferenceTable:
             show_table_title=False,
         )
 
-        self.layout_builder = table.ReferenceTableLayout(
+        self.layout_builder = ReferenceTableLayout(
             ids=self.ids,
             config=self.config,
             table_columns=self.bead_table_columns,
-            table_data=table.FluorescenceReferenceTable.build_rows_from_runtime_config(
+            table_data=FluorescenceReferenceTable.build_rows_from_runtime_config(
                 runtime_config=RuntimeConfig.from_default_profile(),
             ),
         )
@@ -92,7 +93,7 @@ class ReferenceTable:
         """
         runtime_config = RuntimeConfig.from_default_profile()
 
-        preset_name = table.FluorescenceReferenceTable.resolve_runtime_preset_name(
+        preset_name = FluorescenceReferenceTable.resolve_runtime_preset_name(
             runtime_config=runtime_config,
         )
 

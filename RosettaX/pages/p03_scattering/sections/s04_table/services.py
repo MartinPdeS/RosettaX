@@ -4,7 +4,8 @@ import logging
 from typing import Any, Optional
 
 from RosettaX.utils import RuntimeConfig
-from RosettaX.workflow import table, parameters, scattering
+from RosettaX.workflow import parameters, scattering
+from RosettaX.workflow.table import services as table_services
 
 logger = logging.getLogger(__name__)
 
@@ -154,7 +155,7 @@ class ScatteringCalibrationStandardTable:
             mie_model,
         )
 
-        return table.services.get_column_ids(
+        return table_services.get_column_ids(
             columns=parameters.table.get_table_columns_for_model(
                 resolved_mie_model,
             ),
@@ -191,7 +192,7 @@ class ScatteringCalibrationStandardTable:
             mie_model,
         )
 
-        return table.services.table_is_effectively_empty(
+        return table_services.table_is_effectively_empty(
             rows=cls.normalize_rows(
                 mie_model=resolved_mie_model,
                 rows=rows,
@@ -216,8 +217,8 @@ class ScatteringCalibrationStandardTable:
             mie_model,
         )
 
-        return table.services.should_rebuild_table_from_runtime_config(
-            profile_load_was_requested=table.services.profile_load_was_requested(
+        return table_services.should_rebuild_table_from_runtime_config(
+            profile_load_was_requested=table_services.profile_load_was_requested(
                 profile_load_event_data=profile_load_event_data,
             ),
             current_rows=cls.normalize_rows(
@@ -260,7 +261,7 @@ class ScatteringCalibrationStandardTable:
             mie_model,
         )
 
-        return table.services.append_empty_row(
+        return table_services.append_empty_row(
             rows=rows,
             empty_row=parameters.table.build_empty_row_for_model(
                 resolved_mie_model,
@@ -293,7 +294,7 @@ class ScatteringCalibrationStandardTable:
         """
         Clear measured peak positions.
         """
-        return table.services.clear_columns(
+        return table_services.clear_columns(
             rows=rows,
             column_ids=[
                 parameters.table.COLUMN_MEASURED_PEAK_POSITION,
@@ -309,7 +310,7 @@ class ScatteringCalibrationStandardTable:
         """
         Clear expected coupling values.
         """
-        return table.services.clear_columns(
+        return table_services.clear_columns(
             rows=rows,
             column_ids=[
                 parameters.table.COLUMN_EXPECTED_COUPLING,
