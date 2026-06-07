@@ -110,47 +110,60 @@ class FilePickerCallbacks:
 
                 return FilePickerResult(
                     uploaded_fcs_path_store=None,
-                    alert_children="Upload canceled.",
+                    alert_children=services.build_upload_prompt_text(),
                     alert_color="danger",
                     alert_is_open=True,
                 ).to_tuple()
 
-            services.validate_upload_payload(
-                contents_list=contents_list,
-                filenames=filenames,
-            )
+            try:
+                services.validate_upload_payload(
+                    contents_list=contents_list,
+                    filenames=filenames,
+                )
 
-            saved_paths = services.save_uploaded_files(
-                upload_directory=self.upload_directory,
-                contents_list=contents_list,
-                filenames=filenames,
-            )
+                saved_paths = services.save_uploaded_files(
+                    upload_directory=self.upload_directory,
+                    contents_list=contents_list,
+                    filenames=filenames,
+                )
 
-            consistency_report = services.check_saved_files_consistency(
-                saved_paths=saved_paths,
-            )
+                consistency_report = services.check_saved_files_consistency(
+                    saved_paths=saved_paths,
+                )
 
-            alert_children, alert_color, alert_is_open = services.build_success_alert_payload(
-                saved_paths=saved_paths,
-                consistency_report=consistency_report,
-            )
+                alert_children, alert_color, alert_is_open = services.build_success_alert_payload(
+                    saved_paths=saved_paths,
+                    consistency_report=consistency_report,
+                )
 
-            logger.debug(
-                "Upload handling succeeded with saved_paths=%r alert_color=%r alert_is_open=%r",
-                [
-                    str(path)
-                    for path in saved_paths
-                ],
-                alert_color,
-                alert_is_open,
-            )
+                logger.debug(
+                    "Upload handling succeeded with saved_paths=%r alert_color=%r alert_is_open=%r",
+                    [
+                        str(path)
+                        for path in saved_paths
+                    ],
+                    alert_color,
+                    alert_is_open,
+                )
 
-            return FilePickerResult(
-                uploaded_fcs_path_store=[
-                    str(path)
-                    for path in saved_paths
-                ],
-                alert_children=alert_children,
-                alert_color=alert_color,
-                alert_is_open=alert_is_open,
-            ).to_tuple()
+                return FilePickerResult(
+                    uploaded_fcs_path_store=[
+                        str(path)
+                        for path in saved_paths
+                    ],
+                    alert_children=alert_children,
+                    alert_color=alert_color,
+                    alert_is_open=alert_is_open,
+                ).to_tuple()
+
+            except Exception as exc:
+                logger.exception(
+                    "handle_upload failed for filenames=%r",
+                    filenames,
+                )
+
+                return FilePickerResult(
+                    alert_children=f"Upload failed: {type(exc).__name__}: {exc}",
+                    alert_color="danger",
+                    alert_is_open=True,
+                ).to_tuple()

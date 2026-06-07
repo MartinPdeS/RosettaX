@@ -7,10 +7,11 @@ import re
 from pathlib import Path
 from typing import Any, Optional
 
+from RosettaX.utils.upload_limits import format_upload_size, get_max_upload_bytes
+
 from RosettaX.workflow.upload.models import UploadConfig, UploadState
 
 DEFAULT_UPLOAD_DIRECTORY = Path.home() / ".rosettax" / "uploads"
-DEFAULT_MAX_UPLOAD_BYTES = 100 * 1024 * 1024
 DEFAULT_ALLOWED_UPLOAD_EXTENSIONS = frozenset({".fcs"})
 
 
@@ -45,9 +46,18 @@ def build_loaded_filename_text(
     )
 
     if clean_filename is None:
-        return "No file loaded."
+        return f"No file loaded. Maximum file size: {format_upload_size()}."
 
     return f"Loaded file: {clean_filename}"
+
+
+def build_upload_error_text(
+    error: Exception,
+) -> str:
+    """
+    Build a user visible upload error message.
+    """
+    return f"Upload failed: {type(error).__name__}: {error}"
 
 
 def sanitize_filename(
@@ -130,7 +140,7 @@ def validate_upload_filename(
 def decode_dash_upload_contents(
     contents: str,
     *,
-    max_upload_bytes: int = DEFAULT_MAX_UPLOAD_BYTES,
+    max_upload_bytes: Optional[int] = None,
 ) -> bytes:
     """
     Decode Dash upload contents.
@@ -138,6 +148,10 @@ def decode_dash_upload_contents(
     Dash upload payloads have the form:
         data:<mime>;base64,<payload>
     """
+    resolved_max_upload_bytes = (
+        get_max_upload_bytes() if max_upload_bytes is None else int(max_upload_bytes)
+    )
+
     if "," not in contents:
         raise ValueError("Upload contents are malformed.")
 
@@ -154,9 +168,10 @@ def decode_dash_upload_contents(
     except binascii.Error as error:
         raise ValueError("Upload contents could not be decoded.") from error
 
-    if len(decoded_bytes) > int(max_upload_bytes):
+    if len(decoded_bytes) > resolved_max_upload_bytes:
         raise ValueError(
-            f"Upload exceeds the maximum supported size of {int(max_upload_bytes)} bytes."
+            "Upload exceeds the maximum supported size of "
+            f"{format_upload_size(resolved_max_upload_bytes)}."
         )
 
     return decoded_bytes
@@ -182,7 +197,7 @@ def save_uploaded_file(
     filename: Optional[str],
     upload_directory: Path,
     allowed_extensions: frozenset[str] = DEFAULT_ALLOWED_UPLOAD_EXTENSIONS,
-    max_upload_bytes: int = DEFAULT_MAX_UPLOAD_BYTES,
+    max_upload_bytes: Optional[int] = None,
 ) -> Path:
     """
     Save one uploaded file and return its path.

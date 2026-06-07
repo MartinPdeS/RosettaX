@@ -8,6 +8,9 @@ import dash_bootstrap_components as dbc
 
 from RosettaX.utils import styling
 from RosettaX.utils import ui_forms
+from RosettaX.utils.upload_limits import get_max_upload_bytes
+
+from . import services
 
 
 logger = logging.getLogger(__name__)
@@ -86,7 +89,10 @@ class FilePickerLayout:
                         "height": "14px",
                     },
                 ),
-                self._build_alert(),
+                dash.dcc.Loading(
+                    self._build_alert(),
+                    type="default",
+                ),
                 self._build_upload_store(),
             ],
             style=ui_forms.build_workflow_section_body_style(),
@@ -128,6 +134,7 @@ class FilePickerLayout:
             ),
             multiple=True,
             style=styling.UPLOAD,
+            max_size=get_max_upload_bytes(),
         )
 
     def _build_alert(self) -> dbc.Alert:
@@ -135,7 +142,7 @@ class FilePickerLayout:
         Build the upload status alert.
         """
         return dbc.Alert(
-            "Upload one or more FCS files.",
+            services.build_upload_prompt_text(),
             id=self.page.ids.FilePicker.column_consistency_alert,
             color="secondary",
             is_open=True,

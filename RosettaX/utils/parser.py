@@ -1,6 +1,7 @@
 import argparse
 
 from RosettaX import __version__
+from RosettaX.utils.upload_limits import parse_upload_size_argument
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -8,6 +9,14 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
     parser.add_argument("--host", type=str, default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8050)
+    parser.add_argument(
+        "--max-upload-size",
+        "--max_size",
+        "--max-size",
+        type=parse_upload_size_argument,
+        default=argparse.SUPPRESS,
+        help="Maximum accepted upload size, for example 10MB or 512MiB.",
+    )
 
     parser.add_argument(
         "--no-browser",

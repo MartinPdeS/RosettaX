@@ -11,6 +11,11 @@ import dash
 
 from RosettaX.pages.p00_sidebar.main import register_sidebar_callbacks
 from RosettaX.utils.parser import _parse_args
+from RosettaX.utils.upload_limits import (
+    configure_max_upload_bytes,
+    format_upload_size,
+    get_max_upload_bytes,
+)
 
 from .callbacks import register_application_callbacks
 from .layout import build_application_layout
@@ -72,13 +77,15 @@ class RosettaXApplication:
         self.port = int(port)
         self.open_browser = bool(open_browser)
         self.debug = bool(debug)
+        self.max_upload_bytes = get_max_upload_bytes()
 
         logger.debug(
-            "Initializing RosettaXApplication with host=%r port=%r open_browser=%r debug=%r",
+            "Initializing RosettaXApplication with host=%r port=%r open_browser=%r debug=%r max_upload_bytes=%r",
             self.host,
             self.port,
             self.open_browser,
             self.debug,
+            self.max_upload_bytes,
         )
 
         assets_folder = Path(__file__).resolve().parents[1] / "assets"
@@ -94,6 +101,9 @@ class RosettaXApplication:
             pages_folder="",
             suppress_callback_exceptions=True,
         )
+
+        self.app.server.config["MAX_CONTENT_LENGTH"] = self.max_upload_bytes
+        self.app.server.config["ROSETTAX_MAX_UPLOAD_BYTES"] = self.max_upload_bytes
 
         logger.debug("Dash application instantiated")
 
@@ -147,9 +157,17 @@ def main(argv: Optional[list[str]] = None) -> None:
 
     parsed_arguments = _parse_args(argv)
     debug_mode = bool(getattr(parsed_arguments, "debug", False))
+    configured_upload_size = configure_max_upload_bytes(
+        getattr(parsed_arguments, "max_upload_size", None)
+    )
     configure_logging(
         debug=debug_mode,
         log_level=str(getattr(parsed_arguments, "log_level", "INFO")),
+    )
+
+    logger.info(
+        "Configured maximum upload size: %s",
+        format_upload_size(configured_upload_size),
     )
 
     application = RosettaXApplication(

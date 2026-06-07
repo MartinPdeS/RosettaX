@@ -7,9 +7,17 @@ from pathlib import Path
 from typing import Any
 
 from RosettaX.utils import checks
+from RosettaX.utils.upload_limits import format_upload_size, get_max_upload_bytes
 
 
 logger = logging.getLogger(__name__)
+
+
+def build_upload_prompt_text() -> str:
+    """
+    Build the default FCS upload prompt text.
+    """
+    return f"Upload one or more FCS files. Maximum file size: {format_upload_size()}."
 
 
 def build_upload_directory() -> Path:
@@ -188,6 +196,12 @@ def save_single_uploaded_file(
         encoded_payload,
         validate=True,
     )
+
+    if len(raw_bytes) > get_max_upload_bytes():
+        raise ValueError(
+            "Uploaded file exceeds the maximum supported size of "
+            f"{format_upload_size()}."
+        )
 
     original_path = Path(
         str(filename),

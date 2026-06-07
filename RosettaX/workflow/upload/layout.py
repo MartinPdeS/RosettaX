@@ -9,6 +9,7 @@ from dash import dcc
 from dash import html
 
 from RosettaX.utils import styling
+from RosettaX.utils.upload_limits import get_max_upload_bytes
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.upload import services
 from RosettaX.workflow.upload.models import UploadConfig
@@ -82,17 +83,21 @@ class UploadLayout:
                                 ]
                             ),
                             style=styling.UPLOAD,
+                            max_size=get_max_upload_bytes(),
                             multiple=False,
                             accept=self.config.accepted_file_extensions,
                         ),
-                        html.Div(
-                            id=self.ids.upload_filename,
-                            children=services.build_loaded_filename_text(
-                                initial_filename,
+                        dcc.Loading(
+                            html.Div(
+                                id=self.ids.upload_filename,
+                                children=services.build_loaded_filename_text(
+                                    initial_filename,
+                                ),
+                                style={
+                                    "marginTop": "10px",
+                                },
                             ),
-                            style={
-                                "marginTop": "10px",
-                            },
+                            type="default",
                         ),
                     ],
                     style=self._get_body_style(),
