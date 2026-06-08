@@ -5,6 +5,7 @@ import dash_bootstrap_components as dbc
 from dash import html
 
 from RosettaX.utils import ui_forms
+from RosettaX.utils import usage_metrics
 
 
 class HomePage:
@@ -39,9 +40,19 @@ class HomePage:
         self,
         **_kwargs,
     ) -> dbc.Container:
+        metrics = usage_metrics.load_usage_metrics()
+
         return dbc.Container(
             [
                 self._hero_section(),
+                html.Div(
+                    style={
+                        "height": "18px",
+                    },
+                ),
+                self._usage_metrics_card(
+                    metrics=metrics,
+                ),
                 html.Div(
                     style={
                         "height": "18px",
@@ -107,6 +118,99 @@ class HomePage:
             card=card,
             header_font_weight="750",
             header_font_size="1.02rem",
+        )
+
+    def _usage_metrics_card(
+        self,
+        *,
+        metrics: usage_metrics.UsageMetrics,
+    ) -> dbc.Card:
+        card = dbc.Card(
+            [
+                dbc.CardHeader(
+                    [
+                        html.Div(
+                            "Usage snapshot",
+                            style={
+                                "fontWeight": "750",
+                                "fontSize": "1.02rem",
+                            },
+                        ),
+                        html.Div(
+                            "Server-side aggregate counts for apply calibration activity.",
+                            style={
+                                "fontSize": "0.86rem",
+                                "opacity": 0.76,
+                                "marginTop": "3px",
+                            },
+                        ),
+                    ]
+                ),
+                dbc.CardBody(
+                    dbc.Row(
+                        [
+                            dbc.Col(
+                                self._usage_metric_tile(
+                                    value=str(metrics.apply_button_click_count),
+                                    label="Apply button clicks",
+                                ),
+                                md=6,
+                            ),
+                            dbc.Col(
+                                self._usage_metric_tile(
+                                    value=str(metrics.total_calibrated_files),
+                                    label="Total calibrated files",
+                                ),
+                                md=6,
+                            ),
+                        ],
+                        className="g-3",
+                    ),
+                    style={
+                        "padding": "16px",
+                    },
+                ),
+            ]
+        )
+
+        return ui_forms.apply_workflow_section_card_style(
+            card=card,
+            header_font_weight="750",
+            header_font_size="1.02rem",
+        )
+
+    def _usage_metric_tile(
+        self,
+        *,
+        value: str,
+        label: str,
+    ) -> html.Div:
+        return html.Div(
+            [
+                html.Div(
+                    value,
+                    style={
+                        "fontSize": "2rem",
+                        "fontWeight": "800",
+                        "lineHeight": "1.0",
+                    },
+                ),
+                html.Div(
+                    label,
+                    style={
+                        "fontSize": "0.92rem",
+                        "opacity": 0.76,
+                        "marginTop": "6px",
+                    },
+                ),
+            ],
+            style={
+                "padding": "18px",
+                "borderRadius": "12px",
+                "border": "1px solid rgba(13, 110, 253, 0.16)",
+                "background": "rgba(13, 110, 253, 0.04)",
+                "height": "100%",
+            },
         )
 
     def _workflow_cards_row(self) -> dbc.Row:

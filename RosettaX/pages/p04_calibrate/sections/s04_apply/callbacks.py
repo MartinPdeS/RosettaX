@@ -10,6 +10,7 @@ from RosettaX.pages.p04_calibrate.state import ApplyCalibrationPageState
 from RosettaX.workflow import apply_calibration
 from RosettaX.workflow.apply_calibration import io as apply_calibration_io
 from RosettaX.workflow.apply_calibration import report as apply_report
+from RosettaX.utils import usage_metrics
 
 from . import services
 
@@ -263,6 +264,11 @@ class ApplyCallbacks:
 
             del n_clicks
 
+            try:
+                usage_metrics.record_apply_button_click()
+            except Exception:
+                logger.exception("Failed to record apply button click usage metric.")
+
             page_state = ApplyCalibrationPageState.from_dict(
                 page_state_data,
             )
@@ -318,6 +324,16 @@ class ApplyCallbacks:
                 result.output_channels,
                 result.warnings,
             )
+
+            try:
+                usage_metrics.record_calibrated_files(
+                    file_count=result.file_count,
+                )
+            except Exception:
+                logger.exception(
+                    "Failed to record calibrated file usage metric for file_count=%r",
+                    result.file_count,
+                )
 
             status_message = result.status
             download_bytes = result.payload_bytes
