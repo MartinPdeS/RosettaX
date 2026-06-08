@@ -53,6 +53,14 @@ class ApplyLayout:
             f"{self.page.ids.Export.apply_and_export_button}-info-tooltip"
         )
 
+        self.report_button_tooltip_target_id = (
+            f"{self.page.ids.Export.generate_report_button}-info-target"
+        )
+
+        self.report_button_tooltip_id = (
+            f"{self.page.ids.Export.generate_report_button}-info-tooltip"
+        )
+
     def build_layout(self) -> dbc.Card:
         """
         Build the apply and export layout.
@@ -114,6 +122,9 @@ class ApplyLayout:
                 self._build_status_alert(),
                 dash.dcc.Download(
                     id=self.page.ids.Export.download,
+                ),
+                dash.dcc.Download(
+                    id=self.page.ids.Export.report_download,
                 ),
             ],
             style=ui_forms.build_workflow_section_body_style(),
@@ -203,6 +214,27 @@ class ApplyLayout:
                     target=self.apply_button_tooltip_target_id,
                     placement="right",
                 ),
+                dbc.Button(
+                    "Generate report PDF",
+                    id=self.page.ids.Export.generate_report_button,
+                    n_clicks=0,
+                    color="secondary",
+                    outline=True,
+                    disabled=True,
+                ),
+                ui_forms.build_info_badge(
+                    tooltip_target_id=self.report_button_tooltip_target_id,
+                ),
+                dbc.Tooltip(
+                    (
+                        "Download a PDF summary for the most recent successful "
+                        "apply and export run. The report is refreshed only after "
+                        "Apply & export completes for the current inputs."
+                    ),
+                    id=self.report_button_tooltip_id,
+                    target=self.report_button_tooltip_target_id,
+                    placement="right",
+                ),
             ],
             style=ui_forms.build_workflow_panel_style(
                 color_name=self.card_color,
@@ -212,6 +244,10 @@ class ApplyLayout:
                 ),
                 style_overrides={
                     "padding": "14px 16px",
+                    "display": "flex",
+                    "gap": "10px",
+                    "alignItems": "center",
+                    "flexWrap": "wrap",
                 },
             ),
         )

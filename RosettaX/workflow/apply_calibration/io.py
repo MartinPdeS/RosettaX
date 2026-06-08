@@ -211,6 +211,55 @@ def build_zip_of_exported_fcs_files(
     return zip_buffer.getvalue()
 
 
+def append_files_to_zip_bytes(
+    *,
+    zip_bytes: bytes,
+    extra_files: dict[str, bytes],
+) -> bytes:
+    """
+    Append extra in-memory files to an existing ZIP payload.
+    """
+    source_buffer = io.BytesIO(
+        zip_bytes,
+    )
+    output_buffer = io.BytesIO()
+    existing_names: set[str] = set()
+
+    with zipfile.ZipFile(source_buffer, mode="r") as source_zip:
+        with zipfile.ZipFile(
+            output_buffer,
+            mode="w",
+            compression=zipfile.ZIP_DEFLATED,
+        ) as output_zip:
+            for zip_info in source_zip.infolist():
+                existing_names.add(
+                    zip_info.filename,
+                )
+                output_zip.writestr(
+                    zip_info,
+                    source_zip.read(zip_info.filename),
+                )
+
+            for member_name, member_bytes in extra_files.items():
+                resolved_member_name = _resolve_extra_zip_member_name(
+                    member_name=str(member_name),
+                    existing_names=existing_names,
+                )
+                output_zip.writestr(
+                    resolved_member_name,
+                    member_bytes,
+                )
+                existing_names.add(
+                    resolved_member_name,
+                )
+
+    output_buffer.seek(
+        0,
+    )
+
+    return output_buffer.getvalue()
+
+
 def build_export_filename(
     *,
     uploaded_fcs_path: str,
@@ -270,3 +319,24 @@ def safe_filename_fragment(
         .replace(" ", "_")
         .replace(":", "_")
     )
+
+
+def _resolve_extra_zip_member_name(
+    *,
+    member_name: str,
+    existing_names: set[str],
+) -> str:
+    candidate = str(member_name).strip() or "report.pdf"
+    path = Path(
+        candidate,
+    )
+    stem = path.stem or "report"
+    suffix = path.suffix or ".pdf"
+    deduplicated_name = f"{stem}{suffix}"
+    counter = 2
+
+    while deduplicated_name in existing_names:
+        deduplicated_name = f"{stem}_{counter}{suffix}"
+        counter += 1
+
+    return deduplicated_name

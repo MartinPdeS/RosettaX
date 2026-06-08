@@ -103,7 +103,9 @@ class Ids:
 
     class Export:
         download = f"{page_name}-download"
+        report_download = f"{page_name}-report-download"
         apply_and_export_button = f"{page_name}-apply-and-export-button"
+        generate_report_button = f"{page_name}-generate-report-button"
         status = f"{page_name}-status"
         export_button = f"{page_name}-export-button"
         export_columns_dropdown = f"{page_name}-export-columns-dropdown"
