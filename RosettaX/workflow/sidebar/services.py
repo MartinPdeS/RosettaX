@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import quote
 
-from RosettaX.utils.browser_profiles import BrowserProfileLibrary
+from RosettaX.utils.browser_profiles import BrowserProfileLibrary, build_profile_label
 from RosettaX.utils import directories
 from RosettaX.utils.paths import (
     normalize_profile_filename as normalize_safe_profile_filename,
@@ -44,7 +44,7 @@ def resolve_selected_profile(
     if not resolved_profile_name:
         return None, "No profile selected."
 
-    return resolved_profile_name, f"Selected profile: {resolved_profile_name}"
+    return resolved_profile_name, f"Selected profile: {build_profile_label(resolved_profile_name)}"
 
 
 def list_saved_calibrations() -> dict[str, list[str]]:

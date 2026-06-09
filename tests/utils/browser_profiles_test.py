@@ -25,7 +25,7 @@ def test_from_dict_normalizes_names_and_sorts_default_first():
     ]
     assert library.build_options() == [
         {
-            "label": "default_profile",
+            "label": "Automatic",
             "value": DEFAULT_PROFILE_FILENAME,
         },
         {

@@ -23,9 +23,12 @@ def build_profile_label(profile_name: str) -> str:
     normalized_profile_name = normalize_profile_filename(profile_name)
 
     if normalized_profile_name.endswith(".json"):
-        return normalized_profile_name[:-5]
+        normalized_profile_name = normalized_profile_name[:-5]
 
-    return normalized_profile_name
+    if normalized_profile_name == "default_profile":
+        return "Automatic"
+
+    return normalized_profile_name.replace("_", " ").replace("-", " ")
 
 
 def _sort_profile_names(profile_names: list[str]) -> list[str]:

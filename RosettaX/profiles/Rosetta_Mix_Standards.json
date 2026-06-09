@@ -16,7 +16,7 @@
     "max_events_for_analysis": 100000,
     "n_bins_for_plots": 256,
     "peak_graph_colormap_log": false,
-    "target_model_preset": "Custom",
+    "target_model_preset": "Extracellular Vesicles",
     "target_mie_relation_xscale": "linear",
     "target_mie_relation_yscale": "log"
   },
@@ -36,11 +36,23 @@
   },
   "particle_model": {
     "mie_model": "Solid Sphere",
-    "scatterer_preset": "Custom",
-    "particle_refractive_index": 1.45,
-    "core_refractive_index": 1.45,
-    "shell_refractive_index": 1.4,
-    "particle_diameter_nm": [],
+    "scatterer_preset": "Rosetta Mix",
+    "particle_refractive_index": 1.59,
+    "core_refractive_index": 1.47,
+    "shell_refractive_index": 1.46,
+    "particle_diameter_nm": [
+      994.0,
+      799.0,
+      600.0,
+      400.0,
+      296.0,
+      203.0,
+      194.0,
+      150.0,
+      125.0,
+      100.0,
+      70.0
+    ],
     "core_diameter_nm": [],
     "shell_thickness_nm": []
   },

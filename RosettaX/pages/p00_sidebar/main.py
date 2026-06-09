@@ -13,6 +13,8 @@ from RosettaX.workflow.sidebar import services
 from RosettaX.utils.browser_profiles import (
     BROWSER_PROFILES_STORE_ID,
     BrowserProfileLibrary,
+    DEFAULT_PROFILE_FILENAME,
+    build_profile_label,
 )
 from RosettaX.utils import styling
 
@@ -66,8 +68,8 @@ class Sidebar:
             if isinstance(option, dict) and option.get("value")
         ]
 
-        if "default_profile" in option_values:
-            return "default_profile"
+        if DEFAULT_PROFILE_FILENAME in option_values:
+            return DEFAULT_PROFILE_FILENAME
 
         return option_values[0] if option_values else None
 
@@ -224,7 +226,7 @@ class Sidebar:
             if not selected_profile:
                 return "No profile selected."
 
-            return f"Selected profile: {selected_profile}"
+            return f"Selected profile: {build_profile_label(str(selected_profile))}"
 
     def layout(
         self,
