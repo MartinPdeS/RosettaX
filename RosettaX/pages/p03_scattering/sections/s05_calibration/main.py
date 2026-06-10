@@ -9,7 +9,7 @@ import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
 
 from RosettaX.pages.p03_scattering.state import ScatteringPageState
-from RosettaX.utils import plottings, styling, ui_forms
+from RosettaX.utils import RuntimeConfig, plottings, styling, ui_forms
 from . import services
 
 
@@ -39,7 +39,6 @@ class Calibration:
     """
 
     simulated_curve_point_count = 200
-    graph_height_px = 520
     graph_min_width_px = 760
 
     def __init__(
@@ -274,11 +273,7 @@ class Calibration:
                     ),
                     dash.dcc.Graph(
                         id=graph_id,
-                        style={
-                            **styling.PLOTLY_GRAPH_STYLE,
-                            "height": f"{self.graph_height_px}px",
-                            "width": "100%",
-                        },
+                        style=self._build_graph_style(),
                         config=styling.PLOTLY_GRAPH_CONFIG,
                     ),
                 ],
@@ -313,6 +308,26 @@ class Calibration:
             },
             class_name="h-100",
         )
+
+    @staticmethod
+    def _resolve_graph_height(
+        runtime_config_data: Any = None,
+    ) -> str:
+        runtime_config = RuntimeConfig.from_dict(
+            runtime_config_data if isinstance(runtime_config_data, dict) else None
+        )
+
+        return runtime_config.get_graph_height(default="850px")
+
+    def _build_graph_style(
+        self,
+        runtime_config_data: Any = None,
+    ) -> dict[str, Any]:
+        return {
+            **styling.PLOTLY_GRAPH_STYLE,
+            "height": self._resolve_graph_height(runtime_config_data),
+            "width": "100%",
+        }
 
     def _build_axis_control_block(
         self,
@@ -422,11 +437,11 @@ class Calibration:
         figure: go.Figure,
     ) -> go.Figure:
         """
-        Apply the section graph size and legend placement.
+        Apply shared graph layout settings.
         """
         figure.update_layout(
             autosize=True,
-            height=self.graph_height_px,
+            height=None,
             margin={
                 "l": 70,
                 "r": 24,
@@ -552,9 +567,30 @@ class Calibration:
         """
         logger.debug("Registering Scattering Calibration callbacks.")
 
+        self._register_graph_style_callback()
         self._register_fit_calibration_callback()
         self._register_left_graph_callback()
         self._register_right_graph_callback()
+
+    def _register_graph_style_callback(self) -> None:
+        """
+        Register the graph style callback.
+        """
+
+        @dash.callback(
+            dash.Output(self.ids.graph_calibration, "style"),
+            dash.Output(self.ids.graph_model, "style"),
+            dash.Input("runtime-config-store", "data"),
+            prevent_initial_call=False,
+        )
+        def update_graph_styles(
+            runtime_config_data: Any,
+        ) -> tuple[dict[str, Any], dict[str, Any]]:
+            graph_style = self._build_graph_style(
+                runtime_config_data,
+            )
+
+            return graph_style, dict(graph_style)
 
     def _register_fit_calibration_callback(self) -> None:
         """

@@ -7,10 +7,15 @@ import plotly.graph_objs as go
 
 from RosettaX.utils import RuntimeConfig
 from RosettaX.workflow import detector, parameters
+from RosettaX.workflow.parameters.refractive_index import (
+    resolve_refractive_index_source_value,
+    resolve_refractive_index_value,
+)
 from RosettaX.workflow.table import services as table_services
 
 
 CUSTOM_SCATTERER_PRESET_NAME = "Custom"
+NO_SCATTERER_PRESET_NAME = ""
 ROSETTA_MIX_PRESET_NAME = "Rosetta Mix"
 SMALL_PARTICLE_STANDARD_PRESET_NAME = "Small particle standard"
 BROAD_PARTICLE_STANDARD_PRESET_NAME = "Broad particle standard"
@@ -28,6 +33,10 @@ class ScatteringCalibrationScattererPreset:
     particle_refractive_index: float
     core_refractive_index: float
     shell_refractive_index: float
+    medium_refractive_index_source: Optional[str] = None
+    particle_refractive_index_source: Optional[str] = None
+    core_refractive_index_source: Optional[str] = None
+    shell_refractive_index_source: Optional[str] = None
     particle_diameters_nm: tuple[float, ...] = ()
     core_diameters_nm: tuple[float, ...] = ()
     shell_thicknesses_nm: tuple[float, ...] = ()
@@ -52,9 +61,13 @@ def build_scattering_calibration_scatterer_presets() -> dict[str, ScatteringCali
             name=ROSETTA_MIX_PRESET_NAME,
             mie_model="Solid Sphere",
             medium_refractive_index=1.333,
+            medium_refractive_index_source="water",
             particle_refractive_index=1.59,
+            particle_refractive_index_source="polystyrene",
             core_refractive_index=1.47,
+            core_refractive_index_source="polystyrene",
             shell_refractive_index=1.46,
+            shell_refractive_index_source="phospholipid",
             particle_diameters_nm=(994.0, 799.0, 600.0, 400.0, 296.0, 203.0, 194.0, 150.0, 125.0, 100.0, 70.0),
             description="Six-bead Rosetta mix spanning 70 nm to 500 nm.",
         ),
@@ -62,9 +75,13 @@ def build_scattering_calibration_scatterer_presets() -> dict[str, ScatteringCali
             name=SMALL_PARTICLE_STANDARD_PRESET_NAME,
             mie_model="Solid Sphere",
             medium_refractive_index=1.333,
+            medium_refractive_index_source="water",
             particle_refractive_index=1.45,
+            particle_refractive_index_source="silica",
             core_refractive_index=1.45,
+            core_refractive_index_source="silica",
             shell_refractive_index=1.45,
+            shell_refractive_index_source="waterlike",
             particle_diameters_nm=(80.0, 100.0, 125.0, 150.0, 200.0, 240.0),
             description="Compact small-particle calibration standard.",
         ),
@@ -72,9 +89,13 @@ def build_scattering_calibration_scatterer_presets() -> dict[str, ScatteringCali
             name=BROAD_PARTICLE_STANDARD_PRESET_NAME,
             mie_model="Solid Sphere",
             medium_refractive_index=1.333,
+            medium_refractive_index_source="water",
             particle_refractive_index=1.59,
+            particle_refractive_index_source="polystyrene",
             core_refractive_index=1.59,
+            core_refractive_index_source="polystyrene",
             shell_refractive_index=1.59,
+            shell_refractive_index_source="polystyrene",
             particle_diameters_nm=(100.0, 200.0, 300.0, 400.0, 600.0, 800.0),
             description="Broad dynamic-range bead standard.",
         ),
@@ -87,10 +108,16 @@ def build_scattering_calibration_scatterer_preset_options() -> list[dict[str, st
     """
     return [
         {
+            "label": "No preset",
+            "value": NO_SCATTERER_PRESET_NAME,
+        },
+        *[
+        {
             "label": preset.name,
             "value": preset.name,
         }
         for preset in build_scattering_calibration_scatterer_presets().values()
+        ],
     ]
 
 
@@ -102,9 +129,10 @@ def get_scattering_calibration_scatterer_preset(
     """
     presets = build_scattering_calibration_scatterer_presets()
 
-    preset_name_string = str(
-        preset_name or CUSTOM_SCATTERER_PRESET_NAME,
-    ).strip()
+    preset_name_string = str(preset_name or "").strip()
+
+    if not preset_name_string:
+        return presets[CUSTOM_SCATTERER_PRESET_NAME]
 
     return presets.get(
         preset_name_string,
@@ -277,6 +305,49 @@ class ModelConfiguration:
         return detector.build_detector_preset_options()
 
     @staticmethod
+    def build_detector_preset_brand_options() -> list[dict[str, Any]]:
+        """
+        Build detector preset brand dropdown options.
+        """
+        return detector.load_detector_configuration_brand_options()
+
+    @staticmethod
+    def build_detector_preset_model_options(
+        brand: Any,
+    ) -> list[dict[str, Any]]:
+        """
+        Build detector preset model dropdown options for one brand.
+        """
+        return detector.load_detector_configuration_model_options(
+            brand,
+        )
+
+    @staticmethod
+    def resolve_detector_preset_brand(
+        preset_name: Any,
+    ) -> str | None:
+        """
+        Resolve the brand label for one detector preset name.
+        """
+        return detector.resolve_detector_configuration_preset_brand(
+            preset_name,
+        )
+
+    @staticmethod
+    def resolve_detector_preset_wavelength_nm(
+        *,
+        preset_name: Any,
+        current_wavelength_nm: Any,
+    ) -> Any:
+        """
+        Resolve the wavelength contributed by one detector preset.
+        """
+        return detector.resolve_detector_preset_wavelength_nm(
+            preset_name=preset_name,
+            current_wavelength_nm=current_wavelength_nm,
+        )
+
+    @staticmethod
     def build_scatterer_preset_options() -> list[dict[str, Any]]:
         """
         Build scatterer preset dropdown options.
@@ -290,8 +361,13 @@ class ModelConfiguration:
         """
         Resolve a persisted scatterer preset name to a known preset.
         """
+        preset_name_string = str(preset_name or "").strip()
+
+        if not preset_name_string:
+            return NO_SCATTERER_PRESET_NAME
+
         return get_scattering_calibration_scatterer_preset(
-            preset_name,
+            preset_name_string,
         ).name
 
     @staticmethod
@@ -343,26 +419,33 @@ class ModelConfiguration:
         *,
         preset_name: Any,
         current_mie_model: Any,
+        current_medium_refractive_index_source: Any,
         current_medium_refractive_index: Any,
+        current_particle_refractive_index_source: Any,
         current_particle_refractive_index: Any,
+        current_core_refractive_index_source: Any,
         current_core_refractive_index: Any,
+        current_shell_refractive_index_source: Any,
         current_shell_refractive_index: Any,
-    ) -> tuple[Any, Any, Any, Any, Any]:
+        wavelength_nm: Any,
+    ) -> tuple[Any, Any, Any, Any, Any, Any, Any, Any, Any]:
         """
         Resolve the page control values from the selected scatterer preset.
 
         Selecting the custom preset preserves the current manual values.
         """
-        preset_name_string = str(
-            preset_name or CUSTOM_SCATTERER_PRESET_NAME,
-        ).strip()
+        preset_name_string = str(preset_name or "").strip()
 
-        if preset_name_string == CUSTOM_SCATTERER_PRESET_NAME:
+        if not preset_name_string or preset_name_string == CUSTOM_SCATTERER_PRESET_NAME:
             return (
                 current_mie_model,
+                current_medium_refractive_index_source,
                 current_medium_refractive_index,
+                current_particle_refractive_index_source,
                 current_particle_refractive_index,
+                current_core_refractive_index_source,
                 current_core_refractive_index,
+                current_shell_refractive_index_source,
                 current_shell_refractive_index,
             )
 
@@ -372,10 +455,30 @@ class ModelConfiguration:
 
         return (
             preset.mie_model,
-            preset.medium_refractive_index,
-            preset.particle_refractive_index,
-            preset.core_refractive_index,
-            preset.shell_refractive_index,
+            preset.medium_refractive_index_source,
+            resolve_refractive_index_source_value(
+                preset.medium_refractive_index_source,
+                wavelength_nm=wavelength_nm,
+                fallback_value=preset.medium_refractive_index,
+            ),
+            preset.particle_refractive_index_source,
+            resolve_refractive_index_source_value(
+                preset.particle_refractive_index_source,
+                wavelength_nm=wavelength_nm,
+                fallback_value=preset.particle_refractive_index,
+            ),
+            preset.core_refractive_index_source,
+            resolve_refractive_index_source_value(
+                preset.core_refractive_index_source,
+                wavelength_nm=wavelength_nm,
+                fallback_value=preset.core_refractive_index,
+            ),
+            preset.shell_refractive_index_source,
+            resolve_refractive_index_source_value(
+                preset.shell_refractive_index_source,
+                wavelength_nm=wavelength_nm,
+                fallback_value=preset.shell_refractive_index,
+            ),
         )
 
     @staticmethod
@@ -386,9 +489,12 @@ class ModelConfiguration:
         """
         Return whether scatterer preset selection should lock manual controls.
         """
-        return str(
-            preset_name or CUSTOM_SCATTERER_PRESET_NAME,
-        ).strip() != CUSTOM_SCATTERER_PRESET_NAME
+        preset_name_string = str(preset_name or "").strip()
+
+        if not preset_name_string:
+            return False
+
+        return preset_name_string != CUSTOM_SCATTERER_PRESET_NAME
 
     @staticmethod
     def build_table_state_from_scatterer_preset(
@@ -401,6 +507,9 @@ class ModelConfiguration:
 
         The custom preset returns ``None`` so user-edited rows are preserved.
         """
+        if not str(preset_name or "").strip():
+            return None
+
         preset = get_scattering_calibration_scatterer_preset(
             preset_name,
         )
@@ -524,6 +633,7 @@ class ModelConfiguration:
     def apply_refractive_index_preset(
         *,
         preset_value: Any,
+        wavelength_nm: Any,
         current_value: Any,
     ) -> Any:
         """
@@ -533,9 +643,13 @@ class ModelConfiguration:
         if preset_value is None:
             return current_value
 
-        return float(
-            preset_value,
-        )
+        try:
+            return resolve_refractive_index_value(
+                preset_value,
+                wavelength_nm=wavelength_nm,
+            )
+        except Exception:
+            return current_value
 
     @staticmethod
     def build_optical_configuration_preview_figure(

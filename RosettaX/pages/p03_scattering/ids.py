@@ -35,6 +35,14 @@ class ParameterSectionIds:
         return f"{self.prefix}-detector-configuration-preset"
 
     @property
+    def detector_configuration_brand(self) -> str:
+        return f"{self.prefix}-detector-configuration-brand"
+
+    @property
+    def detector_configuration_model(self) -> str:
+        return f"{self.prefix}-detector-configuration-model"
+
+    @property
     def detector_configuration_auto_detect_button(self) -> str:
         return f"{self.prefix}-detector-configuration-auto-detect-button"
 
@@ -121,6 +129,10 @@ class ParameterSectionIds:
     @property
     def core_shell_container(self) -> str:
         return f"{self.prefix}-core-shell-container"
+
+    @property
+    def particle_configuration_custom_values_container(self) -> str:
+        return f"{self.prefix}-particle-configuration-custom-values-container"
 
 
 @dataclass(frozen=True)

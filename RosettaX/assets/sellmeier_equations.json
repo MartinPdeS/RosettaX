@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "wavelength_unit": "um",
+  "formula": "n^2 = a + sum(B_i * lambda^2 / (lambda^2 - C_i))",
+  "materials": {
+    "water": {
+      "label": "Water",
+      "coefficients": {
+        "a": 1.0,
+        "b": [0.757],
+        "c": [0.00923]
+      },
+      "notes": "Visible-range one-term Sellmeier fit for aqueous water."
+    },
+    "pbs": {
+      "label": "PBS",
+      "coefficients": {
+        "a": 1.0,
+        "b": [0.7619],
+        "c": [0.00918]
+      },
+      "notes": "Visible-range one-term Sellmeier fit for PBS-like aqueous buffer."
+    },
+    "polystyrene": {
+      "label": "Polystyrene",
+      "coefficients": {
+        "a": 1.0,
+        "b": [1.469],
+        "c": [0.01295]
+      },
+      "notes": "Visible-range one-term Sellmeier fit for polystyrene microspheres."
+    },
+    "silica": {
+      "label": "Silica",
+      "coefficients": {
+        "a": 1.0,
+        "b": [1.0969],
+        "c": [0.00906]
+      },
+      "notes": "Visible-range one-term Sellmeier fit for silica particles."
+    },
+    "pmma": {
+      "label": "PMMA",
+      "coefficients": {
+        "a": 1.0,
+        "b": [1.189],
+        "c": [0.00982]
+      },
+      "notes": "Visible-range one-term Sellmeier fit for PMMA particles."
+    },
+    "soybean_oil": {
+      "label": "Soybean oil",
+      "coefficients": {
+        "a": 1.0,
+        "b": [1.1276],
+        "c": [0.00911]
+      },
+      "notes": "Visible-range one-term Sellmeier fit for soybean-oil-like cores."
+    },
+    "lipid": {
+      "label": "Lipid",
+      "coefficients": {
+        "a": 1.0,
+        "b": [1.128],
+        "c": [0.00802]
+      },
+      "notes": "Visible-range one-term Sellmeier fit for lipid-rich particles."
+    },
+    "phospholipid": {
+      "label": "Phospholipid",
+      "coefficients": {
+        "a": 1.0,
+        "b": [1.099],
+        "c": [0.00816]
+      },
+      "notes": "Visible-range one-term Sellmeier fit for phospholipid shells."
+    },
+    "waterlike": {
+      "label": "Waterlike",
+      "coefficients": {
+        "a": 1.0,
+        "b": [0.757],
+        "c": [0.00923]
+      },
+      "notes": "Visible-range one-term Sellmeier fit for water-like media."
+    }
+  }
+}

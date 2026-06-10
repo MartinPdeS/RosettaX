@@ -85,6 +85,11 @@ class Test_ApplyCalibrationReport:
                         "particle_diameter_nm": 240.0,
                     },
                 ],
+                "metadata": {
+                    "detector_configuration_preset_name": "Side scatter preset",
+                    "wavelength_nm": 488,
+                    "notes": "Silica standards",
+                },
             },
             export_columns=[
                 "FSC-A",
@@ -154,6 +159,8 @@ class Test_ApplyCalibrationReport:
         assert payload["calibration_details"]["calibration_type"] == "scattering"
         assert payload["calibration_details"]["instrument_response"]["slope"] == 1.23
         assert payload["calibration_details"]["reference_table"][0]["particle_diameter_nm"] == 180.0
+        assert payload["saved_calibration_payload"]["metadata"]["detector_configuration_preset_name"] == "Side scatter preset"
+        assert payload["saved_calibration_payload"]["instrument_response"]["model_name"] == "Linear"
 
     def test_apply_report_matches_request_detects_request_changes(self) -> None:
         request = ApplyCalibrationRequest(
@@ -207,8 +214,14 @@ class Test_ApplyCalibrationReport:
             uploaded_fcs_paths=["/tmp/input-a.fcs"],
             selected_calibration="fluorescence-calibration.json",
             calibration_payload={
+                "schema_version": "1.0",
                 "calibration_type": "fluorescence",
+                "name": "FITC MESF calibration",
+                "created_at": "2026-06-09T15:30:00Z",
+                "source_file": "beads.fcs",
                 "source_channel": "FITC-A",
+                "gating_channel": "SSC-A",
+                "gating_threshold": 1200.0,
                 "fit_model": "power-law",
                 "fit_metrics": {
                     "r_squared": 0.999,
@@ -218,6 +231,16 @@ class Test_ApplyCalibrationReport:
                     "slope": 0.98,
                     "intercept": 0.12,
                     "prefactor": 1.32,
+                },
+                "export_notes": "Generated from MESF bead batch 24A.",
+                "payload": {
+                    "slope": 0.98,
+                    "intercept": 0.12,
+                    "prefactor": 1.32,
+                    "R_squared": 0.999,
+                    "model": "power-law",
+                    "x_definition": "Intensity [a.u.]",
+                    "y_definition": "Intensity [MESF]",
                 },
                 "reference_points": [
                     {
@@ -270,5 +293,73 @@ class Test_ApplyCalibrationReport:
         assert b"Applied fluorescence calibration to 1 file." in pdf_bytes
         assert b"MESF and peak positions" in pdf_bytes
         assert b"Measured peak position" in pdf_bytes
+        assert b"Saved calibration JSON" in pdf_bytes
+        assert b"Generated from MESF bead batch 24A." in pdf_bytes
+        assert b"Intensity [MESF]" in pdf_bytes
         assert pdf_filename.startswith("rosettax_apply_report_fluorescence-calibration_")
         assert pdf_filename.endswith(".pdf")
+
+    def test_build_apply_report_pdf_bytes_includes_saved_scattering_metadata(self) -> None:
+        request = ApplyCalibrationRequest(
+            uploaded_fcs_paths=["/tmp/input-a.fcs"],
+            selected_calibration="scatter-calibration.json",
+            calibration_payload={
+                "calibration_type": "scattering",
+                "version": 2,
+                "source_channel": "SSC-A",
+                "output_quantity": "particle_diameter_nm",
+                "instrument_response": {
+                    "measured_channel": "SSC-A",
+                    "slope": 1.23,
+                    "intercept": 4.56,
+                    "r_squared": 0.998,
+                    "force_zero_intercept": False,
+                    "input_quantity": "measured_peak_position",
+                    "output_quantity": "particle_diameter_nm",
+                    "model_name": "Linear",
+                },
+                "metadata": {
+                    "detector_configuration_preset_name": "Small particle SSC",
+                    "wavelength_nm": 488,
+                    "notes": "Lot 42",
+                },
+                "reference_table": [
+                    {
+                        "measured_peak_position": 1200.0,
+                        "particle_diameter_nm": 180.0,
+                    },
+                    {
+                        "measured_peak_position": 2100.0,
+                        "particle_diameter_nm": 240.0,
+                    },
+                ],
+            },
+            export_columns=["Time"],
+        )
+
+        result = ApplyCalibrationFilesResult(
+            payload_bytes=b"zip-bytes",
+            download_filename="scattering_calibrated_1_file.zip",
+            source_channel="SSC-A",
+            output_channels=["SSC-A", "particle_diameter_nm"],
+            file_count=1,
+            warnings=[],
+            status="Applied scattering calibration to 1 file.",
+        )
+
+        payload = build_apply_report_payload(
+            request=request,
+            result=result,
+            calibration_summary={
+                "file_name": "scatter-calibration.json",
+                "calibration_type": "scattering",
+                "source_channel": "SSC-A",
+                "output_quantity": "particle_diameter_nm",
+            },
+        )
+
+        pdf_bytes = build_apply_report_pdf_bytes(report_payload=payload)
+
+        assert b"Saved calibration JSON: Metadata" in pdf_bytes
+        assert b"Small particle SSC" in pdf_bytes
+        assert b"Lot 42" in pdf_bytes

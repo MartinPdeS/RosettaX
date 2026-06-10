@@ -47,6 +47,7 @@ def build_apply_report_payload(
         "calibration_details": _build_calibration_details_payload(
             calibration_payload=request.calibration_payload,
         ),
+        "saved_calibration_payload": _sanitize_payload_tree(request.calibration_payload),
         "uploaded_fcs_paths": [str(path) for path in request.uploaded_fcs_paths],
         "export_columns": [str(column) for column in request.export_columns],
         "scattering_target_model_parameters": _build_scattering_target_model_payload(
@@ -277,9 +278,47 @@ def _sanitize_payload_value(value: Any) -> Any:
 
     return str(value)
 
+def _sanitize_payload_tree(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {
+            str(key): _sanitize_payload_tree(item)
+            for key, item in value.items()
+            if _is_supported_payload_tree_value(item)
+        }
+
+    if isinstance(value, list):
+        return [
+            _sanitize_payload_tree(item)
+            for item in value
+            if _is_supported_payload_tree_value(item)
+        ]
+
+    return _sanitize_payload_value(value)
+
+def _sanitize_payload_tree(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {
+            str(key): _sanitize_payload_tree(item)
+            for key, item in value.items()
+            if _is_supported_payload_tree_value(item)
+        }
+
+    if isinstance(value, list):
+        return [
+            _sanitize_payload_tree(item)
+            for item in value
+            if _is_supported_payload_tree_value(item)
+        ]
+
+    return _sanitize_payload_value(value)
+
 
 def _is_supported_payload_value(value: Any) -> bool:
-    return isinstance(value, (str, bool, int, float, list)) or value is None
+    return isinstance(value, (dict, str, bool, int, float, list)) or value is None
+
+
+def _is_supported_payload_tree_value(value: Any) -> bool:
+    return isinstance(value, (dict, list)) or _is_supported_payload_value(value)
 
 
 def _as_float_or_none(value: Any) -> Optional[float]:
@@ -362,6 +401,12 @@ class _PdfReportComposer:
             self._draw_key_value_table(
                 title="Scattering target model",
                 items=target_model_items,
+            )
+
+        for section_spec in _build_saved_payload_section_specs(report_payload=self.report_payload):
+            self._draw_key_value_table(
+                title=section_spec["title"],
+                items=section_spec["items"],
             )
 
         input_file_rows = [[file_path] for file_path in _normalize_string_list(self.report_payload.get("uploaded_fcs_paths"))]
@@ -1189,6 +1234,182 @@ def _build_target_model_items(
     return [(_prettify_label(key), _format_display_value(value)) for key, value in payload.items()]
 
 
+def _build_saved_payload_section_specs(
+    *,
+    report_payload: dict[str, Any],
+) -> list[dict[str, Any]]:
+    payload = report_payload.get("saved_calibration_payload", {})
+
+    if not isinstance(payload, dict):
+        return []
+
+    overview_items: list[tuple[str, str]] = []
+    section_specs: list[dict[str, Any]] = []
+    top_level_excluded_keys = {
+        "calibration_type",
+        "fit_metrics",
+        "fit_model",
+        "gating_channel",
+        "gating_threshold",
+        "instrument_response",
+        "output_quantity",
+        "parameters",
+        "reference_points",
+        "reference_table",
+        "source_channel",
+        "source_file",
+    }
+
+    for key, value in payload.items():
+        if key in top_level_excluded_keys or _is_empty_payload_value(value):
+            continue
+
+        if isinstance(value, dict):
+            group_items = _build_saved_payload_group_items(
+                group_name=key,
+                group_payload=value,
+            )
+            if group_items:
+                section_specs.append(
+                    {
+                        "title": f"Saved calibration JSON: {_prettify_label(key)}",
+                        "items": group_items,
+                    }
+                )
+            continue
+
+        if isinstance(value, list):
+            if _is_scalar_sequence(value):
+                overview_items.append((_prettify_label(key), _format_display_value(value)))
+            continue
+
+        overview_items.append((_prettify_label(key), _format_display_value(value)))
+
+    if overview_items:
+        section_specs.insert(
+            0,
+            {
+                "title": "Saved calibration JSON",
+                "items": overview_items,
+            },
+        )
+
+    return section_specs
+
+def _build_saved_payload_group_items(
+    *,
+    group_name: str,
+    group_payload: dict[str, Any],
+) -> list[tuple[str, str]]:
+    excluded_paths: set[str] = set()
+
+    if group_name == "payload":
+        excluded_paths = {
+            "slope",
+            "intercept",
+            "prefactor",
+            "R_squared",
+            "r_squared",
+        }
+
+    return _collect_scalar_payload_items(
+        payload=group_payload,
+        excluded_paths=excluded_paths,
+    )
+
+def _collect_scalar_payload_items(
+    *,
+    payload: dict[str, Any],
+    parent_path: str = "",
+    excluded_paths: Optional[set[str]] = None,
+) -> list[tuple[str, str]]:
+    items: list[tuple[str, str]] = []
+    active_excluded_paths = excluded_paths or set()
+
+    for key, value in payload.items():
+        path = f"{parent_path}.{key}" if parent_path else str(key)
+
+        if path in active_excluded_paths or _is_empty_payload_value(value):
+            continue
+
+        if isinstance(value, dict):
+            items.extend(
+                _collect_scalar_payload_items(
+                    payload=value,
+                    parent_path=path,
+                    excluded_paths=active_excluded_paths,
+                )
+            )
+            continue
+
+        if isinstance(value, list):
+            if _is_scalar_sequence(value):
+                items.append(
+                    (_format_payload_path_label(path), _format_display_value(value))
+                )
+            continue
+
+
+
+def _build_saved_payload_group_items(
+    *,
+    group_name: str,
+    group_payload: dict[str, Any],
+) -> list[tuple[str, str]]:
+    excluded_paths: set[str] = set()
+
+    if group_name == "payload":
+        excluded_paths = {
+            "slope",
+            "intercept",
+            "prefactor",
+            "R_squared",
+            "r_squared",
+        }
+
+    return _collect_scalar_payload_items(
+        payload=group_payload,
+        excluded_paths=excluded_paths,
+    )
+
+
+def _collect_scalar_payload_items(
+    *,
+    payload: dict[str, Any],
+    parent_path: str = "",
+    excluded_paths: Optional[set[str]] = None,
+) -> list[tuple[str, str]]:
+    items: list[tuple[str, str]] = []
+    active_excluded_paths = excluded_paths or set()
+
+    for key, value in payload.items():
+        path = f"{parent_path}.{key}" if parent_path else str(key)
+
+        if path in active_excluded_paths or _is_empty_payload_value(value):
+            continue
+
+        if isinstance(value, dict):
+            items.extend(
+                _collect_scalar_payload_items(
+                    payload=value,
+                    parent_path=path,
+                    excluded_paths=active_excluded_paths,
+                )
+            )
+            continue
+
+        if isinstance(value, list):
+            if _is_scalar_sequence(value):
+                items.append(
+                    (_format_payload_path_label(path), _format_display_value(value))
+                )
+            continue
+
+        items.append((_format_payload_path_label(path), _format_display_value(value)))
+
+    return items
+
+
 def _build_reference_table_spec(
     *,
     report_payload: dict[str, Any],
@@ -1427,6 +1648,23 @@ def _normalize_string_list(value: Any) -> list[str]:
     return [str(item) for item in value]
 
 
+def _is_scalar_sequence(value: Any) -> bool:
+    return isinstance(value, list) and all(not isinstance(item, (dict, list)) for item in value)
+
+
+def _is_empty_payload_value(value: Any) -> bool:
+    if value in (None, "", [], {}):
+        return True
+
+    if isinstance(value, dict):
+        return all(_is_empty_payload_value(item) for item in value.values())
+
+    if isinstance(value, list):
+        return all(_is_empty_payload_value(item) for item in value)
+
+    return False
+
+
 def _format_display_value(value: Any) -> str:
     if value in (None, ""):
         return "n/a"
@@ -1448,6 +1686,11 @@ def _format_display_value(value: Any) -> str:
         return ", ".join(_format_display_value(item) for item in value) or "n/a"
 
     return str(value)
+
+
+def _format_payload_path_label(path: str) -> str:
+    parts = [part for part in str(path).split(".") if part]
+    return " / ".join(_prettify_label(part) for part in parts) or "Value"
 
 
 def _prettify_label(value: str) -> str:

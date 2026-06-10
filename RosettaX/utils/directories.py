@@ -26,11 +26,11 @@ fcs_data = root / "data"
 
 profiles = root / "profiles"
 
+asset_directory = root / "assets"
+
 default_profile = profiles / "default_profile.json"
 
-detectors = root / "workflow/detector/presets"
-
-asset_directory = root / "assets"
+detectors = asset_directory / "detector_definitions.json"
 
 
 def list_profiles() -> list[str]:

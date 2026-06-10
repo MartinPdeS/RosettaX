@@ -1,12 +1,17 @@
 # -*- coding: utf-8 -*-
 
+import importlib
 import logging
 from types import SimpleNamespace
 
+import dash
 import numpy as np
 
+from RosettaX.pages.p00_sidebar.main import Sidebar
 from RosettaX.pages.p02_fluorescence.ids import Ids as FluorescenceIds
 from RosettaX.pages.p02_fluorescence.sections.s04_calibration.main import Calibration
+from RosettaX.pages.p03_scattering.ids import Ids as ScatteringIds
+from RosettaX.pages.p03_scattering.sections.s03_model.main import Model as ScatteringModel
 from RosettaX.pages.p03_scattering.sections.s05_calibration import services as scattering_services
 
 
@@ -25,6 +30,46 @@ def _collect_component_ids(component) -> set[str]:
 
     collected_ids.update(_collect_component_ids(children))
     return collected_ids
+
+
+def _collect_component_hrefs(component) -> set[str]:
+    href = getattr(component, "href", None)
+    collected_hrefs = {href} if isinstance(href, str) else set()
+    children = getattr(component, "children", None)
+
+    if children is None:
+        return collected_hrefs
+
+    if isinstance(children, (list, tuple)):
+        for child in children:
+            collected_hrefs.update(_collect_component_hrefs(child))
+        return collected_hrefs
+
+    collected_hrefs.update(_collect_component_hrefs(children))
+    return collected_hrefs
+
+
+def _find_component_by_id(component, target_id: str):
+    component_id = getattr(component, "id", None)
+
+    if component_id == target_id:
+        return component
+
+    children = getattr(component, "children", None)
+
+    if children is None:
+        return None
+
+    if isinstance(children, (list, tuple)):
+        for child in children:
+            found_component = _find_component_by_id(child, target_id)
+
+            if found_component is not None:
+                return found_component
+
+        return None
+
+    return _find_component_by_id(children, target_id)
 
 
 class Test_FluorescenceCalibrationLayout:
@@ -85,3 +130,57 @@ class Test_ScatteringCalibrationPreviewGraph:
             "Mie relation (200 points)",
             "Calibration standards",
         ]
+
+
+class Test_ScatteringModelLayout:
+    def test_layout_includes_detector_brand_and_model_controls(self) -> None:
+        section = ScatteringModel(
+            page=SimpleNamespace(ids=ScatteringIds()),
+            section_number=3,
+        )
+
+        layout = section.get_layout()
+        component_ids = _collect_component_ids(layout)
+
+        assert section.ids.detector_configuration_brand in component_ids
+        assert section.ids.detector_configuration_model in component_ids
+        assert section.ids.detector_configuration_preset in component_ids
+
+        custom_values_container = _find_component_by_id(
+            layout,
+            section.ids.detector_configuration_custom_values_container,
+        )
+
+        assert custom_values_container is not None
+        assert section.ids.wavelength_nm in _collect_component_ids(custom_values_container)
+
+
+class Test_DocumentationPage:
+    def test_layout_includes_core_documentation_sections(self, monkeypatch) -> None:
+        monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
+
+        documentation_main = importlib.import_module(
+            "RosettaX.pages.p07_documentation.main"
+        )
+        page = documentation_main.DocumentationPage()
+
+        layout = page.layout()
+        component_ids = _collect_component_ids(layout)
+
+        assert page._id("hero") in component_ids
+        assert page._id("system-model") in component_ids
+        assert page._id("supported-cytometers") in component_ids
+        assert page._id("refractive-index") in component_ids
+        assert page._id("regression-models") in component_ids
+        assert page._id("calibration-files") in component_ids
+        assert page._id("apply-checks") in component_ids
+        assert page._id("reports") in component_ids
+
+
+class Test_SidebarNavigation:
+    def test_navigation_includes_documentation_link(self) -> None:
+        sidebar = Sidebar()
+
+        navigation = sidebar._build_navigation_section()
+
+        assert "/documentation" in _collect_component_hrefs(navigation)

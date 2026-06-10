@@ -8,7 +8,7 @@ import numpy as np
 import plotly.graph_objs as go
 
 from ..core import graphing
-from RosettaX.utils import plottings
+from RosettaX.utils import RuntimeConfig, plottings, styling
 
 
 logger = logging.getLogger(__name__)
@@ -35,6 +35,24 @@ def register_graph_callbacks(
     axis_scale_toggle_id = resolve_axis_scale_toggle_id(
         ids=ids,
     )
+
+    @dash.callback(
+        dash.Output(
+            ids.graph_hist,
+            "style",
+        ),
+        dash.Input(
+            runtime_config_store_id,
+            "data",
+        ),
+        prevent_initial_call=False,
+    )
+    def update_graph_style(
+        runtime_config_data: Any,
+    ) -> dict[str, Any]:
+        return resolve_peak_graph_style(
+            runtime_config_data=runtime_config_data,
+        )
 
     state_components: list[Any] = [
         dash.State(
@@ -198,6 +216,24 @@ def register_graph_callbacks(
             )
 
             return figure
+
+
+def resolve_peak_graph_style(
+    *,
+    runtime_config_data: Any,
+) -> dict[str, Any]:
+    """
+    Resolve the Dash component style for peak workflow graphs.
+    """
+    runtime_config = RuntimeConfig.from_dict(
+        runtime_config_data if isinstance(runtime_config_data, dict) else None
+    )
+
+    return {
+        **styling.PLOTLY_GRAPH_STYLE,
+        "height": runtime_config.get_graph_height(default="850px"),
+        "width": "100%",
+    }
 
 
 def resolve_axis_scale_toggle_id(

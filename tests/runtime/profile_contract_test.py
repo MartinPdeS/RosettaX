@@ -108,6 +108,7 @@ class Test_RuntimeConfigProfileContract:
 
         assert payload["ui"]["theme_mode"] in {"dark", "light"}
         assert isinstance(payload["ui"]["show_graphs"], bool)
+        assert isinstance(payload["ui"]["show_preset_configuration"], bool)
 
     @pytest.mark.parametrize("profile_path", collect_profile_paths())
     def test_profile_json_file_has_valid_calibration_values(

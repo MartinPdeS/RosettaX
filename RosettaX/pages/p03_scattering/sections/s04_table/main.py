@@ -116,7 +116,12 @@ class ReferenceTable:
         card = self.layout_builder.get_layout()
         body = card.children[1]
         body.children = [
-            self.model_section._build_particle_configuration_panel(),
+            dash.html.Div(
+                self.model_section._build_particle_configuration_section(),
+                style={
+                    "marginBottom": "18px",
+                },
+            ),
             dash.html.Div(
                 style={
                     "height": "18px",

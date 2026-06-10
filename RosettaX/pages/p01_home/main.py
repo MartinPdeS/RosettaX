@@ -26,7 +26,7 @@ class HomePage:
         self.github_url = "https://github.com/MartinPdeS/RosettaX"
         self.pypi_url = "https://pypi.org/project/RosettaX/"
         self.anaconda_url = "https://anaconda.org/channels/MartinPdeS/packages/Rosettax/overview"
-        self.documentation_url = "https://martinpdes.github.io/RosettaX/docs/latest/index.html"
+        self.documentation_url = "/documentation"
         self.support_url = "https://github.com/sponsors/MartinPdeS"
         self.contact_email = "martin.poinsinet.de.sivry@gmail.com"
 
@@ -50,14 +50,6 @@ class HomePage:
                         "height": "18px",
                     },
                 ),
-                self._usage_metrics_card(
-                    metrics=metrics,
-                ),
-                html.Div(
-                    style={
-                        "height": "18px",
-                    },
-                ),
                 self._workflow_cards_row(),
                 html.Div(
                     style={
@@ -65,6 +57,12 @@ class HomePage:
                     },
                 ),
                 self._secondary_actions_card(),
+                html.Div(
+                    style={
+                        "height": "18px",
+                    },
+                ),
+                self._usage_metrics_card(metrics=metrics),
                 html.Div(
                     style={
                         "height": "18px",
@@ -130,14 +128,14 @@ class HomePage:
                 dbc.CardHeader(
                     [
                         html.Div(
-                            "Usage snapshot",
+                            "Website usage metrics to date.",
                             style={
                                 "fontWeight": "750",
                                 "fontSize": "1.02rem",
                             },
                         ),
                         html.Div(
-                            "Server-side aggregate counts for apply calibration activity.",
+                            "",
                             style={
                                 "fontSize": "0.86rem",
                                 "opacity": 0.76,
@@ -458,7 +456,7 @@ class HomePage:
                                         href=self.documentation_url,
                                         color="primary",
                                         outline=False,
-                                        target="_blank",
+                                        target="_self",
                                     ),
                                     md=3,
                                 ),
@@ -470,7 +468,7 @@ class HomePage:
                                         outline=True,
                                         target="_blank",
                                     ),
-                                    md=3,
+                                    md=2,
                                 ),
                                 dbc.Col(
                                     self._resource_button(

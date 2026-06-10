@@ -2,262 +2,116 @@
 
 .. _theory:
 
-Theoretical background
-======================
+Implementation model
+====================
 
-RosettaX is built around the idea that flow cytometry calibration should remain
-explicit from the raw measurement space to the exported calibration relation.
+RosettaX operates on exported flow-cytometry data, not on raw detector traces
+or acquisition hardware. The software assumes the cytometer has already turned
+optical signals into event-level columns stored in an FCS file. RosettaX then
+does three things:
 
-In many workflows, calibration is performed through a combination of acquisition
-software, exported FCS files, manual peak selection, spreadsheets, optical
-models, and downstream analysis scripts. Each of these steps can be valid on its
-own, but the full calibration chain often becomes difficult to inspect and
-reproduce once parameters are copied between tools.
+#. inspect the exported measurement distributions
+#. fit a calibration relation against a reference table or optical model
+#. save that relation as JSON and later apply it to other FCS files
 
-RosettaX provides a structured interface for this process. It does not attempt
-to control the cytometer. Instead, it focuses on the calibration analysis step:
-loading cytometry data, inspecting signal distributions, identifying reference
-populations, fitting calibration relations, and exporting reusable calibration
-files.
-
-The purpose of this section is to describe the physical and numerical concepts
-behind the calibration workflows implemented in RosettaX.
+That boundary matters. A RosettaX calibration is a mapping from a processed
+instrument observable to a calibrated quantity. It is not a claim that the FCS
+value was a raw optical power in the first place.
 
 
-Flow cytometry measurements
-***************************
+What kind of flow-cytometry system is modeled
+*********************************************
 
-Flow cytometry measures particles or cells as they pass through an interrogation
-region, usually defined by a focused optical beam and a hydrodynamically focused
-sample stream. As each particle crosses the beam, it produces optical signals
-that are detected by one or more photodetectors.
+RosettaX assumes a conventional event-based flow-cytometry workflow where:
 
-Common signal channels include:
+* each FCS row is one event
+* each selected column is an exported instrument feature
+* fluorescence and scattering are calibrated from one chosen source channel at a time
+* the calibration is built after acquisition, from saved files
 
-* forward scatter, often associated with low angle scattered light
-* side scatter, often associated with larger angle scattered light
-* fluorescence channels, associated with emitted light from fluorophores
-* trigger channels, used by the instrument to decide whether an event should be
-  recorded
+For fluorescence, RosettaX treats the selected detector column as the measured
+instrument quantity to be related to an assigned reference intensity scale.
 
-The recorded data are usually exported as FCS files. Each row in an FCS file
-corresponds to an event, and each column corresponds to a measured feature or
-channel. Depending on the instrument and acquisition settings, these features
-may include pulse height, pulse area, pulse width, or other processed signal
-quantities.
+For scattering, RosettaX goes further and models the optical system used to
+generate the calibration-standard relation. The scattering backend uses a
+Gaussian illumination source and a photodiode-style collection model through
+PyMieSim. The configurable geometry includes wavelength, detector numerical
+aperture, detector cache numerical aperture, blocker-bar numerical aperture,
+detector phi angle, detector gamma angle, detector sampling, and preset-based
+angular weights or effective geometry corrections.
 
-RosettaX works with these exported measurements. It treats the FCS file as the
-experimental input and uses calibration references to convert instrument signal
-values into more interpretable calibrated quantities.
-
-
-Events, signals, and features
-*****************************
-
-A flow cytometry event is not a direct measurement of a particle property. It is
-the result of several physical and electronic steps:
-
-#. the particle crosses the illuminated interrogation volume
-#. light is scattered or emitted
-#. part of this light is collected by the optical system
-#. the optical power reaches a detector
-#. the detector converts optical power into an electrical signal
-#. analog and digital electronics process the signal
-#. triggering logic decides whether the signal is stored as an event
-#. event features are extracted from the time dependent pulse
-
-The values stored in an FCS file are therefore processed observables. They are
-not usually raw optical powers.
-
-For calibration, this distinction matters. A calibration relation should be
-interpreted as a mapping between a measured instrument observable and a chosen
-reference quantity. The exact meaning of this relation depends on the selected
-channel, feature type, detector configuration, and calibration model.
-
-For example, a calibration may relate a fluorescence channel to a reference
-fluorescence intensity, or it may relate a scattering channel to a modeled
-scattering quantity for particles of known optical properties.
+The practical consequence is that RosettaX does not simply fit scatter peak to
+diameter. It fits measured scatter peak to modeled optical coupling, then uses a
+target Mie relation to convert coupling to equivalent diameter during apply.
 
 
-Calibration as a mapping problem
-********************************
+How material refractive indices are computed
+********************************************
 
-Calibration can be viewed as a mapping between two spaces:
+Scattering presets can refer either to plain numeric refractive indices or to
+named materials stored in ``RosettaX/assets/sellmeier_equations.json``.
 
-* the instrument measurement space
-* the reference or model space
-
-The instrument measurement space is formed by the values measured by the
-cytometer. These values may be arbitrary detector units, digitizer counts,
-scaled channel values, or transformed quantities depending on the instrument
-and export settings.
-
-The reference space is defined by the calibration material or model. In
-fluorescence calibration, this may be a known reference intensity. In scattering
-calibration, this may be a modeled scattering signal computed from particle
-diameter, refractive index, wavelength, collection geometry, and detector
-configuration.
-
-The calibration task is to estimate a function
+When a named material is selected, RosettaX evaluates a Sellmeier relation at
+the current wavelength:
 
 .. math::
 
-   y = f(x)
+   n^2 = a + \sum_i \frac{B_i \lambda^2}{\lambda^2 - C_i}
 
-where ``x`` is the measured signal value and ``y`` is the calibrated reference
-quantity.
+The user-facing wavelength is entered in nanometers and converted to
+micrometers before the Sellmeier expression is evaluated. The resulting numeric
+value is then written back into the refractive-index field and used by the
+scattering model.
 
-Depending on the workflow, the relation may also be represented in the opposite
-direction,
-
-.. math::
-
-   x = g(y)
-
-where the measured signal is modeled as a function of the reference quantity.
-
-Both views are useful. The first is useful when applying a calibration to
-experimental data. The second is useful when fitting expected instrument
-responses from known reference populations.
+This means that changing wavelength can change the resolved refractive index for
+water, PBS, polystyrene, silica, PMMA, lipid-like materials, and other packaged
+presets. If a preset is already numeric, RosettaX uses the numeric value
+directly instead of evaluating the material bank.
 
 
-Reference populations
-*********************
-
-A calibration reference usually contains several distinguishable populations.
-These populations may be beads, particles, or samples with known or modeled
-properties.
-
-A good reference population should satisfy several practical conditions:
-
-* it should be measurable above the relevant noise floor
-* it should produce a distinguishable peak or mode
-* its reference value should be known or computable
-* it should span the useful dynamic range of the instrument
-* it should be stable enough for repeated measurements
-* it should be appropriate for the channel being calibrated
-
-In practice, reference populations are identified from histograms or density
-plots. RosettaX provides tools to inspect these distributions and associate
-detected peaks with calibration reference values.
-
-The calibration quality depends strongly on the quality of this association.
-Incorrect peak assignment, unresolved populations, saturated channels, or
-poorly separated peaks can produce misleading calibration fits.
-
-
-Histograms and peak identification
+Regression models used by RosettaX
 **********************************
 
-Calibration workflows often begin by inspecting one dimensional or two
-dimensional signal distributions.
+RosettaX uses a different regression model for each calibration family.
 
-For a one dimensional channel, a histogram estimates the distribution of event
-values. Peaks in the histogram may correspond to reference populations,
-background events, unresolved mixtures, or instrument artifacts.
-
-For a two dimensional representation, density plots can reveal whether
-populations are well separated, whether a channel contains correlated
-structure, or whether a selected peak is actually a projection of several
-overlapping populations.
-
-Peak identification is therefore not only a numerical task. It is also a
-quality control step.
-
-When selecting calibration peaks, the user should consider:
-
-* whether the population is clearly separated from neighboring populations
-* whether the population is above the detection threshold
-* whether the peak position is stable under reasonable binning choices
-* whether the peak is affected by saturation or clipping
-* whether the selected channel and feature type are appropriate
-* whether the number of events is sufficient for a stable estimate
-
-RosettaX is designed to make this step inspectable rather than hidden. The user
-can review the distribution, identify the relevant peaks, and verify that the
-calibration points are physically reasonable before exporting a calibration.
-
-
-Fluorescence calibration
-************************
-
-Fluorescence calibration relates measured fluorescence channel values to a
-reference fluorescence scale.
-
-A fluorescence measurement depends on several factors:
-
-* excitation wavelength and optical power
-* fluorophore absorption
-* fluorophore emission spectrum
-* quantum yield
-* optical filters
-* collection efficiency
-* detector responsivity
-* electronic gain
-* acquisition settings
-* background and noise
-
-In many practical calibration workflows, these factors are not modeled
-individually. Instead, reference materials with known or assigned fluorescence
-values are measured, and a calibration relation is fitted between measured
-channel values and reference intensities.
-
-This produces an empirical mapping from instrument units to calibrated
-fluorescence units.
-
-The general workflow is:
-
-#. measure a fluorescence reference sample
-#. identify the measured peak positions
-#. assign each peak to its known reference value
-#. fit a calibration relation
-#. review the residuals and the usable range
-#. export the calibration result
-
-The fitted relation may be linear, log linear, polynomial, or another model
-depending on the assumptions of the workflow and the response of the detector
-chain.
-
-A simple linear relation has the form
+Fluorescence uses a log-log linear fit:
 
 .. math::
 
-   y = a x + b
+   \log_{10}(y) = m \log_{10}(x) + b
 
-where ``x`` is the measured channel value, ``y`` is the calibrated reference
-value, ``a`` is the gain factor, and ``b`` is the offset.
+which is equivalent to the power law
 
-For many cytometry applications, the useful response may be approximately
-linear only over a limited range. Saturation, background subtraction, nonlinear
-amplification, compensation, or exported scaling may all affect the apparent
-relation.
+.. math::
 
-The fitted calibration should therefore be interpreted within the range covered
-by the reference populations. Extrapolation outside the measured calibration
-range should be treated carefully.
+   y = 10^b x^m
+
+The fit is performed with ``numpy.polyfit`` after discarding any pair where the
+measured intensity, reference intensity, or transformed value is not finite and
+strictly positive.
+
+Scattering uses a linear instrument-response model:
+
+.. math::
+
+   \mathrm{theoretical\_coupling} = m \cdot \mathrm{measured\_peak} + b
+
+The theoretical coupling values come from the optical model. The default
+behavior is to force :math:`b = 0`, which makes the fit a pure slope estimate.
+RosettaX stores ``R^2`` for both workflows so the saved calibration still shows
+the quality of the fitted relation.
 
 
-Scattering calibration
-**********************
+Why the saved record matters
+****************************
 
-Scattering calibration relates measured scatter signals to optical scattering
-quantities predicted from a physical model.
+RosettaX is deliberately opinionated about serialization. A calibration is only
+reusable if the saved JSON explains what was fitted. That is why fluorescence
+payloads preserve reference points and fit parameters, while scattering payloads
+also preserve the modeled calibration-standard relation and optical metadata.
 
-When a particle is illuminated, it redirects part of the incident optical field.
-The angular distribution and total scattered intensity depend on the particle
-properties and optical configuration.
-
-Important parameters include:
-
-* particle diameter
-* particle refractive index
-* surrounding medium refractive index
-* illumination wavelength
-* incident polarization
-* collection angle
-* numerical aperture
-* detector geometry
-* optical throughput
+The apply workflow then uses that saved payload as the authoritative source for
+which channel is calibrated and how the conversion should be interpreted.
 * detector responsivity
 
 For spherical particles, scattering is often modeled using Mie theory. Mie

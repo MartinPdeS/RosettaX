@@ -113,6 +113,9 @@ class Ids:
         peak_graph_colormap_log = f"{PAGE_NAME}-peak-graph-colormap-log"
         graph_height = f"{PAGE_NAME}-graph-height"
         default_marker_opacity = f"{PAGE_NAME}-default-marker-opacity"
+        show_preset_configuration = f"{PAGE_NAME}-show-preset-configuration"
+
+
 
     class NewProfile:
         """

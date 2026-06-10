@@ -14,7 +14,8 @@ from RosettaX.workflow.detector import (
     resolve_detector_angular_weights,
     resolve_detector_modeling_geometry_values,
 )
-from RosettaX.workflow.detector.configuration import _build_blocker_bar_numerical_aperture
+from RosettaX.workflow.detector.configuration import _build_blocker_bar_numerical_aperture, resolve_detector_configuration_values, resolve_detector_preset_wavelength_nm
+from RosettaX.workflow.scattering.model import ModelConfiguration
 from RosettaX.workflow.parameters.model import (
     SOLID_SPHERE_MODEL_NAME,
     CORE_SHELL_SPHERE_MODEL_NAME,
@@ -32,6 +33,77 @@ class Test_ModelConstants:
     def test_core_shell_sphere_model_name(self):
         """Test core-shell sphere model name constant."""
         assert CORE_SHELL_SPHERE_MODEL_NAME == "Core/Shell Sphere"
+
+
+class Test_DetectorPresetLoaderCatalog:
+    def test_loader_builds_brand_options_from_preset_metadata(self):
+        loader = DetectorPresetLoader()
+
+        option_values = {
+            option["value"]
+            for option in loader.load_brand_options()
+        }
+
+        assert "BD Biosciences" in option_values
+        assert "Apogee" in option_values
+        assert "Beckman Coulter Life Sciences" in option_values
+        assert "Custom" in option_values
+
+    def test_loader_builds_model_options_for_one_brand(self):
+        loader = DetectorPresetLoader()
+
+        bd_options = loader.load_model_options(
+            "BD Biosciences",
+        )
+
+        assert bd_options == [
+            {
+                "label": "FACSCanto II - FSC",
+                "value": "BD FACSCanto II FSC",
+            },
+            {
+                "label": "FACSCanto II - SSC",
+                "value": "BD FACSCanto II SSC",
+            },
+        ]
+
+    def test_loader_resolves_custom_brand_for_generic_detector(self):
+        loader = DetectorPresetLoader()
+
+        assert loader.resolve_preset_brand("Generic detector") == "Custom"
+
+    def test_loader_builds_trimmed_model_labels_for_apogee_brand(self):
+        loader = DetectorPresetLoader()
+
+        assert loader.load_model_options("Apogee") == [
+            {
+                "label": "Forward",
+                "value": "Apogee - Forward",
+            },
+            {
+                "label": "Side",
+                "value": "Apogee - Side",
+            },
+        ]
+
+
+class Test_ScattererPresetDefaults:
+    def test_scatterer_preset_options_start_with_no_preset(self):
+        assert ModelConfiguration.build_scatterer_preset_options()[0] == {
+            "label": "No preset",
+            "value": "",
+        }
+
+    def test_resolve_runtime_scatterer_preset_keeps_empty_value(self):
+        assert ModelConfiguration.resolve_runtime_scatterer_preset("") == ""
+
+    def test_no_preset_does_not_disable_manual_controls(self):
+        assert (
+            ModelConfiguration.scatterer_preset_disables_manual_controls(
+                preset_name="",
+            )
+            is False
+        )
 
 
 class Test_compute_model_for_rows:
@@ -389,10 +461,9 @@ class Test_compute_model_for_rows:
             'metric': 'x-minus-z',
             'keep': 'positive',
         }
-        assert preset_path.name == 'apogee_side.json'
-        assert preset_path.parent.name == 'presets'
-        assert preset_path.parent.parent.name == 'detector'
-        assert preset_path.parent.parent.parent.name == 'workflow'
+        assert apogee_side_preset['alias'] == ['apogee']
+        assert preset_path.name == 'detector_definitions.json'
+        assert preset_path.parent.name == 'assets'
 
     @patch('RosettaX.workflow.detector.configuration._DETECTOR_PRESET_LOADER.load_preset')
     def test_resolve_detector_angular_weights_applies_cache_and_blocker_geometry(self, mock_load_preset):
@@ -505,6 +576,37 @@ class Test_compute_model_for_rows:
 
         assert resolved_detector_cache_numerical_aperture == 0.0
         assert resolved_blocker_bar_numerical_aperture == 0.0
+
+    def test_resolve_detector_configuration_values_preserves_generic_detector_cache_geometry(self):
+        resolved_values = resolve_detector_configuration_values(
+            preset_name='Generic detector',
+            current_detector_numerical_aperture=1.2,
+            current_detector_cache_numerical_aperture=0.3,
+            current_blocker_bar_numerical_aperture=0.1,
+            current_detector_sampling=1000,
+            current_detector_phi_angle_degree=45.0,
+            current_detector_gamma_angle_degree=0.0,
+        )
+
+        assert resolved_values == (1.2, 0.3, 0.1, 1000, 45.0, 0.0)
+
+    def test_resolve_detector_preset_wavelength_uses_preset_value(self):
+        assert resolve_detector_preset_wavelength_nm(
+            preset_name='BD FACSCanto II SSC',
+            current_wavelength_nm=700.0,
+        ) == 488.0
+
+    def test_resolve_detector_preset_wavelength_keeps_generic_detector_editable(self):
+        assert resolve_detector_preset_wavelength_nm(
+            preset_name='Generic detector',
+            current_wavelength_nm=561.0,
+        ) == 561.0
+
+    def test_resolve_detector_preset_wavelength_keeps_backward_compatible_keyword(self):
+        assert resolve_detector_preset_wavelength_nm(
+            preset_name='Generic detector',
+            fallback_wavelength_nm=640.0,
+        ) == 640.0
 
     @patch('RosettaX.workflow.parameters.model.table')
     def test_compute_model_for_rows_parameter_types(self, mock_table, mock_logger):

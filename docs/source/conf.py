@@ -25,6 +25,8 @@ autodoc_mock_imports = [
     "numpy",
     "matplotlib",
     "numpydoc",
+    "dash_bootstrap_components",
+    "PyMieSim",
 ]
 
 
@@ -46,8 +48,8 @@ extensions = [
 napoleon_google_docstring = False
 napoleon_numpy_docstring = True
 
-html_logo = "_static/thumbnail.png"
-html_favicon = "_static/thumbnail.png"
+html_logo = "../../RosettaX/assets/logo_light.svg"
+html_favicon = "../../RosettaX/assets/logo_light.svg"
 
 
 sphinx_gallery_conf = {
@@ -97,7 +99,7 @@ binder_branch = f"v{major}.{minor}.x"
 
 html_theme_options = dict()
 
-html_theme_options["logo"] = dict(text=package_name, image="_static/thumbnail.png")
+html_theme_options["logo"] = dict(text=package_name, image="../../RosettaX/assets/logo_light.svg")
 html_theme_options["show_nav_level"] = 0
 
 html_theme_options.update(
@@ -174,5 +176,6 @@ html_static_path = ["_static"]
 templates_path = ["_templates"]
 html_css_files = ["default.css"]
 epub_exclude_files = ["search.html"]
+suppress_warnings = ["config.cache"]
 
 # -

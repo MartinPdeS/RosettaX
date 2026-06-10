@@ -9,30 +9,30 @@ MIE_MODEL_OPTIONS: list[dict[str, str]] = [
 ]
 
 
-MEDIUM_REFRACTIVE_INDEX_PRESETS: list[dict[str, float]] = [
-    {"label": "Water 1.333", "value": 1.333},
-    {"label": "PBS 1.335", "value": 1.335},
+MEDIUM_REFRACTIVE_INDEX_PRESETS: list[dict[str, Any]] = [
+    {"label": "Water", "value": "water"},
+    {"label": "PBS", "value": "pbs"},
 ]
 
 
-PARTICLE_REFRACTIVE_INDEX_PRESETS: list[dict[str, float]] = [
-    {"label": "Polystyrene 1.59", "value": 1.59},
-    {"label": "Silica 1.45", "value": 1.45},
-    {"label": "PMMA 1.49", "value": 1.49},
-    {"label": "Lipid 1.47", "value": 1.47},
+PARTICLE_REFRACTIVE_INDEX_PRESETS: list[dict[str, Any]] = [
+    {"label": "Polystyrene", "value": "polystyrene"},
+    {"label": "Silica", "value": "silica"},
+    {"label": "PMMA", "value": "pmma"},
+    {"label": "Lipid", "value": "lipid"},
 ]
 
 
-CORE_REFRACTIVE_INDEX_PRESETS: list[dict[str, float]] = [
-    {"label": "Soybean oil 1.47", "value": 1.47},
-    {"label": "Polystyrene 1.59", "value": 1.59},
-    {"label": "Silica 1.45", "value": 1.45},
+CORE_REFRACTIVE_INDEX_PRESETS: list[dict[str, Any]] = [
+    {"label": "Soybean oil", "value": "soybean_oil"},
+    {"label": "Polystyrene", "value": "polystyrene"},
+    {"label": "Silica", "value": "silica"},
 ]
 
 
-SHELL_REFRACTIVE_INDEX_PRESETS: list[dict[str, float]] = [
-    {"label": "Phospholipid 1.46", "value": 1.46},
-    {"label": "Waterlike 1.33", "value": 1.33},
+SHELL_REFRACTIVE_INDEX_PRESETS: list[dict[str, Any]] = [
+    {"label": "Phospholipid", "value": "phospholipid"},
+    {"label": "Waterlike", "value": "waterlike"},
 ]
 
 

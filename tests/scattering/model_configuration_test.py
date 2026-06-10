@@ -3,6 +3,8 @@
 import sys
 import types
 
+import pytest
+
 
 class _DashBootstrapComponentsSentinel:
     def __call__(self, *args, **kwargs):
@@ -66,37 +68,84 @@ class Test_ScatteringModelConfigurationScattererPresets:
         result = ModelConfiguration.resolve_scatterer_preset_values(
             preset_name=CUSTOM_SCATTERER_PRESET_NAME,
             current_mie_model="Solid Sphere",
+            current_medium_refractive_index_source="water",
             current_medium_refractive_index=1.335,
+            current_particle_refractive_index_source="polystyrene",
             current_particle_refractive_index=1.45,
+            current_core_refractive_index_source="silica",
             current_core_refractive_index=1.47,
+            current_shell_refractive_index_source="phospholipid",
             current_shell_refractive_index=1.46,
+            wavelength_nm=488.0,
         )
 
         assert result == (
             "Solid Sphere",
+            "water",
             1.335,
+            "polystyrene",
             1.45,
+            "silica",
             1.47,
+            "phospholipid",
             1.46,
         )
 
-    def test_rosetta_mix_preset_applies_expected_values(self):
-        result = ModelConfiguration.resolve_scatterer_preset_values(
+    def test_rosetta_mix_preset_applies_wavelength_aware_material_values(self):
+        result_488 = ModelConfiguration.resolve_scatterer_preset_values(
             preset_name=ROSETTA_MIX_PRESET_NAME,
             current_mie_model="Solid Sphere",
+            current_medium_refractive_index_source=None,
             current_medium_refractive_index=1.0,
+            current_particle_refractive_index_source=None,
             current_particle_refractive_index=1.0,
+            current_core_refractive_index_source=None,
             current_core_refractive_index=1.0,
+            current_shell_refractive_index_source=None,
             current_shell_refractive_index=1.0,
+            wavelength_nm=488.0,
         )
 
-        assert result == (
-            "Solid Sphere",
-            1.333,
-            1.59,
-            1.47,
-            1.46,
+        result_700 = ModelConfiguration.resolve_scatterer_preset_values(
+            preset_name=ROSETTA_MIX_PRESET_NAME,
+            current_mie_model="Solid Sphere",
+            current_medium_refractive_index_source=None,
+            current_medium_refractive_index=1.0,
+            current_particle_refractive_index_source=None,
+            current_particle_refractive_index=1.0,
+            current_core_refractive_index_source=None,
+            current_core_refractive_index=1.0,
+            current_shell_refractive_index_source=None,
+            current_shell_refractive_index=1.0,
+            wavelength_nm=700.0,
         )
+
+        assert result_488[0] == "Solid Sphere"
+        assert result_488[1] == "water"
+        assert result_488[3] == "polystyrene"
+        assert result_488[5] == "polystyrene"
+        assert result_488[7] == "phospholipid"
+        assert result_488[2] > result_700[2] > 1.32
+        assert result_488[4] > result_700[4] > 1.58
+        assert result_488[6] > result_700[6] > 1.58
+        assert result_488[8] > result_700[8] > 1.45
+
+    def test_apply_refractive_index_preset_recomputes_material_value_from_wavelength(self):
+        value_488 = ModelConfiguration.apply_refractive_index_preset(
+            preset_value="water",
+            wavelength_nm=488.0,
+            current_value=1.0,
+        )
+
+        value_700 = ModelConfiguration.apply_refractive_index_preset(
+            preset_value="water",
+            wavelength_nm=700.0,
+            current_value=1.0,
+        )
+
+        assert value_488 == pytest.approx(1.3372, abs=1e-3)
+        assert value_700 == pytest.approx(1.3308, abs=1e-3)
+        assert value_488 > value_700
 
     def test_custom_scatterer_preset_does_not_lock_controls(self):
         assert ModelConfiguration.scatterer_preset_disables_manual_controls(

@@ -48,7 +48,6 @@ Repository = "https://github.com/MartinPdeS/RosettaX.git"
 [tool.setuptools.package-data]
 RosettaX = [
     "assets/*",
-    "workflow/detector/presets/*.json",
     "presets/**/*.json",
     "profiles/**/*.json",
     "calibrations/**/*.json",

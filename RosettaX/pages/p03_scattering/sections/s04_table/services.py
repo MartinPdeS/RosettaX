@@ -30,11 +30,13 @@ class ScatteringCalibrationStandardTable:
         resolved_scatterer_preset = scattering.ModelConfiguration.resolve_runtime_scatterer_preset(
             runtime_config.get_str(
                 "particle_model.scatterer_preset",
-                default=scattering.CUSTOM_SCATTERER_PRESET_NAME,
+                default="",
             )
         )
 
-        if resolved_scatterer_preset != scattering.CUSTOM_SCATTERER_PRESET_NAME:
+        if scattering.ModelConfiguration.scatterer_preset_disables_manual_controls(
+            preset_name=resolved_scatterer_preset,
+        ):
             preset_table_state = scattering.ModelConfiguration.build_table_state_from_scatterer_preset(
                 preset_name=resolved_scatterer_preset,
             )
@@ -111,7 +113,9 @@ class ScatteringCalibrationStandardTable:
             scatterer_preset,
         )
 
-        if resolved_scatterer_preset != scattering.CUSTOM_SCATTERER_PRESET_NAME:
+        if scattering.ModelConfiguration.scatterer_preset_disables_manual_controls(
+            preset_name=resolved_scatterer_preset,
+        ):
             preset_table_state = scattering.ModelConfiguration.build_table_state_from_scatterer_preset(
                 preset_name=resolved_scatterer_preset,
                 current_rows=current_rows,

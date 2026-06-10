@@ -7,6 +7,7 @@ import dash
 import plotly.graph_objs as go
 
 from RosettaX.pages.p02_fluorescence.state import FluorescencePageState
+from RosettaX.utils import RuntimeConfig, styling
 from . import services
 
 
@@ -19,8 +20,34 @@ def register_callbacks(section) -> None:
     """
     logger.debug("Registering calibration callbacks.")
 
+    _register_graph_style_callback(section)
     _register_graph_render_callback(section)
     _register_calibration_workflow_callback(section)
+
+
+def _register_graph_style_callback(section) -> None:
+    """
+    Register the graph style callback.
+    """
+
+    @dash.callback(
+        dash.Output(section.ids.graph_calibration, "style"),
+        dash.Input("runtime-config-store", "data"),
+        prevent_initial_call=False,
+    )
+    def update_calibration_graph_style(
+        runtime_config_data: Any,
+    ) -> dict[str, Any]:
+        runtime_config = RuntimeConfig.from_dict(
+            runtime_config_data if isinstance(runtime_config_data, dict) else None
+        )
+
+        return {
+            **styling.PLOTLY_GRAPH_STYLE,
+            "height": runtime_config.get_graph_height(default="850px"),
+            "width": "100%",
+            "display": "block",
+        }
 
 
 def _register_graph_render_callback(section) -> None:

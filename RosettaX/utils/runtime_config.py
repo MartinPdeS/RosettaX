@@ -138,6 +138,7 @@ class RuntimeConfig:
         "apply_calibration.visualization.show_grid_by_default": "visualization.show_grid_by_default",
         "misc.ui.theme_mode": "ui.theme_mode",
         "misc.ui.show_graphs": "ui.show_graphs",
+        "misc.ui.show_preset_configuration": "ui.show_preset_configuration",
         "scattering_calibration.target_mie_relation_xscale": "calibration.target_mie_relation_xscale",
         "scattering_calibration.target_mie_relation_yscale": "calibration.target_mie_relation_yscale",
         # Older profiles stored the scattering peak process under calibration.
@@ -160,6 +161,11 @@ class RuntimeConfig:
             expected_type=bool,
             default=True,
             description="Whether graphs are shown by default.",
+        ),
+        "ui.show_preset_configuration": RuntimeConfigField(
+            expected_type=bool,
+            default=False,
+            description="Whether preset-owned configuration values remain visible in the UI.",
         ),
         # ---------------------------------------------------------------------
         # Files
@@ -344,7 +350,7 @@ class RuntimeConfig:
         ),
         "particle_model.scatterer_preset": RuntimeConfigField(
             expected_type=str,
-            default="Custom",
+            default="",
             description="Default scatterer preset for the scattering calibration page.",
         ),
         "particle_model.particle_refractive_index": RuntimeConfigField(
@@ -1120,6 +1126,17 @@ class RuntimeConfig:
         Convenience accessor for graph visibility preference.
         """
         return self.get_bool("ui.show_graphs", default=default)
+
+    def get_graph_height(self, default: str = "850px") -> str:
+        """
+        Convenience accessor for graph height CSS value.
+        """
+        graph_height = self.get_str(
+            "visualization.graph_height",
+            default=default,
+        )
+
+        return graph_height if graph_height else default
 
     def update(self, **kwargs: Any) -> None:
         """

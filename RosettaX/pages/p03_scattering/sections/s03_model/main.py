@@ -137,7 +137,7 @@ class Model:
                         "flexWrap": "wrap",
                         "overflow": "visible",
                     },
-                )
+                ),
             ],
             style=ui_forms.build_workflow_section_body_style(),
         )
@@ -148,19 +148,40 @@ class Model:
         """
         return dash.html.Div(
             [
-                self._build_numeric_input_row(
-                    label="Wavelength (nm):",
-                    component_id=self.ids.wavelength_nm,
-                    placeholder="Wavelength (nm)",
-                    value=self.default_values.wavelength_nm,
-                    min_value=1,
-                    step=1,
-                    width_px=220,
-                ),
                 ui_forms.build_inline_row(
                     label="Detector preset:",
                     control=dash.html.Div(
                         [
+                            dash.dcc.Dropdown(
+                                id=self.ids.detector_configuration_brand,
+                                options=[
+                                    {
+                                        "label": "No preset",
+                                        "value": "",
+                                    },
+                                    *self.model_configuration.build_detector_preset_brand_options(),
+                                ],
+                                value="",
+                                placeholder="Select brand",
+                                clearable=False,
+                                searchable=False,
+                                style={
+                                    "width": "220px",
+                                },
+                            ),
+                            dash.dcc.Dropdown(
+                                id=self.ids.detector_configuration_model,
+                                options=[],
+                                value=None,
+                                placeholder="Select model",
+                                clearable=True,
+                                searchable=False,
+                                disabled=True,
+                                style={
+                                    "width": "260px",
+                                    "marginLeft": "10px",
+                                },
+                            ),
                             dash.dcc.Dropdown(
                                 id=self.ids.detector_configuration_preset,
                                 options=[
@@ -171,13 +192,12 @@ class Model:
                                     *self.model_configuration.build_detector_preset_options(),
                                 ],
                                 value="",
-                                placeholder="Select detector preset",
                                 clearable=True,
                                 searchable=False,
                                 persistence=True,
                                 persistence_type="session",
                                 style={
-                                    "width": "320px",
+                                    "display": "none",
                                 },
                             ),
                             dbc.Button(
@@ -195,10 +215,10 @@ class Model:
                             ),
                             dbc.Tooltip(
                                 (
-                                    "Use a detector preset to load a predefined "
-                                    "collection geometry. Leave the preset empty to "
-                                    "keep the detector unconfigured, select Generic "
-                                    "detector to edit parameters manually, or click "
+                                    "Choose a detector brand first, then one of the supported "
+                                    "models to load a predefined collection geometry. "
+                                    "Leave the brand on No preset to keep the detector unconfigured, "
+                                    "select Custom to edit a Generic detector manually, or click "
                                     "Auto-detect to try matching the uploaded FCS "
                                     "metadata to a known preset."
                                 ),
@@ -236,6 +256,15 @@ class Model:
                 ),
                 dash.html.Div(
                     [
+                        self._build_numeric_input_row(
+                            label="Wavelength (nm):",
+                            component_id=self.ids.wavelength_nm,
+                            placeholder="Wavelength (nm)",
+                            value=self.default_values.wavelength_nm,
+                            min_value=1,
+                            step=1,
+                            width_px=220,
+                        ),
                         self._build_numeric_input_row(
                             label="Detector NA:",
                             component_id=self.ids.detector_numerical_aperture,
@@ -443,7 +472,7 @@ class Model:
                             dash.dcc.Dropdown(
                                 id=self.ids.scatterer_preset,
                                 options=self.model_configuration.build_scatterer_preset_options(),
-                                value=self.model_configuration.custom_scatterer_preset_name,
+                                value="",
                                 clearable=False,
                                 searchable=False,
                                 persistence=True,
@@ -479,47 +508,55 @@ class Model:
                         "overflow": "visible",
                     },
                 ),
-                ui_forms.build_inline_row(
-                    label="Particle type:",
-                    control=dash.dcc.Dropdown(
-                        id=self.ids.mie_model,
-                        options=self.model_configuration.mie_model_options,
-                        value=self.default_values.mie_model,
-                        clearable=False,
-                        searchable=False,
-                        persistence=True,
-                        persistence_type="session",
-                        style={
-                            "width": "220px",
-                        },
-                    ),
-                    margin_top=False,
-                    row_style_overrides={
-                        "overflow": "visible",
-                    },
-                    control_wrapper_style_overrides={
-                        "overflow": "visible",
-                    },
-                ),
-                self._refractive_index_picker(
-                    label="Medium refractive index:",
-                    preset_id=self.ids.medium_refractive_index_source,
-                    value_id=self.ids.medium_refractive_index_custom,
-                    default_value=self.default_values.medium_refractive_index,
-                    preset_options=self.model_configuration.medium_refractive_index_presets,
-                ),
                 dash.html.Div(
-                    self._build_solid_sphere_parameters_block(),
-                    id=self.ids.solid_sphere_container,
-                    style=self._build_parameter_group_style(
+                    [
+                        ui_forms.build_inline_row(
+                            label="Particle type:",
+                            control=dash.dcc.Dropdown(
+                                id=self.ids.mie_model,
+                                options=self.model_configuration.mie_model_options,
+                                value=self.default_values.mie_model,
+                                clearable=False,
+                                searchable=False,
+                                persistence=True,
+                                persistence_type="session",
+                                style={
+                                    "width": "220px",
+                                },
+                            ),
+                            margin_top=False,
+                            row_style_overrides={
+                                "overflow": "visible",
+                            },
+                            control_wrapper_style_overrides={
+                                "overflow": "visible",
+                            },
+                        ),
+                        self._refractive_index_picker(
+                            label="Medium refractive index:",
+                            preset_id=self.ids.medium_refractive_index_source,
+                            value_id=self.ids.medium_refractive_index_custom,
+                            default_value=self.default_values.medium_refractive_index,
+                            preset_options=self.model_configuration.medium_refractive_index_presets,
+                        ),
+                        dash.html.Div(
+                            self._build_solid_sphere_parameters_block(),
+                            id=self.ids.solid_sphere_container,
+                            style=self._build_parameter_group_style(
+                                is_visible=True,
+                            ),
+                        ),
+                        dash.html.Div(
+                            self._build_core_shell_parameters_block(),
+                            id=self.ids.core_shell_container,
+                            style=self._build_parameter_group_style(
+                                is_visible=False,
+                            ),
+                        ),
+                    ],
+                    id=self.ids.particle_configuration_custom_values_container,
+                    style=self._build_preset_configuration_container_style(
                         is_visible=True,
-                    ),
-                ),
-                dash.html.Div(
-                    self._build_core_shell_parameters_block(),
-                    id=self.ids.core_shell_container,
-                    style=self._build_parameter_group_style(
-                        is_visible=False,
                     ),
                 ),
             ],
@@ -545,6 +582,73 @@ class Model:
             "gap": "12px",
             "overflow": "visible",
         }
+
+    @staticmethod
+    def _build_detector_configuration_custom_values_style(
+        *,
+        is_visible: bool,
+    ) -> dict[str, str]:
+        return {
+            "display": "block" if is_visible else "none",
+            "overflow": "visible",
+        }
+
+    @staticmethod
+    def _build_preset_configuration_container_style(
+        *,
+        is_visible: bool,
+    ) -> dict[str, str]:
+        return {
+            "display": "flex" if is_visible else "none",
+            "flexDirection": "column",
+            "gap": "12px",
+            "overflow": "visible",
+        }
+
+    @staticmethod
+    def _resolve_show_preset_configuration(
+        runtime_config_data: Any,
+    ) -> bool:
+        runtime_config = RuntimeConfig.from_dict(
+            runtime_config_data if isinstance(runtime_config_data, dict) else None
+        )
+
+        return runtime_config.get_bool(
+            "ui.show_preset_configuration",
+            default=False,
+        )
+
+    def _should_show_detector_preset_configuration(
+        self,
+        *,
+        preset_name: Any,
+        show_preset_configuration: bool,
+    ) -> bool:
+        normalized_preset_name = str(preset_name or "").strip()
+
+        if (
+            normalized_preset_name
+            == self.model_configuration.custom_detector_preset_name
+        ):
+            return True
+
+        return bool(show_preset_configuration and normalized_preset_name)
+
+    def _should_show_scatterer_preset_configuration(
+        self,
+        *,
+        preset_name: Any,
+        show_preset_configuration: bool,
+    ) -> bool:
+        normalized_preset_name = str(preset_name or "").strip()
+
+        if (
+            normalized_preset_name
+            == self.model_configuration.custom_scatterer_preset_name
+        ):
+            return True
+
+        return bool(show_preset_configuration and normalized_preset_name)
 
     def _build_solid_sphere_parameters_block(self) -> list[Any]:
         """
@@ -819,19 +923,32 @@ class Model:
                 )
             )
 
+            resolved_wavelength_nm = self.model_configuration.resolve_detector_preset_wavelength_nm(
+                preset_name=detector_preset,
+                current_wavelength_nm=resolved_values[5],
+            )
+
             resolved_values = (
                 *resolved_values[:6],
                 *resolved_detector_values,
             )
 
+            resolved_values = (
+                *resolved_values[:5],
+                resolved_wavelength_nm,
+                *resolved_values[6:],
+            )
+
             scatterer_preset = self.model_configuration.resolve_runtime_scatterer_preset(
                 runtime_config.get_str(
                     "particle_model.scatterer_preset",
-                    default=self.model_configuration.custom_scatterer_preset_name,
+                    default="",
                 )
             )
 
-            if scatterer_preset != self.model_configuration.custom_scatterer_preset_name:
+            if self.model_configuration.scatterer_preset_disables_manual_controls(
+                preset_name=scatterer_preset,
+            ):
                 (
                     resolved_mie_model,
                     resolved_medium_refractive_index,
@@ -894,19 +1011,29 @@ class Model:
             dash.Output(self.ids.shell_refractive_index_custom, "value", allow_duplicate=True),
             dash.Input(self.ids.scatterer_preset, "value"),
             dash.State(self.ids.mie_model, "value"),
+            dash.State(self.ids.medium_refractive_index_source, "value"),
             dash.State(self.ids.medium_refractive_index_custom, "value"),
+            dash.State(self.ids.particle_refractive_index_source, "value"),
             dash.State(self.ids.particle_refractive_index_custom, "value"),
+            dash.State(self.ids.core_refractive_index_source, "value"),
             dash.State(self.ids.core_refractive_index_custom, "value"),
+            dash.State(self.ids.shell_refractive_index_source, "value"),
             dash.State(self.ids.shell_refractive_index_custom, "value"),
+            dash.State(self.ids.wavelength_nm, "value"),
             prevent_initial_call=True,
         )
         def apply_scatterer_preset(
             preset_name: Any,
             current_mie_model: Any,
+            current_medium_refractive_index_source: Any,
             current_medium_refractive_index: Any,
+            current_particle_refractive_index_source: Any,
             current_particle_refractive_index: Any,
+            current_core_refractive_index_source: Any,
             current_core_refractive_index: Any,
+            current_shell_refractive_index_source: Any,
             current_shell_refractive_index: Any,
+            wavelength_nm: Any,
         ) -> tuple[Any, ...]:
             logger.debug(
                 "apply_scatterer_preset called with triggered_id=%r preset_name=%r",
@@ -916,28 +1043,37 @@ class Model:
 
             (
                 resolved_mie_model,
+                resolved_medium_refractive_index_source,
                 resolved_medium_refractive_index,
+                resolved_particle_refractive_index_source,
                 resolved_particle_refractive_index,
+                resolved_core_refractive_index_source,
                 resolved_core_refractive_index,
+                resolved_shell_refractive_index_source,
                 resolved_shell_refractive_index,
             ) = self.model_configuration.resolve_scatterer_preset_values(
                 preset_name=preset_name,
                 current_mie_model=current_mie_model,
+                current_medium_refractive_index_source=current_medium_refractive_index_source,
                 current_medium_refractive_index=current_medium_refractive_index,
+                current_particle_refractive_index_source=current_particle_refractive_index_source,
                 current_particle_refractive_index=current_particle_refractive_index,
+                current_core_refractive_index_source=current_core_refractive_index_source,
                 current_core_refractive_index=current_core_refractive_index,
+                current_shell_refractive_index_source=current_shell_refractive_index_source,
                 current_shell_refractive_index=current_shell_refractive_index,
+                wavelength_nm=wavelength_nm,
             )
 
             return (
                 resolved_mie_model,
-                None,
+                resolved_medium_refractive_index_source,
                 resolved_medium_refractive_index,
-                None,
+                resolved_particle_refractive_index_source,
                 resolved_particle_refractive_index,
-                None,
+                resolved_core_refractive_index_source,
                 resolved_core_refractive_index,
-                None,
+                resolved_shell_refractive_index_source,
                 resolved_shell_refractive_index,
             )
 
@@ -979,19 +1115,36 @@ class Model:
         """
 
         @dash.callback(
+            dash.Output(
+                self.ids.particle_configuration_custom_values_container,
+                "style",
+            ),
             dash.Output(self.ids.solid_sphere_container, "style"),
             dash.Output(self.ids.core_shell_container, "style"),
+            dash.Input("runtime-config-store", "data"),
             dash.Input(self.ids.mie_model, "value"),
+            dash.Input(self.ids.scatterer_preset, "value"),
             prevent_initial_call=False,
         )
         def toggle_parameter_blocks(
+            runtime_config_data: Any,
             mie_model_value: Optional[str],
-        ) -> tuple[dict[str, str], dict[str, str]]:
+            scatterer_preset: Any,
+        ) -> tuple[dict[str, str], dict[str, str], dict[str, str]]:
             resolved_mie_model = self.model_configuration.resolve_mie_model(
                 mie_model_value,
             )
+            show_preset_configuration = self._resolve_show_preset_configuration(
+                runtime_config_data,
+            )
 
             resolved_styles = (
+                self._build_preset_configuration_container_style(
+                    is_visible=self._should_show_scatterer_preset_configuration(
+                        preset_name=scatterer_preset,
+                        show_preset_configuration=show_preset_configuration,
+                    ),
+                ),
                 self._build_parameter_group_style(
                     is_visible=resolved_mie_model != "Core/Shell Sphere",
                 ),
@@ -1001,8 +1154,10 @@ class Model:
             )
 
             logger.debug(
-                "toggle_parameter_blocks called with mie_model_value=%r styles=%r",
+                "toggle_parameter_blocks called with mie_model_value=%r scatterer_preset=%r show_preset_configuration=%r styles=%r",
                 mie_model_value,
+                scatterer_preset,
+                show_preset_configuration,
                 resolved_styles,
             )
 
@@ -1020,15 +1175,18 @@ class Model:
                 allow_duplicate=True,
             ),
             dash.Input(self.ids.medium_refractive_index_source, "value"),
+            dash.Input(self.ids.wavelength_nm, "value"),
             dash.State(self.ids.medium_refractive_index_custom, "value"),
             prevent_initial_call=True,
         )
         def apply_medium_preset(
             preset_value: Any,
+            wavelength_nm: Any,
             current_value: Any,
         ) -> Any:
             return self.model_configuration.apply_refractive_index_preset(
                 preset_value=preset_value,
+                wavelength_nm=wavelength_nm,
                 current_value=current_value,
             )
 
@@ -1039,15 +1197,18 @@ class Model:
                 allow_duplicate=True,
             ),
             dash.Input(self.ids.particle_refractive_index_source, "value"),
+            dash.Input(self.ids.wavelength_nm, "value"),
             dash.State(self.ids.particle_refractive_index_custom, "value"),
             prevent_initial_call=True,
         )
         def apply_particle_preset(
             preset_value: Any,
+            wavelength_nm: Any,
             current_value: Any,
         ) -> Any:
             return self.model_configuration.apply_refractive_index_preset(
                 preset_value=preset_value,
+                wavelength_nm=wavelength_nm,
                 current_value=current_value,
             )
 
@@ -1058,15 +1219,18 @@ class Model:
                 allow_duplicate=True,
             ),
             dash.Input(self.ids.core_refractive_index_source, "value"),
+            dash.Input(self.ids.wavelength_nm, "value"),
             dash.State(self.ids.core_refractive_index_custom, "value"),
             prevent_initial_call=True,
         )
         def apply_core_preset(
             preset_value: Any,
+            wavelength_nm: Any,
             current_value: Any,
         ) -> Any:
             return self.model_configuration.apply_refractive_index_preset(
                 preset_value=preset_value,
+                wavelength_nm=wavelength_nm,
                 current_value=current_value,
             )
 
@@ -1077,15 +1241,18 @@ class Model:
                 allow_duplicate=True,
             ),
             dash.Input(self.ids.shell_refractive_index_source, "value"),
+            dash.Input(self.ids.wavelength_nm, "value"),
             dash.State(self.ids.shell_refractive_index_custom, "value"),
             prevent_initial_call=True,
         )
         def apply_shell_preset(
             preset_value: Any,
+            wavelength_nm: Any,
             current_value: Any,
         ) -> Any:
             return self.model_configuration.apply_refractive_index_preset(
                 preset_value=preset_value,
+                wavelength_nm=wavelength_nm,
                 current_value=current_value,
             )
 
@@ -1093,6 +1260,76 @@ class Model:
         """
         Register detector configuration callbacks.
         """
+
+        @dash.callback(
+            dash.Output(self.ids.detector_configuration_brand, "value"),
+            dash.Input(self.ids.detector_configuration_preset, "value"),
+            dash.State(self.ids.detector_configuration_brand, "value"),
+            prevent_initial_call=False,
+        )
+        def sync_detector_configuration_brand_from_preset(
+            preset_name: Any,
+            current_brand: Any,
+        ) -> str:
+            resolved_brand = self.model_configuration.resolve_detector_preset_brand(
+                preset_name,
+            )
+
+            if resolved_brand:
+                return resolved_brand
+
+            return str(current_brand or "").strip()
+
+        @dash.callback(
+            dash.Output(self.ids.detector_configuration_model, "options"),
+            dash.Output(self.ids.detector_configuration_model, "value"),
+            dash.Output(self.ids.detector_configuration_model, "disabled"),
+            dash.Input(self.ids.detector_configuration_brand, "value"),
+            dash.State(self.ids.detector_configuration_preset, "value"),
+            dash.State(self.ids.detector_configuration_model, "value"),
+            prevent_initial_call=False,
+        )
+        def sync_detector_configuration_models_for_brand(
+            brand_name: Any,
+            current_preset_name: Any,
+            current_model_name: Any,
+        ) -> tuple[list[dict[str, Any]], Any, bool]:
+            resolved_options = self.model_configuration.build_detector_preset_model_options(
+                brand_name,
+            )
+
+            if not resolved_options:
+                return [], None, True
+
+            option_values = {
+                option["value"]
+                for option in resolved_options
+            }
+
+            if current_preset_name in option_values:
+                resolved_value = current_preset_name
+            elif current_model_name in option_values:
+                resolved_value = current_model_name
+            elif len(resolved_options) == 1:
+                resolved_value = resolved_options[0]["value"]
+            else:
+                resolved_value = None
+
+            return resolved_options, resolved_value, False
+
+        @dash.callback(
+            dash.Output(
+                self.ids.detector_configuration_preset,
+                "value",
+                allow_duplicate=True,
+            ),
+            dash.Input(self.ids.detector_configuration_model, "value"),
+            prevent_initial_call=True,
+        )
+        def sync_detector_configuration_preset_from_model(
+            model_value: Any,
+        ) -> Any:
+            return model_value or ""
 
         @dash.callback(
             dash.Output(
@@ -1169,9 +1406,6 @@ class Model:
                 uploaded_fcs_path=uploaded_fcs_path,
                 selected_detector_channel=selected_detector_channel,
             )
-            detected_wavelength_nm = self.model_configuration.detect_wavelength_nm_from_detector_channel(
-                selected_detector_channel,
-            )
 
             if not detected_preset:
                 return (
@@ -1184,6 +1418,18 @@ class Model:
                     "warning",
                     True,
                 )
+
+            fallback_wavelength_nm = self.model_configuration.detect_wavelength_nm_from_detector_channel(
+                selected_detector_channel,
+            )
+            detected_wavelength_nm = self.model_configuration.resolve_detector_preset_wavelength_nm(
+                preset_name=detected_preset,
+                current_wavelength_nm=(
+                    fallback_wavelength_nm
+                    if fallback_wavelength_nm is not None
+                    else current_wavelength_nm
+                ),
+            )
 
             wavelength_status_text = ""
 
@@ -1207,10 +1453,12 @@ class Model:
                 self.ids.detector_configuration_custom_values_container,
                 "style",
             ),
+            dash.Input("runtime-config-store", "data"),
             dash.Input(self.ids.detector_configuration_preset, "value"),
             prevent_initial_call=False,
         )
         def toggle_detector_configuration_custom_values(
+            runtime_config_data: Any,
             preset_name: Any,
         ) -> dict[str, str]:
             logger.debug(
@@ -1218,11 +1466,53 @@ class Model:
                 preset_name,
             )
 
-            return self.model_configuration.resolve_detector_configuration_visibility_style(
-                preset_name=preset_name,
+            show_preset_configuration = self._resolve_show_preset_configuration(
+                runtime_config_data,
+            )
+
+            return self._build_detector_configuration_custom_values_style(
+                is_visible=self._should_show_detector_preset_configuration(
+                    preset_name=preset_name,
+                    show_preset_configuration=show_preset_configuration,
+                ),
             )
 
         @dash.callback(
+            dash.Output(self.ids.wavelength_nm, "disabled"),
+            dash.Output(self.ids.detector_numerical_aperture, "disabled"),
+            dash.Output(self.ids.detector_cache_numerical_aperture, "disabled"),
+            dash.Output(self.ids.blocker_bar_numerical_aperture, "disabled"),
+            dash.Output(self.ids.detector_sampling, "disabled"),
+            dash.Output(self.ids.detector_phi_angle_degree, "disabled"),
+            dash.Output(self.ids.detector_gamma_angle_degree, "disabled"),
+            dash.Input(self.ids.detector_configuration_preset, "value"),
+            prevent_initial_call=False,
+        )
+        def sync_detector_preset_disabled_state(
+            preset_name: Any,
+        ) -> tuple[bool, ...]:
+            normalized_preset_name = str(preset_name or "").strip()
+            is_locked = (
+                normalized_preset_name
+                != self.model_configuration.custom_detector_preset_name
+            )
+
+            return (
+                is_locked,
+                is_locked,
+                is_locked,
+                is_locked,
+                is_locked,
+                is_locked,
+                is_locked,
+            )
+
+        @dash.callback(
+            dash.Output(
+                self.ids.wavelength_nm,
+                "value",
+                allow_duplicate=True,
+            ),
             dash.Output(
                 self.ids.detector_numerical_aperture,
                 "value",
@@ -1254,6 +1544,7 @@ class Model:
                 allow_duplicate=True,
             ),
             dash.Input(self.ids.detector_configuration_preset, "value"),
+            dash.State(self.ids.wavelength_nm, "value"),
             dash.State(self.ids.detector_numerical_aperture, "value"),
             dash.State(self.ids.detector_cache_numerical_aperture, "value"),
             dash.State(self.ids.blocker_bar_numerical_aperture, "value"),
@@ -1264,13 +1555,14 @@ class Model:
         )
         def apply_detector_configuration_preset(
             preset_name: Any,
+            current_wavelength_nm: Any,
             current_detector_numerical_aperture: Any,
             current_detector_cache_numerical_aperture: Any,
             current_blocker_bar_numerical_aperture: Any,
             current_detector_sampling: Any,
             current_detector_phi_angle_degree: Any,
             current_detector_gamma_angle_degree: Any,
-        ) -> tuple[Any, Any, Any, Any, Any, Any]:
+        ) -> tuple[Any, Any, Any, Any, Any, Any, Any]:
             logger.debug(
                 "apply_detector_configuration_preset called with preset_name=%r",
                 preset_name,
@@ -1284,6 +1576,11 @@ class Model:
                 current_detector_sampling=current_detector_sampling,
                 current_detector_phi_angle_degree=current_detector_phi_angle_degree,
                 current_detector_gamma_angle_degree=current_detector_gamma_angle_degree,
+            )
+
+            resolved_wavelength_nm = self.model_configuration.resolve_detector_preset_wavelength_nm(
+                preset_name=preset_name,
+                current_wavelength_nm=current_wavelength_nm,
             )
 
             logger.debug(
@@ -1300,7 +1597,10 @@ class Model:
                 *resolved_values[2:],
             )
 
-            return resolved_values
+            return (
+                resolved_wavelength_nm,
+                *resolved_values,
+            )
 
         @dash.callback(
             dash.Output(

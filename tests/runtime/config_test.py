@@ -53,6 +53,7 @@ class Test_RuntimeConfig:
 
         assert exported_payload["ui"]["theme_mode"] == "dark"
         assert exported_payload["ui"]["show_graphs"] is True
+        assert exported_payload["ui"]["show_preset_configuration"] is False
 
         assert exported_payload["calibration"]["histogram_scale"] == "log"
         assert exported_payload["calibration"]["n_bins_for_plots"] == 256
@@ -67,6 +68,7 @@ class Test_RuntimeConfig:
         ] == pytest.approx(0.45)
 
         assert exported_payload["particle_model"]["mie_model"] == "Solid Sphere"
+        assert exported_payload["particle_model"]["scatterer_preset"] == ""
         assert exported_payload["particle_model"][
             "particle_refractive_index"
         ] == pytest.approx(1.45)
@@ -287,6 +289,34 @@ class Test_RuntimeConfig:
         )
 
         assert runtime_config.get_show_graphs(default=True) is False
+
+    def test_get_graph_height_uses_visualization_graph_height_path(self) -> None:
+        runtime_config = RuntimeConfig.from_dict(
+            {
+                "visualization": {
+                    "graph_height": "70vh",
+                }
+            }
+        )
+
+        assert runtime_config.get_graph_height(default="850px") == "70vh"
+
+    def test_get_bool_reads_ui_show_preset_configuration_path(self) -> None:
+        runtime_config = RuntimeConfig.from_dict(
+            {
+                "ui": {
+                    "show_preset_configuration": "enabled",
+                }
+            }
+        )
+
+        assert (
+            runtime_config.get_bool(
+                "ui.show_preset_configuration",
+                default=False,
+            )
+            is True
+        )
 
     def test_set_path_validates_known_choice(self) -> None:
         runtime_config = RuntimeConfig.from_dict({})

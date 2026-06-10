@@ -1,7 +1,8 @@
 {
   "ui": {
     "theme_mode": "light",
-    "show_graphs": true
+    "show_graphs": true,
+    "show_preset_configuration": false
   },
   "files": {
     "fluorescence_fcs_file_path": "",

@@ -113,33 +113,10 @@ class Test_DetectorAutoDetect:
 
         assert resolved_channel == "SSC-A"
 
-    def test_detect_detector_preset_from_uploaded_fcs_uses_rule_based_detector_preset(
+    def test_detect_detector_preset_from_uploaded_fcs_uses_preset_alias_field(
         self,
-        tmp_path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        rules_path = tmp_path / "detector_auto_detect_rules.json"
-        rules_path.write_text(
-            json.dumps(
-                {
-                    "schema_version": "1.0",
-                    "rules": [
-                        {
-                            "name": "CytoFLEX scattering",
-                            "instrument_aliases": ["cytoflex s"],
-                            "detector_preset": "Beckman Coulter CytoFLEX SSC",
-                        }
-                    ],
-                }
-            ),
-            encoding="utf-8",
-        )
-        monkeypatch.setattr(
-            detector_configuration,
-            "DETECTOR_AUTO_DETECT_RULES_PATH",
-            rules_path,
-        )
-
         metadata = build_metadata(
             instrument_name="Beckman Coulter CytoFLEX S",
             column_names=["FSC-A", "SSC-A", "FL1-A"],

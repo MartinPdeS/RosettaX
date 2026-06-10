@@ -316,6 +316,7 @@ class Sidebar:
                         self._nav_link("Scattering", "/scattering"),
                         self._nav_link("Apply calibration", "/calibrate"),
                         self._nav_link("Settings", "/settings"),
+                        self._nav_link("Documentation", "/documentation"),
                         self._nav_link("Help", "/help"),
                     ],
                     vertical=True,

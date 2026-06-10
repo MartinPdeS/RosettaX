@@ -1,7 +1,8 @@
 {
   "ui": {
     "theme_mode": "light",
-    "show_graphs": true
+    "show_graphs": true,
+    "show_preset_configuration": true
   },
   "files": {
     "fluorescence_fcs_file_path": "",
@@ -36,7 +37,7 @@
   },
   "particle_model": {
     "mie_model": "Solid Sphere",
-    "scatterer_preset": "Custom",
+    "scatterer_preset": "",
     "particle_refractive_index": 1.45,
     "core_refractive_index": 1.45,
     "shell_refractive_index": 1.4,

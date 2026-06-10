@@ -156,9 +156,9 @@ def detect_detector_preset_from_uploaded_fcs(
     """
     Detect one detector preset from uploaded FCS metadata and the selected peak detector.
 
-    Detection requires the currently selected peak detector channel. Explicit rule
-    mappings win first when they agree with that channel family, then the
-    instrument-and-channel heuristic runs.
+    Detection requires the currently selected peak detector channel. Preset
+    aliases from the detector catalog are scored first, then the remaining
+    preset metadata heuristic runs.
     """
     uploaded_fcs_path_string = clean_optional_string(
         uploaded_fcs_path,
@@ -179,17 +179,6 @@ def detect_detector_preset_from_uploaded_fcs(
             uploaded_fcs_path_string,
         )
         return None
-
-    matched_rule = resolve_detector_auto_detect_rule(
-        metadata=metadata,
-    )
-    rule_based_preset_name = resolve_rule_based_detector_preset(
-        matched_rule=matched_rule,
-        selected_detector_channel=selected_detector_channel_string,
-    )
-
-    if rule_based_preset_name:
-        return rule_based_preset_name
 
     return infer_detector_preset_from_metadata(
         metadata=metadata,
@@ -369,12 +358,21 @@ def score_detector_preset_match(
     ):
         return 0
 
+    alias_score = _score_detector_preset_alias_match(
+        instrument_name=instrument_name,
+        preset=preset,
+    )
+
+    if alias_score > 0:
+        score = alias_score
+    else:
+        score = 0
+
     field_weights = (
         ("instrument", 120),
         ("name", 100),
         ("manufacturer", 40),
     )
-    score = 0
 
     for field_name, field_weight in field_weights:
         field_value = clean_optional_string(
@@ -429,6 +427,74 @@ def score_detector_preset_match(
         score += 80
 
     return score
+
+
+def _score_detector_preset_alias_match(
+    *,
+    instrument_name: str,
+    preset: dict[str, Any],
+) -> int:
+    normalized_instrument_name = normalize_lookup_token(
+        instrument_name,
+    )
+    instrument_tokens = tokenize_lookup_text(
+        instrument_name,
+    )
+    best_score = 0
+
+    for alias_value in _iter_detector_preset_aliases(
+        preset,
+    ):
+        normalized_alias = normalize_lookup_token(
+            alias_value,
+        )
+
+        if not normalized_alias:
+            continue
+
+        if normalized_alias == normalized_instrument_name:
+            best_score = max(best_score, 260)
+            continue
+
+        if (
+            normalized_alias in normalized_instrument_name
+            or normalized_instrument_name in normalized_alias
+        ):
+            best_score = max(best_score, 220)
+            continue
+
+        shared_tokens = instrument_tokens & tokenize_lookup_text(alias_value)
+
+        if shared_tokens:
+            best_score = max(best_score, 180 + (10 * len(shared_tokens)))
+
+    return best_score
+
+
+def _iter_detector_preset_aliases(
+    preset: dict[str, Any],
+) -> tuple[str, ...]:
+    raw_aliases = preset.get("alias")
+
+    if raw_aliases in (None, ""):
+        return ()
+
+    if isinstance(raw_aliases, str):
+        alias_values = [raw_aliases]
+    elif isinstance(raw_aliases, (list, tuple, set)):
+        alias_values = list(raw_aliases)
+    else:
+        return ()
+
+    normalized_aliases: list[str] = []
+
+    for alias_value in alias_values:
+        cleaned_alias = clean_optional_string(alias_value)
+
+        if cleaned_alias and cleaned_alias not in normalized_aliases:
+            normalized_aliases.append(cleaned_alias)
+
+    return tuple(normalized_aliases)
 
 
 def classify_detector_channel_family(value: Any) -> str:
@@ -730,7 +796,7 @@ def resolve_detector_configuration_values(
     if detector_preset_is_custom(preset_name):
         resolved_custom_values = (
             current_detector_numerical_aperture,
-            0.0,
+            current_detector_cache_numerical_aperture,
             current_blocker_bar_numerical_aperture,
             current_detector_sampling,
             current_detector_phi_angle_degree,
@@ -790,6 +856,37 @@ def resolve_detector_configuration_values(
     )
 
     return resolved_values
+
+
+def resolve_detector_preset_wavelength_nm(
+    *,
+    preset_name: Any,
+    current_wavelength_nm: Any = None,
+    fallback_wavelength_nm: Any = None,
+) -> Any:
+    """
+    Resolve the wavelength owned by one detector preset.
+
+    Empty or custom presets keep the current wavelength so the user can edit it
+    manually when no fixed preset wavelength should apply.
+    """
+    resolved_current_wavelength_nm = current_wavelength_nm
+
+    if resolved_current_wavelength_nm is None:
+        resolved_current_wavelength_nm = fallback_wavelength_nm
+
+    if detector_preset_is_empty(preset_name) or detector_preset_is_custom(preset_name):
+        return resolved_current_wavelength_nm
+
+    preset = _DETECTOR_PRESET_LOADER.load_preset(
+        preset_name,
+    )
+
+    return _resolve_preset_value(
+        preset=preset,
+        key="wavelength_nm",
+        fallback=resolved_current_wavelength_nm,
+    )
 
 
 def resolve_detector_modeling_geometry_values(

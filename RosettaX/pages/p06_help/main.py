@@ -13,10 +13,10 @@ class HelpPage:
 
     Responsibilities
     ----------------
-    - Explain the three main RosettaX workflows.
-    - Provide quick entry points to workflow pages.
-    - Keep workflow guidance and troubleshooting separate from the home page.
-    - Present diagnostics information for debugging calibration issues.
+    - Provide a short getting-started surface for new users.
+    - Provide operational help when something looks wrong.
+    - Keep troubleshooting and diagnostics separate from the documentation page.
+    - Focus on debugging context rather than workflow orientation.
     """
 
     def __init__(
@@ -42,13 +42,7 @@ class HelpPage:
                         "height": "18px",
                     },
                 ),
-                self._quick_start_row(),
-                html.Div(
-                    style={
-                        "height": "18px",
-                    },
-                ),
-                self._workflow_help_row(),
+                self._support_scope_row(),
                 html.Div(
                     style={
                         "height": "18px",
@@ -88,9 +82,8 @@ class HelpPage:
                         ),
                         html.Div(
                             (
-                                "RosettaX is organized around three workflows: "
-                                "building fluorescence calibrations, building scattering "
-                                "calibrations, and applying saved calibrations to FCS files."
+                                "Use this page when you need the shortest route to getting started or when a fit, "
+                                "table, plot, sidebar state, or export looks wrong and you need debugging context."
                             ),
                             style={
                                 "fontSize": "1.06rem",
@@ -113,41 +106,45 @@ class HelpPage:
             header_font_size="1.02rem",
         )
 
-    def _quick_start_row(self) -> dbc.Row:
+    def _support_scope_row(self) -> dbc.Row:
         """
-        Build quick start and navigation cards.
+        Build support scope cards.
         """
         return dbc.Row(
             [
                 dbc.Col(
-                    self._quick_start_card(),
-                    lg=8,
+                    self._getting_started_card(),
+                    lg=4,
                 ),
                 dbc.Col(
-                    self._where_to_go_card(),
+                    self._when_to_use_help_card(),
+                    lg=4,
+                ),
+                dbc.Col(
+                    self._before_debugging_card(),
                     lg=4,
                 ),
             ],
             className="g-3",
         )
 
-    def _quick_start_card(self) -> dbc.Card:
+    def _getting_started_card(self) -> dbc.Card:
         """
-        Build the quick start card.
+        Build a quick getting-started card.
         """
         card = dbc.Card(
             [
                 dbc.CardHeader(
                     [
                         html.Div(
-                            "Quick start",
+                            "Getting started",
                             style={
                                 "fontWeight": "750",
                                 "fontSize": "1.02rem",
                             },
                         ),
                         html.Div(
-                            "The shortest path through the application.",
+                            "Use Help for first-run orientation. Use Documentation for internals.",
                             style=ui_forms.build_workflow_section_subtitle_style(),
                         ),
                     ]
@@ -158,42 +155,204 @@ class HelpPage:
                             [
                                 self._numbered_instruction(
                                     index=1,
-                                    title="Choose the workflow",
+                                    title="Choose the workflow first",
                                     description=(
-                                        "Open Fluorescence or Scattering when building a new "
-                                        "calibration. Open Apply calibration when reusing an "
-                                        "existing calibration."
+                                        "Fluorescence builds empirical intensity calibrations, scattering builds model-based "
+                                        "optical calibrations, and Apply calibration reuses a saved JSON on experimental files."
                                     ),
                                 ),
                                 self._numbered_instruction(
                                     index=2,
-                                    title="Upload the FCS file",
+                                    title="Inspect before fitting",
                                     description=(
-                                        "Use the calibration bead file for calibration workflows, "
-                                        "or one or more experimental files for the apply workflow."
+                                        "Look at the detector selection, histogram or peak graph, and calibration table before "
+                                        "treating the fit button as the real decision point."
                                     ),
                                 ),
                                 self._numbered_instruction(
                                     index=3,
-                                    title="Inspect intermediate outputs",
+                                    title="Save the JSON, then export with the PDF",
                                     description=(
-                                        "Check detector selections, peak positions, model parameters, "
-                                        "tables, and preview graphs before fitting or exporting."
+                                        "The calibration JSON is the reusable record. The PDF report explains one apply/export run."
+                                    ),
+                                ),
+                            ],
+                            style={
+                                "display": "flex",
+                                "flexDirection": "column",
+                                "gap": "10px",
+                            },
+                        ),
+                        html.Hr(
+                            style={
+                                "margin": "14px 0px",
+                                "opacity": 0.18,
+                            }
+                        ),
+                        html.Div(
+                            "Try RosettaX with sample files",
+                            style={
+                                "fontWeight": "700",
+                                "marginBottom": "6px",
+                            },
+                        ),
+                        html.Div(
+                            "Download a sample FCS file and matching saved calibrations to explore the workflows before using your own data.",
+                            style={
+                                "fontSize": "0.92rem",
+                                "opacity": 0.78,
+                                "marginBottom": "12px",
+                            },
+                        ),
+                        html.Div(
+                            [
+                                self._sample_download_item(
+                                    title="Sample FCS file",
+                                    description="Use this file to inspect detector columns and try the calibration pages.",
+                                    file_name="sample_fcs.fcs",
+                                ),
+                                self._sample_download_item(
+                                    title="Sample fluorescence calibration",
+                                    description="Load this JSON in Apply calibration to see the fluorescence export flow.",
+                                    file_name="sample_fluorescence_calibration.json",
+                                ),
+                                self._sample_download_item(
+                                    title="Sample scattering calibration",
+                                    description="Load this JSON in Apply calibration to try the scattering target-model workflow.",
+                                    file_name="sample_scatter_calibration.json.json",
+                                ),
+                            ],
+                            style={
+                                "display": "flex",
+                                "flexDirection": "column",
+                                "gap": "10px",
+                            },
+                        ),
+                    ],
+                    style={
+                        "padding": "16px",
+                    },
+                ),
+            ],
+            style={
+                "height": "100%",
+            },
+        )
+
+        return ui_forms.apply_workflow_section_card_style(
+            card=card,
+            header_font_weight="750",
+            header_font_size="1.02rem",
+        )
+
+    def _sample_download_item(
+        self,
+        *,
+        title: str,
+        description: str,
+        file_name: str,
+    ) -> html.Div:
+        """
+        Build one sample-download row.
+        """
+        return html.Div(
+            [
+                html.Div(
+                    [
+                        html.Div(
+                            title,
+                            style={
+                                "fontWeight": "700",
+                                "marginBottom": "2px",
+                            },
+                        ),
+                        html.Div(
+                            description,
+                            style={
+                                "fontSize": "0.9rem",
+                                "opacity": 0.74,
+                            },
+                        ),
+                    ],
+                    style={
+                        "flex": "1",
+                        "minWidth": "0",
+                    },
+                ),
+                html.A(
+                    dbc.Button(
+                        "Download",
+                        color="primary",
+                        outline=True,
+                        size="sm",
+                    ),
+                    href=f"/assets/{file_name}",
+                    download=file_name,
+                    style={
+                        "flex": "0 0 auto",
+                        "textDecoration": "none",
+                    },
+                ),
+            ],
+            style={
+                "display": "flex",
+                "gap": "12px",
+                "alignItems": "center",
+                "justifyContent": "space-between",
+                "padding": "10px 12px",
+                "border": "1px solid rgba(13, 110, 253, 0.14)",
+                "borderRadius": "10px",
+                "background": "rgba(13, 110, 253, 0.04)",
+            },
+        )
+
+    def _when_to_use_help_card(self) -> dbc.Card:
+        """
+        Build the help-scope card.
+        """
+        card = dbc.Card(
+            [
+                dbc.CardHeader(
+                    [
+                        html.Div(
+                            "When to use Help",
+                            style={
+                                "fontWeight": "750",
+                                "fontSize": "1.02rem",
+                            },
+                        ),
+                        html.Div(
+                            "This page is for first-run orientation and diagnosis, not deep technical reference.",
+                            style=ui_forms.build_workflow_section_subtitle_style(),
+                        ),
+                    ]
+                ),
+                dbc.CardBody(
+                    [
+                        html.Div(
+                            [
+                                self._numbered_instruction(
+                                    index=1,
+                                    title="Something behaved unexpectedly",
+                                    description=(
+                                        "Use Help when a detector list, peak result, fit, warning, "
+                                        "or export outcome does not match what you expected."
                                     ),
                                 ),
                                 self._numbered_instruction(
-                                    index=4,
-                                    title="Fit and save",
+                                    index=2,
+                                    title="You already know which page triggered it",
                                     description=(
-                                        "Create the calibration, inspect the fit, then save the JSON "
-                                        "payload for reuse."
+                                        "Documentation explains what RosettaX is doing under the hood. "
+                                        "Help stays focused on working out what to do next."
                                     ),
                                 ),
                                 self._numbered_instruction(
-                                    index=5,
-                                    title="Apply and export",
+                                    index=3,
+                                    title="You want the smallest useful debugging package",
                                     description=(
-                                        "Select a saved calibration and export calibrated FCS files."
+                                        "Use the troubleshooting and diagnostics sections below to "
+                                        "collect only the context needed to understand the issue."
                                     ),
                                 ),
                             ],
@@ -220,56 +379,49 @@ class HelpPage:
             header_font_size="1.02rem",
         )
 
-    def _where_to_go_card(self) -> dbc.Card:
+    def _before_debugging_card(self) -> dbc.Card:
         """
-        Build direct navigation card.
+        Build pre-debug checklist card.
         """
         card = dbc.Card(
             [
                 dbc.CardHeader(
                     [
                         html.Div(
-                            "Go directly to",
+                            "Before digging deeper",
                             style={
                                 "fontWeight": "750",
                                 "fontSize": "1.02rem",
                             },
                         ),
                         html.Div(
-                            "Open a workflow page.",
+                            "Check these first before treating the issue as larger than it is.",
                             style=ui_forms.build_workflow_section_subtitle_style(),
                         ),
                     ]
                 ),
                 dbc.CardBody(
                     [
-                        self._navigation_button(
-                            label="Fluorescence",
-                            href="/fluorescence",
-                            color="primary",
-                            button_id=self._id("fluorescence-link"),
-                        ),
-                        self._navigation_button(
-                            label="Scattering",
-                            href="/scattering",
-                            color="primary",
-                            button_id=self._id("scattering-link"),
-                            outline=True,
-                        ),
-                        self._navigation_button(
-                            label="Apply calibration",
-                            href="/calibrate",
-                            color="success",
-                            button_id=self._id("apply-link"),
-                            outline=True,
-                        ),
-                        self._navigation_button(
-                            label="Settings",
-                            href="/settings",
-                            color="secondary",
-                            button_id=self._id("settings-link"),
-                            outline=True,
-                            margin_bottom=False,
+                        html.Div(
+                            [
+                                self._checklist_item(
+                                    "Confirm the selected detector names before blaming the fit."
+                                ),
+                                self._checklist_item(
+                                    "Look at the most recent plot or table state, not only the final message."
+                                ),
+                                self._checklist_item(
+                                    "If export output looks wrong, inspect the saved calibration JSON and the PDF report together."
+                                ),
+                                self._checklist_item(
+                                    "For batch apply issues, check cross-file detector consistency first."
+                                ),
+                            ],
+                            style={
+                                "display": "flex",
+                                "flexDirection": "column",
+                                "gap": "10px",
+                            },
                         ),
                     ],
                     style={
@@ -288,175 +440,6 @@ class HelpPage:
             header_font_size="1.02rem",
         )
 
-    def _workflow_help_row(self) -> dbc.Row:
-        """
-        Build workflow specific help cards.
-        """
-        return dbc.Row(
-            [
-                dbc.Col(
-                    self._workflow_help_card(
-                        title="Fluorescence calibration",
-                        subtitle="MESF based fluorescence calibration.",
-                        description=(
-                            "Use this workflow when the bead populations have known "
-                            "fluorescence reference values."
-                        ),
-                        items=[
-                            "Upload the fluorescence bead FCS file.",
-                            "Select the detector channel used by the peak process.",
-                            "Detect or manually select bead population peaks.",
-                            "Review the MESF reference table.",
-                            "Create the fluorescence calibration and inspect the fit.",
-                            "Save the calibration JSON for reuse.",
-                        ],
-                        alert_text=(
-                            "If the fluorescence histogram looks messy, first verify "
-                            "the selected detector channel and the retained peak positions."
-                        ),
-                        alert_color="info",
-                    ),
-                    lg=4,
-                ),
-                dbc.Col(
-                    self._workflow_help_card(
-                        title="Scattering calibration",
-                        subtitle="Mie based scattering calibration.",
-                        description=(
-                            "Use this workflow when measured bead peak positions need "
-                            "to be linked to modeled scattering coupling."
-                        ),
-                        items=[
-                            "Upload the scattering calibration FCS file.",
-                            "Select the scattering detector or detector pair.",
-                            "Configure the optical and particle model.",
-                            "Fill or compute the calibration standard table.",
-                            "Fit the instrument response.",
-                            "Save the scattering calibration JSON.",
-                        ],
-                        alert_text=(
-                            "If the fit is unstable, check the detector selection, the "
-                            "particle model, and the standard table before changing the fit."
-                        ),
-                        alert_color="warning",
-                    ),
-                    lg=4,
-                ),
-                dbc.Col(
-                    self._workflow_help_card(
-                        title="Apply saved calibration",
-                        subtitle="Batch export calibrated FCS files.",
-                        description=(
-                            "Use this workflow when a calibration JSON already exists "
-                            "and should be applied to experimental files."
-                        ),
-                        items=[
-                            "Upload one or more input FCS files.",
-                            "Select a saved fluorescence or scattering calibration.",
-                            "For scattering, configure the target particle model.",
-                            "Choose extra raw channels to export unchanged.",
-                            "Run the apply and export step.",
-                            "Download the calibrated output files.",
-                        ],
-                        alert_text=(
-                            "For multi file export, uploaded files should have compatible "
-                            "detector names and a consistent FCS structure."
-                        ),
-                        alert_color="info",
-                    ),
-                    lg=4,
-                ),
-            ],
-            className="g-3",
-        )
-
-    def _workflow_help_card(
-        self,
-        *,
-        title: str,
-        subtitle: str,
-        description: str,
-        items: list[str],
-        alert_text: str,
-        alert_color: str,
-    ) -> dbc.Card:
-        """
-        Build a workflow help card.
-        """
-        return dbc.Card(
-            [
-                dbc.CardHeader(
-                    [
-                        html.Div(
-                            title,
-                            style={
-                                "fontWeight": "760",
-                                "fontSize": "1rem",
-                            },
-                        ),
-                        html.Div(
-                            subtitle,
-                            style={
-                                "fontSize": "0.84rem",
-                                "opacity": 0.72,
-                                "marginTop": "3px",
-                            },
-                        ),
-                    ],
-                    style={
-                        "background": "rgba(13, 110, 253, 0.06)",
-                        "borderBottom": "1px solid rgba(13, 110, 253, 0.16)",
-                        "padding": "12px 16px",
-                        "borderTopLeftRadius": "12px",
-                        "borderTopRightRadius": "12px",
-                    },
-                ),
-                dbc.CardBody(
-                    [
-                        html.P(
-                            description,
-                            style={
-                                "opacity": 0.82,
-                                "marginBottom": "14px",
-                            },
-                        ),
-                        html.Div(
-                            [
-                                self._checklist_item(
-                                    item,
-                                )
-                                for item in items
-                            ],
-                            style={
-                                "display": "flex",
-                                "flexDirection": "column",
-                                "gap": "8px",
-                                "marginBottom": "14px",
-                            },
-                        ),
-                        dbc.Alert(
-                            alert_text,
-                            color=alert_color,
-                            style={
-                                "marginBottom": "0px",
-                                "borderRadius": "10px",
-                                "fontSize": "0.9rem",
-                            },
-                        ),
-                    ],
-                    style={
-                        "padding": "16px",
-                    },
-                ),
-            ],
-            style={
-                "height": "100%",
-                "borderRadius": "12px",
-                "border": "1px solid rgba(13, 110, 253, 0.16)",
-                "boxShadow": "0 0.25rem 0.65rem rgba(0, 0, 0, 0.06)",
-                "overflow": "visible",
-            },
-        )
 
     def _troubleshooting_card(self) -> dbc.Card:
         """
@@ -848,32 +831,6 @@ class HelpPage:
                 "background": "rgba(128, 128, 128, 0.045)",
             },
         )
-
-    def _navigation_button(
-        self,
-        *,
-        label: str,
-        href: str,
-        color: str,
-        button_id: str,
-        outline: bool = False,
-        margin_bottom: bool = True,
-    ) -> dbc.Button:
-        """
-        Build one full width navigation button.
-        """
-        return dbc.Button(
-            label,
-            href=href,
-            id=button_id,
-            color=color,
-            outline=outline,
-            style={
-                "width": "100%",
-                "marginBottom": "10px" if margin_bottom else "0px",
-            },
-        )
-
 
 _page = HelpPage()
 layout = _page.layout
