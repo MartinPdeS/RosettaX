@@ -56,12 +56,6 @@ class HomePage:
                         "height": "18px",
                     },
                 ),
-                self._secondary_actions_card(),
-                html.Div(
-                    style={
-                        "height": "18px",
-                    },
-                ),
                 self._usage_metrics_card(metrics=metrics),
                 html.Div(
                     style={
@@ -102,6 +96,35 @@ class HomePage:
                                 "opacity": 0.86,
                                 "maxWidth": "980px",
                                 "marginBottom": "18px",
+                            },
+                        ),
+                        html.Div(
+                            [
+                                dbc.Button(
+                                    "Support Developer",
+                                    href=self.support_url,
+                                    color="warning",
+                                    target="_blank",
+                                    rel="noopener noreferrer",
+                                    style={
+                                        "fontWeight": "700",
+                                        "paddingLeft": "18px",
+                                        "paddingRight": "18px",
+                                    },
+                                ),
+                                html.Div(
+                                    "If RosettaX helps your work, support ongoing development and maintenance here.",
+                                    style={
+                                        "fontSize": "0.92rem",
+                                        "opacity": 0.8,
+                                    },
+                                ),
+                            ],
+                            style={
+                                "display": "flex",
+                                "alignItems": "center",
+                                "gap": "14px",
+                                "flexWrap": "wrap",
                             },
                         ),
                     ],

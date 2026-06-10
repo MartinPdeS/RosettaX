@@ -73,6 +73,27 @@ def _find_component_by_id(component, target_id: str):
     return _find_component_by_id(children, target_id)
 
 
+def _collect_text(component) -> list[str]:
+    if component is None:
+        return []
+
+    if isinstance(component, str):
+        return [component]
+
+    children = getattr(component, "children", None)
+
+    if children is None:
+        return []
+
+    if isinstance(children, (list, tuple)):
+        collected: list[str] = []
+        for child in children:
+            collected.extend(_collect_text(child))
+        return collected
+
+    return _collect_text(children)
+
+
 class Test_FluorescenceCalibrationLayout:
     def test_layout_includes_calibration_graph_component(self) -> None:
         section = Calibration(
@@ -186,6 +207,24 @@ class Test_DocumentationPage:
         assert page._id("calibration-files") in component_ids
         assert page._id("apply-checks") in component_ids
         assert page._id("reports") in component_ids
+
+
+class Test_HelpPage:
+    def test_layout_includes_horizontal_project_resources_card(self, monkeypatch) -> None:
+        monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
+
+        help_main = importlib.import_module("RosettaX.pages.p06_help.main")
+        page = help_main.HelpPage()
+
+        layout = page.layout()
+        text_nodes = _collect_text(layout)
+        hrefs = _collect_component_hrefs(layout)
+
+        assert "Project resources" in text_nodes
+        assert "Technical docs" in text_nodes
+        assert "Support Developer" in text_nodes
+        assert "/documentation" in hrefs
+        assert "https://github.com/MartinPdeS/RosettaX" in hrefs
 
 
 class Test_SidebarNavigation:

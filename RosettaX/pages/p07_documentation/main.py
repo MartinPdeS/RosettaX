@@ -2,7 +2,7 @@
 
 import dash
 import dash_bootstrap_components as dbc
-from dash import html
+from dash import dcc, html
 
 from RosettaX.utils import ui_forms
 from RosettaX.workflow.detector.loader import load_detector_configuration_preset_catalog
@@ -19,8 +19,7 @@ class DocumentationPage:
 
     def __init__(self) -> None:
         self.page_name = "documentation"
-        self.reference_docs_url = "https://martinpdes.github.io/RosettaX/docs/latest/index.html"
-        self.github_url = "https://github.com/MartinPdeS/RosettaX"
+        self.contact_email = "martin.poinsinet.de.sivry@gmail.com"
 
     def _id(self, name: str) -> str:
         return f"{self.page_name}-{name}"
@@ -35,8 +34,6 @@ class DocumentationPage:
                         dbc.Col(
                             [
                                 self._table_of_contents_card(),
-                                html.Div(style={"height": "18px"}),
-                                self._resource_card(),
                             ],
                             lg=3,
                         ),
@@ -156,7 +153,7 @@ class DocumentationPage:
                     style={"padding": "16px", "display": "flex", "flexDirection": "column", "gap": "10px"},
                 ),
             ],
-            style={"position": "sticky", "top": "12px"},
+            style=self._documentation_card_style(),
         )
 
         return ui_forms.apply_workflow_section_card_style(
@@ -178,52 +175,6 @@ class DocumentationPage:
                 "background": "rgba(13, 110, 253, 0.04)",
                 "display": "block",
             },
-        )
-
-    def _resource_card(self) -> dbc.Card:
-        card = dbc.Card(
-            [
-                dbc.CardHeader(
-                    [
-                        html.Div(
-                            "More resources",
-                            style={"fontWeight": "750", "fontSize": "1.02rem"},
-                        ),
-                        html.Div(
-                            "Use Documentation for internals. Use Help for getting started and debugging.",
-                            style={"fontSize": "0.86rem", "opacity": 0.76, "marginTop": "3px"},
-                        ),
-                    ]
-                ),
-                dbc.CardBody(
-                    [
-                        dbc.Button(
-                            "Open reference documentation",
-                            href=self.reference_docs_url,
-                            target="_blank",
-                            rel="noopener noreferrer",
-                            color="primary",
-                            style={"width": "100%", "marginBottom": "10px"},
-                        ),
-                        dbc.Button(
-                            "View source on GitHub",
-                            href=self.github_url,
-                            target="_blank",
-                            rel="noopener noreferrer",
-                            color="secondary",
-                            outline=True,
-                            style={"width": "100%"},
-                        ),
-                    ],
-                    style={"padding": "16px"},
-                ),
-            ]
-        )
-
-        return ui_forms.apply_workflow_section_card_style(
-            card=card,
-            header_font_weight="750",
-            header_font_size="1.02rem",
         )
 
     def _system_model_row(self) -> dbc.Row:
@@ -277,9 +228,8 @@ class DocumentationPage:
                 html.Div(
                     "When you choose a material such as water, PBS, polystyrene, silica, PMMA, lipid, or phospholipid, RosettaX resolves the refractive index from the packaged Sellmeier bank in RosettaX/assets/sellmeier_equations.json.",
                 ),
-                html.Pre(
-                    "n^2 = a + sum(B_i * lambda^2 / (lambda^2 - C_i))\nwith lambda converted from nm to um before evaluation.",
-                    style=self._pre_style(),
+                self._math_block(
+                    "$$n^2 = a + \\sum_i \\frac{B_i \\lambda^2}{\\lambda^2 - C_i}$$\nwith $\\lambda$ converted from nm to $\\mu$m before evaluation.",
                 ),
                 html.Div(
                     "If the preset is a plain number, RosettaX uses that number directly. If a material source is empty or cannot be resolved, the workflow falls back to the numeric value already present in the input box.",
@@ -337,7 +287,17 @@ class DocumentationPage:
                 ),
                 table,
                 dbc.Alert(
-                    "If your company would like RosettaX to support another cytometer, contact the maintainer with an example FCS file, the detector or channel naming you want recognized, and any public optical-geometry documentation that should inform the preset.",
+                    [
+                        "If your company would like RosettaX to support another cytometer, contact the maintainer with an example FCS file, the detector or channel naming you want recognized, and any public optical-geometry documentation that should inform the preset.",
+                        html.Br(),
+                        html.Br(),
+                        html.Span("Contact: ", style={"fontWeight": "600"}),
+                        html.A(
+                            self.contact_email,
+                            href=f"mailto:{self.contact_email}",
+                            style={"textDecoration": "none"},
+                        ),
+                    ],
                     color="secondary",
                     style={
                         "marginBottom": "0px",
@@ -361,9 +321,8 @@ class DocumentationPage:
             title="Fluorescence regression",
             subtitle="Fluorescence calibration is fitted as a log-log linear relation, equivalent to a power law.",
             body=[
-                html.Pre(
-                    "log10(y) = slope * log10(x) + intercept\ny = (10**intercept) * x**slope",
-                    style=self._pre_style(),
+                self._math_block(
+                    "$$\\log_{10}(y) = \\text{slope} \\cdot \\log_{10}(x) + \\text{intercept}$$\n$$y = 10^{\\text{intercept}} \\cdot x^{\\text{slope}}$$",
                 ),
                 html.Div(
                     "Before fitting, RosettaX removes non-finite points and any pair where either the measured intensity or calibrated reference value is not strictly positive. The fit itself uses numpy.polyfit on the log10-transformed axes.",
@@ -379,9 +338,8 @@ class DocumentationPage:
             title="Scattering regression",
             subtitle="Scattering calibration fits measured peak position to modeled optical coupling with a linear instrument-response model.",
             body=[
-                html.Pre(
-                    "theoretical_coupling = slope * measured_peak + intercept",
-                    style=self._pre_style(),
+                self._math_block(
+                    "$$\\text{theoretical coupling} = \\text{slope} \\cdot \\text{measured peak} + \\text{intercept}$$",
                 ),
                 html.Div(
                     "RosettaX first computes modeled coupling for the calibration-standard particles from the selected Mie model and optical parameters. It then fits a linear response from measured peak positions to those coupling values. The default behavior fixes the intercept to zero.",
@@ -482,6 +440,19 @@ class DocumentationPage:
             "whiteSpace": "pre-wrap",
         }
 
+    def _documentation_card_style(self) -> dict[str, str]:
+        return {
+            "height": "100%",
+            "minHeight": "252px",
+        }
+
+    def _math_block(self, expression: str) -> dcc.Markdown:
+        return dcc.Markdown(
+            expression,
+            mathjax=True,
+            style=self._pre_style(),
+        )
+
     def _content_card(self, *, title: str, subtitle: str, body: list[html.Div | html.Pre]) -> dbc.Card:
         card = dbc.Card(
             [
@@ -496,7 +467,7 @@ class DocumentationPage:
                     style={"padding": "16px"},
                 ),
             ],
-            style={"height": "100%"},
+            style=self._documentation_card_style(),
         )
 
         return ui_forms.apply_workflow_section_card_style(

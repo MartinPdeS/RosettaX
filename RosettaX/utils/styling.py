@@ -26,7 +26,7 @@ SIDEBAR = {
     "top": 0,
     "left": 0,
     "bottom": 0,
-    "width": "500px",
+    "width": "352px",
     "padding": "16px",
     "overflowY": "auto",
     "zIndex": 1000,
@@ -53,7 +53,7 @@ PAGE = {
 }
 
 CONTENT = {
-    "marginLeft": "460px",
+    "marginLeft": "352px",
     "padding": "16px",
     "minHeight": "100vh",
     "boxSizing": "border-box",

@@ -50,7 +50,9 @@ class Test_HomePage:
         layout = home_main.HomePage().layout()
         text_nodes = _collect_text(layout)
 
-        assert "Usage snapshot" in text_nodes
+        assert "Support Developer" in text_nodes
+        assert "Project resources" not in text_nodes
+        assert "Website usage metrics to date." in text_nodes
         assert "Apply button clicks" in text_nodes
         assert "Total calibrated files" in text_nodes
         assert "12" in text_nodes

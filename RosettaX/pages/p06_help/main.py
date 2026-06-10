@@ -23,6 +23,12 @@ class HelpPage:
         self,
     ) -> None:
         self.page_name = "help"
+        self.documentation_url = "/documentation"
+        self.github_url = "https://github.com/MartinPdeS/RosettaX"
+        self.pypi_url = "https://pypi.org/project/RosettaX/"
+        self.anaconda_url = "https://anaconda.org/channels/MartinPdeS/packages/Rosettax/overview"
+        self.support_url = "https://github.com/sponsors/MartinPdeS"
+        self.contact_email = "martin.poinsinet.de.sivry@gmail.com"
 
     def _id(
         self,
@@ -37,6 +43,12 @@ class HelpPage:
         return dbc.Container(
             [
                 self._hero_section(),
+                html.Div(
+                    style={
+                        "height": "18px",
+                    },
+                ),
+                self._project_resources_card(),
                 html.Div(
                     style={
                         "height": "18px",
@@ -96,6 +108,119 @@ class HelpPage:
                     style={
                         "padding": "26px",
                     },
+                ),
+            ]
+        )
+
+        return ui_forms.apply_workflow_section_card_style(
+            card=card,
+            header_font_weight="750",
+            header_font_size="1.02rem",
+        )
+
+    def _project_resources_card(self) -> dbc.Card:
+        card = dbc.Card(
+            [
+                dbc.CardHeader(
+                    [
+                        html.Div(
+                            "Project resources",
+                            style={
+                                "fontWeight": "750",
+                                "fontSize": "1.02rem",
+                            },
+                        ),
+                        html.Div(
+                            "Documentation, source code, package links, and project support.",
+                            style=ui_forms.build_workflow_section_subtitle_style(),
+                        ),
+                    ]
+                ),
+                dbc.CardBody(
+                    [
+                        dbc.Row(
+                            [
+                                dbc.Col(
+                                    dbc.Button(
+                                        "Technical docs",
+                                        href=self.documentation_url,
+                                        color="primary",
+                                        target="_self",
+                                        style={"width": "100%"},
+                                    ),
+                                    md=3,
+                                ),
+                                dbc.Col(
+                                    dbc.Button(
+                                        "GitHub",
+                                        href=self.github_url,
+                                        color="dark",
+                                        outline=True,
+                                        target="_blank",
+                                        rel="noopener noreferrer",
+                                        style={"width": "100%"},
+                                    ),
+                                    md=2,
+                                ),
+                                dbc.Col(
+                                    dbc.Button(
+                                        "PyPI",
+                                        href=self.pypi_url,
+                                        color="secondary",
+                                        outline=True,
+                                        target="_blank",
+                                        rel="noopener noreferrer",
+                                        style={"width": "100%"},
+                                    ),
+                                    md=2,
+                                ),
+                                dbc.Col(
+                                    dbc.Button(
+                                        "Anaconda",
+                                        href=self.anaconda_url,
+                                        color="secondary",
+                                        outline=True,
+                                        target="_blank",
+                                        rel="noopener noreferrer",
+                                        style={"width": "100%"},
+                                    ),
+                                    md=2,
+                                ),
+                                dbc.Col(
+                                    dbc.Button(
+                                        "Support Developer",
+                                        href=self.support_url,
+                                        color="warning",
+                                        target="_blank",
+                                        rel="noopener noreferrer",
+                                        style={"width": "100%"},
+                                    ),
+                                    md=3,
+                                ),
+                            ],
+                            className="g-2",
+                            style={"alignItems": "center"},
+                        ),
+                        html.Div(
+                            [
+                                html.Span(
+                                    "Contact: ",
+                                    style={"fontWeight": "600"},
+                                ),
+                                html.A(
+                                    self.contact_email,
+                                    href=f"mailto:{self.contact_email}",
+                                    style={"textDecoration": "none"},
+                                ),
+                            ],
+                            style={
+                                "fontSize": "0.86rem",
+                                "opacity": 0.75,
+                                "marginTop": "12px",
+                            },
+                        ),
+                    ],
+                    style={"padding": "16px"},
                 ),
             ]
         )
