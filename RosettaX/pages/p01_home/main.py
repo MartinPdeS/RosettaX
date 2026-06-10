@@ -4,6 +4,7 @@ import dash
 import dash_bootstrap_components as dbc
 from dash import html
 
+from RosettaX import __version__
 from RosettaX.utils import ui_forms
 from RosettaX.utils import usage_metrics
 
@@ -44,6 +45,12 @@ class HomePage:
 
         return dbc.Container(
             [
+                self._github_tag_widget(),
+                html.Div(
+                    style={
+                        "height": "12px",
+                    },
+                ),
                 self._hero_section(),
                 html.Div(
                     style={
@@ -68,6 +75,39 @@ class HomePage:
             style={
                 "paddingTop": "12px",
                 "paddingBottom": "40px",
+            },
+        )
+
+    def _github_tag_widget(self) -> html.Div:
+        return html.Div(
+            [
+                html.Span(
+                    "Version:",
+                    style={
+                        "fontSize": "0.72rem",
+                        "fontWeight": "700",
+                        "letterSpacing": "0.08em",
+                        "textTransform": "uppercase",
+                        "opacity": 0.7,
+                    },
+                ),
+                html.Span(
+                    f"v{__version__}",
+                    style={
+                        "fontSize": "0.92rem",
+                        "fontWeight": "700",
+                    },
+                ),
+            ],
+            style={
+                "display": "inline-flex",
+                "alignItems": "center",
+                "gap": "10px",
+                "padding": "8px 12px",
+                "borderRadius": "999px",
+                "border": "1px solid rgba(128, 128, 128, 0.22)",
+                "background": "rgba(255, 255, 255, 0.55)",
+                "backdropFilter": "blur(8px)",
             },
         )
 

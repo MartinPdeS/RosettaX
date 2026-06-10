@@ -50,6 +50,8 @@ class Test_HomePage:
         layout = home_main.HomePage().layout()
         text_nodes = _collect_text(layout)
 
+        assert "GitHub tag" in text_nodes
+        assert f"v{home_main.__version__}" in text_nodes
         assert "Support Developer" in text_nodes
         assert "Project resources" not in text_nodes
         assert "Website usage metrics to date." in text_nodes

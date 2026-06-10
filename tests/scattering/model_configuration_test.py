@@ -276,8 +276,19 @@ class Test_ScatteringModelConfigurationScattererPresets:
             detector_configuration_preset="",
         )
 
-        assert len(figure.data) == 0
+        assert len(figure.data) == 8
         assert figure.layout.scene is not None
+        assert figure.data[0].type == "surface"
+        assert figure.data[1].type == "surface"
+        assert not any(
+            trace.type == "scatter3d" and getattr(trace, "mode", None) == "markers"
+            for trace in figure.data
+        )
+        assert figure.layout.scene.xaxis.showgrid is False
+        assert figure.layout.scene.xaxis.showline is False
+        assert figure.layout.scene.xaxis.showbackground is False
+        assert figure.layout.scene.xaxis.showspikes is False
+        assert figure.layout.scene.xaxis.ticks == ""
 
 
 class Test_ScatteringCalibrationStandardTable:

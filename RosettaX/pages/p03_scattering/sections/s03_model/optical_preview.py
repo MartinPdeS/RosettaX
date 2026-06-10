@@ -88,6 +88,9 @@ def build_optical_configuration_preview_figure(
 
     figure = go.Figure()
 
+    figure.add_trace(_build_unit_sphere_trace())
+    figure.add_trace(_build_center_sphere_trace())
+
     if include_geometry:
         detector_visible_mask: Optional[tuple[bool, ...]] = None
 
@@ -116,16 +119,14 @@ def build_optical_configuration_preview_figure(
             coordinate_array=resolved_scatter_coordinates,
         )
 
-        figure.add_trace(_build_unit_sphere_trace())
-        figure.add_trace(_build_center_sphere_trace())
         figure.add_trace(
             _build_scatter_points_trace(
                 scatter_coordinates=resolved_scatter_coordinates,
             )
         )
 
-        for trace in _build_incident_wave_traces():
-            figure.add_trace(trace)
+    for trace in _build_incident_wave_traces():
+        figure.add_trace(trace)
 
     figure.update_layout(
         margin={
@@ -1037,8 +1038,13 @@ def _build_hidden_axis(
     return {
         "visible": False,
         "showgrid": False,
+        "showline": False,
+        "showbackground": False,
         "showticklabels": False,
+        "showspikes": False,
         "zeroline": False,
+        "ticks": "",
+        "backgroundcolor": "rgba(0,0,0,0)",
         "title": "",
         "range": [-range_limit, range_limit],
     }
