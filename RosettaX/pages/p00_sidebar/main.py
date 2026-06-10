@@ -42,7 +42,7 @@ class Sidebar:
         self.page_name = "sidebar"
         self.logo_src = "/assets/logo_light.svg"
         self.logo_max_height_px = 156
-        self.sidebar_width_px = 430
+        self.sidebar_width_px = 400
         self.style = styling.PAGE
 
         logger.debug(

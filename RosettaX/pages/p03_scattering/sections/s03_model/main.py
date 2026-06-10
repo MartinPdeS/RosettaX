@@ -233,6 +233,7 @@ class Model:
                             "overflow": "visible",
                         },
                     ),
+                    label_width_px=170,
                     margin_top=True,
                     row_style_overrides={
                         "overflow": "visible",
