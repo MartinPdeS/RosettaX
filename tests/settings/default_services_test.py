@@ -149,3 +149,31 @@ class Test_SettingsDefaultServicesCanonicalSharedPaths:
             == "linear"
         )
         assert nested_profile_payload["apply_calibration"]["calibration"]["n_bins_for_plots"] == 128
+
+
+class Test_SettingsDefaultServicesProfileNamePersistence:
+    def test_save_profile_preserves_existing_profile_name_metadata(self):
+        saved_browser_profiles = services.save_profile(
+            "custom profile",
+            {
+                "ui": {
+                    "theme_mode": "dark",
+                },
+            },
+            {
+                "profiles": {
+                    "custom profile": {
+                        "profile_name": "Readable Profile Name",
+                        "ui": {
+                            "theme_mode": "light",
+                        },
+                    },
+                },
+                "selected_profile": "custom profile",
+            },
+        )
+
+        assert (
+            saved_browser_profiles["profiles"]["custom profile.json"]["profile_name"]
+            == "Readable Profile Name"
+        )

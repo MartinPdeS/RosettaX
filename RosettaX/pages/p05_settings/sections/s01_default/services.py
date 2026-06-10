@@ -493,10 +493,16 @@ def save_profile(
     """
     Save a nested profile payload into browser-local storage.
     """
-    return BrowserProfileLibrary.from_dict(
+    browser_profiles = BrowserProfileLibrary.from_dict(
         browser_profiles_payload,
-    ).with_saved_profile(
+    )
+    existing_profile_label = browser_profiles.get_profile_label(
+        profile_name,
+    )
+
+    return browser_profiles.with_saved_profile(
         profile_name=profile_name,
         profile_payload=nested_profile_payload,
         select_profile=False,
+        profile_display_name=existing_profile_label,
     ).to_dict()

@@ -213,10 +213,12 @@ class Sidebar:
         @dash.callback(
             dash.Output(SidebarIds.saved_profiles_load_status, "children"),
             dash.Input(SidebarIds.selected_profile_store, "data"),
+            dash.Input(BROWSER_PROFILES_STORE_ID, "data"),
             prevent_initial_call=False,
         )
         def render_selected_profile_status(
             selected_profile: Any,
+            browser_profiles_payload: Any,
         ) -> str:
             logger.debug(
                 "render_selected_profile_status called with selected_profile=%r",
@@ -226,7 +228,14 @@ class Sidebar:
             if not selected_profile:
                 return "No profile selected."
 
-            return f"Selected profile: {build_profile_label(str(selected_profile))}"
+            browser_profiles = BrowserProfileLibrary.from_dict(
+                browser_profiles_payload,
+            )
+            profile_label = browser_profiles.get_profile_label(
+                str(selected_profile),
+            ) or build_profile_label(str(selected_profile))
+
+            return f"Selected profile: {profile_label}"
 
     def layout(
         self,

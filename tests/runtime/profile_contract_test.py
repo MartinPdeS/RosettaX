@@ -44,6 +44,8 @@ class Test_RuntimeConfigProfileContract:
         assert isinstance(
             payload, dict
         ), f"Profile {profile_path.name} must contain a JSON object."
+        assert isinstance(payload.get("profile_name"), str)
+        assert str(payload.get("profile_name") or "").strip()
 
     @pytest.mark.parametrize("profile_path", collect_profile_paths())
     def test_profile_json_file_matches_runtime_config_schema(

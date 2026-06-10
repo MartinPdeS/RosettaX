@@ -1,4 +1,5 @@
 {
+  "profile_name": "Diagnostic",
   "ui": {
     "theme_mode": "light",
     "show_graphs": true,
@@ -55,7 +56,7 @@
     "instrument_name": ""
   },
   "visualization": {
-    "graph_height": "950px",
+    "graph_height": "450px",
     "default_marker_opacity": 0.8,
     "default_marker_size": 8.0,
     "default_line_width": 2.5,

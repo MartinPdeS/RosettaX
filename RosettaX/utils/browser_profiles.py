@@ -14,11 +14,12 @@ logger = logging.getLogger(__name__)
 
 BROWSER_PROFILES_STORE_ID = "browser-profiles-store"
 DEFAULT_PROFILE_FILENAME = "default_profile.json"
+PROFILE_NAME_FIELD = "profile_name"
 
 
-def build_profile_label(profile_name: str) -> str:
+def _build_default_profile_label(profile_name: str) -> str:
     """
-    Build the human readable label for one profile option.
+    Build the fallback human readable label for one profile option.
     """
     normalized_profile_name = normalize_profile_filename(profile_name)
 
@@ -31,7 +32,40 @@ def build_profile_label(profile_name: str) -> str:
     return normalized_profile_name.replace("_", " ").replace("-", " ")
 
 
-def _sort_profile_names(profile_names: list[str]) -> list[str]:
+def resolve_profile_display_name(profile_payload: Any) -> Optional[str]:
+    """
+    Return the explicit display name stored in a profile payload, if any.
+    """
+    if not isinstance(profile_payload, dict):
+        return None
+
+    raw_profile_display_name = str(profile_payload.get(PROFILE_NAME_FIELD) or "").strip()
+
+    if not raw_profile_display_name:
+        return None
+
+    return raw_profile_display_name
+
+
+def build_profile_label(
+    profile_name: str,
+    profile_payload: Optional[dict[str, Any]] = None,
+) -> str:
+    """
+    Build the human readable label for one profile option.
+    """
+    explicit_profile_display_name = resolve_profile_display_name(profile_payload)
+
+    if explicit_profile_display_name is not None:
+        return explicit_profile_display_name
+
+    return _build_default_profile_label(profile_name)
+
+
+def _sort_profile_names(
+    profile_names: list[str],
+    profile_payloads: Optional[dict[str, dict[str, Any]]] = None,
+) -> list[str]:
     """
     Sort profile names with the default profile first.
     """
@@ -39,7 +73,12 @@ def _sort_profile_names(profile_names: list[str]) -> list[str]:
         profile_names,
         key=lambda profile_name: (
             normalize_profile_filename(profile_name) != DEFAULT_PROFILE_FILENAME,
-            build_profile_label(profile_name).lower(),
+            build_profile_label(
+                profile_name,
+                None
+                if profile_payloads is None
+                else profile_payloads.get(normalize_profile_filename(profile_name)),
+            ).lower(),
         ),
     )
 
@@ -118,6 +157,45 @@ class BrowserProfileLibrary:
                         raw_profile_name,
                     )
 
+        try:
+            packaged_profile_names = directories.list_profiles()
+        except Exception:
+            logger.exception(
+                "Failed to list packaged profiles while syncing browser profile metadata."
+            )
+            packaged_profile_names = []
+
+        for packaged_profile_name in packaged_profile_names:
+            try:
+                normalized_packaged_profile_name = normalize_profile_filename(
+                    packaged_profile_name,
+                )
+
+                if normalized_packaged_profile_name not in sanitized_profiles:
+                    continue
+
+                packaged_profile_payload = RuntimeConfig.from_profile_name(
+                    packaged_profile_name,
+                ).to_dict()
+                packaged_profile_display_name = resolve_profile_display_name(
+                    packaged_profile_payload,
+                )
+
+                if packaged_profile_display_name is None:
+                    continue
+
+                sanitized_profiles[normalized_packaged_profile_name] = cls._prepare_profile_payload(
+                    profile_name=normalized_packaged_profile_name,
+                    profile_payload=sanitized_profiles[normalized_packaged_profile_name],
+                    profile_display_name=packaged_profile_display_name,
+                )
+
+            except Exception:
+                logger.exception(
+                    "Failed to sync packaged profile metadata from disk. packaged_profile_name=%r",
+                    packaged_profile_name,
+                )
+
         if DEFAULT_PROFILE_FILENAME not in sanitized_profiles:
             sanitized_profiles[DEFAULT_PROFILE_FILENAME] = RuntimeConfig.from_default_profile().to_dict()
 
@@ -171,16 +249,56 @@ class BrowserProfileLibrary:
         """
         return asdict(self)
 
+    @staticmethod
+    def _prepare_profile_payload(
+        *,
+        profile_name: str,
+        profile_payload: dict[str, Any],
+        profile_display_name: Optional[str] = None,
+    ) -> dict[str, Any]:
+        """
+        Normalize one stored profile payload and ensure it carries a display name.
+        """
+        validated_profile_payload = RuntimeConfig.from_dict(profile_payload).to_dict()
+        resolved_profile_display_name = str(
+            profile_display_name
+            or resolve_profile_display_name(profile_payload)
+            or _build_default_profile_label(profile_name)
+        ).strip()
+
+        if not resolved_profile_display_name:
+            resolved_profile_display_name = _build_default_profile_label(profile_name)
+
+        validated_profile_payload[PROFILE_NAME_FIELD] = resolved_profile_display_name
+        return validated_profile_payload
+
+    def get_profile_label(
+        self,
+        profile_name: Optional[str] = None,
+    ) -> Optional[str]:
+        """
+        Return the visible label for one stored profile.
+        """
+        resolved_profile_name = profile_name or self.selected_profile
+
+        if not resolved_profile_name:
+            return None
+
+        normalized_profile_name = normalize_profile_filename(resolved_profile_name)
+        profile_payload = self.profiles.get(normalized_profile_name)
+
+        return build_profile_label(normalized_profile_name, profile_payload)
+
     def build_options(self) -> list[dict[str, str]]:
         """
         Build dropdown options for the available browser profiles.
         """
         return [
             {
-                "label": build_profile_label(profile_name),
+                "label": self.get_profile_label(profile_name) or build_profile_label(profile_name),
                 "value": profile_name,
             }
-            for profile_name in _sort_profile_names(list(self.profiles.keys()))
+            for profile_name in _sort_profile_names(list(self.profiles.keys()), self.profiles)
         ]
 
     def get_profile_payload(
@@ -224,12 +342,17 @@ class BrowserProfileLibrary:
         profile_name: str,
         profile_payload: dict[str, Any],
         select_profile: bool,
+        profile_display_name: Optional[str] = None,
     ) -> "BrowserProfileLibrary":
         """
         Return a copy with one profile saved into browser storage.
         """
         normalized_profile_name = normalize_profile_filename(profile_name)
-        validated_profile_payload = RuntimeConfig.from_dict(profile_payload).to_dict()
+        validated_profile_payload = self._prepare_profile_payload(
+            profile_name=normalized_profile_name,
+            profile_payload=profile_payload,
+            profile_display_name=profile_display_name,
+        )
         next_profiles = dict(self.profiles)
         next_profiles[normalized_profile_name] = validated_profile_payload
 
@@ -270,6 +393,7 @@ class BrowserProfileLibrary:
             profile_name=normalized_profile_name,
             profile_payload=source_payload,
             select_profile=select_profile,
+            profile_display_name=_build_default_profile_label(normalized_profile_name),
         )
 
     def delete_profile(

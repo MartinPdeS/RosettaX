@@ -44,7 +44,10 @@ def resolve_selected_profile(
     if not resolved_profile_name:
         return None, "No profile selected."
 
-    return resolved_profile_name, f"Selected profile: {build_profile_label(resolved_profile_name)}"
+    return resolved_profile_name, (
+        f"Selected profile: "
+        f"{browser_profiles.get_profile_label(resolved_profile_name) or build_profile_label(resolved_profile_name)}"
+    )
 
 
 def list_saved_calibrations() -> dict[str, list[str]]:
