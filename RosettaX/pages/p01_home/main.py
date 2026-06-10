@@ -1,12 +1,96 @@
 # -*- coding: utf-8 -*-
 
+import json
+import logging
+import time
+from typing import Optional
+from urllib import error, request
+
 import dash
 import dash_bootstrap_components as dbc
 from dash import html
 
-from RosettaX import __version__
 from RosettaX.utils import ui_forms
 from RosettaX.utils import usage_metrics
+
+
+logger = logging.getLogger(__name__)
+LATEST_GITHUB_TAG_API_URL = "https://api.github.com/repos/MartinPdeS/RosettaX/tags?per_page=1"
+GITHUB_TAG_REQUEST_TIMEOUT_SECONDS = 2.0
+GITHUB_TAG_CACHE_TTL_SECONDS = 300.0
+
+_cached_github_tag_label: Optional[str] = None
+_cached_github_tag_expires_at = 0.0
+
+
+def _fetch_latest_github_tag_label() -> Optional[str]:
+    request_headers = {
+        "Accept": "application/vnd.github+json",
+        "User-Agent": "RosettaX",
+    }
+    github_request = request.Request(
+        LATEST_GITHUB_TAG_API_URL,
+        headers=request_headers,
+    )
+
+    try:
+        with request.urlopen(
+            github_request,
+            timeout=GITHUB_TAG_REQUEST_TIMEOUT_SECONDS,
+        ) as response:
+            payload = json.load(response)
+    except (error.URLError, error.HTTPError, OSError, TimeoutError, ValueError) as exc:
+        logger.debug(
+            "Failed to fetch latest GitHub tag from %s: %s",
+            LATEST_GITHUB_TAG_API_URL,
+            exc,
+        )
+        return None
+
+    if not isinstance(payload, list) or not payload:
+        logger.debug(
+            "GitHub tag payload was empty or invalid: %r",
+            payload,
+        )
+        return None
+
+    latest_tag_name = str(payload[0].get("name", "")).strip()
+
+    if not latest_tag_name:
+        logger.debug("Latest GitHub tag payload did not include a tag name: %r", payload[0])
+        return None
+
+    if latest_tag_name.lower().startswith("v"):
+        return latest_tag_name
+
+    return f"v{latest_tag_name}"
+
+
+def resolve_latest_github_tag_label() -> str:
+    global _cached_github_tag_label
+    global _cached_github_tag_expires_at
+
+    current_time = time.monotonic()
+
+    if (
+        _cached_github_tag_label is not None
+        and current_time < _cached_github_tag_expires_at
+    ):
+        return _cached_github_tag_label
+
+    fetched_label = _fetch_latest_github_tag_label()
+
+    if fetched_label is not None:
+        _cached_github_tag_label = fetched_label
+        _cached_github_tag_expires_at = current_time + GITHUB_TAG_CACHE_TTL_SECONDS
+        return fetched_label
+
+    _cached_github_tag_expires_at = current_time + GITHUB_TAG_CACHE_TTL_SECONDS
+
+    if _cached_github_tag_label is not None:
+        return _cached_github_tag_label
+
+    return "Unavailable"
 
 
 class HomePage:
@@ -79,6 +163,8 @@ class HomePage:
         )
 
     def _github_tag_widget(self) -> html.Div:
+        github_tag_label = resolve_latest_github_tag_label()
+
         return html.Div(
             [
                 html.Span(
@@ -92,7 +178,7 @@ class HomePage:
                     },
                 ),
                 html.Span(
-                    f"v{__version__}",
+                    github_tag_label,
                     style={
                         "fontSize": "0.92rem",
                         "fontWeight": "700",
