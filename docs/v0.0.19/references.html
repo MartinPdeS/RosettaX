@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>References &#8212; RosettaX  documentation</title>
+    <title>Calibration file format &#8212; RosettaX  documentation</title>
   
   
   
@@ -57,9 +57,11 @@
             true;
         </script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="_static/logo_light.svg"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="Examples" href="gallery/index.html" />
+    <link rel="next" title="Reports and export provenance" href="reports.html" />
+    <link rel="prev" title="Apply-calibration workflow" href="workflows/apply.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.0.19" />
@@ -129,6 +131,14 @@
   
   
   
+    
+    
+      
+    
+    
+    <img src="_static/logo_light.svg" class="logo__image only-light" alt=""/>
+    <img src="_static/logo_light.svg" class="logo__image only-dark pst-js-only" alt=""/>
+  
   
     <p class="title logo__title">RosettaX</p>
   
@@ -146,31 +156,76 @@
     
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="theory.html">
-    Theoretical background
+    Implementation model
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="code.html">
-    API reference
-  </a>
-</li>
-
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="gallery/index.html">
-    Examples
+  <a class="nav-link nav-internal" href="workflows/index.html">
+    Workflow guides
   </a>
 </li>
 
 
 <li class="nav-item current active">
   <a class="nav-link nav-internal" href="#">
-    References
+    Calibration file format
   </a>
 </li>
 
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="reports.html">
+    Reports and export provenance
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="quickstart.html">
+    Quick start
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="interface.html">
+    Interface guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="troubleshooting.html">
+    Troubleshooting
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="code.html">
+    API reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="gallery/index.html">
+    Examples
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
   </ul>
 </nav></div>
       
@@ -295,7 +350,49 @@
     
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="theory.html">
-    Theoretical background
+    Implementation model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="workflows/index.html">
+    Workflow guides
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Calibration file format
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="reports.html">
+    Reports and export provenance
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="interface.html">
+    Interface guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="troubleshooting.html">
+    Troubleshooting
   </a>
 </li>
 
@@ -310,13 +407,6 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="gallery/index.html">
     Examples
-  </a>
-</li>
-
-
-<li class="nav-item current active">
-  <a class="nav-link nav-internal" href="#">
-    References
   </a>
 </li>
 
@@ -442,7 +532,7 @@
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">References</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Calibration file format</span></li>
   </ul>
 </nav>
 </div>
@@ -459,8 +549,88 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="references">
-<span id="id1"></span><h1>References<a class="headerlink" href="#references" title="Link to this heading">#</a></h1>
+  <section id="calibration-file-format">
+<span id="references"></span><h1>Calibration file format<a class="headerlink" href="#calibration-file-format" title="Link to this heading">#</a></h1>
+<p>RosettaX saves both fluorescence and scattering calibrations in the same outer
+record structure. The shared wrapper is created by the save workflow before the
+JSON download is produced.</p>
+<section id="outer-wrapper">
+<h2>Outer wrapper<a class="headerlink" href="#outer-wrapper" title="Link to this heading">#</a></h2>
+<p>Every saved calibration starts with the same top-level keys:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>{
+        &quot;schema&quot;: &quot;rosettax_calibration_v1&quot;,
+        &quot;kind&quot;: &quot;fluorescence&quot;,
+        &quot;created_at&quot;: &quot;2025-...&quot;,
+        &quot;name&quot;: &quot;Example calibration&quot;,
+        &quot;payload&quot;: {
+                &quot;...&quot;: &quot;workflow-specific content&quot;
+        }
+}
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">kind</span></code> is either <code class="docutils literal notranslate"><span class="pre">&quot;fluorescence&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;scattering&quot;</span></code>. The inner
+<code class="docutils literal notranslate"><span class="pre">payload</span></code> is where the workflow-specific model, fit parameters, reference
+points, and metadata are stored.</p>
+</section>
+<section id="fluorescence-payload">
+<h2>Fluorescence payload<a class="headerlink" href="#fluorescence-payload" title="Link to this heading">#</a></h2>
+<p>The fluorescence payload currently uses schema version <code class="docutils literal notranslate"><span class="pre">1.0</span></code> and contains the
+fields that are needed to reconstruct the empirical fit:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>{
+        &quot;schema_version&quot;: &quot;1.0&quot;,
+        &quot;calibration_type&quot;: &quot;fluorescence&quot;,
+        &quot;source_file&quot;: &quot;beads.fcs&quot;,
+        &quot;source_channel&quot;: &quot;FITC-A&quot;,
+        &quot;gating_channel&quot;: &quot;SSC-A&quot;,
+        &quot;gating_threshold&quot;: 1200.0,
+        &quot;fit_model&quot;: &quot;log10(y)=slope*log10(x)+intercept; y=(10**intercept) * x**slope&quot;,
+        &quot;fit_metrics&quot;: {
+                &quot;r_squared&quot;: 0.998,
+                &quot;point_count&quot;: 6
+        },
+        &quot;parameters&quot;: {
+                &quot;slope&quot;: 1.02,
+                &quot;intercept&quot;: -0.13,
+                &quot;prefactor&quot;: 0.74
+        },
+        &quot;reference_points&quot;: [...],
+        &quot;payload&quot;: {...}
+}
+</pre></div>
+</div>
+<p>The nested <code class="docutils literal notranslate"><span class="pre">payload</span></code> block is kept for downstream compatibility and contains
+the same fit in a compact apply-oriented form.</p>
+</section>
+<section id="scattering-payload">
+<h2>Scattering payload<a class="headerlink" href="#scattering-payload" title="Link to this heading">#</a></h2>
+<p>The scattering payload stores both the fitted instrument response and the
+modeled calibration-standard relation used to produce it:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>{
+        &quot;calibration_type&quot;: &quot;scattering&quot;,
+        &quot;version&quot;: 2,
+        &quot;source_channel&quot;: &quot;SSC-A&quot;,
+        &quot;output_quantity&quot;: &quot;estimated_coupling&quot;,
+        &quot;instrument_response&quot;: {...},
+        &quot;calibration_standard_mie_relation&quot;: {...},
+        &quot;reference_table&quot;: [...],
+        &quot;metadata&quot;: {...}
+}
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">instrument_response</span></code> stores the linear fit parameters and <code class="docutils literal notranslate"><span class="pre">R^2</span></code>.
+<code class="docutils literal notranslate"><span class="pre">calibration_standard_mie_relation</span></code> stores the modeled coupling relation for
+the calibration standard. <code class="docutils literal notranslate"><span class="pre">reference_table</span></code> stores the measured peaks and the
+rows that actually supported the fit. <code class="docutils literal notranslate"><span class="pre">metadata</span></code> stores the optical and
+context fields needed to interpret the result later.</p>
+</section>
+<section id="why-the-file-is-structured-this-way">
+<h2>Why the file is structured this way<a class="headerlink" href="#why-the-file-is-structured-this-way" title="Link to this heading">#</a></h2>
+<p>RosettaX separates the outer wrapper from the inner payload so the save/apply
+pipeline can identify the calibration family quickly while still preserving the
+full workflow-specific evidence. The practical rule is simple: the outer record
+answers what kind of calibration this is, and the inner payload answers how it
+was built.</p>
+</section>
 </section>
 
 
@@ -477,6 +647,21 @@
                 <dialog id="pst-secondary-sidebar-modal"></dialog>
                 <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#outer-wrapper">Outer wrapper</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fluorescence-payload">Fluorescence payload</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scattering-payload">Scattering payload</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-the-file-is-structured-this-way">Why the file is structured this way</a></li>
+</ul>
+  </nav></div>
 
   <div class="sidebar-secondary-item">
 

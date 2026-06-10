@@ -29,11 +29,7 @@ These modules normalize scattering model inputs and the editable calibration sta
     :members:
     :show-inheritance:
 
-.. automodule:: RosettaX.workflow.parameters.detector_configuration
-    :members:
-    :show-inheritance:
-
-.. automodule:: RosettaX.workflow.parameters.services
+.. automodule:: RosettaX.workflow.parameters.refractive_index
     :members:
     :show-inheritance:
 
@@ -43,15 +39,15 @@ Calibration workflow
 
 The calibration modules define optical parameter models and the fitted relationships used for fluorescence and scattering calibration.
 
-.. automodule:: RosettaX.workflow.calibration.mie_relation
+.. automodule:: RosettaX.workflow.scattering.mie_relation
     :members:
     :show-inheritance:
 
-.. automodule:: RosettaX.workflow.calibration.scattering
+.. automodule:: RosettaX.workflow.scattering.calibration_services
     :members:
     :show-inheritance:
 
-.. automodule:: RosettaX.workflow.calibration.fluorescence
+.. automodule:: RosettaX.workflow.scattering.model
     :members:
     :show-inheritance:
 
@@ -67,7 +63,7 @@ Apply-calibration workflow
     :members:
     :show-inheritance:
 
-.. automodule:: RosettaX.workflow.apply_calibration.scattering.main
+.. automodule:: RosettaX.workflow.apply_calibration.scattering
     :members:
     :show-inheritance:
 

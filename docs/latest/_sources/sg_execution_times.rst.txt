@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:00.035** total execution time for 1 file **from all galleries**:
+**00:00.000** total execution time for 0 files **from all galleries**:
 
 .. container::
 
@@ -32,6 +32,6 @@ Computation times
    * - Example
      - Time
      - Mem (MB)
-   * - :ref:`sphx_glr_gallery_workflow_workflow.py` (``../examples/workflow/workflow.py``)
-     - 00:00.035
-     - 0.0
+   * - N/A
+     - N/A
+     - N/A

@@ -57,6 +57,7 @@
             true;
         </script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="../_static/logo_light.svg"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Pages API" href="pages.html" />
@@ -130,6 +131,14 @@
   
   
   
+    
+    
+      
+    
+    
+    <img src="../_static/logo_light.svg" class="logo__image only-light" alt=""/>
+    <img src="../_static/logo_light.svg" class="logo__image only-dark pst-js-only" alt=""/>
+  
   
     <p class="title logo__title">RosettaX</p>
   
@@ -147,31 +156,76 @@
     
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../theory.html">
-    Theoretical background
-  </a>
-</li>
-
-
-<li class="nav-item current active">
-  <a class="nav-link nav-internal" href="../code.html">
-    API reference
+    Implementation model
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../gallery/index.html">
-    Examples
+  <a class="nav-link nav-internal" href="../workflows/index.html">
+    Workflow guides
   </a>
 </li>
 
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../references.html">
-    References
+    Calibration file format
   </a>
 </li>
 
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reports.html">
+    Reports and export provenance
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../quickstart.html">
+    Quick start
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../interface.html">
+    Interface guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../troubleshooting.html">
+    Troubleshooting
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="../code.html">
+    API reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../gallery/index.html">
+    Examples
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
   </ul>
 </nav></div>
       
@@ -296,7 +350,49 @@
     
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../theory.html">
-    Theoretical background
+    Implementation model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../workflows/index.html">
+    Workflow guides
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../references.html">
+    Calibration file format
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reports.html">
+    Reports and export provenance
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../interface.html">
+    Interface guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../troubleshooting.html">
+    Troubleshooting
   </a>
 </li>
 
@@ -311,13 +407,6 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../gallery/index.html">
     Examples
-  </a>
-</li>
-
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../references.html">
-    References
   </a>
 </li>
 
@@ -480,14 +569,14 @@
 <p>These modules normalize scattering model inputs and the editable calibration standard table.</p>
 </section>
 <section id="calibration-workflow">
-<span id="module-RosettaX.workflow.parameters.model"></span><span id="module-RosettaX.workflow.parameters.table"></span><h2>Calibration workflow<a class="headerlink" href="#calibration-workflow" title="Link to this heading">#</a></h2>
+<span id="module-RosettaX.workflow.parameters.refractive_index"></span><span id="module-RosettaX.workflow.parameters.model"></span><span id="module-RosettaX.workflow.parameters.table"></span><h2>Calibration workflow<a class="headerlink" href="#calibration-workflow" title="Link to this heading">#</a></h2>
 <p>The calibration modules define optical parameter models and the fitted relationships used for fluorescence and scattering calibration.</p>
 </section>
 <section id="module-RosettaX.workflow.apply_calibration.services">
-<span id="apply-calibration-workflow"></span><h2>Apply-calibration workflow<a class="headerlink" href="#module-RosettaX.workflow.apply_calibration.services" title="Link to this heading">#</a></h2>
+<span id="apply-calibration-workflow"></span><span id="module-RosettaX.workflow.scattering.model"></span><span id="module-RosettaX.workflow.scattering.calibration_services"></span><span id="module-RosettaX.workflow.scattering.mie_relation"></span><h2>Apply-calibration workflow<a class="headerlink" href="#module-RosettaX.workflow.apply_calibration.services" title="Link to this heading">#</a></h2>
 </section>
 <section id="peak-workflow">
-<span id="module-RosettaX.workflow.apply_calibration.fluorescence"></span><h2>Peak workflow<a class="headerlink" href="#peak-workflow" title="Link to this heading">#</a></h2>
+<span id="module-RosettaX.workflow.apply_calibration.scattering"></span><span id="module-RosettaX.workflow.apply_calibration.fluorescence"></span><h2>Peak workflow<a class="headerlink" href="#peak-workflow" title="Link to this heading">#</a></h2>
 <p>Peak detection and annotation are distributed across adapters, registry helpers, plotting helpers, and lower-level scripts.</p>
 </section>
 <section id="module-RosettaX.workflow.save.services">
