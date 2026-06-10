@@ -264,6 +264,21 @@ class Test_ScatteringModelConfigurationScattererPresets:
 
         assert len(figure.data) >= 3
 
+    def test_optical_preview_omits_geometry_when_detector_preset_is_empty(self):
+        figure = ModelConfiguration.build_optical_configuration_preview_figure(
+            detector_numerical_aperture=0.2,
+            detector_cache_numerical_aperture=0.0,
+            blocker_bar_numerical_aperture=0.0,
+            medium_refractive_index=1.333,
+            detector_phi_angle_degree=0.0,
+            detector_gamma_angle_degree=0.0,
+            detector_sampling=200,
+            detector_configuration_preset="",
+        )
+
+        assert len(figure.data) == 0
+        assert figure.layout.scene is not None
+
 
 class Test_ScatteringCalibrationStandardTable:
     def test_runtime_config_uses_scatterer_preset_when_geometry_lists_are_empty(self):

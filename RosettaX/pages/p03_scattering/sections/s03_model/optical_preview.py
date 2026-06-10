@@ -22,6 +22,7 @@ def build_optical_configuration_preview_figure(
     camera: Optional[dict[str, Any]] = None,
     detector_sampling: Any = 200,
     detector_angular_weights: Optional[np.ndarray] = None,
+    include_geometry: bool = True,
 ) -> go.Figure:
     """
     Build an interactive 3D optical configuration preview.
@@ -66,23 +67,12 @@ def build_optical_configuration_preview_figure(
         name="detector_sampling",
     )
 
-    detector_visible_mask: Optional[tuple[bool, ...]] = None
-
-    if detector_angular_weights is not None:
-        detector_visible_mask = tuple(
-            bool(value != 0.0)
-            for value in np.asarray(
-                detector_angular_weights,
-                dtype=np.complex128,
-            ).reshape(-1)
-        )
-
     logger.debug(
         "Building optical preview figure with detector_numerical_aperture=%r, "
         "blocker_bar_numerical_aperture=%r, medium_refractive_index=%r, "
         "detector_phi_angle_degree=%r, detector_gamma_angle_degree=%r, "
         "detector_sampling=%r, detector_angular_weights_provided=%r, "
-        "scatter_coordinates_provided=%r",
+        "scatter_coordinates_provided=%r, include_geometry=%r",
         resolved_detector_numerical_aperture,
         resolved_blocker_bar_numerical_aperture,
         resolved_medium_refractive_index,
@@ -91,38 +81,51 @@ def build_optical_configuration_preview_figure(
         resolved_detector_sampling,
         detector_angular_weights is not None,
         scatter_coordinates is not None,
-    )
-
-    resolved_scatter_coordinates = resolve_scatter_coordinates(
-        scatter_coordinates=scatter_coordinates,
-        detector_numerical_aperture=resolved_detector_numerical_aperture,
-        blocker_bar_numerical_aperture=resolved_blocker_bar_numerical_aperture,
-        medium_refractive_index=resolved_medium_refractive_index,
-        detector_phi_angle_degree=resolved_detector_phi_angle_degree,
-        detector_gamma_angle_degree=resolved_detector_gamma_angle_degree,
-        detector_sampling=resolved_detector_sampling,
-        detector_visible_mask=detector_visible_mask,
-    )
-
-    _log_coordinate_summary(
-        name="resolved_scatter_coordinates",
-        coordinate_array=resolved_scatter_coordinates,
+        include_geometry,
     )
 
     resolved_camera = resolve_locked_camera(camera=camera)
 
     figure = go.Figure()
 
-    figure.add_trace(_build_unit_sphere_trace())
-    figure.add_trace(_build_center_sphere_trace())
-    figure.add_trace(
-        _build_scatter_points_trace(
-            scatter_coordinates=resolved_scatter_coordinates,
-        )
-    )
+    if include_geometry:
+        detector_visible_mask: Optional[tuple[bool, ...]] = None
 
-    for trace in _build_incident_wave_traces():
-        figure.add_trace(trace)
+        if detector_angular_weights is not None:
+            detector_visible_mask = tuple(
+                bool(value != 0.0)
+                for value in np.asarray(
+                    detector_angular_weights,
+                    dtype=np.complex128,
+                ).reshape(-1)
+            )
+
+        resolved_scatter_coordinates = resolve_scatter_coordinates(
+            scatter_coordinates=scatter_coordinates,
+            detector_numerical_aperture=resolved_detector_numerical_aperture,
+            blocker_bar_numerical_aperture=resolved_blocker_bar_numerical_aperture,
+            medium_refractive_index=resolved_medium_refractive_index,
+            detector_phi_angle_degree=resolved_detector_phi_angle_degree,
+            detector_gamma_angle_degree=resolved_detector_gamma_angle_degree,
+            detector_sampling=resolved_detector_sampling,
+            detector_visible_mask=detector_visible_mask,
+        )
+
+        _log_coordinate_summary(
+            name="resolved_scatter_coordinates",
+            coordinate_array=resolved_scatter_coordinates,
+        )
+
+        figure.add_trace(_build_unit_sphere_trace())
+        figure.add_trace(_build_center_sphere_trace())
+        figure.add_trace(
+            _build_scatter_points_trace(
+                scatter_coordinates=resolved_scatter_coordinates,
+            )
+        )
+
+        for trace in _build_incident_wave_traces():
+            figure.add_trace(trace)
 
     figure.update_layout(
         margin={

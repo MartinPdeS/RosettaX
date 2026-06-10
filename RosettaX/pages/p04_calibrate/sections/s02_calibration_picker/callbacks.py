@@ -8,6 +8,7 @@ import dash
 from RosettaX.utils import RuntimeConfig
 from RosettaX.workflow.apply_calibration.scattering import (
     CUSTOM_PRESET_NAME,
+    build_scattering_target_model_preset_options,
     get_scattering_target_model_preset,
 )
 
@@ -40,6 +41,7 @@ class CalibrationPickerCallbacks:
         self._register_target_model_preset_runtime_sync_callback()
         self._register_target_model_preset_callback()
         self._register_target_model_preset_disabled_state_callback()
+        self._register_target_model_details_visibility_callback()
         self._register_target_model_parameter_visibility_callback()
         self._register_target_mie_relation_preview_callback()
         self._register_target_mie_relation_axis_scale_runtime_sync_callback()
@@ -67,12 +69,59 @@ class CalibrationPickerCallbacks:
                 runtime_config_data if isinstance(runtime_config_data, dict) else None
             )
 
-            return get_scattering_target_model_preset(
-                runtime_config.get_str(
-                    "calibration.target_model_preset",
-                    default=CUSTOM_PRESET_NAME,
+            configured_value = runtime_config.get_str(
+                "calibration.target_model_preset",
+                default=CUSTOM_PRESET_NAME,
+            )
+
+            available_values = {
+                option.get("value")
+                for option in build_scattering_target_model_preset_options(
+                    include_empty_option=True,
+                    empty_label="Select",
                 )
+                if isinstance(option, dict)
+            }
+
+            if configured_value in available_values:
+                return configured_value
+
+            return get_scattering_target_model_preset(
+                configured_value,
             ).name
+
+    def _register_target_model_details_visibility_callback(self) -> None:
+        """
+        Show target model detail boxes only after a preset is selected.
+        """
+
+        @dash.callback(
+            dash.Output(
+                self.page.ids.CalibrationPicker.target_model_details_container,
+                "style",
+            ),
+            dash.Output(
+                self.page.ids.CalibrationPicker.target_mie_relation_preview_container,
+                "style",
+            ),
+            dash.Input(
+                self.page.ids.CalibrationPicker.target_model_preset,
+                "value",
+            ),
+            prevent_initial_call=False,
+        )
+        def toggle_target_model_detail_boxes(
+            target_model_preset: Any,
+        ) -> tuple[dict[str, str], dict[str, str]]:
+            has_selected_preset = services.has_selected_target_model_preset(
+                target_model_preset,
+            )
+
+            visible_style = services.build_scattering_target_model_container_style(
+                is_visible=has_selected_preset,
+            )
+
+            return visible_style, dict(visible_style)
 
     def _register_target_model_preset_callback(self) -> None:
         """
@@ -297,6 +346,13 @@ class CalibrationPickerCallbacks:
             )
 
             is_core_shell_model = resolved_target_mie_model == "Core/Shell Sphere"
+
+            if not services.has_selected_target_model_preset(target_model_preset):
+                hidden_style = services.build_target_parameter_container_style(
+                    is_visible=False,
+                )
+
+                return hidden_style, dict(hidden_style)
 
             is_preset_selected = str(
                 target_model_preset or CUSTOM_PRESET_NAME,
@@ -553,6 +609,10 @@ class CalibrationPickerCallbacks:
                 "value",
             ),
             dash.Input(
+                self.page.ids.CalibrationPicker.target_model_preset,
+                "value",
+            ),
+            dash.Input(
                 self.page.ids.CalibrationPicker.target_mie_relation_axis_scale_toggle,
                 "value",
             ),
@@ -572,6 +632,7 @@ class CalibrationPickerCallbacks:
             target_core_shell_core_diameter_min_nm: Any,
             target_core_shell_core_diameter_max_nm: Any,
             target_core_shell_core_diameter_count: Any,
+            target_model_preset: Any,
             axis_scale_toggle_values: Any,
         ) -> tuple[Any, str, str]:
             logger.debug(
@@ -600,6 +661,7 @@ class CalibrationPickerCallbacks:
                 target_core_shell_core_diameter_min_nm,
                 target_core_shell_core_diameter_max_nm,
                 target_core_shell_core_diameter_count,
+                target_model_preset,
                 axis_scale_toggle_values,
             )
 
@@ -610,6 +672,13 @@ class CalibrationPickerCallbacks:
                 return (
                     services.build_empty_target_mie_relation_figure(),
                     "Select a scattering calibration to preview the target Mie relation.",
+                    "secondary",
+                )
+
+            if not services.has_selected_target_model_preset(target_model_preset):
+                return (
+                    services.build_empty_target_mie_relation_figure(),
+                    "Select a target model preset to preview the target Mie relation.",
                     "secondary",
                 )
 

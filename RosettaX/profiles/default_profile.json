@@ -11,14 +11,14 @@
   },
   "calibration": {
     "mesf_values": [],
-    "default_fluorescence_peak_process": "Automatic 1D",
+    "default_fluorescence_peak_process": "",
     "histogram_scale": "log",
     "histogram_xscale": "linear",
     "histogram_yscale": "log",
     "max_events_for_analysis": 100000,
     "n_bins_for_plots": 256,
     "peak_graph_colormap_log": false,
-    "target_model_preset": "Custom",
+    "target_model_preset": "",
     "target_mie_relation_xscale": "linear",
     "target_mie_relation_yscale": "log"
   },
@@ -48,7 +48,7 @@
   },
   "scattering_calibration": {
     "peak_table_sort_order": "descending",
-    "default_peak_process": "Automatic 1D",
+    "default_peak_process": "",
     "default_detector_selection_mode": "auto-detect"
   },
   "metadata": {

@@ -91,19 +91,34 @@ def build_scattering_target_model_presets() -> dict[str, ScatteringTargetModelPr
     }
 
 
-def build_scattering_target_model_preset_options() -> list[dict[str, str]]:
+def build_scattering_target_model_preset_options(
+    *,
+    include_empty_option: bool = False,
+    empty_label: str = "Select",
+) -> list[dict[str, str]]:
     """
     Build Dash dropdown options for target model presets.
     """
     presets = build_scattering_target_model_presets()
 
-    return [
+    options = [
         {
             "label": preset.name,
             "value": preset.name,
         }
         for preset in presets.values()
     ]
+
+    if include_empty_option:
+        return [
+            {
+                "label": empty_label,
+                "value": "",
+            },
+            *options,
+        ]
+
+    return options
 
 
 def get_scattering_target_model_preset(

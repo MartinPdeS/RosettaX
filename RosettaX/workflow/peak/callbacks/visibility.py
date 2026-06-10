@@ -18,6 +18,10 @@ def register_visibility_callbacks(
         ids=ids,
     )
 
+    register_graph_toggle_control_visibility_callback(
+        ids=ids,
+    )
+
     register_force_graph_visible_callback(
         ids=ids,
     )
@@ -62,6 +66,79 @@ def graph_toggle_is_enabled(
     return False
 
 
+def has_selected_process(
+    process_name: Any,
+) -> bool:
+    """
+    Return whether a concrete peak process is selected.
+    """
+    return bool(registry.get_selected_process_name(process_name))
+
+
+def build_graph_toggle_control_style(
+    process_name: Any,
+) -> dict[str, str]:
+    """
+    Build the graph toggle style for the selected process state.
+    """
+    if not has_selected_process(process_name):
+        return {
+            "display": "none",
+        }
+
+    return {
+        "display": "inline-flex",
+    }
+
+
+def build_graph_container_style(
+    *,
+    process_name: Any,
+    graph_toggle_value: Any,
+) -> dict[str, str]:
+    """
+    Build the graph container style for the selected process state.
+    """
+    if not has_selected_process(process_name):
+        return {
+            "display": "none",
+        }
+
+    if graph_toggle_is_enabled(graph_toggle_value):
+        return {
+            "display": "block",
+        }
+
+    return {
+        "display": "none",
+    }
+
+
+def register_graph_toggle_control_visibility_callback(
+    *,
+    ids: Any,
+) -> None:
+    """
+    Hide the graph toggle until a peak process is selected.
+    """
+
+    @dash.callback(
+        dash.Output(
+            ids.graph_toggle_switch,
+            "style",
+        ),
+        dash.Input(
+            ids.process_dropdown,
+            "value",
+        ),
+        prevent_initial_call=False,
+    )
+    def toggle_graph_toggle_control(
+        process_name: Any,
+    ) -> dict[str, str]:
+        return build_graph_toggle_control_style(process_name)
+
+
 def register_process_visibility_callback(
     *,
     ids: Any,
@@ -89,11 +166,19 @@ def register_process_visibility_callback(
         process_name: Any,
         process_container_ids: list[dict[str, Any]],
     ) -> list[dict[str, Any]]:
-        resolved_process_name = registry.resolve_process_name(
+        selected_process_name = registry.get_selected_process_name(
             process_name,
         )
 
         styles: list[dict[str, Any]] = []
+
+        if not selected_process_name:
+            return [
+                {
+                    "display": "none",
+                }
+                for _ in (process_container_ids or [])
+            ]
 
         for process_container_id in process_container_ids or []:
             if not isinstance(
@@ -125,7 +210,7 @@ def register_process_visibility_callback(
 
             styles.append(
                 process.build_visibility_style(
-                    selected_process_name=resolved_process_name,
+                    selected_process_name=selected_process_name,
                 )
             )
 
@@ -163,19 +248,22 @@ def register_force_graph_visible_callback(
         process_name: Any,
         current_graph_toggle_value: Any,
     ) -> Any:
-        resolved_process_name = registry.resolve_process_name(
+        selected_process_name = registry.get_selected_process_name(
             process_name,
         )
 
+        if not selected_process_name:
+            return []
+
         process = registry.get_process_instance(
-            process_name=resolved_process_name,
+            process_name=selected_process_name,
         )
 
         if process is None:
             return current_graph_toggle_value
 
         if process.should_force_graph_visible(
-            selected_process_name=resolved_process_name,
+            selected_process_name=selected_process_name,
         ):
             return [
                 "enabled",
@@ -198,24 +286,23 @@ def register_graph_visibility_callback(
             "style",
         ),
         dash.Input(
+            ids.process_dropdown,
+            "value",
+        ),
+        dash.Input(
             ids.graph_toggle_switch,
             "value",
         ),
         prevent_initial_call=False,
     )
     def toggle_graph_container(
+        process_name: Any,
         graph_toggle_value: Any,
     ) -> dict[str, str]:
-        if graph_toggle_is_enabled(
-            graph_toggle_value,
-        ):
-            return {
-                "display": "block",
-            }
-
-        return {
-            "display": "none",
-        }
+        return build_graph_container_style(
+            process_name=process_name,
+            graph_toggle_value=graph_toggle_value,
+        )
 
 
 def register_graph_controls_visibility_callback(
@@ -244,12 +331,17 @@ def register_graph_controls_visibility_callback(
     def toggle_graph_controls(
         process_name: Any,
     ) -> dict[str, Any]:
-        resolved_process_name = registry.resolve_process_name(
+        selected_process_name = registry.get_selected_process_name(
             process_name,
         )
 
+        if not selected_process_name:
+            return {
+                "display": "none",
+            }
+
         process = registry.get_process_instance(
-            process_name=resolved_process_name,
+            process_name=selected_process_name,
         )
 
         if process is None:
@@ -304,12 +396,17 @@ def register_bins_visibility_callback(
     def toggle_bins_control(
         process_name: Any,
     ) -> dict[str, Any]:
-        resolved_process_name = registry.resolve_process_name(
+        selected_process_name = registry.get_selected_process_name(
             process_name,
         )
 
+        if not selected_process_name:
+            return {
+                "display": "none",
+            }
+
         process = registry.get_process_instance(
-            process_name=resolved_process_name,
+            process_name=selected_process_name,
         )
 
         if process is None:

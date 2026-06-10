@@ -202,60 +202,19 @@ class CalibrationPickerLayout:
         """
         return dash.html.Div(
             [
-                dbc.Card(
+                dash.html.Div(
                     [
-                        dbc.CardHeader(
-                            [
-                                ui_forms.build_title_with_info(
-                                    title="Target particle model",
-                                    tooltip_target_id=self.target_model_tooltip_target_id,
-                                    tooltip_id=self.target_model_tooltip_id,
-                                    tooltip_text=(
-                                        "The selected scattering calibration provides the "
-                                        "instrument response. These parameters define the "
-                                        "target particle model used to convert calibrated "
-                                        "optical coupling into equivalent diameter."
-                                    ),
-                                    subtitle=(
-                                        "Configure the target Mie model used for scattering "
-                                        "diameter inversion."
-                                    ),
-                                    title_style_overrides={
-                                        "fontSize": "1rem",
-                                    },
-                                ),
-                            ],
-                            style=ui_forms.build_workflow_subpanel_header_style(
-                                color_name=self.card_color,
-                            ),
-                        ),
-                        dbc.CardBody(
-                            [
-                                dash.html.Div(
-                                    [
-                                        self._build_target_model_controls_panel(),
-                                        self._build_target_mie_relation_preview_panel(),
-                                    ],
-                                    style={
-                                        "display": "flex",
-                                        "gap": "18px",
-                                        "alignItems": "stretch",
-                                        "width": "100%",
-                                        "flexWrap": "wrap",
-                                        "overflow": "visible",
-                                    },
-                                ),
-                            ],
-                            style=ui_forms.build_workflow_panel_body_style(
-                                style_overrides={
-                                    "padding": "16px",
-                                },
-                            ),
-                        ),
+                        self._build_target_model_controls_panel(),
+                        self._build_target_mie_relation_preview_panel(),
                     ],
-                    style=ui_forms.build_workflow_subpanel_card_style(
-                        color_name=self.card_color,
-                    ),
+                    style={
+                        "display": "flex",
+                        "gap": "18px",
+                        "alignItems": "stretch",
+                        "width": "100%",
+                        "flexWrap": "wrap",
+                        "overflow": "visible",
+                    },
                 ),
             ],
             id=self.page.ids.CalibrationPicker.scattering_target_model_container,
@@ -304,8 +263,11 @@ class CalibrationPickerLayout:
                             label="Preset:",
                             control=ui_forms.persistent_dropdown(
                                 id=self.page.ids.CalibrationPicker.target_model_preset,
-                                options=apply_calibration.scattering.build_scattering_target_model_preset_options(),
-                                value=apply_calibration.scattering.CUSTOM_PRESET_NAME,
+                                options=apply_calibration.scattering.build_scattering_target_model_preset_options(
+                                    include_empty_option=True,
+                                    empty_label="Select",
+                                ),
+                                value="",
                                 clearable=False,
                                 searchable=False,
                                 style={
@@ -315,31 +277,39 @@ class CalibrationPickerLayout:
                             label_width_px=230,
                             margin_top=False,
                         ),
-                        ui_forms.build_inline_row(
-                            label="Particle type:",
-                            control=ui_forms.persistent_dropdown(
-                                id=self.page.ids.CalibrationPicker.target_mie_model,
-                                options=self.model_configuration.mie_model_options,
-                                value="Solid Sphere",
-                                clearable=False,
-                                searchable=False,
-                                style={
-                                    "width": "220px",
-                                },
+                        dash.html.Div(
+                            [
+                                ui_forms.build_inline_row(
+                                    label="Particle type:",
+                                    control=ui_forms.persistent_dropdown(
+                                        id=self.page.ids.CalibrationPicker.target_mie_model,
+                                        options=self.model_configuration.mie_model_options,
+                                        value="Solid Sphere",
+                                        clearable=False,
+                                        searchable=False,
+                                        style={
+                                            "width": "220px",
+                                        },
+                                    ),
+                                    label_width_px=230,
+                                    margin_top=True,
+                                ),
+                                self._build_numeric_input_row(
+                                    label="Medium refractive index:",
+                                    component_id=self.page.ids.CalibrationPicker.target_medium_refractive_index,
+                                    value=1.333,
+                                    min_value=1.0,
+                                    max_value=2.5,
+                                    step=0.001,
+                                ),
+                                self._build_solid_sphere_parameters(),
+                                self._build_core_shell_parameters(),
+                            ],
+                            id=self.page.ids.CalibrationPicker.target_model_details_container,
+                            style=services.build_scattering_target_model_container_style(
+                                is_visible=False,
                             ),
-                            label_width_px=230,
-                            margin_top=True,
                         ),
-                        self._build_numeric_input_row(
-                            label="Medium refractive index:",
-                            component_id=self.page.ids.CalibrationPicker.target_medium_refractive_index,
-                            value=1.333,
-                            min_value=1.0,
-                            max_value=2.5,
-                            step=0.001,
-                        ),
-                        self._build_solid_sphere_parameters(),
-                        self._build_core_shell_parameters(),
                     ],
                     style=ui_forms.build_workflow_panel_body_style(
                         style_overrides={
@@ -460,67 +430,73 @@ class CalibrationPickerLayout:
         """
         Build the target Mie relation preview panel.
         """
-        return dbc.Card(
-            [
-                dbc.CardHeader(
-                    [
-                        ui_forms.build_title_with_info(
-                            title="Target Mie relation preview",
-                            tooltip_target_id=self.target_graph_tooltip_target_id,
-                            tooltip_id=self.target_graph_tooltip_id,
-                            tooltip_text=(
-                                "This preview shows the target Mie relation used for "
-                                "diameter inversion. If the full relation is not monotonic, "
-                                "RosettaX automatically selects the largest monotonic branch."
+        return dash.html.Div(
+            dbc.Card(
+                [
+                    dbc.CardHeader(
+                        [
+                            ui_forms.build_title_with_info(
+                                title="Target Mie relation preview",
+                                tooltip_target_id=self.target_graph_tooltip_target_id,
+                                tooltip_id=self.target_graph_tooltip_id,
+                                tooltip_text=(
+                                    "This preview shows the target Mie relation used for "
+                                    "diameter inversion. If the full relation is not monotonic, "
+                                    "RosettaX automatically selects the largest monotonic branch."
+                                ),
+                                subtitle="Full relation and selected monotonic branch when needed.",
+                                title_style_overrides={
+                                    "fontSize": "0.98rem",
+                                },
                             ),
-                            subtitle="Full relation and selected monotonic branch when needed.",
-                            title_style_overrides={
-                                "fontSize": "0.98rem",
+                        ],
+                        style=ui_forms.build_workflow_subpanel_header_style(
+                            color_name=self.secondary_card_color,
+                        ),
+                    ),
+                    dbc.CardBody(
+                        [
+                            dbc.Alert(
+                                "Target Mie relation status will appear here.",
+                                id=self.page.ids.CalibrationPicker.target_mie_relation_status,
+                                color="secondary",
+                                style={
+                                    "marginBottom": "10px",
+                                },
+                            ),
+                            plotting.scatter2d.Scatter2DGraph.build_component(
+                                component_ids=plotting.scatter2d.Scatter2DGraphIds(
+                                    graph=self.page.ids.CalibrationPicker.target_mie_relation_graph,
+                                    axis_scale_toggle=self.page.ids.CalibrationPicker.target_mie_relation_axis_scale_toggle,
+                                ),
+                                figure=services.build_empty_target_mie_relation_figure(),
+                                x_log_enabled=self._get_default_target_mie_relation_xscale() == "log",
+                                y_log_enabled=self._get_default_target_mie_relation_yscale() == "log",
+                                graph_style={
+                                    "height": "320px",
+                                    "width": "100%",
+                                },
+                            ),
+                        ],
+                        style=ui_forms.build_workflow_panel_body_style(
+                            style_overrides={
+                                "padding": "14px",
                             },
                         ),
-                    ],
-                    style=ui_forms.build_workflow_subpanel_header_style(
+                    ),
+                ],
+                style={
+                    **ui_forms.build_workflow_subpanel_card_style(
                         color_name=self.secondary_card_color,
                     ),
-                ),
-                dbc.CardBody(
-                    [
-                        dbc.Alert(
-                            "Target Mie relation status will appear here.",
-                            id=self.page.ids.CalibrationPicker.target_mie_relation_status,
-                            color="secondary",
-                            style={
-                                "marginBottom": "10px",
-                            },
-                        ),
-                        plotting.scatter2d.Scatter2DGraph.build_component(
-                            component_ids=plotting.scatter2d.Scatter2DGraphIds(
-                                graph=self.page.ids.CalibrationPicker.target_mie_relation_graph,
-                                axis_scale_toggle=self.page.ids.CalibrationPicker.target_mie_relation_axis_scale_toggle,
-                            ),
-                            figure=services.build_empty_target_mie_relation_figure(),
-                            x_log_enabled=self._get_default_target_mie_relation_xscale() == "log",
-                            y_log_enabled=self._get_default_target_mie_relation_yscale() == "log",
-                            graph_style={
-                                "height": "320px",
-                                "width": "100%",
-                            },
-                        ),
-                    ],
-                    style=ui_forms.build_workflow_panel_body_style(
-                        style_overrides={
-                            "padding": "14px",
-                        },
-                    ),
-                ),
-            ],
-            style={
-                **ui_forms.build_workflow_subpanel_card_style(
-                    color_name=self.secondary_card_color,
-                ),
-                "flex": "1.25 1 560px",
-                "minWidth": "440px",
-            },
+                    "flex": "1.25 1 560px",
+                    "minWidth": "440px",
+                },
+            ),
+            id=self.page.ids.CalibrationPicker.target_mie_relation_preview_container,
+            style=services.build_scattering_target_model_container_style(
+                is_visible=False,
+            ),
         )
 
     def _build_numeric_input_row(

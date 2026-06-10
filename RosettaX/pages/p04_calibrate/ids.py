@@ -30,6 +30,14 @@ class Ids:
             f"{page_name}-calibration-picker-target-model-preset"
         )
 
+        target_model_details_container = (
+            f"{page_name}-calibration-picker-target-model-details-container"
+        )
+
+        target_mie_relation_preview_container = (
+            f"{page_name}-calibration-picker-target-mie-relation-preview-container"
+        )
+
         target_solid_sphere_parameter_container = (
             f"{page_name}-calibration-picker-target-solid-sphere-parameter-container"
         )

@@ -557,7 +557,7 @@ class Model:
                     ],
                     id=self.ids.particle_configuration_custom_values_container,
                     style=self._build_preset_configuration_container_style(
-                        is_visible=True,
+                        is_visible=False,
                     ),
                 ),
             ],

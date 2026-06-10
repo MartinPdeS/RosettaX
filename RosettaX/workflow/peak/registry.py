@@ -43,6 +43,13 @@ def clean_optional_string(value: Any) -> str:
     return cleaned_value
 
 
+def get_selected_process_name(process_name: Any) -> str:
+    """
+    Return the explicitly selected peak process name, if any.
+    """
+    return clean_optional_string(process_name)
+
+
 @lru_cache(maxsize=1)
 def load_peak_scripts() -> tuple[Any, ...]:
     """
@@ -264,9 +271,7 @@ def resolve_process_name(process_name: Any) -> str:
     str
         Resolved process name.
     """
-    process_name_clean = clean_optional_string(
-        process_name,
-    )
+    process_name_clean = get_selected_process_name(process_name)
 
     if process_name_clean:
         return process_name_clean
@@ -310,7 +315,11 @@ def get_process_instance(
     return None
 
 
-def build_peak_process_options() -> list[dict[str, str]]:
+def build_peak_process_options(
+    *,
+    include_empty_option: bool = False,
+    empty_label: str = "Select",
+) -> list[dict[str, str]]:
     """
     Build peak process dropdown options from cached peak scripts.
 
@@ -319,10 +328,21 @@ def build_peak_process_options() -> list[dict[str, str]]:
     list[dict[str, str]]
         Dropdown options.
     """
-    return [
+    options = [
         script.get_process_option()
         for script in get_peak_process_instances()
     ]
+
+    if include_empty_option:
+        return [
+            {
+                "label": empty_label,
+                "value": "",
+            },
+            *options,
+        ]
+
+    return options
 
 
 def get_default_script_name(

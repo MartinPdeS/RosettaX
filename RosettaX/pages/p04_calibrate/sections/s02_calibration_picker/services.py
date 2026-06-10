@@ -206,6 +206,15 @@ def build_scattering_target_model_container_style(
     }
 
 
+def has_selected_target_model_preset(
+    target_model_preset: Any,
+) -> bool:
+    """
+    Return whether a concrete target model preset has been chosen.
+    """
+    return bool(str(target_model_preset or "").strip())
+
+
 def normalize_axis_scale(
     value: Any,
     *,

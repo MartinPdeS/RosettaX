@@ -7,6 +7,7 @@ from typing import Any, Optional
 import dash_bootstrap_components as dbc
 from dash import dcc, html
 
+from . import registry
 from .callbacks.shared import get_peak_processes
 from .models import PeakConfig
 from RosettaX.utils.runtime_config import RuntimeConfig
@@ -148,17 +149,9 @@ class PeakLayout:
         """
         Build the peak process selector dropdown.
         """
-        options = [
-            {
-                "label": self._get_process_label(
-                    process=process,
-                ),
-                "value": self._get_process_name(
-                    process=process,
-                ),
-            }
-            for process in processes
-        ]
+        options = registry.build_peak_process_options(
+            include_empty_option=True,
+        )
 
         selected_value = self._resolve_default_process_value(
             explicit_value=value,

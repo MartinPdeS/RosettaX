@@ -3,6 +3,7 @@
 from .configuration import (
     CUSTOM_DETECTOR_PRESET_NAME,
     build_detector_preset_options,
+    detector_preset_is_empty,
     detect_detector_preset_from_uploaded_fcs,
     detect_wavelength_nm_from_detector_channel,
     resolve_detector_preset_wavelength_nm,
@@ -33,6 +34,7 @@ __all__ = [
     "DEFAULT_DETECTOR_PRESET_DIRECTORY",
     "DetectorPresetLoader",
     "build_detector_preset_options",
+    "detector_preset_is_empty",
     "detect_detector_preset_from_uploaded_fcs",
     "detect_wavelength_nm_from_detector_channel",
     "get_default_detector_preset_loader",

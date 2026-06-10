@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from RosettaX.pages.p05_settings.sections.s01_default import services
+from RosettaX.pages.p05_settings.sections.s01_default import schema
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.apply_calibration.scattering import (
     EXTRACELLULAR_VESICLES_PRESET_NAME,
@@ -14,6 +15,20 @@ from RosettaX.workflow.scattering.model import ROSETTA_MIX_PRESET_NAME
 
 
 class Test_SettingsDefaultServicesPresetPreferences:
+    def test_schema_exposes_manual_selection_options_for_optional_defaults(self):
+        assert schema.PEAK_PROCESS_OPTIONS[0] == {
+            "label": "Select",
+            "value": "",
+        }
+        assert schema.SCATTERING_PRESET_OPTIONS[0] == {
+            "label": "Select",
+            "value": "",
+        }
+        assert schema.APPLY_TARGET_PRESET_OPTIONS[0] == {
+            "label": "Select",
+            "value": "",
+        }
+
     def test_build_form_store_reads_saved_preset_preferences(self):
         runtime_config = RuntimeConfig.from_dict(
             {
@@ -40,6 +55,27 @@ class Test_SettingsDefaultServicesPresetPreferences:
             form_store["default_apply_target_model_preset"]
             == EXTRACELLULAR_VESICLES_PRESET_NAME
         )
+
+    def test_build_form_store_preserves_manual_selection_defaults(self):
+        runtime_config = RuntimeConfig.from_dict(
+            {
+                "calibration": {
+                    "default_fluorescence_peak_process": "",
+                    "target_model_preset": "",
+                },
+                "scattering_calibration": {
+                    "default_peak_process": "",
+                },
+            }
+        )
+
+        form_store = services.build_form_store_from_runtime_config(
+            runtime_config,
+        )
+
+        assert form_store["default_fluorescence_peak_process"] == ""
+        assert form_store["default_scattering_peak_process"] == ""
+        assert form_store["default_apply_target_model_preset"] == ""
 
     def test_build_nested_profile_payload_saves_preset_preferences(self):
         nested_profile_payload = services.build_nested_profile_payload(

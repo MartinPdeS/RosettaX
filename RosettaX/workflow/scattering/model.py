@@ -108,7 +108,7 @@ def build_scattering_calibration_scatterer_preset_options() -> list[dict[str, st
     """
     return [
         {
-            "label": "No preset",
+            "label": "Select",
             "value": NO_SCATTERER_PRESET_NAME,
         },
         *[
@@ -700,6 +700,10 @@ class ModelConfiguration:
             current_blocker_bar_numerical_aperture=resolved_blocker_bar_numerical_aperture,
         )
 
+        include_geometry = not detector.detector_preset_is_empty(
+            detector_configuration_preset,
+        )
+
         return parameters.build_optical_configuration_preview_figure(
             detector_numerical_aperture=resolved_detector_numerical_aperture,
             blocker_bar_numerical_aperture=effective_blocker_bar_numerical_aperture,
@@ -709,6 +713,7 @@ class ModelConfiguration:
             detector_sampling=resolved_detector_sampling,
             detector_angular_weights=detector_angular_weights,
             camera=camera,
+            include_geometry=include_geometry,
         )
 
     @staticmethod

@@ -6,6 +6,7 @@ from types import SimpleNamespace
 
 import dash
 import numpy as np
+import pytest
 
 from RosettaX.pages.p00_sidebar.main import Sidebar
 from RosettaX.pages.p02_fluorescence.ids import Ids as FluorescenceIds
@@ -14,6 +15,7 @@ from RosettaX.pages.p03_scattering.ids import Ids as ScatteringIds
 from RosettaX.pages.p03_scattering.sections.s03_model.main import Model as ScatteringModel
 from RosettaX.pages.p03_scattering.sections.s05_calibration.main import Calibration as ScatteringCalibration
 from RosettaX.pages.p03_scattering.sections.s05_calibration import services as scattering_services
+from RosettaX.pages.p04_calibrate.sections.s04_apply import services as apply_services
 
 
 def _collect_component_ids(component) -> set[str]:
@@ -185,6 +187,88 @@ class Test_ScatteringCalibrationCallbackOutputs:
         rows = [{"particle_diameter_nm": "100"}]
 
         assert ScatteringCalibration._resolve_bead_table_output(rows) == rows
+
+
+class Test_ApplyCalibrationPage:
+    def test_layout_uses_model_panels_without_target_particle_model_wrapper(
+        self,
+        monkeypatch,
+    ) -> None:
+        monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
+
+        apply_main = importlib.import_module("RosettaX.pages.p04_calibrate.main")
+        page = apply_main.ApplyCalibrationPage()
+
+        layout = page.layout()
+        text_nodes = _collect_text(layout)
+
+        assert "Target particle model" not in text_nodes
+        assert "Model parameters" in text_nodes
+        assert "Target Mie relation preview" in text_nodes
+
+    def test_layout_starts_with_select_placeholder_and_hidden_target_model_boxes(
+        self,
+        monkeypatch,
+    ) -> None:
+        monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
+
+        apply_main = importlib.import_module("RosettaX.pages.p04_calibrate.main")
+        page = apply_main.ApplyCalibrationPage()
+
+        layout = page.layout()
+
+        preset_dropdown = _find_component_by_id(
+            layout,
+            page.ids.CalibrationPicker.target_model_preset,
+        )
+        details_container = _find_component_by_id(
+            layout,
+            page.ids.CalibrationPicker.target_model_details_container,
+        )
+        preview_container = _find_component_by_id(
+            layout,
+            page.ids.CalibrationPicker.target_mie_relation_preview_container,
+        )
+
+        assert preset_dropdown is not None
+        assert preset_dropdown.value == ""
+        assert preset_dropdown.options[0] == {
+            "label": "Select",
+            "value": "",
+        }
+        assert details_container is not None
+        assert details_container.style["display"] == "none"
+        assert preview_container is not None
+        assert preview_container.style["display"] == "none"
+
+    def test_build_apply_calibration_request_requires_target_model_selection_for_scattering(
+        self,
+    ) -> None:
+        with pytest.raises(ValueError, match="Select a target model preset first."):
+            apply_services.build_apply_calibration_request(
+                uploaded_fcs_path=["/tmp/input.fcs"],
+                export_columns=[],
+                selected_calibration_summary={
+                    "requires_target_model": True,
+                    "file_name": "scattering.json",
+                    "calibration_payload": {
+                        "calibration_type": "scattering",
+                    },
+                },
+                target_model_preset="",
+                target_mie_model="Solid Sphere",
+                target_medium_refractive_index=1.333,
+                target_particle_refractive_index=1.39,
+                target_solid_sphere_diameter_min_nm=30,
+                target_solid_sphere_diameter_max_nm=1000,
+                target_solid_sphere_diameter_count=500,
+                target_core_refractive_index=1.37,
+                target_shell_refractive_index=1.46,
+                target_shell_thickness_nm=5,
+                target_core_shell_core_diameter_min_nm=30,
+                target_core_shell_core_diameter_max_nm=1000,
+                target_core_shell_core_diameter_count=500,
+            )
 
 
 class Test_DocumentationPage:

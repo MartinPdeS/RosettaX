@@ -218,6 +218,7 @@ def build_apply_calibration_request(
     uploaded_fcs_path: Any,
     export_columns: Any,
     selected_calibration_summary: Any,
+    target_model_preset: Any,
     target_mie_model: Any,
     target_medium_refractive_index: Any,
     target_particle_refractive_index: Any,
@@ -243,6 +244,11 @@ def build_apply_calibration_request(
 
     if not isinstance(selected_calibration_summary, dict):
         raise ValueError("Upload a calibration JSON file first.")
+
+    if bool(selected_calibration_summary.get("requires_target_model")) and not str(
+        target_model_preset or ""
+    ).strip():
+        raise ValueError("Select a target model preset first.")
 
     calibration_payload = selected_calibration_summary.get("calibration_payload")
 
