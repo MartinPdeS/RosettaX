@@ -12,6 +12,7 @@ from RosettaX.pages.p02_fluorescence.ids import Ids as FluorescenceIds
 from RosettaX.pages.p02_fluorescence.sections.s04_calibration.main import Calibration
 from RosettaX.pages.p03_scattering.ids import Ids as ScatteringIds
 from RosettaX.pages.p03_scattering.sections.s03_model.main import Model as ScatteringModel
+from RosettaX.pages.p03_scattering.sections.s05_calibration.main import Calibration as ScatteringCalibration
 from RosettaX.pages.p03_scattering.sections.s05_calibration import services as scattering_services
 
 
@@ -153,6 +154,16 @@ class Test_ScatteringModelLayout:
 
         assert custom_values_container is not None
         assert section.ids.wavelength_nm in _collect_component_ids(custom_values_container)
+
+
+class Test_ScatteringCalibrationCallbackOutputs:
+    def test_missing_table_update_keeps_existing_rows(self) -> None:
+        assert ScatteringCalibration._resolve_bead_table_output(None) is dash.no_update
+
+    def test_explicit_table_update_is_forwarded(self) -> None:
+        rows = [{"particle_diameter_nm": "100"}]
+
+        assert ScatteringCalibration._resolve_bead_table_output(rows) == rows
 
 
 class Test_DocumentationPage:

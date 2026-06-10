@@ -106,6 +106,18 @@ class Calibration:
             ),
         )
 
+    @staticmethod
+    def _resolve_bead_table_output(
+        next_bead_table_data: Any,
+    ) -> Any:
+        """
+        Preserve the current table when calibration does not return replacement rows.
+        """
+        if next_bead_table_data is None:
+            return dash.no_update
+
+        return next_bead_table_data
+
     def _build_body(self) -> dbc.CardBody:
         """
         Build the section body.
@@ -732,7 +744,7 @@ class Calibration:
 
             return (
                 page_state.to_dict(),
-                next_bead_table_data,
+                self._resolve_bead_table_output(next_bead_table_data),
                 slope_text,
                 intercept_text,
                 r_squared_text,
