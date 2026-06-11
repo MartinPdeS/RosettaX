@@ -153,7 +153,6 @@ class HomePage:
                         "height": "18px",
                     },
                 ),
-                self._footer_links(),
             ],
             fluid=True,
             style={

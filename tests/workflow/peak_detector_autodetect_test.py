@@ -134,6 +134,82 @@ class Test_DetectorAutoDetect:
 
         assert resolved_preset == "Beckman Coulter CytoFLEX SSC"
 
+    def test_detect_detector_preset_from_uploaded_fcs_supports_cytek_aurora_aliases(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        metadata = build_metadata(
+            instrument_name="Cytek Aurora 5L",
+            column_names=["FSC-A", "SSC-A", "FL1-A"],
+        )
+        monkeypatch.setattr(
+            detector_configuration,
+            "FCSFile",
+            lambda _path: FakeFCSFile(metadata),
+        )
+
+        resolved_preset = detector_configuration.detect_detector_preset_from_uploaded_fcs(
+            uploaded_fcs_path="example.fcs",
+            selected_detector_channel="SSC-A",
+        )
+
+        assert resolved_preset == "Cytek Aurora SSC"
+
+    def test_infer_default_detector_channel_uses_packaged_attune_rule(
+        self,
+    ) -> None:
+        metadata = build_metadata(
+            instrument_name="Thermo Fisher Attune NxT",
+            column_names=["Time", "FSC-A", "SSC-A", "FL1-A"],
+        )
+
+        resolved_channel = detectors.infer_default_detector_channel(
+            column_names=metadata.column_names,
+            metadata=metadata,
+            detector_role="primary",
+            selection_mode="auto-detect",
+        )
+
+        assert resolved_channel == "SSC-A"
+
+    def test_detect_detector_preset_from_uploaded_fcs_supports_nanofcm_aliases(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        metadata = build_metadata(
+            instrument_name="nanoFCM NanoAnalyzer",
+            column_names=["405LALS(Area)", "405SALS(Area)", "FL1-A"],
+        )
+        monkeypatch.setattr(
+            detector_configuration,
+            "FCSFile",
+            lambda _path: FakeFCSFile(metadata),
+        )
+
+        resolved_preset = detector_configuration.detect_detector_preset_from_uploaded_fcs(
+            uploaded_fcs_path="example.fcs",
+            selected_detector_channel="405SALS(Area)",
+        )
+
+        assert resolved_preset == "nanoFCM NanoAnalyzer SSC"
+
+    def test_infer_default_detector_channel_uses_packaged_nanofcm_rule(
+        self,
+    ) -> None:
+        metadata = build_metadata(
+            instrument_name="nanoFCM NanoAnalyzer",
+            column_names=["405LALS(Area)", "405SALS(Area)", "FL1-A"],
+        )
+
+        resolved_channel = detectors.infer_default_detector_channel(
+            column_names=metadata.column_names,
+            metadata=metadata,
+            detector_role="primary",
+            selection_mode="auto-detect",
+        )
+
+        assert resolved_channel == "405SALS(Area)"
+
     def test_detect_detector_preset_from_uploaded_fcs_name_heuristic_prefers_scatter_preset(
         self,
         tmp_path,

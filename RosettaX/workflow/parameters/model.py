@@ -119,13 +119,11 @@ def compute_model_for_rows(
             detector_numerical_aperture,
             "detector_numerical_aperture",
         )
-        resolved_detector_cache_numerical_aperture = as_required_float(
-            detector_cache_numerical_aperture,
-            "detector_cache_numerical_aperture",
+        resolved_detector_cache_numerical_aperture = (
+            as_optional_float(detector_cache_numerical_aperture) or 0.0
         )
-        resolved_blocker_bar_numerical_aperture = as_required_float(
-            blocker_bar_numerical_aperture,
-            "blocker_bar_numerical_aperture",
+        resolved_blocker_bar_numerical_aperture = (
+            as_optional_float(blocker_bar_numerical_aperture) or 0.0
         )
         resolved_detector_sampling = as_required_int(
             detector_sampling,

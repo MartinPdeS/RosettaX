@@ -332,6 +332,9 @@ class DetectorPresetLoader:
         normalized_detector_preset["alias"] = _normalize_detector_aliases(
             normalized_detector_preset.get("alias"),
         )
+        normalized_detector_preset = _normalize_standard_scatter_angles(
+            normalized_detector_preset,
+        )
 
         normalized_angular_weighting = _normalize_angular_weighting_definition(
             normalized_detector_preset,
@@ -414,6 +417,27 @@ def _normalize_detector_aliases(
             normalized_aliases.append(cleaned_alias)
 
     return normalized_aliases
+
+
+def _normalize_standard_scatter_angles(
+    detector_preset: dict[str, Any],
+) -> dict[str, Any]:
+    normalized_detector_preset = copy.deepcopy(detector_preset)
+    channel_name = _clean_preset_text(
+        normalized_detector_preset.get("channel"),
+    ).upper()
+
+    if channel_name == "FSC":
+        normalized_detector_preset["detector_phi_angle_degree"] = 0.0
+        normalized_detector_preset["detector_gamma_angle_degree"] = 0.0
+        return normalized_detector_preset
+
+    if channel_name == "SSC":
+        normalized_detector_preset["detector_phi_angle_degree"] = 90.0
+        normalized_detector_preset["detector_gamma_angle_degree"] = 0.0
+        return normalized_detector_preset
+
+    return normalized_detector_preset
 
 
 _DEFAULT_DETECTOR_PRESET_LOADER = DetectorPresetLoader()

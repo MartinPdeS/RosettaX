@@ -19,6 +19,10 @@ from RosettaX.utils.runtime_config import RuntimeConfig
 logger = logging.getLogger(__name__)
 
 
+MAINTAINER_NAME = "Martin Poinsinet de Sivry-Houle"
+MAINTAINER_EMAIL = "martin.poinsinet.de.sivry@gmail.com"
+
+
 THEME_LIGHT = dbc.themes.FLATLY
 THEME_DARK = dbc.themes.SLATE
 
@@ -30,9 +34,49 @@ def build_main_content() -> html.Div:
     logger.debug("Building main content container")
 
     return html.Div(
-        dash.page_container,
+        [
+            html.Div(
+                dash.page_container,
+                style={
+                    "flex": "1 0 auto",
+                },
+            ),
+            build_application_footer(),
+        ],
         id="page-content",
-        style=styling.CONTENT,
+        style={
+            **styling.CONTENT,
+            "display": "flex",
+            "flexDirection": "column",
+            "gap": "12px",
+        },
+    )
+
+
+def build_application_footer() -> html.Footer:
+    """
+    Build the global footer shown below every page.
+    """
+    return html.Footer(
+        [
+            "RosettaX is developed and maintained by ",
+            html.A(
+                MAINTAINER_NAME,
+                href=f"mailto:{MAINTAINER_EMAIL}",
+                style={
+                    "textDecoration": "none",
+                    "fontWeight": "600",
+                },
+            ),
+            ".",
+        ],
+        style={
+            "fontSize": "0.88rem",
+            "opacity": 0.72,
+            "textAlign": "center",
+            "paddingTop": "8px",
+            "paddingBottom": "6px",
+        },
     )
 
 

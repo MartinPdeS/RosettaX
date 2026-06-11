@@ -8,6 +8,7 @@ from unittest.mock import patch
 from RosettaX.workflow.scattering.calibration_services import (
     OpticalParameters,
     ParsedSphereStandardRows,
+    parse_optical_parameters,
 )
 
 
@@ -244,3 +245,26 @@ class Test_ParsedSphereStandardRows:
         assert rows.row_count == 2  # Based on row_indices
         assert len(rows.particle_diameters_nm) == 3
         assert len(rows.measured_peak_positions) == 2
+
+
+class Test_parse_optical_parameters:
+    def test_generic_detector_allows_missing_optional_geometry(self):
+        optical_parameters = parse_optical_parameters(
+            medium_refractive_index=1.33,
+            particle_refractive_index=1.59,
+            core_refractive_index=None,
+            shell_refractive_index=None,
+            wavelength_nm=488.0,
+            detector_numerical_aperture=1.2,
+            detector_cache_numerical_aperture=None,
+            blocker_bar_numerical_aperture=None,
+            detector_sampling=1000,
+            detector_phi_angle_degree=0.0,
+            detector_gamma_angle_degree=0.0,
+            detector_configuration_preset='Generic detector',
+        )
+
+        assert optical_parameters.detector_cache_numerical_aperture == 0.0
+        assert optical_parameters.blocker_bar_numerical_aperture == 0.0
+        assert optical_parameters.modeling_detector_cache_numerical_aperture == 0.0
+        assert optical_parameters.modeling_blocker_bar_numerical_aperture == 0.0

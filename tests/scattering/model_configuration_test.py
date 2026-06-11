@@ -3,6 +3,7 @@
 import sys
 import types
 
+import numpy as np
 import pytest
 
 
@@ -41,6 +42,9 @@ sys.modules.setdefault(
 )
 
 from RosettaX.utils.runtime_config import RuntimeConfig
+from RosettaX.pages.p03_scattering.sections.s03_model.optical_preview import (
+    build_pymiesim_photodiode_mesh_coordinates,
+)
 from RosettaX.pages.p03_scattering.sections.s04_table.services import (
     ScatteringCalibrationStandardTable,
 )
@@ -289,6 +293,47 @@ class Test_ScatteringModelConfigurationScattererPresets:
         assert figure.layout.scene.xaxis.showbackground is False
         assert figure.layout.scene.xaxis.showspikes is False
         assert figure.layout.scene.xaxis.ticks == ""
+
+    def test_optical_preview_incident_wave_aligns_with_default_detector_axis(self):
+        figure = ModelConfiguration.build_optical_configuration_preview_figure(
+            detector_numerical_aperture=0.45,
+            detector_cache_numerical_aperture=0.0,
+            blocker_bar_numerical_aperture=0.0,
+            medium_refractive_index=1.333,
+            detector_phi_angle_degree=0.0,
+            detector_gamma_angle_degree=0.0,
+            detector_sampling=256,
+            detector_configuration_preset="Generic detector",
+        )
+
+        incident_wave_trace = next(
+            trace
+            for trace in figure.data
+            if trace.type == "scatter3d"
+            and getattr(trace, "mode", None) == "lines"
+            and getattr(getattr(trace, "line", None), "color", None) == "#d62728"
+        )
+        incident_wave_vector = np.asarray(
+            [
+                float(incident_wave_trace.x[1] - incident_wave_trace.x[0]),
+                float(incident_wave_trace.y[1] - incident_wave_trace.y[0]),
+                float(incident_wave_trace.z[1] - incident_wave_trace.z[0]),
+            ],
+            dtype=float,
+        )
+        incident_wave_vector = incident_wave_vector / np.linalg.norm(incident_wave_vector)
+
+        coordinate_array = build_pymiesim_photodiode_mesh_coordinates(
+            detector_numerical_aperture=0.45,
+            medium_refractive_index=1.333,
+            detector_phi_angle_degree=0.0,
+            detector_gamma_angle_degree=0.0,
+            detector_sampling=256,
+        )
+        detector_axis = coordinate_array.mean(axis=0)
+        detector_axis = detector_axis / np.linalg.norm(detector_axis)
+
+        assert np.allclose(incident_wave_vector, detector_axis, atol=5e-3)
 
 
 class Test_ScatteringCalibrationStandardTable:

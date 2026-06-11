@@ -916,32 +916,32 @@ def _build_incident_wave_traces() -> list[Any]:
     Build incident wave annotation traces.
 
     k:
-        Red propagation vector coming from below the sphere toward the origin.
+        Red propagation vector coming from negative x toward the origin.
 
     E:
         Blue electric field vector, perpendicular to k.
-        Since k is along +z here, E is drawn along +x from the same origin.
+        Since k is along +x here, E is drawn along +z from the same origin.
     """
     shared_origin = np.asarray(
-        [0.0, 0.0, -0.78],
+        [-0.78, 0.0, 0.0],
         dtype=float,
     )
 
     k_traces = _build_incident_vector_traces(
         label="k",
         origin=shared_origin,
-        tip=np.asarray([0.0, 0.0, -0.14], dtype=float),
+        tip=np.asarray([-0.14, 0.0, 0.0], dtype=float),
         color="#d62728",
-        label_offset=np.asarray([0.07, 0.0, 0.02], dtype=float),
+        label_offset=np.asarray([0.03, 0.0, 0.08], dtype=float),
         cone_size_reference=0.17,
     )
 
     electric_field_traces = _build_incident_vector_traces(
         label="E",
         origin=shared_origin,
-        tip=np.asarray([0.52, 0.0, -0.78], dtype=float),
+        tip=np.asarray([-0.78, 0.0, 0.52], dtype=float),
         color="#1f77b4",
-        label_offset=np.asarray([0.08, 0.0, 0.05], dtype=float),
+        label_offset=np.asarray([0.06, 0.0, 0.07], dtype=float),
         cone_size_reference=0.15,
     )
 

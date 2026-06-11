@@ -1,5 +1,69 @@
 {
   "schema_version": "1.0",
   "description": "Map FCS instrument aliases to scattering detector presets and preferred detector channel names.",
-  "rules": []
+  "rules": [
+    {
+      "name": "Agilent NovoCyte scatter defaults",
+      "instrument_aliases": [
+        "agilent novocyte",
+        "novocyte",
+        "novocyte advanteon",
+        "novocyte quattro"
+      ],
+      "detector_channels": {
+        "default": ["SSC-A", "SSC-H", "SSC Area", "SSC"],
+        "forward": ["FSC-A", "FSC-H", "FSC Area", "FSC"]
+      }
+    },
+    {
+      "name": "Cytek Aurora scatter defaults",
+      "instrument_aliases": [
+        "cytek aurora",
+        "aurora",
+        "aurora 3l",
+        "aurora 5l"
+      ],
+      "detector_channels": {
+        "default": ["SSC-A", "SSC-H", "SSC Area", "SSC"],
+        "forward": ["FSC-A", "FSC-H", "FSC Area", "FSC"]
+      }
+    },
+    {
+      "name": "Sony ID7000 scatter defaults",
+      "instrument_aliases": [
+        "sony id7000",
+        "id7000",
+        "sony spectral analyzer"
+      ],
+      "detector_channels": {
+        "default": ["SSC-A", "SSC-H", "SSC Area", "SSC"],
+        "forward": ["FSC-A", "FSC-H", "FSC Area", "FSC"]
+      }
+    },
+    {
+      "name": "nanoFCM NanoAnalyzer scatter defaults",
+      "instrument_aliases": [
+        "nanofcm",
+        "nanofcm",
+        "nanoanalyzer",
+        "nano analyzer"
+      ],
+      "detector_channels": {
+        "default": ["405SALS(Area)", "SALS", "SSC-A", "SSC-H"],
+        "forward": ["405LALS(Area)", "LALS", "FSC-A", "FSC-H"]
+      }
+    },
+    {
+      "name": "Thermo Fisher Attune NxT scatter defaults",
+      "instrument_aliases": [
+        "thermo fisher attune nxt",
+        "attune nxt",
+        "attune"
+      ],
+      "detector_channels": {
+        "default": ["SSC-A", "SSC-H", "SSC Area", "SSC"],
+        "forward": ["FSC-A", "FSC-H", "FSC Area", "FSC"]
+      }
+    }
+  ]
 }

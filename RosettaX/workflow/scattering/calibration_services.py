@@ -678,13 +678,11 @@ def parse_optical_parameters(
         if detector_configuration_preset is None
         else str(detector_configuration_preset)
     )
-    resolved_detector_cache_numerical_aperture = casting.as_required_float(
-        detector_cache_numerical_aperture,
-        "detector_cache_numerical_aperture",
+    resolved_detector_cache_numerical_aperture = (
+        casting.as_optional_float(detector_cache_numerical_aperture) or 0.0
     )
-    resolved_blocker_bar_numerical_aperture = casting.as_required_float(
-        blocker_bar_numerical_aperture,
-        "blocker_bar_numerical_aperture",
+    resolved_blocker_bar_numerical_aperture = (
+        casting.as_optional_float(blocker_bar_numerical_aperture) or 0.0
     )
     effective_detector_cache_numerical_aperture, effective_blocker_bar_numerical_aperture = (
         detector.resolve_detector_modeling_geometry_values(

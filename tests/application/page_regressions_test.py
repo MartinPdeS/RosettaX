@@ -8,6 +8,7 @@ import dash
 import numpy as np
 import pytest
 
+from RosettaX.application import layout as application_layout
 from RosettaX.pages.p00_sidebar.main import Sidebar
 from RosettaX.pages.p02_fluorescence.ids import Ids as FluorescenceIds
 from RosettaX.pages.p02_fluorescence.sections.s04_calibration.main import Calibration
@@ -282,8 +283,10 @@ class Test_DocumentationPage:
 
         layout = page.layout()
         component_ids = _collect_component_ids(layout)
+        text_nodes = _collect_text(layout)
 
         assert page._id("hero") in component_ids
+        assert page._id("workflow-map") in component_ids
         assert page._id("system-model") in component_ids
         assert page._id("supported-cytometers") in component_ids
         assert page._id("refractive-index") in component_ids
@@ -291,6 +294,20 @@ class Test_DocumentationPage:
         assert page._id("calibration-files") in component_ids
         assert page._id("apply-checks") in component_ids
         assert page._id("reports") in component_ids
+        assert "How detector support works" in text_nodes
+        assert "Cytek Biosciences" in text_nodes
+
+
+class Test_ApplicationLayout:
+    def test_layout_includes_global_maintainer_footer(self) -> None:
+        layout = application_layout.build_application_layout()
+
+        text_nodes = _collect_text(layout)
+        hrefs = _collect_component_hrefs(layout)
+
+        assert "RosettaX is developed and maintained by " in text_nodes
+        assert "Martin Poinsinet de Sivry-Houle" in text_nodes
+        assert "mailto:martin.poinsinet.de.sivry@gmail.com" in hrefs
 
 
 class Test_HelpPage:

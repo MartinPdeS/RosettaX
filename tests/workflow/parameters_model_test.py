@@ -44,9 +44,14 @@ class Test_DetectorPresetLoaderCatalog:
             for option in loader.load_brand_options()
         }
 
+        assert "Agilent" in option_values
         assert "BD Biosciences" in option_values
         assert "Apogee" in option_values
         assert "Beckman Coulter Life Sciences" in option_values
+        assert "Cytek Biosciences" in option_values
+        assert "nanoFCM" in option_values
+        assert "Sony Biosciences" in option_values
+        assert "Thermo Fisher Scientific" in option_values
         assert "Custom" in option_values
 
     def test_loader_builds_model_options_for_one_brand(self):
@@ -85,6 +90,94 @@ class Test_DetectorPresetLoaderCatalog:
                 "value": "Apogee - Side",
             },
         ]
+
+    def test_loader_builds_model_options_for_cytek_brand(self):
+        loader = DetectorPresetLoader()
+
+        assert loader.load_model_options("Cytek Biosciences") == [
+            {
+                "label": "Aurora - FSC",
+                "value": "Cytek Aurora FSC",
+            },
+            {
+                "label": "Aurora - SSC",
+                "value": "Cytek Aurora SSC",
+            },
+        ]
+
+    def test_loader_builds_model_options_for_nanofcm_brand(self):
+        loader = DetectorPresetLoader()
+
+        assert loader.load_model_options("nanoFCM") == [
+            {
+                "label": "NanoAnalyzer - FSC",
+                "value": "nanoFCM NanoAnalyzer FSC",
+            },
+            {
+                "label": "NanoAnalyzer - SSC",
+                "value": "nanoFCM NanoAnalyzer SSC",
+            },
+        ]
+
+    def test_standard_scatter_presets_use_forward_zero_and_side_ninety_angles(self):
+        loader = DetectorPresetLoader()
+        standard_presets = {
+            name: preset
+            for name, preset in loader.load_presets().items()
+            if preset.get("channel") in {"FSC", "SSC"}
+        }
+
+        for preset_name, preset in standard_presets.items():
+            expected_phi = 0.0 if preset["channel"] == "FSC" else 90.0
+            expected_gamma = 0.0
+            assert preset["detector_phi_angle_degree"] == expected_phi, preset_name
+            assert preset["detector_gamma_angle_degree"] == expected_gamma, preset_name
+
+    def test_loader_normalizes_standard_scatter_angles_from_catalog_data(self, tmp_path):
+        detector_catalog_path = tmp_path / "detector_definitions.json"
+        detector_catalog_path.write_text(
+            """
+{
+    "schema_version": "1.0",
+    "presets": [
+        {
+            "name": "Example FSC",
+            "manufacturer": "Example",
+            "instrument": "System",
+            "channel": "FSC",
+            "detector_phi_angle_degree": 37.0,
+            "detector_gamma_angle_degree": 12.0
+        },
+        {
+            "name": "Example SSC",
+            "manufacturer": "Example",
+            "instrument": "System",
+            "channel": "SSC",
+            "detector_phi_angle_degree": 11.0,
+            "detector_gamma_angle_degree": 22.0
+        },
+        {
+            "name": "Apogee - Forward",
+            "manufacturer": "Apogee",
+            "instrument": "Ad hoc",
+            "channel": "Weighted",
+            "detector_phi_angle_degree": 45.0,
+            "detector_gamma_angle_degree": 0.0
+        }
+    ]
+}
+            """.strip(),
+            encoding="utf-8",
+        )
+
+        loader = DetectorPresetLoader(detector_catalog_path)
+        presets = loader.load_presets()
+
+        assert presets["Example FSC"]["detector_phi_angle_degree"] == 0.0
+        assert presets["Example FSC"]["detector_gamma_angle_degree"] == 0.0
+        assert presets["Example SSC"]["detector_phi_angle_degree"] == 90.0
+        assert presets["Example SSC"]["detector_gamma_angle_degree"] == 0.0
+        assert presets["Apogee - Forward"]["detector_phi_angle_degree"] == 45.0
 
 
 class Test_ScattererPresetDefaults:
@@ -396,6 +489,35 @@ class Test_compute_model_for_rows:
         assert detector_angular_weights.shape == (1000,)
         assert np.allclose(detector_angular_weights[~expected_visible_mask], 0.0)
         assert np.allclose(detector_angular_weights[expected_visible_mask], 1.0)
+
+    @patch('RosettaX.workflow.parameters.model.table')
+    @patch('RosettaX.workflow.parameters.model.BackEnd.compute_modeled_coupling_from_diameters')
+    def test_compute_model_for_rows_treats_missing_generic_detector_geometry_as_zero(
+        self,
+        mock_compute_coupling,
+        mock_table,
+        valid_optical_parameters,
+        valid_solid_sphere_rows,
+        mock_logger,
+    ):
+        mock_table.normalize_table_rows.return_value = [dict(row) for row in valid_solid_sphere_rows]
+        mock_compute_coupling.return_value = SimpleNamespace(
+            expected_coupling_values=np.asarray([1.0, 2.0, 3.0], dtype=float)
+        )
+        valid_optical_parameters['detector_configuration_preset'] = 'Generic detector'
+        valid_optical_parameters['detector_cache_numerical_aperture'] = None
+        valid_optical_parameters['blocker_bar_numerical_aperture'] = None
+
+        result = compute_model_for_rows(
+            mie_model=SOLID_SPHERE_MODEL_NAME,
+            current_rows=valid_solid_sphere_rows,
+            logger=mock_logger,
+            **valid_optical_parameters
+        )
+
+        assert [row['expected_coupling'] for row in result] == ['1', '2', '3']
+        assert mock_compute_coupling.call_args.kwargs['detector_cache_numerical_aperture'] == 0.0
+        assert mock_compute_coupling.call_args.kwargs['detector_angular_weights'] is None
 
     def test_resolve_detector_angular_weights_apogee_half_lens_split_presets(self):
         apogee_side_preset = DetectorPresetLoader().load_preset('Apogee - Side')

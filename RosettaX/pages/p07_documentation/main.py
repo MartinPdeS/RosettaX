@@ -40,13 +40,18 @@ class DocumentationPage:
                         dbc.Col(
                             [
                                 self._section_wrapper(
+                                    section_id=self._id("workflow-map"),
+                                    child=self._workflow_map_card(),
+                                ),
+                                html.Div(style={"height": "18px"}),
+                                self._section_wrapper(
                                     section_id=self._id("system-model"),
                                     child=self._system_model_row(),
                                 ),
                                 html.Div(style={"height": "18px"}),
                                 self._section_wrapper(
                                     section_id=self._id("supported-cytometers"),
-                                    child=self._supported_cytometers_card(),
+                                    child=self._supported_cytometers_row(),
                                 ),
                                 html.Div(style={"height": "18px"}),
                                 self._section_wrapper(
@@ -143,6 +148,7 @@ class DocumentationPage:
                 dbc.CardBody(
                     [
                         self._toc_link("System model", f"#{self._id('system-model')}"),
+                        self._toc_link("Workflow map", f"#{self._id('workflow-map')}"),
                         self._toc_link("Supported cytometers", f"#{self._id('supported-cytometers')}"),
                         self._toc_link("Material refractive index", f"#{self._id('refractive-index')}"),
                         self._toc_link("Regression models", f"#{self._id('regression-models')}"),
@@ -184,6 +190,34 @@ class DocumentationPage:
                 dbc.Col(self._scattering_optics_card(), lg=6),
             ],
             className="g-3",
+        )
+
+    def _workflow_map_card(self) -> dbc.Card:
+        return self._content_card(
+            title="Workflow map",
+            subtitle="RosettaX is organized around three concrete steps: calibrate fluorescence, calibrate scattering, then apply saved records.",
+            body=[
+                html.Div(
+                    [
+                        html.Div("1. Fluorescence", style={"fontWeight": "700", "marginBottom": "4px"}),
+                        html.Div("Choose a detector channel, resolve peaks, assign reference values, and fit a log-log calibration relation."),
+                    ],
+                    style={"marginBottom": "12px"},
+                ),
+                html.Div(
+                    [
+                        html.Div("2. Scattering", style={"fontWeight": "700", "marginBottom": "4px"}),
+                        html.Div("Choose a scatter channel, pick a detector geometry preset or custom optics, model the calibration standards, and fit the instrument response."),
+                    ],
+                    style={"marginBottom": "12px"},
+                ),
+                html.Div(
+                    [
+                        html.Div("3. Apply", style={"fontWeight": "700", "marginBottom": "4px"}),
+                        html.Div("Load a saved calibration, validate the target file and target model, export calibrated FCS files, and keep a PDF report with provenance."),
+                    ]
+                ),
+            ],
         )
 
     def _fcs_system_card(self) -> dbc.Card:
@@ -240,11 +274,34 @@ class DocumentationPage:
             ],
         )
 
+    def _supported_cytometers_row(self) -> dbc.Row:
+        return dbc.Row(
+            [
+                dbc.Col(self._supported_cytometers_card(), lg=7),
+                dbc.Col(self._detector_support_card(), lg=5),
+            ],
+            className="g-3",
+        )
+
     def _supported_cytometers_card(self) -> dbc.Card:
+        catalog = load_detector_configuration_preset_catalog()
         grouped_rows: dict[str, list[str]] = {}
 
-        for item in load_detector_configuration_preset_catalog():
+        for item in catalog:
             grouped_rows.setdefault(item["brand"], []).append(item["label"])
+
+        summary_row = html.Div(
+            [
+                self._summary_pill(f"{len(grouped_rows)} brands"),
+                self._summary_pill(f"{len(catalog)} packaged presets"),
+            ],
+            style={
+                "display": "flex",
+                "gap": "8px",
+                "flexWrap": "wrap",
+                "marginBottom": "12px",
+            },
+        )
 
         table = dbc.Table(
             [
@@ -283,8 +340,9 @@ class DocumentationPage:
             subtitle="RosettaX currently ships these detector-preset groups for scattering modeling and auto-detect support.",
             body=[
                 html.Div(
-                    "The support list reflects the packaged detector preset bank. These presets encode modeled detector geometry, not a guarantee that every channel on every instrument configuration is already covered.",
+                    "The support list reflects the packaged detector preset bank. These presets encode one documented RosettaX geometry per instrument family so calibrations are reproducible and reviewable, even when the exact vendor optical train is not fully public.",
                 ),
+                summary_row,
                 table,
                 dbc.Alert(
                     [
@@ -305,6 +363,38 @@ class DocumentationPage:
                     },
                 ),
             ],
+        )
+
+    def _detector_support_card(self) -> dbc.Card:
+        return self._content_card(
+            title="How detector support works",
+            subtitle="A RosettaX cytometer preset is two things at once: a named geometry assumption and a set of instrument aliases that help the UI select it.",
+            body=[
+                html.Div(
+                    "The detector catalog stores brand, instrument, channel family, wavelength, and effective optical geometry. When RosettaX sees a matching instrument name in FCS metadata, it can suggest the corresponding preset or scatter channel automatically.",
+                ),
+                html.Div(
+                    "The shipped presets are intended as documented starting points. They help you keep calibration assumptions explicit, but they do not claim that every vendor configuration, filter set, or detector option has already been captured exactly.",
+                ),
+                html.Div(
+                    "To add support for another cytometer family, the most useful inputs are one representative FCS file, the exact instrument name written into metadata, common scatter-channel labels, and any public optical notes that justify the chosen geometry.",
+                ),
+            ],
+        )
+
+    def _summary_pill(self, label: str) -> html.Span:
+        return html.Span(
+            label,
+            style={
+                "display": "inline-flex",
+                "alignItems": "center",
+                "padding": "6px 10px",
+                "borderRadius": "999px",
+                "border": "1px solid rgba(13, 110, 253, 0.18)",
+                "background": "rgba(13, 110, 253, 0.06)",
+                "fontWeight": "600",
+                "fontSize": "0.84rem",
+            },
         )
 
     def _regression_row(self) -> dbc.Row:
