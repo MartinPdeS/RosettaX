@@ -43,6 +43,10 @@ class ParameterSectionIds:
         return f"{self.prefix}-detector-configuration-model"
 
     @property
+    def detector_configuration_type(self) -> str:
+        return f"{self.prefix}-detector-configuration-type"
+
+    @property
     def detector_configuration_auto_detect_button(self) -> str:
         return f"{self.prefix}-detector-configuration-auto-detect-button"
 

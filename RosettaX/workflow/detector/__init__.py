@@ -20,11 +20,13 @@ from .loader import (
     get_default_detector_preset_loader,
     load_detector_configuration_brand_options,
     load_detector_configuration_model_options,
+    load_detector_configuration_type_options,
     load_detector_configuration_preset,
     load_detector_configuration_preset_catalog,
     load_detector_configuration_preset_options,
     load_detector_configuration_presets,
     resolve_detector_configuration_preset_brand,
+    resolve_detector_configuration_preset_model,
 )
 
 
@@ -40,11 +42,13 @@ __all__ = [
     "get_default_detector_preset_loader",
     "load_detector_configuration_brand_options",
     "load_detector_configuration_model_options",
+    "load_detector_configuration_type_options",
     "load_detector_configuration_preset",
     "load_detector_configuration_preset_catalog",
     "load_detector_configuration_preset_options",
     "load_detector_configuration_presets",
     "resolve_detector_configuration_preset_brand",
+    "resolve_detector_configuration_preset_model",
     "resolve_detector_preset_wavelength_nm",
     "resolve_runtime_detector_preset",
     "resolve_detector_angular_weights",

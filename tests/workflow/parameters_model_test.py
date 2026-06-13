@@ -63,11 +63,26 @@ class Test_DetectorPresetLoaderCatalog:
 
         assert bd_options == [
             {
-                "label": "FACSCanto II - FSC",
+                "label": "FACSCanto II",
+                "value": "FACSCanto II",
+            },
+        ]
+
+    def test_loader_builds_type_options_for_one_brand_and_model(self):
+        loader = DetectorPresetLoader()
+
+        bd_type_options = loader.load_type_options(
+            brand="BD Biosciences",
+            model="FACSCanto II",
+        )
+
+        assert bd_type_options == [
+            {
+                "label": "FSC",
                 "value": "BD FACSCanto II FSC",
             },
             {
-                "label": "FACSCanto II - SSC",
+                "label": "SSC",
                 "value": "BD FACSCanto II SSC",
             },
         ]
@@ -81,6 +96,16 @@ class Test_DetectorPresetLoaderCatalog:
         loader = DetectorPresetLoader()
 
         assert loader.load_model_options("Apogee") == [
+            {
+                "label": "Apogee",
+                "value": "Apogee",
+            },
+        ]
+
+        assert loader.load_type_options(
+            brand="Apogee",
+            model="Apogee",
+        ) == [
             {
                 "label": "Forward",
                 "value": "Apogee - Forward",
@@ -96,11 +121,21 @@ class Test_DetectorPresetLoaderCatalog:
 
         assert loader.load_model_options("Cytek Biosciences") == [
             {
-                "label": "Aurora - FSC",
+                "label": "Aurora",
+                "value": "Aurora",
+            },
+        ]
+
+        assert loader.load_type_options(
+            brand="Cytek Biosciences",
+            model="Aurora",
+        ) == [
+            {
+                "label": "FSC",
                 "value": "Cytek Aurora FSC",
             },
             {
-                "label": "Aurora - SSC",
+                "label": "SSC",
                 "value": "Cytek Aurora SSC",
             },
         ]
@@ -110,11 +145,21 @@ class Test_DetectorPresetLoaderCatalog:
 
         assert loader.load_model_options("nanoFCM") == [
             {
-                "label": "NanoAnalyzer - FSC",
+                "label": "NanoAnalyzer",
+                "value": "NanoAnalyzer",
+            },
+        ]
+
+        assert loader.load_type_options(
+            brand="nanoFCM",
+            model="NanoAnalyzer",
+        ) == [
+            {
+                "label": "FSC",
                 "value": "nanoFCM NanoAnalyzer FSC",
             },
             {
-                "label": "NanoAnalyzer - SSC",
+                "label": "SSC",
                 "value": "nanoFCM NanoAnalyzer SSC",
             },
         ]

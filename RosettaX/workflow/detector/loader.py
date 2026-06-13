@@ -171,6 +171,8 @@ class DetectorPresetLoader:
             catalog.append(
                 {
                     "brand": _resolve_detector_preset_brand_label(preset),
+                    "model": _resolve_detector_preset_model_key(preset),
+                    "detector_type": _resolve_detector_preset_type_label(preset),
                     "label": _resolve_detector_preset_model_label(preset),
                     "value": preset_name,
                 }
@@ -217,13 +219,45 @@ class DetectorPresetLoader:
         if not resolved_brand:
             return []
 
+        model_labels = sorted(
+            {
+                item["model"]
+                for item in self.load_preset_catalog()
+                if item["brand"] == resolved_brand and item.get("model")
+            },
+            key=str.lower,
+        )
+
         return [
             {
-                "label": item["label"],
+                "label": model_label,
+                "value": model_label,
+            }
+            for model_label in model_labels
+        ]
+
+    def load_type_options(
+        self,
+        *,
+        brand: Any,
+        model: Any,
+    ) -> list[dict[str, str]]:
+        """
+        Build detector type options for one brand/model pair.
+        """
+        resolved_brand = str(brand or "").strip()
+        resolved_model = str(model or "").strip()
+
+        if not resolved_brand or not resolved_model:
+            return []
+
+        return [
+            {
+                "label": item["detector_type"],
                 "value": item["value"],
             }
             for item in self.load_preset_catalog()
-            if item["brand"] == resolved_brand
+            if item["brand"] == resolved_brand and item["model"] == resolved_model
         ]
 
     def resolve_preset_brand(
@@ -241,6 +275,24 @@ class DetectorPresetLoader:
             return None
 
         return _resolve_detector_preset_brand_label(
+            preset,
+        )
+
+    def resolve_preset_model(
+        self,
+        preset_name: Any,
+    ) -> str | None:
+        """
+        Resolve the model label for one preset name.
+        """
+        preset = self.load_preset(
+            preset_name,
+        )
+
+        if not preset:
+            return None
+
+        return _resolve_detector_preset_model_key(
             preset,
         )
 
@@ -500,6 +552,61 @@ def _resolve_detector_preset_model_label(
     return preset_name
 
 
+def _resolve_detector_preset_model_key(
+    detector_preset: dict[str, Any],
+) -> str:
+    preset_name = _clean_preset_text(
+        detector_preset.get("name"),
+    )
+
+    if preset_name == CUSTOM_DETECTOR_PRESET_NAME:
+        return CUSTOM_DETECTOR_PRESET_NAME
+
+    instrument = _clean_preset_text(
+        detector_preset.get("instrument"),
+    )
+
+    if instrument and instrument.lower() != "ad hoc":
+        return instrument
+
+    manufacturer = _clean_preset_text(
+        detector_preset.get("manufacturer"),
+    )
+
+    if manufacturer:
+        return manufacturer
+
+    return _resolve_detector_preset_model_label(
+        detector_preset,
+    )
+
+
+def _resolve_detector_preset_type_label(
+    detector_preset: dict[str, Any],
+) -> str:
+    channel = _clean_preset_text(
+        detector_preset.get("channel"),
+    )
+
+    if channel and channel.lower() != "weighted":
+        return channel
+
+    preset_name = _clean_preset_text(
+        detector_preset.get("name"),
+    ).lower()
+
+    if "side" in preset_name:
+        return "Side"
+
+    if "forward" in preset_name:
+        return "Forward"
+
+    if channel:
+        return channel
+
+    return "Detector"
+
+
 def get_default_detector_preset_loader() -> DetectorPresetLoader:
     return _DEFAULT_DETECTOR_PRESET_LOADER
 
@@ -546,6 +653,20 @@ def load_detector_configuration_model_options(
     )
 
 
+def load_detector_configuration_type_options(
+    *,
+    brand: Any,
+    model: Any,
+) -> list[dict[str, str]]:
+    """
+    Load detector type options for one brand/model pair.
+    """
+    return get_default_detector_preset_loader().load_type_options(
+        brand=brand,
+        model=model,
+    )
+
+
 def resolve_detector_configuration_preset_brand(
     preset_name: Any,
 ) -> str | None:
@@ -553,6 +674,17 @@ def resolve_detector_configuration_preset_brand(
     Resolve the brand label for one detector preset name.
     """
     return get_default_detector_preset_loader().resolve_preset_brand(
+        preset_name,
+    )
+
+
+def resolve_detector_configuration_preset_model(
+    preset_name: Any,
+) -> str | None:
+    """
+    Resolve the model label for one detector preset name.
+    """
+    return get_default_detector_preset_loader().resolve_preset_model(
         preset_name,
     )
 

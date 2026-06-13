@@ -158,7 +158,7 @@ class Test_ScatteringCalibrationPreviewGraph:
 
 
 class Test_ScatteringModelLayout:
-    def test_layout_includes_detector_brand_and_model_controls(self) -> None:
+    def test_layout_includes_detector_brand_model_and_type_controls(self) -> None:
         section = ScatteringModel(
             page=SimpleNamespace(ids=ScatteringIds()),
             section_number=3,
@@ -169,6 +169,7 @@ class Test_ScatteringModelLayout:
 
         assert section.ids.detector_configuration_brand in component_ids
         assert section.ids.detector_configuration_model in component_ids
+        assert section.ids.detector_configuration_type in component_ids
         assert section.ids.detector_configuration_preset in component_ids
 
         custom_values_container = _find_component_by_id(

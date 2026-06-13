@@ -178,7 +178,20 @@ class Model:
                                 searchable=False,
                                 disabled=True,
                                 style={
-                                    "width": "260px",
+                                    "width": "220px",
+                                    "marginLeft": "10px",
+                                },
+                            ),
+                            dash.dcc.Dropdown(
+                                id=self.ids.detector_configuration_type,
+                                options=[],
+                                value=None,
+                                placeholder="Select detector type",
+                                clearable=True,
+                                searchable=False,
+                                disabled=True,
+                                style={
+                                    "width": "220px",
                                     "marginLeft": "10px",
                                 },
                             ),
@@ -215,8 +228,9 @@ class Model:
                             ),
                             dbc.Tooltip(
                                 (
-                                    "Choose a detector brand first, then one of the supported "
-                                    "models to load a predefined collection geometry. "
+                                    "Choose a detector brand first, then one model, then one "
+                                    "detector type (for example FSC or SSC) to load a predefined "
+                                    "collection geometry. "
                                     "Leave the brand on No preset to keep the detector unconfigured, "
                                     "select Custom to edit a Generic detector manually, or click "
                                     "Auto-detect to try matching the uploaded FCS "
@@ -1306,11 +1320,54 @@ class Model:
                 option["value"]
                 for option in resolved_options
             }
+            resolved_model_from_preset = self.model_configuration.resolve_detector_preset_model(
+                current_preset_name,
+            )
+
+            if resolved_model_from_preset in option_values:
+                resolved_value = resolved_model_from_preset
+            elif current_model_name in option_values:
+                resolved_value = current_model_name
+            elif len(resolved_options) == 1:
+                resolved_value = resolved_options[0]["value"]
+            else:
+                resolved_value = None
+
+            return resolved_options, resolved_value, False
+
+        @dash.callback(
+            dash.Output(self.ids.detector_configuration_type, "options"),
+            dash.Output(self.ids.detector_configuration_type, "value"),
+            dash.Output(self.ids.detector_configuration_type, "disabled"),
+            dash.Input(self.ids.detector_configuration_model, "value"),
+            dash.State(self.ids.detector_configuration_brand, "value"),
+            dash.State(self.ids.detector_configuration_preset, "value"),
+            dash.State(self.ids.detector_configuration_type, "value"),
+            prevent_initial_call=False,
+        )
+        def sync_detector_configuration_types_for_model(
+            model_name: Any,
+            brand_name: Any,
+            current_preset_name: Any,
+            current_type_name: Any,
+        ) -> tuple[list[dict[str, Any]], Any, bool]:
+            resolved_options = self.model_configuration.build_detector_preset_type_options(
+                brand=brand_name,
+                model=model_name,
+            )
+
+            if not resolved_options:
+                return [], None, True
+
+            option_values = {
+                option["value"]
+                for option in resolved_options
+            }
 
             if current_preset_name in option_values:
                 resolved_value = current_preset_name
-            elif current_model_name in option_values:
-                resolved_value = current_model_name
+            elif current_type_name in option_values:
+                resolved_value = current_type_name
             elif len(resolved_options) == 1:
                 resolved_value = resolved_options[0]["value"]
             else:
@@ -1324,13 +1381,13 @@ class Model:
                 "value",
                 allow_duplicate=True,
             ),
-            dash.Input(self.ids.detector_configuration_model, "value"),
+            dash.Input(self.ids.detector_configuration_type, "value"),
             prevent_initial_call=True,
         )
         def sync_detector_configuration_preset_from_model(
-            model_value: Any,
+            type_value: Any,
         ) -> Any:
-            return model_value or ""
+            return type_value or ""
 
         @dash.callback(
             dash.Output(

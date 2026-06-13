@@ -323,6 +323,20 @@ class ModelConfiguration:
         )
 
     @staticmethod
+    def build_detector_preset_type_options(
+        *,
+        brand: Any,
+        model: Any,
+    ) -> list[dict[str, Any]]:
+        """
+        Build detector preset type dropdown options for one brand/model pair.
+        """
+        return detector.load_detector_configuration_type_options(
+            brand=brand,
+            model=model,
+        )
+
+    @staticmethod
     def resolve_detector_preset_brand(
         preset_name: Any,
     ) -> str | None:
@@ -330,6 +344,17 @@ class ModelConfiguration:
         Resolve the brand label for one detector preset name.
         """
         return detector.resolve_detector_configuration_preset_brand(
+            preset_name,
+        )
+
+    @staticmethod
+    def resolve_detector_preset_model(
+        preset_name: Any,
+    ) -> str | None:
+        """
+        Resolve the model label for one detector preset name.
+        """
+        return detector.resolve_detector_configuration_preset_model(
             preset_name,
         )
 
