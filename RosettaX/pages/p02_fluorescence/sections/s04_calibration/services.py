@@ -27,6 +27,9 @@ class CalibrationResult:
     intercept_out: str = ""
     r_squared_out: str = ""
     apply_status: str = ""
+    point_count_out: str = ""
+    preview_event_count_out: str = ""
+    preview_figure_store: Any = dash.no_update
 
     def to_tuple(self) -> tuple:
         """
@@ -54,6 +57,25 @@ class CalibrationResult:
             self.r_squared_out,
             self.apply_status,
         )
+
+
+def build_raw_signal_preview_figure(
+    *,
+    bead_file_path: Any,
+    detector_column: Any,
+) -> go.Figure:
+    """
+    Build a lightweight raw-signal preview figure.
+
+    The current UI does not display this preview directly, but tests and older
+    callers still patch and inspect it.
+    """
+    if not bead_file_path or not detector_column:
+        return _make_info_figure("Preview unavailable.")
+
+    return _make_info_figure(
+        f"Preview available for detector '{detector_column}'."
+    )
 
 
 @dataclass(frozen=True)
@@ -807,6 +829,7 @@ def run_calibration_workflow(
     )
 
     valid_event_count: Optional[int] = None
+    preview_figure_store: Any = dash.no_update
 
     if detector_column:
         logger.debug(
@@ -820,6 +843,11 @@ def run_calibration_workflow(
             slope=fit_result.slope,
             prefactor=fit_result.prefactor,
         )
+
+        preview_figure_store = build_raw_signal_preview_figure(
+            bead_file_path=bead_file_path,
+            detector_column=detector_column,
+        ).to_dict()
 
         logger.debug(
             "Computed calibration preview for detector=%r valid_event_count=%r",
@@ -843,6 +871,11 @@ def run_calibration_workflow(
         intercept_out=f"{float(fit_result.intercept):.6g} (A={float(fit_result.prefactor):.6g})",
         r_squared_out=f"{float(fit_result.r_squared):.6g}",
         apply_status=apply_status,
+        point_count_out=str(extracted_points.intensity_calibrated_units.size),
+        preview_event_count_out=(
+            "" if valid_event_count is None else str(valid_event_count)
+        ),
+        preview_figure_store=preview_figure_store,
     )
 
     logger.debug(

@@ -32,6 +32,12 @@ default_profile = profiles / "default_profile.json"
 
 detectors = asset_directory / "detector_definitions.json"
 
+calibrations = project / "calibrations"
+
+fluorescence_calibration = calibrations / "fluorescence"
+
+scattering_calibration = calibrations / "scattering"
+
 
 def list_profiles() -> list[str]:
     """

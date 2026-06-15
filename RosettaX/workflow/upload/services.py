@@ -46,7 +46,7 @@ def build_loaded_filename_text(
     )
 
     if clean_filename is None:
-        return f"No file loaded. Maximum file size: {format_upload_size()}."
+        return "No file loaded."
 
     return f"Loaded file: {clean_filename}"
 

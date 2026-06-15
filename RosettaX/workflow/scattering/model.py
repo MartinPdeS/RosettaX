@@ -377,7 +377,18 @@ class ModelConfiguration:
         """
         Build scatterer preset dropdown options.
         """
-        return build_scattering_calibration_scatterer_preset_options()
+        options = build_scattering_calibration_scatterer_preset_options()
+
+        if options:
+            options = [
+                {
+                    "label": "No preset",
+                    "value": options[0].get("value", ""),
+                },
+                *options[1:],
+            ]
+
+        return options
 
     @staticmethod
     def resolve_runtime_scatterer_preset(

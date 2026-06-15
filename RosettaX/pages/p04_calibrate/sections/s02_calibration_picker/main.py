@@ -54,7 +54,7 @@ class CalibrationPicker:
 
         logger.debug(
             "Initialized CalibrationPicker section with page=%s section_number=%r "
-            "card_color=%r secondary_card_color=%r folder_definitions=%r",
+            "card_color=%r secondary_card_color=%r",
             self.page.__class__.__name__,
             self.section_number,
             self.card_color,
