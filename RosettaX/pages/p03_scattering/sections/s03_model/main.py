@@ -858,7 +858,7 @@ class Model:
             process_name=selected_peak_process_name,
         )
 
-        for channel_name in ("primary", "scattering_axis", "x_axis", "x"):
+        for channel_name in ("primary", "scattering", "scattering_axis", "x_axis", "x"):
             resolved_channel = channel_values.get(channel_name)
 
             if resolved_channel:
@@ -966,17 +966,26 @@ class Model:
             ):
                 (
                     resolved_mie_model,
+                    _medium_ri_source,
                     resolved_medium_refractive_index,
+                    _particle_ri_source,
                     resolved_particle_refractive_index,
+                    _core_ri_source,
                     resolved_core_refractive_index,
+                    _shell_ri_source,
                     resolved_shell_refractive_index,
                 ) = self.model_configuration.resolve_scatterer_preset_values(
                     preset_name=scatterer_preset,
                     current_mie_model=resolved_values[0],
+                    current_medium_refractive_index_source=None,
                     current_medium_refractive_index=resolved_values[1],
+                    current_particle_refractive_index_source=None,
                     current_particle_refractive_index=resolved_values[2],
+                    current_core_refractive_index_source=None,
                     current_core_refractive_index=resolved_values[3],
+                    current_shell_refractive_index_source=None,
                     current_shell_refractive_index=resolved_values[4],
+                    wavelength_nm=resolved_values[5],
                 )
 
                 resolved_values = (
@@ -1465,21 +1474,40 @@ class Model:
                 selected_detector_channel=selected_detector_channel,
             )
 
+            fallback_wavelength_nm = self.model_configuration.detect_wavelength_nm_from_detector_channel(
+                selected_detector_channel,
+            )
+
             if not detected_preset:
+                filled_fields: list[str] = []
+                missing_fields: list[str] = ["detector preset"]
+
+                if fallback_wavelength_nm is not None:
+                    filled_fields.append(
+                        f"wavelength={fallback_wavelength_nm} nm"
+                    )
+                else:
+                    missing_fields.append("wavelength")
+
+                status_text = (
+                    "Auto-detect could only fill some fields. "
+                    f"Filled: {', '.join(filled_fields) if filled_fields else 'none'}. "
+                    f"Missing: {', '.join(missing_fields)}. "
+                    f"Selected peak detector channel: {selected_detector_channel}."
+                )
+
                 return (
                     dash.no_update,
-                    dash.no_update,
                     (
-                        "No detector preset match was found for the uploaded FCS metadata "
-                        f"and selected peak detector channel ({selected_detector_channel})."
+                        fallback_wavelength_nm
+                        if fallback_wavelength_nm is not None
+                        else dash.no_update
                     ),
+                    status_text,
                     "warning",
                     True,
                 )
 
-            fallback_wavelength_nm = self.model_configuration.detect_wavelength_nm_from_detector_channel(
-                selected_detector_channel,
-            )
             detected_wavelength_nm = self.model_configuration.resolve_detector_preset_wavelength_nm(
                 preset_name=detected_preset,
                 current_wavelength_nm=(
@@ -1494,12 +1522,22 @@ class Model:
             if detected_wavelength_nm is not None:
                 wavelength_status_text = f" Wavelength: {detected_wavelength_nm} nm."
 
+            filled_fields = [f"detector preset={detected_preset}"]
+            missing_fields: list[str] = []
+
+            if detected_wavelength_nm is not None:
+                filled_fields.append(f"wavelength={detected_wavelength_nm} nm")
+            else:
+                missing_fields.append("wavelength")
+
             return (
                 detected_preset,
                 detected_wavelength_nm if detected_wavelength_nm is not None else current_wavelength_nm,
                 (
-                    f"Auto-detected detector preset: {detected_preset} "
-                    f"from peak detector channel {selected_detector_channel}."
+                    "Auto-detect completed. "
+                    f"Filled: {', '.join(filled_fields)}. "
+                    f"Missing: {', '.join(missing_fields) if missing_fields else 'none'}. "
+                    f"Selected peak detector channel: {selected_detector_channel}."
                     f"{wavelength_status_text}"
                 ),
                 "info",

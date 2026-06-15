@@ -78,6 +78,11 @@ class DocumentationPage:
                                     section_id=self._id("reports"),
                                     child=self._reports_card(),
                                 ),
+                                html.Div(style={"height": "18px"}),
+                                self._section_wrapper(
+                                    section_id=self._id("peak-identification"),
+                                    child=self._peak_identification_card(),
+                                ),
                             ],
                             lg=9,
                         ),
@@ -155,6 +160,7 @@ class DocumentationPage:
                         self._toc_link("Calibration files", f"#{self._id('calibration-files')}"),
                         self._toc_link("Apply checks", f"#{self._id('apply-checks')}"),
                         self._toc_link("Reports and provenance", f"#{self._id('reports')}"),
+                        self._toc_link("Peak identification methods", f"#{self._id('peak-identification')}"),
                     ],
                     style={"padding": "16px", "display": "flex", "flexDirection": "column", "gap": "10px"},
                 ),
@@ -516,6 +522,110 @@ class DocumentationPage:
                     "Use the JSON to answer what the calibration is. Use the PDF to answer what happened during this particular apply run.",
                 ),
             ],
+        )
+
+    def _peak_identification_card(self) -> dbc.Card:
+        scripts = [
+            {
+                "name": "Manual 1D",
+                "when": "You want full control. Click peak positions directly on a 1D histogram.",
+                "how": "Displays a 1D histogram for a single selected detector channel. Each click on the graph registers one peak position. Supports multiple clicks; the clear button resets all registered peaks.",
+                "settings": "Detector channel. No numeric settings.",
+            },
+            {
+                "name": "Manual 2D",
+                "when": "Your data is better understood in a 2D scatter plot (e.g. scatter vs. fluorescence).",
+                "how": "Renders a 2D scatter graph for two detector channels. Clicks register one peak point per event, and the x-coordinate of each click is inserted into the calibration table. Supports multiple clicks and a clear action.",
+                "settings": "Primary detector channel and secondary detector channel.",
+            },
+            {
+                "name": "Automatic 1D",
+                "when": "Peaks are well separated and you want a quick automated result without a fluorescence channel.",
+                "how": "Builds a log-binned histogram in log10 space, smooths it with a Gaussian kernel, detects local maxima, estimates prominence, and returns the N strongest well-separated peaks. Works on any single detector channel.",
+                "settings": "Detector channel. Maximum number of peaks to return.",
+            },
+            {
+                "name": "Prominence 1D",
+                "when": "Same use case as Automatic 1D but you want to tune sensitivity explicitly.",
+                "how": "Identical underlying algorithm to Automatic 1D — log-space histogram, smoothing, prominence-ranked local maxima — with additional exposed controls for the minimum prominence fraction and the minimum inter-peak distance fraction.",
+                "settings": "Detector channel, peak count, minimum prominence fraction, minimum distance fraction.",
+            },
+            {
+                "name": "Prominence 2D",
+                "when": "Populations need to be selected interactively in a 2D scatter view and confirmed against a density criterion.",
+                "how": "Builds a 2D hexbin density grid, finds local density maxima, and lets you inspect clusters visually before committing. Detected peaks can be filtered by a minimum density fraction and a minimum inter-cluster distance.",
+                "settings": "Primary and secondary detector channels, peak count, minimum density fraction, minimum distance.",
+            },
+            {
+                "name": "Gated K-means 1D",
+                "when": "You have a rough idea of how many populations exist and want a clustering approach rather than a histogram peak finder.",
+                "how": "Runs K-means clustering on one selected channel in log10 space. The user defines the expected number of populations. K-means centroids become the reported peak positions. Optionally shows per-cluster histograms.",
+                "settings": "Detector channel, number of clusters.",
+            },
+            {
+                "name": "Gated K-means 2D",
+                "when": "You want clustering in 2D to separate overlapping populations that share the same scatter value but differ in fluorescence, or vice versa.",
+                "how": "Applies K-means in the joint 2D log10 space of two selected channels. Reports cluster centroids; the x-coordinate of each centroid is inserted into the calibration table.",
+                "settings": "Primary and secondary detector channels, number of clusters.",
+            },
+            {
+                "name": "Rosetta",
+                "when": "You are calibrating a Rosetta bead mixture (CAL003 or compatible) that contains fluorescent marker beads and non-fluorescent polystyrene beads.",
+                "how": (
+                    "Follows a structured fluorescence-guided workflow: "
+                    "(1) detect and validate fluorescence peaks on the green channel — baseline noise peak plus up to two fluorescent marker peaks; "
+                    "(2) classify the marker peaks as dim or bright based on relative brightness and saturation fraction; "
+                    "(3) gate each marker using its fitted Gaussian mean and standard deviation, then detect and validate the scatter peak inside the gate; "
+                    "(4) gate non-fluorescent events using the baseline peak mean plus the configured sigma multiplier, then detect and validate all non-fluorescent scatter peaks. "
+                    "All peak validation uses Gaussian fitting with R\u00b2 and CV criteria. Only the non-fluorescent scatter peaks are inserted into the calibration table; marker scatter peaks are shown on the graph for orientation."
+                ),
+                "settings": "Maximum number of scatter peaks, minimum fit R\u00b2, baseline gate width (\u03c3).",
+            },
+        ]
+
+        rows = []
+        for script in scripts:
+            rows.append(
+                html.Div(
+                    [
+                        html.Div(
+                            script["name"],
+                            style={"fontWeight": "700", "fontSize": "0.97rem", "marginBottom": "4px"},
+                        ),
+                        html.Div(
+                            [
+                                html.Span("Use when: ", style={"fontWeight": "600", "opacity": 0.80}),
+                                html.Span(script["when"]),
+                            ],
+                            style={"marginBottom": "4px"},
+                        ),
+                        html.Div(
+                            [
+                                html.Span("How it works: ", style={"fontWeight": "600", "opacity": 0.80}),
+                                html.Span(script["how"]),
+                            ],
+                            style={"marginBottom": "4px"},
+                        ),
+                        html.Div(
+                            [
+                                html.Span("Settings: ", style={"fontWeight": "600", "opacity": 0.80}),
+                                html.Span(script["settings"]),
+                            ],
+                        ),
+                    ],
+                    style={
+                        "padding": "14px 16px",
+                        "borderRadius": "10px",
+                        "border": "1px solid rgba(13, 110, 253, 0.12)",
+                        "marginBottom": "10px",
+                    },
+                )
+            )
+
+        return self._content_card(
+            title="Peak identification methods",
+            subtitle="RosettaX ships eight peak identification scripts. Choose the one that matches your data and workflow.",
+            body=rows,
         )
 
     def _pre_style(self) -> dict[str, str]:

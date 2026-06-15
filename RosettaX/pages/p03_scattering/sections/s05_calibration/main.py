@@ -522,6 +522,7 @@ class Calibration:
         Resolution order
         ----------------
         - primary: used by 1D peak scripts.
+        - scattering: used by 2D scripts with a named scattering channel (e.g. Rosetta Script).
         - scattering_axis: used by newer 2D scripts with semantic channel names.
         - x_axis: used by newer generic 2D scripts.
         - x: used by older 2D scripts.
@@ -561,6 +562,9 @@ class Calibration:
 
         if "primary" in channel_values:
             return channel_values["primary"]
+
+        if "scattering" in channel_values:
+            return channel_values["scattering"]
 
         if "scattering_axis" in channel_values:
             return channel_values["scattering_axis"]

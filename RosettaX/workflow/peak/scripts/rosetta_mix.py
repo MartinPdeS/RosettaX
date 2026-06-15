@@ -14,26 +14,22 @@ logger = logging.getLogger(__name__)
 
 class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
     """
-    Automatic 2D peak process guided by green fluorescence.
+    Rosetta bead-mixture peak detection process.
 
-    This process is intended for bead mixtures where the graph is shown as:
+    This process follows a fluorescence-guided workflow:
 
-    - x axis: scattering channel
-    - y axis: green fluorescence channel
-
-    The process does not try to find arbitrary 2D density maxima. Instead it:
-
-    1. estimates a fluorescence positive threshold from the green fluorescence channel
-    2. estimates the scattering limit of detection from the fluorescence negative background
-    3. detects visible scattering peaks above the limit of detection
-    4. returns 2D marker positions for display and x values for table insertion
+    1. Detect and validate fluorescence peaks in 1D.
+    2. Resolve baseline fluorescence and fluorescent marker peaks.
+    3. Gate marker events and detect corresponding scatter peaks.
+    4. Gate non-fluorescent events from baseline fluorescence and detect
+       non-fluorescent scatter peaks used for table insertion.
     """
 
-    process_name = "Rosetta"
-    process_label = "Rosetta"
+    process_name = "Rosetta Script"
+    process_label = "Rosetta Script"
     description = (
-        "Use the green fluorescence channel to guide automatic detection of "
-        "visible peaks in the scattering channel."
+        "Fluorescence-guided scatter peak identification with per-peak "
+        "validation for Rosetta bead mixtures."
     )
     graph_type = "2d_scatter"
     sort_order = 20
@@ -45,7 +41,7 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
 
     def get_required_detector_channels(self) -> list[str]:
         """
-        Return the detector channels required by this process.
+        Return required detector channels.
         """
         return [
             "scattering",
@@ -61,37 +57,36 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
                 "name": "peak_count",
                 "kind": "integer",
                 "label": "Maximum number of scatter peaks",
-                "default_value": 6,
+                "default_value": 8,
                 "min_value": 1,
                 "max_value": 20,
                 "step": 1,
             },
             {
-                "name": "fluorescence_background_quantile",
+                "name": "fit_r2_threshold",
                 "kind": "float",
-                "label": "Fluorescence background quantile",
-                "default_value": 0.995,
-                "min_value": 0.90,
-                "max_value": 0.9999,
-                "step": 0.001,
-            },
-            {
-                "name": "scatter_background_quantile",
-                "kind": "float",
-                "label": "Scatter background quantile for LOD",
-                "default_value": 0.999,
-                "min_value": 0.95,
-                "max_value": 0.99999,
-                "step": 0.001,
-            },
-            {
-                "name": "minimum_peak_fraction",
-                "kind": "float",
-                "label": "Minimum peak height fraction",
-                "default_value": 0.08,
-                "min_value": 0.01,
-                "max_value": 0.50,
+                "label": "Minimum fit R\u00b2",
+                "help": (
+                    "Minimum Gaussian fit quality for a peak to be accepted. "
+                    "Lower values accept noisier peaks."
+                ),
+                "default_value": 0.30,
+                "min_value": 0.00,
+                "max_value": 0.999,
                 "step": 0.01,
+            },
+            {
+                "name": "baseline_sigma_multiplier",
+                "kind": "float",
+                "label": "Baseline gate width (\u03c3)",
+                "help": (
+                    "Events within this many standard deviations of the baseline "
+                    "fluorescence peak are treated as non-fluorescent."
+                ),
+                "default_value": 2.0,
+                "min_value": 0.5,
+                "max_value": 5.0,
+                "step": 0.5,
             },
         ]
 
@@ -105,42 +100,32 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
         process_settings: dict[str, Any],
     ) -> Optional[PeakProcessResult]:
         """
-        Run automatic fluorescence guided scatter peak detection.
+        Run the Rosetta peak identification workflow.
         """
         if backend is None:
-            return PeakProcessResult(
-                peak_positions=[],
-                peak_lines_payload=self.build_empty_peak_lines_payload(),
+            return self._empty_result(
                 status="The backend is not available.",
                 clear_existing_table_peaks=False,
             )
 
-        scattering_column = detector_channels.get(
-            "scattering",
-        )
-        green_fluorescence_column = detector_channels.get(
-            "green_fluorescence",
-        )
+        scattering_column = detector_channels.get("scattering")
+        green_fluorescence_column = detector_channels.get("green_fluorescence")
 
         if not str(scattering_column or "").strip():
-            return PeakProcessResult(
-                peak_positions=[],
-                peak_lines_payload=self.build_empty_peak_lines_payload(),
+            return self._empty_result(
                 status="Select a scattering channel first.",
                 clear_existing_table_peaks=False,
             )
 
         if not str(green_fluorescence_column or "").strip():
-            return PeakProcessResult(
-                peak_positions=[],
-                peak_lines_payload=self.build_empty_peak_lines_payload(),
+            return self._empty_result(
                 status="Select a green fluorescence channel first.",
                 clear_existing_table_peaks=False,
             )
 
         resolved_peak_count = resolve_integer(
             value=peak_count,
-            default=6,
+            default=8,
             minimum=1,
             maximum=20,
         )
@@ -152,26 +137,29 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
             maximum=5_000_000,
         )
 
-        fluorescence_background_quantile = resolve_float(
-            value=process_settings.get("fluorescence_background_quantile"),
-            default=0.995,
-            minimum=0.90,
-            maximum=0.9999,
+        # User-facing settings (3 controls shown in UI).
+        fit_r2_threshold = resolve_float(
+            value=process_settings.get("fit_r2_threshold"),
+            default=0.80,
+            minimum=0.00,
+            maximum=0.999,
         )
 
-        scatter_background_quantile = resolve_float(
-            value=process_settings.get("scatter_background_quantile"),
-            default=0.999,
-            minimum=0.95,
-            maximum=0.99999,
+        baseline_sigma_multiplier = resolve_float(
+            value=process_settings.get("baseline_sigma_multiplier"),
+            default=2.0,
+            minimum=0.5,
+            maximum=5.0,
         )
 
-        minimum_peak_fraction = resolve_float(
-            value=process_settings.get("minimum_peak_fraction"),
-            default=0.08,
-            minimum=0.01,
-            maximum=0.50,
-        )
+        # Internal algorithm constants (not user-configurable).
+        minimum_peak_fraction = 0.03
+        minimum_events_per_peak = 35
+        fit_cv_threshold = 0.55
+        fluorescence_saturation_quantile = 0.9995
+        marker_gate_sigma_multiplier = 2.0
+        scatter_fit_r2_threshold = fit_r2_threshold
+        scatter_fit_cv_threshold = 0.50
 
         scattering_values = np.asarray(
             column_copy(
@@ -194,127 +182,216 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
         )
 
         finite_mask = np.isfinite(scattering_values) & np.isfinite(green_fluorescence_values)
-
         scattering_values = scattering_values[finite_mask]
         green_fluorescence_values = green_fluorescence_values[finite_mask]
 
         if scattering_values.size == 0:
-            return PeakProcessResult(
-                peak_positions=[],
-                peak_lines_payload=self.build_empty_peak_lines_payload(),
+            return self._empty_result(
                 status="No finite events are available for automatic detection.",
                 clear_existing_table_peaks=False,
             )
 
-        fluorescence_positive_threshold = estimate_fluorescence_positive_threshold(
-            green_fluorescence_values=green_fluorescence_values,
-            fluorescence_background_quantile=fluorescence_background_quantile,
+        fluorescence_saturation_intensity = resolve_saturation_intensity(
+            values=green_fluorescence_values,
+            saturation_quantile=fluorescence_saturation_quantile,
         )
 
-        scattering_limit_of_detection = estimate_scattering_limit_of_detection(
-            scattering_values=scattering_values,
-            green_fluorescence_values=green_fluorescence_values,
-            fluorescence_positive_threshold=fluorescence_positive_threshold,
-            scatter_background_quantile=scatter_background_quantile,
+        fluorescence_has_saturated_counts = has_fluorescence_saturated_counts(
+            values=green_fluorescence_values,
         )
 
-        fluorescence_positive_mask = green_fluorescence_values >= fluorescence_positive_threshold
-        visible_scattering_mask = (
-            fluorescence_positive_mask
-            & np.isfinite(scattering_values)
-            & (scattering_values > 0.0)
-            & (scattering_values >= scattering_limit_of_detection)
+        fluorescence_analysis = find_fit_validate_peaks_1d(
+            values=green_fluorescence_values,
+            peak_count=3,
+            minimum_peak_fraction=minimum_peak_fraction,
+            minimum_events_per_peak=minimum_events_per_peak,
+            fit_r2_threshold=fit_r2_threshold,
+            fit_cv_threshold=fit_cv_threshold,
+            saturation_intensity=fluorescence_saturation_intensity,
         )
 
-        visible_scattering_values = scattering_values[
-            visible_scattering_mask
-        ]
-        visible_green_fluorescence_values = green_fluorescence_values[
-            visible_scattering_mask
-        ]
+        fluorescence_validated_peaks = fluorescence_analysis["validated_peaks"]
 
-        if visible_scattering_values.size < 5:
-            peak_lines_payload = {
-                "positions": [],
-                "x_positions": [],
-                "y_positions": [],
-                "points": [],
-                "labels": [],
-                "limit_of_detection_x": float(scattering_limit_of_detection),
-            }
-
-            return PeakProcessResult(
-                peak_positions=[],
-                peak_lines_payload=peak_lines_payload,
+        if not fluorescence_validated_peaks:
+            return self._build_stop_result(
                 status=(
-                    "No visible scattering peaks were found above the estimated "
-                    "limit of detection."
+                    "No validated fluorescence peaks found. "
+                    "Unable to identify fluorescent marker populations."
                 ),
-                clear_existing_table_peaks=False,
+                fluorescence_analysis=fluorescence_analysis,
             )
 
-        detected_scatter_peak_positions = detect_scattering_peak_positions(
-            scattering_values=visible_scattering_values,
+        baseline_peak = resolve_baseline_peak(
+            peaks=fluorescence_validated_peaks,
+        )
+
+        baseline_lower_gate = float(
+            max(0.0, baseline_peak["mean"] - baseline_sigma_multiplier * max(baseline_peak["std"], 1e-12))
+        )
+
+        baseline_upper_gate = float(
+            baseline_peak["mean"] + baseline_sigma_multiplier * max(baseline_peak["std"], 1e-12)
+        )
+
+        baseline_cutoff = float(baseline_upper_gate)
+
+        marker_peaks = [
+            peak
+            for peak in fluorescence_validated_peaks
+            if peak is not baseline_peak
+        ]
+
+        if len(marker_peaks) == 0:
+            return self._build_stop_result(
+                status=(
+                    "0 fluorescent marker peaks found after removing baseline. "
+                    "Stopping Rosetta workflow."
+                ),
+                fluorescence_analysis=fluorescence_analysis,
+                baseline_lower_gate=baseline_lower_gate,
+                baseline_upper_gate=baseline_upper_gate,
+            )
+
+        if len(marker_peaks) == 3:
+            return self._build_stop_result(
+                status=(
+                    "3 fluorescent marker peaks found after removing baseline. "
+                    "Stopping Rosetta workflow."
+                ),
+                fluorescence_analysis=fluorescence_analysis,
+                baseline_lower_gate=baseline_lower_gate,
+                baseline_upper_gate=baseline_upper_gate,
+            )
+
+        if len(marker_peaks) > 3:
+            return self._build_stop_result(
+                status=(
+                    f"{len(marker_peaks)} fluorescent marker peaks found after removing baseline. "
+                    "Stopping Rosetta workflow."
+                ),
+                fluorescence_analysis=fluorescence_analysis,
+                baseline_lower_gate=baseline_lower_gate,
+                baseline_upper_gate=baseline_upper_gate,
+            )
+
+        marker_classification = classify_marker_peaks(
+            marker_peaks=marker_peaks,
+            has_saturated_counts=fluorescence_has_saturated_counts,
+        )
+
+        marker_points: list[dict[str, float]] = []
+
+        for marker_peak in marker_classification:
+            marker_gate_mask = build_sigma_gate_mask(
+                values=green_fluorescence_values,
+                mean_value=marker_peak["mean"],
+                std_value=marker_peak["std"],
+                sigma_multiplier=marker_gate_sigma_multiplier,
+            )
+
+            gated_scatter_values = scattering_values[marker_gate_mask]
+
+            scatter_peak = select_primary_validated_peak(
+                values=gated_scatter_values,
+                peak_count=1,
+                minimum_peak_fraction=minimum_peak_fraction,
+                minimum_events_per_peak=minimum_events_per_peak,
+                fit_r2_threshold=scatter_fit_r2_threshold,
+                fit_cv_threshold=scatter_fit_cv_threshold,
+            )
+
+            if scatter_peak is None:
+                continue
+
+            marker_points.append(
+                {
+                    "x": float(scatter_peak["mean"]),
+                    "y": float(marker_peak["mean"]),
+                    "kind": "marker",
+                    "label": str(marker_peak["marker_role"]),
+                }
+            )
+
+        non_fluorescent_mask = (
+            np.isfinite(scattering_values)
+            & np.isfinite(green_fluorescence_values)
+            & (scattering_values > 0.0)
+            & (green_fluorescence_values <= baseline_cutoff)
+        )
+
+        non_fluorescent_scattering_values = scattering_values[non_fluorescent_mask]
+        non_fluorescent_fluorescence_values = green_fluorescence_values[non_fluorescent_mask]
+
+        non_fluorescent_analysis = find_fit_validate_peaks_1d(
+            values=non_fluorescent_scattering_values,
             peak_count=resolved_peak_count,
             minimum_peak_fraction=minimum_peak_fraction,
+            minimum_events_per_peak=minimum_events_per_peak,
+            fit_r2_threshold=scatter_fit_r2_threshold,
+            fit_cv_threshold=scatter_fit_cv_threshold,
+            saturation_intensity=float("inf"),
         )
 
-        if not detected_scatter_peak_positions:
-            peak_lines_payload = {
-                "positions": [],
-                "x_positions": [],
-                "y_positions": [],
-                "points": [],
-                "labels": [],
-                "limit_of_detection_x": float(scattering_limit_of_detection),
-            }
+        non_fluorescent_validated_peaks = non_fluorescent_analysis["validated_peaks"]
 
-            return PeakProcessResult(
-                peak_positions=[],
-                peak_lines_payload=peak_lines_payload,
-                status="No distinct scattering peaks could be resolved.",
-                clear_existing_table_peaks=False,
+        if not non_fluorescent_validated_peaks:
+            return self._build_stop_result(
+                status=(
+                    "No validated non-fluorescent scatter peaks found. "
+                    "Stopping Rosetta workflow."
+                ),
+                fluorescence_analysis=fluorescence_analysis,
+                baseline_lower_gate=baseline_lower_gate,
+                baseline_upper_gate=baseline_upper_gate,
+                marker_points=marker_points,
             )
 
-        peak_points = build_peak_display_points(
-            scattering_values=visible_scattering_values,
-            green_fluorescence_values=visible_green_fluorescence_values,
-            scatter_peak_positions=detected_scatter_peak_positions,
-        )
-
-        labels = [
-            f"Scatter peak {index + 1}"
-            for index in range(len(peak_points))
+        non_fluorescent_scatter_positions = [
+            float(peak["mean"])
+            for peak in non_fluorescent_validated_peaks
         ]
 
+        non_fluorescent_points = build_peak_display_points(
+            scattering_values=non_fluorescent_scattering_values,
+            fluorescence_values=non_fluorescent_fluorescence_values,
+            scatter_peak_positions=non_fluorescent_scatter_positions,
+            default_y=float(baseline_peak["mean"]),
+            kind="non_fluorescent",
+        )
+
+        labels: list[str] = []
+        for index, _ in enumerate(non_fluorescent_points, start=1):
+            labels.append(f"Non-fluorescent peak {index}")
+
+        for marker_point in marker_points:
+            labels.append(str(marker_point.get("label", "Marker peak")))
+
+        all_points = [*non_fluorescent_points, *marker_points]
+
         peak_lines_payload = {
-            "positions": [
-                float(point["x"])
-                for point in peak_points
-            ],
-            "x_positions": [
-                float(point["x"])
-                for point in peak_points
-            ],
-            "y_positions": [
-                float(point["y"])
-                for point in peak_points
-            ],
+            "positions": [float(point["x"]) for point in all_points],
+            "x_positions": [float(point["x"]) for point in all_points],
+            "y_positions": [float(point["y"]) for point in all_points],
             "points": [
                 {
                     "x": float(point["x"]),
                     "y": float(point["y"]),
+                    "kind": str(point.get("kind", "peak")),
                 }
-                for point in peak_points
+                for point in all_points
             ],
             "labels": labels,
-            "limit_of_detection_x": float(scattering_limit_of_detection),
+            "baseline_cutoff": baseline_cutoff,
+            "y_lower_gate": baseline_lower_gate,
+            "y_upper_gate": baseline_upper_gate,
+            "fluorescence_saturation_intensity": float(fluorescence_saturation_intensity),
         }
 
         status = (
-            f"Detected {len(peak_points)} scatter peak(s). "
-            f"Fluorescence threshold={fluorescence_positive_threshold:.6g}. "
-            f"Scatter LOD={scattering_limit_of_detection:.6g}."
+            f"Fluorescence peaks: {len(fluorescence_validated_peaks)} total "
+            f"(1 baseline + {len(marker_peaks)} marker); "
+            f"non-fluorescent scatter peaks: {len(non_fluorescent_points)}. "
+            f"Baseline cutoff={baseline_cutoff:.6g}."
         )
 
         return PeakProcessResult(
@@ -323,11 +400,83 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
                     "x": float(point["x"]),
                     "y": float(point["y"]),
                 }
-                for point in peak_points
+                for point in non_fluorescent_points
+            ],
+            new_peak_positions=[
+                float(point["x"])
+                for point in non_fluorescent_points
             ],
             peak_lines_payload=peak_lines_payload,
             status=status,
             clear_existing_table_peaks=False,
+        )
+
+    def _build_stop_result(
+        self,
+        *,
+        status: str,
+        fluorescence_analysis: Optional[dict[str, Any]] = None,
+        baseline_lower_gate: Optional[float] = None,
+        baseline_upper_gate: Optional[float] = None,
+        marker_points: Optional[list[dict[str, float]]] = None,
+    ) -> PeakProcessResult:
+        """
+        Build a stop result with optional diagnostic payload.
+        """
+        payload = self.build_empty_peak_lines_payload()
+
+        if fluorescence_analysis is not None:
+            payload["fluorescence_peak_count"] = int(
+                len(fluorescence_analysis.get("validated_peaks", []))
+            )
+
+        if baseline_lower_gate is not None and np.isfinite(baseline_lower_gate):
+            payload["y_lower_gate"] = float(baseline_lower_gate)
+
+        if baseline_upper_gate is not None and np.isfinite(baseline_upper_gate):
+            payload["baseline_cutoff"] = float(baseline_upper_gate)
+            payload["y_upper_gate"] = float(baseline_upper_gate)
+
+        if marker_points:
+            payload["points"] = [
+                {
+                    "x": float(point["x"]),
+                    "y": float(point["y"]),
+                    "kind": str(point.get("kind", "marker")),
+                }
+                for point in marker_points
+            ]
+            payload["x_positions"] = [float(point["x"]) for point in marker_points]
+            payload["y_positions"] = [float(point["y"]) for point in marker_points]
+            payload["positions"] = [float(point["x"]) for point in marker_points]
+            payload["labels"] = [
+                str(point.get("label", "Marker peak"))
+                for point in marker_points
+            ]
+
+        return PeakProcessResult(
+            peak_positions=[],
+            peak_lines_payload=payload,
+            status=status,
+            new_peak_positions=[],
+            clear_existing_table_peaks=False,
+        )
+
+    def _empty_result(
+        self,
+        *,
+        status: str,
+        clear_existing_table_peaks: bool,
+    ) -> PeakProcessResult:
+        """
+        Build an empty process result.
+        """
+        return PeakProcessResult(
+            peak_positions=[],
+            peak_lines_payload=self.build_empty_peak_lines_payload(),
+            status=status,
+            new_peak_positions=[],
+            clear_existing_table_peaks=clear_existing_table_peaks,
         )
 
     def clear_peaks(self) -> PeakProcessResult:
@@ -337,13 +486,14 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
         return PeakProcessResult(
             peak_positions=[],
             peak_lines_payload=self.build_empty_peak_lines_payload(),
-            status="Cleared fluorescence guided scatter peaks.",
+            status="Cleared Rosetta fluorescence-guided scatter peaks.",
+            new_peak_positions=[],
             clear_existing_table_peaks=True,
         )
 
     def build_empty_peak_lines_payload(self) -> dict[str, Any]:
         """
-        Build an empty peak payload.
+        Build an empty payload.
         """
         return {
             "positions": [],
@@ -362,23 +512,14 @@ def resolve_integer(
     maximum: int,
 ) -> int:
     """
-    Resolve an integer setting.
+    Resolve a bounded integer value.
     """
     try:
         resolved_value = int(value)
-
     except (TypeError, ValueError):
         resolved_value = int(default)
 
-    resolved_value = max(
-        int(minimum),
-        min(
-            int(maximum),
-            int(resolved_value),
-        ),
-    )
-
-    return resolved_value
+    return max(int(minimum), min(int(maximum), int(resolved_value)))
 
 
 def resolve_float(
@@ -389,248 +530,82 @@ def resolve_float(
     maximum: float,
 ) -> float:
     """
-    Resolve a floating point setting.
+    Resolve a bounded floating-point value.
     """
     try:
         resolved_value = float(value)
-
     except (TypeError, ValueError):
         resolved_value = float(default)
 
     if not np.isfinite(resolved_value):
         resolved_value = float(default)
 
-    resolved_value = max(
-        float(minimum),
-        min(
-            float(maximum),
-            float(resolved_value),
-        ),
-    )
-
-    return resolved_value
+    return max(float(minimum), min(float(maximum), float(resolved_value)))
 
 
-def estimate_fluorescence_positive_threshold(
+def resolve_saturation_intensity(
     *,
-    green_fluorescence_values: np.ndarray,
-    fluorescence_background_quantile: float,
+    values: np.ndarray,
+    saturation_quantile: float,
 ) -> float:
     """
-    Estimate the fluorescence positive threshold.
-
-    The method first tries to find a valley between two fluorescence modes in
-    log space. If that fails, it falls back to a high background quantile.
+    Estimate saturation intensity from a high fluorescence quantile.
     """
-    green_fluorescence_values = np.asarray(
-        green_fluorescence_values,
-        dtype=float,
-    )
+    values = np.asarray(values, dtype=float)
+    values = values[np.isfinite(values)]
 
-    positive_values = green_fluorescence_values[
-        np.isfinite(green_fluorescence_values)
-        & (green_fluorescence_values > 0.0)
-    ]
+    if values.size == 0:
+        return float("inf")
 
-    if positive_values.size == 0:
-        return 0.0
-
-    log_values = np.log10(
-        positive_values,
-    )
-
-    histogram_bin_count = min(
-        256,
-        max(
-            64,
-            int(np.sqrt(log_values.size)),
-        ),
-    )
-
-    counts, bin_edges = np.histogram(
-        log_values,
-        bins=histogram_bin_count,
-    )
-
-    smoothed_counts = smooth_counts(
-        counts=np.asarray(counts, dtype=float),
-        window_size=9,
-    )
-
-    local_maxima_indices = find_local_maxima_indices(
-        values=smoothed_counts,
-    )
-
-    if len(local_maxima_indices) >= 2:
-        strongest_peak_indices = sorted(
-            local_maxima_indices,
-            key=lambda index: smoothed_counts[index],
-            reverse=True,
-        )[:2]
-
-        left_peak_index, right_peak_index = sorted(
-            strongest_peak_indices,
-        )
-
-        valley_slice = smoothed_counts[
-            left_peak_index:right_peak_index + 1
-        ]
-
-        if valley_slice.size > 0:
-            valley_index = left_peak_index + int(
-                np.argmin(valley_slice)
-            )
-
-            valley_center = 0.5 * (
-                bin_edges[valley_index]
-                + bin_edges[valley_index + 1]
-            )
-
-            return float(
-                10.0 ** valley_center
-            )
-
-    return float(
-        np.quantile(
-            positive_values,
-            fluorescence_background_quantile,
-        )
-    )
+    return float(np.quantile(values, float(saturation_quantile)))
 
 
-def estimate_scattering_limit_of_detection(
+def find_fit_validate_peaks_1d(
     *,
-    scattering_values: np.ndarray,
-    green_fluorescence_values: np.ndarray,
-    fluorescence_positive_threshold: float,
-    scatter_background_quantile: float,
-) -> float:
-    """
-    Estimate the scattering limit of detection from the fluorescence negative
-    background population.
-    """
-    scattering_values = np.asarray(
-        scattering_values,
-        dtype=float,
-    )
-
-    green_fluorescence_values = np.asarray(
-        green_fluorescence_values,
-        dtype=float,
-    )
-
-    valid_scattering_mask = np.isfinite(scattering_values) & (scattering_values > 0.0)
-
-    if not np.isfinite(fluorescence_positive_threshold):
-        background_scattering_values = scattering_values[
-            valid_scattering_mask
-        ]
-
-    else:
-        fluorescence_negative_mask = green_fluorescence_values < fluorescence_positive_threshold
-
-        background_scattering_values = scattering_values[
-            valid_scattering_mask
-            & fluorescence_negative_mask
-        ]
-
-        if background_scattering_values.size < 32:
-            sorted_green_fluorescence_values = np.sort(
-                green_fluorescence_values[
-                    np.isfinite(green_fluorescence_values)
-                ]
-            )
-
-            if sorted_green_fluorescence_values.size > 0:
-                fallback_threshold_index = int(
-                    0.7 * (sorted_green_fluorescence_values.size - 1)
-                )
-
-                fallback_threshold = sorted_green_fluorescence_values[
-                    fallback_threshold_index
-                ]
-
-                background_scattering_values = scattering_values[
-                    valid_scattering_mask
-                    & (green_fluorescence_values <= fallback_threshold)
-                ]
-
-    if background_scattering_values.size == 0:
-        valid_scattering_values = scattering_values[
-            valid_scattering_mask
-        ]
-
-        if valid_scattering_values.size == 0:
-            return 0.0
-
-        return float(
-            np.quantile(
-                valid_scattering_values,
-                scatter_background_quantile,
-            )
-        )
-
-    return float(
-        np.quantile(
-            background_scattering_values,
-            scatter_background_quantile,
-        )
-    )
-
-
-def detect_scattering_peak_positions(
-    *,
-    scattering_values: np.ndarray,
+    values: np.ndarray,
     peak_count: int,
     minimum_peak_fraction: float,
-) -> list[float]:
+    minimum_events_per_peak: int,
+    fit_r2_threshold: float,
+    fit_cv_threshold: float,
+    saturation_intensity: float,
+) -> dict[str, Any]:
     """
-    Detect peaks along the scattering axis.
+    Find, fit, and validate 1D peaks.
 
-    Peak detection is done on a one dimensional histogram in log space because
-    the actual quantity of interest is the x axis peak location.
+    Workflow:
+    - Build a log-binned histogram and detect candidate peaks.
+    - Build a region of interest around each candidate.
+    - Build a linearly binned ROI histogram.
+    - Fit a Gaussian using weighted moments and evaluate quality.
+    - Validate using R2, CV, saturation, and minimum event count.
     """
-    scattering_values = np.asarray(
-        scattering_values,
-        dtype=float,
-    )
+    values = np.asarray(values, dtype=float)
+    values = values[np.isfinite(values) & (values > 0.0)]
 
-    scattering_values = scattering_values[
-        np.isfinite(scattering_values)
-        & (scattering_values > 0.0)
-    ]
+    if values.size == 0:
+        return {
+            "all_peaks": [],
+            "validated_peaks": [],
+        }
 
-    if scattering_values.size == 0:
-        return []
-
-    log_scattering_values = np.log10(
-        scattering_values,
-    )
+    log_values = np.log10(values)
 
     histogram_bin_count = min(
         256,
-        max(
-            64,
-            int(np.sqrt(log_scattering_values.size)),
-        ),
+        max(64, int(np.sqrt(log_values.size))),
     )
 
-    counts, bin_edges = np.histogram(
-        log_scattering_values,
-        bins=histogram_bin_count,
-    )
+    counts, bin_edges = np.histogram(log_values, bins=histogram_bin_count)
 
     if counts.size == 0:
-        return []
+        return {
+            "all_peaks": [],
+            "validated_peaks": [],
+        }
 
-    smoothed_counts = smooth_counts(
-        counts=np.asarray(counts, dtype=float),
-        window_size=7,
-    )
-
-    candidate_peak_indices = find_local_maxima_indices(
-        values=smoothed_counts,
-    )
+    smoothed_counts = smooth_counts(counts=np.asarray(counts, dtype=float), window_size=7)
+    candidate_peak_indices = find_local_maxima_indices(values=smoothed_counts)
 
     if not candidate_peak_indices:
         candidate_peak_indices = [
@@ -638,18 +613,13 @@ def detect_scattering_peak_positions(
             for index in np.argsort(smoothed_counts)[-int(peak_count):]
         ]
 
-    maximum_count = float(
-        np.max(smoothed_counts)
-    )
+    maximum_count = float(np.max(smoothed_counts))
 
     candidate_peak_indices = [
-        index
+        int(index)
         for index in candidate_peak_indices
-        if smoothed_counts[index] >= maximum_count * float(minimum_peak_fraction)
+        if smoothed_counts[int(index)] >= maximum_count * float(minimum_peak_fraction)
     ]
-
-    if not candidate_peak_indices:
-        return []
 
     selected_peak_indices = select_well_separated_peak_indices(
         candidate_peak_indices=candidate_peak_indices,
@@ -658,100 +628,428 @@ def detect_scattering_peak_positions(
         minimum_index_distance=6,
     )
 
-    log_bin_centers = 0.5 * (
-        bin_edges[:-1]
-        + bin_edges[1:]
-    )
+    all_peaks: list[dict[str, float]] = []
 
-    scatter_peak_positions = [
-        float(
-            10.0 ** log_bin_centers[index]
+    for peak_index in selected_peak_indices:
+        if peak_index < 0 or peak_index >= len(bin_edges) - 1:
+            continue
+
+        log_peak_center = 0.5 * (bin_edges[peak_index] + bin_edges[peak_index + 1])
+        log_peak_half_width = estimate_log_peak_half_width(
+            smoothed_counts=smoothed_counts,
+            peak_index=peak_index,
+            bin_edges=bin_edges,
+            minimum_half_width=0.05,
         )
-        for index in sorted(selected_peak_indices)
-        if 0 <= index < log_bin_centers.size
+
+        log_roi_low = log_peak_center - 2.0 * log_peak_half_width
+        log_roi_high = log_peak_center + 2.0 * log_peak_half_width
+
+        roi_mask = (log_values >= log_roi_low) & (log_values <= log_roi_high)
+        roi_values = values[roi_mask]
+
+        gaussian_fit = fit_gaussian_from_values(
+            values=roi_values,
+            minimum_events=max(5, minimum_events_per_peak // 2),
+            use_log_space=True,
+        )
+
+        if gaussian_fit is None:
+            continue
+
+        fit_mean = float(gaussian_fit["mean"])
+        fit_std = float(gaussian_fit["std"])
+        fit_cv = float(gaussian_fit["cv"])
+        fit_r2 = float(gaussian_fit["r2"])
+        fit_count = int(gaussian_fit["count"])
+
+        is_valid = (
+            fit_count >= int(minimum_events_per_peak)
+            and fit_r2 >= float(fit_r2_threshold)
+            and fit_cv <= float(fit_cv_threshold)
+            and fit_mean < float(saturation_intensity)
+        )
+
+        all_peaks.append(
+            {
+                "mean": fit_mean,
+                "std": fit_std,
+                "cv": fit_cv,
+                "r2": fit_r2,
+                "count": fit_count,
+                "validated": bool(is_valid),
+            }
+        )
+
+    all_peaks_sorted = sorted(all_peaks, key=lambda peak: float(peak["mean"]))
+
+    validated_peaks = [
+        peak
+        for peak in all_peaks_sorted
+        if bool(peak["validated"])
     ]
 
-    return scatter_peak_positions
+    return {
+        "all_peaks": all_peaks_sorted,
+        "validated_peaks": validated_peaks,
+    }
+
+
+def estimate_log_peak_half_width(
+    *,
+    smoothed_counts: np.ndarray,
+    peak_index: int,
+    bin_edges: np.ndarray,
+    minimum_half_width: float,
+) -> float:
+    """
+    Estimate half-width for one log-domain histogram peak.
+    """
+    peak_height = float(smoothed_counts[peak_index])
+
+    if peak_height <= 0.0:
+        return float(minimum_half_width)
+
+    half_height = 0.5 * peak_height
+
+    left_index = int(peak_index)
+    while left_index > 0 and smoothed_counts[left_index] > half_height:
+        left_index -= 1
+
+    right_index = int(peak_index)
+    max_right_index = int(smoothed_counts.size - 1)
+    while right_index < max_right_index and smoothed_counts[right_index] > half_height:
+        right_index += 1
+
+    left_edge = float(bin_edges[max(0, left_index)])
+    right_edge = float(bin_edges[min(len(bin_edges) - 1, right_index + 1)])
+
+    half_width = 0.5 * max(right_edge - left_edge, 0.0)
+
+    return float(max(half_width, float(minimum_half_width)))
+
+
+def fit_gaussian_from_values(
+    *,
+    values: np.ndarray,
+    minimum_events: int,
+    use_log_space: bool = False,
+) -> Optional[dict[str, float]]:
+    """
+    Fit a Gaussian to ROI values using histogram moments.
+
+    When ``use_log_space`` is True the fit is performed on log10(values) and
+    the mean and std are converted back to linear space afterwards.  This gives
+    accurate R² values for log-normal scattering data where a linear-bin fit
+    would always appear skewed.
+    """
+    values = np.asarray(values, dtype=float)
+    values = values[np.isfinite(values)]
+
+    if values.size < int(minimum_events):
+        return None
+
+    if use_log_space:
+        values = values[values > 0.0]
+        if values.size < int(minimum_events):
+            return None
+        fit_values = np.log10(values)
+    else:
+        fit_values = values
+
+    value_min = float(np.min(fit_values))
+    value_max = float(np.max(fit_values))
+
+    if not np.isfinite(value_min) or not np.isfinite(value_max) or value_max <= value_min:
+        return None
+
+    bin_count = int(min(128, max(20, int(np.sqrt(fit_values.size)))))
+    counts, edges = np.histogram(fit_values, bins=bin_count)
+
+    if counts.size < 3 or float(np.sum(counts)) <= 0.0:
+        return None
+
+    centers = 0.5 * (edges[:-1] + edges[1:])
+    y_values = np.asarray(counts, dtype=float)
+
+    weight_sum = float(np.sum(y_values))
+    if weight_sum <= 0.0:
+        return None
+
+    mean_fit = float(np.sum(centers * y_values) / weight_sum)
+
+    variance = float(np.sum(((centers - mean_fit) ** 2) * y_values) / weight_sum)
+    std_fit = float(np.sqrt(max(variance, 0.0)))
+
+    if not np.isfinite(std_fit) or std_fit <= 0.0:
+        return None
+
+    basis = np.exp(-0.5 * ((centers - mean_fit) / std_fit) ** 2)
+    basis_energy = float(np.sum(basis * basis))
+
+    if basis_energy <= 0.0:
+        return None
+
+    amplitude = float(np.sum(y_values * basis) / basis_energy)
+    modeled = amplitude * basis
+
+    residual = y_values - modeled
+    sse = float(np.sum(residual * residual))
+    y_mean = float(np.mean(y_values))
+    sst = float(np.sum((y_values - y_mean) ** 2))
+
+    if sst <= 0.0:
+        r2_value = 1.0 if sse <= 0.0 else 0.0
+    else:
+        r2_value = 1.0 - sse / sst
+
+    if use_log_space:
+        # Convert log10-space mean and std back to linear space.
+        # mean_linear = 10^mean_log10
+        # std_linear = mean_linear * sinh(std_log10 * ln(10))  (exact for log-normal)
+        mean_value = float(10.0 ** mean_fit)
+        std_value = float(mean_value * np.sinh(std_fit * np.log(10.0)))
+    else:
+        mean_value = mean_fit
+        std_value = std_fit
+
+    cv_value = float("inf")
+    if mean_value != 0.0:
+        cv_value = float(abs(std_value / mean_value))
+
+    return {
+        "mean": float(mean_value),
+        "std": float(std_value),
+        "cv": float(cv_value),
+        "r2": float(r2_value),
+        "count": int(fit_values.size),
+    }
+
+
+def resolve_baseline_peak(
+    *,
+    peaks: list[dict[str, float]],
+) -> dict[str, float]:
+    """
+    Resolve baseline fluorescence peak.
+
+    The baseline noise peak is expected to have the highest event count.
+    """
+    if not peaks:
+        raise ValueError("Expected at least one fluorescence peak.")
+
+    return max(
+        peaks,
+        key=lambda peak: (
+            float(peak.get("count", 0.0)),
+            -float(peak.get("mean", 0.0)),
+        ),
+    )
+
+
+def classify_marker_peaks(
+    *,
+    marker_peaks: list[dict[str, float]],
+    has_saturated_counts: bool,
+) -> list[dict[str, float]]:
+    """
+    Classify marker peaks as dim or bright.
+
+    PDF rule for one marker peak:
+    - no detector saturated counts -> bright marker
+    - detector saturated counts -> dim marker
+    """
+    marker_peaks_sorted = sorted(
+        marker_peaks,
+        key=lambda peak: float(peak.get("mean", 0.0)),
+    )
+
+    if len(marker_peaks_sorted) == 1:
+        single_peak = dict(marker_peaks_sorted[0])
+
+        if bool(has_saturated_counts):
+            single_peak["marker_role"] = "Dim marker"
+        else:
+            single_peak["marker_role"] = "Bright marker"
+
+        return [single_peak]
+
+    classified: list[dict[str, float]] = []
+
+    for marker_index, marker_peak in enumerate(marker_peaks_sorted):
+        classified_peak = dict(marker_peak)
+
+        if marker_index == 0:
+            classified_peak["marker_role"] = "Dim marker"
+        else:
+            classified_peak["marker_role"] = "Bright marker"
+
+        classified.append(classified_peak)
+
+    return classified
+
+
+def has_fluorescence_saturated_counts(
+    *,
+    values: np.ndarray,
+    top_quantile: float = 0.9995,
+    minimum_top_fraction: float = 0.001,
+) -> bool:
+    """
+    Return whether detector saturation counts are present in fluorescence data.
+
+    Saturation is approximated by a pile-up of events at the highest observed
+    intensity within the top quantile tail of the distribution.
+    """
+    values = np.asarray(values, dtype=float)
+    values = values[np.isfinite(values) & (values > 0.0)]
+
+    if values.size < 100:
+        return False
+
+    try:
+        top_threshold = float(np.quantile(values, float(top_quantile)))
+    except (TypeError, ValueError):
+        return False
+
+    if not np.isfinite(top_threshold):
+        return False
+
+    top_mask = values >= top_threshold
+    top_fraction = float(np.mean(top_mask))
+
+    if top_fraction < float(minimum_top_fraction):
+        return False
+
+    top_values = values[top_mask]
+
+    if top_values.size < 5:
+        return False
+
+    max_value = float(np.max(values))
+    atol = max(abs(max_value) * 1e-6, 1e-9)
+    near_max_count = int(np.count_nonzero(np.isclose(top_values, max_value, rtol=0.0, atol=atol)))
+
+    return near_max_count >= max(3, int(0.2 * top_values.size))
+
+
+def build_sigma_gate_mask(
+    *,
+    values: np.ndarray,
+    mean_value: float,
+    std_value: float,
+    sigma_multiplier: float,
+) -> np.ndarray:
+    """
+    Build a symmetric sigma gate mask.
+    """
+    values = np.asarray(values, dtype=float)
+
+    safe_std = max(float(std_value), max(abs(mean_value) * 0.01, 1e-6))
+    half_width = float(sigma_multiplier) * safe_std
+
+    lower_bound = float(mean_value) - half_width
+    upper_bound = float(mean_value) + half_width
+
+    return (
+        np.isfinite(values)
+        & (values >= lower_bound)
+        & (values <= upper_bound)
+    )
+
+
+def select_primary_validated_peak(
+    *,
+    values: np.ndarray,
+    peak_count: int,
+    minimum_peak_fraction: float,
+    minimum_events_per_peak: int,
+    fit_r2_threshold: float,
+    fit_cv_threshold: float,
+) -> Optional[dict[str, float]]:
+    """
+    Return the strongest validated peak from one 1D dataset.
+    """
+    analysis = find_fit_validate_peaks_1d(
+        values=values,
+        peak_count=peak_count,
+        minimum_peak_fraction=minimum_peak_fraction,
+        minimum_events_per_peak=minimum_events_per_peak,
+        fit_r2_threshold=fit_r2_threshold,
+        fit_cv_threshold=fit_cv_threshold,
+        saturation_intensity=float("inf"),
+    )
+
+    validated = analysis["validated_peaks"]
+
+    if not validated:
+        return None
+
+    return max(
+        validated,
+        key=lambda peak: float(peak.get("count", 0.0)),
+    )
 
 
 def build_peak_display_points(
     *,
     scattering_values: np.ndarray,
-    green_fluorescence_values: np.ndarray,
+    fluorescence_values: np.ndarray,
     scatter_peak_positions: list[float],
+    default_y: float,
+    kind: str,
 ) -> list[dict[str, float]]:
     """
-    Build 2D display points for the detected scatter peaks.
-
-    The x position is the detected scatter peak. The y position is the median
-    green fluorescence value of nearby events.
+    Build 2D display points from scatter peak positions.
     """
-    scattering_values = np.asarray(
-        scattering_values,
-        dtype=float,
-    )
-
-    green_fluorescence_values = np.asarray(
-        green_fluorescence_values,
-        dtype=float,
-    )
+    scattering_values = np.asarray(scattering_values, dtype=float)
+    fluorescence_values = np.asarray(fluorescence_values, dtype=float)
 
     valid_mask = (
         np.isfinite(scattering_values)
-        & np.isfinite(green_fluorescence_values)
+        & np.isfinite(fluorescence_values)
         & (scattering_values > 0.0)
     )
 
-    scattering_values = scattering_values[
-        valid_mask
-    ]
-    green_fluorescence_values = green_fluorescence_values[
-        valid_mask
-    ]
+    scattering_values = scattering_values[valid_mask]
+    fluorescence_values = fluorescence_values[valid_mask]
 
     if scattering_values.size == 0:
-        return []
+        return [
+            {
+                "x": float(x_position),
+                "y": float(default_y),
+                "kind": str(kind),
+            }
+            for x_position in scatter_peak_positions
+        ]
 
-    log_scattering_values = np.log10(
-        scattering_values,
-    )
+    log_scattering_values = np.log10(scattering_values)
 
-    peak_points: list[dict[str, float]] = []
+    points: list[dict[str, float]] = []
 
     for scatter_peak_position in scatter_peak_positions:
         if scatter_peak_position <= 0.0:
             continue
 
-        target_log_scattering = np.log10(
-            float(scatter_peak_position)
-        )
+        target_log = float(np.log10(scatter_peak_position))
 
-        local_mask = np.abs(
-            log_scattering_values - target_log_scattering
-        ) <= 0.05
+        local_mask = np.abs(log_scattering_values - target_log) <= 0.05
 
         if np.count_nonzero(local_mask) >= 5:
-            representative_green_fluorescence = np.median(
-                green_fluorescence_values[local_mask]
-            )
-
+            y_value = float(np.median(fluorescence_values[local_mask]))
         else:
-            nearest_indices = np.argsort(
-                np.abs(log_scattering_values - target_log_scattering)
-            )[: min(25, log_scattering_values.size)]
+            y_value = float(default_y)
 
-            representative_green_fluorescence = np.median(
-                green_fluorescence_values[nearest_indices]
-            )
-
-        peak_points.append(
+        points.append(
             {
                 "x": float(scatter_peak_position),
-                "y": float(representative_green_fluorescence),
+                "y": float(y_value),
+                "kind": str(kind),
             }
         )
 
-    return peak_points
+    return points
 
 
 def select_well_separated_peak_indices(
@@ -762,7 +1060,7 @@ def select_well_separated_peak_indices(
     minimum_index_distance: int,
 ) -> list[int]:
     """
-    Select the strongest peaks while enforcing a minimum separation.
+    Select strongest peaks while enforcing a minimum histogram-bin distance.
     """
     ordered_candidate_peak_indices = sorted(
         candidate_peak_indices,
@@ -779,16 +1077,12 @@ def select_well_separated_peak_indices(
         ):
             continue
 
-        selected_peak_indices.append(
-            int(candidate_peak_index),
-        )
+        selected_peak_indices.append(int(candidate_peak_index))
 
         if len(selected_peak_indices) >= int(peak_count):
             break
 
-    return sorted(
-        selected_peak_indices,
-    )
+    return sorted(selected_peak_indices)
 
 
 def smooth_counts(
@@ -797,20 +1091,14 @@ def smooth_counts(
     window_size: int,
 ) -> np.ndarray:
     """
-    Smooth histogram counts with a moving average.
+    Smooth histogram counts with a moving-average kernel.
     """
-    counts = np.asarray(
-        counts,
-        dtype=float,
-    )
+    counts = np.asarray(counts, dtype=float)
 
     if counts.size < 3:
         return counts
 
-    resolved_window_size = max(
-        3,
-        int(window_size),
-    )
+    resolved_window_size = max(3, int(window_size))
 
     if resolved_window_size % 2 == 0:
         resolved_window_size += 1
@@ -824,16 +1112,9 @@ def smooth_counts(
     if resolved_window_size < 3:
         return counts
 
-    kernel = np.ones(
-        resolved_window_size,
-        dtype=float,
-    ) / float(resolved_window_size)
+    kernel = np.ones(resolved_window_size, dtype=float) / float(resolved_window_size)
 
-    return np.convolve(
-        counts,
-        kernel,
-        mode="same",
-    )
+    return np.convolve(counts, kernel, mode="same")
 
 
 def find_local_maxima_indices(
@@ -841,23 +1122,15 @@ def find_local_maxima_indices(
     values: np.ndarray,
 ) -> list[int]:
     """
-    Find local maxima in a one dimensional array.
+    Find local maxima indices for 1D data.
     """
-    values = np.asarray(
-        values,
-        dtype=float,
-    )
+    values = np.asarray(values, dtype=float)
 
     maxima_indices: list[int] = []
 
-    for index in range(
-        1,
-        values.size - 1,
-    ):
+    for index in range(1, values.size - 1):
         if values[index] >= values[index - 1] and values[index] >= values[index + 1]:
-            maxima_indices.append(
-                index,
-            )
+            maxima_indices.append(index)
 
     return maxima_indices
 

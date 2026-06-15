@@ -1074,6 +1074,29 @@ class PeakWorkflowGraphBuilder:
             )
         )
 
+        # Add shortened labels in white boxes with black text, aligned at top.
+        shortened_labels = [
+            label.replace("Non-fluorescent peak ", "NF").replace("marker", "").replace("Bright", "BR").replace("Dim", "DM").strip()
+            for label in labels
+        ]
+        
+        for index, point in enumerate(points):
+            if index < len(shortened_labels):
+                figure.add_annotation(
+                    x=point["x"],
+                    y=0.98,
+                    xref="x",
+                    yref="paper",
+                    text=shortened_labels[index],
+                    showarrow=False,
+                    font={"size": 14, "color": "black"},
+                    bgcolor="white",
+                    bordercolor="black",
+                    borderwidth=1,
+                    borderpad=6,
+                    align="center",
+                )
+
         return figure
 
     def _add_out_of_x_interval_gate_shading(

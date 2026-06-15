@@ -32,6 +32,7 @@ class PeakWorkflowCallbacks:
         max_events_input_id: Any,
         runtime_config_store_id: str = "runtime-config-store",
         mie_model_input_id: Any = None,
+        default_process_runtime_config_path: Any = None,
     ) -> None:
         self.page = page
         self.ids = ids
@@ -41,6 +42,7 @@ class PeakWorkflowCallbacks:
         self.max_events_input_id = max_events_input_id
         self.runtime_config_store_id = runtime_config_store_id
         self.mie_model_input_id = mie_model_input_id
+        self.default_process_runtime_config_path = default_process_runtime_config_path
 
     def register(self) -> None:
         """
@@ -55,6 +57,7 @@ class PeakWorkflowCallbacks:
         self.register_runtime_sync_callbacks(
             ids=self.ids,
             runtime_config_store_id=self.runtime_config_store_id,
+            default_process_runtime_config_path=self.default_process_runtime_config_path,
         )
 
         register_visibility_callbacks(
@@ -86,6 +89,7 @@ class PeakWorkflowCallbacks:
         *,
         ids: Any,
         runtime_config_store_id: str,
+        default_process_runtime_config_path: Any = None,
     ) -> None:
         """
         Register runtime configuration synchronization callbacks.
@@ -104,16 +108,25 @@ class PeakWorkflowCallbacks:
         config store changes during the session.
         """
 
-        @dash.callback(
+        process_dropdown_id = getattr(ids, "process_dropdown", None)
+
+        outputs = [
             dash.Output(ids.nbins_input, "value"),
             dash.Output(ids.graph_toggle_switch, "value"),
             dash.Output(ids.axis_scale_toggle, "value"),
+        ]
+
+        if process_dropdown_id is not None and isinstance(default_process_runtime_config_path, str) and default_process_runtime_config_path:
+            outputs.append(dash.Output(process_dropdown_id, "value", allow_duplicate=True))
+
+        @dash.callback(
+            outputs,
             dash.Input(runtime_config_store_id, "data"),
             prevent_initial_call=True,
         )
         def sync_graph_controls_from_runtime_store(
             runtime_config_data: Any,
-        ) -> tuple[Any, Any, Any]:
+        ) -> tuple[Any, ...]:
             runtime_config = RuntimeConfig.from_dict(
                 runtime_config_data if isinstance(runtime_config_data, dict) else None
             )
@@ -146,7 +159,7 @@ class PeakWorkflowCallbacks:
                 ),
             )
 
-            return (
+            base_values: tuple[Any, ...] = (
                 runtime_config.get_int(
                     "calibration.n_bins_for_plots",
                     default=100,
@@ -154,6 +167,15 @@ class PeakWorkflowCallbacks:
                 ["enabled"] if runtime_config.get_show_graphs(default=True) else [],
                 axis_scale_toggle_values,
             )
+
+            if process_dropdown_id is not None and isinstance(default_process_runtime_config_path, str) and default_process_runtime_config_path:
+                configured_process = runtime_config.get_str(
+                    default_process_runtime_config_path,
+                    default="",
+                )
+                return (*base_values, configured_process or dash.no_update)
+
+            return base_values
 
     def build_axis_scale_toggle_values(
         self,

@@ -35,4 +35,5 @@ def register_peak_callbacks(
         max_events_input_id=config.max_events_input_id,
         runtime_config_store_id=config.runtime_config_store_id,
         mie_model_input_id=config.mie_model_input_id,
+        default_process_runtime_config_path=config.default_process_runtime_config_path,
     ).register()

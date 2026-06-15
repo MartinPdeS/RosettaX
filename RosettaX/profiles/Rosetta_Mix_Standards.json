@@ -60,7 +60,7 @@
   },
   "scattering_calibration": {
     "peak_table_sort_order": "descending",
-    "default_peak_process": "Automatic 1D",
+    "default_peak_process": "Rosetta Script",
     "default_detector_selection_mode": "auto-detect"
   },
   "metadata": {
