@@ -148,6 +148,37 @@ class Model:
         """
         return dash.html.Div(
             [
+                dash.html.Div(
+                    [
+                        dbc.Button(
+                            "Auto-detect",
+                            id=self.ids.detector_configuration_auto_detect_button,
+                            n_clicks=0,
+                            color="secondary",
+                            outline=True,
+                            size="sm",
+                        ),
+                        dbc.Alert(
+                            "",
+                            id=self.ids.detector_configuration_auto_detect_status,
+                            color="info",
+                            is_open=False,
+                            style={
+                                "marginLeft": "12px",
+                                "marginBottom": "0px",
+                                "borderRadius": "10px",
+                                "padding": "6px 12px",
+                                "fontSize": "0.85rem",
+                                "display": "inline-block",
+                            },
+                        ),
+                    ],
+                    style={
+                        "display": "flex",
+                        "alignItems": "center",
+                        "marginBottom": "10px",
+                    },
+                ),
                 ui_forms.build_inline_row(
                     label="Detector preset:",
                     control=dash.html.Div(
@@ -213,19 +244,6 @@ class Model:
                                     "display": "none",
                                 },
                             ),
-                            dbc.Button(
-                                "Auto-detect",
-                                id=self.ids.detector_configuration_auto_detect_button,
-                                n_clicks=0,
-                                color="secondary",
-                                outline=True,
-                                style={
-                                    "marginLeft": "10px",
-                                },
-                            ),
-                            ui_forms.build_info_badge(
-                                tooltip_target_id=self.detector_preset_tooltip_target_id,
-                            ),
                             dbc.Tooltip(
                                 (
                                     "Choose a detector brand first, then one model, then one "
@@ -233,12 +251,15 @@ class Model:
                                     "collection geometry. "
                                     "Leave the brand on No preset to keep the detector unconfigured, "
                                     "select Custom to edit a Generic detector manually, or click "
-                                    "Auto-detect to try matching the uploaded FCS "
+                                    "Auto-detect above to try matching the uploaded FCS "
                                     "metadata to a known preset."
                                 ),
                                 id=self.detector_preset_tooltip_id,
                                 target=self.detector_preset_tooltip_target_id,
                                 placement="right",
+                            ),
+                            ui_forms.build_info_badge(
+                                tooltip_target_id=self.detector_preset_tooltip_target_id,
                             ),
                         ],
                         style={
@@ -254,19 +275,6 @@ class Model:
                     },
                     control_wrapper_style_overrides={
                         "overflow": "visible",
-                    },
-                ),
-                dbc.Alert(
-                    "",
-                    id=self.ids.detector_configuration_auto_detect_status,
-                    color="info",
-                    is_open=False,
-                    style={
-                        "marginTop": "12px",
-                        "marginBottom": "0px",
-                        "borderRadius": "10px",
-                        "padding": "8px 12px",
-                        "fontSize": "0.9rem",
                     },
                 ),
                 dash.html.Div(
