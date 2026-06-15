@@ -178,8 +178,17 @@ def build_application_layout() -> html.Div:
             dcc.Location(id="url"),
             *stores,
             theme_link,
-            sidebar_content,
-            main_content,
+            html.Div(
+                [
+                    sidebar_content,
+                    main_content,
+                ],
+                style={
+                    "display": "flex",
+                    "alignItems": "flex-start",
+                    "minHeight": "100vh",
+                },
+            ),
         ]
     )
 

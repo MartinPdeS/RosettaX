@@ -22,15 +22,15 @@ CARD = {
 }
 
 SIDEBAR = {
-    "position": "fixed",
+    "position": "sticky",
     "top": 0,
-    "left": 0,
-    "bottom": 0,
     "width": "352px",
+    "minWidth": "352px",
+    "flexShrink": 0,
     "padding": "16px",
-    "overflowY": "auto",
     "zIndex": 1000,
     "boxSizing": "border-box",
+    "alignSelf": "flex-start",
 }
 
 PAGE = {
@@ -53,10 +53,11 @@ PAGE = {
 }
 
 CONTENT = {
-    "marginLeft": "352px",
     "padding": "16px",
     "minHeight": "100vh",
     "boxSizing": "border-box",
+    "flex": "1 1 auto",
+    "minWidth": 0,
 }
 
 
