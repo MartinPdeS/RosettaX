@@ -23,6 +23,7 @@
 !pytest.ini
 !.coveragerc
 !makefile
+!rosettax.spec
 
 # But ignore docs/build inside docs and code
 docs/build/

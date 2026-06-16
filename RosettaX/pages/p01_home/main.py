@@ -114,6 +114,8 @@ class HomePage:
         self.documentation_url = "/documentation"
         self.support_url = "https://github.com/sponsors/MartinPdeS"
         self.contact_email = "martin.poinsinet.de.sivry@gmail.com"
+        self.zenodo_doi_url = "https://doi.org/10.5281/zenodo.20709591"
+        self.zenodo_badge_url = "https://zenodo.org/badge/1087203577.svg"
 
     def _id(
         self,
@@ -136,6 +138,12 @@ class HomePage:
                     },
                 ),
                 self._hero_section(),
+                html.Div(
+                    style={
+                        "height": "18px",
+                    },
+                ),
+                self._citation_card(),
                 html.Div(
                     style={
                         "height": "18px",
@@ -255,6 +263,84 @@ class HomePage:
                     ],
                     style={
                         "padding": "26px",
+                    },
+                ),
+            ]
+        )
+
+        return ui_forms.apply_workflow_section_card_style(
+            card=card,
+            header_font_weight="750",
+            header_font_size="1.02rem",
+        )
+
+    def _citation_card(self) -> dbc.Card:
+        bibtex = (
+            "@software{rosettax,\n"
+            "  author       = {Poinsinet de Sivry-Houle, Martin},\n"
+            "  title        = {{RosettaX: bead-based flow cytometry calibration}},\n"
+            "  year         = {2025},\n"
+            "  publisher    = {Zenodo},\n"
+            "  doi          = {10.5281/zenodo.20709591},\n"
+            "  url          = {https://doi.org/10.5281/zenodo.20709591}\n"
+            "}"
+        )
+
+        card = dbc.Card(
+            [
+                dbc.CardHeader(
+                    html.Div(
+                        "How to cite",
+                        style={
+                            "fontWeight": "750",
+                            "fontSize": "1.02rem",
+                        },
+                    )
+                ),
+                dbc.CardBody(
+                    [
+                        html.Div(
+                            (
+                                "If RosettaX contributes to your research, please cite it "
+                                "using the following reference. A DOI will be registered via "
+                                "Zenodo — the badge below will link to the archived release."
+                            ),
+                            style={
+                                "fontSize": "0.95rem",
+                                "opacity": 0.88,
+                                "marginBottom": "14px",
+                            },
+                        ),
+                        html.A(
+                            html.Img(
+                                src=self.zenodo_badge_url,
+                                alt="DOI badge",
+                                style={
+                                    "height": "20px",
+                                    "marginBottom": "14px",
+                                },
+                            ),
+                            href=self.zenodo_doi_url,
+                            target="_blank",
+                            rel="noopener noreferrer",
+                        ),
+                        html.Pre(
+                            bibtex,
+                            style={
+                                "background": "rgba(0, 0, 0, 0.04)",
+                                "border": "1px solid rgba(128, 128, 128, 0.2)",
+                                "borderRadius": "8px",
+                                "padding": "14px 16px",
+                                "fontSize": "0.82rem",
+                                "lineHeight": "1.6",
+                                "whiteSpace": "pre",
+                                "overflowX": "auto",
+                                "marginBottom": "0",
+                            },
+                        ),
+                    ],
+                    style={
+                        "padding": "20px",
                     },
                 ),
             ]

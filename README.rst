@@ -307,7 +307,7 @@ archived Zenodo release:
 
 .. code-block:: text
 
-   Martin Poinsinet de Sivry-Houle. (2026). MartinPdeS/RosettaX: Pre-release (v0.0.10). Zenodo. https://doi.org/10.5281/zenodo.19846630
+   Martin Poinsinet de Sivry-Houle. (2026). MartinPdeS/RosettaX: Pre-release (v0.0.10). Zenodo. https://doi.org/10.5281/zenodo.20709591
 
 A formal citation file may be added in a future release.
 
@@ -335,7 +335,7 @@ be discussed with the author.
 
 
 .. |zenodo| image:: https://zenodo.org/badge/1087203577.svg
-  :target: https://doi.org/10.5281/zenodo.19846629
+  :target: https://doi.org/10.5281/zenodo.20709591
 
 
 .. |python| image:: https://img.shields.io/pypi/pyversions/rosettax.svg
