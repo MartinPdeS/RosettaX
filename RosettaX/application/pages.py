@@ -11,6 +11,7 @@ PAGE_MODULES: list[str] = [
     "RosettaX.pages.p01_home.main",
     "RosettaX.pages.p02_fluorescence.main",
     "RosettaX.pages.p03_scattering.main",
+    "RosettaX.pages.p08_cross_calibration.main",
     "RosettaX.pages.p04_calibrate.main",
     "RosettaX.pages.p05_settings.main",
     "RosettaX.pages.p06_help.main",

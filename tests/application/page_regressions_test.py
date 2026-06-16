@@ -336,3 +336,4 @@ class Test_SidebarNavigation:
         navigation = sidebar._build_navigation_section()
 
         assert "/documentation" in _collect_component_hrefs(navigation)
+        assert "/cross-calibration" in _collect_component_hrefs(navigation)

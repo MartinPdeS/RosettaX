@@ -302,8 +302,7 @@ class HomePage:
                         html.Div(
                             (
                                 "If RosettaX contributes to your research, please cite it "
-                                "using the following reference. A DOI will be registered via "
-                                "Zenodo — the badge below will link to the archived release."
+                                "using the following reference (click on the badge). "
                             ),
                             style={
                                 "fontSize": "0.95rem",
@@ -324,20 +323,20 @@ class HomePage:
                             target="_blank",
                             rel="noopener noreferrer",
                         ),
-                        html.Pre(
-                            bibtex,
-                            style={
-                                "background": "rgba(0, 0, 0, 0.04)",
-                                "border": "1px solid rgba(128, 128, 128, 0.2)",
-                                "borderRadius": "8px",
-                                "padding": "14px 16px",
-                                "fontSize": "0.82rem",
-                                "lineHeight": "1.6",
-                                "whiteSpace": "pre",
-                                "overflowX": "auto",
-                                "marginBottom": "0",
-                            },
-                        ),
+                        # html.Pre(
+                        #     bibtex,
+                        #     style={
+                        #         "background": "rgba(0, 0, 0, 0.04)",
+                        #         "border": "1px solid rgba(128, 128, 128, 0.2)",
+                        #         "borderRadius": "8px",
+                        #         "padding": "14px 16px",
+                        #         "fontSize": "0.82rem",
+                        #         "lineHeight": "1.6",
+                        #         "whiteSpace": "pre",
+                        #         "overflowX": "auto",
+                        #         "marginBottom": "0",
+                        #     },
+                        # ),
                     ],
                     style={
                         "padding": "20px",
