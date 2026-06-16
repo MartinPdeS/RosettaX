@@ -26,7 +26,7 @@ requirements:
     - dash >=4.1.0
     - dash-bootstrap-components >=2.0.4
     - martinpdes::pymiesim >=5.1.2
-    - gunicorn >=23.0.0
+    - gunicorn >=23.0.0  # [not win]
 
 test:
   imports:
