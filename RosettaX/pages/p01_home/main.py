@@ -220,9 +220,9 @@ class HomePage:
                         ),
                         html.Div(
                             (
-                                "A calibration workflow for bead based flow cytometry. "
-                                "Build fluorescence and scattering calibrations, save them "
-                                "as reusable records, then apply them to experimental FCS files."
+                                "Convert raw single-particle flow cytometry data into calibrated measurements. "
+                                "Perform fluorescence and light-scattering calibrations, save calibration records, "
+                                "and apply them to FCS files."
                             ),
                             style={
                                 "fontSize": "1.08rem",
@@ -450,15 +450,14 @@ class HomePage:
                 dbc.Col(
                     self._workflow_card(
                         title="Fluorescence calibration",
-                        subtitle="MESF based fluorescence response",
+                        subtitle="",
                         description=(
-                            "Create a calibration from fluorescence bead peak positions "
-                            "and known MESF reference values."
+                            "Convert arbitrary units of fluorescence intensity into standard units (ABC, ERF, or MESF)."
                         ),
                         steps=[
-                            "Upload bead FCS",
+                            "Upload bead FCS file",
                             "Detect fluorescence peaks",
-                            "Review MESF table",
+                            "Add standard units to calibration table",
                             "Create calibration",
                             "Save calibration",
                         ],
@@ -472,7 +471,7 @@ class HomePage:
                 dbc.Col(
                     self._workflow_card(
                         title="Scattering calibration",
-                        subtitle="Mie based scattering response",
+                        subtitle="",
                         description=(
                             "Create a scattering calibration by linking measured bead "
                             "peaks to modeled optical coupling values."
@@ -495,7 +494,7 @@ class HomePage:
                 dbc.Col(
                     self._workflow_card(
                         title="Apply calibration",
-                        subtitle="Batch calibrated FCS export",
+                        subtitle="",
                         description=(
                             "Use a saved fluorescence or scattering calibration to add "
                             "calibrated channels to FCS files."
@@ -810,7 +809,7 @@ dash.register_page(
     __name__,
     path="/",
     redirect_from=["/home"],
-    name="Home",
+    name="RosettaX",
     order=0,
     layout=layout,
 )

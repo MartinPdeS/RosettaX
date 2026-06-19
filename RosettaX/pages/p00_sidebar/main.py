@@ -363,14 +363,14 @@ class Sidebar:
                 dbc.CardHeader("Saved profiles"),
                 dbc.CardBody(
                     [
-                        html.Div(
-                            "Profiles are saved in this browser.",
-                            style={
-                                "marginBottom": "10px",
-                                "opacity": 0.75,
-                                "fontSize": "0.88rem",
-                            },
-                        ),
+                        # html.Div(
+                        #     "Profiles are saved in this browser.",
+                        #     style={
+                        #         "marginBottom": "10px",
+                        #         "opacity": 0.75,
+                        #         "fontSize": "0.88rem",
+                        #     },
+                        # ),
                         html.Div(
                             [
                                 html.Div(

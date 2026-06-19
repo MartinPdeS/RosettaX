@@ -17,10 +17,7 @@ def get_layout(section) -> dbc.Card:
                     title="Fluorescence calibration",
                     title_component="H2",
                     description=(
-                        "Create a fluorescence calibration from bead FCS data by "
-                        "detecting bead populations, entering known MESF references, "
-                        "fitting the calibration relation, and saving the result for "
-                        "reuse."
+                        "Convert arbitrary units of fluorescence intensity into standard units (ABC, ERF, or MESF)."
                     ),
                 ),
                 dbc.Row(
@@ -62,28 +59,25 @@ def _build_steps() -> list[dict[str, str]]:
     return [
         {
             "number": "1",
-            "title": "Upload bead FCS",
+            "title": "Upload bead FCS file",
             "description": (
-                "Load the fluorescence bead file acquired on the instrument. "
-                "This file becomes the source for detector selection and peak detection."
+                "Load the FSC file of fluorescent reference beads. This FCS file becomes the source for parameter selection and detection of fluorescence peaks."
             ),
             "color_name": styling.get_workflow_section_color(1),
         },
         {
             "number": "2",
-            "title": "Detect peaks",
+            "title": "Detect fluorescence peaks",
             "description": (
-                "Select the fluorescence detector channel, inspect the event distribution, "
-                "and detect the bead population peaks from the uploaded FCS file."
+                "Select the parameter to calibrate, inspect the event distribution, and detect the fluorescence bead populations from the uploaded FCS file."
             ),
             "color_name": styling.get_workflow_section_color(2),
         },
         {
             "number": "3",
-            "title": "Enter MESF values",
+            "title": "Add standard units to calibration table",
             "description": (
-                "Enter the known MESF values for the bead populations. These values "
-                "define the calibrated fluorescence scale."
+                "Add standard units (ABC, ERF, MESF) to the calibration table. The provided values define the calibrated fluorescence scale."
             ),
             "color_name": styling.get_workflow_section_color(3),
         },
@@ -91,8 +85,7 @@ def _build_steps() -> list[dict[str, str]]:
             "number": "4",
             "title": "Create calibration",
             "description": (
-                "Match detected peak positions to the entered MESF values and fit the "
-                "fluorescence calibration relation."
+                "Relate arbitrary units of fluorescence intensity to standard units by fitting the calibration table data."
             ),
             "color_name": styling.get_workflow_section_color(4),
         },
@@ -100,8 +93,7 @@ def _build_steps() -> list[dict[str, str]]:
             "number": "5",
             "title": "Save calibration",
             "description": (
-                "Save the fitted calibration so it can be reused later when applying "
-                "calibration to experimental FCS files."
+                "Save the calibration for later reuse when applying it to uncalibrated FCS files."
             ),
             "color_name": styling.get_workflow_section_color(5),
         },

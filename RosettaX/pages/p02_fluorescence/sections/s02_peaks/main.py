@@ -53,7 +53,7 @@ class Peaks:
 
         self.config = PeakConfig(
             header_title=layout.build_section_title(self),
-            process_dropdown_label="Peak process",
+            process_dropdown_label="Peak identification procedure",
             graph_title=layout.build_graph_title(self),
             table_id=self.page.ids.Calibration.bead_table,
             page_state_store_id=self.page.ids.State.page_state_store,
