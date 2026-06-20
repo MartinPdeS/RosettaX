@@ -31,6 +31,9 @@ class PeakConfig:
         Dash component id for the Mie model selector (scattering page only).
     default_process_runtime_config_path : Optional[str]
         Dotted runtime-config path used to persist the selected process name.
+    allowed_process_names : Optional[list[str]]
+        Optional list of process names to expose for this page section. When
+        omitted, all registered peak processes are exposed.
     number_of_bins_runtime_config_path : str
         Dotted runtime-config path for the histogram bin count.
     xscale_runtime_config_path : str
@@ -65,6 +68,7 @@ class PeakConfig:
     mie_model_input_id: Any = None
 
     default_process_runtime_config_path: Optional[str] = None
+    allowed_process_names: Optional[list[str]] = None
 
     number_of_bins_runtime_config_path: str = "visualization.n_bins"
     xscale_runtime_config_path: str = "calibration.histogram_xscale"

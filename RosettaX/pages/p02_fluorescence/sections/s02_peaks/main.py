@@ -14,6 +14,14 @@ from . import layout, callbacks
 logger = logging.getLogger(__name__)
 
 
+FLUORESCENCE_ALLOWED_PEAK_PROCESS_NAMES = [
+    "Manual 1D",
+    "Manual 2D",
+    "Automatic 1D",
+    "Automatic 2D",
+]
+
+
 class Peaks:
     """
     Fluorescence peak detection section.
@@ -61,6 +69,7 @@ class Peaks:
             runtime_config_store_id="runtime-config-store",
             mie_model_input_id=None,
             default_process_runtime_config_path="calibration.default_fluorescence_peak_process",
+            allowed_process_names=FLUORESCENCE_ALLOWED_PEAK_PROCESS_NAMES,
         )
 
         self.layout_builder = PeakLayout(

@@ -116,16 +116,21 @@ class PeakWorkflowCallbacks:
             dash.Output(ids.axis_scale_toggle, "value"),
         ]
 
+        states: list[Any] = []
+
         if process_dropdown_id is not None and isinstance(default_process_runtime_config_path, str) and default_process_runtime_config_path:
             outputs.append(dash.Output(process_dropdown_id, "value", allow_duplicate=True))
+            states.append(dash.State(process_dropdown_id, "options"))
 
         @dash.callback(
             outputs,
             dash.Input(runtime_config_store_id, "data"),
+            *states,
             prevent_initial_call=True,
         )
         def sync_graph_controls_from_runtime_store(
             runtime_config_data: Any,
+            process_dropdown_options: Any = None,
         ) -> tuple[Any, ...]:
             runtime_config = RuntimeConfig.from_dict(
                 runtime_config_data if isinstance(runtime_config_data, dict) else None
@@ -173,7 +178,26 @@ class PeakWorkflowCallbacks:
                     default_process_runtime_config_path,
                     default="",
                 )
-                return (*base_values, configured_process or dash.no_update)
+
+                available_process_values = [
+                    option.get("value")
+                    for option in (process_dropdown_options or [])
+                    if isinstance(option, dict)
+                ]
+
+                non_empty_process_values = [
+                    value
+                    for value in available_process_values
+                    if isinstance(value, str) and value
+                ]
+
+                if configured_process and configured_process in non_empty_process_values:
+                    return (*base_values, configured_process)
+
+                if non_empty_process_values:
+                    return (*base_values, non_empty_process_values[0])
+
+                return (*base_values, dash.no_update)
 
             return base_values
 

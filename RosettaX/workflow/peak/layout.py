@@ -105,7 +105,10 @@ class PeakLayout:
         """
         Build the complete reusable peak workflow layout.
         """
-        processes = get_peak_processes()
+        processes = registry.filter_peak_processes(
+            scripts=get_peak_processes(),
+            allowed_process_names=self.config.allowed_process_names,
+        )
 
         return [
             html.Div(
@@ -149,9 +152,18 @@ class PeakLayout:
         """
         Build the peak process selector dropdown.
         """
-        options = registry.build_peak_process_options(
-            include_empty_option=True,
-        )
+        options = [
+            process.get_process_option()
+            for process in (processes or [])
+        ]
+
+        options = [
+            {
+                "label": "Select",
+                "value": "",
+            },
+            *options,
+        ]
 
         selected_value = self._resolve_default_process_value(
             explicit_value=value,

@@ -42,3 +42,43 @@ class Test_PeakProcessSelectionVisibility:
         ) == {
             "display": "none",
         }
+
+
+class Test_PeakProcessFiltering:
+    def test_filter_peak_processes_keeps_only_allowed_names(self) -> None:
+        scripts = registry.get_peak_process_instances()
+
+        filtered = registry.filter_peak_processes(
+            scripts=scripts,
+            allowed_process_names=[
+                "Manual 1D",
+                "Automatic 2D",
+            ],
+        )
+
+        filtered_names = [
+            getattr(script, "process_name", "")
+            for script in filtered
+        ]
+
+        assert filtered_names
+        assert set(filtered_names).issubset(
+            {
+                "Manual 1D",
+                "Automatic 2D",
+            }
+        )
+        assert "Automatic 2D" in filtered_names
+
+    def test_filter_peak_processes_returns_all_when_allowed_is_empty(self) -> None:
+        scripts = registry.get_peak_process_instances()
+
+        filtered = registry.filter_peak_processes(
+            scripts=scripts,
+            allowed_process_names=[],
+        )
+
+        assert [getattr(script, "process_name", "") for script in filtered] == [
+            getattr(script, "process_name", "")
+            for script in scripts
+        ]

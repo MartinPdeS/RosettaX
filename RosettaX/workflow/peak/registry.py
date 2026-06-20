@@ -221,6 +221,47 @@ def get_peak_process_instances() -> list[Any]:
     return list(load_peak_scripts())
 
 
+def filter_peak_processes(
+    *,
+    scripts: list[Any],
+    allowed_process_names: Any = None,
+) -> list[Any]:
+    """
+    Filter peak process instances by allowed process names.
+
+    Parameters
+    ----------
+    scripts:
+        Peak process instances.
+
+    allowed_process_names:
+        Optional iterable of process names. If omitted or empty, scripts are
+        returned unchanged.
+
+    Returns
+    -------
+    list[Any]
+        Filtered process instances.
+    """
+    if not isinstance(allowed_process_names, (list, tuple, set)):
+        return list(scripts)
+
+    allowed_name_set = {
+        clean_optional_string(name)
+        for name in allowed_process_names
+        if clean_optional_string(name)
+    }
+
+    if not allowed_name_set:
+        return list(scripts)
+
+    return [
+        script
+        for script in scripts
+        if clean_optional_string(getattr(script, "process_name", None)) in allowed_name_set
+    ]
+
+
 def build_script_map(
     scripts: list[Any],
 ) -> dict[str, Any]:
