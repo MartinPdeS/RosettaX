@@ -59,7 +59,7 @@ class Test_HomePage:
         assert "v9.9.9" in text_nodes
         assert "Support Developer" in text_nodes
         assert "Project resources" not in text_nodes
-        assert "Website usage metrics to date." in text_nodes
+        assert "RosettaX usage metrics." in text_nodes
         assert "Apply button clicks" in text_nodes
         assert "Total calibrated files" in text_nodes
         assert "12" in text_nodes
