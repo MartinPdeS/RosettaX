@@ -339,7 +339,7 @@ class HomePage:
                             },
                         ),
                         html.Div(
-                            "",
+                            "Website usage metrics to date.",
                             style={
                                 "fontSize": "0.86rem",
                                 "opacity": 0.76,
