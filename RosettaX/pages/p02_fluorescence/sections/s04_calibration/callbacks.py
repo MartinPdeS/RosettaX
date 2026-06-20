@@ -58,10 +58,12 @@ def _register_graph_render_callback(section) -> None:
     @dash.callback(
         dash.Output(section.ids.graph_calibration, "figure"),
         dash.Input(section.ids.graph_store, "data"),
+        dash.State("runtime-config-store", "data"),
         prevent_initial_call=False,
     )
     def update_calibration_graph(
         stored_figure: Any,
+        runtime_config_data: Any,
     ) -> go.Figure:
         logger.debug(
             "update_calibration_graph called with stored_figure_type=%s",
@@ -75,12 +77,13 @@ def _register_graph_render_callback(section) -> None:
             logger=logger,
         )
 
-        return _finalize_figure_size(figure=figure)
+        return _finalize_figure_size(figure=figure, runtime_config_data=runtime_config_data)
 
 
 def _finalize_figure_size(
     *,
     figure: go.Figure,
+    runtime_config_data: Any = None,
 ) -> go.Figure:
     """
     Apply the section graph layout and legend placement.
@@ -89,6 +92,15 @@ def _finalize_figure_size(
     Plotly layout height. Axis automargins are disabled so long axis titles
     cannot shrink the plotting area unpredictably.
     """
+    runtime_config = RuntimeConfig.from_dict(
+        runtime_config_data if isinstance(runtime_config_data, dict) else None
+    )
+
+    default_font_size = runtime_config.get_float("visualization.default_font_size", default=14.0)
+    default_tick_size = runtime_config.get_float("visualization.default_tick_size", default=12.0)
+    default_line_width = runtime_config.get_float("visualization.default_line_width", default=2.0)
+    show_grid = runtime_config.get_bool("visualization.show_grid_by_default", default=True)
+
     figure.update_layout(
         height=None,
         autosize=True,
@@ -101,6 +113,9 @@ def _finalize_figure_size(
             "t": 18,
             "b": 78,
         },
+        font={
+            "size": default_font_size,
+        },
         legend={
             "x": 0.98,
             "y": 0.98,
@@ -109,18 +124,31 @@ def _finalize_figure_size(
             "bgcolor": "rgba(255,255,255,0.65)",
             "bordercolor": "rgba(0,0,0,0.15)",
             "borderwidth": 1,
+            "font": {
+                "size": default_tick_size,
+            },
         },
     )
 
     figure.update_xaxes(
         automargin=False,
         title_standoff=10,
+        tickfont={"size": default_tick_size},
+        title_font={"size": default_font_size},
+        showgrid=show_grid,
     )
 
     figure.update_yaxes(
         automargin=False,
         title_standoff=10,
+        tickfont={"size": default_tick_size},
+        title_font={"size": default_font_size},
+        showgrid=show_grid,
     )
+
+    for trace in figure.data:
+        if hasattr(trace, "line") and trace.line is not None:
+            trace.update(line={"width": default_line_width})
 
     return figure
 

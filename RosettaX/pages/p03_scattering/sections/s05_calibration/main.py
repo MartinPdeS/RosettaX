@@ -447,10 +447,20 @@ class Calibration:
     def _finalize_figure_size(
         self,
         figure: go.Figure,
+        runtime_config_data: Any = None,
     ) -> go.Figure:
         """
         Apply shared graph layout settings.
         """
+        runtime_config = RuntimeConfig.from_dict(
+            runtime_config_data if isinstance(runtime_config_data, dict) else None
+        )
+
+        default_font_size = runtime_config.get_float("visualization.default_font_size", default=14.0)
+        default_tick_size = runtime_config.get_float("visualization.default_tick_size", default=12.0)
+        default_line_width = runtime_config.get_float("visualization.default_line_width", default=2.0)
+        show_grid = runtime_config.get_bool("visualization.show_grid_by_default", default=True)
+
         figure.update_layout(
             autosize=True,
             height=None,
@@ -460,6 +470,9 @@ class Calibration:
                 "t": 70,
                 "b": 70,
             },
+            font={
+                "size": default_font_size,
+            },
             legend={
                 "x": 0.98,
                 "y": 0.98,
@@ -468,8 +481,27 @@ class Calibration:
                 "bgcolor": "rgba(255, 255, 255, 0.65)",
                 "bordercolor": "rgba(0, 0, 0, 0.15)",
                 "borderwidth": 1,
+                "font": {
+                    "size": default_tick_size,
+                },
             },
         )
+
+        figure.update_xaxes(
+            tickfont={"size": default_tick_size},
+            title_font={"size": default_font_size},
+            showgrid=show_grid,
+        )
+
+        figure.update_yaxes(
+            tickfont={"size": default_tick_size},
+            title_font={"size": default_font_size},
+            showgrid=show_grid,
+        )
+
+        for trace in figure.data:
+            if hasattr(trace, "line") and trace.line is not None:
+                trace.update(line={"width": default_line_width})
 
         return figure
 
@@ -765,12 +797,14 @@ class Calibration:
             dash.Input(self.page.ids.State.page_state_store, "data"),
             dash.Input(self.ids.instrument_response_x_log_switch, "value"),
             dash.Input(self.ids.instrument_response_y_log_switch, "value"),
+            dash.State("runtime-config-store", "data"),
             prevent_initial_call=False,
         )
         def update_left_graph(
             page_state_payload: Any,
             x_log_value: Any,
             y_log_value: Any,
+            runtime_config_data: Any,
         ) -> go.Figure:
             page_state = ScatteringPageState.from_dict(
                 page_state_payload if isinstance(page_state_payload, dict) else None
@@ -814,6 +848,7 @@ class Calibration:
 
             return self._finalize_figure_size(
                 figure,
+                runtime_config_data=runtime_config_data,
             )
 
     def _register_right_graph_callback(self) -> None:
@@ -826,12 +861,14 @@ class Calibration:
             dash.Input(self.page.ids.State.page_state_store, "data"),
             dash.Input(self.ids.mie_relation_x_log_switch, "value"),
             dash.Input(self.ids.mie_relation_y_log_switch, "value"),
+            dash.State("runtime-config-store", "data"),
             prevent_initial_call=False,
         )
         def update_right_graph(
             page_state_payload: Any,
             x_log_value: Any,
             y_log_value: Any,
+            runtime_config_data: Any,
         ) -> go.Figure:
             page_state = ScatteringPageState.from_dict(
                 page_state_payload if isinstance(page_state_payload, dict) else None
@@ -876,4 +913,5 @@ class Calibration:
 
             return self._finalize_figure_size(
                 figure,
+                runtime_config_data=runtime_config_data,
             )

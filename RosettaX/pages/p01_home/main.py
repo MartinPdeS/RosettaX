@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import importlib.metadata
 import json
 import logging
 import time
@@ -90,7 +91,11 @@ def resolve_latest_github_tag_label() -> str:
     if _cached_github_tag_label is not None:
         return _cached_github_tag_label
 
-    return "Unavailable"
+    try:
+        local_version = importlib.metadata.version("RosettaX")
+        return f"v{local_version}" if not local_version.startswith("v") else local_version
+    except importlib.metadata.PackageNotFoundError:
+        return "Unavailable"
 
 
 class HomePage:
@@ -336,14 +341,6 @@ class HomePage:
                             style={
                                 "fontWeight": "750",
                                 "fontSize": "1.02rem",
-                            },
-                        ),
-                        html.Div(
-                            "Website usage metrics to date.",
-                            style={
-                                "fontSize": "0.86rem",
-                                "opacity": 0.76,
-                                "marginTop": "3px",
                             },
                         ),
                     ]

@@ -57,11 +57,11 @@
   },
   "visualization": {
     "graph_height": "450px",
-    "default_marker_opacity": 0.9,
-    "default_marker_size": 10.0,
+    "default_marker_opacity": 1.0,
+    "default_marker_size": 14.0,
     "default_line_width": 3.0,
-    "default_font_size": 20.0,
-    "default_tick_size": 15.0,
+    "default_font_size": 22.0,
+    "default_tick_size": 20.0,
     "show_grid_by_default": true
   }
 }
