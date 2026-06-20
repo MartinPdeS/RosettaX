@@ -469,7 +469,7 @@ class HomePage:
                             "Use saved fluorescence and/or scattering calibrations to add calibrated parameters to FCS files."
                         ),
                         steps=[
-                            "Select calibration",
+                            "Upload calibration file",
                             "Upload uncalibrated FCS file(s)",
                             "Select parameters to export",
                             "Apply and export calibrated FCS file(s)",

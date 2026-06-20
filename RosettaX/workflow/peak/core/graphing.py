@@ -1080,7 +1080,7 @@ class PeakWorkflowGraphBuilder:
             label.replace("Non-fluorescent peak ", "NF").replace("marker", "").replace("Bright", "BR").replace("Dim", "DM").strip()
             for label in labels
         ]
-        
+
         for index, point in enumerate(points):
             if index < len(shortened_labels):
                 figure.add_annotation(
