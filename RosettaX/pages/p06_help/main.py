@@ -23,7 +23,7 @@ class HelpPage:
         self,
     ) -> None:
         self.page_name = "help"
-        self.documentation_url = "/documentation"
+        self.documentation_url = "https://martinpdes.github.io/RosettaX/docs/latest/index.html"
         self.github_url = "https://github.com/MartinPdeS/RosettaX"
         self.pypi_url = "https://pypi.org/project/RosettaX/"
         self.anaconda_url = "https://anaconda.org/channels/MartinPdeS/packages/Rosettax/overview"

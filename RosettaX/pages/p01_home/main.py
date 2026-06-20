@@ -133,7 +133,11 @@ class HomePage:
         self,
         **_kwargs,
     ) -> dbc.Container:
-        metrics = usage_metrics.load_usage_metrics()
+        try:
+            metrics = usage_metrics.record_home_page_visit()
+        except Exception:
+            logger.exception("Failed to record home page visit metric.")
+            metrics = usage_metrics.load_usage_metrics()
 
         return dbc.Container(
             [
@@ -350,17 +354,24 @@ class HomePage:
                         [
                             dbc.Col(
                                 self._usage_metric_tile(
+                                    value=str(metrics.home_page_visit_count),
+                                    label="Home page visits",
+                                ),
+                                md=4,
+                            ),
+                            dbc.Col(
+                                self._usage_metric_tile(
                                     value=str(metrics.apply_button_click_count),
                                     label="Apply button clicks",
                                 ),
-                                md=6,
+                                md=4,
                             ),
                             dbc.Col(
                                 self._usage_metric_tile(
                                     value=str(metrics.total_calibrated_files),
                                     label="Total calibrated files",
                                 ),
-                                md=6,
+                                md=4,
                             ),
                         ],
                         className="g-3",
@@ -774,7 +785,7 @@ dash.register_page(
     __name__,
     path="/",
     redirect_from=["/home"],
-    name="RosettaX",
+    name="RosettaX - Amsterdam Vesicle Center",
     order=0,
     layout=layout,
 )

@@ -40,10 +40,11 @@ class Test_HomePage:
 
         monkeypatch.setattr(
             home_main.usage_metrics,
-            "load_usage_metrics",
+            "record_home_page_visit",
             lambda: UsageMetrics(
                 apply_button_click_count=12,
                 total_calibrated_files=34,
+                home_page_visit_count=56,
             ),
         )
         monkeypatch.setattr(
@@ -60,8 +61,10 @@ class Test_HomePage:
         assert "Support Developer" in text_nodes
         assert "Project resources" not in text_nodes
         assert "RosettaX usage metrics." in text_nodes
+        assert "Home page visits" in text_nodes
         assert "Apply button clicks" in text_nodes
         assert "Total calibrated files" in text_nodes
+        assert "56" in text_nodes
         assert "12" in text_nodes
         assert "34" in text_nodes
 
