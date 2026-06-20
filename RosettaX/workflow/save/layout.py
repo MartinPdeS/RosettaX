@@ -67,6 +67,12 @@ class SaveLayout:
         return dbc.CardBody(
             [
                 dash.html.Br(),
+                dash.html.Div(
+                    "Enter a calibration name to enable download.",
+                    style={
+                        "marginBottom": "8px",
+                    },
+                ),
                 self._build_save_row(),
                 dash.html.Hr(),
                 self._build_status_output(),
@@ -82,8 +88,8 @@ class SaveLayout:
         """
         return dash.html.Div(
             [
-                self._build_save_button(),
                 self._build_file_name_input(),
+                self._build_save_button(),
             ],
             style={
                 "display": "flex",
@@ -101,6 +107,7 @@ class SaveLayout:
             id=self.ids.save_calibration_btn,
             n_clicks=0,
             color="secondary",
+            disabled=True,
         )
 
     def _build_file_name_input(self) -> dash.dcc.Input:

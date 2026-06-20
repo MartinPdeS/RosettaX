@@ -10,6 +10,15 @@ from .adapters import SaveAdapter
 from .models import SaveConfig
 
 
+def save_button_should_be_disabled(
+    file_name: Any,
+) -> bool:
+    """
+    Return whether the save button should be disabled.
+    """
+    return not bool(str(file_name or "").strip())
+
+
 def register_save_callbacks(
     *,
     page: Any,
@@ -37,6 +46,31 @@ def register_save_callbacks(
         calibration_store_id=calibration_store_id,
         page_state_store_id=page_state_store_id,
     )
+
+    _register_save_button_enabled_state_callback(
+        ids=ids,
+    )
+
+
+def _register_save_button_enabled_state_callback(
+    *,
+    ids: Any,
+) -> None:
+    """
+    Disable the save/download button until a calibration name is provided.
+    """
+
+    @dash.callback(
+        dash.Output(ids.save_calibration_btn, "disabled"),
+        dash.Input(ids.file_name, "value"),
+        prevent_initial_call=False,
+    )
+    def set_save_button_enabled_state(
+        file_name: Any,
+    ) -> bool:
+        return save_button_should_be_disabled(
+            file_name=file_name,
+        )
 
 
 def _register_save_callback(

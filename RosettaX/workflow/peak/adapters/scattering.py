@@ -128,12 +128,27 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
                 mie_model=mie_model,
             )
 
+        should_replace_existing_table_peaks = bool(
+            context.get("replace_existing_table_peaks")
+        )
+
+        working_table_data = table_data
+
+        if should_replace_existing_table_peaks:
+            working_table_data = self.clear_scattering_peak_column(
+                table_data=table_data,
+                mie_model=mie_model,
+            )
+
         x_values_to_append = self.extract_x_values_to_append(
             result=result,
         )
 
         if not x_values_to_append:
             logger.debug("Scattering peak process produced no x values to append.")
+
+            if should_replace_existing_table_peaks:
+                return working_table_data
 
             return dash.no_update
 
@@ -148,7 +163,7 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
         )
 
         return self.append_x_values_to_scattering_table(
-            table_data=table_data,
+            table_data=working_table_data,
             x_values=x_values_to_append,
             mie_model=mie_model,
             descending=peak_table_sort_order == "descending",

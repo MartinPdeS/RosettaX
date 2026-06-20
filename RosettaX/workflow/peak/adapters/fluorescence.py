@@ -117,12 +117,29 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
                 table_data=table_data,
             )
 
+        should_replace_existing_table_peaks = bool(
+            context.get("replace_existing_table_peaks")
+        )
+
+        working_table_data = table_data
+
+        if should_replace_existing_table_peaks:
+            cleared_table_data = self.clear_fluorescence_peak_column(
+                table_data=table_data,
+            )
+
+            if cleared_table_data is not dash.no_update:
+                working_table_data = cleared_table_data
+
         x_values_to_append = self.extract_x_values_to_append(
             result=result,
         )
 
         if not x_values_to_append:
             logger.debug("Fluorescence peak process produced no x values to append.")
+
+            if should_replace_existing_table_peaks and working_table_data is not dash.no_update:
+                return working_table_data
 
             return dash.no_update
 
@@ -137,7 +154,7 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
         )
 
         return self.append_x_values_to_fluorescence_table(
-            table_data=table_data,
+            table_data=working_table_data,
             x_values=x_values_to_append,
             descending=peak_table_sort_order == "descending",
         )

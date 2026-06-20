@@ -12,9 +12,9 @@
   "calibration": {
     "mesf_values": [],
     "default_fluorescence_peak_process": "",
-    "histogram_scale": "log",
-    "histogram_xscale": "linear",
-    "histogram_yscale": "log",
+    "histogram_scale": "linear",
+    "histogram_xscale": "log",
+    "histogram_yscale": "linear",
     "max_events_for_analysis": 100000,
     "n_bins_for_plots": 256,
     "peak_graph_colormap_log": false,
@@ -57,11 +57,11 @@
   },
   "visualization": {
     "graph_height": "450px",
-    "default_marker_opacity": 0.72,
-    "default_marker_size": 7.0,
-    "default_line_width": 2.0,
-    "default_font_size": 14.0,
-    "default_tick_size": 12.0,
+    "default_marker_opacity": 0.9,
+    "default_marker_size": 10.0,
+    "default_line_width": 3.0,
+    "default_font_size": 20.0,
+    "default_tick_size": 15.0,
     "show_grid_by_default": true
   }
 }

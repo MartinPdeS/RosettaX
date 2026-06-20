@@ -6,6 +6,7 @@ import logging
 import dash
 
 from RosettaX.pages.p00_sidebar.ids import SidebarIds
+from RosettaX.pages.p02_fluorescence.state import FluorescencePageState
 from RosettaX.utils import RuntimeConfig
 from RosettaX.workflow.table.fluorescence import FluorescenceReferenceTable
 
@@ -23,6 +24,8 @@ def register_callbacks(section) -> None:
     _register_preset_apply_callback(section)
     _register_preset_sync_callback(section)
     _register_add_row_callback(section)
+    _register_page_state_table_persistence_callback(section)
+    _register_table_hydration_from_page_state_callback(section)
 
 
 def _register_runtime_table_sync_callback(section) -> None:
@@ -204,3 +207,81 @@ def _register_add_row_callback(section) -> None:
         )
 
         return next_rows
+
+
+def _register_page_state_table_persistence_callback(section) -> None:
+    """
+    Persist fluorescence table rows into the page state store.
+    """
+
+    @dash.callback(
+        dash.Output(
+            section.page.ids.State.page_state_store,
+            "data",
+            allow_duplicate=True,
+        ),
+        dash.Input(section.ids.bead_table, "data"),
+        dash.State(section.page.ids.State.page_state_store, "data"),
+        prevent_initial_call=True,
+    )
+    def persist_reference_table_rows_to_page_state(
+        table_rows: Optional[list[dict[str, Any]]],
+        page_state_payload: Any,
+    ) -> Any:
+        page_state = FluorescencePageState.from_dict(
+            page_state_payload if isinstance(page_state_payload, dict) else None
+        )
+
+        normalized_table_rows = FluorescenceReferenceTable.normalize_rows(
+            rows=table_rows,
+        )
+
+        normalized_stored_rows = FluorescenceReferenceTable.normalize_rows(
+            rows=page_state.reference_table_rows,
+        )
+
+        if normalized_table_rows == normalized_stored_rows:
+            return dash.no_update
+
+        return page_state.update(
+            reference_table_rows=normalized_table_rows,
+        ).to_dict()
+
+
+def _register_table_hydration_from_page_state_callback(section) -> None:
+    """
+    Restore fluorescence table rows from page state when revisiting the page.
+    """
+
+    @dash.callback(
+        dash.Output(
+            section.ids.bead_table,
+            "data",
+            allow_duplicate=True,
+        ),
+        dash.Input(section.page.ids.State.page_state_store, "data"),
+        dash.State(section.ids.bead_table, "data"),
+        prevent_initial_call="initial_duplicate",
+    )
+    def hydrate_reference_table_from_page_state(
+        page_state_payload: Any,
+        current_table_rows: Optional[list[dict[str, Any]]],
+    ) -> Any:
+        page_state = FluorescencePageState.from_dict(
+            page_state_payload if isinstance(page_state_payload, dict) else None
+        )
+
+        if page_state.reference_table_rows is None:
+            return dash.no_update
+
+        normalized_stored_rows = FluorescenceReferenceTable.normalize_rows(
+            rows=page_state.reference_table_rows,
+        )
+        normalized_current_rows = FluorescenceReferenceTable.normalize_rows(
+            rows=current_table_rows,
+        )
+
+        if normalized_stored_rows == normalized_current_rows:
+            return dash.no_update
+
+        return normalized_stored_rows

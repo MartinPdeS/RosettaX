@@ -532,6 +532,7 @@ class PeakWorkflowGraphBuilder:
             detector_column=detector_column,
             n_bins_for_plots=self._resolve_number_of_bins(),
             max_events_for_analysis=self._resolve_max_events_for_plots(),
+            use_log_x_bins=self._x_axis_is_log(),
         )
 
         peak_positions = self._extract_x_positions_from_peak_lines_payload()

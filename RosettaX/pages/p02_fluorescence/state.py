@@ -54,6 +54,7 @@ class FluorescencePageState:
 
     peak_lines_payload: Optional[dict[str, Any]] = None
     fluorescence_peak_lines: Optional[list[float]] = None
+    reference_table_rows: Optional[list[dict[str, Any]]] = None
 
     status_message: str = ""
 
@@ -76,6 +77,7 @@ class FluorescencePageState:
             fluorescence_source_channel=None,
             peak_lines_payload=build_empty_peak_lines_payload(),
             fluorescence_peak_lines=[],
+            reference_table_rows=None,
             status_message="",
         )
 

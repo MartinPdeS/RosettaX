@@ -4,6 +4,7 @@ import inspect
 import logging
 import time
 import uuid
+from types import SimpleNamespace
 from typing import Any, Optional
 
 import dash
@@ -554,6 +555,7 @@ def handle_clear_action(
             "mie_model": mie_model,
             "process_name": target_process_name,
             "runtime_config_data": runtime_config_data,
+            "replace_existing_table_peaks": True,
         },
         logger=logger,
     )
@@ -591,6 +593,18 @@ def handle_run_action(
     """
     Handle an automatic run action.
     """
+    cleared_table_result = adapter.apply_peak_process_result_to_table(
+        table_data=table_data,
+        result=SimpleNamespace(clear_existing_table_peaks=True),
+        context={
+            "mie_model": mie_model,
+            "process_name": target_process_name,
+            "runtime_config_data": runtime_config_data,
+            "replace_existing_table_peaks": True,
+        },
+        logger=logger,
+    )
+
     if not context_is_valid_for_process(
         process=process,
         uploaded_fcs_path=uploaded_fcs_path,
@@ -604,7 +618,7 @@ def handle_run_action(
 
         return (
             dash.no_update,
-            dash.no_update,
+            cleared_table_result,
             build_status_children(
                 status_component_ids=status_component_ids,
                 target_process_name=target_process_name,
@@ -650,8 +664,14 @@ def handle_run_action(
     )
 
     if result is None:
-        return build_no_update_callback_result(
-            status_component_ids=status_component_ids,
+        return (
+            dash.no_update,
+            cleared_table_result,
+            build_status_children(
+                status_component_ids=status_component_ids,
+                target_process_name=target_process_name,
+                status="Run completed with no detected peaks.",
+            ),
         )
 
     page_state = adapter.update_peak_lines_payload(
@@ -667,13 +687,20 @@ def handle_run_action(
         process_settings=process_settings,
     )
 
+    table_data_for_run_result = (
+        cleared_table_result
+        if isinstance(cleared_table_result, list)
+        else table_data
+    )
+
     table_result = adapter.apply_peak_process_result_to_table(
-        table_data=table_data,
+        table_data=table_data_for_run_result,
         result=result,
         context={
             "mie_model": mie_model,
             "process_name": target_process_name,
             "runtime_config_data": runtime_config_data,
+            "replace_existing_table_peaks": True,
         },
         logger=logger,
     )
