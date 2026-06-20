@@ -68,7 +68,7 @@ def build_application_footer() -> html.Footer:
                     "fontWeight": "600",
                 },
             ),
-            ".",
+            ", at the Amsterdam Vesicle Center.",
         ],
         style={
             "fontSize": "0.88rem",

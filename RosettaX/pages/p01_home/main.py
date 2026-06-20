@@ -113,6 +113,7 @@ class HomePage:
         self.anaconda_url = "https://anaconda.org/channels/MartinPdeS/packages/Rosettax/overview"
         self.documentation_url = "/documentation"
         self.support_url = "https://github.com/sponsors/MartinPdeS"
+        self.lab_url = "https://www.vesiclecenter.com/"
         self.contact_email = "martin.poinsinet.de.sivry@gmail.com"
         self.zenodo_doi_url = "https://doi.org/10.5281/zenodo.20709591"
         self.zenodo_badge_url = "https://zenodo.org/badge/1087203577.svg"
@@ -228,36 +229,7 @@ class HomePage:
                                 "fontSize": "1.08rem",
                                 "opacity": 0.86,
                                 "maxWidth": "980px",
-                                "marginBottom": "18px",
-                            },
-                        ),
-                        html.Div(
-                            [
-                                dbc.Button(
-                                    "Support Developer",
-                                    href=self.support_url,
-                                    color="warning",
-                                    target="_blank",
-                                    rel="noopener noreferrer",
-                                    style={
-                                        "fontWeight": "700",
-                                        "paddingLeft": "18px",
-                                        "paddingRight": "18px",
-                                    },
-                                ),
-                                html.Div(
-                                    "If RosettaX helps your work, support ongoing development and maintenance here.",
-                                    style={
-                                        "fontSize": "0.92rem",
-                                        "opacity": 0.8,
-                                    },
-                                ),
-                            ],
-                            style={
-                                "display": "flex",
-                                "alignItems": "center",
-                                "gap": "14px",
-                                "flexWrap": "wrap",
+                                "marginBottom": "0px",
                             },
                         ),
                     ],
@@ -275,22 +247,11 @@ class HomePage:
         )
 
     def _citation_card(self) -> dbc.Card:
-        bibtex = (
-            "@software{rosettax,\n"
-            "  author       = {Poinsinet de Sivry-Houle, Martin},\n"
-            "  title        = {{RosettaX: bead-based flow cytometry calibration}},\n"
-            "  year         = {2025},\n"
-            "  publisher    = {Zenodo},\n"
-            "  doi          = {10.5281/zenodo.20709591},\n"
-            "  url          = {https://doi.org/10.5281/zenodo.20709591}\n"
-            "}"
-        )
-
         card = dbc.Card(
             [
                 dbc.CardHeader(
                     html.Div(
-                        "How to cite",
+                        "Support, citation, and lab",
                         style={
                             "fontWeight": "750",
                             "fontSize": "1.02rem",
@@ -301,8 +262,8 @@ class HomePage:
                     [
                         html.Div(
                             (
-                                "If RosettaX contributes to your research, please cite it "
-                                "using the following reference (click on the badge). "
+                                "Support ongoing RosettaX development, cite the work in publications, "
+                                "and find the lab affiliation below."
                             ),
                             style={
                                 "fontSize": "0.95rem",
@@ -310,33 +271,43 @@ class HomePage:
                                 "marginBottom": "14px",
                             },
                         ),
-                        html.A(
-                            html.Img(
-                                src=self.zenodo_badge_url,
-                                alt="DOI badge",
-                                style={
-                                    "height": "20px",
-                                    "marginBottom": "14px",
-                                },
-                            ),
-                            href=self.zenodo_doi_url,
-                            target="_blank",
-                            rel="noopener noreferrer",
+                        html.Div(
+                            [
+                                dbc.Button(
+                                    "Support Developer",
+                                    href=self.support_url,
+                                    color="warning",
+                                    target="_blank",
+                                    rel="noopener noreferrer",
+                                    style={
+                                        "fontWeight": "700",
+                                    },
+                                ),
+                                dbc.Button(
+                                    "Citing this work",
+                                    href=self.zenodo_doi_url,
+                                    color="primary",
+                                    outline=True,
+                                    target="_blank",
+                                    rel="noopener noreferrer",
+                                ),
+                                dbc.Button(
+                                    "Amsterdam Vesicle Center",
+                                    href=self.lab_url,
+                                    color="info",
+                                    outline=True,
+                                    target="_blank",
+                                    rel="noopener noreferrer",
+                                ),
+                            ],
+                            style={
+                                "display": "flex",
+                                "alignItems": "center",
+                                "gap": "10px",
+                                "flexWrap": "wrap",
+                                "marginBottom": "0px",
+                            },
                         ),
-                        # html.Pre(
-                        #     bibtex,
-                        #     style={
-                        #         "background": "rgba(0, 0, 0, 0.04)",
-                        #         "border": "1px solid rgba(128, 128, 128, 0.2)",
-                        #         "borderRadius": "8px",
-                        #         "padding": "14px 16px",
-                        #         "fontSize": "0.82rem",
-                        #         "lineHeight": "1.6",
-                        #         "whiteSpace": "pre",
-                        #         "overflowX": "auto",
-                        #         "marginBottom": "0",
-                        #     },
-                        # ),
                     ],
                     style={
                         "padding": "20px",
@@ -361,7 +332,7 @@ class HomePage:
                 dbc.CardHeader(
                     [
                         html.Div(
-                            "Website usage metrics to date.",
+                            "RosettaX usage metrics.",
                             style={
                                 "fontWeight": "750",
                                 "fontSize": "1.02rem",
@@ -473,14 +444,13 @@ class HomePage:
                         title="Scattering calibration",
                         subtitle="",
                         description=(
-                            "Create a scattering calibration by linking measured bead "
-                            "peaks to modeled optical coupling values."
+                            "Convert arbitrary units of scattering intensity into standard units of scattering cross section (nm2) and particle diameter (nm)."
                         ),
                         steps=[
-                            "Upload bead FCS",
+                            "Upload bead FCS file",
                             "Detect scattering peaks",
-                            "Configure Mie model",
-                            "Compute coupling",
+                            "Set optical configuration",
+                            "Add standard units to calibration table",
                             "Fit response",
                             "Save calibration",
                         ],
@@ -496,15 +466,13 @@ class HomePage:
                         title="Apply calibration",
                         subtitle="",
                         description=(
-                            "Use a saved fluorescence or scattering calibration to add "
-                            "calibrated channels to FCS files."
+                            "Use saved fluorescence and/or scattering calibrations to add calibrated parameters to FCS files."
                         ),
                         steps=[
-                            "Upload input FCS files",
                             "Select calibration",
-                            "Configure target model",
-                            "Choose export columns",
-                            "Export calibrated files",
+                            "Upload uncalibrated FCS file(s)",
+                            "Select parameters to export",
+                            "Apply and export calibrated FCS file(s)",
                         ],
                         button_text="Open apply workflow",
                         button_href="/calibrate",
