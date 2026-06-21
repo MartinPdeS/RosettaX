@@ -420,6 +420,12 @@ def handle_manual_graph_click(
         logger=logger,
     )
 
+    page_state = synchronize_page_state_table_rows(
+        adapter=adapter,
+        page_state=page_state,
+        table_result=table_result,
+    )
+
     status_children = build_status_children(
         status_component_ids=status_component_ids,
         target_process_name=resolved_process_name,
@@ -558,6 +564,12 @@ def handle_clear_action(
             "replace_existing_table_peaks": True,
         },
         logger=logger,
+    )
+
+    page_state = synchronize_page_state_table_rows(
+        adapter=adapter,
+        page_state=page_state,
+        table_result=table_result,
     )
 
     status_children = build_status_children(
@@ -703,6 +715,12 @@ def handle_run_action(
             "replace_existing_table_peaks": True,
         },
         logger=logger,
+    )
+
+    page_state = synchronize_page_state_table_rows(
+        adapter=adapter,
+        page_state=page_state,
+        table_result=table_result,
     )
 
     status_children = build_status_children(
@@ -957,6 +975,52 @@ def build_no_update_status_children(
     Build a valid no update list for wildcard status outputs.
     """
     return [dash.no_update for _ in (status_component_ids or [])]
+
+
+def synchronize_page_state_table_rows(
+    *,
+    adapter: Any,
+    page_state: Any,
+    table_result: Any,
+) -> Any:
+    """
+    Mirror updated table rows into page state when that state owns table rows.
+
+    This keeps table hydration callbacks deterministic when a peak action
+    updates both page state and table in the same interaction.
+    """
+    if not isinstance(table_result, list):
+        return page_state
+
+    payload = adapter.get_page_state_payload(
+        page_state=page_state,
+    )
+
+    if "reference_table_rows" not in payload:
+        return page_state
+
+    normalize_table_data = getattr(
+        adapter,
+        "normalize_table_data",
+        None,
+    )
+
+    if callable(normalize_table_data):
+        normalized_table_rows = normalize_table_data(
+            table_data=table_result,
+        )
+
+    else:
+        normalized_table_rows = table_result
+
+    if payload.get("reference_table_rows") == normalized_table_rows:
+        return page_state
+
+    payload["reference_table_rows"] = normalized_table_rows
+
+    return adapter.build_page_state(
+        payload=payload,
+    )
 
 
 def build_no_update_callback_result(
