@@ -58,6 +58,37 @@ class Test_FluorescenceReferencePresets:
             "456.7",
         ]
 
+    def test_build_rows_from_shorter_preset_preserves_overflow_measured_intensity_rows(self):
+        rows = FluorescenceReferenceTable.build_rows_from_preset_name(
+            preset_name=GENERIC_FLUORESCENCE_REFERENCE_PRESET_NAME,
+            current_rows=[
+                {
+                    FluorescenceReferenceTable.column_calibrated_intensity: "500",
+                    FluorescenceReferenceTable.column_measured_intensity: "12.3",
+                },
+                {
+                    FluorescenceReferenceTable.column_calibrated_intensity: "5000",
+                    FluorescenceReferenceTable.column_measured_intensity: "78.9",
+                },
+                {
+                    FluorescenceReferenceTable.column_calibrated_intensity: "50000",
+                    FluorescenceReferenceTable.column_measured_intensity: "456.7",
+                },
+                {
+                    FluorescenceReferenceTable.column_calibrated_intensity: "500000",
+                    FluorescenceReferenceTable.column_measured_intensity: "999.1",
+                },
+                {
+                    FluorescenceReferenceTable.column_calibrated_intensity: "5e+06",
+                    FluorescenceReferenceTable.column_measured_intensity: "321.0",
+                },
+            ],
+        )
+
+        assert len(rows) == 5
+        assert rows[4][FluorescenceReferenceTable.column_calibrated_intensity] == ""
+        assert rows[4][FluorescenceReferenceTable.column_measured_intensity] == "321.0"
+
     def test_resolve_matching_preset_name_returns_custom_for_manual_values(self):
         rows = [
             {

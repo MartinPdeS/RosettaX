@@ -203,6 +203,25 @@ class FluorescenceReferenceTable:
 
             merged_rows.append(merged_row)
 
+        for row_index in range(len(preset_rows), len(normalized_current_rows)):
+            measured_intensity = str(
+                normalized_current_rows[row_index].get(
+                    cls.column_measured_intensity,
+                    "",
+                )
+                or ""
+            ).strip()
+
+            if not measured_intensity:
+                continue
+
+            merged_rows.append(
+                {
+                    cls.column_calibrated_intensity: "",
+                    cls.column_measured_intensity: measured_intensity,
+                }
+            )
+
         return merged_rows
 
     @classmethod
