@@ -143,7 +143,7 @@ class HelpPage:
                                 dbc.Col(
                                     dbc.Button(
                                         "Technical docs",
-                                        href=self.documentation_url,
+                                        href="/documentation",
                                         color="primary",
                                         target="_self",
                                         style={"width": "100%"},
