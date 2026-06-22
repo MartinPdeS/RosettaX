@@ -8,6 +8,7 @@ import numpy as np
 import plotly.graph_objs as go
 
 from RosettaX.utils.io import load_signal
+from RosettaX.utils.runtime_config import RuntimeConfig
 
 logger = logging.getLogger(__name__)
 
@@ -463,6 +464,174 @@ def _make_info_figure(
         font={"size": float(font_size)},
     )
     return figure
+
+
+def resolve_runtime_visualization_settings(
+    runtime_config: RuntimeConfig,
+) -> dict[str, float | bool | str]:
+    """
+    Resolve shared visualization settings from a runtime profile.
+    """
+    return {
+        "default_marker_size": runtime_config.get_float(
+            "visualization.default_marker_size",
+            default=8.0,
+        ),
+        "default_marker_opacity": runtime_config.get_float(
+            "visualization.default_marker_opacity",
+            default=0.72,
+        ),
+        "default_line_width": runtime_config.get_float(
+            "visualization.default_line_width",
+            default=2.0,
+        ),
+        "default_font_size": runtime_config.get_float(
+            "visualization.default_font_size",
+            default=14.0,
+        ),
+        "default_tick_size": runtime_config.get_float(
+            "visualization.default_tick_size",
+            default=12.0,
+        ),
+        "show_grid": runtime_config.get_bool(
+            "visualization.show_grid_by_default",
+            default=True,
+        ),
+        "legend_vertical_anchor": runtime_config.get_str(
+            "visualization.legend_vertical_anchor",
+            default="bottom",
+        ),
+        "annotation_text_position": runtime_config.get_str(
+            "visualization.annotation_text_position",
+            default="top center",
+        ),
+    }
+
+
+def apply_calibration_chart_style(
+    fig: go.Figure,
+    *,
+    marker_size: float,
+    marker_opacity: float,
+    line_width: float,
+    font_size: float,
+    tick_size: float,
+    show_grid: bool,
+    legend_vertical_anchor: str,
+    annotation_text_position: str,
+    margin: dict[str, float | int],
+    clear_title_text: bool = False,
+) -> go.Figure:
+    """
+    Apply a consistent style for fluorescence/scattering calibration charts.
+    """
+    resolved_legend_vertical_anchor = str(legend_vertical_anchor).strip().lower()
+    if resolved_legend_vertical_anchor not in {"top", "bottom"}:
+        resolved_legend_vertical_anchor = "bottom"
+
+    resolved_annotation_text_position = str(annotation_text_position).strip().lower()
+    valid_annotation_positions = {
+        "top left",
+        "top center",
+        "top right",
+        "middle left",
+        "middle center",
+        "middle right",
+        "bottom left",
+        "bottom center",
+        "bottom right",
+    }
+    if resolved_annotation_text_position not in valid_annotation_positions:
+        resolved_annotation_text_position = "top center"
+
+    legend_y = 0.98 if resolved_legend_vertical_anchor == "top" else 0.02
+
+    layout_kwargs: dict[str, Any] = {
+        "autosize": True,
+        "height": None,
+        "margin": dict(margin),
+        "font": {
+            "size": float(font_size),
+        },
+        "legend": {
+            "x": 0.98,
+            "y": legend_y,
+            "xanchor": "right",
+            "yanchor": resolved_legend_vertical_anchor,
+            "bgcolor": "rgba(255,255,255,0.65)",
+            "bordercolor": "rgba(0,0,0,0.15)",
+            "borderwidth": 1,
+            "font": {
+                "size": float(tick_size),
+            },
+        },
+    }
+
+    if clear_title_text:
+        layout_kwargs["title"] = {"text": ""}
+
+    fig.update_layout(**layout_kwargs)
+
+    fig.update_xaxes(
+        automargin=False,
+        title_standoff=10,
+        showgrid=bool(show_grid),
+        title_font={"size": float(font_size)},
+        tickfont={"size": float(tick_size)},
+    )
+    fig.update_yaxes(
+        automargin=False,
+        title_standoff=10,
+        showgrid=bool(show_grid),
+        title_font={"size": float(font_size)},
+        tickfont={"size": float(tick_size)},
+    )
+
+    for trace in fig.data:
+        marker = getattr(trace, "marker", None)
+        if marker is not None:
+            try:
+                marker.size = float(marker_size)
+                marker.opacity = float(marker_opacity)
+            except (AttributeError, TypeError, ValueError):
+                logger.debug(
+                    "Could not apply marker defaults to trace_type=%s",
+                    type(trace).__name__,
+                    exc_info=True,
+                )
+
+        line = getattr(trace, "line", None)
+        if line is not None:
+            try:
+                line.width = float(line_width)
+            except (AttributeError, TypeError, ValueError):
+                logger.debug(
+                    "Could not apply line defaults to trace_type=%s",
+                    type(trace).__name__,
+                    exc_info=True,
+                )
+
+        if hasattr(trace, "textposition") and getattr(trace, "text", None) is not None:
+            try:
+                trace.textposition = resolved_annotation_text_position
+            except (AttributeError, TypeError, ValueError):
+                logger.debug(
+                    "Could not apply textposition to trace_type=%s",
+                    type(trace).__name__,
+                    exc_info=True,
+                )
+
+    if fig.layout.annotations:
+        updated_annotations = []
+        for annotation in fig.layout.annotations:
+            annotation_json = annotation.to_plotly_json()
+            annotation_font = dict(annotation_json.get("font", {}))
+            annotation_font["size"] = float(font_size)
+            annotation_json["font"] = annotation_font
+            updated_annotations.append(annotation_json)
+        fig.update_layout(annotations=updated_annotations)
+
+    return fig
 
 
 def apply_default_visual_style(

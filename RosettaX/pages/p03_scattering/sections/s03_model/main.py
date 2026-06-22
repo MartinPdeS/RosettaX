@@ -1482,20 +1482,9 @@ class Model:
                 selected_detector_channel=selected_detector_channel,
             )
 
-            fallback_wavelength_nm = self.model_configuration.detect_wavelength_nm_from_detector_channel(
-                selected_detector_channel,
-            )
-
             if not detected_preset:
                 filled_fields: list[str] = []
-                missing_fields: list[str] = ["detector preset"]
-
-                if fallback_wavelength_nm is not None:
-                    filled_fields.append(
-                        f"wavelength={fallback_wavelength_nm} nm"
-                    )
-                else:
-                    missing_fields.append("wavelength")
+                missing_fields: list[str] = ["detector preset", "wavelength"]
 
                 status_text = (
                     "Auto-detect could only fill some fields. "
@@ -1506,11 +1495,7 @@ class Model:
 
                 return (
                     dash.no_update,
-                    (
-                        fallback_wavelength_nm
-                        if fallback_wavelength_nm is not None
-                        else dash.no_update
-                    ),
+                    dash.no_update,
                     status_text,
                     "warning",
                     True,
@@ -1518,11 +1503,7 @@ class Model:
 
             detected_wavelength_nm = self.model_configuration.resolve_detector_preset_wavelength_nm(
                 preset_name=detected_preset,
-                current_wavelength_nm=(
-                    fallback_wavelength_nm
-                    if fallback_wavelength_nm is not None
-                    else current_wavelength_nm
-                ),
+                current_wavelength_nm=current_wavelength_nm,
             )
 
             wavelength_status_text = ""

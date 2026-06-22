@@ -136,6 +136,8 @@ class RuntimeConfig:
         "apply_calibration.visualization.default_font_size": "visualization.default_font_size",
         "apply_calibration.visualization.default_tick_size": "visualization.default_tick_size",
         "apply_calibration.visualization.show_grid_by_default": "visualization.show_grid_by_default",
+        "apply_calibration.visualization.legend_vertical_anchor": "visualization.legend_vertical_anchor",
+        "apply_calibration.visualization.annotation_text_position": "visualization.annotation_text_position",
         "misc.ui.theme_mode": "ui.theme_mode",
         "misc.ui.show_graphs": "ui.show_graphs",
         "misc.ui.show_preset_configuration": "ui.show_preset_configuration",
@@ -442,6 +444,28 @@ class RuntimeConfig:
             expected_type=bool,
             default=True,
             description="Whether plot grid lines are shown by default.",
+        ),
+        "visualization.legend_vertical_anchor": RuntimeConfigField(
+            expected_type=str,
+            default="bottom",
+            choices=("top", "bottom"),
+            description="Default legend vertical anchor for calibration charts.",
+        ),
+        "visualization.annotation_text_position": RuntimeConfigField(
+            expected_type=str,
+            default="top center",
+            choices=(
+                "top left",
+                "top center",
+                "top right",
+                "middle left",
+                "middle center",
+                "middle right",
+                "bottom left",
+                "bottom center",
+                "bottom right",
+            ),
+            description="Default text position for scatter annotation labels.",
         ),
     }
 

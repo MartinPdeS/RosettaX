@@ -80,6 +80,11 @@ class Test_RuntimeConfig:
             2.0
         )
         assert exported_payload["visualization"]["show_grid_by_default"] is True
+        assert exported_payload["visualization"]["legend_vertical_anchor"] == "bottom"
+        assert (
+            exported_payload["visualization"]["annotation_text_position"]
+            == "top center"
+        )
 
     def test_unknown_paths_are_preserved_by_default(self) -> None:
         runtime_config = RuntimeConfig.from_dict(

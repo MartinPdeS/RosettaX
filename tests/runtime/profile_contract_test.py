@@ -192,6 +192,18 @@ class Test_RuntimeConfigProfileContract:
         assert payload["visualization"]["default_font_size"] >= 1.0
         assert payload["visualization"]["default_tick_size"] >= 1.0
         assert isinstance(payload["visualization"]["show_grid_by_default"], bool)
+        assert payload["visualization"]["legend_vertical_anchor"] in {"top", "bottom"}
+        assert payload["visualization"]["annotation_text_position"] in {
+            "top left",
+            "top center",
+            "top right",
+            "middle left",
+            "middle center",
+            "middle right",
+            "bottom left",
+            "bottom center",
+            "bottom right",
+        }
 
     def test_default_profile_can_be_loaded_and_validated(self) -> None:
         runtime_config = RuntimeConfig.from_default_profile()

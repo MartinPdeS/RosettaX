@@ -456,54 +456,28 @@ class Calibration:
             runtime_config_data if isinstance(runtime_config_data, dict) else None
         )
 
-        default_font_size = runtime_config.get_float("visualization.default_font_size", default=14.0)
-        default_tick_size = runtime_config.get_float("visualization.default_tick_size", default=12.0)
-        default_line_width = runtime_config.get_float("visualization.default_line_width", default=2.0)
-        show_grid = runtime_config.get_bool("visualization.show_grid_by_default", default=True)
+        visualization_settings = plottings.resolve_runtime_visualization_settings(
+            runtime_config,
+        )
 
-        figure.update_layout(
-            autosize=True,
-            height=None,
+        return plottings.apply_calibration_chart_style(
+            figure,
+            marker_size=float(visualization_settings["default_marker_size"]),
+            marker_opacity=float(visualization_settings["default_marker_opacity"]),
+            line_width=float(visualization_settings["default_line_width"]),
+            font_size=float(visualization_settings["default_font_size"]),
+            tick_size=float(visualization_settings["default_tick_size"]),
+            show_grid=bool(visualization_settings["show_grid"]),
+            legend_vertical_anchor=str(visualization_settings["legend_vertical_anchor"]),
+            annotation_text_position=str(visualization_settings["annotation_text_position"]),
             margin={
                 "l": 70,
                 "r": 24,
                 "t": 70,
                 "b": 70,
             },
-            font={
-                "size": default_font_size,
-            },
-            legend={
-                "x": 0.98,
-                "y": 0.02,
-                "xanchor": "right",
-                "yanchor": "bottom",
-                "bgcolor": "rgba(255, 255, 255, 0.65)",
-                "bordercolor": "rgba(0, 0, 0, 0.15)",
-                "borderwidth": 1,
-                "font": {
-                    "size": default_tick_size,
-                },
-            },
+            clear_title_text=False,
         )
-
-        figure.update_xaxes(
-            tickfont={"size": default_tick_size},
-            title_font={"size": default_font_size},
-            showgrid=show_grid,
-        )
-
-        figure.update_yaxes(
-            tickfont={"size": default_tick_size},
-            title_font={"size": default_font_size},
-            showgrid=show_grid,
-        )
-
-        for trace in figure.data:
-            if hasattr(trace, "line") and trace.line is not None:
-                trace.update(line={"width": default_line_width})
-
-        return figure
 
     def _axis_type_from_toggle(
         self,

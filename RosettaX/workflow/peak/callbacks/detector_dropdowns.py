@@ -47,6 +47,10 @@ def register_detector_dropdown_callbacks(
         ),
         dash.State(
             ids.process_detector_dropdown_pattern(),
+            "options",
+        ),
+        dash.State(
+            ids.process_detector_dropdown_pattern(),
             "value",
         ),
         prevent_initial_call=False,
@@ -55,6 +59,7 @@ def register_detector_dropdown_callbacks(
         page_state_payload: Any,
         runtime_config_data: Any,
         detector_dropdown_ids: list[dict[str, Any]],
+        current_detector_options: list[Any],
         current_detector_values: list[Any],
     ) -> tuple[list[list[dict[str, Any]]], list[Any]]:
         page_state = adapter.get_page_state_from_payload(
@@ -65,7 +70,7 @@ def register_detector_dropdown_callbacks(
             page_state=page_state,
         )
 
-        return detectors.populate_peak_script_detector_dropdowns(
+        resolved_options, resolved_values = detectors.populate_peak_script_detector_dropdowns(
             uploaded_fcs_path=uploaded_fcs_path,
             detector_dropdown_ids=detector_dropdown_ids,
             current_detector_values=current_detector_values,
@@ -77,3 +82,14 @@ def register_detector_dropdown_callbacks(
             ),
             logger=logger,
         )
+
+        if (
+            isinstance(current_detector_options, list)
+            and resolved_options == current_detector_options
+            and resolved_values == (current_detector_values or [])
+        ):
+            # Keep detector dropdown outputs stable to avoid emitting synthetic
+            # detector-change events when unrelated page state updates occur.
+            return dash.no_update, dash.no_update
+
+        return resolved_options, resolved_values

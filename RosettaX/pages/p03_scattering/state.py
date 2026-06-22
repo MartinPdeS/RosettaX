@@ -17,6 +17,7 @@ class ScatteringPageState:
     uploaded_filename: Optional[str] = None
 
     peak_lines_payload: Optional[dict[str, Any]] = None
+    scattering_peak_lines_payload: Optional[dict[str, Any]] = None
 
     scattering_parameters_payload: Optional[dict[str, Any]] = None
 
@@ -38,6 +39,10 @@ class ScatteringPageState:
         """
         return cls(
             peak_lines_payload={
+                "positions": [],
+                "labels": [],
+            },
+            scattering_peak_lines_payload={
                 "positions": [],
                 "labels": [],
             },
@@ -72,17 +77,24 @@ class ScatteringPageState:
             if key in valid_keys
         }
 
-        state = cls(**clean_payload)
+        peak_lines_payload = clean_payload.get("peak_lines_payload")
+        scattering_peak_lines_payload = clean_payload.get("scattering_peak_lines_payload")
 
-        if state.peak_lines_payload is None:
-            state = state.update(
-                peak_lines_payload={
-                    "positions": [],
-                    "labels": [],
-                }
-            )
+        if peak_lines_payload is None and scattering_peak_lines_payload is None:
+            empty_peak_lines_payload = {
+                "positions": [],
+                "labels": [],
+            }
+            clean_payload["peak_lines_payload"] = empty_peak_lines_payload
+            clean_payload["scattering_peak_lines_payload"] = dict(empty_peak_lines_payload)
 
-        return state
+        elif peak_lines_payload is None:
+            clean_payload["peak_lines_payload"] = scattering_peak_lines_payload
+
+        elif scattering_peak_lines_payload is None:
+            clean_payload["scattering_peak_lines_payload"] = peak_lines_payload
+
+        return cls(**clean_payload)
 
     def to_dict(self) -> dict[str, Any]:
         """

@@ -7,7 +7,7 @@ import dash
 import plotly.graph_objs as go
 
 from RosettaX.pages.p02_fluorescence.state import FluorescencePageState
-from RosettaX.utils import RuntimeConfig, styling
+from RosettaX.utils import RuntimeConfig, plottings, styling
 from . import services
 
 
@@ -96,61 +96,28 @@ def _finalize_figure_size(
         runtime_config_data if isinstance(runtime_config_data, dict) else None
     )
 
-    default_font_size = runtime_config.get_float("visualization.default_font_size", default=14.0)
-    default_tick_size = runtime_config.get_float("visualization.default_tick_size", default=12.0)
-    default_line_width = runtime_config.get_float("visualization.default_line_width", default=2.0)
-    show_grid = runtime_config.get_bool("visualization.show_grid_by_default", default=True)
+    visualization_settings = plottings.resolve_runtime_visualization_settings(
+        runtime_config,
+    )
 
-    figure.update_layout(
-        height=None,
-        autosize=True,
-        title={
-            "text": "",
-        },
+    return plottings.apply_calibration_chart_style(
+        figure,
+        marker_size=float(visualization_settings["default_marker_size"]),
+        marker_opacity=float(visualization_settings["default_marker_opacity"]),
+        line_width=float(visualization_settings["default_line_width"]),
+        font_size=float(visualization_settings["default_font_size"]),
+        tick_size=float(visualization_settings["default_tick_size"]),
+        show_grid=bool(visualization_settings["show_grid"]),
+        legend_vertical_anchor=str(visualization_settings["legend_vertical_anchor"]),
+        annotation_text_position=str(visualization_settings["annotation_text_position"]),
         margin={
             "l": 92,
             "r": 28,
             "t": 18,
             "b": 78,
         },
-        font={
-            "size": default_font_size,
-        },
-        legend={
-            "x": 0.98,
-            "y": 0.98,
-            "xanchor": "right",
-            "yanchor": "top",
-            "bgcolor": "rgba(255,255,255,0.65)",
-            "bordercolor": "rgba(0,0,0,0.15)",
-            "borderwidth": 1,
-            "font": {
-                "size": default_tick_size,
-            },
-        },
+        clear_title_text=True,
     )
-
-    figure.update_xaxes(
-        automargin=False,
-        title_standoff=10,
-        tickfont={"size": default_tick_size},
-        title_font={"size": default_font_size},
-        showgrid=show_grid,
-    )
-
-    figure.update_yaxes(
-        automargin=False,
-        title_standoff=10,
-        tickfont={"size": default_tick_size},
-        title_font={"size": default_font_size},
-        showgrid=show_grid,
-    )
-
-    for trace in figure.data:
-        if hasattr(trace, "line") and trace.line is not None:
-            trace.update(line={"width": default_line_width})
-
-    return figure
 
 
 def _get_fluorescence_detector_dropdown_pattern(section) -> Any:

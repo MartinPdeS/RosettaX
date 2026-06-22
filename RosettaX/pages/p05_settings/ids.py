@@ -103,6 +103,8 @@ class Ids:
         default_font_size = f"{PAGE_NAME}-default-font-size"
         default_tick_size = f"{PAGE_NAME}-default-tick-size"
         show_grid_by_default = f"{PAGE_NAME}-show-grid-by-default"
+        legend_vertical_anchor = f"{PAGE_NAME}-legend-vertical-anchor"
+        annotation_text_position = f"{PAGE_NAME}-annotation-text-position"
 
         fluorescence_fcs_file_path = f"{PAGE_NAME}-fluorescence-fcs-file-path"
         scattering_fcs_file_path = f"{PAGE_NAME}-scattering-fcs-file-path"
