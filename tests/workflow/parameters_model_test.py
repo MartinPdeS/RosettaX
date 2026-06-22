@@ -293,8 +293,10 @@ class Test_compute_model_for_rows:
                                                         valid_solid_sphere_rows, mock_logger):
         """Test compute_model_for_rows with valid solid sphere parameters."""
         mock_table.normalize_table_rows.return_value = [dict(row) for row in valid_solid_sphere_rows]
+        mock_table.COLUMN_EXPECTED_CROSS_SECTION_NM2 = 'expected_cross_section_nm2'
         mock_compute_coupling.return_value = SimpleNamespace(
-            expected_coupling_values=np.asarray([1234.5, 2468.0, 3701.5], dtype=float)
+            expected_coupling_values=np.asarray([1234.5, 2468.0, 3701.5], dtype=float),
+            expected_cross_section_nm2_values=np.asarray([3.1, 6.2, 9.3], dtype=float),
         )
 
         result = compute_model_for_rows(
@@ -314,6 +316,9 @@ class Test_compute_model_for_rows:
         assert result[0]['expected_coupling'] == '1234.5'
         assert result[1]['expected_coupling'] == '2468'
         assert result[2]['expected_coupling'] == '3701.5'
+        assert result[0]['expected_cross_section_nm2'] == '3.1'
+        assert result[1]['expected_cross_section_nm2'] == '6.2'
+        assert result[2]['expected_cross_section_nm2'] == '9.3'
 
     @patch('RosettaX.workflow.parameters.model.table')
     @patch('RosettaX.workflow.parameters.model.BackEnd.compute_modeled_coupling_from_core_shell_dimensions')
@@ -335,8 +340,10 @@ class Test_compute_model_for_rows:
             }
             for row in valid_core_shell_rows
         ]
+        mock_table.COLUMN_EXPECTED_CROSS_SECTION_NM2 = 'expected_cross_section_nm2'
         mock_compute_coupling.return_value = SimpleNamespace(
-            expected_coupling_values=np.asarray([987.6, 1975.2, 2962.8], dtype=float)
+            expected_coupling_values=np.asarray([987.6, 1975.2, 2962.8], dtype=float),
+            expected_cross_section_nm2_values=np.asarray([2.5, 5.0, 7.5], dtype=float),
         )
 
         result = compute_model_for_rows(
@@ -356,6 +363,9 @@ class Test_compute_model_for_rows:
         assert result[0]['expected_coupling'] == '987.6'
         assert result[1]['expected_coupling'] == '1975.2'
         assert result[2]['expected_coupling'] == '2962.8'
+        assert result[0]['expected_cross_section_nm2'] == '2.5'
+        assert result[1]['expected_cross_section_nm2'] == '5'
+        assert result[2]['expected_cross_section_nm2'] == '7.5'
 
     @patch('RosettaX.workflow.parameters.model.table')
     def test_compute_model_for_rows_empty_rows(self, mock_table, valid_optical_parameters, mock_logger):

@@ -12,6 +12,7 @@ from RosettaX.workflow.parameters.table import (
     COLUMN_OUTER_DIAMETER_NM,
     COLUMN_MEASURED_PEAK_POSITION,
     COLUMN_EXPECTED_COUPLING,
+    COLUMN_EXPECTED_CROSS_SECTION_NM2,
     sphere_table_columns,
     core_shell_table_columns,
     resolve_mie_model,
@@ -36,6 +37,7 @@ class Test_ModelConstants:
         assert COLUMN_OUTER_DIAMETER_NM == "outer_diameter_nm"
         assert COLUMN_MEASURED_PEAK_POSITION == "measured_peak_position"
         assert COLUMN_EXPECTED_COUPLING == "expected_coupling"
+        assert COLUMN_EXPECTED_CROSS_SECTION_NM2 == "expected_cross_section_nm2"
 
 
 class Test_table_columns:
@@ -44,7 +46,7 @@ class Test_table_columns:
     def test_sphere_table_columns_structure(self):
         """Test sphere_table_columns has correct structure."""
         assert isinstance(sphere_table_columns, list)
-        assert len(sphere_table_columns) == 3
+        assert len(sphere_table_columns) == 4
 
         # Check each column has required fields
         for column in sphere_table_columns:
@@ -63,6 +65,7 @@ class Test_table_columns:
         assert COLUMN_PARTICLE_DIAMETER_NM in column_ids
         assert COLUMN_MEASURED_PEAK_POSITION in column_ids
         assert COLUMN_EXPECTED_COUPLING in column_ids
+        assert COLUMN_EXPECTED_CROSS_SECTION_NM2 in column_ids
         assert next(
             column["name"]
             for column in sphere_table_columns
@@ -71,7 +74,10 @@ class Test_table_columns:
 
         # Check editability
         for column in sphere_table_columns:
-            if column["id"] == COLUMN_EXPECTED_COUPLING:
+            if column["id"] in {
+                COLUMN_EXPECTED_COUPLING,
+                COLUMN_EXPECTED_CROSS_SECTION_NM2,
+            }:
                 assert column["editable"] is False
             else:
                 assert column["editable"] is True
@@ -79,7 +85,7 @@ class Test_table_columns:
     def test_core_shell_table_columns_structure(self):
         """Test core_shell_table_columns has correct structure."""
         assert isinstance(core_shell_table_columns, list)
-        assert len(core_shell_table_columns) == 5
+        assert len(core_shell_table_columns) == 6
 
         # Check each column has required fields
         for column in core_shell_table_columns:
@@ -96,6 +102,7 @@ class Test_table_columns:
         assert COLUMN_OUTER_DIAMETER_NM in column_ids
         assert COLUMN_MEASURED_PEAK_POSITION in column_ids
         assert COLUMN_EXPECTED_COUPLING in column_ids
+        assert COLUMN_EXPECTED_CROSS_SECTION_NM2 in column_ids
         assert next(
             column["name"]
             for column in core_shell_table_columns
@@ -109,6 +116,7 @@ class Test_table_columns:
         assert editable_columns[COLUMN_OUTER_DIAMETER_NM] is False  # Calculated field
         assert editable_columns[COLUMN_MEASURED_PEAK_POSITION] is True
         assert editable_columns[COLUMN_EXPECTED_COUPLING] is False  # Calculated field
+        assert editable_columns[COLUMN_EXPECTED_CROSS_SECTION_NM2] is False
 
     def test_table_columns_immutability(self):
         """Test that modifying returned columns doesn't affect originals."""
@@ -116,7 +124,7 @@ class Test_table_columns:
         columns_copy = list(sphere_table_columns)
         columns_copy.append({"name": "Extra", "id": "extra", "editable": True})
 
-        assert len(sphere_table_columns) == 3  # Original unchanged
+        assert len(sphere_table_columns) == 4  # Original unchanged
 
 
 class Test_resolve_mie_model:
@@ -302,14 +310,14 @@ class Test_table_integration:
         columns = get_table_columns_for_model(resolved_model)
 
         assert resolved_model == MIE_MODEL_SOLID_SPHERE
-        assert len(columns) == 3
+        assert len(columns) == 4
 
         # Test core-shell consistency
         resolved_model = resolve_mie_model(MIE_MODEL_CORE_SHELL_SPHERE)
         columns = get_table_columns_for_model(resolved_model)
 
         assert resolved_model == MIE_MODEL_CORE_SHELL_SPHERE
-        assert len(columns) == 5
+        assert len(columns) == 6
 
     def test_all_columns_have_required_structure(self):
         """Test that all columns from both models have required structure."""

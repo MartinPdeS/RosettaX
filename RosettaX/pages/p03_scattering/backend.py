@@ -25,6 +25,7 @@ class ModeledCouplingResult:
 
     particle_diameters_nm: np.ndarray
     expected_coupling_values: np.ndarray
+    expected_cross_section_nm2_values: np.ndarray
     model_metadata: dict[str, Any]
 
     def to_dict(self) -> dict[str, Any]:
@@ -34,6 +35,7 @@ class ModeledCouplingResult:
         return {
             "particle_diameters_nm": self.particle_diameters_nm.tolist(),
             "expected_coupling_values": self.expected_coupling_values.tolist(),
+            "expected_cross_section_nm2_values": self.expected_cross_section_nm2_values.tolist(),
             "model_metadata": self.model_metadata,
         }
 
@@ -356,10 +358,31 @@ class BackEnd:
             dtype=float,
         )
 
+        cross_section_nm2_values = np.asarray(
+            BackEnd._compute_cached_solid_sphere_cross_section_nm2(
+                particle_diameters_nm=tuple(
+                    float(value) for value in particle_diameters_nm.tolist()
+                ),
+                wavelength_nm=float(wavelength_nm),
+                source_numerical_aperture=float(source_numerical_aperture),
+                optical_power_watt=float(optical_power_watt),
+                medium_refractive_index=float(medium_refractive_index),
+                particle_refractive_index=float(particle_refractive_index),
+                polarization_angle_degree=float(polarization_angle_degree),
+            ),
+            dtype=float,
+        )
+
         BackEnd._validate_coupling_size(
             coupling_values=coupling_values,
             expected_size=particle_diameters_nm.size,
             size_context="particle diameter",
+        )
+
+        BackEnd._validate_modeled_value_size(
+            values=cross_section_nm2_values,
+            expected_size=particle_diameters_nm.size,
+            size_context="particle diameter cross section",
         )
 
         model_metadata = {
@@ -383,6 +406,7 @@ class BackEnd:
         modeled_coupling_result = ModeledCouplingResult(
             particle_diameters_nm=particle_diameters_nm,
             expected_coupling_values=coupling_values,
+            expected_cross_section_nm2_values=cross_section_nm2_values,
             model_metadata=model_metadata,
         )
 
@@ -461,6 +485,55 @@ class BackEnd:
             float(value)
             for value in np.asarray(coupling_values, dtype=float).reshape(-1)
         )
+
+    @staticmethod
+    @lru_cache(maxsize=32)
+    def _compute_cached_solid_sphere_cross_section_nm2(
+        *,
+        particle_diameters_nm: tuple[float, ...],
+        wavelength_nm: float,
+        source_numerical_aperture: float,
+        optical_power_watt: float,
+        medium_refractive_index: float,
+        particle_refractive_index: float,
+        polarization_angle_degree: float,
+    ) -> tuple[float, ...]:
+        """
+        Cache solid-sphere Csca computations converted from m^2 to nm^2.
+        """
+        target_size = len(particle_diameters_nm)
+        particle_diameter_array = np.asarray(particle_diameters_nm, dtype=float)
+
+        polarization_set = PyMieSim.polarization_set.PolarizationSet(
+            angles=np.full(target_size, float(polarization_angle_degree)) * ureg.degree,
+        )
+
+        source_set = PyMieSim.source_set.GaussianSet.build_sequential(
+            target_size=target_size,
+            wavelength=np.full(target_size, float(wavelength_nm)) * ureg.nanometer,
+            polarization=polarization_set,
+            optical_power=np.full(target_size, float(optical_power_watt)) * ureg.watt,
+            numerical_aperture=np.full(target_size, float(source_numerical_aperture)),
+        )
+
+        scatterer_set = PyMieSim.scatterer_set.SphereSet.build_sequential(
+            target_size=target_size,
+            diameter=particle_diameter_array * ureg.nanometer,
+            material=np.full(target_size, complex(float(particle_refractive_index), 0.0), dtype=np.complex128),
+            medium=np.full(target_size, float(medium_refractive_index)),
+        )
+
+        experiment = PyMieSim.Setup(
+            scatterer_set=scatterer_set,
+            source_set=source_set,
+        )
+
+        cross_section_values = experiment.get_sequential("Csca")
+        cross_section_values = np.real_if_close(cross_section_values, tol=1000)
+        cross_section_values = np.asarray(cross_section_values, dtype=float).reshape(-1)
+
+        cross_section_nm2_values = cross_section_values * 1e18
+        return tuple(float(value) for value in cross_section_nm2_values)
 
     @staticmethod
     def compute_modeled_coupling_from_core_shell_dimensions(
@@ -594,10 +667,35 @@ class BackEnd:
             dtype=float,
         )
 
+        expected_cross_section_nm2_values_array = np.asarray(
+            BackEnd._compute_cached_core_shell_cross_section_nm2(
+                core_diameters_nm=tuple(
+                    float(value) for value in core_diameters_nm.tolist()
+                ),
+                shell_thicknesses_nm=tuple(
+                    float(value) for value in shell_thicknesses_nm.tolist()
+                ),
+                wavelength_nm=float(wavelength_nm),
+                source_numerical_aperture=float(source_numerical_aperture),
+                optical_power_watt=float(optical_power_watt),
+                medium_refractive_index=float(medium_refractive_index),
+                core_refractive_index=float(core_refractive_index),
+                shell_refractive_index=float(shell_refractive_index),
+                polarization_angle_degree=float(polarization_angle_degree),
+            ),
+            dtype=float,
+        )
+
         BackEnd._validate_coupling_size(
             coupling_values=expected_coupling_values_array,
             expected_size=core_diameters_nm.size,
             size_context="core shell row",
+        )
+
+        BackEnd._validate_modeled_value_size(
+            values=expected_cross_section_nm2_values_array,
+            expected_size=core_diameters_nm.size,
+            size_context="core shell row cross section",
         )
 
         model_metadata = {
@@ -625,6 +723,7 @@ class BackEnd:
         modeled_coupling_result = ModeledCouplingResult(
             particle_diameters_nm=particle_diameters_nm,
             expected_coupling_values=expected_coupling_values_array,
+            expected_cross_section_nm2_values=expected_cross_section_nm2_values_array,
             model_metadata=model_metadata,
         )
 
@@ -728,6 +827,58 @@ class BackEnd:
             expected_coupling_values.append(float(coupling_values[0]))
 
         return tuple(expected_coupling_values)
+
+    @staticmethod
+    @lru_cache(maxsize=32)
+    def _compute_cached_core_shell_cross_section_nm2(
+        *,
+        core_diameters_nm: tuple[float, ...],
+        shell_thicknesses_nm: tuple[float, ...],
+        wavelength_nm: float,
+        source_numerical_aperture: float,
+        optical_power_watt: float,
+        medium_refractive_index: float,
+        core_refractive_index: float,
+        shell_refractive_index: float,
+        polarization_angle_degree: float,
+    ) -> tuple[float, ...]:
+        """
+        Cache paired core-shell Csca computations converted from m^2 to nm^2.
+        """
+        target_size = len(core_diameters_nm)
+
+        polarization_set = PyMieSim.polarization_set.PolarizationSet(
+            angles=np.full(target_size, float(polarization_angle_degree)) * ureg.degree,
+        )
+
+        source_set = PyMieSim.source_set.GaussianSet.build_sequential(
+            target_size=target_size,
+            wavelength=np.full(target_size, float(wavelength_nm)) * ureg.nanometer,
+            polarization=polarization_set,
+            optical_power=np.full(target_size, float(optical_power_watt)) * ureg.watt,
+            numerical_aperture=np.full(target_size, float(source_numerical_aperture)),
+        )
+
+        scatterer_set = PyMieSim.scatterer_set.CoreShellSet.build_sequential(
+            target_size=target_size,
+            core_diameter=np.asarray(core_diameters_nm, dtype=float) * ureg.nanometer,
+            shell_thickness=np.asarray(shell_thicknesses_nm, dtype=float) * ureg.nanometer,
+            core_material=np.full(target_size, complex(float(core_refractive_index), 0.0), dtype=np.complex128),
+            shell_material=np.full(target_size, complex(float(shell_refractive_index), 0.0), dtype=np.complex128),
+            medium=np.full(target_size, float(medium_refractive_index)),
+        )
+
+        experiment = PyMieSim.Setup(
+            scatterer_set=scatterer_set,
+            source_set=source_set,
+        )
+
+        cross_section_values = experiment.get_sequential("Csca")
+        cross_section_values = np.real_if_close(cross_section_values, tol=1000)
+        cross_section_values = np.asarray(cross_section_values, dtype=float).reshape(-1)
+
+        cross_section_nm2_values = cross_section_values * 1e18
+        return tuple(float(value) for value in cross_section_nm2_values)
 
     @staticmethod
     def parse_particle_diameter_list(particle_diameter_list_text: str) -> np.ndarray:
@@ -1133,6 +1284,25 @@ class BackEnd:
         raise ValueError(
             "Modeled coupling result size does not match the provided "
             f"{size_context} size. Got {coupling_values.size} modeled values "
+            f"for {expected_size} input values."
+        )
+
+    @staticmethod
+    def _validate_modeled_value_size(
+        *,
+        values: np.ndarray,
+        expected_size: int,
+        size_context: str,
+    ) -> None:
+        """
+        Validate that a modeled output has one value per input geometry.
+        """
+        if values.size == expected_size:
+            return
+
+        raise ValueError(
+            "Modeled output size does not match the provided "
+            f"{size_context} size. Got {values.size} modeled values "
             f"for {expected_size} input values."
         )
 

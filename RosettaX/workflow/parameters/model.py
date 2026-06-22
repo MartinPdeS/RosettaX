@@ -268,7 +268,8 @@ def _compute_core_shell_model_for_rows(
     Returns
     -------
     list[dict[str, str]]
-        Updated rows with ``expected_coupling`` populated for valid entries.
+        Updated rows with ``expected_coupling`` and
+        ``expected_cross_section_nm2`` populated for valid entries.
     """
     logger.debug("compute_model_for_rows running in Core/Shell Sphere mode.")
 
@@ -305,10 +306,12 @@ def _compute_core_shell_model_for_rows(
 
         if core_diameter_nm is None or core_diameter_nm <= 0.0:
             updated_rows[row_index]["expected_coupling"] = ""
+            updated_rows[row_index][table.COLUMN_EXPECTED_CROSS_SECTION_NM2] = ""
             continue
 
         if shell_thickness_nm is None or shell_thickness_nm <= 0.0:
             updated_rows[row_index]["expected_coupling"] = ""
+            updated_rows[row_index][table.COLUMN_EXPECTED_CROSS_SECTION_NM2] = ""
             continue
 
         valid_row_indices.append(row_index)
@@ -367,12 +370,34 @@ def _compute_core_shell_model_for_rows(
         )
         return updated_rows
 
-    for row_index, expected_coupling in zip(
-        valid_row_indices,
+    expected_coupling_values = np.asarray(
         modeled_coupling_result.expected_coupling_values,
-        strict=False,
-    ):
-        updated_rows[row_index]["expected_coupling"] = f"{float(expected_coupling):.6g}"
+        dtype=float,
+    ).reshape(-1)
+    expected_cross_section_nm2_values = np.asarray(
+        getattr(
+            modeled_coupling_result,
+            "expected_cross_section_nm2_values",
+            expected_coupling_values,
+        ),
+        dtype=float,
+    ).reshape(-1)
+
+    for value_index, row_index in enumerate(valid_row_indices):
+        expected_coupling_text = _format_modeled_numeric_cell(
+            expected_coupling_values[value_index]
+            if value_index < expected_coupling_values.size
+            else None
+        )
+        expected_cross_section_nm2_text = _format_modeled_numeric_cell(
+            expected_cross_section_nm2_values[value_index]
+            if value_index < expected_cross_section_nm2_values.size
+            else None
+        )
+        updated_rows[row_index]["expected_coupling"] = expected_coupling_text
+        updated_rows[row_index][
+            table.COLUMN_EXPECTED_CROSS_SECTION_NM2
+        ] = expected_cross_section_nm2_text
 
     logger.debug(
         "compute_model_for_rows returning updated core shell rows=%r",
@@ -442,7 +467,8 @@ def _compute_solid_sphere_model_for_rows(
     Returns
     -------
     list[dict[str, str]]
-        Updated rows with ``expected_coupling`` populated for valid entries.
+        Updated rows with ``expected_coupling`` and
+        ``expected_cross_section_nm2`` populated for valid entries.
     """
     logger.debug("compute_model_for_rows running in Solid Sphere mode.")
 
@@ -473,6 +499,7 @@ def _compute_solid_sphere_model_for_rows(
 
         if particle_diameter_nm is None or particle_diameter_nm <= 0.0:
             updated_rows[row_index]["expected_coupling"] = ""
+            updated_rows[row_index][table.COLUMN_EXPECTED_CROSS_SECTION_NM2] = ""
             continue
 
         valid_row_indices.append(row_index)
@@ -526,12 +553,34 @@ def _compute_solid_sphere_model_for_rows(
         )
         return updated_rows
 
-    for row_index, expected_coupling in zip(
-        valid_row_indices,
+    expected_coupling_values = np.asarray(
         modeled_coupling_result.expected_coupling_values,
-        strict=False,
-    ):
-        updated_rows[row_index]["expected_coupling"] = f"{float(expected_coupling):.6g}"
+        dtype=float,
+    ).reshape(-1)
+    expected_cross_section_nm2_values = np.asarray(
+        getattr(
+            modeled_coupling_result,
+            "expected_cross_section_nm2_values",
+            expected_coupling_values,
+        ),
+        dtype=float,
+    ).reshape(-1)
+
+    for value_index, row_index in enumerate(valid_row_indices):
+        expected_coupling_text = _format_modeled_numeric_cell(
+            expected_coupling_values[value_index]
+            if value_index < expected_coupling_values.size
+            else None
+        )
+        expected_cross_section_nm2_text = _format_modeled_numeric_cell(
+            expected_cross_section_nm2_values[value_index]
+            if value_index < expected_cross_section_nm2_values.size
+            else None
+        )
+        updated_rows[row_index]["expected_coupling"] = expected_coupling_text
+        updated_rows[row_index][
+            table.COLUMN_EXPECTED_CROSS_SECTION_NM2
+        ] = expected_cross_section_nm2_text
 
     logger.debug(
         "compute_model_for_rows returning updated solid sphere rows=%r",
@@ -563,3 +612,21 @@ def _normalize_mie_model(mie_model: str) -> str:
         return CORE_SHELL_SPHERE_MODEL_NAME
 
     return SOLID_SPHERE_MODEL_NAME
+
+
+def _format_modeled_numeric_cell(value: Any) -> str:
+    """
+    Format modeled numeric values for table cells.
+    """
+    if value is None:
+        return ""
+
+    try:
+        resolved_value = float(value)
+    except Exception:
+        return ""
+
+    if not np.isfinite(resolved_value):
+        return ""
+
+    return f"{resolved_value:.6g}"

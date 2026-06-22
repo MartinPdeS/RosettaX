@@ -16,17 +16,18 @@ COLUMN_SHELL_THICKNESS_NM = "shell_thickness_nm"
 COLUMN_OUTER_DIAMETER_NM = "outer_diameter_nm"
 COLUMN_MEASURED_PEAK_POSITION = "measured_peak_position"
 COLUMN_EXPECTED_COUPLING = "expected_coupling"
+COLUMN_EXPECTED_CROSS_SECTION_NM2 = "expected_cross_section_nm2"
 
 
 sphere_table_columns = [
     {
-        "name": "Particle diameter [nm]",
-        "id": COLUMN_PARTICLE_DIAMETER_NM,
+        "name": "Measured peak position [a.u.]",
+        "id": COLUMN_MEASURED_PEAK_POSITION,
         "editable": True,
     },
     {
-        "name": "Measured peak position [a.u.]",
-        "id": COLUMN_MEASURED_PEAK_POSITION,
+        "name": "Particle diameter [nm]",
+        "id": COLUMN_PARTICLE_DIAMETER_NM,
         "editable": True,
     },
     {
@@ -34,9 +35,19 @@ sphere_table_columns = [
         "id": COLUMN_EXPECTED_COUPLING,
         "editable": False,
     },
+    {
+        "name": "Cross section [nm^2]",
+        "id": COLUMN_EXPECTED_CROSS_SECTION_NM2,
+        "editable": False,
+    },
 ]
 
 core_shell_table_columns = [
+    {
+        "name": "Measured peak position [a.u.]",
+        "id": COLUMN_MEASURED_PEAK_POSITION,
+        "editable": True,
+    },
     {
         "name": "Core diameter [nm]",
         "id": COLUMN_CORE_DIAMETER_NM,
@@ -53,13 +64,13 @@ core_shell_table_columns = [
         "editable": False,
     },
     {
-        "name": "Measured peak position [a.u.]",
-        "id": COLUMN_MEASURED_PEAK_POSITION,
-        "editable": True,
-    },
-    {
         "name": "Coupling [W]",
         "id": COLUMN_EXPECTED_COUPLING,
+        "editable": False,
+    },
+    {
+        "name": "Cross section [nm^2]",
+        "id": COLUMN_EXPECTED_CROSS_SECTION_NM2,
         "editable": False,
     },
 ]
@@ -133,12 +144,14 @@ def build_empty_row_for_model(
             COLUMN_OUTER_DIAMETER_NM: "",
             COLUMN_MEASURED_PEAK_POSITION: "",
             COLUMN_EXPECTED_COUPLING: "",
+            COLUMN_EXPECTED_CROSS_SECTION_NM2: "",
         }
 
     return {
         COLUMN_PARTICLE_DIAMETER_NM: "",
         COLUMN_MEASURED_PEAK_POSITION: "",
         COLUMN_EXPECTED_COUPLING: "",
+        COLUMN_EXPECTED_CROSS_SECTION_NM2: "",
     }
 
 
@@ -295,6 +308,13 @@ def remap_row_to_core_shell_model(
         )
     )
 
+    expected_cross_section_nm2 = normalize_cell_value(
+        row.get(
+            COLUMN_EXPECTED_CROSS_SECTION_NM2,
+            expected_coupling,
+        )
+    )
+
     if not core_diameter_nm and particle_diameter_nm:
         core_diameter_nm = particle_diameter_nm
 
@@ -307,6 +327,7 @@ def remap_row_to_core_shell_model(
         ),
         COLUMN_MEASURED_PEAK_POSITION: measured_peak_position,
         COLUMN_EXPECTED_COUPLING: expected_coupling,
+        COLUMN_EXPECTED_CROSS_SECTION_NM2: expected_cross_section_nm2,
     }
 
 
@@ -347,6 +368,13 @@ def remap_row_to_solid_sphere_model(
         )
     )
 
+    expected_cross_section_nm2 = normalize_cell_value(
+        row.get(
+            COLUMN_EXPECTED_CROSS_SECTION_NM2,
+            expected_coupling,
+        )
+    )
+
     if not particle_diameter_nm:
         if outer_diameter_nm:
             particle_diameter_nm = outer_diameter_nm
@@ -358,6 +386,7 @@ def remap_row_to_solid_sphere_model(
         COLUMN_PARTICLE_DIAMETER_NM: particle_diameter_nm,
         COLUMN_MEASURED_PEAK_POSITION: measured_peak_position,
         COLUMN_EXPECTED_COUPLING: expected_coupling,
+        COLUMN_EXPECTED_CROSS_SECTION_NM2: expected_cross_section_nm2,
     }
 
 
@@ -429,6 +458,15 @@ def normalize_core_shell_row(
                 COLUMN_EXPECTED_COUPLING,
             )
         ),
+        COLUMN_EXPECTED_CROSS_SECTION_NM2: normalize_cell_value(
+            row.get(
+                COLUMN_EXPECTED_CROSS_SECTION_NM2,
+                row.get(
+                    COLUMN_EXPECTED_COUPLING,
+                    "",
+                ),
+            )
+        ),
     }
 
 
@@ -453,6 +491,15 @@ def normalize_solid_sphere_row(
         COLUMN_EXPECTED_COUPLING: normalize_cell_value(
             row.get(
                 COLUMN_EXPECTED_COUPLING,
+            )
+        ),
+        COLUMN_EXPECTED_CROSS_SECTION_NM2: normalize_cell_value(
+            row.get(
+                COLUMN_EXPECTED_CROSS_SECTION_NM2,
+                row.get(
+                    COLUMN_EXPECTED_COUPLING,
+                    "",
+                ),
             )
         ),
     }
@@ -609,6 +656,7 @@ def populate_core_shell_rows_from_runtime_defaults(
                 ),
                 COLUMN_MEASURED_PEAK_POSITION: "",
                 COLUMN_EXPECTED_COUPLING: "",
+                COLUMN_EXPECTED_CROSS_SECTION_NM2: "",
             }
         )
 
@@ -649,6 +697,7 @@ def populate_solid_sphere_rows_from_runtime_defaults(
                 COLUMN_PARTICLE_DIAMETER_NM: particle_diameter_nm,
                 COLUMN_MEASURED_PEAK_POSITION: "",
                 COLUMN_EXPECTED_COUPLING: "",
+                COLUMN_EXPECTED_CROSS_SECTION_NM2: "",
             }
         )
 

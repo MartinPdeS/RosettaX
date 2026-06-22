@@ -172,9 +172,10 @@ class Test_ScatteringModelConfigurationScattererPresets:
         )
 
         assert [column["id"] for column in columns] == [
-            "particle_diameter_nm",
             "measured_peak_position",
+            "particle_diameter_nm",
             "expected_coupling",
+            "expected_cross_section_nm2",
         ]
         assert [row["particle_diameter_nm"] for row in rows] == [
             '994',
@@ -208,19 +209,22 @@ class Test_ScatteringModelConfigurationScattererPresets:
         )
 
         assert [column["id"] for column in columns] == [
-            "particle_diameter_nm",
             "measured_peak_position",
+            "particle_diameter_nm",
             "expected_coupling",
+            "expected_cross_section_nm2",
         ]
         assert rows[0] == {
             "particle_diameter_nm": "994",
             "measured_peak_position": "12.3",
             "expected_coupling": "45.6",
+            "expected_cross_section_nm2": "45.6",
         }
         assert rows[1] == {
             "particle_diameter_nm": "799",
             "measured_peak_position": "78.9",
             "expected_coupling": "10.11",
+            "expected_cross_section_nm2": "10.11",
         }
 
     def test_rosetta_mix_preset_preserves_measured_peak_column_for_all_overlapping_rows(self):
@@ -353,9 +357,10 @@ class Test_ScatteringCalibrationStandardTable:
         )
 
         assert [column["id"] for column in columns] == [
-            "particle_diameter_nm",
             "measured_peak_position",
+            "particle_diameter_nm",
             "expected_coupling",
+            "expected_cross_section_nm2",
         ]
         assert [row["particle_diameter_nm"] for row in rows] == [
             "994",
@@ -440,19 +445,22 @@ class Test_ScatteringCalibrationStandardTable:
         )
 
         assert [column["id"] for column in columns] == [
-            "particle_diameter_nm",
             "measured_peak_position",
+            "particle_diameter_nm",
             "expected_coupling",
+            "expected_cross_section_nm2",
         ]
         assert rows[0] == {
             "particle_diameter_nm": "994",
             "measured_peak_position": "12.3",
             "expected_coupling": "45.6",
+            "expected_cross_section_nm2": "45.6",
         }
         assert rows[1] == {
             "particle_diameter_nm": "799",
             "measured_peak_position": "78.9",
             "expected_coupling": "10.11",
+            "expected_cross_section_nm2": "10.11",
         }
 
     def test_model_selection_remaps_current_rows_for_custom_preset(self):
@@ -469,11 +477,12 @@ class Test_ScatteringCalibrationStandardTable:
         )
 
         assert [column["id"] for column in columns] == [
+            "measured_peak_position",
             "core_diameter_nm",
             "shell_thickness_nm",
             "outer_diameter_nm",
-            "measured_peak_position",
             "expected_coupling",
+            "expected_cross_section_nm2",
         ]
         assert rows[0] == {
             "core_diameter_nm": "111",
@@ -481,6 +490,7 @@ class Test_ScatteringCalibrationStandardTable:
             "outer_diameter_nm": "",
             "measured_peak_position": "12.3",
             "expected_coupling": "45.6",
+            "expected_cross_section_nm2": "45.6",
         }
 
     def test_clear_measured_peak_positions_preserves_geometry_and_expected_coupling(self):

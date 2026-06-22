@@ -100,13 +100,13 @@ class FluorescenceReferenceTable:
 
     columns: list[dict[str, Any]] = [
         {
-            "name": "Intensity [standard units]",
-            "id": column_calibrated_intensity,
+            "name": "Intensity [a.u.]",
+            "id": column_measured_intensity,
             "editable": True,
         },
         {
-            "name": "Intensity [a.u.]",
-            "id": column_measured_intensity,
+            "name": "Intensity [standard units]",
+            "id": column_calibrated_intensity,
             "editable": True,
         },
     ]

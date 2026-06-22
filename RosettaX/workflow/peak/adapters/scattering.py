@@ -752,12 +752,14 @@ def build_empty_table_row(
             "outer_diameter_nm": "",
             "measured_peak_position": "",
             "expected_coupling": "",
+            "expected_cross_section_nm2": "",
         }
 
     return {
         "particle_diameter_nm": "",
         "measured_peak_position": "",
         "expected_coupling": "",
+        "expected_cross_section_nm2": "",
     }
 
 

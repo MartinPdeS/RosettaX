@@ -475,9 +475,9 @@ class Calibration:
             },
             legend={
                 "x": 0.98,
-                "y": 0.98,
+                "y": 0.02,
                 "xanchor": "right",
-                "yanchor": "top",
+                "yanchor": "bottom",
                 "bgcolor": "rgba(255, 255, 255, 0.65)",
                 "bordercolor": "rgba(0, 0, 0, 0.15)",
                 "borderwidth": 1,

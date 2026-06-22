@@ -318,6 +318,7 @@ class ScatteringCalibrationStandardTable:
             rows=rows,
             column_ids=[
                 parameters.table.COLUMN_EXPECTED_COUPLING,
+                parameters.table.COLUMN_EXPECTED_CROSS_SECTION_NM2,
             ],
         )
 
