@@ -1,13 +1,84 @@
 # -*- coding: utf-8 -*-
 
 
+DESIGN_TOKENS = {
+    "spacing": {
+        "xs": "8px",
+        "sm": "12px",
+        "md": "16px",
+        "lg": "18px",
+        "xl": "24px",
+    },
+    "radius": {
+        "sm": "8px",
+        "md": "12px",
+        "lg": "15px",
+        "pill": "999px",
+    },
+    "shadow": {
+        "soft": "0 0.35rem 0.9rem rgba(0, 0, 0, 0.08)",
+        "none": "none",
+    },
+    "border": {
+        "muted": "1px solid rgba(128, 128, 128, 0.18)",
+        "strong": "1px solid rgba(128, 128, 128, 0.25)",
+    },
+    "typography": {
+        "heading_h2_size": "2rem",
+        "heading_h4_size": "1.25rem",
+        "heading_h5_size": "1.02rem",
+        "section_title_size": "1.02rem",
+        "section_title_weight": "750",
+        "subtitle_size": "0.86rem",
+        "subtitle_weight": "500",
+        "body_size": "0.95rem",
+        "label_weight": "500",
+    },
+}
+
+
+def get_spacing_token(name: str, fallback: str = "16px") -> str:
+    """
+    Resolve a named spacing token.
+    """
+    return DESIGN_TOKENS["spacing"].get(name, fallback)
+
+
+def get_radius_token(name: str, fallback: str = "12px") -> str:
+    """
+    Resolve a named radius token.
+    """
+    return DESIGN_TOKENS["radius"].get(name, fallback)
+
+
+def get_shadow_token(name: str, fallback: str = "none") -> str:
+    """
+    Resolve a named shadow token.
+    """
+    return DESIGN_TOKENS["shadow"].get(name, fallback)
+
+
+def get_border_token(name: str, fallback: str = "1px solid rgba(128, 128, 128, 0.18)") -> str:
+    """
+    Resolve a named border token.
+    """
+    return DESIGN_TOKENS["border"].get(name, fallback)
+
+
+def get_typography_token(name: str, fallback: str = "0.95rem") -> str:
+    """
+    Resolve a named typography token.
+    """
+    return DESIGN_TOKENS["typography"].get(name, fallback)
+
+
 UPLOAD = {
     "width": "100%",
     "minHeight": "64px",
     "lineHeight": "64px",
     "borderWidth": "1px",
     "borderStyle": "dashed",
-    "borderRadius": "12px",
+    "borderRadius": get_radius_token("md"),
     "textAlign": "center",
     "cursor": "pointer",
     "background": "rgba(128, 128, 128, 0.045)",
@@ -17,7 +88,7 @@ UPLOAD = {
 
 CARD = {
     "display": "flex",
-    "gap": "12px",
+    "gap": get_spacing_token("sm"),
     "alignItems": "center",
 }
 
@@ -27,7 +98,7 @@ SIDEBAR = {
     "width": "352px",
     "minWidth": "352px",
     "flexShrink": 0,
-    "padding": "16px",
+    "padding": get_spacing_token("md"),
     "zIndex": 1000,
     "boxSizing": "border-box",
     "alignSelf": "flex-start",
@@ -41,10 +112,10 @@ PAGE = {
     "row": {
         "display": "flex",
         "alignItems": "center",
-        "gap": "10px",
+        "gap": get_spacing_token("sm"),
     },
     "label": {
-        "minWidth": "160px",
+        "minWidth": "180px",
     },
     "card_body_scroll": {
         "maxHeight": "60vh",
@@ -53,7 +124,7 @@ PAGE = {
 }
 
 CONTENT = {
-    "padding": "16px",
+    "padding": get_spacing_token("md"),
     "minHeight": "100vh",
     "boxSizing": "border-box",
     "flex": "1 1 auto",
@@ -167,6 +238,30 @@ PLOTLY_GRAPH_STYLE = {
 }
 
 
+CHART_STYLE = {
+    "font_family": "IBM Plex Sans, Segoe UI, sans-serif",
+    "grid_color": "rgba(120, 120, 120, 0.22)",
+    "grid_width": 1.0,
+    "legend": {
+        "x": 0.98,
+        "y": 0.98,
+        "xanchor": "right",
+        "yanchor": "top",
+        "bgcolor": "rgba(255, 255, 255, 0.68)",
+        "bordercolor": "rgba(0, 0, 0, 0.14)",
+        "borderwidth": 1,
+    },
+    "marker_symbol": "circle",
+    "marker_line_color": "rgba(0, 0, 0, 0.35)",
+    "annotation": {
+        "bgcolor": "rgba(255,255,255,0.68)",
+        "bordercolor": "rgba(0,0,0,0.14)",
+        "borderwidth": 1,
+        "borderpad": 2,
+    },
+}
+
+
 COLOR_SCHEME = {
     "blue": "13, 110, 253",
     "gray": "108, 117, 125",
@@ -208,59 +303,59 @@ SECTION_COLOR_BY_KEY = {
 
 WORKFLOW_SECTION = {
     "card": {
-        "borderRadius": "15px",
+        "borderRadius": get_radius_token("lg"),
         "borderLeft": "5px solid rgba(13, 110, 253, 0.75)",
-        "boxShadow": "0 0.35rem 0.9rem rgba(0, 0, 0, 0.08)",
+        "boxShadow": get_shadow_token("soft"),
         "overflow": "visible",
     },
     "header": {
         "background": "rgba(13, 110, 253, 0.10)",
         "borderBottom": "1px solid rgba(13, 110, 253, 0.20)",
-        "padding": "13px 18px",
-        "borderTopLeftRadius": "15px",
-        "borderTopRightRadius": "15px",
-        "fontWeight": "750",
-        "fontSize": "1.02rem",
+        "padding": f"{get_spacing_token('sm')} {get_spacing_token('lg')}",
+        "borderTopLeftRadius": get_radius_token("lg"),
+        "borderTopRightRadius": get_radius_token("lg"),
+        "fontWeight": get_typography_token("section_title_weight", "750"),
+        "fontSize": get_typography_token("section_title_size", "1.02rem"),
     },
     "body": {
-        "padding": "18px",
+        "padding": get_spacing_token("lg"),
         "overflow": "visible",
     },
     "subtitle": {
-        "fontSize": "0.86rem",
+        "fontSize": get_typography_token("subtitle_size", "0.86rem"),
         "opacity": 0.76,
         "marginTop": "3px",
     },
     "subcard": {
-        "borderRadius": "12px",
+        "borderRadius": get_radius_token("md"),
         "border": "1px solid rgba(13, 110, 253, 0.16)",
         "overflow": "visible",
     },
     "subcard_header": {
         "background": "rgba(13, 110, 253, 0.06)",
         "borderBottom": "1px solid rgba(13, 110, 253, 0.16)",
-        "padding": "12px 16px",
-        "borderTopLeftRadius": "12px",
-        "borderTopRightRadius": "12px",
+        "padding": f"{get_spacing_token('sm')} {get_spacing_token('md')}",
+        "borderTopLeftRadius": get_radius_token("md"),
+        "borderTopRightRadius": get_radius_token("md"),
     },
     "subcard_body": {
-        "padding": "16px",
+        "padding": get_spacing_token("md"),
         "overflow": "visible",
     },
     "action_panel": {
-        "borderRadius": "12px",
+        "borderRadius": get_radius_token("md"),
         "border": "1px solid rgba(13, 110, 253, 0.16)",
         "background": "rgba(13, 110, 253, 0.04)",
         "overflow": "visible",
     },
     "compact_control_box": {
         "display": "inline-flex",
-        "gap": "18px",
+        "gap": get_spacing_token("lg"),
         "alignItems": "center",
         "flexWrap": "wrap",
-        "padding": "8px 10px",
-        "border": "1px solid rgba(128, 128, 128, 0.18)",
-        "borderRadius": "9px",
+        "padding": f"{get_spacing_token('xs')} {get_spacing_token('sm')}",
+        "border": get_border_token("muted"),
+        "borderRadius": get_radius_token("sm"),
         "background": "rgba(128, 128, 128, 0.06)",
     },
     "info_badge": {
@@ -282,8 +377,8 @@ WORKFLOW_SECTION = {
     "title_with_info": {
         "display": "flex",
         "alignItems": "center",
-        "fontWeight": "750",
-        "fontSize": "1.02rem",
+        "fontWeight": get_typography_token("section_title_weight", "750"),
+        "fontSize": get_typography_token("section_title_size", "1.02rem"),
     },
 }
 

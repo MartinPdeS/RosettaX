@@ -9,6 +9,7 @@ import numpy as np
 import plotly.graph_objs as go
 
 from RosettaX.utils import styling
+from RosettaX.utils import plottings
 
 
 @dataclass(frozen=True)
@@ -424,6 +425,15 @@ class Scatter2DGraph:
             tickfont={
                 "size": cls.default_tick_size,
             },
+        )
+
+        plottings.apply_default_visual_style(
+            figure,
+            marker_size=cls.default_marker_size,
+            line_width=2.0,
+            font_size=float(cls.default_font_size),
+            tick_size=float(cls.default_tick_size),
+            show_grid=show_grid,
         )
 
         return figure

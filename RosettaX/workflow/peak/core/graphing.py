@@ -1712,42 +1712,13 @@ class PeakWorkflowGraphBuilder:
 
         show_grid_by_default = self._show_grid_by_default()
 
-        figure.update_layout(
-            font={
-                "size": default_font_size,
-            },
-            legend={
-                "x": 0.99,
-                "y": 0.99,
-                "xanchor": "right",
-                "yanchor": "top",
-                "bgcolor": "rgba(255, 255, 255, 0.72)",
-                "bordercolor": "rgba(0, 0, 0, 0.18)",
-                "borderwidth": 1,
-                "font": {
-                    "size": default_tick_size,
-                },
-            },
-        )
-
-        figure.update_xaxes(
-            tickfont={
-                "size": default_tick_size,
-            },
-            title_font={
-                "size": default_font_size,
-            },
-            showgrid=show_grid_by_default,
-        )
-
-        figure.update_yaxes(
-            tickfont={
-                "size": default_tick_size,
-            },
-            title_font={
-                "size": default_font_size,
-            },
-            showgrid=show_grid_by_default,
+        plottings.apply_default_visual_style(
+            figure,
+            marker_size=default_marker_size,
+            line_width=default_line_width,
+            font_size=default_font_size,
+            tick_size=default_tick_size,
+            show_grid=show_grid_by_default,
         )
 
         for trace in figure.data:

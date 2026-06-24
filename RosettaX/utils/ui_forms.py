@@ -8,6 +8,19 @@ from dash import dcc, html
 from RosettaX.utils import styling
 
 
+def _token_px_to_int(token_value: str, fallback: int) -> int:
+    """
+    Convert a px token value into an integer fallback-safe value.
+    """
+    value = str(token_value).strip()
+    if value.endswith("px"):
+        value = value[:-2]
+    try:
+        return int(float(value))
+    except (TypeError, ValueError):
+        return fallback
+
+
 def normalize_children(
     children: Any,
 ) -> list[Any]:
@@ -218,7 +231,7 @@ def build_workflow_section_card_style(
     *,
     color_name: str = "blue",
     accent_rgba: Optional[str] = None,
-    border_radius_px: int = 15,
+    border_radius_px: int = _token_px_to_int(styling.get_radius_token("lg"), 15),
     style_overrides: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
     """
@@ -231,7 +244,7 @@ def build_workflow_section_card_style(
                 "5px solid "
                 f"{build_rgba_from_color_name(color_name=color_name, accent_rgba=accent_rgba, opacity=0.75)}"
             ),
-            "boxShadow": "0 0.35rem 0.9rem rgba(0, 0, 0, 0.08)",
+            "boxShadow": styling.get_shadow_token("soft"),
             "overflow": "visible",
         },
         style_overrides,
@@ -242,7 +255,7 @@ def build_workflow_section_header_style(
     *,
     color_name: str = "blue",
     accent_rgba: Optional[str] = None,
-    border_radius_px: int = 15,
+    border_radius_px: int = _token_px_to_int(styling.get_radius_token("lg"), 15),
     style_overrides: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
     """
@@ -259,7 +272,7 @@ def build_workflow_section_header_style(
                 "1px solid "
                 f"{build_rgba_from_color_name(color_name=color_name, accent_rgba=accent_rgba, opacity=0.20)}"
             ),
-            "padding": "13px 18px",
+            "padding": f"{styling.get_spacing_token('sm')} {styling.get_spacing_token('lg')}",
             "borderTopLeftRadius": f"{border_radius_px}px",
             "borderTopRightRadius": f"{border_radius_px}px",
             "overflow": "visible",
@@ -277,7 +290,7 @@ def build_workflow_section_body_style(
     """
     return styling.merge_style(
         {
-            "padding": "18px",
+            "padding": styling.get_spacing_token("lg"),
             "overflow": "visible",
         },
         style_overrides,
@@ -286,9 +299,9 @@ def build_workflow_section_body_style(
 
 def build_workflow_section_subtitle_style(
     *,
-    font_size: str = "0.86rem",
+    font_size: str = styling.get_typography_token("subtitle_size", "0.86rem"),
     opacity: float = 0.76,
-    margin_top_px: int = 3,
+    margin_top_px: int = _token_px_to_int(styling.get_spacing_token("xs"), 8),
     style_overrides: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
     """
@@ -299,6 +312,7 @@ def build_workflow_section_subtitle_style(
             "fontSize": font_size,
             "opacity": opacity,
             "marginTop": f"{int(margin_top_px)}px",
+            "fontWeight": styling.get_typography_token("subtitle_weight", "500"),
         },
         style_overrides,
     )
@@ -309,7 +323,7 @@ def build_workflow_panel_style(
     color_name: str = "blue",
     accent_rgba: Optional[str] = None,
     background: Optional[str] = None,
-    border_radius_px: int = 12,
+    border_radius_px: int = _token_px_to_int(styling.get_radius_token("md"), 12),
     style_overrides: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
     """
@@ -335,7 +349,7 @@ def build_workflow_panel_style(
 
 def build_workflow_panel_body_style(
     *,
-    padding: str = "16px",
+    padding: str = styling.get_spacing_token("md", "16px"),
     style_overrides: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
     """
@@ -354,7 +368,7 @@ def build_workflow_subpanel_card_style(
     *,
     color_name: str = "blue",
     accent_rgba: Optional[str] = None,
-    border_radius_px: int = 12,
+    border_radius_px: int = _token_px_to_int(styling.get_radius_token("md"), 12),
     style_overrides: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
     """
@@ -372,7 +386,7 @@ def build_workflow_subpanel_header_style(
     *,
     color_name: str = "blue",
     accent_rgba: Optional[str] = None,
-    border_radius_px: int = 12,
+    border_radius_px: int = _token_px_to_int(styling.get_radius_token("md"), 12),
     style_overrides: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
     """
@@ -389,7 +403,7 @@ def build_workflow_subpanel_header_style(
                 "1px solid "
                 f"{build_rgba_from_color_name(color_name=color_name, accent_rgba=accent_rgba, opacity=0.16)}"
             ),
-            "padding": "12px 16px",
+            "padding": f"{styling.get_spacing_token('sm')} {styling.get_spacing_token('md')}",
             "borderTopLeftRadius": f"{border_radius_px}px",
             "borderTopRightRadius": f"{border_radius_px}px",
             "overflow": "visible",
@@ -423,10 +437,11 @@ def build_metric_box_style(
     """
     return styling.merge_style(
         {
-            "padding": "8px 10px",
-            "border": "1px solid rgba(128, 128, 128, 0.25)",
-            "borderRadius": "8px",
+            "padding": f"{styling.get_spacing_token('xs')} {styling.get_spacing_token('sm')}",
+            "border": styling.get_border_token("strong"),
+            "borderRadius": styling.get_radius_token("sm"),
             "background": "rgba(128, 128, 128, 0.08)",
+            "fontSize": styling.get_typography_token("body_size", "0.95rem"),
         },
         style_overrides,
     )
@@ -440,9 +455,9 @@ def apply_workflow_section_card_style(
     header_background: Optional[str] = None,
     header_border: Optional[str] = None,
     left_border: Optional[str] = None,
-    border_radius_px: int = 15,
-    header_font_weight: str = "750",
-    header_font_size: str = "1.02rem",
+    border_radius_px: int = _token_px_to_int(styling.get_radius_token("lg"), 15),
+    header_font_weight: str = styling.get_typography_token("section_title_weight", "750"),
+    header_font_size: str = styling.get_typography_token("section_title_size", "1.02rem"),
 ) -> Any:
     """
     Apply the shared RosettaX workflow section card styling to an existing card.
@@ -500,10 +515,10 @@ def build_labeled_row(
     label: str,
     component: Any,
     label_width_px: int = 320,
-    gap_px: int = 12,
-    margin_bottom_px: int = 10,
+    gap_px: int = _token_px_to_int(styling.get_spacing_token("sm"), 12),
+    margin_bottom_px: int = _token_px_to_int(styling.get_spacing_token("sm"), 12),
     align_items: str = "center",
-    label_font_weight: str = "500",
+    label_font_weight: str = styling.get_typography_token("label_weight", "500"),
     label_margin_bottom: str = "0",
     component_flex: str = "1",
     component_display: Optional[str] = None,
@@ -522,6 +537,7 @@ def build_labeled_row(
             "gap": f"{int(gap_px)}px",
             "marginBottom": f"{int(margin_bottom_px)}px",
             "overflow": "visible",
+            "fontSize": styling.get_typography_token("body_size", "0.95rem"),
         },
         row_style_overrides,
     )
@@ -567,7 +583,7 @@ def build_inline_row(
     control: Any,
     label_width_px: int = 260,
     margin_top: bool = True,
-    margin_top_px: int = 10,
+    margin_top_px: int = _token_px_to_int(styling.get_spacing_token("sm"), 12),
     row_width: str = "100%",
     align_items: str = "center",
     label_font_weight: int | str = 500,
@@ -598,6 +614,7 @@ def build_inline_row(
             "width": f"{int(label_width_px)}px",
             "minWidth": f"{int(label_width_px)}px",
             "fontWeight": label_font_weight,
+            "fontSize": styling.get_typography_token("body_size", "0.95rem"),
         },
         label_style_overrides,
     )
@@ -628,7 +645,7 @@ def build_section_intro(
     title_component: str = "H5",
     title_style_overrides: Optional[dict[str, Any]] = None,
     description_opacity: float = 0.85,
-    description_margin_bottom_px: int = 10,
+    description_margin_bottom_px: int = _token_px_to_int(styling.get_spacing_token("sm"), 12),
     description_style_overrides: Optional[dict[str, Any]] = None,
     container_style: Optional[dict[str, Any]] = None,
 ) -> html.Div:
@@ -646,13 +663,13 @@ def build_section_intro(
     )
 
     default_title_style = {
-        "marginBottom": "8px",
+        "marginBottom": styling.get_spacing_token("xs"),
     }
 
     if str(title_component).upper() == "H2":
         default_title_style.update(
             {
-                "fontSize": "2rem",
+                "fontSize": styling.get_typography_token("heading_h2_size", "2rem"),
                 "fontWeight": "600",
                 "lineHeight": "1.2",
             }
@@ -661,6 +678,7 @@ def build_section_intro(
     elif str(title_component).upper() == "H4":
         default_title_style.update(
             {
+                "fontSize": styling.get_typography_token("heading_h4_size", "1.25rem"),
                 "fontWeight": "600",
                 "lineHeight": "1.25",
             }
@@ -671,6 +689,7 @@ def build_section_intro(
             {
                 "fontWeight": "600",
                 "lineHeight": "1.3",
+                "fontSize": styling.get_typography_token("heading_h5_size", "1.02rem"),
             }
         )
 

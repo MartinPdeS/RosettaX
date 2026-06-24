@@ -39,6 +39,9 @@ def build_main_content() -> html.Div:
                 dash.page_container,
                 style={
                     "flex": "1 0 auto",
+                    "display": "flex",
+                    "flexDirection": "column",
+                    "gap": styling.get_spacing_token("xl"),
                 },
             ),
             build_application_footer(),
@@ -48,7 +51,7 @@ def build_main_content() -> html.Div:
             **styling.CONTENT,
             "display": "flex",
             "flexDirection": "column",
-            "gap": "12px",
+            "gap": styling.get_spacing_token("xl"),
         },
     )
 
@@ -74,8 +77,8 @@ def build_application_footer() -> html.Footer:
             "fontSize": "0.88rem",
             "opacity": 0.72,
             "textAlign": "center",
-            "paddingTop": "8px",
-            "paddingBottom": "6px",
+            "paddingTop": styling.get_spacing_token("sm"),
+            "paddingBottom": styling.get_spacing_token("xs"),
         },
     )
 
@@ -172,7 +175,6 @@ def build_application_layout() -> html.Div:
     sidebar_content = build_sidebar_content()
     theme_link = build_theme_link()
     stores = build_stores()
-
     layout = html.Div(
         [
             dcc.Location(id="url"),
@@ -189,7 +191,8 @@ def build_application_layout() -> html.Div:
                     "minHeight": "100vh",
                 },
             ),
-        ]
+        ],
+        className="app-typography-hierarchy",
     )
 
     logger.debug("Application layout built successfully")

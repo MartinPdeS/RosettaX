@@ -9,6 +9,7 @@ import plotly.graph_objs as go
 
 from RosettaX.utils.io import load_signal
 from RosettaX.utils.runtime_config import RuntimeConfig
+from RosettaX.utils import styling
 
 logger = logging.getLogger(__name__)
 
@@ -545,22 +546,24 @@ def apply_calibration_chart_style(
         resolved_annotation_text_position = "top center"
 
     legend_y = 0.98 if resolved_legend_vertical_anchor == "top" else 0.02
+    marker_line_width = max(0.8, float(line_width) * 0.35)
 
     layout_kwargs: dict[str, Any] = {
         "autosize": True,
         "height": None,
         "margin": dict(margin),
         "font": {
+            "family": styling.CHART_STYLE["font_family"],
             "size": float(font_size),
         },
         "legend": {
-            "x": 0.98,
+            "x": styling.CHART_STYLE["legend"]["x"],
             "y": legend_y,
-            "xanchor": "right",
+            "xanchor": styling.CHART_STYLE["legend"]["xanchor"],
             "yanchor": resolved_legend_vertical_anchor,
-            "bgcolor": "rgba(255,255,255,0.65)",
-            "bordercolor": "rgba(0,0,0,0.15)",
-            "borderwidth": 1,
+            "bgcolor": styling.CHART_STYLE["legend"]["bgcolor"],
+            "bordercolor": styling.CHART_STYLE["legend"]["bordercolor"],
+            "borderwidth": styling.CHART_STYLE["legend"]["borderwidth"],
             "font": {
                 "size": float(tick_size),
             },
@@ -576,6 +579,9 @@ def apply_calibration_chart_style(
         automargin=False,
         title_standoff=10,
         showgrid=bool(show_grid),
+        gridcolor=styling.CHART_STYLE["grid_color"],
+        gridwidth=styling.CHART_STYLE["grid_width"],
+        zeroline=False,
         title_font={"size": float(font_size)},
         tickfont={"size": float(tick_size)},
     )
@@ -583,6 +589,9 @@ def apply_calibration_chart_style(
         automargin=False,
         title_standoff=10,
         showgrid=bool(show_grid),
+        gridcolor=styling.CHART_STYLE["grid_color"],
+        gridwidth=styling.CHART_STYLE["grid_width"],
+        zeroline=False,
         title_font={"size": float(font_size)},
         tickfont={"size": float(tick_size)},
     )
@@ -593,6 +602,11 @@ def apply_calibration_chart_style(
             try:
                 marker.size = float(marker_size)
                 marker.opacity = float(marker_opacity)
+                marker.symbol = styling.CHART_STYLE["marker_symbol"]
+                marker.line = {
+                    "width": marker_line_width,
+                    "color": styling.CHART_STYLE["marker_line_color"],
+                }
             except (AttributeError, TypeError, ValueError):
                 logger.debug(
                     "Could not apply marker defaults to trace_type=%s",
@@ -627,7 +641,24 @@ def apply_calibration_chart_style(
             annotation_json = annotation.to_plotly_json()
             annotation_font = dict(annotation_json.get("font", {}))
             annotation_font["size"] = float(font_size)
+            annotation_font["family"] = styling.CHART_STYLE["font_family"]
             annotation_json["font"] = annotation_font
+            annotation_json.setdefault(
+                "bgcolor",
+                styling.CHART_STYLE["annotation"]["bgcolor"],
+            )
+            annotation_json.setdefault(
+                "bordercolor",
+                styling.CHART_STYLE["annotation"]["bordercolor"],
+            )
+            annotation_json.setdefault(
+                "borderwidth",
+                styling.CHART_STYLE["annotation"]["borderwidth"],
+            )
+            annotation_json.setdefault(
+                "borderpad",
+                styling.CHART_STYLE["annotation"]["borderpad"],
+            )
             updated_annotations.append(annotation_json)
         fig.update_layout(annotations=updated_annotations)
 
@@ -670,12 +701,18 @@ def apply_default_visual_style(
     resolved_line_width = float(line_width)
     resolved_font_size = float(font_size)
     resolved_tick_size = float(tick_size)
+    marker_line_width = max(0.8, resolved_line_width * 0.35)
 
     for trace in fig.data:
         marker = getattr(trace, "marker", None)
         if marker is not None:
             try:
                 marker.size = resolved_marker_size
+                marker.symbol = styling.CHART_STYLE["marker_symbol"]
+                marker.line = {
+                    "width": marker_line_width,
+                    "color": styling.CHART_STYLE["marker_line_color"],
+                }
             except (AttributeError, TypeError, ValueError):
                 logger.debug(
                     "Could not apply marker size to trace_type=%s",
@@ -711,7 +748,24 @@ def apply_default_visual_style(
             annotation_json = annotation.to_plotly_json()
             annotation_font = dict(annotation_json.get("font", {}))
             annotation_font["size"] = resolved_font_size
+            annotation_font["family"] = styling.CHART_STYLE["font_family"]
             annotation_json["font"] = annotation_font
+            annotation_json.setdefault(
+                "bgcolor",
+                styling.CHART_STYLE["annotation"]["bgcolor"],
+            )
+            annotation_json.setdefault(
+                "bordercolor",
+                styling.CHART_STYLE["annotation"]["bordercolor"],
+            )
+            annotation_json.setdefault(
+                "borderwidth",
+                styling.CHART_STYLE["annotation"]["borderwidth"],
+            )
+            annotation_json.setdefault(
+                "borderpad",
+                styling.CHART_STYLE["annotation"]["borderpad"],
+            )
             updated_annotations.append(annotation_json)
 
         fig.update_layout(annotations=updated_annotations)
@@ -724,18 +778,30 @@ def apply_default_visual_style(
         current_title_text = fig.layout.title.text
 
     fig.update_layout(
-        font={"size": resolved_font_size},
-        legend={"font": {"size": resolved_font_size}},
+        font={
+            "size": resolved_font_size,
+            "family": styling.CHART_STYLE["font_family"],
+        },
+        legend={
+            **styling.CHART_STYLE["legend"],
+            "font": {"size": resolved_font_size},
+        },
         title={"text": current_title_text, "font": {"size": resolved_font_size}},
     )
 
     fig.update_xaxes(
         showgrid=bool(show_grid),
+        gridcolor=styling.CHART_STYLE["grid_color"],
+        gridwidth=styling.CHART_STYLE["grid_width"],
+        zeroline=False,
         title_font={"size": resolved_font_size},
         tickfont={"size": resolved_tick_size},
     )
     fig.update_yaxes(
         showgrid=bool(show_grid),
+        gridcolor=styling.CHART_STYLE["grid_color"],
+        gridwidth=styling.CHART_STYLE["grid_width"],
+        zeroline=False,
         title_font={"size": resolved_font_size},
         tickfont={"size": resolved_tick_size},
     )

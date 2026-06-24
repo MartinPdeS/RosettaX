@@ -12,6 +12,7 @@ from RosettaX.utils.browser_profiles import (
     BROWSER_PROFILES_STORE_ID,
     BrowserProfileLibrary,
 )
+from RosettaX.utils import styling, ui_forms
 
 
 logger = logging.getLogger(__name__)
@@ -56,7 +57,12 @@ class DeleteProfile:
 
         return dbc.Card(
             [
-                dbc.CardHeader("3. Delete settings profile"),
+                dbc.CardHeader(
+                    "3. Delete settings profile",
+                    style=ui_forms.build_workflow_section_header_style(
+                        color_name=styling.get_workflow_section_color(3),
+                    ),
+                ),
                 dbc.CardBody(
                     [
                         html.P(
@@ -74,10 +80,17 @@ class DeleteProfile:
                             },
                         ),
                     ],
-                    style=self.page.style["card_body_scroll"],
+                    style=ui_forms.build_workflow_section_body_style(
+                        style_overrides=self.page.style["card_body_scroll"],
+                    ),
                 ),
             ],
-            className="mb-4",
+            style={
+                **ui_forms.build_workflow_section_card_style(
+                    color_name=styling.get_workflow_section_color(3),
+                ),
+                "marginBottom": "16px",
+            },
         )
 
     def _build_delete_profile_controls(self) -> html.Div:

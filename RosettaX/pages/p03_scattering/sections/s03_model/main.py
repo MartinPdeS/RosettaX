@@ -16,6 +16,17 @@ logger = logging.getLogger(__name__)
 
 
 DETECTOR_NUMERICAL_APERTURE_EPSILON = 1e-6
+FIELD_LABEL_STYLE_OVERRIDES = {
+    "fontSize": styling.get_typography_token("subtitle_size", "0.86rem"),
+    "fontWeight": styling.get_typography_token("label_weight", "500"),
+    "letterSpacing": "0.006em",
+    "opacity": 0.9,
+}
+SECTION_TITLE_STYLE_OVERRIDES = {
+    "fontSize": "1.14rem",
+    "fontWeight": "780",
+    "letterSpacing": "-0.01em",
+}
 
 
 class Model:
@@ -106,6 +117,7 @@ class Model:
                 "used for scattering calibration."
             ),
             color_name=self.card_color,
+            title_style_overrides=SECTION_TITLE_STYLE_OVERRIDES,
         )
 
     def _build_collapse(self) -> dbc.Collapse:
@@ -131,7 +143,7 @@ class Model:
                     ],
                     style={
                         "display": "flex",
-                        "gap": "24px",
+                        "gap": "28px",
                         "alignItems": "flex-start",
                         "width": "100%",
                         "flexWrap": "wrap",
@@ -176,7 +188,7 @@ class Model:
                     style={
                         "display": "flex",
                         "alignItems": "center",
-                        "marginBottom": "10px",
+                        "marginBottom": styling.get_spacing_token("xs"),
                     },
                 ),
                 ui_forms.build_inline_row(
@@ -270,6 +282,8 @@ class Model:
                     ),
                     label_width_px=170,
                     margin_top=True,
+                    margin_top_px=8,
+                    label_style_overrides=FIELD_LABEL_STYLE_OVERRIDES,
                     row_style_overrides={
                         "overflow": "visible",
                     },
@@ -349,10 +363,9 @@ class Model:
                         ),
                     ],
                     id=self.ids.detector_configuration_custom_values_container,
-                    style={
-                        "display": "none",
-                        "overflow": "visible",
-                    },
+                    style=self._build_detector_configuration_custom_values_style(
+                        is_visible=False,
+                    ),
                 ),
                 dbc.Alert(
                     "",
@@ -371,6 +384,9 @@ class Model:
             style={
                 "flex": "1 1 520px",
                 "minWidth": "480px",
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": styling.get_spacing_token("xs"),
                 "overflow": "visible",
             },
         )
@@ -393,7 +409,8 @@ class Model:
                             "final Mie coupling curve."
                         ),
                         title_style_overrides={
-                            "fontSize": "0.95rem",
+                            "fontSize": "1.02rem",
+                            "fontWeight": "700",
                         },
                     ),
                     style={
@@ -586,7 +603,7 @@ class Model:
             style={
                 "display": "flex",
                 "flexDirection": "column",
-                "gap": "12px",
+                "gap": styling.get_spacing_token("xs"),
                 "overflow": "visible",
             },
         )
@@ -602,7 +619,7 @@ class Model:
         return {
             "display": "flex" if is_visible else "none",
             "flexDirection": "column",
-            "gap": "12px",
+            "gap": styling.get_spacing_token("xs"),
             "overflow": "visible",
         }
 
@@ -612,7 +629,9 @@ class Model:
         is_visible: bool,
     ) -> dict[str, str]:
         return {
-            "display": "block" if is_visible else "none",
+            "display": "flex" if is_visible else "none",
+            "flexDirection": "column",
+            "gap": styling.get_spacing_token("xs"),
             "overflow": "visible",
         }
 
@@ -624,7 +643,7 @@ class Model:
         return {
             "display": "flex" if is_visible else "none",
             "flexDirection": "column",
-            "gap": "12px",
+            "gap": styling.get_spacing_token("xs"),
             "overflow": "visible",
         }
 
@@ -740,6 +759,8 @@ class Model:
                     "width": f"{width_px}px",
                 },
             ),
+            margin_top_px=8,
+            label_style_overrides=FIELD_LABEL_STYLE_OVERRIDES,
             row_style_overrides={
                 "overflow": "visible",
             },
@@ -804,6 +825,8 @@ class Model:
                     "overflow": "visible",
                 },
             ),
+            margin_top_px=8,
+            label_style_overrides=FIELD_LABEL_STYLE_OVERRIDES,
             row_style_overrides={
                 "overflow": "visible",
             },
