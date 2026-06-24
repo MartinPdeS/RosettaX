@@ -102,6 +102,27 @@ class RosettaXApplication:
             suppress_callback_exceptions=True,
         )
 
+        self.app.index_string = """
+<!DOCTYPE html>
+<html>
+    <head>
+        {%metas%}
+        <title>{%title%}</title>
+        <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg?v=2">
+        <link rel="shortcut icon" href="/assets/favicon.svg?v=2">
+        {%css%}
+    </head>
+    <body>
+        {%app_entry%}
+        <footer>
+            {%config%}
+            {%scripts%}
+            {%renderer%}
+        </footer>
+    </body>
+</html>
+"""
+
         self.app.server.config["MAX_CONTENT_LENGTH"] = self.max_upload_bytes
         self.app.server.config["ROSETTAX_MAX_UPLOAD_BYTES"] = self.max_upload_bytes
 
