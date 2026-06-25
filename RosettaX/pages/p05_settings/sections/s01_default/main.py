@@ -53,7 +53,6 @@ class DefaultProfile:
 
         return html.Div(
             [
-                self._build_hero_section(),
                 self._build_vertical_spacer(),
                 self._build_profile_controls_card(),
                 self._build_vertical_spacer(),
@@ -66,32 +65,6 @@ class DefaultProfile:
             style={
                 "display": "flex",
                 "flexDirection": "column",
-            },
-        )
-
-    def _build_hero_section(self) -> dbc.Card:
-        """
-        Build the page introduction card.
-        """
-        return dbc.Card(
-            dbc.CardBody(
-                [
-                    ui_forms.build_section_intro(
-                        title="Default values by page",
-                        title_component="H2",
-                        description=(
-                            "Define startup defaults grouped by page so each profile "
-                            "captures fluorescence, scattering, apply-calibration, "
-                            "and miscellaneous behavior in one place."
-                        ),
-                    ),
-                ],
-                style={
-                    "padding": "22px 24px",
-                },
-            ),
-            style={
-                "borderRadius": "14px",
             },
         )
 
