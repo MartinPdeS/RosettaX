@@ -37,6 +37,17 @@ class CrossCalibrationPage:
                             "multi-channel interpretation."
                         ),
                     ),
+                    dbc.Alert(
+                        [
+                            html.Strong("Under construction: "),
+                            "this workflow is still being built and some controls or outputs may change.",
+                        ],
+                        color="warning",
+                        className="mb-3",
+                        style={
+                            "marginBottom": "14px",
+                        },
+                    ),
                     dbc.Row(
                         [
                             dbc.Col(
