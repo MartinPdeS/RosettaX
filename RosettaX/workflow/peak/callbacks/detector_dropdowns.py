@@ -90,6 +90,10 @@ def register_detector_dropdown_callbacks(
         ):
             # Keep detector dropdown outputs stable to avoid emitting synthetic
             # detector-change events when unrelated page state updates occur.
-            return dash.no_update, dash.no_update
+            no_update_count = len(detector_dropdown_ids or [])
+            return (
+                [dash.no_update] * no_update_count,
+                [dash.no_update] * no_update_count,
+            )
 
         return resolved_options, resolved_values

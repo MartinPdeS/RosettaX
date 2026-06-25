@@ -18,7 +18,6 @@ def build_page_layout(page, sections) -> dash.html.Div:
             ),
             dash.html.Div(
                 [
-                    dash.html.Br(),
                     *[
                         section.get_layout()
                         for section in sections
