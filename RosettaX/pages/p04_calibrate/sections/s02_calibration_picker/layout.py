@@ -103,6 +103,12 @@ class CalibrationPickerLayout:
                         "height": "18px",
                     },
                 ),
+                self._build_calibration_preview_card(),
+                dash.html.Div(
+                    style={
+                        "height": "18px",
+                    },
+                ),
                 self._build_scattering_target_model_section(),
             ],
             style=ui_forms.build_workflow_section_body_style(),
@@ -193,6 +199,58 @@ class CalibrationPickerLayout:
             style={
                 "marginBottom": "0px",
                 "borderRadius": "10px",
+            },
+        )
+
+    def _build_calibration_preview_card(self) -> dash.html.Div:
+        """
+        Build calibration preview card showing key metadata when loaded.
+        """
+        color_name = "blue"
+
+        return dash.html.Div(
+            dbc.Card(
+                [
+                    dbc.CardHeader(
+                        "Calibration preview",
+                        style={
+                            "fontWeight": "700",
+                            "fontSize": "0.95rem",
+                            "background": ui_forms.build_rgba_from_color_name(
+                                color_name=color_name,
+                                opacity=0.10,
+                            ),
+                            "borderBottom": f"1px solid {ui_forms.build_rgba_from_color_name(color_name=color_name, opacity=0.25)}",
+                            "padding": "11px 15px",
+                            "borderTopLeftRadius": "12px",
+                            "borderTopRightRadius": "12px",
+                        },
+                    ),
+                    dbc.CardBody(
+                        dash.html.Div(
+                            id=self.page.ids.CalibrationPicker.preview_content,
+                            style={
+                                "display": "grid",
+                                "gridTemplateColumns": "repeat(auto-fit, minmax(200px, 1fr))",
+                                "gap": "16px",
+                                "alignItems": "start",
+                            },
+                        ),
+                        style={
+                            "padding": "14px",
+                        },
+                    ),
+                ],
+                style={
+                    "borderRadius": "12px",
+                    "border": "1px solid rgba(0, 0, 0, 0.08)",
+                    "background": "rgba(255, 255, 255, 0.5)",
+                    "overflow": "visible",
+                },
+            ),
+            id=self.page.ids.CalibrationPicker.preview_container,
+            style={
+                "display": "none",
             },
         )
 

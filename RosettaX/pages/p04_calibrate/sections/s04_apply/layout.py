@@ -220,7 +220,6 @@ class ApplyLayout:
                     n_clicks=0,
                     color="secondary",
                     outline=True,
-                    disabled=True,
                 ),
                 ui_forms.build_info_badge(
                     tooltip_target_id=self.report_button_tooltip_target_id,

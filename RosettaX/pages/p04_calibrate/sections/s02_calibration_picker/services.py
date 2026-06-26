@@ -396,3 +396,105 @@ def build_target_mie_relation_figure(
     )
 
     return figure
+
+
+def build_preview_items(
+    calibration_summary: dict[str, Any],
+) -> list[Any]:
+    """
+    Build preview information items from calibration summary.
+
+    Returns a list of HTML divs showing key calibration metadata.
+    """
+    import dash_bootstrap_components as dbc
+    import dash.html as html
+
+    items = []
+
+    # Calibration type
+    cal_type = calibration_summary.get("calibration_type", "").upper()
+    if cal_type:
+        items.append(
+            _build_preview_info_block(
+                label="Calibration type",
+                value=cal_type,
+            )
+        )
+
+    # Source/measured channel
+    source_ch = calibration_summary.get("source_channel", "").strip()
+    if source_ch:
+        items.append(
+            _build_preview_info_block(
+                label="Channel",
+                value=source_ch,
+            )
+        )
+
+    # Output quantity (for scattering)
+    output_qty = calibration_summary.get("output_quantity", "").strip()
+    if output_qty:
+        items.append(
+            _build_preview_info_block(
+                label="Output quantity",
+                value=output_qty,
+            )
+        )
+
+    # File name
+    file_name = calibration_summary.get("file_name", "").strip()
+    if file_name:
+        items.append(
+            _build_preview_info_block(
+                label="File",
+                value=file_name,
+                truncate=True,
+            )
+        )
+
+    return items
+
+
+def _build_preview_info_block(
+    *,
+    label: str,
+    value: str,
+    truncate: bool = False,
+) -> Any:
+    """
+    Build a single preview info block.
+    """
+    import dash.html as html
+
+    return html.Div(
+        [
+            html.Div(
+                label,
+                style={
+                    "fontSize": "0.78rem",
+                    "fontWeight": "600",
+                    "opacity": 0.72,
+                    "textTransform": "uppercase",
+                    "letterSpacing": "0.5px",
+                    "marginBottom": "4px",
+                },
+            ),
+            html.Div(
+                value,
+                style={
+                    "fontSize": "0.9rem",
+                    "fontWeight": "500",
+                    "whiteSpace": "nowrap" if truncate else "normal",
+                    "overflow": "hidden" if truncate else "visible",
+                    "textOverflow": "ellipsis" if truncate else "clip",
+                },
+                title=value if truncate else None,
+            ),
+        ],
+        style={
+            "padding": "8px",
+            "background": "rgba(0, 0, 0, 0.02)",
+            "borderRadius": "8px",
+            "borderLeft": "3px solid rgba(0, 123, 255, 0.4)",
+        },
+    )

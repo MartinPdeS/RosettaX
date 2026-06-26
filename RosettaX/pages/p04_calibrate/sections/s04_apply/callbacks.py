@@ -433,6 +433,10 @@ class ApplyCallbacks:
                 "data",
             ),
             dash.State(
+                self.page.ids.CalibrationPicker.target_model_preset,
+                "value",
+            ),
+            dash.State(
                 self.page.ids.CalibrationPicker.target_mie_model,
                 "value",
             ),
@@ -487,6 +491,7 @@ class ApplyCallbacks:
             uploaded_fcs_path: Any,
             export_columns: Any,
             selected_calibration_summary: Any,
+            target_model_preset: Any,
             target_mie_model: Any,
             target_medium_refractive_index: Any,
             target_particle_refractive_index: Any,
@@ -514,6 +519,7 @@ class ApplyCallbacks:
                     uploaded_fcs_path=uploaded_fcs_path,
                     export_columns=export_columns,
                     selected_calibration_summary=selected_calibration_summary,
+                    target_model_preset=target_model_preset,
                     target_mie_model=target_mie_model,
                     target_medium_refractive_index=target_medium_refractive_index,
                     target_particle_refractive_index=target_particle_refractive_index,
@@ -571,6 +577,10 @@ class ApplyCallbacks:
                 "data",
             ),
             dash.State(
+                self.page.ids.CalibrationPicker.target_model_preset,
+                "value",
+            ),
+            dash.State(
                 self.page.ids.CalibrationPicker.target_mie_model,
                 "value",
             ),
@@ -626,6 +636,7 @@ class ApplyCallbacks:
             uploaded_fcs_path: Any,
             export_columns: Any,
             selected_calibration_summary: Any,
+            target_model_preset: Any,
             target_mie_model: Any,
             target_medium_refractive_index: Any,
             target_particle_refractive_index: Any,
@@ -657,6 +668,7 @@ class ApplyCallbacks:
                     uploaded_fcs_path=uploaded_fcs_path,
                     export_columns=export_columns,
                     selected_calibration_summary=selected_calibration_summary,
+                    target_model_preset=target_model_preset,
                     target_mie_model=target_mie_model,
                     target_medium_refractive_index=target_medium_refractive_index,
                     target_particle_refractive_index=target_particle_refractive_index,

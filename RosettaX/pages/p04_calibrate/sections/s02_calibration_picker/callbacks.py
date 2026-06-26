@@ -37,6 +37,7 @@ class CalibrationPickerCallbacks:
         logger.debug("Registering CalibrationPicker callbacks.")
 
         self._register_calibration_upload_callback()
+        self._register_calibration_preview_callback()
         self._register_scattering_target_model_visibility_callback()
         self._register_target_model_preset_runtime_sync_callback()
         self._register_target_model_preset_callback()
@@ -498,6 +499,39 @@ class CalibrationPickerCallbacks:
                     f"Failed to load calibration JSON: {type(exc).__name__}: {exc}",
                     "danger",
                 )
+
+    def _register_calibration_preview_callback(self) -> None:
+        """
+        Register callback to populate and display calibration preview.
+        """
+
+        @dash.callback(
+            dash.Output(
+                self.page.ids.CalibrationPicker.preview_container,
+                "style",
+            ),
+            dash.Output(
+                self.page.ids.CalibrationPicker.preview_content,
+                "children",
+            ),
+            dash.Input(
+                self.page.ids.Stores.selected_calibration_summary_store,
+                "data",
+            ),
+            prevent_initial_call=False,
+        )
+        def update_preview(
+            calibration_summary: Optional[dict[str, Any]],
+        ) -> tuple[dict[str, Any], Any]:
+            if not calibration_summary or not calibration_summary.get("calibration_type"):
+                return {"display": "none"}, None
+
+            preview_items = services.build_preview_items(calibration_summary)
+
+            return (
+                {"display": "block"},
+                preview_items,
+            )
 
     def _register_scattering_target_model_visibility_callback(self) -> None:
         """

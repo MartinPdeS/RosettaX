@@ -104,6 +104,9 @@ class Ids:
             f"{page_name}-calibration-picker-target-mie-relation-status"
         )
 
+        preview_container = f"{page_name}-calibration-picker-preview-container"
+        preview_content = f"{page_name}-calibration-picker-preview-content"
+
     class FilePicker:
         upload = f"{page_name}-upload"
         upload_status = f"{page_name}-upload-status"
