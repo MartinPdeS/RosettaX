@@ -326,6 +326,7 @@ class Sidebar:
                         self._nav_link("Cross calibration", "/cross-calibration"),
                         self._nav_link("Apply calibration", "/calibrate"),
                         self._nav_link("Settings", "/settings"),
+                        self._nav_link("Sample files", "/sample-files"),
                         self._nav_link("Documentation", "/documentation"),
                         self._nav_link("Help", "/help"),
                     ],

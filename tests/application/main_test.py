@@ -4,6 +4,7 @@ import importlib
 from types import SimpleNamespace
 
 application_main = importlib.import_module("RosettaX.application.main")
+application_pages = importlib.import_module("RosettaX.application.pages")
 
 
 class Test_ApplicationMain:
@@ -59,3 +60,6 @@ class Test_ApplicationMain:
             "debug": True,
         }
         assert application_run_calls == [True]
+
+    def test_page_module_registry_includes_sample_files_page(self) -> None:
+        assert "RosettaX.pages.p09_sample_files.main" in application_pages.PAGE_MODULES

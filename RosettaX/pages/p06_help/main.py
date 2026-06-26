@@ -23,6 +23,7 @@ class HelpPage:
         self,
     ) -> None:
         self.page_name = "help"
+        self.sample_files_path = "/sample-files"
         self.documentation_url = "https://martinpdes.github.io/RosettaX/docs/latest/index.html"
         self.github_url = "https://github.com/MartinPdeS/RosettaX"
         self.pypi_url = "https://pypi.org/project/RosettaX/"
@@ -322,36 +323,18 @@ class HelpPage:
                             },
                         ),
                         html.Div(
-                            "Download a sample FCS file and matching saved calibrations to explore the workflows before using your own data.",
+                            "Open the dedicated sample-files page to download FCS examples and calibration JSON templates.",
                             style={
                                 "fontSize": "0.92rem",
                                 "opacity": 0.78,
                                 "marginBottom": "12px",
                             },
                         ),
-                        html.Div(
-                            [
-                                self._sample_download_item(
-                                    title="Sample FCS file",
-                                    description="Use this file to inspect detector columns and try the calibration pages.",
-                                    file_name="sample_fcs.fcs",
-                                ),
-                                self._sample_download_item(
-                                    title="Sample fluorescence calibration",
-                                    description="Load this JSON in Apply calibration to see the fluorescence export flow.",
-                                    file_name="sample_fluorescence_calibration.json",
-                                ),
-                                self._sample_download_item(
-                                    title="Sample scattering calibration",
-                                    description="Load this JSON in Apply calibration to try the scattering target-model workflow.",
-                                    file_name="sample_scatter_calibration.json.json",
-                                ),
-                            ],
-                            style={
-                                "display": "flex",
-                                "flexDirection": "column",
-                                "gap": "10px",
-                            },
+                        dbc.Button(
+                            "Open sample files page",
+                            href=self.sample_files_path,
+                            color="primary",
+                            target="_self",
                         ),
                     ],
                     style={
@@ -368,67 +351,6 @@ class HelpPage:
             card=card,
             header_font_weight="750",
             header_font_size="1.02rem",
-        )
-
-    def _sample_download_item(
-        self,
-        *,
-        title: str,
-        description: str,
-        file_name: str,
-    ) -> html.Div:
-        """
-        Build one sample-download row.
-        """
-        return html.Div(
-            [
-                html.Div(
-                    [
-                        html.Div(
-                            title,
-                            style={
-                                "fontWeight": "700",
-                                "marginBottom": "2px",
-                            },
-                        ),
-                        html.Div(
-                            description,
-                            style={
-                                "fontSize": "0.9rem",
-                                "opacity": 0.74,
-                            },
-                        ),
-                    ],
-                    style={
-                        "flex": "1",
-                        "minWidth": "0",
-                    },
-                ),
-                html.A(
-                    dbc.Button(
-                        "Download",
-                        color="primary",
-                        outline=True,
-                        size="sm",
-                    ),
-                    href=f"/assets/{file_name}",
-                    download=file_name,
-                    style={
-                        "flex": "0 0 auto",
-                        "textDecoration": "none",
-                    },
-                ),
-            ],
-            style={
-                "display": "flex",
-                "gap": "12px",
-                "alignItems": "center",
-                "justifyContent": "space-between",
-                "padding": "10px 12px",
-                "border": "1px solid rgba(13, 110, 253, 0.14)",
-                "borderRadius": "10px",
-                "background": "rgba(13, 110, 253, 0.04)",
-            },
         )
 
     def _when_to_use_help_card(self) -> dbc.Card:

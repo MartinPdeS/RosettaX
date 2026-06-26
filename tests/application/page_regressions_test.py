@@ -325,7 +325,9 @@ class Test_HelpPage:
         assert "Project resources" in text_nodes
         assert "Technical docs" in text_nodes
         assert "Support Developer" in text_nodes
+        assert "Open sample files page" in text_nodes
         assert "/documentation" in hrefs
+        assert "/sample-files" in hrefs
         assert "https://github.com/MartinPdeS/RosettaX" in hrefs
 
 
@@ -337,3 +339,4 @@ class Test_SidebarNavigation:
 
         assert "/documentation" in _collect_component_hrefs(navigation)
         assert "/cross-calibration" in _collect_component_hrefs(navigation)
+        assert "/sample-files" in _collect_component_hrefs(navigation)
