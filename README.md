@@ -19,7 +19,7 @@
 | RosettaX/pages/p03\_scattering/sections/s06\_save/services.py               |        3 |        3 |        0 |        0 |      0.00% |      3-10 |
 | RosettaX/pages/p03\_scattering/sections/services.py                         |       10 |       10 |        0 |        0 |      0.00% |      3-18 |
 | RosettaX/pages/p03\_scattering/state.py                                     |       44 |        9 |       10 |        5 |     74.07% |40, 70, 84-89, 92, 95, 133-134 |
-| RosettaX/pages/p04\_calibrate/sections/s02\_calibration\_picker/services.py |       94 |       67 |       36 |        1 |     21.54% |35-78, 90-135, 163-178, 215, 234, 245-257, 291-398 |
+| RosettaX/pages/p04\_calibrate/sections/s02\_calibration\_picker/services.py |      114 |       85 |       44 |        1 |     18.99% |35-78, 90-135, 163-178, 215, 234, 245-257, 291-398, 409-455, 467-469 |
 | RosettaX/pages/p04\_calibrate/sections/s03\_file\_picker/services.py        |       85 |       54 |       40 |        3 |     30.40% |71, 91, 99, 113-121, 147-167, 179-239, 249-277, 288-314 |
 | RosettaX/pages/p04\_calibrate/sections/s04\_apply/services.py               |       62 |       49 |       20 |        3 |     19.51% |18-33, 55-148, 159-213, 243, 246, 253-295 |
 | RosettaX/pages/p04\_calibrate/state.py                                      |       29 |       13 |        4 |        0 |     48.48% |53-64, 96-106 |
@@ -91,7 +91,7 @@
 | RosettaX/workflow/upload/adapters.py                                        |       33 |       15 |        2 |        0 |     51.43% |61, 72, 81, 93, 117-118, 127, 138, 147, 159-178 |
 | RosettaX/workflow/upload/models.py                                          |       15 |        1 |        0 |        0 |     93.33% |        63 |
 | RosettaX/workflow/upload/services.py                                        |      104 |       37 |       32 |        3 |     64.71% |60, 101, 111, 137, 215-226, 242-267, 286-350 |
-| **TOTAL**                                                                   | **11819** | **5572** | **3912** |  **598** | **48.76%** |           |
+| **TOTAL**                                                                   | **11839** | **5590** | **3920** |  **598** | **48.69%** |           |
 
 8 files skipped due to complete coverage.
 
