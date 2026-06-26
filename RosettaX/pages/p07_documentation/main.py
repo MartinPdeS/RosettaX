@@ -29,71 +29,68 @@ class DocumentationPage:
             [
                 self._hero_section(),
                 html.Div(style={"height": "18px"}),
-                dbc.Row(
-                    [
-                        dbc.Col(
-                            [
-                                self._table_of_contents_card(),
-                            ],
-                            lg=3,
-                        ),
-                        dbc.Col(
-                            [
-                                self._section_wrapper(
-                                    section_id=self._id("workflow-map"),
-                                    child=self._workflow_map_card(),
-                                ),
-                                html.Div(style={"height": "18px"}),
-                                self._section_wrapper(
-                                    section_id=self._id("system-model"),
-                                    child=self._system_model_row(),
-                                ),
-                                html.Div(style={"height": "18px"}),
-                                self._section_wrapper(
-                                    section_id=self._id("supported-cytometers"),
-                                    child=self._supported_cytometers_row(),
-                                ),
-                                html.Div(style={"height": "18px"}),
-                                self._section_wrapper(
-                                    section_id=self._id("refractive-index"),
-                                    child=self._refractive_index_card(),
-                                ),
-                                html.Div(style={"height": "18px"}),
-                                self._section_wrapper(
-                                    section_id=self._id("regression-models"),
-                                    child=self._regression_row(),
-                                ),
-                                html.Div(style={"height": "18px"}),
-                                self._section_wrapper(
-                                    section_id=self._id("calibration-files"),
-                                    child=self._calibration_files_row(),
-                                ),
-                                html.Div(style={"height": "18px"}),
-                                self._section_wrapper(
-                                    section_id=self._id("apply-checks"),
-                                    child=self._apply_checks_card(),
-                                ),
-                                html.Div(style={"height": "18px"}),
-                                self._section_wrapper(
-                                    section_id=self._id("reports"),
-                                    child=self._reports_card(),
-                                ),
-                                html.Div(style={"height": "18px"}),
-                                self._section_wrapper(
-                                    section_id=self._id("peak-identification"),
-                                    child=self._peak_identification_card(),
-                                ),
-                            ],
-                            lg=9,
-                        ),
-                    ],
-                    className="g-3",
-                ),
+                self._table_of_contents_card(),
+                html.Div(style={"height": "18px"}),
+                self._documentation_sections_stack(),
             ],
             fluid=True,
             style={
                 "paddingTop": "12px",
                 "paddingBottom": "40px",
+            },
+        )
+
+    def _documentation_sections_stack(self) -> html.Div:
+        return html.Div(
+            [
+                self._section_wrapper(
+                    section_id=self._id("workflow-map"),
+                    child=self._workflow_map_card(),
+                ),
+                html.Div(style={"height": "18px"}),
+                self._section_wrapper(
+                    section_id=self._id("system-model"),
+                    child=self._system_model_row(),
+                ),
+                html.Div(style={"height": "18px"}),
+                self._section_wrapper(
+                    section_id=self._id("supported-cytometers"),
+                    child=self._supported_cytometers_row(),
+                ),
+                html.Div(style={"height": "18px"}),
+                self._section_wrapper(
+                    section_id=self._id("refractive-index"),
+                    child=self._refractive_index_card(),
+                ),
+                html.Div(style={"height": "18px"}),
+                self._section_wrapper(
+                    section_id=self._id("regression-models"),
+                    child=self._regression_row(),
+                ),
+                html.Div(style={"height": "18px"}),
+                self._section_wrapper(
+                    section_id=self._id("calibration-files"),
+                    child=self._calibration_files_row(),
+                ),
+                html.Div(style={"height": "18px"}),
+                self._section_wrapper(
+                    section_id=self._id("apply-checks"),
+                    child=self._apply_checks_card(),
+                ),
+                html.Div(style={"height": "18px"}),
+                self._section_wrapper(
+                    section_id=self._id("reports"),
+                    child=self._reports_card(),
+                ),
+                html.Div(style={"height": "18px"}),
+                self._section_wrapper(
+                    section_id=self._id("peak-identification"),
+                    child=self._peak_identification_card(),
+                ),
+            ],
+            style={
+                "display": "grid",
+                "rowGap": "0px",
             },
         )
 
@@ -162,7 +159,12 @@ class DocumentationPage:
                         self._toc_link("Reports and provenance", f"#{self._id('reports')}"),
                         self._toc_link("Peak identification methods", f"#{self._id('peak-identification')}"),
                     ],
-                    style={"padding": "16px", "display": "flex", "flexDirection": "column", "gap": "10px"},
+                    style={
+                        "padding": "16px",
+                        "display": "flex",
+                        "flexWrap": "wrap",
+                        "gap": "10px",
+                    },
                 ),
             ],
             style=self._documentation_card_style(),
@@ -181,11 +183,13 @@ class DocumentationPage:
             style={
                 "textDecoration": "none",
                 "fontWeight": "600",
-                "padding": "10px 12px",
+                "padding": "8px 11px",
                 "borderRadius": "10px",
                 "border": "1px solid rgba(13, 110, 253, 0.14)",
                 "background": "rgba(13, 110, 253, 0.04)",
-                "display": "block",
+                "display": "inline-flex",
+                "alignItems": "center",
+                "lineHeight": "1.2",
             },
         )
 
