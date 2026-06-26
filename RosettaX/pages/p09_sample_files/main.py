@@ -53,21 +53,21 @@ class SampleFilesPage:
             [
                 dbc.Col(
                     self._build_download_card(
-                        title="Fluorescence and scattering FCS",
-                        subtitle="Use these for detector selection, peak checks, and initial workflow exploration.",
+                        title="Apogee flow cytometer samples",
+                        subtitle="Real calibration data from an Apogee cytometer with multiple bead sets.",
                         color_name=styling.get_workflow_section_color(1),
                         items=[
                             {
-                                "title": "Apogee sample FCS",
-                                "description": "Representative sample for Apogee-based testing.",
-                                "href": "/assets/sample-files/apogee_sample.fcs",
-                                "download": "apogee_sample.fcs",
+                                "title": "Rainbow beads",
+                                "description": "Multi-color calibration standard for detector validation and linearity checks.",
+                                "href": "/assets/sample-files/apogee_rainbow_beads.fcs",
+                                "download": "apogee_rainbow_beads.fcs",
                             },
                             {
-                                "title": "Cytek sample FCS",
-                                "description": "Representative sample for Cytek-based testing.",
-                                "href": "/assets/sample-files/cytek_sample.fcs",
-                                "download": "cytek_sample.fcs",
+                                "title": "Apogee mix beads",
+                                "description": "Mixed Apogee reference particles for multi-parameter calibration.",
+                                "href": "/assets/sample-files/apogee_mix.fcs",
+                                "download": "apogee_mix.fcs",
                             },
                         ],
                     ),
@@ -75,21 +75,21 @@ class SampleFilesPage:
                 ),
                 dbc.Col(
                     self._build_download_card(
-                        title="Calibration JSON templates",
-                        subtitle="Load these in Apply calibration after you replace them with real calibration payloads.",
+                        title="Cytek Northern Lights samples",
+                        subtitle="Real calibration data from a Cytek Northern Lights flow cytometer.",
                         color_name=styling.get_workflow_section_color(2),
                         items=[
                             {
-                                "title": "Fluorescence calibration JSON",
-                                "description": "Template payload for fluorescence calibration export/apply flow.",
-                                "href": "/assets/sample-files/fluorescence_calibration_sample.json",
-                                "download": "fluorescence_calibration_sample.json",
+                                "title": "Rainbow beads",
+                                "description": "Multi-color calibration standard acquired on Cytek platform.",
+                                "href": "/assets/sample-files/cytek_rainbow_beads.fcs",
+                                "download": "cytek_rainbow_beads.fcs",
                             },
                             {
-                                "title": "Scattering calibration JSON",
-                                "description": "Template payload for scattering calibration export/apply flow.",
-                                "href": "/assets/sample-files/scattering_calibration_sample.json",
-                                "download": "scattering_calibration_sample.json",
+                                "title": "Apogee mix beads",
+                                "description": "Mixed reference particles measured on Cytek instrument.",
+                                "href": "/assets/sample-files/cytek_apogee_mix.fcs",
+                                "download": "cytek_apogee_mix.fcs",
                             },
                         ],
                     ),
