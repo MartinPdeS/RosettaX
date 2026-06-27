@@ -47,6 +47,7 @@ def register_mutation_callbacks(
             "n_clicks",
         ),
         dash.Input(ids.graph_hist, "clickData"),
+        dash.Input(ids.graph_hist, "selectedData"),
     ]
 
     state_components: list[Any] = [
@@ -121,6 +122,7 @@ def register_mutation_callbacks(
         detector_dropdown_values: list[Any],
         action_clicks: list[Any],
         click_data: Any,
+        selected_data: Any,
         page_state_payload: Any,
         detector_dropdown_ids: list[dict[str, Any]],
         action_ids: list[dict[str, Any]],
@@ -171,10 +173,14 @@ def register_mutation_callbacks(
                 ids=ids,
                 adapter=adapter,
                 click_data=click_data,
+                selected_data=selected_data,
                 process_name=process_name,
                 page_state=page_state,
                 detector_dropdown_ids=detector_dropdown_ids,
                 detector_dropdown_values=detector_dropdown_values,
+                process_setting_ids=process_setting_ids,
+                process_setting_values=process_setting_values,
+                axis_scale_toggle_values=axis_scale_toggle_values,
                 table_data=unpacked_state["table_data"],
                 mie_model=unpacked_state["mie_model"],
                 runtime_config_data=unpacked_state["runtime_config_data"],
@@ -335,10 +341,14 @@ def handle_manual_graph_click(
     ids: Any,
     adapter: Any,
     click_data: Any,
+    selected_data: Any,
     process_name: Any,
     page_state: Any,
     detector_dropdown_ids: list[dict[str, Any]],
     detector_dropdown_values: list[Any],
+    process_setting_ids: list[dict[str, Any]],
+    process_setting_values: list[Any],
+    axis_scale_toggle_values: Any,
     table_data: Optional[list[dict[str, Any]]],
     mie_model: Any,
     runtime_config_data: Any,
@@ -369,6 +379,14 @@ def handle_manual_graph_click(
         detector_dropdown_values=detector_dropdown_values,
         process_name=resolved_process_name,
     )
+    process_settings = build_process_settings(
+        process_setting_ids=process_setting_ids,
+        process_setting_values=process_setting_values,
+        process_name=resolved_process_name,
+    )
+    backend = adapter.get_backend(
+        uploaded_fcs_path=uploaded_fcs_path,
+    )
 
     if not context_is_valid_for_process(
         process=process,
@@ -391,16 +409,29 @@ def handle_manual_graph_click(
             ),
         )
 
-    result = process.add_clicked_peak(
+    result = call_add_clicked_peak_with_supported_arguments(
+        process=process,
         click_data=click_data,
+        selected_data=selected_data,
         existing_peak_lines_payload=adapter.get_peak_lines_payload(
             page_state=page_state,
         ),
+        backend=backend,
+        detector_channels=detector_channels,
+        process_settings=process_settings,
+        runtime_config_data=runtime_config_data,
+        axis_scale_toggle_values=axis_scale_toggle_values,
     )
 
     if result is None:
-        return build_no_update_callback_result(
-            status_component_ids=status_component_ids,
+        return (
+            dash.no_update,
+            dash.no_update,
+            build_status_children(
+                status_component_ids=status_component_ids,
+                target_process_name=resolved_process_name,
+                status="That click did not resolve to a selectable peak. Try clicking directly on the plotted signal.",
+            ),
         )
 
     page_state = adapter.update_peak_lines_payload(
@@ -831,6 +862,71 @@ def call_run_automatic_action_with_supported_arguments(
         getattr(process, "process_name", process),
         list(supported_arguments.keys()),
     )
+
+    return method(
+        **supported_arguments,
+    )
+
+
+def call_add_clicked_peak_with_supported_arguments(
+    *,
+    process: Any,
+    click_data: Any,
+    selected_data: Any,
+    existing_peak_lines_payload: Any,
+    backend: Any,
+    detector_channels: dict[str, Any],
+    process_settings: dict[str, Any],
+    runtime_config_data: Any,
+    axis_scale_toggle_values: Any,
+) -> Any:
+    """
+    Call ``process.add_clicked_peak`` with only the arguments it supports.
+    """
+    method = getattr(
+        process,
+        "add_clicked_peak",
+        None,
+    )
+
+    if not callable(method):
+        logger.debug(
+            "Process %r does not implement add_clicked_peak.",
+            getattr(process, "process_name", process),
+        )
+
+        return None
+
+    candidate_arguments = {
+        "click_data": click_data,
+        "selected_data": selected_data,
+        "existing_peak_lines_payload": existing_peak_lines_payload,
+        "backend": backend,
+        "detector_channels": detector_channels,
+        "process_settings": process_settings,
+        "runtime_config_data": runtime_config_data,
+        "axis_scale_toggle_values": axis_scale_toggle_values,
+    }
+
+    signature = inspect.signature(
+        method,
+    )
+
+    accepts_arbitrary_keywords = any(
+        parameter.kind == inspect.Parameter.VAR_KEYWORD
+        for parameter in signature.parameters.values()
+    )
+
+    if accepts_arbitrary_keywords:
+        return method(
+            **candidate_arguments,
+        )
+
+    supported_arguments = {
+        argument_name: argument_value
+        for argument_name, argument_value in candidate_arguments.items()
+        if argument_name in signature.parameters
+    }
 
     return method(
         **supported_arguments,

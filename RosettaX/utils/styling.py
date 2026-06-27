@@ -218,10 +218,7 @@ PLOTLY_GRAPH_CONFIG = {
         "titleText": False,
         "legendText": False,
     },
-    "modeBarButtonsToRemove": [
-        "select2d",
-        "lasso2d",
-    ],
+    "modeBarButtonsToRemove": [],
 }
 
 
@@ -512,5 +509,4 @@ def build_workflow_section_style(
             **WORKFLOW_SECTION["title_with_info"],
         },
     }
-
 

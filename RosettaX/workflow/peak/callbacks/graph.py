@@ -8,6 +8,7 @@ import numpy as np
 import plotly.graph_objs as go
 
 from ..core import graphing
+from .mutation import build_process_settings
 from RosettaX.utils import RuntimeConfig, plottings, styling
 
 
@@ -205,6 +206,28 @@ def register_graph_callbacks(
             figure = apply_peak_graph_layout(
                 figure=figure,
             )
+
+            process_settings = build_process_settings(
+                process_setting_ids=process_setting_ids,
+                process_setting_values=process_setting_values,
+                process_name=str(process_name or ""),
+            )
+
+            snap_to_local_mode_enabled = (
+                process_settings.get("snap_to_local_mode") == "enabled"
+                or (
+                    isinstance(process_settings.get("snap_to_local_mode"), (list, tuple, set))
+                    and "enabled" in process_settings.get("snap_to_local_mode")
+                )
+            )
+
+            if (
+                str(process_name) in ("Manual 1D", "Manual 2D")
+                and snap_to_local_mode_enabled
+            ):
+                figure.update_layout(
+                    dragmode="select",
+                )
 
             return figure
 
