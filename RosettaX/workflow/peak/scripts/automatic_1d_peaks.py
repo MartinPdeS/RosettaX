@@ -9,6 +9,11 @@ import dash_bootstrap_components as dbc
 import numpy as np
 
 from .base import BasePeakProcess, PeakProcessResult
+from .base import (
+    resolve_float_setting,
+    resolve_integer_setting,
+    resolve_integer_value,
+)
 from RosettaX.utils.io import column_copy
 
 
@@ -43,10 +48,86 @@ class Automatic1DPeaksProcess(BasePeakProcess):
     dropdown_menu_max_height_px = 500
 
     default_peak_count = 5
-    default_histogram_bin_count = 200
-    default_smoothing_window_fraction = 0.012
+    default_histogram_bin_count = 500
+    default_smoothing_window_fraction = 0.001
     default_minimum_prominence_fraction = 0.035
     default_minimum_distance_fraction = 0.035
+
+    def get_settings(self) -> list[dict[str, Any]]:
+        """
+        Return configurable process settings.
+        """
+        return [
+            {
+                "name": "histogram_bins",
+                "label": "Detection bins",
+                "kind": "integer",
+                "default_value": self.default_histogram_bin_count,
+                "min_value": 64,
+                "max_value": 4000,
+                "step": 1,
+                "help": (
+                    "Number of histogram bins used for automatic peak detection. "
+                    "Increase it for better separation of nearby peaks. Decrease it "
+                    "if weak peaks are unstable due to noisy bins."
+                ),
+            },
+            {
+                "name": "smoothing_window_fraction",
+                "label": "Smoothing fraction",
+                "kind": "float",
+                "default_value": self.default_smoothing_window_fraction,
+                "min_value": 0.000001,
+                "max_value": 0.08,
+                "step": 0.000001,
+                "help": (
+                    "Gaussian-like smoothing width relative to histogram length. "
+                    "Increase it to suppress bin noise. Decrease it when close peaks "
+                    "are merged."
+                ),
+            },
+            {
+                "name": "minimum_prominence_fraction",
+                "label": "Min prominence fraction",
+                "kind": "float",
+                "default_value": self.default_minimum_prominence_fraction,
+                "min_value": 0.0,
+                "max_value": 1.0,
+                "step": 0.005,
+                "help": (
+                    "Minimum peak prominence relative to the tallest smoothed bin. "
+                    "Decrease this to recover weaker first peaks."
+                ),
+            },
+            {
+                "name": "minimum_distance_fraction",
+                "label": "Min distance fraction",
+                "kind": "float",
+                "default_value": self.default_minimum_distance_fraction,
+                "min_value": 0.0,
+                "max_value": 0.5,
+                "step": 0.005,
+                "help": (
+                    "Minimum spacing between accepted peaks as a fraction of bins. "
+                    "Decrease this when nearby populations are merged."
+                ),
+            },
+            {
+                "name": "log_transform_mode",
+                "label": "Log transform mode",
+                "kind": "select",
+                "default_value": "auto",
+                "options": [
+                    {"label": "Auto", "value": "auto"},
+                    {"label": "Yes", "value": "yes"},
+                    {"label": "No", "value": "no"},
+                ],
+                "help": (
+                    "Auto uses log10 only when most values are positive. "
+                    "Force Yes or No to debug left-edge peak behavior."
+                ),
+            },
+        ]
 
     def get_required_detector_channels(self) -> list[str]:
         """
@@ -242,10 +323,9 @@ class Automatic1DPeaksProcess(BasePeakProcess):
                 ),
                 dash.dcc.Input(
                     id=ids.peak_count_input,
-                    type="number",
-                    min=1,
-                    step=1,
-                    value=self.default_peak_count,
+                    type="text",
+                    inputMode="numeric",
+                    value=str(self.default_peak_count),
                     debounce=True,
                     persistence=True,
                     persistence_type="session",
@@ -427,8 +507,11 @@ class Automatic1DPeaksProcess(BasePeakProcess):
         *,
         backend: Any,
         detector_channels: dict[str, Any],
-        peak_count: Any,
-        max_events_for_analysis: int,
+        process_settings: Optional[dict[str, Any]] = None,
+        peak_count: Any = None,
+        max_events_for_analysis: Any = None,
+        max_events_for_plots: Any = None,
+        **_kwargs: Any,
     ) -> Optional[PeakProcessResult]:
         """
         Run automatic 1D peak detection.
@@ -472,32 +555,44 @@ class Automatic1DPeaksProcess(BasePeakProcess):
                 clear_existing_table_peaks=False,
             )
 
-        resolved_peak_count = self.resolve_peak_count(
-            peak_count,
+        resolved_settings = self.resolve_settings(
+            process_settings=process_settings,
+            peak_count=peak_count,
+        )
+
+        resolved_max_events = resolve_integer_value(
+            value=max_events_for_analysis
+            if max_events_for_analysis is not None
+            else max_events_for_plots,
+            default=10000,
+            minimum=1,
+            maximum=5_000_000,
         )
 
         values = self.read_detector_values(
             backend=backend,
             detector_column=str(detector_column),
-            max_events_for_analysis=max_events_for_analysis,
+            max_events_for_analysis=resolved_max_events,
         )
 
-        peak_positions = self.estimate_peak_positions(
+        peak_positions, detection_debug = self.estimate_peak_positions(
             values=values,
-            peak_count=resolved_peak_count,
+            settings=resolved_settings,
         )
 
         peak_lines_payload = self.build_peak_lines_payload(
             peak_positions=peak_positions,
+            debug_info=detection_debug,
         )
 
         logger.debug(
             "Automatic 1D detected peak_positions=%r detector_column=%r "
-            "peak_count=%r max_events_for_analysis=%r",
+            "settings=%r max_events_for_analysis=%r detection_debug=%r",
             peak_positions,
             detector_column,
-            resolved_peak_count,
-            max_events_for_analysis,
+            resolved_settings,
+            resolved_max_events,
+            detection_debug,
         )
 
         status = (
@@ -505,6 +600,16 @@ class Automatic1DPeaksProcess(BasePeakProcess):
             if peak_positions
             else "No peaks detected."
         )
+
+        if resolved_settings.advanced_mode:
+            status = (
+                f"{status} Debug: finite={detection_debug.get('finite_value_count', 0)}, "
+                f"working={detection_debug.get('working_value_count', 0)}, "
+                f"candidates={detection_debug.get('candidate_count', 0)}, "
+                f"after_prom={detection_debug.get('post_prominence_count', 0)}, "
+                f"selected={detection_debug.get('selected_count', 0)}, "
+                f"log={detection_debug.get('used_log_transform', False)}"
+            )
 
         return PeakProcessResult(
             peak_positions=peak_positions,
@@ -594,8 +699,8 @@ class Automatic1DPeaksProcess(BasePeakProcess):
         self,
         *,
         values: np.ndarray,
-        peak_count: int,
-    ) -> list[float]:
+        settings: "Automatic1DRunSettings",
+    ) -> tuple[list[float], dict[str, Any]]:
         """
         Estimate peak positions from one dimensional event values.
 
@@ -609,48 +714,86 @@ class Automatic1DPeaksProcess(BasePeakProcess):
 
         Returns
         -------
-        list[float]
-            Estimated peak positions in original detector units.
+        tuple[list[float], dict[str, Any]]
+            Estimated peak positions and debug metadata.
         """
         finite_values = self.prepare_finite_values(
             values,
         )
 
-        if finite_values.size == 0:
-            return []
+        debug_info: dict[str, Any] = {
+            "input_value_count": int(np.asarray(values).reshape(-1).size),
+            "finite_value_count": int(finite_values.size),
+            "peak_details": [],
+        }
 
-        working_values, inverse_transform = self.build_peak_detection_axis(
-            finite_values,
+        if finite_values.size == 0:
+            return [], debug_info
+
+        working_values, inverse_transform, axis_debug = self.build_peak_detection_axis(
+            values=finite_values,
+            log_transform_mode=settings.log_transform_mode,
         )
 
+        debug_info.update(axis_debug)
+
         if working_values.size == 0:
-            return []
+            return [], debug_info
 
         counts, bin_edges = np.histogram(
             working_values,
-            bins=self.default_histogram_bin_count,
+            bins=settings.histogram_bins,
         )
 
+        debug_info["working_value_count"] = int(working_values.size)
+        debug_info["histogram_bin_count"] = int(counts.size)
+
         if counts.size == 0:
-            return []
+            return [], debug_info
 
         smoothed_counts = self.smooth_histogram_counts(
             counts=counts,
-            window_fraction=self.default_smoothing_window_fraction,
+            window_fraction=settings.smoothing_window_fraction,
         )
-
-        peak_indices = self.find_prominent_peak_indices(
-            counts=smoothed_counts,
-            peak_count=peak_count,
-            minimum_prominence_fraction=self.default_minimum_prominence_fraction,
-            minimum_distance_fraction=self.default_minimum_distance_fraction,
-        )
-
-        if peak_indices.size == 0:
-            return []
 
         bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
+
+        debug_bin_centers = inverse_transform(
+            bin_centers,
+        )
+
+        debug_info["histogram_bin_centers"] = [
+            float(value)
+            for value in np.asarray(debug_bin_centers, dtype=float)
+            if np.isfinite(value)
+        ]
+
+        debug_info["smoothed_counts"] = [
+            float(value)
+            for value in np.asarray(smoothed_counts, dtype=float)
+            if np.isfinite(value)
+        ]
+
+        peak_indices, prominence_debug, selected_prominences = self.find_prominent_peak_indices(
+            counts=smoothed_counts,
+            peak_count=settings.peak_count,
+            minimum_prominence_fraction=settings.minimum_prominence_fraction,
+            minimum_distance_fraction=settings.minimum_distance_fraction,
+        )
+
+        debug_info.update(prominence_debug)
+
+        if peak_indices.size == 0:
+            return [], debug_info
+
         peak_positions_working_axis = bin_centers[peak_indices]
+        selected_peak_counts = np.asarray(
+            [
+                float(smoothed_counts[int(index)])
+                for index in peak_indices
+            ],
+            dtype=float,
+        )
         peak_positions = inverse_transform(
             peak_positions_working_axis,
         )
@@ -660,13 +803,37 @@ class Automatic1DPeaksProcess(BasePeakProcess):
             dtype=float,
         )
 
-        peak_positions = peak_positions[np.isfinite(peak_positions)]
-        peak_positions = np.sort(peak_positions)
+        finite_peak_mask = np.isfinite(peak_positions)
+        peak_positions = peak_positions[finite_peak_mask]
+        selected_prominences = selected_prominences[finite_peak_mask]
+        selected_peak_counts = selected_peak_counts[finite_peak_mask]
 
-        return [
-            float(value)
-            for value in peak_positions[: int(peak_count)]
+        order = np.argsort(peak_positions)
+
+        peak_positions = peak_positions[order]
+        selected_prominences = selected_prominences[order]
+        selected_peak_counts = selected_peak_counts[order]
+
+        peak_positions = peak_positions[: int(settings.peak_count)]
+        selected_prominences = selected_prominences[: int(settings.peak_count)]
+        selected_peak_counts = selected_peak_counts[: int(settings.peak_count)]
+
+        debug_info["selected_count"] = int(peak_positions.size)
+        debug_info["peak_details"] = [
+            {
+                "count": float(selected_peak_counts[index]),
+                "prominence": float(selected_prominences[index]),
+            }
+            for index in range(int(peak_positions.size))
         ]
+
+        return (
+            [
+                float(value)
+                for value in peak_positions
+            ],
+            debug_info,
+        )
 
     def prepare_finite_values(
         self,
@@ -694,8 +861,10 @@ class Automatic1DPeaksProcess(BasePeakProcess):
 
     def build_peak_detection_axis(
         self,
+        *,
         values: np.ndarray,
-    ) -> tuple[np.ndarray, Any]:
+        log_transform_mode: str,
+    ) -> tuple[np.ndarray, Any, dict[str, Any]]:
         """
         Build the working axis used for peak detection.
 
@@ -709,19 +878,64 @@ class Automatic1DPeaksProcess(BasePeakProcess):
 
         Returns
         -------
-        tuple[np.ndarray, Any]
-            Working values and inverse transform callable.
+        tuple[np.ndarray, Any, dict[str, Any]]
+            Working values, inverse transform callable, and debug metadata.
         """
         positive_values = values[values > 0.0]
+        non_positive_count = int(values.size - positive_values.size)
+
+        if log_transform_mode == "yes":
+            if positive_values.size == 0:
+                return (
+                    np.asarray([], dtype=float),
+                    self.inverse_log10_transform,
+                    {
+                        "used_log_transform": True,
+                        "dropped_non_positive_values": non_positive_count,
+                    },
+                )
+
+            return (
+                np.log10(positive_values),
+                self.inverse_log10_transform,
+                {
+                    "used_log_transform": True,
+                    "dropped_non_positive_values": non_positive_count,
+                },
+            )
+
+        if log_transform_mode == "no":
+            return (
+                values,
+                self.identity_transform,
+                {
+                    "used_log_transform": False,
+                    "dropped_non_positive_values": 0,
+                },
+            )
 
         if positive_values.size >= max(10, int(0.80 * values.size)):
             working_values = np.log10(
                 positive_values,
             )
 
-            return working_values, self.inverse_log10_transform
+            return (
+                working_values,
+                self.inverse_log10_transform,
+                {
+                    "used_log_transform": True,
+                    "dropped_non_positive_values": non_positive_count,
+                },
+            )
 
-        return values, self.identity_transform
+        return (
+            values,
+            self.identity_transform,
+            {
+                "used_log_transform": False,
+                "dropped_non_positive_values": 0,
+            },
+        )
 
     def inverse_log10_transform(
         self,
@@ -839,7 +1053,7 @@ class Automatic1DPeaksProcess(BasePeakProcess):
         peak_count: int,
         minimum_prominence_fraction: float,
         minimum_distance_fraction: float,
-    ) -> np.ndarray:
+    ) -> tuple[np.ndarray, dict[str, Any], np.ndarray]:
         """
         Find prominent local maxima in smoothed histogram counts.
 
@@ -859,39 +1073,38 @@ class Automatic1DPeaksProcess(BasePeakProcess):
 
         Returns
         -------
-        np.ndarray
-            Selected peak indices.
+        tuple[np.ndarray, dict[str, Any], np.ndarray]
+            Selected peak indices, debug metadata, and selected prominences.
         """
         counts = np.asarray(
             counts,
             dtype=float,
         )
 
+        debug_info: dict[str, Any] = {
+            "candidate_count": 0,
+            "post_prominence_count": 0,
+            "selected_count": 0,
+        }
+
         if counts.size < 3:
-            return np.asarray(
-                [],
-                dtype=int,
-            )
+            return np.asarray([], dtype=int), debug_info, np.asarray([], dtype=float)
 
         maximum_count = float(
             np.max(counts),
         )
 
         if maximum_count <= 0.0:
-            return np.asarray(
-                [],
-                dtype=int,
-            )
+            return np.asarray([], dtype=int), debug_info, np.asarray([], dtype=float)
 
         candidate_indices = self.find_local_maxima_indices(
             counts=counts,
         )
 
         if candidate_indices.size == 0:
-            return np.asarray(
-                [],
-                dtype=int,
-            )
+            return np.asarray([], dtype=int), debug_info, np.asarray([], dtype=float)
+
+        debug_info["candidate_count"] = int(candidate_indices.size)
 
         prominences = self.estimate_peak_prominences(
             counts=counts,
@@ -899,6 +1112,7 @@ class Automatic1DPeaksProcess(BasePeakProcess):
         )
 
         minimum_prominence = maximum_count * float(minimum_prominence_fraction)
+        debug_info["minimum_prominence"] = float(minimum_prominence)
 
         prominence_mask = prominences >= minimum_prominence
 
@@ -906,15 +1120,16 @@ class Automatic1DPeaksProcess(BasePeakProcess):
         prominences = prominences[prominence_mask]
 
         if candidate_indices.size == 0:
-            return np.asarray(
-                [],
-                dtype=int,
-            )
+            return np.asarray([], dtype=int), debug_info, np.asarray([], dtype=float)
+
+        debug_info["post_prominence_count"] = int(candidate_indices.size)
 
         minimum_distance = max(
             1,
             int(round(counts.size * float(minimum_distance_fraction))),
         )
+
+        debug_info["minimum_distance_bins"] = int(minimum_distance)
 
         selected_indices = self.select_peaks_by_prominence_and_distance(
             candidate_indices=candidate_indices,
@@ -923,9 +1138,26 @@ class Automatic1DPeaksProcess(BasePeakProcess):
             minimum_distance=minimum_distance,
         )
 
-        return np.sort(
+        selected_indices = np.sort(
             selected_indices,
         )
+
+        prominence_by_index = {
+            int(candidate_indices[index]): float(prominences[index])
+            for index in range(len(candidate_indices))
+        }
+
+        selected_prominences = np.asarray(
+            [
+                prominence_by_index.get(int(selected_index), 0.0)
+                for selected_index in selected_indices
+            ],
+            dtype=float,
+        )
+
+        debug_info["selected_count"] = int(selected_indices.size)
+
+        return selected_indices, debug_info, selected_prominences
 
     def find_local_maxima_indices(
         self,
@@ -947,8 +1179,14 @@ class Automatic1DPeaksProcess(BasePeakProcess):
         """
         candidate_indices: list[int] = []
 
+        if counts.size < 3:
+            return np.asarray(
+                candidate_indices,
+                dtype=int,
+            )
+
         for index in range(1, counts.size - 1):
-            if counts[index] > counts[index - 1] and counts[index] >= counts[index + 1]:
+            if counts[index] > counts[index - 1] and counts[index] > counts[index + 1]:
                 candidate_indices.append(index)
 
         return np.asarray(
@@ -994,10 +1232,21 @@ class Automatic1DPeaksProcess(BasePeakProcess):
                 peak_index=int(candidate_index),
             )
 
-            baseline = max(
-                left_minimum,
-                right_minimum,
-            )
+            valley_minima = [
+                float(value)
+                for value in (
+                    left_minimum,
+                    right_minimum,
+                )
+                if value is not None and np.isfinite(value)
+            ]
+
+            if not valley_minima:
+                baseline = 0.0
+            else:
+                baseline = max(
+                    valley_minima,
+                )
 
             prominence = float(counts[int(candidate_index)] - baseline)
 
@@ -1015,7 +1264,7 @@ class Automatic1DPeaksProcess(BasePeakProcess):
         *,
         counts: np.ndarray,
         peak_index: int,
-    ) -> float:
+    ) -> Optional[float]:
         """
         Find the minimum count between a peak and the previous higher boundary.
 
@@ -1047,7 +1296,7 @@ class Automatic1DPeaksProcess(BasePeakProcess):
         left_slice = counts[left_index: peak_index + 1]
 
         if left_slice.size == 0:
-            return 0.0
+            return None
 
         return float(
             np.min(left_slice),
@@ -1058,7 +1307,7 @@ class Automatic1DPeaksProcess(BasePeakProcess):
         *,
         counts: np.ndarray,
         peak_index: int,
-    ) -> float:
+    ) -> Optional[float]:
         """
         Find the minimum count between a peak and the next higher boundary.
 
@@ -1079,6 +1328,9 @@ class Automatic1DPeaksProcess(BasePeakProcess):
             counts[peak_index],
         )
 
+        if peak_index >= counts.size - 1:
+            return None
+
         right_index = peak_index
 
         while right_index < counts.size - 1 and counts[right_index] <= peak_height:
@@ -1090,7 +1342,7 @@ class Automatic1DPeaksProcess(BasePeakProcess):
         right_slice = counts[peak_index: right_index + 1]
 
         if right_slice.size == 0:
-            return 0.0
+            return None
 
         return float(
             np.min(right_slice),
@@ -1159,6 +1411,7 @@ class Automatic1DPeaksProcess(BasePeakProcess):
         self,
         *,
         peak_positions: list[float],
+        debug_info: Optional[dict[str, Any]] = None,
     ) -> dict[str, list[Any]]:
         """
         Build the graph annotation payload for detected 1D peaks.
@@ -1185,6 +1438,7 @@ class Automatic1DPeaksProcess(BasePeakProcess):
             "x_positions": [],
             "y_positions": [],
             "points": [],
+            "debug": dict(debug_info or {}),
         }
 
     def build_empty_peak_lines_payload(self) -> dict[str, list[Any]]:
@@ -1202,7 +1456,123 @@ class Automatic1DPeaksProcess(BasePeakProcess):
             "x_positions": [],
             "y_positions": [],
             "points": [],
+            "debug": {},
         }
+
+    def resolve_settings(
+        self,
+        *,
+        process_settings: Optional[dict[str, Any]],
+        peak_count: Any,
+    ) -> "Automatic1DRunSettings":
+        """
+        Resolve effective process settings from Dash payloads.
+        """
+        settings = process_settings if isinstance(process_settings, dict) else {}
+
+        log_transform_mode = str(
+            settings.get("log_transform_mode", "auto")
+        ).strip().lower()
+
+        if log_transform_mode not in {"auto", "yes", "no"}:
+            log_transform_mode = "auto"
+
+        return Automatic1DRunSettings(
+            peak_count=self.resolve_peak_count(
+                peak_count,
+            ),
+            histogram_bins=resolve_integer_setting(
+                settings=settings,
+                name="histogram_bins",
+                default=self.default_histogram_bin_count,
+                minimum=64,
+                maximum=4000,
+            ),
+            smoothing_window_fraction=resolve_float_setting(
+                settings=settings,
+                name="smoothing_window_fraction",
+                default=self.default_smoothing_window_fraction,
+                minimum=0.000001,
+                maximum=0.08,
+            ),
+            minimum_prominence_fraction=resolve_float_setting(
+                settings=settings,
+                name="minimum_prominence_fraction",
+                default=self.default_minimum_prominence_fraction,
+                minimum=0.0,
+                maximum=1.0,
+            ),
+            minimum_distance_fraction=resolve_float_setting(
+                settings=settings,
+                name="minimum_distance_fraction",
+                default=self.default_minimum_distance_fraction,
+                minimum=0.0,
+                maximum=0.5,
+            ),
+            log_transform_mode=log_transform_mode,
+            advanced_mode=self._resolve_advanced_mode(settings=settings),
+        )
+
+    def _resolve_advanced_mode(
+        self,
+        *,
+        settings: dict[str, Any],
+    ) -> bool:
+        """
+        Resolve advanced mode from callback-provided process settings.
+        """
+        value = settings.get("advanced_mode", None)
+
+        if isinstance(value, str):
+            return value == "enabled"
+
+        if isinstance(value, (list, tuple, set)):
+            return "enabled" in value
+
+        if isinstance(value, bool):
+            return value
+
+        return False
+
+
+class Automatic1DRunSettings:
+    """
+    Effective settings for one Automatic 1D detection run.
+    """
+
+    def __init__(
+        self,
+        *,
+        peak_count: int,
+        histogram_bins: int,
+        smoothing_window_fraction: float,
+        minimum_prominence_fraction: float,
+        minimum_distance_fraction: float,
+        log_transform_mode: str,
+        advanced_mode: bool,
+    ) -> None:
+        self.peak_count = int(peak_count)
+        self.histogram_bins = int(histogram_bins)
+        self.smoothing_window_fraction = float(smoothing_window_fraction)
+        self.minimum_prominence_fraction = float(minimum_prominence_fraction)
+        self.minimum_distance_fraction = float(minimum_distance_fraction)
+        self.log_transform_mode = str(log_transform_mode)
+        self.advanced_mode = bool(advanced_mode)
+
+    def __repr__(self) -> str:
+        """
+        Return compact representation for debug logging.
+        """
+        return (
+            "Automatic1DRunSettings("
+            f"peak_count={self.peak_count!r}, "
+            f"histogram_bins={self.histogram_bins!r}, "
+            f"smoothing_window_fraction={self.smoothing_window_fraction!r}, "
+            f"minimum_prominence_fraction={self.minimum_prominence_fraction!r}, "
+            f"minimum_distance_fraction={self.minimum_distance_fraction!r}, "
+            f"log_transform_mode={self.log_transform_mode!r}, "
+            f"advanced_mode={self.advanced_mode!r})"
+        )
 
 
 PROCESS = Automatic1DPeaksProcess()

@@ -22,6 +22,10 @@ def register_visibility_callbacks(
         ids=ids,
     )
 
+    register_advanced_mode_control_visibility_callback(
+        ids=ids,
+    )
+
     register_force_graph_visible_callback(
         ids=ids,
     )
@@ -35,6 +39,10 @@ def register_visibility_callbacks(
     )
 
     register_bins_visibility_callback(
+        ids=ids,
+    )
+
+    register_process_settings_visibility_callback(
         ids=ids,
     )
 
@@ -91,6 +99,44 @@ def build_graph_toggle_control_style(
     }
 
 
+def build_advanced_mode_control_style(
+    process_name: Any,
+) -> dict[str, str]:
+    """
+    Build the advanced mode toggle style for the selected process state.
+    """
+    return build_graph_toggle_control_style(
+        process_name,
+    )
+
+
+def build_process_settings_container_style(
+    *,
+    process_name: Any,
+    advanced_mode_value: Any,
+) -> dict[str, Any]:
+    """
+    Build style for process advanced settings visibility.
+    """
+    if not has_selected_process(process_name):
+        return {
+            "display": "none",
+        }
+
+    if not graph_toggle_is_enabled(advanced_mode_value):
+        return {
+            "display": "none",
+        }
+
+    return {
+        "display": "flex",
+        "alignItems": "end",
+        "gap": "12px",
+        "flexWrap": "wrap",
+        "marginTop": "10px",
+    }
+
+
 def build_graph_container_style(
     *,
     process_name: Any,
@@ -137,6 +183,31 @@ def register_graph_toggle_control_visibility_callback(
         process_name: Any,
     ) -> dict[str, str]:
         return build_graph_toggle_control_style(process_name)
+
+
+def register_advanced_mode_control_visibility_callback(
+    *,
+    ids: Any,
+) -> None:
+    """
+    Hide the advanced mode toggle until a peak process is selected.
+    """
+
+    @dash.callback(
+        dash.Output(
+            ids.advanced_mode_switch,
+            "style",
+        ),
+        dash.Input(
+            ids.process_dropdown,
+            "value",
+        ),
+        prevent_initial_call=False,
+    )
+    def toggle_advanced_mode_control(
+        process_name: Any,
+    ) -> dict[str, str]:
+        return build_advanced_mode_control_style(process_name)
 
 
 def register_process_visibility_callback(
@@ -428,3 +499,72 @@ def register_bins_visibility_callback(
         return {
             "display": "none",
         }
+
+
+def register_process_settings_visibility_callback(
+    *,
+    ids: Any,
+) -> None:
+    """
+    Show advanced setting controls only for the selected process in advanced mode.
+    """
+
+    @dash.callback(
+        dash.Output(
+            ids.process_settings_container_pattern(),
+            "style",
+        ),
+        dash.Input(
+            ids.process_dropdown,
+            "value",
+        ),
+        dash.Input(
+            ids.advanced_mode_switch,
+            "value",
+        ),
+        dash.State(
+            ids.process_settings_container_pattern(),
+            "id",
+        ),
+        prevent_initial_call=False,
+    )
+    def toggle_process_settings_containers(
+        process_name: Any,
+        advanced_mode_value: Any,
+        settings_container_ids: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        selected_process_name = registry.get_selected_process_name(
+            process_name,
+        )
+
+        styles: list[dict[str, Any]] = []
+
+        for settings_container_id in settings_container_ids or []:
+            if not isinstance(settings_container_id, dict):
+                styles.append(
+                    {
+                        "display": "none",
+                    }
+                )
+                continue
+
+            process_name_from_id = settings_container_id.get(
+                "process",
+            )
+
+            if process_name_from_id != selected_process_name:
+                styles.append(
+                    {
+                        "display": "none",
+                    }
+                )
+                continue
+
+            styles.append(
+                build_process_settings_container_style(
+                    process_name=process_name,
+                    advanced_mode_value=advanced_mode_value,
+                )
+            )
+
+        return styles

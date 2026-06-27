@@ -7,6 +7,7 @@ import numpy as np
 
 from .base import BasePeakProcess, PeakProcessResult, resolve_integer_setting, resolve_integer_value
 from RosettaX.utils.io import column_copy
+from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
 
 
 logger = logging.getLogger(__name__)
@@ -32,6 +33,12 @@ class Automatic2DPeakProcess(BasePeakProcess):
     supports_clear = True
     supports_automatic_action = True
     force_graph_visible = True
+
+    default_peak_count = 5
+    default_histogram_bins = 500
+    default_smoothing_window = 5
+    default_minimum_separation_bins = 1
+    default_detection_space = "log"
 
     def get_required_detector_channels(self) -> list[str]:
         """
@@ -60,7 +67,7 @@ class Automatic2DPeakProcess(BasePeakProcess):
                 "name": "peak_count",
                 "label": "Peak count",
                 "kind": "integer",
-                "default_value": 3,
+                "default_value": self.default_peak_count,
                 "min_value": 1,
                 "max_value": 100,
                 "step": 1,
@@ -75,7 +82,7 @@ class Automatic2DPeakProcess(BasePeakProcess):
                 "name": "histogram_bins",
                 "label": "2D bins",
                 "kind": "integer",
-                "default_value": 160,
+                "default_value": self.default_histogram_bins,
                 "min_value": 20,
                 "max_value": 1000,
                 "step": 10,
@@ -89,7 +96,7 @@ class Automatic2DPeakProcess(BasePeakProcess):
                 "name": "smoothing_window",
                 "label": "Smoothing",
                 "kind": "integer",
-                "default_value": 5,
+                "default_value": self.default_smoothing_window,
                 "min_value": 1,
                 "max_value": 31,
                 "step": 2,
@@ -103,7 +110,7 @@ class Automatic2DPeakProcess(BasePeakProcess):
                 "name": "minimum_separation_bins",
                 "label": "Min separation",
                 "kind": "integer",
-                "default_value": 8,
+                "default_value": self.default_minimum_separation_bins,
                 "min_value": 1,
                 "max_value": 100,
                 "step": 1,
@@ -112,6 +119,21 @@ class Automatic2DPeakProcess(BasePeakProcess):
                     "in histogram bin units. If two candidate peaks are closer than this, "
                     "only the stronger one is kept. Increase it to merge nearby shoulders. "
                     "Decrease it to allow close populations."
+                ),
+            },
+            {
+                "name": "detection_space",
+                "label": "Detection space",
+                "kind": "select",
+                "default_value": self.default_detection_space,
+                "options": [
+                    {"label": "Log", "value": "log"},
+                    {"label": "Linear", "value": "linear"},
+                ],
+                "help": (
+                    "Coordinate space used to build the 2D detection histogram. "
+                    "Log usually works better for bead populations spread across decades. "
+                    "Linear can help when the data are naturally linear."
                 ),
             },
         ]
@@ -158,7 +180,7 @@ class Automatic2DPeakProcess(BasePeakProcess):
         peak_count = resolve_integer_setting(
             settings=process_settings,
             name="peak_count",
-            default=3,
+            default=self.default_peak_count,
             minimum=1,
             maximum=100,
         )
@@ -166,7 +188,7 @@ class Automatic2DPeakProcess(BasePeakProcess):
         histogram_bins = resolve_integer_setting(
             settings=process_settings,
             name="histogram_bins",
-            default=160,
+            default=self.default_histogram_bins,
             minimum=20,
             maximum=1000,
         )
@@ -174,7 +196,7 @@ class Automatic2DPeakProcess(BasePeakProcess):
         smoothing_window = resolve_integer_setting(
             settings=process_settings,
             name="smoothing_window",
-            default=5,
+            default=self.default_smoothing_window,
             minimum=1,
             maximum=31,
         )
@@ -182,9 +204,15 @@ class Automatic2DPeakProcess(BasePeakProcess):
         minimum_separation_bins = resolve_integer_setting(
             settings=process_settings,
             name="minimum_separation_bins",
-            default=8,
+            default=self.default_minimum_separation_bins,
             minimum=1,
             maximum=100,
+        )
+        advanced_mode = self._resolve_advanced_mode(
+            process_settings=process_settings,
+        )
+        use_log_x, use_log_y = self._resolve_detection_space(
+            process_settings=process_settings,
         )
 
         max_events = resolve_integer_value(
@@ -210,13 +238,16 @@ class Automatic2DPeakProcess(BasePeakProcess):
             n=max_events,
         )
 
-        detected_peak_positions = find_2d_histogram_peak_positions(
+        detected_peak_positions, detection_debug = find_2d_histogram_peak_positions(
             x_values=x_values,
             y_values=y_values,
             peak_count=peak_count,
             histogram_bins=histogram_bins,
             smoothing_window=smoothing_window,
             minimum_separation_bins=minimum_separation_bins,
+            use_log_x=use_log_x,
+            use_log_y=use_log_y,
+            include_debug_grid=advanced_mode,
         )
 
         detected_peak_positions = self.deduplicate_2d_peak_positions(
@@ -225,11 +256,21 @@ class Automatic2DPeakProcess(BasePeakProcess):
 
         peak_lines_payload = self.build_peak_lines_payload(
             peak_positions=detected_peak_positions,
+            debug_info=detection_debug,
         )
 
         status = (
             f"Detected {len(detected_peak_positions)} automatic 2D peak(s)."
         )
+
+        if advanced_mode:
+            status = (
+                f"{status} Debug: finite={detection_debug.get('finite_value_count', 0)}, "
+                f"positive={detection_debug.get('positive_value_count', 0)}, "
+                f"roi={detection_debug.get('range_filtered_value_count', 0)}, "
+                f"candidates={detection_debug.get('candidate_count', 0)}, "
+                f"selected={detection_debug.get('selected_count', 0)}"
+            )
 
         logger.debug(
             "Automatic 2D detection completed with peak_count=%r "
@@ -249,6 +290,65 @@ class Automatic2DPeakProcess(BasePeakProcess):
             new_peak_positions=detected_peak_positions,
             clear_existing_table_peaks=False,
         )
+
+    def _resolve_advanced_mode(
+        self,
+        *,
+        process_settings: dict[str, Any],
+    ) -> bool:
+        """
+        Resolve advanced mode from callback-provided process settings.
+        """
+        value = process_settings.get("advanced_mode", None)
+
+        if isinstance(value, str):
+            return value == "enabled"
+
+        if isinstance(value, (list, tuple, set)):
+            return "enabled" in value
+
+        if isinstance(value, bool):
+            return value
+
+        return False
+
+    def _resolve_detection_space(
+        self,
+        *,
+        process_settings: dict[str, Any],
+    ) -> tuple[bool, bool]:
+        """
+        Resolve whether the detector should analyze the 2D histogram in log space.
+        """
+        detection_space = str(
+            process_settings.get(
+                "detection_space",
+                self.default_detection_space,
+            )
+            or self.default_detection_space
+        ).strip().lower()
+
+        if detection_space == "linear":
+            return False, False
+
+        if detection_space == "log":
+            return True, True
+
+        toggle_values = process_settings.get("axis_scale_toggle_values", None)
+
+        if isinstance(toggle_values, str):
+            return (
+                toggle_values == Scatter2DGraph.x_log_value,
+                toggle_values == Scatter2DGraph.y_log_value,
+            )
+
+        if isinstance(toggle_values, (list, tuple, set)):
+            return (
+                Scatter2DGraph.x_log_value in toggle_values,
+                Scatter2DGraph.y_log_value in toggle_values,
+            )
+
+        return True, True
 
     def deduplicate_2d_peak_positions(
         self,
@@ -329,12 +429,14 @@ class Automatic2DPeakProcess(BasePeakProcess):
             "y_positions": [],
             "points": [],
             "labels": [],
+            "debug": {},
         }
 
     def build_peak_lines_payload(
         self,
         *,
         peak_positions: list[dict[str, float]],
+        debug_info: dict[str, Any] | None = None,
     ) -> dict[str, list[Any]]:
         """
         Build graph annotation payload for detected 2D peaks.
@@ -366,6 +468,7 @@ class Automatic2DPeakProcess(BasePeakProcess):
                 for position in peak_positions
             ],
             "labels": labels,
+            "debug": dict(debug_info or {}),
         }
 
 
@@ -377,7 +480,10 @@ def find_2d_histogram_peak_positions(
     histogram_bins: int,
     smoothing_window: int,
     minimum_separation_bins: int,
-) -> list[dict[str, float]]:
+    use_log_x: bool = False,
+    use_log_y: bool = False,
+    include_debug_grid: bool = False,
+) -> tuple[list[dict[str, float]], dict[str, Any]]:
     """
     Detect 2D peak positions from a smoothed 2D histogram.
     """
@@ -391,16 +497,51 @@ def find_2d_histogram_peak_positions(
         dtype=float,
     )
 
+    debug_info: dict[str, Any] = {
+        "input_value_count": int(min(x_values.size, y_values.size)),
+        "finite_value_count": 0,
+        "positive_value_count": 0,
+        "range_filtered_value_count": 0,
+        "candidate_count": 0,
+        "selected_count": 0,
+        "candidate_points": [],
+        "selected_bin_indices": [],
+        "use_log_x": bool(use_log_x),
+        "use_log_y": bool(use_log_y),
+    }
+
     finite_mask = np.isfinite(x_values) & np.isfinite(y_values)
 
     x_values = x_values[finite_mask]
     y_values = y_values[finite_mask]
+    debug_info["finite_value_count"] = int(x_values.size)
 
     if x_values.size == 0 or y_values.size == 0:
-        return []
+        return [], debug_info
+
+    positive_mask = np.ones(
+        x_values.shape,
+        dtype=bool,
+    )
+
+    if use_log_x:
+        positive_mask &= x_values > 0.0
+
+    if use_log_y:
+        positive_mask &= y_values > 0.0
+
+    x_values = x_values[positive_mask]
+    y_values = y_values[positive_mask]
+    debug_info["positive_value_count"] = int(x_values.size)
+
+    if x_values.size == 0 or y_values.size == 0:
+        return [], debug_info
+
+    histogram_x_values = np.log10(x_values) if use_log_x else x_values
+    histogram_y_values = np.log10(y_values) if use_log_y else y_values
 
     x_lower, x_upper = np.quantile(
-        x_values,
+        histogram_x_values,
         [
             0.001,
             0.999,
@@ -408,7 +549,7 @@ def find_2d_histogram_peak_positions(
     )
 
     y_lower, y_upper = np.quantile(
-        y_values,
+        histogram_y_values,
         [
             0.001,
             0.999,
@@ -416,26 +557,35 @@ def find_2d_histogram_peak_positions(
     )
 
     range_mask = (
-        (x_values >= x_lower)
-        & (x_values <= x_upper)
-        & (y_values >= y_lower)
-        & (y_values <= y_upper)
+        (histogram_x_values >= x_lower)
+        & (histogram_x_values <= x_upper)
+        & (histogram_y_values >= y_lower)
+        & (histogram_y_values <= y_upper)
     )
 
-    x_values = x_values[range_mask]
-    y_values = y_values[range_mask]
+    histogram_x_values = histogram_x_values[range_mask]
+    histogram_y_values = histogram_y_values[range_mask]
+    debug_info["range_filtered_value_count"] = int(histogram_x_values.size)
+    debug_info["x_lower_quantile"] = float(10 ** x_lower) if use_log_x else float(x_lower)
+    debug_info["x_upper_quantile"] = float(10 ** x_upper) if use_log_x else float(x_upper)
+    debug_info["y_lower_quantile"] = float(10 ** y_lower) if use_log_y else float(y_lower)
+    debug_info["y_upper_quantile"] = float(10 ** y_upper) if use_log_y else float(y_upper)
 
-    if x_values.size == 0 or y_values.size == 0:
-        return []
+    if histogram_x_values.size == 0 or histogram_y_values.size == 0:
+        return [], debug_info
 
     histogram, x_edges, y_edges = np.histogram2d(
-        x_values,
-        y_values,
+        histogram_x_values,
+        histogram_y_values,
         bins=int(histogram_bins),
     )
+    debug_info["histogram_shape"] = [
+        int(histogram.shape[0]),
+        int(histogram.shape[1]),
+    ]
 
     if histogram.size == 0:
-        return []
+        return [], debug_info
 
     smoothed_histogram = smooth_2d_array(
         values=histogram,
@@ -454,6 +604,8 @@ def find_2d_histogram_peak_positions(
             )
         ]
 
+    debug_info["candidate_count"] = int(len(candidate_indices))
+
     candidate_indices = sorted(
         candidate_indices,
         key=lambda index_pair: smoothed_histogram[index_pair[0], index_pair[1]],
@@ -470,10 +622,53 @@ def find_2d_histogram_peak_positions(
     x_centers = 0.5 * (
         x_edges[:-1] + x_edges[1:]
     )
+    if use_log_x:
+        x_centers = np.power(
+            10.0,
+            x_centers,
+        )
 
     y_centers = 0.5 * (
         y_edges[:-1] + y_edges[1:]
     )
+    if use_log_y:
+        y_centers = np.power(
+            10.0,
+            y_centers,
+        )
+
+    debug_info["candidate_points"] = [
+        {
+            "x": float(x_centers[x_index]),
+            "y": float(y_centers[y_index]),
+            "density": float(smoothed_histogram[x_index, y_index]),
+        }
+        for x_index, y_index in candidate_indices
+        if 0 <= x_index < x_centers.size and 0 <= y_index < y_centers.size
+    ]
+    debug_info["selected_bin_indices"] = [
+        [int(x_index), int(y_index)]
+        for x_index, y_index in selected_indices
+    ]
+    debug_info["selected_count"] = int(len(selected_indices))
+
+    if include_debug_grid:
+        debug_info["debug_grid"] = {
+            "x_centers": [
+                float(value)
+                for value in np.asarray(x_centers, dtype=float)
+                if np.isfinite(value)
+            ],
+            "y_centers": [
+                float(value)
+                for value in np.asarray(y_centers, dtype=float)
+                if np.isfinite(value)
+            ],
+            "smoothed_histogram": np.asarray(
+                smoothed_histogram,
+                dtype=float,
+            ).tolist(),
+        }
 
     peak_positions: list[dict[str, float]] = []
 
@@ -491,7 +686,7 @@ def find_2d_histogram_peak_positions(
             }
         )
 
-    return peak_positions
+    return peak_positions, debug_info
 
 
 def smooth_2d_array(

@@ -67,6 +67,8 @@ def register_mutation_callbacks(
             ids.process_setting_pattern(),
             "value",
         ),
+        dash.State(ids.advanced_mode_switch, "value"),
+        dash.State(ids.axis_scale_toggle, "value"),
     ]
 
     if max_events_input_id is not None:
@@ -124,6 +126,8 @@ def register_mutation_callbacks(
         action_ids: list[dict[str, Any]],
         process_setting_ids: list[dict[str, Any]],
         process_setting_values: list[Any],
+        advanced_mode_value: Any,
+        axis_scale_toggle_values: Any,
         *state_values: Any,
     ) -> tuple[Any, Any, list[Any]]:
         del action_clicks
@@ -191,6 +195,8 @@ def register_mutation_callbacks(
                 detector_dropdown_values=detector_dropdown_values,
                 process_setting_ids=process_setting_ids,
                 process_setting_values=process_setting_values,
+                advanced_mode_value=advanced_mode_value,
+                axis_scale_toggle_values=axis_scale_toggle_values,
                 max_events_for_plots=unpacked_state["max_events_for_plots"],
                 table_data=unpacked_state["table_data"],
                 mie_model=unpacked_state["mie_model"],
@@ -450,6 +456,8 @@ def handle_process_action(
     detector_dropdown_values: list[Any],
     process_setting_ids: list[dict[str, Any]],
     process_setting_values: list[Any],
+    advanced_mode_value: Any = None,
+    axis_scale_toggle_values: Any = None,
     max_events_for_plots: Any,
     table_data: Optional[list[dict[str, Any]]],
     mie_model: Any,
@@ -514,6 +522,8 @@ def handle_process_action(
             detector_channels=detector_channels,
             process_setting_ids=process_setting_ids,
             process_setting_values=process_setting_values,
+            advanced_mode_value=advanced_mode_value,
+            axis_scale_toggle_values=axis_scale_toggle_values,
             max_events_for_plots=max_events_for_plots,
             table_data=table_data,
             mie_model=mie_model,
@@ -596,6 +606,8 @@ def handle_run_action(
     detector_channels: dict[str, Any],
     process_setting_ids: list[dict[str, Any]],
     process_setting_values: list[Any],
+    advanced_mode_value: Any = None,
+    axis_scale_toggle_values: Any = None,
     max_events_for_plots: Any,
     table_data: Optional[list[dict[str, Any]]],
     mie_model: Any,
@@ -647,6 +659,9 @@ def handle_run_action(
         process_setting_values=process_setting_values,
         process_name=target_process_name,
     )
+
+    process_settings["advanced_mode"] = advanced_mode_value
+    process_settings["axis_scale_toggle_values"] = axis_scale_toggle_values
 
     resolved_peak_count = process_settings.get("peak_count")
 

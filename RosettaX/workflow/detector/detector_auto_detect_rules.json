@@ -49,6 +49,8 @@
         "nano analyzer"
       ],
       "detector_channels": {
+        "x": ["405Blu(Area)", "405 Blu", "Blu", "Blue"],
+        "y": ["405SALS(Area)", "SALS", "SSC-A", "SSC-H"],
         "default": ["405SALS(Area)", "SALS", "SSC-A", "SSC-H"],
         "forward": ["405LALS(Area)", "LALS", "FSC-A", "FSC-H"]
       }

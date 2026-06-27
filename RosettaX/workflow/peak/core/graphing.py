@@ -199,6 +199,7 @@ def build_peak_workflow_graph_figure(
     process_setting_ids: list[dict[str, Any]],
     process_setting_values: list[Any],
     graph_toggle_value: Any,
+    advanced_mode_value: Any = None,
     xscale_selection: Any = None,
     yscale_selection: Any = None,
     nbins: Any = None,
@@ -221,6 +222,7 @@ def build_peak_workflow_graph_figure(
         process_setting_ids=process_setting_ids,
         process_setting_values=process_setting_values,
         graph_toggle_value=graph_toggle_value,
+        advanced_mode_value=advanced_mode_value,
         xscale_selection=xscale_selection,
         yscale_selection=yscale_selection,
         nbins=nbins,
@@ -271,6 +273,7 @@ class PeakWorkflowGraphBuilder:
         process_setting_ids: list[dict[str, Any]],
         process_setting_values: list[Any],
         graph_toggle_value: Any,
+        advanced_mode_value: Any = None,
         xscale_selection: Any = None,
         yscale_selection: Any = None,
         nbins: Any = None,
@@ -286,6 +289,7 @@ class PeakWorkflowGraphBuilder:
         self.process_setting_ids = process_setting_ids or []
         self.process_setting_values = process_setting_values or []
         self.graph_toggle_value = graph_toggle_value
+        self.advanced_mode_value = advanced_mode_value
         self.xscale_selection = xscale_selection
         self.yscale_selection = yscale_selection
         self.nbins = nbins
@@ -307,6 +311,7 @@ class PeakWorkflowGraphBuilder:
 
         self.detector_channels: dict[str, Any] = {}
         self.process_settings: dict[str, Any] = {}
+        self._stable_histogram_count_values: Optional[np.ndarray] = None
 
     def build(self) -> go.Figure:
         """
@@ -333,6 +338,10 @@ class PeakWorkflowGraphBuilder:
         figure = self._build_process_specific_figure()
 
         self._apply_axis_types(
+            figure=figure,
+        )
+
+        self._apply_stable_1d_histogram_y_range(
             figure=figure,
         )
 
@@ -512,6 +521,11 @@ class PeakWorkflowGraphBuilder:
                     figure=figure,
                 )
 
+                if self._advanced_mode_is_enabled():
+                    figure = self._add_2d_advanced_overlays(
+                        figure=figure,
+                    )
+
             return figure
 
         return None
@@ -534,10 +548,14 @@ class PeakWorkflowGraphBuilder:
             max_events_for_analysis=self._resolve_max_events_for_plots(),
             use_log_x_bins=self._x_axis_is_log(),
         )
+        self._stable_histogram_count_values = np.asarray(
+            histogram_result.counts,
+            dtype=float,
+        )
 
         peak_positions = self._extract_x_positions_from_peak_lines_payload()
 
-        return plottings.build_histogram_figure(
+        figure = plottings.build_histogram_figure(
             histogram_result=histogram_result,
             detector_column=detector_column,
             use_log_counts=scale_selection_is_log(
@@ -545,6 +563,136 @@ class PeakWorkflowGraphBuilder:
             ),
             peak_positions=peak_positions,
         )
+
+        if self._advanced_mode_is_enabled():
+            figure = self._add_1d_advanced_overlays(
+                figure=figure,
+            )
+
+        figure.update_layout(
+            showlegend=False,
+        )
+
+        return figure
+
+    def _apply_stable_1d_histogram_y_range(
+        self,
+        *,
+        figure: go.Figure,
+    ) -> None:
+        """
+        Clamp 1D histogram y range using only histogram counts.
+
+        Diagnostic overlays such as smoothed curves and threshold guide lines
+        must not redefine the displayed histogram count range.
+        """
+        histogram_count_values = self._stable_histogram_count_values
+
+        if histogram_count_values is None:
+            return
+
+        y_range = compute_stable_axis_range(
+            values=histogram_count_values,
+            log_scale=self._y_axis_is_log(),
+        )
+
+        if y_range is None:
+            return
+
+        figure.update_yaxes(
+            autorange=False,
+            range=y_range,
+        )
+
+    def _advanced_mode_is_enabled(self) -> bool:
+        """
+        Return whether advanced mode is enabled for graph diagnostics.
+        """
+        return is_enabled(
+            self.advanced_mode_value,
+        )
+
+    def _add_1d_advanced_overlays(
+        self,
+        *,
+        figure: go.Figure,
+    ) -> go.Figure:
+        """
+        Add compact diagnostic overlays for 1D automatic peak detection.
+        """
+        if not isinstance(self.peak_lines_payload, dict):
+            return figure
+
+        debug_payload = self.peak_lines_payload.get("debug", {})
+
+        if not isinstance(debug_payload, dict):
+            return figure
+
+        bin_centers = np.asarray(
+            debug_payload.get("histogram_bin_centers", []),
+            dtype=float,
+        )
+
+        smoothed_counts = np.asarray(
+            debug_payload.get("smoothed_counts", []),
+            dtype=float,
+        )
+
+        if bin_centers.size == 0 or smoothed_counts.size == 0:
+            return figure
+
+        if bin_centers.size != smoothed_counts.size:
+            minimum_size = int(min(bin_centers.size, smoothed_counts.size))
+
+            if minimum_size <= 0:
+                return figure
+
+            bin_centers = bin_centers[:minimum_size]
+            smoothed_counts = smoothed_counts[:minimum_size]
+
+        finite_mask = np.isfinite(bin_centers) & np.isfinite(smoothed_counts)
+
+        if not np.any(finite_mask):
+            return figure
+
+        bin_centers = bin_centers[finite_mask]
+        smoothed_counts = smoothed_counts[finite_mask]
+
+        figure.add_trace(
+            go.Scatter(
+                x=bin_centers,
+                y=smoothed_counts,
+                mode="lines",
+                name="Smoothed curve",
+                line={
+                    "width": 2,
+                    "dash": "dot",
+                    "color": "rgba(30, 30, 30, 0.85)",
+                },
+                hovertemplate=(
+                    "x=%{x:.6g}<br>smoothed=%{y:.6g}<extra></extra>"
+                ),
+            )
+        )
+
+        minimum_prominence = debug_payload.get("minimum_prominence", None)
+
+        try:
+            minimum_prominence_value = float(minimum_prominence)
+        except (TypeError, ValueError):
+            minimum_prominence_value = None
+
+        if minimum_prominence_value is not None and np.isfinite(minimum_prominence_value):
+            figure.add_hline(
+                y=minimum_prominence_value,
+                line_dash="dash",
+                line_width=1,
+                line_color="rgba(120, 35, 35, 0.9)",
+                annotation_text="Min prominence",
+                annotation_position="top left",
+            )
+
+        return figure
 
     def _build_default_2d_scatter_figure(self) -> go.Figure:
         """
@@ -629,7 +777,7 @@ class PeakWorkflowGraphBuilder:
                     "size": self._get_default_marker_size(),
                     "opacity": self._get_default_marker_opacity(),
                     "color": density_values,
-                    "colorscale": "Viridis",
+                    "colorscale": "Turbo",
                     "showscale": True,
                     "colorbar": {
                         "title": {
@@ -675,6 +823,15 @@ class PeakWorkflowGraphBuilder:
 
         figure = self._add_2d_overlays(
             figure=figure,
+        )
+
+        if self._advanced_mode_is_enabled():
+            figure = self._add_2d_advanced_overlays(
+                figure=figure,
+            )
+
+        figure.update_layout(
+            showlegend=False,
         )
 
         return figure
@@ -1097,6 +1254,91 @@ class PeakWorkflowGraphBuilder:
                     borderpad=6,
                     align="center",
                 )
+
+        return figure
+
+    def _add_2d_advanced_overlays(
+        self,
+        *,
+        figure: go.Figure,
+    ) -> go.Figure:
+        """
+        Add the smoothed 2D density map used by automatic peak detection.
+        """
+        if not isinstance(self.peak_lines_payload, dict):
+            return figure
+
+        debug_payload = self.peak_lines_payload.get("debug", {})
+
+        if not isinstance(debug_payload, dict):
+            return figure
+
+        debug_grid = debug_payload.get("debug_grid", {})
+
+        if not isinstance(debug_grid, dict):
+            return figure
+
+        x_centers = np.asarray(
+            debug_grid.get("x_centers", []),
+            dtype=float,
+        )
+        y_centers = np.asarray(
+            debug_grid.get("y_centers", []),
+            dtype=float,
+        )
+        smoothed_histogram = np.asarray(
+            debug_grid.get("smoothed_histogram", []),
+            dtype=float,
+        )
+
+        if (
+            x_centers.size == 0
+            or y_centers.size == 0
+            or smoothed_histogram.size == 0
+        ):
+            return figure
+
+        if smoothed_histogram.ndim != 2:
+            return figure
+
+        if smoothed_histogram.shape != (
+            x_centers.size,
+            y_centers.size,
+        ):
+            return figure
+
+        if not (
+            np.all(np.isfinite(x_centers))
+            and np.all(np.isfinite(y_centers))
+            and np.all(np.isfinite(smoothed_histogram))
+        ):
+            return figure
+
+        figure.add_trace(
+            go.Heatmap(
+                x=x_centers,
+                y=y_centers,
+                z=np.log10(
+                    smoothed_histogram.T + 1.0,
+                ),
+                colorscale="Turbo",
+                opacity=0.50,
+                showscale=False,
+                hovertemplate=(
+                    "Smoothed density<br>"
+                    "x=%{x:.6g}<br>"
+                    "y=%{y:.6g}<br>"
+                    "log10(count+1)=%{z:.6g}<extra></extra>"
+                ),
+            )
+        )
+
+        figure.data = tuple(
+            [
+                figure.data[-1],
+                *figure.data[:-1],
+            ]
+        )
 
         return figure
 

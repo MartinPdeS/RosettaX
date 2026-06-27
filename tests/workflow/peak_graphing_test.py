@@ -318,3 +318,29 @@ class Test_PeakWorkflowGraphBuilder2DFiltering:
             assert is_enabled("disabled") is False
             assert scale_selection_is_log("log") is True
             assert scale_selection_is_log("linear") is False
+
+
+class Test_PeakWorkflowGraphBuilder1DHistogramRange:
+    def test_advanced_overlay_does_not_expand_histogram_y_range(self):
+        builder = PeakWorkflowGraphBuilder.__new__(PeakWorkflowGraphBuilder)
+        builder.yscale_selection = "linear"
+        builder._stable_histogram_count_values = np.asarray(
+            [10.0, 15.0, 12.0],
+            dtype=float,
+        )
+
+        figure = go.Figure()
+        figure.add_trace(
+            go.Scatter(
+                x=[1.0, 2.0, 3.0],
+                y=[10.0, 5000.0, 12.0],
+                mode="lines",
+            )
+        )
+
+        builder._apply_stable_1d_histogram_y_range(
+            figure=figure,
+        )
+
+        assert figure.layout.yaxis.autorange is False
+        assert tuple(figure.layout.yaxis.range) == (9.5, 15.5)

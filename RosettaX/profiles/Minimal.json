@@ -17,7 +17,7 @@
     "histogram_yscale": "log",
     "max_events_for_analysis": 25000,
     "n_bins_for_plots": 128,
-    "peak_graph_colormap_log": false,
+    "peak_graph_colormap_log": true,
     "target_model_preset": "Custom",
     "target_mie_relation_xscale": "linear",
     "target_mie_relation_yscale": "log"

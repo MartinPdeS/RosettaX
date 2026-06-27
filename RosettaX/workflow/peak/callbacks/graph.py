@@ -91,6 +91,10 @@ def register_graph_callbacks(
             "value",
         ),
         dash.Input(
+            ids.advanced_mode_switch,
+            "value",
+        ),
+        dash.Input(
             axis_scale_toggle_id,
             "value",
         ),
@@ -119,6 +123,7 @@ def register_graph_callbacks(
     )
     def update_graph(
         graph_toggle_value: Any,
+        advanced_mode_value: Any,
         axis_scale_toggle_values: Any,
         page_state_payload: Any,
         nbins: Any,
@@ -180,6 +185,7 @@ def register_graph_callbacks(
                 process_setting_ids=process_setting_ids,
                 process_setting_values=process_setting_values,
                 graph_toggle_value=graph_toggle_value,
+                advanced_mode_value=advanced_mode_value,
                 xscale_selection=axis_scale_toggle_values,
                 yscale_selection=axis_scale_toggle_values,
                 nbins=nbins,
@@ -422,6 +428,7 @@ def add_grouped_1d_histogram_traces(
 
     figure.update_layout(
         barmode="overlay",
+        bargap=0.0,
         showlegend=True,
     )
 

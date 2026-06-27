@@ -194,12 +194,25 @@ def build_histogram_figure(
 
     figure = go.Figure()
 
+    step_x = np.repeat(
+        histogram_result.edges,
+        2,
+    )[1:-1]
+    step_y = np.repeat(
+        histogram_result.counts,
+        2,
+    )
+
     figure.add_trace(
-        go.Bar(
-            x=histogram_result.centers,
-            y=histogram_result.counts,
-            width=np.diff(histogram_result.edges),
+        go.Scatter(
+            x=step_x,
+            y=step_y,
+            mode="lines",
+            fill="tozeroy",
             name="signal",
+            line={
+                "shape": "linear",
+            },
         )
     )
 
@@ -327,7 +340,7 @@ def make_histogram_with_lines(
         },
         xaxis_title=xaxis_title,
         yaxis_title="Count",
-        bargap=0.02,
+        bargap=0.0,
         showlegend=(overlay_histogram_values is not None),
         separators=".,",
         barmode="overlay",

@@ -19,6 +19,15 @@ class Test_PeakProcessSelectionVisibility:
         assert visibility.build_graph_toggle_control_style("") == {
             "display": "none",
         }
+        assert visibility.build_advanced_mode_control_style("") == {
+            "display": "none",
+        }
+        assert visibility.build_process_settings_container_style(
+            process_name="",
+            advanced_mode_value=["enabled"],
+        ) == {
+            "display": "none",
+        }
         assert visibility.build_graph_container_style(
             process_name="",
             graph_toggle_value=["enabled"],
@@ -29,6 +38,25 @@ class Test_PeakProcessSelectionVisibility:
     def test_selected_process_shows_graph_toggle_and_respects_toggle_value(self) -> None:
         assert visibility.build_graph_toggle_control_style("Automatic 1D") == {
             "display": "inline-flex",
+        }
+        assert visibility.build_advanced_mode_control_style("Automatic 1D") == {
+            "display": "inline-flex",
+        }
+        assert visibility.build_process_settings_container_style(
+            process_name="Automatic 1D",
+            advanced_mode_value=["enabled"],
+        ) == {
+            "display": "flex",
+            "alignItems": "end",
+            "gap": "12px",
+            "flexWrap": "wrap",
+            "marginTop": "10px",
+        }
+        assert visibility.build_process_settings_container_style(
+            process_name="Automatic 1D",
+            advanced_mode_value=[],
+        ) == {
+            "display": "none",
         }
         assert visibility.build_graph_container_style(
             process_name="Automatic 1D",

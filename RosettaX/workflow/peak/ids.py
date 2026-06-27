@@ -63,6 +63,14 @@ class PeakIds:
         return f"{self.resolved_namespace}-peak-script-setting"
 
     @property
+    def process_settings_container_type(self) -> str:
+        return f"{self.resolved_namespace}-peak-script-settings-container"
+
+    @property
+    def process_setting_spinner_button_type(self) -> str:
+        return f"{self.resolved_namespace}-peak-script-setting-spinner-button"
+
+    @property
     def detector_dropdown_type(self) -> str:
         return self.process_detector_dropdown_type
 
@@ -96,6 +104,10 @@ class PeakIds:
     @property
     def graph_toggle_switch(self) -> str:
         return f"{self.prefix}-graph-toggle-switch"
+
+    @property
+    def advanced_mode_switch(self) -> str:
+        return f"{self.prefix}-advanced-mode-switch"
 
     @property
     def graph_toggle_container(self) -> str:
@@ -288,3 +300,48 @@ class PeakIds:
 
     def setting_pattern(self) -> dict[str, Any]:
         return self.process_setting_pattern()
+
+    def process_setting_match(self) -> dict[str, Any]:
+        return {
+            "type": self.process_setting_type,
+            "process": dash.MATCH,
+            "setting": dash.MATCH,
+        }
+
+    def process_setting_spinner_button(
+        self,
+        *,
+        process_name: str,
+        setting_name: str,
+        direction: str,
+    ) -> dict[str, str]:
+        return {
+            "type": self.process_setting_spinner_button_type,
+            "process": process_name,
+            "setting": setting_name,
+            "direction": direction,
+        }
+
+    def process_setting_spinner_button_match(self) -> dict[str, Any]:
+        return {
+            "type": self.process_setting_spinner_button_type,
+            "process": dash.MATCH,
+            "setting": dash.MATCH,
+            "direction": dash.ALL,
+        }
+
+    def process_settings_container(
+        self,
+        *,
+        process_name: str,
+    ) -> dict[str, str]:
+        return {
+            "type": self.process_settings_container_type,
+            "process": process_name,
+        }
+
+    def process_settings_container_pattern(self) -> dict[str, Any]:
+        return {
+            "type": self.process_settings_container_type,
+            "process": dash.ALL,
+        }

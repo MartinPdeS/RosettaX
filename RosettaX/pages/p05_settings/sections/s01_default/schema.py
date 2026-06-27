@@ -594,7 +594,7 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         value_kind="int",
         runtime_path="calibration.n_bins_for_plots",
         profile_path="apply_calibration.calibration.n_bins_for_plots",
-        default=100,
+        default=500,
         min_value=10,
         step=1,
     ),

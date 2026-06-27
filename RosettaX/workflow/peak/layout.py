@@ -121,6 +121,11 @@ class PeakLayout:
                     self._build_graph_toggle_control(
                         switch_id=self.ids.graph_toggle_switch,
                     ),
+                    self._build_graph_toggle_control(
+                        switch_id=self.ids.advanced_mode_switch,
+                        label="Advanced mode",
+                        value=[],
+                    ),
                 ],
                 style={
                     "display": "flex",
@@ -289,6 +294,10 @@ class PeakLayout:
             process=process,
         )
 
+        setting_controls = self._build_setting_controls(
+            process=process,
+        )
+
         children: list[Any] = [
             html.Div(
                 [
@@ -311,14 +320,9 @@ class PeakLayout:
                 ]
             ),
             html.Div(
-                [
-                    *self._build_detector_controls(
-                        process=process,
-                    ),
-                    *self._build_setting_controls(
-                        process=process,
-                    ),
-                ],
+                self._build_detector_controls(
+                    process=process,
+                ),
                 style={
                     "display": "flex",
                     "alignItems": "end",
@@ -326,6 +330,21 @@ class PeakLayout:
                     "flexWrap": "wrap",
                 },
             ),
+            html.Div(
+                setting_controls,
+                id=self.ids.process_settings_container(
+                    process_name=process_name,
+                ),
+                style={
+                    "display": "none",
+                    "alignItems": "end",
+                    "gap": "12px",
+                    "flexWrap": "wrap",
+                    "marginTop": "10px",
+                },
+            )
+            if setting_controls
+            else None,
             html.Div(
                 self._build_process_action_buttons(
                     process_name=process_name,
@@ -507,7 +526,6 @@ class PeakLayout:
                 name="step",
                 default=None,
             )
-
             setting_id = self.ids.process_setting(
                 process_name=process_name,
                 setting_name=setting_name,
@@ -725,11 +743,10 @@ class PeakLayout:
                 ),
                 dbc.Input(
                     id=input_id,
-                    type="number",
-                    value=value,
-                    min=minimum,
-                    max=maximum,
-                    step=step,
+                    type="text",
+                    inputMode="numeric",
+                    value=str(value),
+                    debounce=True,
                     size="sm",
                     style={
                         "width": "110px",
@@ -905,11 +922,10 @@ class PeakLayout:
                 ),
                 dbc.Input(
                     id=input_id,
-                    type="number",
-                    value=value,
-                    min=minimum,
-                    max=maximum,
-                    step=step,
+                    type="text",
+                    inputMode="numeric",
+                    value=str(value),
+                    debounce=True,
                     size="sm",
                     persistence=True,
                     persistence_type="session",
@@ -940,19 +956,14 @@ class PeakLayout:
 
         input_kwargs: dict[str, Any] = {
             "id": input_id,
-            "type": "number",
-            "value": value,
-            "step": step,
+            "type": "text",
+            "inputMode": "decimal",
+            "value": str(value),
+            "debounce": True,
             "size": "sm",
             "persistence": True,
             "persistence_type": "session",
         }
-
-        if minimum is not None:
-            input_kwargs["min"] = minimum
-
-        if maximum is not None:
-            input_kwargs["max"] = maximum
 
         return html.Div(
             [

@@ -46,3 +46,36 @@ class Test_PlottingsHistogram:
 
         assert np.all(histogram_result.values > 0.0)
         assert histogram_result.values.tolist() == [1.0, 10.0]
+
+    def test_make_histogram_with_lines_uses_zero_bar_gap(self) -> None:
+        figure = plottings.make_histogram_with_lines(
+            values=np.asarray([1.0, 2.0, 3.0, 4.0], dtype=float),
+            nbins=4,
+            xaxis_title="Signal",
+            line_positions=[],
+            line_labels=[],
+        )
+
+        assert figure.layout.bargap == 0.0
+
+    def test_build_histogram_figure_uses_filled_step_trace(self) -> None:
+        histogram_result = plottings.HistogramResult(
+            values=np.asarray([1.0, 2.0, 4.0, 8.0], dtype=float),
+            counts=np.asarray([3.0, 1.0, 2.0], dtype=float),
+            edges=np.asarray([1.0, 2.0, 4.0, 8.0], dtype=float),
+            centers=np.asarray(
+                [np.sqrt(2.0), np.sqrt(8.0), np.sqrt(32.0)],
+                dtype=float,
+            ),
+        )
+
+        figure = plottings.build_histogram_figure(
+            detector_column="FL1-A",
+            histogram_result=histogram_result,
+        )
+
+        assert len(figure.data) == 1
+        assert figure.data[0].type == "scatter"
+        assert figure.data[0].fill == "tozeroy"
+        assert tuple(figure.data[0].x) == (1.0, 2.0, 2.0, 4.0, 4.0, 8.0)
+        assert tuple(figure.data[0].y) == (3.0, 3.0, 1.0, 1.0, 2.0, 2.0)
