@@ -453,7 +453,7 @@ class CalibrationPickerCallbacks:
         def sync_uploaded_calibration_summary(
             uploaded_contents: Any,
             uploaded_filename: Any,
-        ) -> tuple[Optional[dict[str, Any]], str, str]:
+        ) -> tuple[Optional[list[dict[str, Any]]], str, str]:
             logger.debug(
                 "sync_uploaded_calibration_summary called with uploaded_filename=%r",
                 uploaded_filename,
@@ -467,24 +467,49 @@ class CalibrationPickerCallbacks:
                 )
 
             try:
-                resolved_filename, calibration_payload = services.parse_uploaded_calibration(
-                    contents=uploaded_contents,
-                    filename=uploaded_filename,
-                )
+                if isinstance(uploaded_contents, list):
+                    contents_list = uploaded_contents
+                else:
+                    contents_list = [uploaded_contents]
 
-                calibration_summary = services.build_calibration_summary(
-                    selected_calibration=resolved_filename,
-                    calibration_payload=calibration_payload,
-                )
+                if isinstance(uploaded_filename, list):
+                    filename_list = uploaded_filename
+                else:
+                    filename_list = [uploaded_filename]
+
+                if len(contents_list) != len(filename_list):
+                    raise ValueError(
+                        "Calibration upload payload is inconsistent."
+                    )
+
+                calibration_summaries: list[dict[str, Any]] = []
+
+                for contents_item, filename_item in zip(
+                    contents_list,
+                    filename_list,
+                ):
+                    resolved_filename, calibration_payload = services.parse_uploaded_calibration(
+                        contents=contents_item,
+                        filename=filename_item,
+                    )
+
+                    calibration_summaries.append(
+                        services.build_calibration_summary(
+                            selected_calibration=resolved_filename,
+                            calibration_payload=calibration_payload,
+                        )
+                    )
 
                 logger.debug(
                     "Updating selected_calibration_summary_store=%r",
-                    calibration_summary,
+                    calibration_summaries,
                 )
 
+                loaded_file_count = len(calibration_summaries)
+
                 return (
-                    calibration_summary,
-                    f'Loaded calibration file "{resolved_filename}".',
+                    calibration_summaries,
+                    f"Loaded {loaded_file_count} calibration file(s).",
                     "success",
                 )
 
@@ -521,16 +546,53 @@ class CalibrationPickerCallbacks:
             prevent_initial_call=False,
         )
         def update_preview(
-            calibration_summary: Optional[dict[str, Any]],
+            calibration_summary: Any,
         ) -> tuple[dict[str, Any], Any]:
-            if not calibration_summary or not calibration_summary.get("calibration_type"):
+            calibration_summaries = services.normalize_calibration_summaries(
+                calibration_summary,
+            )
+
+            if not calibration_summaries:
                 return {"display": "none"}, None
 
-            preview_items = services.build_preview_items(calibration_summary)
+            preview_children = []
+
+            for index, summary in enumerate(calibration_summaries, start=1):
+                if not summary.get("calibration_type"):
+                    continue
+
+                preview_children.append(
+                    dash.html.Div(
+                        [
+                            dash.html.Div(
+                                f"Calibration {index}",
+                                style={
+                                    "fontWeight": "700",
+                                    "fontSize": "0.93rem",
+                                    "marginBottom": "10px",
+                                },
+                            ),
+                            dash.html.Div(
+                                services.build_preview_items(summary),
+                            ),
+                        ],
+                        style={
+                            "padding": "10px 0px",
+                            "borderBottom": (
+                                "1px solid rgba(0, 0, 0, 0.08)"
+                                if index < len(calibration_summaries)
+                                else "none"
+                            ),
+                        },
+                    )
+                )
+
+            if not preview_children:
+                return {"display": "none"}, None
 
             return (
                 {"display": "block"},
-                preview_items,
+                preview_children,
             )
 
     def _register_scattering_target_model_visibility_callback(self) -> None:
@@ -557,9 +619,8 @@ class CalibrationPickerCallbacks:
                 calibration_summary,
             )
 
-            is_visible = (
-                isinstance(calibration_summary, dict)
-                and calibration_summary.get("requires_target_model")
+            is_visible = services.calibration_summaries_require_target_model(
+                calibration_summary,
             )
 
             return services.build_scattering_target_model_container_style(
@@ -699,10 +760,13 @@ class CalibrationPickerCallbacks:
                 axis_scale_toggle_values,
             )
 
-            if not (
-                isinstance(selected_calibration_summary, dict)
-                and selected_calibration_summary.get("requires_target_model")
-            ):
+            scattering_calibration_summary = (
+                services.get_primary_scattering_calibration_summary(
+                    selected_calibration_summary,
+                )
+            )
+
+            if scattering_calibration_summary is None:
                 return (
                     services.build_empty_target_mie_relation_figure(),
                     "Select a scattering calibration to preview the target Mie relation.",
@@ -726,7 +790,7 @@ class CalibrationPickerCallbacks:
                     resolve_monotonic_target_mie_relation,
                 )
 
-                calibration_payload = selected_calibration_summary.get(
+                calibration_payload = scattering_calibration_summary.get(
                     "calibration_payload",
                 )
 

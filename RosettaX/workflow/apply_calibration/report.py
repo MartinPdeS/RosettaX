@@ -8,7 +8,7 @@ import re
 import textwrap
 from typing import Any, Optional
 
-from .services import ApplyCalibrationFilesResult, ApplyCalibrationRequest
+from .services import ApplyCalibrationFilesResult, ApplyCalibrationRequest, resolve_source_channel
 
 
 PAGE_WIDTH = 612.0
@@ -28,28 +28,63 @@ COLOR_ACCENT_ALT = (0.88, 0.93, 0.90)
 COLOR_WARNING = (0.72, 0.41, 0.12)
 COLOR_POINT = (0.89, 0.34, 0.19)
 COLOR_LINE_SERIES = (0.07, 0.47, 0.73)
-COLOR_LOGO_CYAN = (0.08, 0.79, 0.86)
-COLOR_LOGO_BLUE = (0.16, 0.46, 0.95)
 
 
 def build_apply_report_payload(
     *,
     request: ApplyCalibrationRequest,
     result: ApplyCalibrationFilesResult,
-    calibration_summary: Optional[dict[str, Any]] = None,
+    calibration_summary: Optional[Any] = None,
 ) -> dict[str, Any]:
     """Build a serializable payload describing one successful apply/export run."""
+    calibration_summaries = _normalize_calibration_summaries(
+        calibration_summary,
+    )
+    primary_calibration_summary = calibration_summaries[0] if calibration_summaries else None
+
     return {
         "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
         "request_signature": build_apply_report_request_signature(request=request),
-        "selected_calibration": str(request.selected_calibration),
+        "selected_calibration": _build_selected_calibration_label(
+            request=request,
+        ),
+        "selected_calibrations": [
+            str(calibration.selected_calibration)
+            for calibration in request.calibrations
+        ],
         "calibration_summary": _build_calibration_summary_payload(
-            calibration_summary=calibration_summary,
+            calibration_summary=primary_calibration_summary,
         ),
+        "calibration_summaries": [
+            _build_calibration_summary_payload(
+                calibration_summary=summary,
+            )
+            for summary in calibration_summaries
+        ],
         "calibration_details": _build_calibration_details_payload(
-            calibration_payload=request.calibration_payload,
+            calibration_payload=(
+                request.calibrations[0].calibration_payload
+                if request.calibrations
+                else {}
+            ),
         ),
-        "saved_calibration_payload": _sanitize_payload_tree(request.calibration_payload),
+        "calibration_details_list": [
+            _build_calibration_details_payload(
+                calibration_payload=calibration.calibration_payload,
+            )
+            for calibration in request.calibrations
+        ],
+        "saved_calibration_payload": _sanitize_payload_tree(
+            request.calibrations[0].calibration_payload
+            if request.calibrations
+            else {}
+        ),
+        "saved_calibration_payloads": [
+            _sanitize_payload_tree(
+                calibration.calibration_payload,
+            )
+            for calibration in request.calibrations
+        ],
         "uploaded_fcs_paths": [str(path) for path in request.uploaded_fcs_paths],
         "export_columns": [str(column) for column in request.export_columns],
         "scattering_target_model_parameters": _build_scattering_target_model_payload(
@@ -74,7 +109,15 @@ def build_apply_report_request_signature(
     """Build a comparable signature for the current apply request."""
     return {
         "uploaded_fcs_paths": [str(path) for path in request.uploaded_fcs_paths],
-        "selected_calibration": str(request.selected_calibration),
+        "selected_calibrations": [
+            {
+                "selected_calibration": str(calibration.selected_calibration),
+                "source_channel": resolve_source_channel(
+                    calibration.calibration_payload,
+                ),
+            }
+            for calibration in request.calibrations
+        ],
         "export_columns": [str(column) for column in request.export_columns],
         "scattering_target_model_parameters": _build_scattering_target_model_payload(
             request=request,
@@ -152,6 +195,37 @@ def _build_calibration_summary_payload(
         "version": calibration_summary.get("version"),
         "requires_target_model": bool(calibration_summary.get("requires_target_model", False)),
     }
+
+
+def _normalize_calibration_summaries(
+    calibration_summary: Any,
+) -> list[dict[str, Any]]:
+    if isinstance(calibration_summary, list):
+        return [
+            item
+            for item in calibration_summary
+            if isinstance(item, dict)
+        ]
+
+    if isinstance(calibration_summary, dict):
+        return [
+            calibration_summary,
+        ]
+
+    return []
+
+
+def _build_selected_calibration_label(
+    *,
+    request: ApplyCalibrationRequest,
+) -> str:
+    if not request.calibrations:
+        return ""
+
+    if len(request.calibrations) == 1:
+        return str(request.calibrations[0].selected_calibration)
+
+    return f"{len(request.calibrations)} calibration files"
 
 
 def _build_calibration_details_payload(
@@ -256,7 +330,12 @@ def _build_scattering_target_model_payload(
     *,
     request: ApplyCalibrationRequest,
 ) -> Optional[dict[str, Any]]:
-    parameters = request.scattering_target_model_parameters
+    parameters = None
+
+    for calibration in request.calibrations:
+        if calibration.scattering_target_model_parameters is not None:
+            parameters = calibration.scattering_target_model_parameters
+            break
 
     if parameters is None:
         return None
@@ -370,12 +449,34 @@ class _PdfReportComposer:
     def _compose_document(self) -> None:
         self._draw_summary_cards(items=_build_cover_summary_items(report_payload=self.report_payload))
         self._draw_key_value_table(
-            title="Apply overview",
+            title="Run summary",
             items=_build_apply_overview_items(report_payload=self.report_payload),
         )
+        calibration_rows = _build_selected_calibration_rows(
+            report_payload=self.report_payload,
+        )
+        if calibration_rows:
+            self._draw_table(
+                title="Selected calibrations",
+                headers=["File", "Type", "Source channel", "Output quantity"],
+                rows=calibration_rows,
+                column_weights=[0.34, 0.14, 0.24, 0.28],
+            )
         self._draw_key_value_table(
-            title="Calibration metadata",
+            title="Primary calibration details",
             items=_build_calibration_metadata_items(report_payload=self.report_payload),
+        )
+        input_file_rows = [
+            [file_path]
+            for file_path in _normalize_string_list(
+                self.report_payload.get("uploaded_fcs_paths")
+            )
+        ]
+        self._draw_table(
+            title="Input FCS files",
+            headers=["Uploaded FCS file"],
+            rows=input_file_rows or [["None"]],
+            column_weights=[1.0],
         )
 
         chart_spec = _build_chart_spec(report_payload=self.report_payload)
@@ -405,20 +506,6 @@ class _PdfReportComposer:
                 items=target_model_items,
             )
 
-        for section_spec in _build_saved_payload_section_specs(report_payload=self.report_payload):
-            self._draw_key_value_table(
-                title=section_spec["title"],
-                items=section_spec["items"],
-            )
-
-        input_file_rows = [[file_path] for file_path in _normalize_string_list(self.report_payload.get("uploaded_fcs_paths"))]
-        self._draw_table(
-            title="Input files",
-            headers=["Uploaded FCS file"],
-            rows=input_file_rows or [["None"]],
-            column_weights=[1.0],
-        )
-
         reference_table_spec = _build_reference_table_spec(report_payload=self.report_payload)
         if reference_table_spec is not None:
             self._draw_table(
@@ -426,6 +513,12 @@ class _PdfReportComposer:
                 headers=reference_table_spec["headers"],
                 rows=reference_table_spec["rows"],
                 column_weights=reference_table_spec["column_weights"],
+            )
+
+        for section_spec in _build_saved_payload_section_specs(report_payload=self.report_payload):
+            self._draw_key_value_table(
+                title=section_spec["title"],
+                items=section_spec["items"],
             )
 
         warning_items = _normalize_string_list(self.report_payload.get("result", {}).get("warnings"))
@@ -443,36 +536,30 @@ class _PdfReportComposer:
 
         self._fill_rect(
             x=0.0,
-            y=PAGE_HEIGHT - 118.0,
+            y=PAGE_HEIGHT - 106.0,
             width=PAGE_WIDTH,
-            height=118.0,
+            height=106.0,
             fill_color=COLOR_ACCENT,
         )
         self._fill_rect(
-            x=PAGE_WIDTH - 148.0,
-            y=PAGE_HEIGHT - 118.0,
-            width=148.0,
-            height=118.0,
-            fill_color=COLOR_ACCENT_ALT,
-        )
-        self._draw_brand_mark(
-            x=PAGE_WIDTH - 120.0,
-            y=PAGE_HEIGHT - 90.0,
-            scale=1.0,
-            on_dark=False,
+            x=0.0,
+            y=PAGE_HEIGHT - 106.0,
+            width=PAGE_WIDTH,
+            height=1.0,
+            fill_color=(0.89, 0.94, 0.98),
         )
         self._draw_text(
             x=PAGE_MARGIN,
-            y=PAGE_HEIGHT - 52.0,
-            text="RosettaX Apply Calibration Report",
+            y=PAGE_HEIGHT - 44.0,
+            text="Apply Calibration Report",
             font="F2",
-            size=22.0,
+            size=21.0,
             color=(1.0, 1.0, 1.0),
         )
         self._draw_text_block(
             x=PAGE_MARGIN,
-            y=PAGE_HEIGHT - 76.0,
-            width=PAGE_WIDTH - (2.0 * PAGE_MARGIN) - 120.0,
+            y=PAGE_HEIGHT - 64.0,
+            width=PAGE_WIDTH - (2.0 * PAGE_MARGIN),
             text=calibration_name,
             font="F1",
             size=11.0,
@@ -481,7 +568,7 @@ class _PdfReportComposer:
         )
         self._draw_text(
             x=PAGE_MARGIN,
-            y=PAGE_HEIGHT - 99.0,
+            y=PAGE_HEIGHT - 86.0,
             text=f"Generated {self.report_payload.get('generated_at', '')}",
             font="F1",
             size=9.0,
@@ -507,16 +594,18 @@ class _PdfReportComposer:
         self._draw_text(
             x=PAGE_MARGIN,
             y=PAGE_HEIGHT - 17.0,
-            text="RosettaX Apply Calibration Report",
+            text="Apply Calibration Report",
             font="F2",
             size=9.0,
             color=COLOR_MUTED,
         )
-        self._draw_brand_mark(
-            x=PAGE_WIDTH - PAGE_MARGIN - 76.0,
-            y=PAGE_HEIGHT - 20.0,
-            scale=0.55,
-            on_dark=False,
+        self._draw_text(
+            x=PAGE_WIDTH - PAGE_MARGIN - 150.0,
+            y=PAGE_HEIGHT - 17.0,
+            text=str(self.report_payload.get("generated_at") or ""),
+            font="F1",
+            size=8.0,
+            color=COLOR_MUTED,
         )
 
     def _draw_page_footer(self, *, page: _PdfPage, page_number: int, page_count: int) -> None:
@@ -1195,103 +1284,6 @@ class _PdfReportComposer:
             f"{cx + control:.2f} {cy - radius:.2f} {cx + radius:.2f} {cy - control:.2f} {cx + radius:.2f} {cy:.2f} c f Q"
         )
 
-    def _draw_brand_mark(
-        self,
-        *,
-        x: float,
-        y: float,
-        scale: float,
-        on_dark: bool,
-    ) -> None:
-        bar_height = 6.0 * scale
-        center_radius = 8.5 * scale
-        left_bar_width = 26.0 * scale
-        right_bar_width = 26.0 * scale
-        branch_gap = 6.0 * scale
-
-        self._fill_rect(
-            x=x,
-            y=y - (bar_height / 2.0),
-            width=left_bar_width,
-            height=bar_height,
-            fill_color=COLOR_LOGO_CYAN,
-        )
-        self._fill_rect(
-            x=x + left_bar_width + (2.0 * center_radius),
-            y=y - (bar_height / 2.0),
-            width=right_bar_width,
-            height=bar_height,
-            fill_color=COLOR_LOGO_BLUE,
-        )
-
-        self._fill_circle(
-            cx=x + left_bar_width + center_radius,
-            cy=y,
-            radius=center_radius,
-            fill_color=COLOR_LOGO_BLUE if on_dark else COLOR_ACCENT,
-        )
-
-        for index, dot_radius in enumerate((3.0, 2.4, 1.8), start=1):
-            offset = (center_radius + (index * branch_gap))
-            self._fill_circle(
-                cx=x + left_bar_width + center_radius - offset,
-                cy=y + (index * 4.0 * scale),
-                radius=dot_radius * scale,
-                fill_color=COLOR_LOGO_CYAN,
-            )
-            self._fill_circle(
-                cx=x + left_bar_width + center_radius - offset,
-                cy=y - (index * 4.0 * scale),
-                radius=dot_radius * scale,
-                fill_color=COLOR_LOGO_CYAN,
-            )
-            self._fill_circle(
-                cx=x + left_bar_width + center_radius + offset,
-                cy=y + (index * 4.0 * scale),
-                radius=dot_radius * scale,
-                fill_color=COLOR_LOGO_BLUE,
-            )
-            self._fill_circle(
-                cx=x + left_bar_width + center_radius + offset,
-                cy=y - (index * 4.0 * scale),
-                radius=dot_radius * scale,
-                fill_color=COLOR_LOGO_BLUE,
-            )
-
-    def _draw_logo_light_lockup(
-        self,
-        *,
-        x: float,
-        y: float,
-        scale: float,
-        on_dark: bool,
-    ) -> None:
-        text_color = (0.95, 0.98, 1.0) if on_dark else COLOR_MUTED
-
-        self._draw_text(
-            x=x,
-            y=y + (8.0 * scale),
-            text="RosettaX",
-            font="F2",
-            size=11.5 * scale,
-            color=text_color,
-        )
-        self._draw_text(
-            x=x,
-            y=y - (3.0 * scale),
-            text="Flow-cytometry calibration",
-            font="F1",
-            size=6.5 * scale,
-            color=text_color,
-        )
-        self._draw_brand_mark(
-            x=x + (65.0 * scale),
-            y=y + (5.0 * scale),
-            scale=0.62 * scale,
-            on_dark=on_dark,
-        )
-
-
 def _build_cover_summary_items(
     *,
     report_payload: dict[str, Any],
@@ -1307,17 +1299,20 @@ def _build_cover_summary_items(
     if isinstance(result_payload, dict):
         file_count = int(result_payload.get("file_count") or 0)
 
+    calibration_count = len(
+        _normalize_calibration_summaries(
+            report_payload.get("calibration_summaries"),
+        )
+    )
     output_channels = _normalize_string_list(
         result_payload.get("output_channels") if isinstance(result_payload, dict) else None,
     )
-    artifact_name = str(
-        result_payload.get("download_filename") if isinstance(result_payload, dict) else "",
-    ) or "n/a"
 
     return [
         ("Calibration type", calibration_type),
-        ("Input files", str(file_count)),
-        ("Output channels", ", ".join(output_channels) if output_channels else artifact_name),
+        ("Calibration files", str(calibration_count or 1)),
+        ("Input FCS files", str(file_count)),
+        ("Output channels", ", ".join(output_channels) if output_channels else "n/a"),
     ]
 
 
@@ -1332,11 +1327,12 @@ def _build_apply_overview_items(
 
     return [
         ("Generated at", str(report_payload.get("generated_at") or "n/a")),
-        ("Selected calibration", str(report_payload.get("selected_calibration") or "n/a")),
+        ("Calibration selection", str(report_payload.get("selected_calibration") or "n/a")),
         ("Download artifact", str(result_payload.get("download_filename") or "n/a")),
         ("Output channels", ", ".join(_normalize_string_list(result_payload.get("output_channels"))) or "None"),
+        ("Uploaded FCS files", str(result_payload.get("file_count") or 0)),
         ("Extra exported columns", ", ".join(_normalize_string_list(report_payload.get("export_columns"))) or "None"),
-        ("ZIP includes PDF", "Yes" if bool(result_payload.get("includes_embedded_report")) else "No"),
+        ("Report bundled into ZIP", "Yes" if bool(result_payload.get("includes_embedded_report")) else "No"),
         ("Status", str(result_payload.get("status") or "n/a")),
         ("Warnings", str(len(_normalize_string_list(result_payload.get("warnings"))))),
     ]
@@ -1388,6 +1384,34 @@ def _build_calibration_metadata_items(
         items.append(("Calibration path", file_path))
 
     return items
+
+
+def _build_selected_calibration_rows(
+    *,
+    report_payload: dict[str, Any],
+) -> list[list[str]]:
+    calibration_summaries = _normalize_calibration_summaries(
+        report_payload.get("calibration_summaries"),
+    )
+
+    if not calibration_summaries:
+        calibration_summaries = _normalize_calibration_summaries(
+            report_payload.get("calibration_summary"),
+        )
+
+    rows: list[list[str]] = []
+
+    for calibration_summary in calibration_summaries:
+        rows.append(
+            [
+                str(calibration_summary.get("file_name") or calibration_summary.get("selected_calibration") or "n/a"),
+                str(calibration_summary.get("calibration_type") or "unknown"),
+                str(calibration_summary.get("source_channel") or "n/a"),
+                str(calibration_summary.get("output_quantity") or "n/a"),
+            ]
+        )
+
+    return rows
 
 
 def _build_fluorescence_fit_items(
@@ -1497,7 +1521,7 @@ def _build_saved_payload_section_specs(
             if group_items:
                 section_specs.append(
                     {
-                        "title": f"Saved calibration JSON: {_prettify_label(key)}",
+                        "title": f"Additional calibration fields: {_prettify_label(key)}",
                         "items": group_items,
                     }
                 )
@@ -1514,7 +1538,7 @@ def _build_saved_payload_section_specs(
         section_specs.insert(
             0,
             {
-                "title": "Saved calibration JSON",
+                "title": "Additional saved calibration fields",
                 "items": overview_items,
             },
         )

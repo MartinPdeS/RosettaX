@@ -4,6 +4,7 @@ import logging
 from typing import Any, Optional
 
 from RosettaX.workflow import apply_calibration
+from RosettaX.pages.p04_calibrate.sections.s02_calibration_picker import services as calibration_picker_services
 
 
 logger = logging.getLogger(__name__)
@@ -79,26 +80,11 @@ def build_scattering_target_model_parameters_if_required(
         target_core_shell_core_diameter_count,
     )
 
-    if not isinstance(
+    if not calibration_picker_services.calibration_summaries_require_target_model(
         selected_calibration_summary,
-        dict,
     ):
         logger.debug(
-            "No scattering target model parameters required because selected_calibration_summary is not a dict."
-        )
-
-        return None
-
-    requires_target_model = bool(
-        selected_calibration_summary.get(
-            "requires_target_model",
-            False,
-        )
-    )
-
-    if not requires_target_model:
-        logger.debug(
-            "No scattering target model parameters required because requires_target_model=False."
+            "No scattering target model parameters required for selected calibrations."
         )
 
         return None
@@ -242,25 +228,26 @@ def build_apply_calibration_request(
     if not resolved_uploaded_fcs_paths:
         raise ValueError("Upload at least one input FCS file first.")
 
-    if not isinstance(selected_calibration_summary, dict):
-        raise ValueError("Upload a calibration JSON file first.")
+    selected_calibration_summaries = calibration_picker_services.normalize_calibration_summaries(
+        selected_calibration_summary,
+    )
 
-    if bool(selected_calibration_summary.get("requires_target_model")) and not str(
+    if not selected_calibration_summaries:
+        raise ValueError("Upload at least one calibration JSON file first.")
+
+    if calibration_picker_services.calibration_summaries_require_target_model(
+        selected_calibration_summaries,
+    ) and not str(
         target_model_preset or ""
     ).strip():
         raise ValueError("Select a target model preset first.")
-
-    calibration_payload = selected_calibration_summary.get("calibration_payload")
-
-    if not isinstance(calibration_payload, dict) or not calibration_payload:
-        raise ValueError("Uploaded calibration payload is missing.")
 
     resolved_export_columns = apply_calibration.io.normalize_export_columns(
         export_columns,
     )
 
     scattering_target_model_parameters = build_scattering_target_model_parameters_if_required(
-        selected_calibration_summary=selected_calibration_summary,
+        selected_calibration_summary=selected_calibration_summaries,
         target_mie_model=target_mie_model,
         target_medium_refractive_index=target_medium_refractive_index,
         target_particle_refractive_index=target_particle_refractive_index,
@@ -275,16 +262,34 @@ def build_apply_calibration_request(
         target_core_shell_core_diameter_count=target_core_shell_core_diameter_count,
     )
 
+    calibration_applications: list[apply_calibration.CalibrationApplication] = []
+
+    for calibration_summary in selected_calibration_summaries:
+        calibration_payload = calibration_summary.get("calibration_payload")
+
+        if not isinstance(calibration_payload, dict) or not calibration_payload:
+            raise ValueError("Uploaded calibration payload is missing.")
+
+        calibration_applications.append(
+            apply_calibration.CalibrationApplication(
+                selected_calibration=str(
+                    calibration_summary.get("file_name")
+                    or calibration_summary.get("selected_calibration")
+                    or "uploaded calibration.json"
+                ),
+                calibration_payload=dict(calibration_payload),
+                scattering_target_model_parameters=(
+                    scattering_target_model_parameters
+                    if bool(calibration_summary.get("requires_target_model"))
+                    else None
+                ),
+            )
+        )
+
     request = apply_calibration.ApplyCalibrationRequest(
         uploaded_fcs_paths=resolved_uploaded_fcs_paths,
-        selected_calibration=str(
-            selected_calibration_summary.get("file_name")
-            or selected_calibration_summary.get("selected_calibration")
-            or "uploaded calibration.json",
-        ),
-        calibration_payload=dict(calibration_payload),
         export_columns=resolved_export_columns,
-        scattering_target_model_parameters=scattering_target_model_parameters,
+        calibrations=calibration_applications,
     )
 
     logger.debug(

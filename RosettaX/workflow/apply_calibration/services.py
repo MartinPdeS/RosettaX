@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Optional
 
 import numpy as np
@@ -17,16 +17,25 @@ from .scattering import (
 )
 
 @dataclass(frozen=True)
+class CalibrationApplication:
+    """
+    One calibration application mapped to its source channel.
+    """
+
+    selected_calibration: str
+    calibration_payload: dict[str, Any]
+    scattering_target_model_parameters: Optional[ScatteringTargetModelParameters] = None
+
+
+@dataclass(frozen=True)
 class ApplyCalibrationRequest:
     """
-    Request for applying one calibration to one or more FCS files.
+    Request for applying one or more calibrations to one or more FCS files.
     """
 
     uploaded_fcs_paths: list[str]
-    selected_calibration: str
-    calibration_payload: dict[str, Any]
     export_columns: list[str]
-    scattering_target_model_parameters: Optional[ScatteringTargetModelParameters] = None
+    calibrations: list[CalibrationApplication] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -54,53 +63,88 @@ def apply_calibration_to_fcs_files(
     if not request.uploaded_fcs_paths:
         raise ValueError("At least one uploaded FCS file is required.")
 
-    if not request.selected_calibration:
-        raise ValueError("A calibration file must be selected.")
+    if not request.calibrations:
+        raise ValueError("At least one calibration file must be selected.")
 
-    if not isinstance(request.calibration_payload, dict) or not request.calibration_payload:
-        raise ValueError("Uploaded calibration payload is missing.")
+    input_source_channels: list[str] = []
+    output_channels: list[str] = []
+    calibration_descriptions: list[str] = []
+    source_channels_seen: set[str] = set()
+    calibration_applications: list[tuple[CalibrationApplication, str, bool]] = []
 
-    calibration_payload = dict(request.calibration_payload)
+    for calibration_application in request.calibrations:
+        if not calibration_application.selected_calibration:
+            raise ValueError("A calibration file must be selected.")
 
-    source_channel = resolve_source_channel(
-        calibration_payload,
-    )
+        if (
+            not isinstance(calibration_application.calibration_payload, dict)
+            or not calibration_application.calibration_payload
+        ):
+            raise ValueError("Uploaded calibration payload is missing.")
 
-    if not source_channel:
-        raise ValueError('Calibration payload is missing "source_channel".')
+        calibration_payload = dict(calibration_application.calibration_payload)
+        source_channel = resolve_source_channel(
+            calibration_payload,
+        )
+
+        if not source_channel:
+            raise ValueError('Calibration payload is missing "source_channel".')
+
+        if source_channel in source_channels_seen:
+            raise ValueError(
+                f'More than one calibration targets source channel "{source_channel}".'
+            )
+
+        source_channels_seen.add(
+            source_channel,
+        )
+        input_source_channels.append(
+            source_channel,
+        )
+
+        is_scattering = calibration_is_scattering_v2(
+            calibration_payload,
+        )
+
+        if is_scattering:
+            if calibration_application.scattering_target_model_parameters is None:
+                raise ValueError(
+                    "Scattering target model parameters are required for scattering calibration."
+                )
+
+            resolved_output_channels = build_scattering_output_columns(
+                source_channel=source_channel,
+            ).as_list()
+        else:
+            resolved_output_channels = [
+                source_channel,
+            ]
+
+        for output_channel in resolved_output_channels:
+            if output_channel not in output_channels:
+                output_channels.append(
+                    output_channel,
+                )
+
+        calibration_descriptions.append(
+            f'{calibration_application.selected_calibration} -> "{source_channel}"'
+        )
+        calibration_applications.append(
+            (
+                calibration_application,
+                source_channel,
+                is_scattering,
+            )
+        )
 
     input_export_columns = io.build_input_export_columns(
-        source_channel=source_channel,
+        source_channels=input_source_channels,
         export_columns=request.export_columns,
     )
 
-    if calibration_is_scattering_v2(
-        calibration_payload,
-    ):
-        if request.scattering_target_model_parameters is None:
-            raise ValueError(
-                "Scattering target model parameters are required for scattering calibration."
-            )
-
-        output_channels = build_scattering_output_columns(
-            source_channel=source_channel,
-        ).as_list()
-
-        dataframe_transformer_factory = build_scattering_dataframe_transformer_factory(
-            source_channel=source_channel,
-            calibration_payload=calibration_payload,
-            target_model_parameters=request.scattering_target_model_parameters,
-        )
-
-    else:
-        output_channels = [
-            source_channel,
-        ]
-
-        dataframe_transformer_factory = build_legacy_dataframe_transformer_factory(
-            source_channel=source_channel,
-            calibration_payload=calibration_payload,
-        )
+    dataframe_transformer_factory = build_multi_calibration_dataframe_transformer_factory(
+        calibration_applications=calibration_applications,
+    )
 
     if len(request.uploaded_fcs_paths) == 1:
         uploaded_fcs_path = request.uploaded_fcs_paths[0]
@@ -134,8 +178,8 @@ def apply_calibration_to_fcs_files(
         )
 
     status = build_success_message(
-        selected_calibration=request.selected_calibration,
-        source_channel=source_channel,
+        selected_calibrations=calibration_descriptions,
+        source_channels=input_source_channels,
         file_count=len(
             request.uploaded_fcs_paths,
         ),
@@ -145,7 +189,7 @@ def apply_calibration_to_fcs_files(
     return ApplyCalibrationFilesResult(
         payload_bytes=payload_bytes,
         download_filename=download_filename,
-        source_channel=source_channel,
+        source_channel=", ".join(input_source_channels),
         output_channels=output_channels,
         file_count=len(
             request.uploaded_fcs_paths,
@@ -153,6 +197,57 @@ def apply_calibration_to_fcs_files(
         warnings=[],
         status=status,
     )
+
+
+def build_multi_calibration_dataframe_transformer_factory(
+    *,
+    calibration_applications: list[tuple[CalibrationApplication, str, bool]],
+):
+    """
+    Build one dataframe transformer factory that applies all calibrations in sequence.
+    """
+
+    def dataframe_transformer_factory(
+        uploaded_fcs_path: str,
+    ):
+        individual_transformers = []
+
+        for calibration_application, source_channel, is_scattering in calibration_applications:
+            if is_scattering:
+                individual_transformers.append(
+                    build_scattering_dataframe_transformer_factory(
+                        source_channel=source_channel,
+                        calibration_payload=calibration_application.calibration_payload,
+                        target_model_parameters=calibration_application.scattering_target_model_parameters,
+                    )(
+                        uploaded_fcs_path,
+                    )
+                )
+            else:
+                individual_transformers.append(
+                    build_legacy_dataframe_transformer_factory(
+                        source_channel=source_channel,
+                        calibration_payload=calibration_application.calibration_payload,
+                    )(
+                        uploaded_fcs_path,
+                    )
+                )
+
+        def dataframe_transformer(
+            dataframe: Any,
+        ) -> Any:
+            output_dataframe = dataframe
+
+            for transformer in individual_transformers:
+                output_dataframe = transformer(
+                    output_dataframe,
+                )
+
+            return output_dataframe
+
+        return dataframe_transformer
+
+    return dataframe_transformer_factory
 
 
 def build_scattering_dataframe_transformer_factory(
@@ -368,8 +463,8 @@ def resolve_source_channel(
 
 def build_success_message(
     *,
-    selected_calibration: Any,
-    source_channel: str,
+    selected_calibrations: list[str],
+    source_channels: list[str],
     file_count: int,
     output_channels: list[str],
 ) -> str:
@@ -378,10 +473,10 @@ def build_success_message(
 
     Parameters
     ----------
-    selected_calibration : Any
-        Name of the calibration that was applied (used in the message).
-    source_channel : str
-        Detector column that was calibrated.
+    selected_calibrations : list[str]
+        Human-readable descriptions of the calibrations that were applied.
+    source_channels : list[str]
+        Detector columns that were calibrated.
     file_count : int
         Number of FCS files that were processed.
     output_channels : list[str]
@@ -399,8 +494,17 @@ def build_success_message(
         ]
     )
 
+    source_channel_text = ", ".join(
+        [
+            f'"{source_channel}"'
+            for source_channel in source_channels
+        ]
+    )
+
+    calibration_text = "; ".join(selected_calibrations)
+
     return (
-        f'Applied calibration "{selected_calibration}" to source channel '
-        f'"{source_channel}" for {file_count} file(s). Exported column(s): '
+        f"Applied calibration(s) {calibration_text} to source channel(s) "
+        f"{source_channel_text} for {file_count} file(s). Exported column(s): "
         f"{output_channel_text}."
     )

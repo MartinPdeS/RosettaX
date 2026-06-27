@@ -64,27 +64,36 @@ def normalize_export_columns(
 
 def build_input_export_columns(
     *,
-    source_channel: str,
+    source_channels: list[str],
     export_columns: list[str],
 ) -> list[str]:
     """
     Build input columns required to read from the source FCS file.
 
-    The source channel is always included. Additional export columns are copied
-    unchanged.
+    The source channels are always included. Additional export columns are
+    copied unchanged.
     """
-    input_export_columns = [
-        str(
+    input_export_columns: list[str] = []
+
+    for source_channel in source_channels:
+        source_channel_string = str(
             source_channel,
         )
-    ]
+
+        if source_channel_string and source_channel_string not in input_export_columns:
+            input_export_columns.append(
+                source_channel_string,
+            )
 
     for column_name in export_columns:
         column_name_string = str(
             column_name,
         )
 
-        if column_name_string != source_channel:
+        if (
+            column_name_string
+            and column_name_string not in input_export_columns
+        ):
             input_export_columns.append(
                 column_name_string,
             )

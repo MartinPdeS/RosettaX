@@ -5,7 +5,7 @@
     {
       "name": "Apogee - Forward",
       "manufacturer": "Apogee",
-      "instrument": "Ad hoc",
+      "instrument": "A60 - Micro",
       "channel": "Weighted",
       "alias": [
         "apogee"
@@ -28,7 +28,7 @@
     {
       "name": "Apogee - Side",
       "manufacturer": "Apogee",
-      "instrument": "Ad hoc",
+      "instrument": "A60 - Micro",
       "channel": "Weighted",
       "alias": [
         "apogee"
