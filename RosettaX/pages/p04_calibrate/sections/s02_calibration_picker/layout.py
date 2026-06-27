@@ -230,14 +230,15 @@ class CalibrationPickerLayout:
                         dash.html.Div(
                             id=self.page.ids.CalibrationPicker.preview_content,
                             style={
-                                "display": "grid",
-                                "gridTemplateColumns": "repeat(auto-fit, minmax(200px, 1fr))",
-                                "gap": "16px",
-                                "alignItems": "start",
+                                "display": "flex",
+                                "flexDirection": "column",
+                                "gap": "8px",
+                                "alignItems": "stretch",
+                                "width": "100%",
                             },
                         ),
                         style={
-                            "padding": "14px",
+                            "padding": "10px 12px",
                         },
                     ),
                 ],

@@ -472,53 +472,40 @@ def build_preview_items(
 
     Returns a list of HTML divs showing key calibration metadata.
     """
-    import dash_bootstrap_components as dbc
     import dash.html as html
 
-    items = []
+    cal_type = str(calibration_summary.get("calibration_type", "")).strip().upper() or "n/a"
+    source_ch = str(calibration_summary.get("source_channel", "")).strip() or "n/a"
+    file_name = str(calibration_summary.get("file_name", "")).strip() or "n/a"
 
-    # Calibration type
-    cal_type = calibration_summary.get("calibration_type", "").upper()
-    if cal_type:
-        items.append(
+    row = html.Div(
+        [
             _build_preview_info_block(
                 label="Calibration type",
                 value=cal_type,
-            )
-        )
-
-    # Source/measured channel
-    source_ch = calibration_summary.get("source_channel", "").strip()
-    if source_ch:
-        items.append(
+            ),
             _build_preview_info_block(
                 label="Channel",
                 value=source_ch,
-            )
-        )
-
-    # Output quantity (for scattering)
-    output_qty = calibration_summary.get("output_quantity", "").strip()
-    if output_qty:
-        items.append(
-            _build_preview_info_block(
-                label="Output quantity",
-                value=output_qty,
-            )
-        )
-
-    # File name
-    file_name = calibration_summary.get("file_name", "").strip()
-    if file_name:
-        items.append(
+            ),
             _build_preview_info_block(
                 label="File",
                 value=file_name,
                 truncate=True,
-            )
-        )
+            ),
+        ],
+        style={
+            "display": "grid",
+            "gridTemplateColumns": "minmax(130px, 0.9fr) minmax(110px, 0.8fr) minmax(200px, 1.5fr)",
+            "gap": "8px",
+            "width": "100%",
+            "alignItems": "stretch",
+        },
+    )
 
-    return items
+    return [
+        row,
+    ]
 
 
 def _build_preview_info_block(
@@ -532,35 +519,45 @@ def _build_preview_info_block(
     """
     import dash.html as html
 
+    value_style = {
+        "fontSize": "0.83rem",
+        "fontWeight": "500",
+        "lineHeight": "1.15",
+        "color": "rgba(13, 25, 43, 0.9)",
+        "whiteSpace": "nowrap" if truncate else "normal",
+        "overflow": "hidden" if truncate else "visible",
+        "textOverflow": "ellipsis" if truncate else "clip",
+        "minWidth": "0",
+        "flex": "1 1 auto",
+    }
+
     return html.Div(
         [
-            html.Div(
-                label,
+            html.Span(
+                f"{label}:",
                 style={
-                    "fontSize": "0.78rem",
+                    "fontSize": "0.72rem",
                     "fontWeight": "600",
-                    "opacity": 0.72,
+                    "opacity": 0.74,
                     "textTransform": "uppercase",
-                    "letterSpacing": "0.5px",
-                    "marginBottom": "4px",
+                    "letterSpacing": "0.4px",
+                    "whiteSpace": "nowrap",
                 },
             ),
-            html.Div(
+            html.Span(
                 value,
-                style={
-                    "fontSize": "0.9rem",
-                    "fontWeight": "500",
-                    "whiteSpace": "nowrap" if truncate else "normal",
-                    "overflow": "hidden" if truncate else "visible",
-                    "textOverflow": "ellipsis" if truncate else "clip",
-                },
+                style=value_style,
                 title=value if truncate else None,
             ),
         ],
         style={
-            "padding": "8px",
-            "background": "rgba(0, 0, 0, 0.02)",
-            "borderRadius": "8px",
-            "borderLeft": "3px solid rgba(0, 123, 255, 0.4)",
+            "display": "flex",
+            "alignItems": "center",
+            "gap": "6px",
+            "padding": "5px 8px",
+            "background": "rgba(0, 123, 255, 0.035)",
+            "borderRadius": "6px",
+            "borderLeft": "2px solid rgba(0, 123, 255, 0.35)",
+            "minHeight": "30px",
         },
     )

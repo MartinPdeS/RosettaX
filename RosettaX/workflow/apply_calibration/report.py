@@ -144,15 +144,22 @@ def build_apply_report_download_filename(
     report_payload: dict[str, Any],
 ) -> str:
     """Build a stable download filename for the PDF report."""
-    calibration_summary = report_payload.get("calibration_summary", {})
+    calibration_entries = _build_calibration_entries(
+        report_payload=report_payload,
+    )
 
-    if isinstance(calibration_summary, dict):
-        calibration_name = calibration_summary.get(
-            "file_name",
-            report_payload.get("selected_calibration", "calibration"),
-        )
+    if len(calibration_entries) > 1:
+        calibration_name = "multi_calibration"
     else:
-        calibration_name = report_payload.get("selected_calibration", "calibration")
+        calibration_summary = report_payload.get("calibration_summary", {})
+
+        if isinstance(calibration_summary, dict):
+            calibration_name = calibration_summary.get(
+                "file_name",
+                report_payload.get("selected_calibration", "calibration"),
+            )
+        else:
+            calibration_name = report_payload.get("selected_calibration", "calibration")
 
     calibration_stem = Path(str(calibration_name or "calibration")).stem
     safe_stem = re.sub(r"[^A-Za-z0-9._-]+", "_", calibration_stem).strip("._")
@@ -462,10 +469,95 @@ class _PdfReportComposer:
                 rows=calibration_rows,
                 column_weights=[0.34, 0.14, 0.24, 0.28],
             )
-        self._draw_key_value_table(
-            title="Primary calibration details",
-            items=_build_calibration_metadata_items(report_payload=self.report_payload),
+        calibration_entries = _build_calibration_entries(
+            report_payload=self.report_payload,
         )
+
+        if not calibration_entries:
+            calibration_entries = [
+                {
+                    "display_name": "Calibration",
+                    "calibration_type": "",
+                }
+            ]
+
+        for calibration_index, calibration_entry in enumerate(calibration_entries):
+            display_name = str(calibration_entry.get("display_name") or f"Calibration {calibration_index + 1}")
+            calibration_title_suffix = (
+                f" ({display_name})"
+                if len(calibration_entries) > 1
+                else ""
+            )
+
+            self._draw_key_value_table(
+                title=f"Calibration details{calibration_title_suffix}",
+                items=_build_calibration_metadata_items(
+                    report_payload=self.report_payload,
+                    calibration_index=calibration_index,
+                ),
+            )
+
+            chart_spec = _build_chart_spec(
+                report_payload=self.report_payload,
+                calibration_index=calibration_index,
+            )
+            if chart_spec is not None:
+                if len(calibration_entries) > 1:
+                    chart_spec = dict(chart_spec)
+                    chart_spec["title"] = f"{chart_spec.get('title', 'Calibration chart')} ({display_name})"
+                self._draw_chart(chart_spec=chart_spec)
+
+            calibration_type = str(
+                calibration_entry.get("calibration_type") or "",
+            ).strip().lower()
+
+            if calibration_type == "fluorescence":
+                self._draw_key_value_table(
+                    title=f"Fit parameters{calibration_title_suffix}",
+                    items=_build_fluorescence_fit_items(
+                        report_payload=self.report_payload,
+                        calibration_index=calibration_index,
+                    ),
+                )
+
+            if calibration_type == "scattering":
+                self._draw_key_value_table(
+                    title=f"Instrument response{calibration_title_suffix}",
+                    items=_build_scattering_fit_items(
+                        report_payload=self.report_payload,
+                        calibration_index=calibration_index,
+                    ),
+                )
+
+            reference_table_spec = _build_reference_table_spec(
+                report_payload=self.report_payload,
+                calibration_index=calibration_index,
+            )
+            if reference_table_spec is not None:
+                if len(calibration_entries) > 1:
+                    reference_table_spec = dict(reference_table_spec)
+                    reference_table_spec["title"] = (
+                        f"{reference_table_spec.get('title', 'Reference table')} ({display_name})"
+                    )
+                self._draw_table(
+                    title=reference_table_spec["title"],
+                    headers=reference_table_spec["headers"],
+                    rows=reference_table_spec["rows"],
+                    column_weights=reference_table_spec["column_weights"],
+                )
+
+            for section_spec in _build_saved_payload_section_specs(
+                report_payload=self.report_payload,
+                calibration_index=calibration_index,
+            ):
+                section_title = str(section_spec["title"])
+                if len(calibration_entries) > 1:
+                    section_title = f"{section_title} ({display_name})"
+                self._draw_key_value_table(
+                    title=section_title,
+                    items=section_spec["items"],
+                )
+
         input_file_rows = [
             [file_path]
             for file_path in _normalize_string_list(
@@ -479,46 +571,11 @@ class _PdfReportComposer:
             column_weights=[1.0],
         )
 
-        chart_spec = _build_chart_spec(report_payload=self.report_payload)
-        if chart_spec is not None:
-            self._draw_chart(chart_spec=chart_spec)
-
-        calibration_type = str(
-            self.report_payload.get("calibration_summary", {}).get("calibration_type", ""),
-        ).strip().lower()
-
-        if calibration_type == "fluorescence":
-            self._draw_key_value_table(
-                title="Fit parameters",
-                items=_build_fluorescence_fit_items(report_payload=self.report_payload),
-            )
-
-        if calibration_type == "scattering":
-            self._draw_key_value_table(
-                title="Instrument response",
-                items=_build_scattering_fit_items(report_payload=self.report_payload),
-            )
-
         target_model_items = _build_target_model_items(report_payload=self.report_payload)
         if target_model_items:
             self._draw_key_value_table(
                 title="Scattering target model",
                 items=target_model_items,
-            )
-
-        reference_table_spec = _build_reference_table_spec(report_payload=self.report_payload)
-        if reference_table_spec is not None:
-            self._draw_table(
-                title=reference_table_spec["title"],
-                headers=reference_table_spec["headers"],
-                rows=reference_table_spec["rows"],
-                column_weights=reference_table_spec["column_weights"],
-            )
-
-        for section_spec in _build_saved_payload_section_specs(report_payload=self.report_payload):
-            self._draw_key_value_table(
-                title=section_spec["title"],
-                items=section_spec["items"],
             )
 
         warning_items = _normalize_string_list(self.report_payload.get("result", {}).get("warnings"))
@@ -1325,9 +1382,26 @@ def _build_apply_overview_items(
     if not isinstance(result_payload, dict):
         result_payload = {}
 
+    selected_calibration_files = _normalize_string_list(
+        report_payload.get("selected_calibrations"),
+    )
+
+    if not selected_calibration_files:
+        selected_calibration = str(
+            report_payload.get("selected_calibration") or "",
+        ).strip()
+        if selected_calibration:
+            selected_calibration_files = [
+                selected_calibration,
+            ]
+
     return [
         ("Generated at", str(report_payload.get("generated_at") or "n/a")),
         ("Calibration selection", str(report_payload.get("selected_calibration") or "n/a")),
+        (
+            "Calibration files",
+            ", ".join(selected_calibration_files) if selected_calibration_files else "n/a",
+        ),
         ("Download artifact", str(result_payload.get("download_filename") or "n/a")),
         ("Output channels", ", ".join(_normalize_string_list(result_payload.get("output_channels"))) or "None"),
         ("Uploaded FCS files", str(result_payload.get("file_count") or 0)),
@@ -1341,9 +1415,14 @@ def _build_apply_overview_items(
 def _build_calibration_metadata_items(
     *,
     report_payload: dict[str, Any],
+    calibration_index: int = 0,
 ) -> list[tuple[str, str]]:
-    summary = report_payload.get("calibration_summary", {})
-    details = report_payload.get("calibration_details", {})
+    calibration_entry = _build_calibration_entry(
+        report_payload=report_payload,
+        calibration_index=calibration_index,
+    )
+    summary = calibration_entry.get("summary", {})
+    details = calibration_entry.get("details", {})
 
     if not isinstance(summary, dict):
         summary = {}
@@ -1351,7 +1430,10 @@ def _build_calibration_metadata_items(
         details = {}
 
     items = [
-        ("Calibration file", str(summary.get("file_name") or report_payload.get("selected_calibration") or "n/a")),
+        (
+            "Calibration file",
+            str(summary.get("file_name") or calibration_entry.get("display_name") or "n/a"),
+        ),
         ("Calibration type", str(summary.get("calibration_type") or "unknown")),
         ("Source channel", str(summary.get("source_channel") or details.get("source_channel") or "n/a")),
         ("Output quantity", str(summary.get("output_quantity") or details.get("output_quantity") or "n/a")),
@@ -1417,8 +1499,12 @@ def _build_selected_calibration_rows(
 def _build_fluorescence_fit_items(
     *,
     report_payload: dict[str, Any],
+    calibration_index: int = 0,
 ) -> list[tuple[str, str]]:
-    details = report_payload.get("calibration_details", {})
+    details = _build_calibration_entry(
+        report_payload=report_payload,
+        calibration_index=calibration_index,
+    ).get("details", {})
 
     if not isinstance(details, dict):
         return []
@@ -1448,8 +1534,12 @@ def _build_fluorescence_fit_items(
 def _build_scattering_fit_items(
     *,
     report_payload: dict[str, Any],
+    calibration_index: int = 0,
 ) -> list[tuple[str, str]]:
-    details = report_payload.get("calibration_details", {})
+    details = _build_calibration_entry(
+        report_payload=report_payload,
+        calibration_index=calibration_index,
+    ).get("details", {})
 
     if not isinstance(details, dict):
         return []
@@ -1486,8 +1576,12 @@ def _build_target_model_items(
 def _build_saved_payload_section_specs(
     *,
     report_payload: dict[str, Any],
+    calibration_index: int = 0,
 ) -> list[dict[str, Any]]:
-    payload = report_payload.get("saved_calibration_payload", {})
+    payload = _build_calibration_entry(
+        report_payload=report_payload,
+        calibration_index=calibration_index,
+    ).get("saved_payload", {})
 
     if not isinstance(payload, dict):
         return []
@@ -1662,8 +1756,12 @@ def _collect_scalar_payload_items(
 def _build_reference_table_spec(
     *,
     report_payload: dict[str, Any],
+    calibration_index: int = 0,
 ) -> Optional[dict[str, Any]]:
-    details = report_payload.get("calibration_details", {})
+    details = _build_calibration_entry(
+        report_payload=report_payload,
+        calibration_index=calibration_index,
+    ).get("details", {})
 
     if not isinstance(details, dict):
         return None
@@ -1734,8 +1832,12 @@ def _build_reference_table_spec(
 def _build_chart_spec(
     *,
     report_payload: dict[str, Any],
+    calibration_index: int = 0,
 ) -> Optional[dict[str, Any]]:
-    details = report_payload.get("calibration_details", {})
+    details = _build_calibration_entry(
+        report_payload=report_payload,
+        calibration_index=calibration_index,
+    ).get("details", {})
 
     if not isinstance(details, dict):
         return None
@@ -1895,6 +1997,120 @@ def _normalize_string_list(value: Any) -> list[str]:
         return []
 
     return [str(item) for item in value]
+
+
+def _normalize_dict_list(value: Any) -> list[dict[str, Any]]:
+    if not isinstance(value, list):
+        return []
+
+    return [
+        item
+        for item in value
+        if isinstance(item, dict)
+    ]
+
+
+def _build_calibration_entries(
+    *,
+    report_payload: dict[str, Any],
+) -> list[dict[str, Any]]:
+    summaries = _normalize_calibration_summaries(
+        report_payload.get("calibration_summaries"),
+    )
+
+    if not summaries:
+        summaries = _normalize_calibration_summaries(
+            report_payload.get("calibration_summary"),
+        )
+
+    details_list = _normalize_dict_list(
+        report_payload.get("calibration_details_list"),
+    )
+    if not details_list:
+        details_list = _normalize_dict_list(
+            [
+                report_payload.get("calibration_details"),
+            ]
+        )
+
+    payloads = _normalize_dict_list(
+        report_payload.get("saved_calibration_payloads"),
+    )
+    if not payloads:
+        payloads = _normalize_dict_list(
+            [
+                report_payload.get("saved_calibration_payload"),
+            ]
+        )
+
+    calibration_count = max(
+        len(summaries),
+        len(details_list),
+        len(payloads),
+    )
+
+    entries: list[dict[str, Any]] = []
+
+    for calibration_index in range(calibration_count):
+        summary = summaries[calibration_index] if calibration_index < len(summaries) else {}
+        details = details_list[calibration_index] if calibration_index < len(details_list) else {}
+        saved_payload = payloads[calibration_index] if calibration_index < len(payloads) else {}
+
+        if not details and isinstance(saved_payload, dict) and saved_payload:
+            details = _build_calibration_details_payload(
+                calibration_payload=saved_payload,
+            )
+
+        calibration_type = str(
+            details.get("calibration_type")
+            or summary.get("calibration_type")
+            or "",
+        )
+
+        display_name = str(
+            summary.get("file_name")
+            or summary.get("selected_calibration")
+            or f"Calibration {calibration_index + 1}",
+        )
+
+        entries.append(
+            {
+                "summary": summary,
+                "details": details,
+                "saved_payload": saved_payload,
+                "display_name": display_name,
+                "calibration_type": calibration_type,
+            }
+        )
+
+    return entries
+
+
+def _build_calibration_entry(
+    *,
+    report_payload: dict[str, Any],
+    calibration_index: int,
+) -> dict[str, Any]:
+    entries = _build_calibration_entries(
+        report_payload=report_payload,
+    )
+
+    if not entries:
+        return {
+            "summary": {},
+            "details": {},
+            "saved_payload": {},
+            "display_name": "Calibration",
+            "calibration_type": "",
+        }
+
+    if calibration_index < 0:
+        calibration_index = 0
+
+    if calibration_index >= len(entries):
+        calibration_index = len(entries) - 1
+
+    return entries[calibration_index]
 
 
 def _is_scalar_sequence(value: Any) -> bool:

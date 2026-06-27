@@ -47,6 +47,7 @@ from RosettaX.workflow.apply_calibration.report import (
 from RosettaX.workflow.apply_calibration.services import (
     ApplyCalibrationFilesResult,
     ApplyCalibrationRequest,
+    CalibrationApplication,
 )
 from RosettaX.workflow.apply_calibration.scattering.models import (
     ScatteringTargetModelParameters,
@@ -363,3 +364,87 @@ class Test_ApplyCalibrationReport:
         assert b"Saved calibration JSON: Metadata" in pdf_bytes
         assert b"Small particle SSC" in pdf_bytes
         assert b"Lot 42" in pdf_bytes
+
+    def test_build_apply_report_pdf_bytes_handles_multiple_selected_calibrations(self) -> None:
+        request = ApplyCalibrationRequest(
+            uploaded_fcs_paths=["/tmp/input-a.fcs", "/tmp/input-b.fcs"],
+            export_columns=["Time"],
+            calibrations=[
+                CalibrationApplication(
+                    selected_calibration="fluor-a.json",
+                    calibration_payload={
+                        "calibration_type": "fluorescence",
+                        "source_channel": "FITC-A",
+                        "output_quantity": "MESF",
+                        "fit_metrics": {"r_squared": 0.997, "point_count": 3},
+                        "parameters": {"slope": 1.05, "intercept": -0.1},
+                        "reference_points": [
+                            {"reference_value": 1000.0, "measured_value": 800.0},
+                            {"reference_value": 10000.0, "measured_value": 7600.0},
+                        ],
+                    },
+                ),
+                CalibrationApplication(
+                    selected_calibration="scatter-b.json",
+                    calibration_payload={
+                        "calibration_type": "scattering",
+                        "source_channel": "SSC-A",
+                        "output_quantity": "particle_diameter_nm",
+                        "instrument_response": {
+                            "measured_channel": "SSC-A",
+                            "slope": 1.2,
+                            "intercept": 4.4,
+                            "r_squared": 0.99,
+                            "force_zero_intercept": False,
+                        },
+                        "reference_table": [
+                            {
+                                "measured_peak_position": 1500.0,
+                                "particle_diameter_nm": 180.0,
+                            },
+                            {
+                                "measured_peak_position": 2300.0,
+                                "particle_diameter_nm": 240.0,
+                            },
+                        ],
+                    },
+                ),
+            ],
+        )
+
+        result = ApplyCalibrationFilesResult(
+            payload_bytes=b"zip-bytes",
+            download_filename="calibrated_2_files.zip",
+            source_channel="FITC-A, SSC-A",
+            output_channels=["FITC-A", "SSC-A", "particle_diameter_nm"],
+            file_count=2,
+            warnings=[],
+            status="Applied calibration to 2 files.",
+        )
+
+        payload = build_apply_report_payload(
+            request=request,
+            result=result,
+            calibration_summary=[
+                {
+                    "file_name": "fluor-a.json",
+                    "calibration_type": "fluorescence",
+                    "source_channel": "FITC-A",
+                    "output_quantity": "MESF",
+                },
+                {
+                    "file_name": "scatter-b.json",
+                    "calibration_type": "scattering",
+                    "source_channel": "SSC-A",
+                    "output_quantity": "particle_diameter_nm",
+                },
+            ],
+        )
+
+        pdf_bytes = build_apply_report_pdf_bytes(report_payload=payload)
+        pdf_filename = build_apply_report_download_filename(report_payload=payload)
+
+        assert b"fluor-a.json" in pdf_bytes
+        assert b"scatter-b.json" in pdf_bytes
+        assert b"Calibration details" in pdf_bytes
+        assert pdf_filename.startswith("rosettax_apply_report_multi_calibration_")

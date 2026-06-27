@@ -563,21 +563,9 @@ class CalibrationPickerCallbacks:
 
                 preview_children.append(
                     dash.html.Div(
-                        [
-                            dash.html.Div(
-                                f"Calibration {index}",
-                                style={
-                                    "fontWeight": "700",
-                                    "fontSize": "0.93rem",
-                                    "marginBottom": "10px",
-                                },
-                            ),
-                            dash.html.Div(
-                                services.build_preview_items(summary),
-                            ),
-                        ],
+                        services.build_preview_items(summary),
                         style={
-                            "padding": "10px 0px",
+                            "padding": "4px 0px",
                             "borderBottom": (
                                 "1px solid rgba(0, 0, 0, 0.08)"
                                 if index < len(calibration_summaries)
