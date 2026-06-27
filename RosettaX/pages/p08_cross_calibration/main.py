@@ -21,7 +21,11 @@ class CrossCalibrationPage:
                 self._build_header_card(),
             ],
             fluid=True,
-            style=self.style,
+            style={
+                **self.style,
+                "paddingLeft": "0px",
+                "paddingRight": "0px",
+            },
         )
 
     def _build_header_card(self) -> dbc.Card:

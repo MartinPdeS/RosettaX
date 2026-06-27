@@ -35,6 +35,8 @@ class DocumentationPage:
             ],
             fluid=True,
             style={
+                "paddingLeft": "0px",
+                "paddingRight": "0px",
                 "paddingTop": "12px",
                 "paddingBottom": "40px",
             },

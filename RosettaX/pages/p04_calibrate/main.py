@@ -45,6 +45,8 @@ class ApplyCalibrationPage:
 
     def __init__(self) -> None:
         self.container_style = {
+        "paddingLeft": "0px",
+        "paddingRight": "0px",
             "paddingBottom": "48px",
         }
 

@@ -22,7 +22,11 @@ class SampleFilesPage:
                 self._build_download_sections(),
             ],
             fluid=True,
-            style=self.style,
+            style={
+                **self.style,
+                "paddingLeft": "0px",
+                "paddingRight": "0px",
+            },
         )
 
     def _build_header_card(self) -> dbc.Card:

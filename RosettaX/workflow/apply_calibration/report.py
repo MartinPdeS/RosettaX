@@ -28,6 +28,8 @@ COLOR_ACCENT_ALT = (0.88, 0.93, 0.90)
 COLOR_WARNING = (0.72, 0.41, 0.12)
 COLOR_POINT = (0.89, 0.34, 0.19)
 COLOR_LINE_SERIES = (0.07, 0.47, 0.73)
+COLOR_LOGO_CYAN = (0.08, 0.79, 0.86)
+COLOR_LOGO_BLUE = (0.16, 0.46, 0.95)
 
 
 def build_apply_report_payload(
@@ -453,6 +455,12 @@ class _PdfReportComposer:
             height=118.0,
             fill_color=COLOR_ACCENT_ALT,
         )
+        self._draw_brand_mark(
+            x=PAGE_WIDTH - 120.0,
+            y=PAGE_HEIGHT - 90.0,
+            scale=1.0,
+            on_dark=False,
+        )
         self._draw_text(
             x=PAGE_MARGIN,
             y=PAGE_HEIGHT - 52.0,
@@ -503,6 +511,12 @@ class _PdfReportComposer:
             font="F2",
             size=9.0,
             color=COLOR_MUTED,
+        )
+        self._draw_brand_mark(
+            x=PAGE_WIDTH - PAGE_MARGIN - 76.0,
+            y=PAGE_HEIGHT - 20.0,
+            scale=0.55,
+            on_dark=False,
         )
 
     def _draw_page_footer(self, *, page: _PdfPage, page_number: int, page_count: int) -> None:
@@ -592,8 +606,6 @@ class _PdfReportComposer:
         if not headers:
             return
 
-        self._draw_section_title(title=title)
-
         weights_total = sum(column_weights) or float(len(headers))
         column_widths = [CONTENT_WIDTH * (weight / weights_total) for weight in column_weights]
         header_height = 22.0
@@ -602,22 +614,48 @@ class _PdfReportComposer:
         row_padding = 7.0
         row_index = 0
 
+        if rows:
+            first_row_layout = self._build_table_row_layout(
+                row_values=rows[0],
+                column_widths=column_widths,
+                font_size=font_size,
+                line_height=line_height,
+                row_padding=row_padding,
+            )
+            self._ensure_space(28.0 + header_height + first_row_layout[1] + 10.0)
+        else:
+            self._ensure_space(40.0)
+
+        self._draw_section_title(title=title)
+
         while row_index < len(rows):
-            self._ensure_space(header_height + 26.0)
+            next_row_layout = self._build_table_row_layout(
+                row_values=rows[row_index],
+                column_widths=column_widths,
+                font_size=font_size,
+                line_height=line_height,
+                row_padding=row_padding,
+            )
+            self._ensure_space(header_height + next_row_layout[1] + 10.0)
             self._draw_table_header(headers=headers, column_widths=column_widths, height=header_height)
 
             while row_index < len(rows):
-                cell_lines_by_column = []
-                for value, column_width in zip(rows[row_index], column_widths, strict=False):
-                    cell_lines_by_column.append(
-                        self._wrap_text_to_width(
-                            text=_format_display_value(value),
-                            width=column_width - 12.0,
-                            font_size=font_size,
-                        ) or [""],
-                    )
+                cell_lines_by_column, row_height = self._build_table_row_layout(
+                    row_values=rows[row_index],
+                    column_widths=column_widths,
+                    font_size=font_size,
+                    line_height=line_height,
+                    row_padding=row_padding,
+                )
 
-                row_height = (max(len(lines) for lines in cell_lines_by_column) * line_height) + (2.0 * row_padding)
+                available_height = self.cursor_y - PAGE_BOTTOM
+                if row_height > available_height:
+                    cell_lines_by_column, row_height = self._truncate_row_layout_to_fit_height(
+                        cell_lines_by_column=cell_lines_by_column,
+                        line_height=line_height,
+                        row_padding=row_padding,
+                        available_height=available_height,
+                    )
 
                 if self.cursor_y - row_height < PAGE_BOTTOM:
                     self._start_new_page()
@@ -636,7 +674,57 @@ class _PdfReportComposer:
                 row_index += 1
 
             if row_index >= len(rows):
-                self.cursor_y -= 8.0
+                self.cursor_y -= 14.0
+
+    def _build_table_row_layout(
+        self,
+        *,
+        row_values: list[Any],
+        column_widths: list[float],
+        font_size: float,
+        line_height: float,
+        row_padding: float,
+    ) -> tuple[list[list[str]], float]:
+        cell_lines_by_column: list[list[str]] = []
+
+        for value, column_width in zip(row_values, column_widths, strict=False):
+            cell_lines_by_column.append(
+                self._wrap_text_to_width(
+                    text=_format_display_value(value),
+                    width=column_width - 12.0,
+                    font_size=font_size,
+                ) or [""],
+            )
+
+        row_height = (max(len(lines) for lines in cell_lines_by_column) * line_height) + (2.0 * row_padding)
+        return cell_lines_by_column, row_height
+
+    def _truncate_row_layout_to_fit_height(
+        self,
+        *,
+        cell_lines_by_column: list[list[str]],
+        line_height: float,
+        row_padding: float,
+        available_height: float,
+    ) -> tuple[list[list[str]], float]:
+        max_line_count = max(int((available_height - (2.0 * row_padding)) / line_height), 1)
+
+        truncated_lines_by_column: list[list[str]] = []
+        for lines in cell_lines_by_column:
+            if len(lines) <= max_line_count:
+                truncated_lines_by_column.append(lines)
+                continue
+
+            truncated = list(lines[:max_line_count])
+            truncated[-1] = textwrap.shorten(
+                truncated[-1],
+                width=max(len(truncated[-1]) - 3, 3),
+                placeholder="...",
+            )
+            truncated_lines_by_column.append(truncated)
+
+        row_height = (max_line_count * line_height) + (2.0 * row_padding)
+        return truncated_lines_by_column, row_height
 
     def _draw_table_header(self, *, headers: list[str], column_widths: list[float], height: float) -> None:
         x_cursor = PAGE_MARGIN
@@ -870,22 +958,40 @@ class _PdfReportComposer:
             for item in items
         ]
 
-        box_height = max(34.0, 14.0 + (sum(len(lines) for lines in wrapped_lines) * 11.0))
-        self._ensure_space(box_height)
+        flat_lines = [line for lines in wrapped_lines for line in lines]
+        line_height = 11.0
+        line_index = 0
 
-        y = self.cursor_y - box_height
-        self._fill_rect(
-            x=PAGE_MARGIN,
-            y=y,
-            width=CONTENT_WIDTH,
-            height=box_height,
-            fill_color=COLOR_SURFACE,
-            stroke_color=COLOR_LINE,
-        )
+        while line_index < len(flat_lines):
+            available_height = self.cursor_y - PAGE_BOTTOM - 8.0
+            max_lines_on_page = max(int((available_height - 14.0) / line_height), 1)
 
-        text_y = y + box_height - 16.0
-        for lines in wrapped_lines:
-            for line in lines:
+            if max_lines_on_page <= 0:
+                self._start_new_page()
+                self._draw_section_title(title=f"{title} (continued)")
+                continue
+
+            next_index = min(line_index + max_lines_on_page, len(flat_lines))
+            chunk = flat_lines[line_index:next_index]
+            box_height = max(34.0, 14.0 + (len(chunk) * line_height))
+
+            if self.cursor_y - box_height < PAGE_BOTTOM:
+                self._start_new_page()
+                self._draw_section_title(title=f"{title} (continued)")
+                continue
+
+            y = self.cursor_y - box_height
+            self._fill_rect(
+                x=PAGE_MARGIN,
+                y=y,
+                width=CONTENT_WIDTH,
+                height=box_height,
+                fill_color=COLOR_SURFACE,
+                stroke_color=COLOR_LINE,
+            )
+
+            text_y = y + box_height - 16.0
+            for line in chunk:
                 self._draw_text(
                     x=PAGE_MARGIN + 10.0,
                     y=text_y,
@@ -894,12 +1000,13 @@ class _PdfReportComposer:
                     size=9.0,
                     color=COLOR_WARNING if line != "- None" else COLOR_MUTED,
                 )
-                text_y -= 11.0
+                text_y -= line_height
 
-        self.cursor_y = y - 10.0
+            self.cursor_y = y - 10.0
+            line_index = next_index
 
     def _draw_section_title(self, *, title: str) -> None:
-        self._ensure_space(28.0)
+        self._ensure_space(34.0)
         self._draw_text(
             x=PAGE_MARGIN,
             y=self.cursor_y,
@@ -916,7 +1023,7 @@ class _PdfReportComposer:
             color=COLOR_ACCENT,
             line_width=1.2,
         )
-        self.cursor_y -= 20.0
+        self.cursor_y -= 24.0
 
     def _wrap_text_to_width(self, *, text: str, width: float, font_size: float) -> list[str]:
         approximate_character_width = max(font_size * 0.54, 1.0)
@@ -1064,6 +1171,124 @@ class _PdfReportComposer:
             f"{_rgb(color)} RG "
             f"{line_width:.2f} w "
             f"{' '.join(commands)} S Q"
+        )
+
+    def _fill_circle(
+        self,
+        *,
+        cx: float,
+        cy: float,
+        radius: float,
+        fill_color: tuple[float, float, float],
+    ) -> None:
+        # Cubic Bezier approximation for a circle.
+        kappa = 0.5522847498
+        control = radius * kappa
+
+        self.current_page.commands.append(
+            "q "
+            f"{_rgb(fill_color)} rg "
+            f"{cx + radius:.2f} {cy:.2f} m "
+            f"{cx + radius:.2f} {cy + control:.2f} {cx + control:.2f} {cy + radius:.2f} {cx:.2f} {cy + radius:.2f} c "
+            f"{cx - control:.2f} {cy + radius:.2f} {cx - radius:.2f} {cy + control:.2f} {cx - radius:.2f} {cy:.2f} c "
+            f"{cx - radius:.2f} {cy - control:.2f} {cx - control:.2f} {cy - radius:.2f} {cx:.2f} {cy - radius:.2f} c "
+            f"{cx + control:.2f} {cy - radius:.2f} {cx + radius:.2f} {cy - control:.2f} {cx + radius:.2f} {cy:.2f} c f Q"
+        )
+
+    def _draw_brand_mark(
+        self,
+        *,
+        x: float,
+        y: float,
+        scale: float,
+        on_dark: bool,
+    ) -> None:
+        bar_height = 6.0 * scale
+        center_radius = 8.5 * scale
+        left_bar_width = 26.0 * scale
+        right_bar_width = 26.0 * scale
+        branch_gap = 6.0 * scale
+
+        self._fill_rect(
+            x=x,
+            y=y - (bar_height / 2.0),
+            width=left_bar_width,
+            height=bar_height,
+            fill_color=COLOR_LOGO_CYAN,
+        )
+        self._fill_rect(
+            x=x + left_bar_width + (2.0 * center_radius),
+            y=y - (bar_height / 2.0),
+            width=right_bar_width,
+            height=bar_height,
+            fill_color=COLOR_LOGO_BLUE,
+        )
+
+        self._fill_circle(
+            cx=x + left_bar_width + center_radius,
+            cy=y,
+            radius=center_radius,
+            fill_color=COLOR_LOGO_BLUE if on_dark else COLOR_ACCENT,
+        )
+
+        for index, dot_radius in enumerate((3.0, 2.4, 1.8), start=1):
+            offset = (center_radius + (index * branch_gap))
+            self._fill_circle(
+                cx=x + left_bar_width + center_radius - offset,
+                cy=y + (index * 4.0 * scale),
+                radius=dot_radius * scale,
+                fill_color=COLOR_LOGO_CYAN,
+            )
+            self._fill_circle(
+                cx=x + left_bar_width + center_radius - offset,
+                cy=y - (index * 4.0 * scale),
+                radius=dot_radius * scale,
+                fill_color=COLOR_LOGO_CYAN,
+            )
+            self._fill_circle(
+                cx=x + left_bar_width + center_radius + offset,
+                cy=y + (index * 4.0 * scale),
+                radius=dot_radius * scale,
+                fill_color=COLOR_LOGO_BLUE,
+            )
+            self._fill_circle(
+                cx=x + left_bar_width + center_radius + offset,
+                cy=y - (index * 4.0 * scale),
+                radius=dot_radius * scale,
+                fill_color=COLOR_LOGO_BLUE,
+            )
+
+    def _draw_logo_light_lockup(
+        self,
+        *,
+        x: float,
+        y: float,
+        scale: float,
+        on_dark: bool,
+    ) -> None:
+        text_color = (0.95, 0.98, 1.0) if on_dark else COLOR_MUTED
+
+        self._draw_text(
+            x=x,
+            y=y + (8.0 * scale),
+            text="RosettaX",
+            font="F2",
+            size=11.5 * scale,
+            color=text_color,
+        )
+        self._draw_text(
+            x=x,
+            y=y - (3.0 * scale),
+            text="Flow-cytometry calibration",
+            font="F1",
+            size=6.5 * scale,
+            color=text_color,
+        )
+        self._draw_brand_mark(
+            x=x + (65.0 * scale),
+            y=y + (5.0 * scale),
+            scale=0.62 * scale,
+            on_dark=on_dark,
         )
 
 
