@@ -66,6 +66,228 @@ def _build_dataset_without_markers() -> tuple[np.ndarray, np.ndarray]:
 
 
 class Test_RosettaPeakScript:
+    def test_settings_keep_only_process_specific_rosetta_toggles(self) -> None:
+        process = rosetta_mix.FluorescenceGuidedScatterPeakProcess()
+
+        settings = process.get_settings()
+        table_non_fluorescent_only_setting = next(
+            setting
+            for setting in settings
+            if setting.get("name") == "table_non_fluorescent_only"
+        )
+        fit_r2_setting = next(
+            setting
+            for setting in settings
+            if setting.get("name") == "fit_r2_threshold"
+        )
+        fluorescence_cv_setting = next(
+            setting
+            for setting in settings
+            if setting.get("name") == "fit_cv_threshold"
+        )
+        scatter_cv_setting = next(
+            setting
+            for setting in settings
+            if setting.get("name") == "scatter_fit_cv_threshold"
+        )
+
+        assert all(
+            setting.get("name") != "remove_saturated_events"
+            for setting in settings
+        )
+        assert table_non_fluorescent_only_setting["kind"] == "boolean"
+        assert table_non_fluorescent_only_setting["default_value"] is False
+        assert fit_r2_setting["default_value"] == 0.80
+        assert fluorescence_cv_setting["default_value"] == 1.0
+        assert scatter_cv_setting["default_value"] == 1.0
+
+    def test_run_automatic_action_uses_configured_fluorescence_cv_threshold(self, monkeypatch) -> None:
+        scattering, fluorescence = _build_dataset_without_markers()
+        captured_fit_cv_thresholds: list[float] = []
+
+        def fake_column_copy(*, fcs_file_path, detector_column, dtype=float, n=None):
+            del fcs_file_path
+            del dtype
+
+            if detector_column == "SSC-A":
+                values = scattering
+            elif detector_column == "FITC-A":
+                values = fluorescence
+            else:
+                raise AssertionError(f"Unexpected detector column: {detector_column}")
+
+            if n is None:
+                return values
+
+            return values[: int(n)]
+
+        def fake_find_fit_validate_peaks_1d(**kwargs):
+            captured_fit_cv_thresholds.append(float(kwargs["fit_cv_threshold"]))
+            return {
+                "all_peaks": [],
+                "validated_peaks": [],
+            }
+
+        monkeypatch.setattr(rosetta_mix, "column_copy", fake_column_copy)
+        monkeypatch.setattr(
+            rosetta_mix,
+            "find_fit_validate_peaks_1d",
+            fake_find_fit_validate_peaks_1d,
+        )
+
+        process = rosetta_mix.FluorescenceGuidedScatterPeakProcess()
+        backend = SimpleNamespace(fcs_file_path="dummy.fcs")
+
+        result = process.run_automatic_action(
+            backend=backend,
+            detector_channels={
+                "scattering": "SSC-A",
+                "green_fluorescence": "FITC-A",
+            },
+            peak_count=6,
+            max_events_for_analysis=10000,
+            process_settings={
+                "fit_cv_threshold": 0.72,
+            },
+        )
+
+        assert result is not None
+        assert captured_fit_cv_thresholds == [0.72]
+
+    def test_run_automatic_action_uses_configured_scatter_cv_threshold(self, monkeypatch) -> None:
+        scattering, fluorescence = _build_synthetic_dataset_with_two_markers()
+        captured_fit_cv_thresholds: list[float] = []
+
+        def fake_column_copy(*, fcs_file_path, detector_column, dtype=float, n=None):
+            del fcs_file_path
+            del dtype
+
+            if detector_column == "SSC-A":
+                values = scattering
+            elif detector_column == "FITC-A":
+                values = fluorescence
+            else:
+                raise AssertionError(f"Unexpected detector column: {detector_column}")
+
+            if n is None:
+                return values
+
+            return values[: int(n)]
+
+        def fake_find_fit_validate_peaks_1d(**kwargs):
+            values = np.asarray(kwargs["values"], dtype=float)
+            captured_fit_cv_thresholds.append(float(kwargs["fit_cv_threshold"]))
+
+            if np.max(values) < 20000.0:
+                return {
+                    "all_peaks": [
+                        {"mean": 120.0, "std": 10.0, "count": 9000, "validated": True, "rejection_reasons": []},
+                        {"mean": 900.0, "std": 80.0, "count": 500, "validated": True, "rejection_reasons": []},
+                    ],
+                    "validated_peaks": [
+                        {"mean": 120.0, "std": 10.0, "count": 9000, "validated": True, "rejection_reasons": []},
+                        {"mean": 900.0, "std": 80.0, "count": 500, "validated": True, "rejection_reasons": []},
+                    ],
+                }
+
+            return {
+                "all_peaks": [
+                    {"mean": 700.0, "std": 50.0, "count": 3000, "validated": True, "rejection_reasons": []},
+                ],
+                "validated_peaks": [
+                    {"mean": 700.0, "std": 50.0, "count": 3000, "validated": True, "rejection_reasons": []},
+                ],
+            }
+
+        monkeypatch.setattr(rosetta_mix, "column_copy", fake_column_copy)
+        monkeypatch.setattr(
+            rosetta_mix,
+            "find_fit_validate_peaks_1d",
+            fake_find_fit_validate_peaks_1d,
+        )
+
+        process = rosetta_mix.FluorescenceGuidedScatterPeakProcess()
+        backend = SimpleNamespace(fcs_file_path="dummy.fcs")
+
+        result = process.run_automatic_action(
+            backend=backend,
+            detector_channels={
+                "scattering": "SSC-A",
+                "green_fluorescence": "FITC-A",
+            },
+            peak_count=6,
+            max_events_for_analysis=20000,
+            process_settings={
+                "fit_cv_threshold": 0.72,
+                "scatter_fit_cv_threshold": 1.35,
+            },
+        )
+
+        assert result is not None
+        assert captured_fit_cv_thresholds[0] == 0.72
+        assert captured_fit_cv_thresholds[1:] == [1.35, 1.35]
+
+    def test_run_automatic_action_payload_uses_filtered_plot_values_when_saturation_removal_enabled(
+        self,
+        monkeypatch,
+    ) -> None:
+        scattering = np.concatenate(
+            [
+                np.full(40, 3.91e6, dtype=float),
+                np.linspace(500.0, 2000.0, 400, dtype=float),
+            ]
+        )
+        fluorescence = np.concatenate(
+            [
+                np.full(40, 1.0, dtype=float),
+                np.linspace(150.0, 900.0, 400, dtype=float),
+            ]
+        )
+
+        def fake_column_copy(*, fcs_file_path, detector_column, dtype=float, n=None):
+            del fcs_file_path
+            del dtype
+
+            if detector_column == "SSC-A":
+                values = scattering
+            elif detector_column == "FITC-A":
+                values = fluorescence
+            else:
+                raise AssertionError(f"Unexpected detector column: {detector_column}")
+
+            if n is None:
+                return values
+
+            return values[: int(n)]
+
+        monkeypatch.setattr(rosetta_mix, "column_copy", fake_column_copy)
+
+        process = rosetta_mix.FluorescenceGuidedScatterPeakProcess()
+        backend = SimpleNamespace(fcs_file_path="dummy.fcs")
+
+        result = process.run_automatic_action(
+            backend=backend,
+            detector_channels={
+                "scattering": "SSC-A",
+                "green_fluorescence": "FITC-A",
+            },
+            peak_count=6,
+            max_events_for_analysis=10000,
+            process_settings={
+                "remove_saturated_events": True,
+            },
+        )
+
+        plot_x_values = result.peak_lines_payload.get("plot_x_values", [])
+        plot_y_values = result.peak_lines_payload.get("plot_y_values", [])
+
+        assert plot_x_values
+        assert plot_y_values
+        assert len(plot_x_values) < len(scattering)
+        assert len(plot_y_values) < len(fluorescence)
+        assert max(plot_x_values) < 3.91e6
+        assert min(plot_y_values) > 1.0
+
     def test_run_automatic_action_detects_non_fluorescent_scatter_peaks(self, monkeypatch) -> None:
         scattering, fluorescence = _build_synthetic_dataset_with_two_markers()
 
@@ -107,8 +329,63 @@ class Test_RosettaPeakScript:
         assert result is not None
         assert len(result.new_peak_positions or []) >= 2
         assert "non-fluorescent scatter peaks" in str(result.status).lower()
+        assert "scatter analysis:" in str(result.status).lower()
         assert isinstance(result.peak_lines_payload, dict)
         assert len(result.peak_lines_payload.get("points", [])) >= len(result.new_peak_positions or [])
+        assert len(result.peak_lines_payload.get("scatter_guide_positions", [])) >= len(result.new_peak_positions or [])
+        assert len(result.peak_lines_payload.get("fluorescence_guide_positions", [])) >= 1
+
+    def test_run_automatic_action_can_insert_marker_associated_scatter_peaks_into_table(
+        self,
+        monkeypatch,
+    ) -> None:
+        scattering, fluorescence = _build_synthetic_dataset_with_two_markers()
+
+        def fake_column_copy(*, fcs_file_path, detector_column, dtype=float, n=None):
+            del fcs_file_path
+            del dtype
+
+            if detector_column == "SSC-A":
+                values = scattering
+            elif detector_column == "FITC-A":
+                values = fluorescence
+            else:
+                raise AssertionError(f"Unexpected detector column: {detector_column}")
+
+            if n is None:
+                return values
+
+            return values[: int(n)]
+
+        monkeypatch.setattr(rosetta_mix, "column_copy", fake_column_copy)
+
+        process = rosetta_mix.FluorescenceGuidedScatterPeakProcess()
+        backend = SimpleNamespace(fcs_file_path="dummy.fcs")
+
+        result = process.run_automatic_action(
+            backend=backend,
+            detector_channels={
+                "scattering": "SSC-A",
+                "green_fluorescence": "FITC-A",
+            },
+            peak_count=6,
+            max_events_for_analysis=20000,
+            process_settings={
+                "table_non_fluorescent_only": False,
+            },
+        )
+
+        marker_points = [
+            point
+            for point in result.peak_lines_payload.get("points", [])
+            if str(point.get("kind", "")).strip().lower() == "marker"
+        ]
+
+        assert result is not None
+        assert marker_points
+        assert len(result.peak_positions or []) == len(result.peak_lines_payload.get("points", []))
+        assert len(result.new_peak_positions or []) == len(result.peak_lines_payload.get("points", []))
+        assert "both non-fluorescent scatter peaks and marker-associated scatter peaks are inserted into the table" in str(result.status).lower()
 
     def test_run_automatic_action_stops_when_no_marker_peaks_found(self, monkeypatch) -> None:
         scattering, fluorescence = _build_dataset_without_markers()
@@ -154,6 +431,36 @@ class Test_RosettaPeakScript:
             "marker" in str(result.status).lower()
             or "fluorescence peaks" in str(result.status).lower()
         )
+        assert "analysis:" in str(result.status).lower()
+        assert "candidate peak" in str(result.status).lower()
+        assert "validated" in str(result.status).lower()
+
+    def test_build_saturated_event_mask_marks_scatter_and_fluorescence_edge_pileups(self) -> None:
+        rng = np.random.default_rng(2027)
+
+        scattering = np.concatenate(
+            [
+                np.full(40, 1.0),
+                rng.lognormal(mean=np.log(5_000.0), sigma=0.20, size=3000),
+                np.full(50, 9.9e6),
+            ]
+        )
+        fluorescence = np.concatenate(
+            [
+                rng.lognormal(mean=np.log(400.0), sigma=0.25, size=3040),
+                np.full(50, 1.0),
+            ]
+        )
+
+        mask = rosetta_mix.build_saturated_event_mask(
+            scattering_values=scattering,
+            fluorescence_values=fluorescence,
+        )
+
+        assert int(np.count_nonzero(mask)) >= 90
+        assert np.any(mask[:40])
+        assert np.any(mask[-50:])
+        assert np.any(mask[3040:3090])
 
     def test_baseline_gate_width_changes_payload_y_gate_interval(self, monkeypatch) -> None:
         scattering, fluorescence = _build_synthetic_dataset_with_two_markers()
@@ -272,3 +579,34 @@ class Test_RosettaPeakScript:
 
         assert len(validated_peaks) >= 2
         assert all(float(peak["r2"]) >= 0.70 for peak in validated_peaks)
+
+    def test_build_peak_analysis_diagnostic_text_includes_rejection_reasons(self) -> None:
+        diagnostic_text = rosetta_mix.build_peak_analysis_diagnostic_text(
+            analysis={
+                "all_peaks": [
+                    {
+                        "mean": 120.0,
+                        "validated": True,
+                        "rejection_reasons": [],
+                    },
+                    {
+                        "mean": 9800.0,
+                        "validated": False,
+                        "rejection_reasons": ["CV 0.73 > 0.55", "R2 0.42 < 0.80"],
+                    },
+                ],
+                "validated_peaks": [
+                    {
+                        "mean": 120.0,
+                        "validated": True,
+                        "rejection_reasons": [],
+                    }
+                ],
+            },
+            label="fluorescence",
+        )
+
+        assert "1 rejected" in diagnostic_text
+        assert "peak at 9.8e+03" in diagnostic_text
+        assert "CV 0.73 > 0.55" in diagnostic_text
+        assert "R2 0.42 < 0.80" in diagnostic_text

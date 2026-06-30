@@ -7,7 +7,12 @@ import dash
 import dash_bootstrap_components as dbc
 import numpy as np
 
-from .base import BasePeakProcess, PeakProcessResult
+from .base import (
+    BasePeakProcess,
+    PeakProcessResult,
+    filter_edge_artifact_pairs,
+    resolve_edge_artifact_filter_enabled,
+)
 from RosettaX.utils.io import column_copy
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
@@ -613,6 +618,19 @@ class Manual2DClickProcess(BasePeakProcess):
         finite_mask = np.isfinite(x_values) & np.isfinite(y_values)
         x_values = x_values[finite_mask]
         y_values = y_values[finite_mask]
+
+        if resolve_edge_artifact_filter_enabled(
+            process_settings=process_settings,
+            default=True,
+        ):
+            x_values, y_values = filter_edge_artifact_pairs(
+                x_values=x_values,
+                y_values=y_values,
+                remove_x_min=True,
+                remove_x_max=True,
+                remove_y_min=True,
+                remove_y_max=False,
+            )
 
         if x_values.size < 16 or y_values.size < 16:
             return None

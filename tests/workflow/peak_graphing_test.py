@@ -4,6 +4,27 @@ import numpy as np
 import pytest
 from unittest.mock import patch, MagicMock
 import plotly.graph_objs as go
+import sys
+import types
+
+
+class _DashBootstrapComponentsSentinel:
+    def __call__(self, *args, **kwargs):
+        return None
+
+    def __getattr__(self, name):
+        return self
+
+
+class _DashBootstrapComponentsStub(types.ModuleType):
+    def __getattr__(self, name):
+        return _DashBootstrapComponentsSentinel()
+
+
+sys.modules.setdefault(
+    "dash_bootstrap_components",
+    _DashBootstrapComponentsStub("dash_bootstrap_components"),
+)
 
 from RosettaX.workflow.peak.callbacks.graph import (
     add_grouped_2d_scatter_traces,
@@ -13,6 +34,11 @@ from RosettaX.workflow.peak.core.graphing import (
     PeakWorkflowGraphBuilder,
     is_enabled,
     scale_selection_is_log
+)
+from RosettaX.workflow.peak.scripts.base import (
+    filter_edge_artifact_pairs,
+    filter_edge_artifact_values,
+    resolve_edge_artifact_filter_enabled,
 )
 
 
@@ -319,6 +345,82 @@ class Test_PeakWorkflowGraphBuilder2DFiltering:
             assert scale_selection_is_log("log") is True
             assert scale_selection_is_log("linear") is False
 
+    def test_extract_plot_values_from_peak_lines_payload_uses_payload_override(self):
+        builder = PeakWorkflowGraphBuilder.__new__(PeakWorkflowGraphBuilder)
+        builder.peak_lines_payload = {
+            "plot_x_values": [10.0, 20.0, "bad", float("nan")],
+            "plot_y_values": [100.0, 200.0, 300.0, 400.0],
+        }
+
+        payload_values = builder._extract_plot_values_from_peak_lines_payload()
+
+        assert payload_values is not None
+        payload_x_values, payload_y_values = payload_values
+        assert payload_x_values.tolist() == [10.0, 20.0]
+        assert payload_y_values.tolist() == [100.0, 200.0]
+
+
+class Test_EdgeArtifactFiltering:
+    def test_filter_edge_artifact_values_removes_floor_and_ceiling_pileups(self):
+        values = np.concatenate(
+            [
+                np.ones(40, dtype=float),
+                np.linspace(100.0, 1000.0, 400, dtype=float),
+                np.full(40, 1.0e6, dtype=float),
+            ]
+        )
+
+        filtered_values = filter_edge_artifact_values(
+            values=values,
+            remove_min=True,
+            remove_max=True,
+        )
+
+        assert float(np.min(filtered_values)) > 1.0
+        assert float(np.max(filtered_values)) < 1.0e6
+
+    def test_filter_edge_artifact_pairs_removes_scatter_floor_ceiling_and_fluorescence_floor(self):
+        x_values = np.concatenate(
+            [
+                np.ones(30, dtype=float),
+                np.linspace(200.0, 2000.0, 300, dtype=float),
+                np.full(30, 5.0e6, dtype=float),
+            ]
+        )
+        y_values = np.concatenate(
+            [
+                np.ones(30, dtype=float),
+                np.linspace(100.0, 900.0, 300, dtype=float),
+                np.linspace(300.0, 700.0, 30, dtype=float),
+            ]
+        )
+
+        filtered_x_values, filtered_y_values = filter_edge_artifact_pairs(
+            x_values=x_values,
+            y_values=y_values,
+            remove_x_min=True,
+            remove_x_max=True,
+            remove_y_min=True,
+            remove_y_max=False,
+        )
+
+        assert float(np.min(filtered_x_values)) > 1.0
+        assert float(np.max(filtered_x_values)) < 5.0e6
+        assert float(np.min(filtered_y_values)) > 1.0
+
+    def test_resolve_edge_artifact_filter_enabled_defaults_to_true(self):
+        assert resolve_edge_artifact_filter_enabled(
+            process_settings={},
+            default=True,
+        ) is True
+
+        assert resolve_edge_artifact_filter_enabled(
+            process_settings={
+                "filter_edge_artifacts": [],
+            },
+            default=True,
+        ) is False
+
 
 class Test_PeakWorkflowGraphBuilder1DHistogramRange:
     def test_advanced_overlay_does_not_expand_histogram_y_range(self):
@@ -343,4 +445,105 @@ class Test_PeakWorkflowGraphBuilder1DHistogramRange:
         )
 
         assert figure.layout.yaxis.autorange is False
-        assert tuple(figure.layout.yaxis.range) == (9.5, 15.5)
+        assert tuple(figure.layout.yaxis.range) == pytest.approx((9.7545, 15.2435))
+
+
+class Test_PeakWorkflowGraphBuilderRosettaOverlays:
+    def test_rosetta_y_gate_overlay_adds_helper_bands_without_in_plot_labels(self):
+        builder = PeakWorkflowGraphBuilder.__new__(PeakWorkflowGraphBuilder)
+        builder.resolved_process_name = "Rosetta Script"
+        builder.yscale_selection = "log"
+        builder.peak_lines_payload = {
+            "y_lower_gate": 20.0,
+            "y_upper_gate": 1000.0,
+        }
+
+        figure = go.Figure()
+        figure.update_yaxes(type="log", range=[0.0, 4.0])
+
+        figure = builder._add_y_axis_gate_overlay(
+            figure=figure,
+        )
+
+        shapes = list(figure.layout.shapes or [])
+
+        assert len(shapes) >= 2
+        assert not list(figure.layout.annotations or [])
+
+    def test_rosetta_selected_peak_markers_add_vertical_and_horizontal_guides(self):
+        builder = PeakWorkflowGraphBuilder.__new__(PeakWorkflowGraphBuilder)
+        builder.resolved_process_name = "Rosetta Script"
+        builder.advanced_mode_value = ["enabled"]
+        builder.peak_lines_payload = {
+            "points": [
+                {"x": 100.0, "y": 200.0},
+                {"x": 300.0, "y": 400.0},
+                {"x": 500.0, "y": 400.0},
+            ],
+            "scatter_guide_positions": [100.0, 300.0, 500.0],
+            "fluorescence_guide_positions": [200.0, 400.0],
+            "labels": [
+                "Non-fluorescent peak 1",
+                "Bright marker",
+                "Dim marker",
+            ],
+        }
+
+        figure = builder._add_selected_peak_markers(
+            figure=go.Figure(),
+        )
+
+        shapes = list(figure.layout.shapes or [])
+
+        vertical_shapes = [
+            shape
+            for shape in shapes
+            if shape.type == "line" and float(shape.x0) == float(shape.x1)
+        ]
+        horizontal_shapes = [
+            shape
+            for shape in shapes
+            if shape.type == "line" and float(shape.y0) == float(shape.y1)
+        ]
+
+        assert len(vertical_shapes) == 3
+        assert len(horizontal_shapes) == 2
+        assert all(shape.line.dash == "dash" for shape in vertical_shapes)
+        assert all(shape.line.color == "#1f9d55" for shape in vertical_shapes)
+        assert all(shape.line.dash == "dash" for shape in horizontal_shapes)
+        assert all(shape.line.color == "#d64545" for shape in horizontal_shapes)
+        assert len(figure.data) == 1
+        assert not list(figure.layout.annotations or [])
+
+    def test_rosetta_selected_peak_markers_hide_horizontal_guides_without_advanced_mode(self):
+        builder = PeakWorkflowGraphBuilder.__new__(PeakWorkflowGraphBuilder)
+        builder.resolved_process_name = "Rosetta Script"
+        builder.advanced_mode_value = []
+        builder.peak_lines_payload = {
+            "points": [
+                {"x": 100.0, "y": 200.0},
+                {"x": 300.0, "y": 400.0},
+            ],
+            "scatter_guide_positions": [100.0, 300.0],
+            "fluorescence_guide_positions": [200.0, 400.0],
+        }
+
+        figure = builder._add_selected_peak_markers(
+            figure=go.Figure(),
+        )
+
+        shapes = list(figure.layout.shapes or [])
+
+        vertical_shapes = [
+            shape
+            for shape in shapes
+            if shape.type == "line" and float(shape.x0) == float(shape.x1)
+        ]
+        horizontal_shapes = [
+            shape
+            for shape in shapes
+            if shape.type == "line" and float(shape.y0) == float(shape.y1)
+        ]
+
+        assert len(vertical_shapes) == 2
+        assert horizontal_shapes == []

@@ -14,6 +14,11 @@ from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.utils.io import column_copy
 from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
 from RosettaX.workflow.plotting.scatter2d import Scatter2DTrace
+from ..scripts.base import (
+    filter_edge_artifact_pairs,
+    filter_edge_artifact_values,
+    resolve_edge_artifact_filter_enabled,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -200,6 +205,7 @@ def build_peak_workflow_graph_figure(
     process_setting_values: list[Any],
     graph_toggle_value: Any,
     advanced_mode_value: Any = None,
+    data_filter_value: Any = None,
     xscale_selection: Any = None,
     yscale_selection: Any = None,
     nbins: Any = None,
@@ -223,6 +229,7 @@ def build_peak_workflow_graph_figure(
         process_setting_values=process_setting_values,
         graph_toggle_value=graph_toggle_value,
         advanced_mode_value=advanced_mode_value,
+        data_filter_value=data_filter_value,
         xscale_selection=xscale_selection,
         yscale_selection=yscale_selection,
         nbins=nbins,
@@ -230,6 +237,39 @@ def build_peak_workflow_graph_figure(
         max_events_for_plots=max_events_for_plots,
         runtime_config_data=runtime_config_data,
     ).build()
+
+
+def unique_finite_preserving_order(
+    values: list[Any],
+) -> list[float]:
+    """
+    Return finite floats in first-seen order with near-duplicates collapsed.
+    """
+    resolved_values: list[float] = []
+
+    for raw_value in values:
+        try:
+            value = float(raw_value)
+        except (TypeError, ValueError):
+            continue
+
+        if not np.isfinite(value):
+            continue
+
+        if any(
+            np.isclose(
+                value,
+                existing_value,
+                rtol=0.0,
+                atol=max(abs(existing_value) * 1e-6, 1e-9),
+            )
+            for existing_value in resolved_values
+        ):
+            continue
+
+        resolved_values.append(value)
+
+    return resolved_values
 
 
 class PeakWorkflowGraphBuilder:
@@ -261,6 +301,8 @@ class PeakWorkflowGraphBuilder:
 
     rejected_x_fill_color = "rgba(20, 20, 20, 0.16)"
     rejected_y_fill_color = "rgba(20, 20, 20, 0.22)"
+    accepted_y_fill_color = "rgba(38, 196, 78, 0.20)"
+    fluorescence_helper_fill_color = "rgba(64, 138, 255, 0.12)"
 
     def __init__(
         self,
@@ -274,6 +316,7 @@ class PeakWorkflowGraphBuilder:
         process_setting_values: list[Any],
         graph_toggle_value: Any,
         advanced_mode_value: Any = None,
+        data_filter_value: Any = None,
         xscale_selection: Any = None,
         yscale_selection: Any = None,
         nbins: Any = None,
@@ -290,6 +333,7 @@ class PeakWorkflowGraphBuilder:
         self.process_setting_values = process_setting_values or []
         self.graph_toggle_value = graph_toggle_value
         self.advanced_mode_value = advanced_mode_value
+        self.data_filter_value = data_filter_value
         self.xscale_selection = xscale_selection
         self.yscale_selection = yscale_selection
         self.nbins = nbins
@@ -428,10 +472,23 @@ class PeakWorkflowGraphBuilder:
         """
         Build a dictionary of process setting values for the selected process.
         """
-        return build_process_settings(
+        process_settings = build_process_settings(
             process_setting_ids=self.process_setting_ids,
             process_setting_values=self.process_setting_values,
             process_name=self.resolved_process_name,
+        )
+
+        process_settings["filter_edge_artifacts"] = self.data_filter_value
+
+        return process_settings
+
+    def _edge_artifact_filter_is_enabled(self) -> bool:
+        """
+        Return whether shared zero/saturation filtering is enabled.
+        """
+        return resolve_edge_artifact_filter_enabled(
+            process_settings=self.process_settings,
+            default=True,
         )
 
     def _build_process_specific_figure(self) -> go.Figure:
@@ -541,13 +598,79 @@ class PeakWorkflowGraphBuilder:
                 "Select a detector channel first.",
             )
 
-        histogram_result = plottings.build_histogram(
-            fcs_file_path=self.backend.fcs_file_path,
-            detector_column=detector_column,
-            n_bins_for_plots=self._resolve_number_of_bins(),
-            max_events_for_analysis=self._resolve_max_events_for_plots(),
-            use_log_x_bins=self._x_axis_is_log(),
-        )
+        if self._edge_artifact_filter_is_enabled():
+            raw_values = np.asarray(
+                column_copy(
+                    fcs_file_path=self.backend.fcs_file_path,
+                    detector_column=str(detector_column),
+                    dtype=float,
+                    n=self._resolve_max_events_for_plots(),
+                ),
+                dtype=float,
+            )
+
+            filtered_values = filter_edge_artifact_values(
+                values=raw_values,
+                remove_min=True,
+                remove_max=True,
+            )
+
+            if filtered_values.size == 0:
+                return plottings._make_info_figure(
+                    "No finite events remain after filtering zeros and saturated values.",
+                )
+
+            histogram_values = filtered_values[
+                filtered_values > 0.0
+            ] if self._x_axis_is_log() else filtered_values
+
+            if histogram_values.size == 0:
+                return plottings._make_info_figure(
+                    "No positive events remain after filtering for the selected axis scale.",
+                )
+
+            if self._x_axis_is_log():
+                lower_edge = float(np.min(histogram_values))
+                upper_edge = float(np.max(histogram_values))
+
+                if lower_edge == upper_edge:
+                    upper_edge = lower_edge * 1.01
+
+                histogram_edges = np.geomspace(
+                    lower_edge,
+                    upper_edge,
+                    num=self._resolve_number_of_bins() + 1,
+                )
+                histogram_counts, histogram_edges = np.histogram(
+                    histogram_values,
+                    bins=histogram_edges,
+                )
+                histogram_centers = np.sqrt(
+                    histogram_edges[:-1] * histogram_edges[1:]
+                )
+            else:
+                histogram_counts, histogram_edges = np.histogram(
+                    histogram_values,
+                    bins=self._resolve_number_of_bins(),
+                )
+                histogram_centers = 0.5 * (
+                    histogram_edges[:-1] + histogram_edges[1:]
+                )
+
+            histogram_result = plottings.HistogramResult(
+                values=np.asarray(histogram_values, dtype=float),
+                counts=np.asarray(histogram_counts, dtype=float),
+                edges=np.asarray(histogram_edges, dtype=float),
+                centers=np.asarray(histogram_centers, dtype=float),
+            )
+        else:
+            histogram_result = plottings.build_histogram(
+                fcs_file_path=self.backend.fcs_file_path,
+                detector_column=detector_column,
+                n_bins_for_plots=self._resolve_number_of_bins(),
+                max_events_for_analysis=self._resolve_max_events_for_plots(),
+                use_log_x_bins=self._x_axis_is_log(),
+            )
         self._stable_histogram_count_values = np.asarray(
             histogram_result.counts,
             dtype=float,
@@ -722,29 +845,44 @@ class PeakWorkflowGraphBuilder:
                 "Select both detector channels first.",
             )
 
-        x_values = np.asarray(
-            column_copy(
-                fcs_file_path=self.backend.fcs_file_path,
-                detector_column=str(
-                    x_detector_column,
-                ),
-                dtype=float,
-                n=self._resolve_max_events_for_plots(),
-            ),
-            dtype=float,
-        )
+        payload_plot_values = self._extract_plot_values_from_peak_lines_payload()
 
-        y_values = np.asarray(
-            column_copy(
-                fcs_file_path=self.backend.fcs_file_path,
-                detector_column=str(
-                    y_detector_column,
+        if payload_plot_values is not None:
+            x_values, y_values = payload_plot_values
+        else:
+            x_values = np.asarray(
+                column_copy(
+                    fcs_file_path=self.backend.fcs_file_path,
+                    detector_column=str(
+                        x_detector_column,
+                    ),
+                    dtype=float,
+                    n=self._resolve_max_events_for_plots(),
                 ),
                 dtype=float,
-                n=self._resolve_max_events_for_plots(),
-            ),
-            dtype=float,
-        )
+            )
+
+            y_values = np.asarray(
+                column_copy(
+                    fcs_file_path=self.backend.fcs_file_path,
+                    detector_column=str(
+                        y_detector_column,
+                    ),
+                    dtype=float,
+                    n=self._resolve_max_events_for_plots(),
+                ),
+                dtype=float,
+            )
+
+        if self._edge_artifact_filter_is_enabled():
+            x_values, y_values = filter_edge_artifact_pairs(
+                x_values=x_values,
+                y_values=y_values,
+                remove_x_min=True,
+                remove_x_max=True,
+                remove_y_min=True,
+                remove_y_max=False,
+            )
 
         filtered_x_values, filtered_y_values = self._filter_2d_values_for_axis_scale(
             x_values=x_values,
@@ -778,12 +916,7 @@ class PeakWorkflowGraphBuilder:
                     "opacity": self._get_default_marker_opacity(),
                     "color": density_values,
                     "colorscale": "Turbo",
-                    "showscale": True,
-                    "colorbar": {
-                        "title": {
-                            "text": "Density",
-                        },
-                    },
+                    "showscale": False,
                 },
                 customdata=density_values,
                 hovertemplate=(
@@ -835,6 +968,52 @@ class PeakWorkflowGraphBuilder:
         )
 
         return figure
+
+    def _extract_plot_values_from_peak_lines_payload(
+        self,
+    ) -> Optional[tuple[np.ndarray, np.ndarray]]:
+        """
+        Extract plot event coordinates from the peak payload when provided.
+
+        This lets a process override the displayed point cloud so the graph can
+        reflect process-specific filtering such as Rosetta saturated-event removal.
+        """
+        if not isinstance(self.peak_lines_payload, dict):
+            return None
+
+        raw_x_values = self.peak_lines_payload.get("plot_x_values")
+        raw_y_values = self.peak_lines_payload.get("plot_y_values")
+
+        if not isinstance(raw_x_values, list) or not isinstance(raw_y_values, list):
+            return None
+
+        resolved_x_values: list[float] = []
+        resolved_y_values: list[float] = []
+
+        for raw_x_value, raw_y_value in zip(
+            raw_x_values,
+            raw_y_values,
+            strict=False,
+        ):
+            try:
+                x_value = float(raw_x_value)
+                y_value = float(raw_y_value)
+            except (TypeError, ValueError):
+                continue
+
+            if not np.isfinite(x_value) or not np.isfinite(y_value):
+                continue
+
+            resolved_x_values.append(x_value)
+            resolved_y_values.append(y_value)
+
+        if not resolved_x_values or not resolved_y_values:
+            return None
+
+        return (
+            np.asarray(resolved_x_values, dtype=float),
+            np.asarray(resolved_y_values, dtype=float),
+        )
 
 
 
@@ -1164,6 +1343,13 @@ class PeakWorkflowGraphBuilder:
                 line_dash="dash",
             )
 
+        if self._is_rosetta_script_process():
+            self._add_rosetta_y_gate_helper(
+                figure=figure,
+                y_lower_gate=y_lower_gate,
+                y_upper_gate=y_upper_gate,
+            )
+
         return figure
 
     def _add_selected_peak_markers(
@@ -1186,13 +1372,59 @@ class PeakWorkflowGraphBuilder:
             point_count=len(points),
         )
 
-        for point in points:
-            self._add_vertical_shape_line(
-                figure=figure,
-                x=point["x"],
-                line_width=1,
-                line_dash="dot",
+        if self._is_rosetta_script_process():
+            scatter_guide_positions = self._extract_numeric_list_from_peak_lines_payload(
+                key="scatter_guide_positions",
             )
+            fluorescence_guide_positions = self._extract_numeric_list_from_peak_lines_payload(
+                key="fluorescence_guide_positions",
+            )
+
+            if not scatter_guide_positions:
+                scatter_guide_positions = unique_finite_preserving_order(
+                    [
+                        point["x"]
+                        for point in points
+                    ]
+                )
+
+            if not fluorescence_guide_positions:
+                fluorescence_guide_positions = unique_finite_preserving_order(
+                    [
+                        point["y"]
+                        for point in points
+                        if str(point.get("kind", "")).strip().lower() == "marker"
+                    ]
+                )
+
+            for scatter_position in scatter_guide_positions:
+                self._add_vertical_shape_line(
+                    figure=figure,
+                    x=scatter_position,
+                    line_width=2,
+                    line_dash="dash",
+                    line_color="#1f9d55",
+                )
+
+            if self._advanced_mode_is_enabled():
+                for fluorescence_position in fluorescence_guide_positions:
+                    self._add_horizontal_shape_line(
+                        figure=figure,
+                        y=fluorescence_position,
+                        line_width=2,
+                        line_dash="dash",
+                        line_color="#d64545",
+                    )
+
+        else:
+            for point in points:
+                self._add_vertical_shape_line(
+                    figure=figure,
+                    x=point["x"],
+                    line_width=1,
+                    line_dash="dot",
+                    line_color=None,
+                )
 
         figure.add_trace(
             go.Scatter(
@@ -1231,29 +1463,6 @@ class PeakWorkflowGraphBuilder:
                 name="Selected peaks",
             )
         )
-
-        # Add shortened labels in white boxes with black text, aligned at top.
-        shortened_labels = [
-            label.replace("Non-fluorescent peak ", "NF").replace("marker", "").replace("Bright", "BR").replace("Dim", "DM").strip()
-            for label in labels
-        ]
-
-        for index, point in enumerate(points):
-            if index < len(shortened_labels):
-                figure.add_annotation(
-                    x=point["x"],
-                    y=0.98,
-                    xref="x",
-                    yref="paper",
-                    text=shortened_labels[index],
-                    showarrow=False,
-                    font={"size": 14, "color": "black"},
-                    bgcolor="white",
-                    bordercolor="black",
-                    borderwidth=1,
-                    borderpad=6,
-                    align="center",
-                )
 
         return figure
 
@@ -1480,33 +1689,74 @@ class PeakWorkflowGraphBuilder:
                     layer="below",
                 )
 
-        if upper_gate is not None and np.isfinite(upper_gate):
-            shaded_lower_y = max(
-                float(
-                    upper_gate,
-                ),
-                float(
-                    visible_lower_y,
-                ),
+    def _add_rosetta_y_gate_helper(
+        self,
+        *,
+        figure: go.Figure,
+        y_lower_gate: Optional[float],
+        y_upper_gate: Optional[float],
+    ) -> None:
+        """
+        Add explicit Rosetta helper bands for the accepted scatter gate and the
+        fluorescence region above it.
+        """
+        visible_y_range = self._get_visible_axis_range(
+            figure=figure,
+            axis_name="yaxis",
+        )
+
+        if visible_y_range is None:
+            return
+
+        visible_lower_y, visible_upper_y = visible_y_range
+
+        accepted_lower_y = (
+            float(y_lower_gate)
+            if y_lower_gate is not None and np.isfinite(y_lower_gate)
+            else float(visible_lower_y)
+        )
+        accepted_upper_y = (
+            float(y_upper_gate)
+            if y_upper_gate is not None and np.isfinite(y_upper_gate)
+            else float(visible_upper_y)
+        )
+
+        accepted_lower_y = max(float(visible_lower_y), accepted_lower_y)
+        accepted_upper_y = min(float(visible_upper_y), accepted_upper_y)
+
+        if accepted_upper_y > accepted_lower_y:
+            figure.add_shape(
+                type="rect",
+                xref="paper",
+                yref="y",
+                x0=0.0,
+                x1=1.0,
+                y0=accepted_lower_y,
+                y1=accepted_upper_y,
+                fillcolor=self.accepted_y_fill_color,
+                line={"width": 0},
+                layer="below",
             )
 
-            shaded_upper_y = float(
-                visible_upper_y,
-            )
+        if (
+            y_upper_gate is not None
+            and np.isfinite(y_upper_gate)
+            and float(visible_upper_y) > float(y_upper_gate)
+        ):
+            fluorescence_lower_y = max(float(y_upper_gate), float(visible_lower_y))
+            fluorescence_upper_y = float(visible_upper_y)
 
-            if shaded_upper_y > shaded_lower_y:
+            if fluorescence_upper_y > fluorescence_lower_y:
                 figure.add_shape(
                     type="rect",
                     xref="paper",
                     yref="y",
                     x0=0.0,
                     x1=1.0,
-                    y0=shaded_lower_y,
-                    y1=shaded_upper_y,
-                    fillcolor=self.rejected_y_fill_color,
-                    line={
-                        "width": 0,
-                    },
+                    y0=fluorescence_lower_y,
+                    y1=fluorescence_upper_y,
+                    fillcolor=self.fluorescence_helper_fill_color,
+                    line={"width": 0},
                     layer="below",
                 )
 
@@ -1517,6 +1767,7 @@ class PeakWorkflowGraphBuilder:
         x: float,
         line_width: float,
         line_dash: str,
+        line_color: Optional[str] = None,
     ) -> None:
         """
         Add a vertical line as a shape, not as an annotation.
@@ -1543,6 +1794,13 @@ class PeakWorkflowGraphBuilder:
             line={
                 "width": line_width,
                 "dash": line_dash,
+                **(
+                    {
+                        "color": line_color,
+                    }
+                    if isinstance(line_color, str) and line_color
+                    else {}
+                ),
             },
             layer="above",
         )
@@ -1554,6 +1812,7 @@ class PeakWorkflowGraphBuilder:
         y: float,
         line_width: float,
         line_dash: str,
+        line_color: Optional[str] = None,
     ) -> None:
         """
         Add a horizontal line as a shape, not as an annotation.
@@ -1580,6 +1839,13 @@ class PeakWorkflowGraphBuilder:
             line={
                 "width": line_width,
                 "dash": line_dash,
+                **(
+                    {
+                        "color": line_color,
+                    }
+                    if isinstance(line_color, str) and line_color
+                    else {}
+                ),
             },
             layer="above",
         )
@@ -1910,6 +2176,34 @@ class PeakWorkflowGraphBuilder:
             )
         ]
 
+    def _extract_numeric_list_from_peak_lines_payload(
+        self,
+        *,
+        key: str,
+    ) -> list[float]:
+        """
+        Extract one finite unique float list from the peak payload.
+        """
+        if not isinstance(self.peak_lines_payload, dict):
+            return []
+
+        raw_values = self.peak_lines_payload.get(
+            key,
+        )
+
+        if not isinstance(raw_values, list):
+            return []
+
+        return unique_finite_preserving_order(
+            raw_values,
+        )
+
+    def _is_rosetta_script_process(self) -> bool:
+        """
+        Return whether the currently selected process is the Rosetta Script.
+        """
+        return self.resolved_process_name == "Rosetta Script"
+
     def _apply_axis_types(
         self,
         *,
@@ -2090,22 +2384,34 @@ class PeakWorkflowGraphBuilder:
         """
         Return whether x axis log scale is enabled.
         """
+        xscale_selection = getattr(
+            self,
+            "xscale_selection",
+            None,
+        )
+
         return scale_selection_is_log(
-            self.xscale_selection,
+            xscale_selection,
         ) or (
-            isinstance(self.xscale_selection, (list, tuple, set))
-            and Scatter2DGraph.x_log_value in self.xscale_selection
+            isinstance(xscale_selection, (list, tuple, set))
+            and Scatter2DGraph.x_log_value in xscale_selection
         )
 
     def _y_axis_is_log(self) -> bool:
         """
         Return whether y axis log scale is enabled.
         """
+        yscale_selection = getattr(
+            self,
+            "yscale_selection",
+            None,
+        )
+
         return scale_selection_is_log(
-            self.yscale_selection,
+            yscale_selection,
         ) or (
-            isinstance(self.yscale_selection, (list, tuple, set))
-            and Scatter2DGraph.y_log_value in self.yscale_selection
+            isinstance(yscale_selection, (list, tuple, set))
+            and Scatter2DGraph.y_log_value in yscale_selection
         )
 
     def _get_default_marker_size(self) -> float:

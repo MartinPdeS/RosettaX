@@ -113,6 +113,7 @@ class PeakWorkflowCallbacks:
         outputs = [
             dash.Output(ids.nbins_input, "value"),
             dash.Output(ids.graph_toggle_switch, "value"),
+            dash.Output(ids.data_filter_switch, "value"),
             dash.Output(ids.axis_scale_toggle, "value"),
         ]
 
@@ -170,6 +171,10 @@ class PeakWorkflowCallbacks:
                     default=100,
                 ),
                 ["enabled"] if runtime_config.get_show_graphs(default=True) else [],
+                ["enabled"] if runtime_config.get_bool(
+                    "calibration.filter_edge_artifacts",
+                    default=True,
+                ) else [],
                 axis_scale_toggle_values,
             )
 

@@ -5,7 +5,14 @@ import logging
 
 import numpy as np
 
-from .base import BasePeakProcess, PeakProcessResult, resolve_integer_setting, resolve_integer_value
+from .base import (
+    BasePeakProcess,
+    PeakProcessResult,
+    filter_edge_artifact_pairs,
+    resolve_edge_artifact_filter_enabled,
+    resolve_integer_setting,
+    resolve_integer_value,
+)
 from RosettaX.utils.io import column_copy
 from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
 
@@ -237,6 +244,19 @@ class Automatic2DPeakProcess(BasePeakProcess):
             dtype=float,
             n=max_events,
         )
+
+        if resolve_edge_artifact_filter_enabled(
+            process_settings=process_settings,
+            default=True,
+        ):
+            x_values, y_values = filter_edge_artifact_pairs(
+                x_values=x_values,
+                y_values=y_values,
+                remove_x_min=True,
+                remove_x_max=True,
+                remove_y_min=True,
+                remove_y_max=False,
+            )
 
         detected_peak_positions, detection_debug = find_2d_histogram_peak_positions(
             x_values=x_values,

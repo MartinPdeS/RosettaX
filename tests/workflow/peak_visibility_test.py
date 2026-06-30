@@ -22,6 +22,9 @@ class Test_PeakProcessSelectionVisibility:
         assert visibility.build_advanced_mode_control_style("") == {
             "display": "none",
         }
+        assert visibility.build_graph_toggle_control_style("") == {
+            "display": "none",
+        }
         assert visibility.build_process_settings_container_style(
             process_name="",
             advanced_mode_value=["enabled"],
@@ -40,6 +43,9 @@ class Test_PeakProcessSelectionVisibility:
             "display": "inline-flex",
         }
         assert visibility.build_advanced_mode_control_style("Automatic 1D") == {
+            "display": "inline-flex",
+        }
+        assert visibility.build_graph_toggle_control_style("Automatic 1D") == {
             "display": "inline-flex",
         }
         assert visibility.build_process_settings_container_style(
@@ -69,6 +75,31 @@ class Test_PeakProcessSelectionVisibility:
             graph_toggle_value=[],
         ) == {
             "display": "none",
+        }
+
+    def test_rosetta_advanced_only_helpers_hide_without_advanced_mode(self) -> None:
+        assert visibility.build_rosetta_advanced_only_style(
+            process_name="Rosetta Script",
+            graph_toggle_value=["enabled"],
+            advanced_mode_value=[],
+        ) == {
+            "display": "none",
+        }
+
+        assert visibility.build_rosetta_advanced_only_style(
+            process_name="Rosetta Script",
+            graph_toggle_value=["enabled"],
+            advanced_mode_value=["enabled"],
+        ) == {
+            "display": "block",
+        }
+
+        assert visibility.build_rosetta_advanced_only_style(
+            process_name="Automatic 1D",
+            graph_toggle_value=["enabled"],
+            advanced_mode_value=[],
+        ) == {
+            "display": "block",
         }
 
 

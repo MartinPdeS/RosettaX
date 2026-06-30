@@ -26,11 +26,23 @@ def register_visibility_callbacks(
         ids=ids,
     )
 
+    register_data_filter_control_visibility_callback(
+        ids=ids,
+    )
+
     register_force_graph_visible_callback(
         ids=ids,
     )
 
     register_graph_visibility_callback(
+        ids=ids,
+    )
+
+    register_graph_helper_legend_callback(
+        ids=ids,
+    )
+
+    register_status_area_visibility_callback(
         ids=ids,
     )
 
@@ -160,6 +172,39 @@ def build_graph_container_style(
     }
 
 
+def build_rosetta_advanced_only_style(
+    *,
+    process_name: Any,
+    graph_toggle_value: Any,
+    advanced_mode_value: Any,
+) -> dict[str, Any]:
+    """
+    Build visibility style for Rosetta advanced-only helpers.
+    """
+    selected_process_name = registry.get_selected_process_name(
+        process_name,
+    )
+
+    if selected_process_name != "Rosetta Script":
+        return {
+            "display": "block",
+        }
+
+    if not graph_toggle_is_enabled(graph_toggle_value):
+        return {
+            "display": "none",
+        }
+
+    if not graph_toggle_is_enabled(advanced_mode_value):
+        return {
+            "display": "none",
+        }
+
+    return {
+        "display": "block",
+    }
+
+
 def register_graph_toggle_control_visibility_callback(
     *,
     ids: Any,
@@ -208,6 +253,31 @@ def register_advanced_mode_control_visibility_callback(
         process_name: Any,
     ) -> dict[str, str]:
         return build_advanced_mode_control_style(process_name)
+
+
+def register_data_filter_control_visibility_callback(
+    *,
+    ids: Any,
+) -> None:
+    """
+    Hide the shared zero/saturation filter toggle until a process is selected.
+    """
+
+    @dash.callback(
+        dash.Output(
+            ids.data_filter_switch,
+            "style",
+        ),
+        dash.Input(
+            ids.process_dropdown,
+            "value",
+        ),
+        prevent_initial_call=False,
+    )
+    def toggle_data_filter_control(
+        process_name: Any,
+    ) -> dict[str, str]:
+        return build_graph_toggle_control_style(process_name)
 
 
 def register_process_visibility_callback(
@@ -374,6 +444,135 @@ def register_graph_visibility_callback(
             process_name=process_name,
             graph_toggle_value=graph_toggle_value,
         )
+
+
+def register_graph_helper_legend_callback(
+    *,
+    ids: Any,
+) -> None:
+    """
+    Show a plain-text Rosetta legend below the graph when relevant.
+    """
+
+    @dash.callback(
+        dash.Output(
+            ids.graph_helper_legend,
+            "children",
+        ),
+        dash.Output(
+            ids.graph_helper_legend,
+            "style",
+        ),
+        dash.Input(
+            ids.process_dropdown,
+            "value",
+        ),
+        dash.Input(
+            ids.graph_toggle_switch,
+            "value",
+        ),
+        dash.Input(
+            ids.advanced_mode_switch,
+            "value",
+        ),
+        prevent_initial_call=False,
+    )
+    def toggle_graph_helper_legend(
+        process_name: Any,
+        graph_toggle_value: Any,
+        advanced_mode_value: Any,
+    ) -> tuple[Any, dict[str, Any]]:
+        base_style = {
+            "display": "none",
+            "marginTop": "8px",
+            "marginBottom": "14px",
+            "padding": "10px 12px",
+            "borderRadius": "8px",
+            "backgroundColor": "#f6f9fc",
+            "border": "1px solid #d6e0ea",
+            "fontSize": "0.9rem",
+            "lineHeight": "1.45",
+            "color": "#22324a",
+        }
+
+        selected_process_name = registry.get_selected_process_name(
+            process_name,
+        )
+
+        if (
+            selected_process_name != "Rosetta Script"
+            or not graph_toggle_is_enabled(graph_toggle_value)
+            or not graph_toggle_is_enabled(advanced_mode_value)
+        ):
+            return "", base_style
+
+        return (
+            [
+                dash.html.Div(
+                    "Rosetta legend",
+                    style={"fontWeight": "600", "marginBottom": "4px"},
+                ),
+                dash.html.Div("Green area: scattering only."),
+                dash.html.Div("Blue area: fluorescence only."),
+                dash.html.Div("Green dashed vertical lines: scattering peak positions."),
+                dash.html.Div("Red dashed horizontal lines: fluorescence peak positions."),
+            ],
+            {
+                **base_style,
+                "display": "block",
+            },
+        )
+
+
+def register_status_area_visibility_callback(
+    *,
+    ids: Any,
+) -> None:
+    """
+    Show the below-graph status area only when relevant for the selected process.
+    """
+
+    @dash.callback(
+        dash.Output(
+            ids.script_status,
+            "style",
+        ),
+        dash.Input(
+            ids.process_dropdown,
+            "value",
+        ),
+        dash.Input(
+            ids.graph_toggle_switch,
+            "value",
+        ),
+        dash.Input(
+            ids.advanced_mode_switch,
+            "value",
+        ),
+        prevent_initial_call=False,
+    )
+    def toggle_status_area(
+        process_name: Any,
+        graph_toggle_value: Any,
+        advanced_mode_value: Any,
+    ) -> dict[str, Any]:
+        base_style = {
+            "marginTop": "12px",
+            "display": "flex",
+            "flexDirection": "column",
+            "gap": "10px",
+        }
+
+        visibility_style = build_rosetta_advanced_only_style(
+            process_name=process_name,
+            graph_toggle_value=graph_toggle_value,
+            advanced_mode_value=advanced_mode_value,
+        )
+
+        return {
+            **base_style,
+            **visibility_style,
+        }
 
 
 def register_graph_controls_visibility_callback(

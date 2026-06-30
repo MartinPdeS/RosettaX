@@ -110,8 +110,16 @@ class PeakIds:
         return f"{self.prefix}-advanced-mode-switch"
 
     @property
+    def data_filter_switch(self) -> str:
+        return f"{self.prefix}-data-filter-switch"
+
+    @property
     def graph_toggle_container(self) -> str:
         return f"{self.prefix}-graph-toggle-container"
+
+    @property
+    def graph_helper_legend(self) -> str:
+        return f"{self.prefix}-graph-helper-legend"
 
     @property
     def histogram_controls_container(self) -> str:

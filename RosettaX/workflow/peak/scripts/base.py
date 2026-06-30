@@ -54,6 +54,255 @@ class PeakProcessResult:
     clear_existing_table_peaks: bool = False
 
 
+def resolve_enabled_toggle_value(
+    value: Any,
+    *,
+    default: bool = False,
+) -> bool:
+    """
+    Resolve a Dash switch or checklist value into a boolean.
+    """
+    if isinstance(value, str):
+        return value == "enabled"
+
+    if isinstance(value, (list, tuple, set)):
+        return "enabled" in value
+
+    if isinstance(value, bool):
+        return value
+
+    return bool(default)
+
+
+def resolve_edge_artifact_filter_enabled(
+    *,
+    process_settings: Optional[dict[str, Any]],
+    default: bool = True,
+) -> bool:
+    """
+    Resolve whether edge-artifact filtering is enabled for a peak workflow.
+
+    ``filter_edge_artifacts`` is the shared setting used by all scripts.
+    ``remove_saturated_events`` is kept as a compatibility fallback for older
+    Rosetta-specific state payloads.
+    """
+    resolved_process_settings = process_settings or {}
+
+    if "filter_edge_artifacts" in resolved_process_settings:
+        return resolve_enabled_toggle_value(
+            resolved_process_settings.get("filter_edge_artifacts"),
+            default=default,
+        )
+
+    if "remove_saturated_events" in resolved_process_settings:
+        return resolve_enabled_toggle_value(
+            resolved_process_settings.get("remove_saturated_events"),
+            default=default,
+        )
+
+    return bool(default)
+
+
+def build_edge_pileup_mask(
+    *,
+    values: Any,
+    edge: str,
+    quantile: float = 0.9995,
+    minimum_fraction: float = 0.001,
+) -> np.ndarray:
+    """
+    Detect a detector-edge pile-up and return the affected-event mask.
+    """
+    resolved_values = np.asarray(
+        values,
+        dtype=float,
+    ).reshape(-1)
+
+    finite_mask = np.isfinite(
+        resolved_values,
+    )
+
+    if np.count_nonzero(finite_mask) < 100:
+        return np.zeros_like(
+            resolved_values,
+            dtype=bool,
+        )
+
+    finite_values = resolved_values[finite_mask]
+
+    if edge == "min":
+        threshold = float(
+            np.quantile(
+                finite_values,
+                1.0 - float(quantile),
+            )
+        )
+        edge_mask = resolved_values <= threshold
+        edge_value = float(np.min(finite_values))
+    else:
+        threshold = float(
+            np.quantile(
+                finite_values,
+                float(quantile),
+            )
+        )
+        edge_mask = resolved_values >= threshold
+        edge_value = float(np.max(finite_values))
+
+    edge_fraction = float(
+        np.mean(
+            edge_mask[finite_mask],
+        )
+    )
+
+    if edge_fraction < float(minimum_fraction):
+        return np.zeros_like(
+            resolved_values,
+            dtype=bool,
+        )
+
+    edge_values = resolved_values[edge_mask & finite_mask]
+
+    if edge_values.size < 5:
+        return np.zeros_like(
+            resolved_values,
+            dtype=bool,
+        )
+
+    atol = max(abs(edge_value) * 1e-6, 1e-9)
+    near_edge_mask = (
+        np.isclose(
+            resolved_values,
+            edge_value,
+            rtol=0.0,
+            atol=atol,
+        )
+        & finite_mask
+    )
+    near_edge_count = int(np.count_nonzero(near_edge_mask))
+
+    if near_edge_count < max(3, int(0.2 * edge_values.size)):
+        return np.zeros_like(
+            resolved_values,
+            dtype=bool,
+        )
+
+    return edge_mask & finite_mask
+
+
+def filter_edge_artifact_values(
+    *,
+    values: Any,
+    remove_min: bool = True,
+    remove_max: bool = True,
+) -> np.ndarray:
+    """
+    Remove obvious detector-floor and detector-ceiling pile-up from 1D data.
+    """
+    resolved_values = np.asarray(
+        values,
+        dtype=float,
+    ).reshape(-1)
+
+    finite_values = resolved_values[
+        np.isfinite(
+            resolved_values,
+        )
+    ]
+
+    if finite_values.size == 0:
+        return finite_values
+
+    artifact_mask = np.zeros_like(
+        finite_values,
+        dtype=bool,
+    )
+
+    if remove_min:
+        artifact_mask |= build_edge_pileup_mask(
+            values=finite_values,
+            edge="min",
+        )
+
+    if remove_max:
+        artifact_mask |= build_edge_pileup_mask(
+            values=finite_values,
+            edge="max",
+        )
+
+    return finite_values[~artifact_mask]
+
+
+def filter_edge_artifact_pairs(
+    *,
+    x_values: Any,
+    y_values: Any,
+    remove_x_min: bool = True,
+    remove_x_max: bool = True,
+    remove_y_min: bool = True,
+    remove_y_max: bool = False,
+) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Remove obvious detector-edge pile-up from paired 2D event data.
+    """
+    resolved_x_values = np.asarray(
+        x_values,
+        dtype=float,
+    ).reshape(-1)
+    resolved_y_values = np.asarray(
+        y_values,
+        dtype=float,
+    ).reshape(-1)
+
+    finite_mask = (
+        np.isfinite(resolved_x_values)
+        & np.isfinite(resolved_y_values)
+    )
+
+    filtered_x_values = resolved_x_values[finite_mask]
+    filtered_y_values = resolved_y_values[finite_mask]
+
+    if filtered_x_values.size == 0 or filtered_y_values.size == 0:
+        return (
+            filtered_x_values,
+            filtered_y_values,
+        )
+
+    artifact_mask = np.zeros_like(
+        filtered_x_values,
+        dtype=bool,
+    )
+
+    if remove_x_min:
+        artifact_mask |= build_edge_pileup_mask(
+            values=filtered_x_values,
+            edge="min",
+        )
+
+    if remove_x_max:
+        artifact_mask |= build_edge_pileup_mask(
+            values=filtered_x_values,
+            edge="max",
+        )
+
+    if remove_y_min:
+        artifact_mask |= build_edge_pileup_mask(
+            values=filtered_y_values,
+            edge="min",
+        )
+
+    if remove_y_max:
+        artifact_mask |= build_edge_pileup_mask(
+            values=filtered_y_values,
+            edge="max",
+        )
+
+    return (
+        filtered_x_values[~artifact_mask],
+        filtered_y_values[~artifact_mask],
+    )
+
+
 class BasePeakProcess:
     """
     Base class for a peak detection or peak selection process.

@@ -38,7 +38,8 @@ class SampleFilesPage:
                         title_component="H2",
                         description=(
                             "Download example FCS files and calibration JSON templates for fluorescence, "
-                            "scattering, and apply-calibration testing."
+                            "scattering, and apply-calibration testing. These bundled FCS examples come "
+                            "from the Vesicle Center summer school on flow cytometry."
                         ),
                     ),
                 ],
@@ -58,7 +59,10 @@ class SampleFilesPage:
                 dbc.Col(
                     self._build_download_card(
                         title="Apogee flow cytometer samples",
-                        subtitle="Real calibration data from an Apogee cytometer with multiple bead sets.",
+                        subtitle=(
+                            "Four FCS datasets from the Vesicle Center summer school on flow cytometry, "
+                            "acquired on an Apogee instrument."
+                        ),
                         color_name=styling.get_workflow_section_color(1),
                         items=[
                             {
@@ -68,10 +72,22 @@ class SampleFilesPage:
                                 "download": "apogee_rainbow_beads.fcs",
                             },
                             {
-                                "title": "Apogee mix beads",
-                                "description": "Mixed Apogee reference particles for multi-parameter calibration.",
-                                "href": "/assets/sample-files/apogee_mix.fcs",
-                                "download": "apogee_mix.fcs",
+                                "title": "Mixed reference beads",
+                                "description": "Apogee mix sample with multiple bead populations for scatter and fluorescence exercises.",
+                                "href": "/assets/sample-files/apogee_mixed_reference_beads.fcs",
+                                "download": "apogee_mixed_reference_beads.fcs",
+                            },
+                            {
+                                "title": "Mystery beads",
+                                "description": "Unknown bead mixture intended for identification and comparison exercises.",
+                                "href": "/assets/sample-files/apogee_mystery_beads.fcs",
+                                "download": "apogee_mystery_beads.fcs",
+                            },
+                            {
+                                "title": "Rosetta beads (1 min)",
+                                "description": "Rosetta bead acquisition with a one-minute run, useful for Rosetta Script testing.",
+                                "href": "/assets/sample-files/apogee_rosetta_beads_1min.fcs",
+                                "download": "apogee_rosetta_beads_1min.fcs",
                             },
                         ],
                     ),
@@ -79,21 +95,36 @@ class SampleFilesPage:
                 ),
                 dbc.Col(
                     self._build_download_card(
-                        title="Cytek Northern Lights samples",
-                        subtitle="Real calibration data from a Cytek Northern Lights flow cytometer.",
+                        title="Northern Lights flow cytometer samples",
+                        subtitle=(
+                            "Four FCS datasets from the Vesicle Center summer school on flow cytometry, "
+                            "acquired on a Northern Lights instrument."
+                        ),
                         color_name=styling.get_workflow_section_color(2),
                         items=[
                             {
                                 "title": "Rainbow beads",
-                                "description": "Multi-color calibration standard acquired on Cytek platform.",
-                                "href": "/assets/sample-files/cytek_rainbow_beads.fcs",
-                                "download": "cytek_rainbow_beads.fcs",
+                                "description": "Multi-color calibration standard acquired on the Northern Lights platform.",
+                                "href": "/assets/sample-files/northern_lights_rainbow_beads.fcs",
+                                "download": "northern_lights_rainbow_beads.fcs",
                             },
                             {
-                                "title": "Apogee mix beads",
-                                "description": "Mixed reference particles measured on Cytek instrument.",
-                                "href": "/assets/sample-files/cytek_apogee_mix.fcs",
-                                "download": "cytek_apogee_mix.fcs",
+                                "title": "Mixed reference beads",
+                                "description": "Compressed Northern Lights acquisition of the Apogee mix reference sample.",
+                                "href": "/assets/sample-files/northern_lights_mixed_reference_beads.fcs",
+                                "download": "northern_lights_mixed_reference_beads.fcs",
+                            },
+                            {
+                                "title": "Mystery beads",
+                                "description": "Compressed Northern Lights acquisition of the unknown bead mixture.",
+                                "href": "/assets/sample-files/northern_lights_mystery_beads.fcs",
+                                "download": "northern_lights_mystery_beads.fcs",
+                            },
+                            {
+                                "title": "Rosetta beads (2 min)",
+                                "description": "Compressed Rosetta bead acquisition with a two-minute run for Rosetta workflow practice.",
+                                "href": "/assets/sample-files/northern_lights_rosetta_beads_2min.fcs",
+                                "download": "northern_lights_rosetta_beads_2min.fcs",
                             },
                         ],
                     ),

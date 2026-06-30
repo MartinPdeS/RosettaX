@@ -78,7 +78,6 @@ class PeakLayout:
             [
                 *self._build_state_stores(),
                 *self._build_peak_workflow_layout(),
-                self._build_script_status(),
             ]
         )
 
@@ -126,6 +125,10 @@ class PeakLayout:
                         label="Advanced mode",
                         value=[],
                     ),
+                    self._build_graph_toggle_control(
+                        switch_id=self.ids.data_filter_switch,
+                        label="Filter zeros/saturation",
+                    ),
                 ],
                 style={
                     "display": "flex",
@@ -143,6 +146,24 @@ class PeakLayout:
                 container_id=self.ids.graph_toggle_container,
                 graph_id=self.ids.graph_hist,
                 axis_scale_toggle_id=self._get_axis_scale_toggle_id(),
+            ),
+            self._build_process_status_area(
+                processes=processes,
+            ),
+            html.Div(
+                id=self.ids.graph_helper_legend,
+                style={
+                    "display": "none",
+                    "marginTop": "8px",
+                    "marginBottom": "14px",
+                    "padding": "10px 12px",
+                    "borderRadius": "8px",
+                    "backgroundColor": "#f6f9fc",
+                    "border": "1px solid #d6e0ea",
+                    "fontSize": "0.9rem",
+                    "lineHeight": "1.45",
+                    "color": "#22324a",
+                },
             ),
         ]
 
@@ -369,16 +390,6 @@ class PeakLayout:
                     "marginTop": "12px",
                 },
             ),
-            html.Div(
-                id=self.ids.process_status(
-                    process_name=process_name,
-                ),
-                style={
-                    "marginTop": "8px",
-                    "fontSize": "0.85rem",
-                    "opacity": 0.85,
-                },
-            ),
         ]
 
         return dbc.Card(
@@ -394,6 +405,32 @@ class PeakLayout:
             ),
             style={
                 "marginTop": "12px",
+            },
+        )
+
+    def _build_process_status_area(
+        self,
+        *,
+        processes: list[Any],
+    ) -> html.Div:
+        """
+        Build the shared process status area below the graph.
+        """
+        return html.Div(
+            [
+                html.Div(
+                    id=self.ids.process_status(
+                        process_name=self._get_process_name(process=process),
+                    ),
+                )
+                for process in (processes or [])
+            ],
+            id=self.ids.script_status,
+            style={
+                "marginTop": "12px",
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "10px",
             },
         )
 
@@ -628,6 +665,17 @@ class PeakLayout:
                                 default="Select value",
                             )
                         ),
+                    )
+                )
+                continue
+
+            if setting_kind in ("boolean", "bool", "switch", "checkbox"):
+                setting_controls.append(
+                    self._build_boolean_setting_control(
+                        input_id=setting_id,
+                        label=setting_label,
+                        tooltip_text=setting_help,
+                        enabled=bool(setting_default_value),
                     )
                 )
                 continue
@@ -1058,6 +1106,48 @@ class PeakLayout:
             },
         )
 
+    def _build_boolean_setting_control(
+        self,
+        *,
+        input_id: Any,
+        label: str,
+        tooltip_text: str = "",
+        enabled: bool = False,
+    ) -> html.Div:
+        """
+        Build a boolean process setting toggle.
+        """
+        target_id = self._stringify_component_id(
+            component_id=input_id,
+        )
+
+        return html.Div(
+            [
+                self._build_setting_label(
+                    label=label,
+                    tooltip_text=tooltip_text,
+                    target_id=target_id,
+                ),
+                dbc.Checklist(
+                    id=input_id,
+                    options=[
+                        {
+                            "label": "Enabled",
+                            "value": "enabled",
+                        }
+                    ],
+                    value=["enabled"] if bool(enabled) else [],
+                    switch=True,
+                    inline=True,
+                    persistence=True,
+                    persistence_type="session",
+                ),
+            ],
+            style={
+                "minWidth": "180px",
+            },
+        )
+
     def _build_process_action_buttons(
         self,
         *,
@@ -1102,17 +1192,6 @@ class PeakLayout:
             )
 
         return buttons
-
-    def _build_script_status(self) -> html.Div:
-        """
-        Build the shared peak script status output.
-        """
-        return html.Div(
-            id=self.ids.script_status,
-            style={
-                "marginTop": "8px",
-            },
-        )
 
     def _get_axis_scale_toggle_id(self) -> str:
         """

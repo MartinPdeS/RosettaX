@@ -9,6 +9,8 @@ from .base import (
     BasePeakProcess,
     PeakProcessResult,
     deduplicate_1d_peak_positions,
+    filter_edge_artifact_values,
+    resolve_edge_artifact_filter_enabled,
     resolve_float_setting,
     resolve_integer_setting,
     resolve_integer_value,
@@ -216,6 +218,16 @@ class QuantileGatedKMeans1DPeakProcess(BasePeakProcess):
             ),
             dtype=float,
         )
+
+        if resolve_edge_artifact_filter_enabled(
+            process_settings=process_settings,
+            default=True,
+        ):
+            x_axis_values = filter_edge_artifact_values(
+                values=x_axis_values,
+                remove_min=True,
+                remove_max=True,
+            )
 
         result = compute_quantile_gated_kmeans_1d_peaks(
             x_axis_values=x_axis_values,

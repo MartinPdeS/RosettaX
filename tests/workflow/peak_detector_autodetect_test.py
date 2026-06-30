@@ -210,6 +210,23 @@ class Test_DetectorAutoDetect:
 
         assert resolved_channel == "405SALS(Area)"
 
+    def test_infer_default_detector_channel_prefers_fluorescence_for_green_role(
+        self,
+    ) -> None:
+        metadata = build_metadata(
+            instrument_name="nanoFCM NanoAnalyzer",
+            column_names=["405Blu(Area)", "405ALS(Peak)", "FITC-A"],
+        )
+
+        resolved_channel = detectors.infer_default_detector_channel(
+            column_names=metadata.column_names,
+            metadata=metadata,
+            detector_role="green_fluorescence",
+            selection_mode="auto-detect",
+        )
+
+        assert resolved_channel == "FITC-A"
+
     def test_detect_detector_preset_from_uploaded_fcs_name_heuristic_prefers_scatter_preset(
         self,
         tmp_path,

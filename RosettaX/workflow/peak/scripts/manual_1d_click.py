@@ -7,7 +7,12 @@ import dash
 import dash_bootstrap_components as dbc
 import numpy as np
 
-from .base import BasePeakProcess, PeakProcessResult
+from .base import (
+    BasePeakProcess,
+    PeakProcessResult,
+    filter_edge_artifact_values,
+    resolve_edge_artifact_filter_enabled,
+)
 from RosettaX.utils.io import column_copy
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
@@ -348,6 +353,7 @@ class Manual1DClickProcess(BasePeakProcess):
                 detector_channels=detector_channels,
                 clicked_peak_position=reference_peak_position,
                 selected_x_range=selected_x_range,
+                process_settings=process_settings,
                 runtime_config_data=runtime_config_data,
                 axis_scale_toggle_values=axis_scale_toggle_values,
             )
@@ -487,6 +493,7 @@ class Manual1DClickProcess(BasePeakProcess):
         detector_channels: Optional[dict[str, Any]],
         clicked_peak_position: float,
         selected_x_range: Optional[tuple[float, float]],
+        process_settings: Optional[dict[str, Any]],
         runtime_config_data: Any,
         axis_scale_toggle_values: Any,
     ) -> Optional[float]:
@@ -515,9 +522,19 @@ class Manual1DClickProcess(BasePeakProcess):
             values,
             dtype=float,
         )
-        values = values[
-            np.isfinite(values)
-        ]
+        if resolve_edge_artifact_filter_enabled(
+            process_settings=process_settings,
+            default=True,
+        ):
+            values = filter_edge_artifact_values(
+                values=values,
+                remove_min=True,
+                remove_max=True,
+            )
+        else:
+            values = values[
+                np.isfinite(values)
+            ]
 
         if values.size < 8:
             return None

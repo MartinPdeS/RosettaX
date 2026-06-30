@@ -96,6 +96,10 @@ def register_graph_callbacks(
             "value",
         ),
         dash.Input(
+            ids.data_filter_switch,
+            "value",
+        ),
+        dash.Input(
             axis_scale_toggle_id,
             "value",
         ),
@@ -125,6 +129,7 @@ def register_graph_callbacks(
     def update_graph(
         graph_toggle_value: Any,
         advanced_mode_value: Any,
+        data_filter_value: Any,
         axis_scale_toggle_values: Any,
         page_state_payload: Any,
         nbins: Any,
@@ -187,6 +192,7 @@ def register_graph_callbacks(
                 process_setting_values=process_setting_values,
                 graph_toggle_value=graph_toggle_value,
                 advanced_mode_value=advanced_mode_value,
+                data_filter_value=data_filter_value,
                 xscale_selection=axis_scale_toggle_values,
                 yscale_selection=axis_scale_toggle_values,
                 nbins=nbins,
@@ -212,6 +218,7 @@ def register_graph_callbacks(
                 process_setting_values=process_setting_values,
                 process_name=str(process_name or ""),
             )
+            process_settings["filter_edge_artifacts"] = data_filter_value
 
             snap_to_local_mode_enabled = (
                 process_settings.get("snap_to_local_mode") == "enabled"
@@ -324,6 +331,10 @@ def apply_peak_graph_layout(
     ``visualization.graph_height``.
 
     This function only controls margins and removes any stale title.
+
+    Keep enough top margin for workflow-specific overlays such as Rosetta peak
+    annotations. A smaller top margin can clip annotations anchored near the top
+    of the plotting area until a later Plotly interaction triggers a redraw.
     """
     figure.update_layout(
         height=None,
@@ -333,7 +344,7 @@ def apply_peak_graph_layout(
         margin={
             "l": 70,
             "r": 30,
-            "t": 20,
+            "t": 60,
             "b": 70,
         },
     )

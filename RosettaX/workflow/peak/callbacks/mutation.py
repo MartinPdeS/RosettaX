@@ -8,6 +8,7 @@ from types import SimpleNamespace
 from typing import Any, Optional
 
 import dash
+import dash_bootstrap_components as dbc
 
 from RosettaX.utils import casting
 from RosettaX.utils.runtime_config import RuntimeConfig
@@ -69,6 +70,7 @@ def register_mutation_callbacks(
             "value",
         ),
         dash.State(ids.advanced_mode_switch, "value"),
+        dash.State(ids.data_filter_switch, "value"),
         dash.State(ids.axis_scale_toggle, "value"),
     ]
 
@@ -129,6 +131,7 @@ def register_mutation_callbacks(
         process_setting_ids: list[dict[str, Any]],
         process_setting_values: list[Any],
         advanced_mode_value: Any,
+        data_filter_value: Any,
         axis_scale_toggle_values: Any,
         *state_values: Any,
     ) -> tuple[Any, Any, list[Any]]:
@@ -180,6 +183,7 @@ def register_mutation_callbacks(
                 detector_dropdown_values=detector_dropdown_values,
                 process_setting_ids=process_setting_ids,
                 process_setting_values=process_setting_values,
+                data_filter_value=data_filter_value,
                 axis_scale_toggle_values=axis_scale_toggle_values,
                 table_data=unpacked_state["table_data"],
                 mie_model=unpacked_state["mie_model"],
@@ -202,6 +206,7 @@ def register_mutation_callbacks(
                 process_setting_ids=process_setting_ids,
                 process_setting_values=process_setting_values,
                 advanced_mode_value=advanced_mode_value,
+                data_filter_value=data_filter_value,
                 axis_scale_toggle_values=axis_scale_toggle_values,
                 max_events_for_plots=unpacked_state["max_events_for_plots"],
                 table_data=unpacked_state["table_data"],
@@ -348,6 +353,7 @@ def handle_manual_graph_click(
     detector_dropdown_values: list[Any],
     process_setting_ids: list[dict[str, Any]],
     process_setting_values: list[Any],
+    data_filter_value: Any,
     axis_scale_toggle_values: Any,
     table_data: Optional[list[dict[str, Any]]],
     mie_model: Any,
@@ -384,6 +390,7 @@ def handle_manual_graph_click(
         process_setting_values=process_setting_values,
         process_name=resolved_process_name,
     )
+    process_settings["filter_edge_artifacts"] = data_filter_value
     backend = adapter.get_backend(
         uploaded_fcs_path=uploaded_fcs_path,
     )
@@ -488,6 +495,7 @@ def handle_process_action(
     process_setting_ids: list[dict[str, Any]],
     process_setting_values: list[Any],
     advanced_mode_value: Any = None,
+    data_filter_value: Any = None,
     axis_scale_toggle_values: Any = None,
     max_events_for_plots: Any,
     table_data: Optional[list[dict[str, Any]]],
@@ -554,6 +562,7 @@ def handle_process_action(
             process_setting_ids=process_setting_ids,
             process_setting_values=process_setting_values,
             advanced_mode_value=advanced_mode_value,
+            data_filter_value=data_filter_value,
             axis_scale_toggle_values=axis_scale_toggle_values,
             max_events_for_plots=max_events_for_plots,
             table_data=table_data,
@@ -638,6 +647,7 @@ def handle_run_action(
     process_setting_ids: list[dict[str, Any]],
     process_setting_values: list[Any],
     advanced_mode_value: Any = None,
+    data_filter_value: Any = None,
     axis_scale_toggle_values: Any = None,
     max_events_for_plots: Any,
     table_data: Optional[list[dict[str, Any]]],
@@ -692,6 +702,7 @@ def handle_run_action(
     )
 
     process_settings["advanced_mode"] = advanced_mode_value
+    process_settings["filter_edge_artifacts"] = data_filter_value
     process_settings["axis_scale_toggle_values"] = axis_scale_toggle_values
 
     resolved_peak_count = process_settings.get("peak_count")
@@ -1067,7 +1078,9 @@ def build_status_children(
     for status_component_id in status_component_ids or []:
         if status_component_id.get("process") == target_process_name:
             children.append(
-                status,
+                build_status_alert(
+                    status=status,
+                ),
             )
 
         else:
@@ -1076,6 +1089,79 @@ def build_status_children(
             )
 
     return children
+
+
+def build_status_alert(
+    *,
+    status: Any,
+) -> Any:
+    """
+    Build one alert component for a status message.
+    """
+    status_text = str(status or "").strip()
+
+    if not status_text:
+        return ""
+
+    return dbc.Alert(
+        status_text,
+        color=classify_status_alert_color(
+            status_text=status_text,
+        ),
+        is_open=True,
+        dismissable=False,
+        style={
+            "marginBottom": "0px",
+            "whiteSpace": "pre-wrap",
+        },
+    )
+
+
+def classify_status_alert_color(
+    *,
+    status_text: str,
+) -> str:
+    """
+    Classify one status message into a Bootstrap alert color.
+    """
+    normalized_status_text = str(status_text or "").strip().lower()
+
+    if not normalized_status_text:
+        return "secondary"
+
+    error_markers = [
+        "error",
+        "failed",
+        "unable",
+        "could not",
+        "missing",
+        "select ",
+        "upload ",
+        "no finite",
+        "not available",
+        "not initialized",
+        "stopping",
+        "no validated",
+        "0 fluorescent marker peaks",
+        "did not resolve",
+        "requires",
+        "invalid",
+    ]
+
+    if any(marker in normalized_status_text for marker in error_markers):
+        return "danger"
+
+    warning_markers = [
+        "warning",
+        "cleared",
+        "rejected:",
+        "run completed with no detected peaks",
+    ]
+
+    if any(marker in normalized_status_text for marker in warning_markers):
+        return "warning"
+
+    return "success"
 
 
 def build_no_update_status_children(

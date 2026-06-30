@@ -15,6 +15,22 @@ logger = logging.getLogger(__name__)
 DETECTOR_AUTO_DETECT_RULES_PATH = Path(__file__).parents[2] / "detector" / (
     "detector_auto_detect_rules.json"
 )
+DETECTOR_ROLE_ALIASES: dict[str, list[str]] = {
+    "primary": ["primary", "default"],
+    "scattering": ["scattering", "primary", "default", "x", "x_axis"],
+    "forward": ["forward", "fsc"],
+    "green_fluorescence": [
+        "green_fluorescence",
+        "fluorescence",
+        "green",
+        "fitc",
+        "fl1",
+        "y",
+        "y_axis",
+    ],
+}
+SCATTERING_ROLE_NAMES = {"primary", "scattering", "forward"}
+FLUORESCENCE_ROLE_NAMES = {"green_fluorescence"}
 
 
 def clean_optional_string(value: Any) -> str:
@@ -226,16 +242,37 @@ def infer_default_detector_channel(
 
     return infer_detector_channel_from_column_names(
         column_names=column_names,
+        detector_role=detector_role,
     )
 
 
 def infer_detector_channel_from_column_names(
     *,
     column_names: list[str],
+    detector_role: Any = None,
 ) -> Optional[str]:
     """
     Infer a reasonable default detector channel from the available column names.
     """
+    role_name = clean_optional_string(detector_role)
+
+    if role_name in FLUORESCENCE_ROLE_NAMES:
+        fluorescence_channel = find_fluorescence_channel_from_column_names(
+            column_names=column_names,
+        )
+
+        if fluorescence_channel:
+            return fluorescence_channel
+
+    if role_name in SCATTERING_ROLE_NAMES:
+        scattering_channel = find_scattering_channel_from_column_names(
+            column_names=column_names,
+            detector_role=role_name,
+        )
+
+        if scattering_channel:
+            return scattering_channel
+
     preferred_keywords = [
         "ssc",
         "fsc",
@@ -252,6 +289,81 @@ def infer_detector_channel_from_column_names(
 
     if column_names:
         return column_names[0]
+
+    return None
+
+
+def find_fluorescence_channel_from_column_names(
+    *,
+    column_names: list[str],
+) -> Optional[str]:
+    """
+    Find a likely fluorescence detector channel from the available column names.
+    """
+    preferred_keywords = [
+        "fitc",
+        "fl1",
+        "green",
+        "fluor",
+        "fluorescence",
+        "gfp",
+        "525",
+        "530",
+        "533",
+        "bl1",
+    ]
+
+    for keyword in preferred_keywords:
+        for column_name in column_names:
+            normalized_column_name = str(column_name).lower()
+            if keyword in normalized_column_name:
+                return column_name
+
+    for column_name in column_names:
+        normalized_column_name = str(column_name).lower()
+        if normalized_column_name.startswith("fl"):
+            return column_name
+
+    return None
+
+
+def find_scattering_channel_from_column_names(
+    *,
+    column_names: list[str],
+    detector_role: str,
+) -> Optional[str]:
+    """
+    Find a likely scattering detector channel from the available column names.
+    """
+    role_specific_keywords = {
+        "forward": [
+            "fsc",
+            "forward",
+            "lals",
+        ],
+        "primary": [
+            "ssc",
+            "sals",
+            "side",
+            "scatter",
+            "blu",
+            "fsc",
+        ],
+        "scattering": [
+            "ssc",
+            "sals",
+            "side",
+            "scatter",
+            "blu",
+            "fsc",
+        ],
+    }
+
+    for keyword in role_specific_keywords.get(detector_role, []):
+        for column_name in column_names:
+            normalized_column_name = str(column_name).lower()
+            if keyword in normalized_column_name:
+                return column_name
 
     return None
 
@@ -348,7 +460,18 @@ def resolve_rule_based_detector_channel(
         detector_role,
     )
 
-    candidate_aliases = detector_channels.get(role_name) or detector_channels.get("default")
+    candidate_aliases = None
+
+    for role_alias in DETECTOR_ROLE_ALIASES.get(role_name, [role_name]):
+        candidate_aliases = detector_channels.get(role_alias)
+        if isinstance(candidate_aliases, list) and candidate_aliases:
+            break
+
+    if (
+        not isinstance(candidate_aliases, list)
+        and role_name in SCATTERING_ROLE_NAMES
+    ):
+        candidate_aliases = detector_channels.get("default")
 
     if not isinstance(candidate_aliases, list):
         return None

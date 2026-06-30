@@ -10,6 +10,8 @@ import numpy as np
 
 from .base import BasePeakProcess, PeakProcessResult
 from .base import (
+    filter_edge_artifact_values,
+    resolve_edge_artifact_filter_enabled,
     resolve_float_setting,
     resolve_integer_setting,
     resolve_integer_value,
@@ -574,6 +576,16 @@ class Automatic1DPeaksProcess(BasePeakProcess):
             detector_column=str(detector_column),
             max_events_for_analysis=resolved_max_events,
         )
+
+        if resolve_edge_artifact_filter_enabled(
+            process_settings=process_settings,
+            default=True,
+        ):
+            values = filter_edge_artifact_values(
+                values=values,
+                remove_min=True,
+                remove_max=True,
+            )
 
         peak_positions, detection_debug = self.estimate_peak_positions(
             values=values,
