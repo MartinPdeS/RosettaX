@@ -659,6 +659,20 @@ class Test_RosettaPeakScript:
         assert len(validated_peaks) >= 2
         assert all(float(peak["r2"]) >= 0.70 for peak in validated_peaks)
 
+    def test_filter_candidate_peak_indices_by_prominence_rejects_weak_shoulder(self) -> None:
+        counts = np.asarray(
+            [2.0, 9.0, 5.0, 6.0, 5.5, 4.5, 8.0, 2.0],
+            dtype=float,
+        )
+
+        filtered_indices = rosetta_mix.filter_candidate_peak_indices_by_prominence(
+            counts=counts,
+            candidate_peak_indices=[1, 3, 6],
+            minimum_prominence=2.0,
+        )
+
+        assert filtered_indices == [1, 6]
+
     def test_build_peak_analysis_diagnostic_text_includes_rejection_reasons(self) -> None:
         diagnostic_text = rosetta_mix.build_peak_analysis_diagnostic_text(
             analysis={

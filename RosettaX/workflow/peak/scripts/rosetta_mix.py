@@ -959,6 +959,7 @@ def find_fit_validate_peaks_1d(
     values: np.ndarray,
     peak_count: int,
     minimum_peak_fraction: float,
+    minimum_prominence_fraction: float = 0.03,
     minimum_events_per_peak: int,
     fit_r2_threshold: float,
     fit_cv_threshold: float,
@@ -1014,6 +1015,12 @@ def find_fit_validate_peaks_1d(
         for index in candidate_peak_indices
         if smoothed_counts[int(index)] >= maximum_count * float(minimum_peak_fraction)
     ]
+
+    candidate_peak_indices = filter_candidate_peak_indices_by_prominence(
+        counts=smoothed_counts,
+        candidate_peak_indices=candidate_peak_indices,
+        minimum_prominence=maximum_count * float(minimum_prominence_fraction),
+    )
 
     selected_peak_indices = select_well_separated_peak_indices(
         candidate_peak_indices=candidate_peak_indices,
@@ -1533,6 +1540,120 @@ def find_local_maxima_indices(
             maxima_indices.append(index)
 
     return maxima_indices
+
+
+def filter_candidate_peak_indices_by_prominence(
+    *,
+    counts: np.ndarray,
+    candidate_peak_indices: list[int],
+    minimum_prominence: float,
+) -> list[int]:
+    """
+    Keep only candidate peaks that rise meaningfully above nearby valleys.
+    """
+    counts = np.asarray(counts, dtype=float)
+
+    if counts.size < 3 or not candidate_peak_indices:
+        return []
+
+    prominences = estimate_peak_prominences(
+        counts=counts,
+        candidate_peak_indices=candidate_peak_indices,
+    )
+
+    filtered_indices: list[int] = []
+
+    for index, prominence in zip(candidate_peak_indices, prominences):
+        if float(prominence) >= float(minimum_prominence):
+            filtered_indices.append(int(index))
+
+    return filtered_indices
+
+
+def estimate_peak_prominences(
+    *,
+    counts: np.ndarray,
+    candidate_peak_indices: list[int],
+) -> np.ndarray:
+    """
+    Estimate local peak prominence above the larger neighboring valley floor.
+    """
+    counts = np.asarray(counts, dtype=float)
+    prominences: list[float] = []
+
+    for candidate_peak_index in candidate_peak_indices:
+        left_minimum = find_left_valley_minimum(
+            counts=counts,
+            peak_index=int(candidate_peak_index),
+        )
+        right_minimum = find_right_valley_minimum(
+            counts=counts,
+            peak_index=int(candidate_peak_index),
+        )
+
+        valley_minima = [
+            float(value)
+            for value in (left_minimum, right_minimum)
+            if value is not None and np.isfinite(value)
+        ]
+
+        baseline = max(valley_minima) if valley_minima else 0.0
+        prominence = float(counts[int(candidate_peak_index)] - baseline)
+        prominences.append(max(0.0, prominence))
+
+    return np.asarray(prominences, dtype=float)
+
+
+def find_left_valley_minimum(
+    *,
+    counts: np.ndarray,
+    peak_index: int,
+) -> Optional[float]:
+    """
+    Find the left-side valley minimum for one histogram peak.
+    """
+    peak_height = float(counts[peak_index])
+    left_index = int(peak_index)
+
+    while left_index > 0 and counts[left_index] <= peak_height:
+        left_index -= 1
+        if counts[left_index] > peak_height:
+            break
+
+    left_slice = counts[left_index: peak_index + 1]
+
+    if left_slice.size == 0:
+        return None
+
+    return float(np.min(left_slice))
+
+
+def find_right_valley_minimum(
+    *,
+    counts: np.ndarray,
+    peak_index: int,
+) -> Optional[float]:
+    """
+    Find the right-side valley minimum for one histogram peak.
+    """
+    peak_height = float(counts[peak_index])
+
+    if peak_index >= counts.size - 1:
+        return None
+
+    right_index = int(peak_index)
+
+    while right_index < counts.size - 1 and counts[right_index] <= peak_height:
+        right_index += 1
+        if counts[right_index] > peak_height:
+            break
+
+    right_slice = counts[peak_index: right_index + 1]
+
+    if right_slice.size == 0:
+        return None
+
+    return float(np.min(right_slice))
 
 
 PROCESS = FluorescenceGuidedScatterPeakProcess()

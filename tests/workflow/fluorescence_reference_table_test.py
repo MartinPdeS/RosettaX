@@ -5,7 +5,10 @@ from RosettaX.workflow.table.fluorescence import (
     CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME,
     GENERIC_FLUORESCENCE_REFERENCE_PRESET_NAME,
     ROSETTA_MIX_FLUORESCENCE_REFERENCE_PRESET_NAME,
+    SUMMER_SCHOOL_APOGEE_APC_FLUORESCENCE_REFERENCE_PRESET_NAME,
+    SUMMER_SCHOOL_CYTEK_FITC_FLUORESCENCE_REFERENCE_PRESET_NAME,
     FluorescenceReferenceTable,
+    build_fluorescence_reference_preset_options,
 )
 
 
@@ -121,3 +124,44 @@ class Test_FluorescenceReferencePresets:
             )
             == GENERIC_FLUORESCENCE_REFERENCE_PRESET_NAME
         )
+
+    def test_build_rows_from_summer_school_apogee_apc_preset_uses_expected_mesf_values(self):
+        rows = FluorescenceReferenceTable.build_rows_from_preset_name(
+            preset_name=SUMMER_SCHOOL_APOGEE_APC_FLUORESCENCE_REFERENCE_PRESET_NAME,
+        )
+
+        assert [
+            row[FluorescenceReferenceTable.column_calibrated_intensity]
+            for row in rows
+        ] == [
+            "1084",
+            "4068",
+            "15785",
+            "51397",
+            "166228",
+        ]
+
+    def test_resolve_runtime_preset_name_matches_summer_school_cytek_fitc_values(self):
+        runtime_config = RuntimeConfig.from_dict(
+            {
+                "calibration": {
+                    "mesf_values": [2417, 8043, 27055, 91014, 303940, 943000],
+                }
+            }
+        )
+
+        assert (
+            FluorescenceReferenceTable.resolve_runtime_preset_name(
+                runtime_config=runtime_config,
+            )
+            == SUMMER_SCHOOL_CYTEK_FITC_FLUORESCENCE_REFERENCE_PRESET_NAME
+        )
+
+    def test_preset_options_include_summer_school_entries(self):
+        option_values = [
+            option["value"]
+            for option in build_fluorescence_reference_preset_options()
+        ]
+
+        assert SUMMER_SCHOOL_APOGEE_APC_FLUORESCENCE_REFERENCE_PRESET_NAME in option_values
+        assert SUMMER_SCHOOL_CYTEK_FITC_FLUORESCENCE_REFERENCE_PRESET_NAME in option_values

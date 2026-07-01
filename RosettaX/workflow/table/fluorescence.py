@@ -14,6 +14,10 @@ GENERIC_FLUORESCENCE_REFERENCE_PRESET_NAME = "Generic"
 ROSETTA_MIX_FLUORESCENCE_REFERENCE_PRESET_NAME = "Rosetta Mix"
 RAINBOW_SIX_FLUORESCENCE_REFERENCE_PRESET_NAME = "Rainbow 6"
 BROAD_EIGHT_FLUORESCENCE_REFERENCE_PRESET_NAME = "Broad 8"
+SUMMER_SCHOOL_APOGEE_APC_FLUORESCENCE_REFERENCE_PRESET_NAME = "Summer School Apogee APC"
+SUMMER_SCHOOL_APOGEE_FITC_FLUORESCENCE_REFERENCE_PRESET_NAME = "Summer School Apogee FITC"
+SUMMER_SCHOOL_CYTEK_APC_FLUORESCENCE_REFERENCE_PRESET_NAME = "Summer School Cytek APC"
+SUMMER_SCHOOL_CYTEK_FITC_FLUORESCENCE_REFERENCE_PRESET_NAME = "Summer School Cytek FITC"
 
 
 @dataclass(frozen=True)
@@ -51,6 +55,26 @@ def build_fluorescence_reference_presets() -> dict[str, FluorescenceReferencePre
             name=BROAD_EIGHT_FLUORESCENCE_REFERENCE_PRESET_NAME,
             mesf_values=[1.0e2, 5.0e2, 2.0e3, 1.0e4, 5.0e4, 2.0e5, 1.0e6, 5.0e6],
             description="Broad eight-population MESF ladder.",
+        ),
+        SUMMER_SCHOOL_APOGEE_APC_FLUORESCENCE_REFERENCE_PRESET_NAME: FluorescenceReferencePreset(
+            name=SUMMER_SCHOOL_APOGEE_APC_FLUORESCENCE_REFERENCE_PRESET_NAME,
+            mesf_values=[1084, 4068, 15785, 51397, 166228],
+            description="Vesicle Center summer school Apogee APC MESF ladder.",
+        ),
+        SUMMER_SCHOOL_APOGEE_FITC_FLUORESCENCE_REFERENCE_PRESET_NAME: FluorescenceReferencePreset(
+            name=SUMMER_SCHOOL_APOGEE_FITC_FLUORESCENCE_REFERENCE_PRESET_NAME,
+            mesf_values=[3689, 10216, 32597, 108310, 342121],
+            description="Vesicle Center summer school Apogee FITC MESF ladder.",
+        ),
+        SUMMER_SCHOOL_CYTEK_APC_FLUORESCENCE_REFERENCE_PRESET_NAME: FluorescenceReferencePreset(
+            name=SUMMER_SCHOOL_CYTEK_APC_FLUORESCENCE_REFERENCE_PRESET_NAME,
+            mesf_values=[1266, 4265, 15590, 57027, 108185, 108185],
+            description="Vesicle Center summer school Cytek APC MESF ladder.",
+        ),
+        SUMMER_SCHOOL_CYTEK_FITC_FLUORESCENCE_REFERENCE_PRESET_NAME: FluorescenceReferencePreset(
+            name=SUMMER_SCHOOL_CYTEK_FITC_FLUORESCENCE_REFERENCE_PRESET_NAME,
+            mesf_values=[2417, 8043, 27055, 91014, 303940, 943000],
+            description="Vesicle Center summer school Cytek FITC MESF ladder.",
         ),
     }
 
