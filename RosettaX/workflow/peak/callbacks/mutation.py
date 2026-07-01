@@ -156,6 +156,10 @@ def register_mutation_callbacks(
                 adapter=adapter,
                 page_state=page_state,
                 process_name=process_name,
+                clear_table=True,
+                table_data=unpacked_state["table_data"],
+                mie_model=unpacked_state["mie_model"],
+                runtime_config_data=unpacked_state["runtime_config_data"],
                 status_component_ids=unpacked_state["status_component_ids"],
             )
 
@@ -308,6 +312,10 @@ def clear_peak_context(
     adapter: Any,
     page_state: Any,
     process_name: Any,
+    clear_table: bool = False,
+    table_data: Optional[list[dict[str, Any]]] = None,
+    mie_model: Any = None,
+    runtime_config_data: Any = None,
     status_component_ids: list[dict[str, Any]],
 ) -> tuple[dict[str, Any], Any, list[Any]]:
     """
@@ -328,6 +336,28 @@ def clear_peak_context(
         process_name=resolved_process_name,
     )
 
+    if clear_table:
+        table_result = adapter.apply_peak_process_result_to_table(
+            table_data=table_data,
+            result=SimpleNamespace(clear_existing_table_peaks=True),
+            context={
+                "mie_model": mie_model,
+                "process_name": resolved_process_name,
+                "runtime_config_data": runtime_config_data,
+                "replace_existing_table_peaks": True,
+            },
+            logger=logger,
+        )
+
+        page_state = synchronize_page_state_table_rows(
+            adapter=adapter,
+            page_state=page_state,
+            table_result=table_result,
+        )
+
+    else:
+        table_result = dash.no_update
+
     status_children = build_status_children(
         status_component_ids=status_component_ids,
         target_process_name=resolved_process_name,
@@ -336,7 +366,7 @@ def clear_peak_context(
 
     return (
         page_state.to_dict(),
-        dash.no_update,
+        table_result,
         status_children,
     )
 

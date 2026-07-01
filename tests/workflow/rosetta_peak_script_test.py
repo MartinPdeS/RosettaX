@@ -80,6 +80,11 @@ class Test_RosettaPeakScript:
             for setting in settings
             if setting.get("name") == "fit_r2_threshold"
         )
+        scatter_fit_r2_setting = next(
+            setting
+            for setting in settings
+            if setting.get("name") == "scatter_fit_r2_threshold"
+        )
         fluorescence_cv_setting = next(
             setting
             for setting in settings
@@ -98,6 +103,7 @@ class Test_RosettaPeakScript:
         assert table_non_fluorescent_only_setting["kind"] == "boolean"
         assert table_non_fluorescent_only_setting["default_value"] is False
         assert fit_r2_setting["default_value"] == 0.80
+        assert scatter_fit_r2_setting["default_value"] == 0.60
         assert fluorescence_cv_setting["default_value"] == 1.0
         assert scatter_cv_setting["default_value"] == 1.0
 
@@ -226,6 +232,79 @@ class Test_RosettaPeakScript:
         assert result is not None
         assert captured_fit_cv_thresholds[0] == 0.72
         assert captured_fit_cv_thresholds[1:] == [1.35, 1.35]
+
+    def test_run_automatic_action_uses_configured_scatter_r2_threshold(self, monkeypatch) -> None:
+        scattering, fluorescence = _build_synthetic_dataset_with_two_markers()
+        captured_fit_r2_thresholds: list[float] = []
+
+        def fake_column_copy(*, fcs_file_path, detector_column, dtype=float, n=None):
+            del fcs_file_path
+            del dtype
+
+            if detector_column == "SSC-A":
+                values = scattering
+            elif detector_column == "FITC-A":
+                values = fluorescence
+            else:
+                raise AssertionError(f"Unexpected detector column: {detector_column}")
+
+            if n is None:
+                return values
+
+            return values[: int(n)]
+
+        def fake_find_fit_validate_peaks_1d(**kwargs):
+            values = np.asarray(kwargs["values"], dtype=float)
+            captured_fit_r2_thresholds.append(float(kwargs["fit_r2_threshold"]))
+
+            if np.max(values) < 20000.0:
+                return {
+                    "all_peaks": [
+                        {"mean": 120.0, "std": 10.0, "count": 9000, "validated": True, "rejection_reasons": []},
+                        {"mean": 900.0, "std": 80.0, "count": 500, "validated": True, "rejection_reasons": []},
+                    ],
+                    "validated_peaks": [
+                        {"mean": 120.0, "std": 10.0, "count": 9000, "validated": True, "rejection_reasons": []},
+                        {"mean": 900.0, "std": 80.0, "count": 500, "validated": True, "rejection_reasons": []},
+                    ],
+                }
+
+            return {
+                "all_peaks": [
+                    {"mean": 700.0, "std": 50.0, "count": 3000, "validated": True, "rejection_reasons": []},
+                ],
+                "validated_peaks": [
+                    {"mean": 700.0, "std": 50.0, "count": 3000, "validated": True, "rejection_reasons": []},
+                ],
+            }
+
+        monkeypatch.setattr(rosetta_mix, "column_copy", fake_column_copy)
+        monkeypatch.setattr(
+            rosetta_mix,
+            "find_fit_validate_peaks_1d",
+            fake_find_fit_validate_peaks_1d,
+        )
+
+        process = rosetta_mix.FluorescenceGuidedScatterPeakProcess()
+        backend = SimpleNamespace(fcs_file_path="dummy.fcs")
+
+        result = process.run_automatic_action(
+            backend=backend,
+            detector_channels={
+                "scattering": "SSC-A",
+                "green_fluorescence": "FITC-A",
+            },
+            peak_count=6,
+            max_events_for_analysis=20000,
+            process_settings={
+                "fit_r2_threshold": 0.82,
+                "scatter_fit_r2_threshold": 0.57,
+            },
+        )
+
+        assert result is not None
+        assert captured_fit_r2_thresholds[0] == 0.82
+        assert captured_fit_r2_thresholds[1:] == [0.57, 0.57]
 
     def test_run_automatic_action_payload_uses_filtered_plot_values_when_saturation_removal_enabled(
         self,

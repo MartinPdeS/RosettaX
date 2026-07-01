@@ -81,7 +81,7 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
                     "Minimum Gaussian fit quality for a peak to be accepted. "
                     "Lower values accept noisier peaks."
                 ),
-                "default_value": 0.80,
+                "default_value": 0.85,
                 "min_value": 0.00,
                 "max_value": 0.999,
                 "step": 0.01,
@@ -94,7 +94,7 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
                     "Events within this many standard deviations of the baseline "
                     "fluorescence peak are treated as non-fluorescent."
                 ),
-                "default_value": 2.0,
+                "default_value": 3.0,
                 "min_value": 0.5,
                 "max_value": 5.0,
                 "step": 0.5,
@@ -105,11 +105,26 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
                 "label": "Maximum fluorescence peak CV",
                 "help": (
                     "Maximum width allowed for fluorescence peaks during Rosetta "
-                    "marker validation. Higher values accept broader marker peaks."
+                    "marker validation. CV is represented as std/mean, so 0.10 "
+                    "corresponds to 10%."
                 ),
-                "default_value": 1.0,
+                "default_value": 0.60,
                 "min_value": 0.05,
                 "max_value": 2.0,
+                "step": 0.01,
+            },
+            {
+                "name": "scatter_fit_r2_threshold",
+                "kind": "float",
+                "label": "Minimum scatter fit R\u00b2",
+                "help": (
+                    "Minimum Gaussian fit quality for scatter peaks. This is kept "
+                    "separate from fluorescence so partially resolved scatter peaks "
+                    "can still be accepted without relaxing fluorescence validation."
+                ),
+                "default_value": 0.70,
+                "min_value": 0.00,
+                "max_value": 0.999,
                 "step": 0.01,
             },
             {
@@ -118,7 +133,8 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
                 "label": "Maximum scatter peak CV",
                 "help": (
                     "Maximum width allowed for scatter peaks during Rosetta "
-                    "validation. Higher values accept broader scatter populations."
+                    "validation. CV is represented as std/mean, so 0.10 "
+                    "corresponds to 10%."
                 ),
                 "default_value": 1.0,
                 "min_value": 0.05,
@@ -188,28 +204,35 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
         # User-facing settings.
         fit_r2_threshold = resolve_float(
             value=process_settings.get("fit_r2_threshold"),
-            default=0.80,
+            default=0.85,
             minimum=0.00,
             maximum=0.999,
         )
 
         baseline_sigma_multiplier = resolve_float(
             value=process_settings.get("baseline_sigma_multiplier"),
-            default=2.0,
+            default=1.0,
             minimum=0.5,
             maximum=5.0,
         )
 
         fit_cv_threshold = resolve_float(
             value=process_settings.get("fit_cv_threshold"),
-            default=0.55,
+            default=0.60,
             minimum=0.05,
             maximum=2.0,
         )
 
+        scatter_fit_r2_threshold = resolve_float(
+            value=process_settings.get("scatter_fit_r2_threshold"),
+            default=0.80,
+            minimum=0.00,
+            maximum=0.999,
+        )
+
         scatter_fit_cv_threshold = resolve_float(
             value=process_settings.get("scatter_fit_cv_threshold"),
-            default=0.50,
+            default=1.0,
             minimum=0.05,
             maximum=3.0,
         )
@@ -227,7 +250,6 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
         minimum_events_per_peak = 35
         fluorescence_saturation_quantile = 0.9995
         marker_gate_sigma_multiplier = 2.0
-        scatter_fit_r2_threshold = fit_r2_threshold
 
         scattering_values = np.asarray(
             column_copy(

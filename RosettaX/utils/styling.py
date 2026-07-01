@@ -509,4 +509,3 @@ def build_workflow_section_style(
             **WORKFLOW_SECTION["title_with_info"],
         },
     }
-
