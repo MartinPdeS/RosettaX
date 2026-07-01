@@ -112,6 +112,12 @@ def build_calibration_summary(
         "version",
         None,
     )
+    applied_output_channel_name = str(
+        calibration_payload.get(
+            "applied_output_channel_name",
+            "",
+        )
+    ).strip()
 
     instrument_response = calibration_payload.get(
         "instrument_response",
@@ -143,6 +149,7 @@ def build_calibration_summary(
         "calibration_type": calibration_type,
         "source_channel": source_channel,
         "output_quantity": output_quantity,
+        "applied_output_channel_name": applied_output_channel_name,
         "version": version,
         "is_scattering": calibration_type == "scattering",
         "is_fluorescence": calibration_type == "fluorescence",
@@ -477,6 +484,7 @@ def build_preview_items(
     cal_type = str(calibration_summary.get("calibration_type", "")).strip().upper() or "n/a"
     source_ch = str(calibration_summary.get("source_channel", "")).strip() or "n/a"
     file_name = str(calibration_summary.get("file_name", "")).strip() or "n/a"
+    output_name = str(calibration_summary.get("applied_output_channel_name", "")).strip() or "n/a"
 
     row = html.Div(
         [
@@ -493,10 +501,15 @@ def build_preview_items(
                 value=file_name,
                 truncate=True,
             ),
+            _build_preview_info_block(
+                label="Output name",
+                value=output_name,
+                truncate=True,
+            ),
         ],
         style={
             "display": "grid",
-            "gridTemplateColumns": "minmax(130px, 0.9fr) minmax(110px, 0.8fr) minmax(200px, 1.5fr)",
+            "gridTemplateColumns": "minmax(130px, 0.9fr) minmax(110px, 0.8fr) minmax(200px, 1.5fr) minmax(180px, 1.1fr)",
             "gap": "8px",
             "width": "100%",
             "alignItems": "stretch",

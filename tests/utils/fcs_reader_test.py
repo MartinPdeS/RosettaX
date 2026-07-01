@@ -217,6 +217,45 @@ def test_builder_from_dataframe_matches_template_detectors_by_name_and_scrubs_de
     assert fsc_detector["S"] == "Forward Scatter"
 
 
+def test_builder_from_dataframe_applies_detector_metadata_overrides_for_derived_column() -> None:
+    class _TemplateFCSFile:
+        def __init__(self) -> None:
+            self.text = {
+                "Keywords": {"$PAR": "1", "$MODE": "L", "$BYTEORD": "1,2,3,4", "$DATATYPE": "F"},
+                "Detectors": {
+                    1: {"N": "FITC-A", "V": "300", "S": "FITC Area"},
+                },
+            }
+            self.delimiter = "|"
+            self.header = {"FCS version": "FCS3.1"}
+
+        def get_column_names(self) -> list[str]:
+            return ["FITC-A"]
+
+    dataframe = pd.DataFrame(
+        {
+            "FITC (MESF)": [1.0, 2.0],
+        }
+    )
+    dataframe.attrs["fcs_detector_metadata_overrides"] = {
+        "FITC (MESF)": {
+            "S": "RosettaX based on FITC-A",
+        }
+    }
+
+    builder = FCSFile.builder_from_dataframe(
+        dataframe,
+        template=_TemplateFCSFile(),
+        force_float32=True,
+    )
+
+    derived_detector = builder.detectors[1]
+
+    assert derived_detector["N"] == "FITC (MESF)"
+    assert derived_detector["S"] == "RosettaX based on FITC-A"
+    assert derived_detector["V"] == ""
+
+
 def test_fcs_reader_raises_for_missing_file() -> None:
     """
     Test that opening a missing FCS file fails explicitly.

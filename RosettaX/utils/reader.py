@@ -924,6 +924,13 @@ class FCSFile:
         if force_float32:
             keywords["$DATATYPE"] = "F"
 
+        dataframe_detector_overrides = cls._normalize_detector_metadata_overrides(
+            dataframe.attrs.get(
+                "fcs_detector_metadata_overrides",
+                {},
+            )
+        )
+
         rebuilt_detectors: Dict[int, Dict[str, Any]] = {}
 
         for parameter_index, column_name in enumerate(list(dataframe.columns), start=1):
@@ -937,6 +944,12 @@ class FCSFile:
             if not detector:
                 detector.update(_NON_APPLICABLE_DERIVED_DETECTOR_FIELDS)
 
+            detector.update(
+                dataframe_detector_overrides.get(
+                    str(column_name),
+                    {},
+                )
+            )
             detector["N"] = str(column_name)
 
             if force_float32:
@@ -960,6 +973,22 @@ class FCSFile:
             delimiter=delimiter,
             fcs_version=version,
         )
+
+    @staticmethod
+    def _normalize_detector_metadata_overrides(
+        overrides: Any,
+    ) -> Dict[str, Dict[str, Any]]:
+        """
+        Normalize DataFrame detector metadata overrides keyed by column name.
+        """
+        if not isinstance(overrides, dict):
+            return {}
+
+        return {
+            str(column_name): dict(detector_metadata)
+            for column_name, detector_metadata in overrides.items()
+            if isinstance(detector_metadata, dict)
+        }
 
 
 @dataclass

@@ -27,6 +27,10 @@ class SaveIds:
         return f"{self.prefix}-file-name"
 
     @property
+    def output_channel_name(self) -> str:
+        return f"{self.prefix}-output-channel-name"
+
+    @property
     def save_out(self) -> str:
         return f"{self.prefix}-save-out"
 

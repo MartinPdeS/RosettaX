@@ -199,6 +199,7 @@ def _build_calibration_summary_payload(
         "calibration_type": str(calibration_summary.get("calibration_type", "")),
         "source_channel": str(calibration_summary.get("source_channel", "")),
         "output_quantity": str(calibration_summary.get("output_quantity", "")),
+        "applied_output_channel_name": str(calibration_summary.get("applied_output_channel_name", "")),
         "version": calibration_summary.get("version"),
         "requires_target_model": bool(calibration_summary.get("requires_target_model", False)),
     }
@@ -1489,7 +1490,11 @@ def _build_selected_calibration_rows(
                 str(calibration_summary.get("file_name") or calibration_summary.get("selected_calibration") or "n/a"),
                 str(calibration_summary.get("calibration_type") or "unknown"),
                 str(calibration_summary.get("source_channel") or "n/a"),
-                str(calibration_summary.get("output_quantity") or "n/a"),
+                str(
+                    calibration_summary.get("applied_output_channel_name")
+                    or calibration_summary.get("output_quantity")
+                    or "n/a"
+                ),
             ]
         )
 

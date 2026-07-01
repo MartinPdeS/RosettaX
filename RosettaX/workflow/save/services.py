@@ -14,7 +14,9 @@ from RosettaX.workflow.save.models import SaveResult
 def validate_save_inputs(
     *,
     file_name: str | None,
+    output_channel_name: str | None,
     calibration_payload: dict | None,
+    require_output_channel_name: bool = False,
 ) -> tuple[SaveInputs | None, str | None]:
     """
     Validate the save workflow inputs.
@@ -33,11 +35,22 @@ def validate_save_inputs(
         Validated inputs and optional validation error.
     """
     clean_file_name = "" if file_name is None else str(file_name).strip()
+    clean_output_channel_name = (
+        ""
+        if output_channel_name is None
+        else str(output_channel_name).strip()
+    )
 
     if not clean_file_name:
         return (
             None,
             "Enter a calibration name before saving.",
+        )
+
+    if require_output_channel_name and not clean_output_channel_name:
+        return (
+            None,
+            "Enter an applied output channel name before saving.",
         )
 
     if not isinstance(calibration_payload, dict) or not calibration_payload:
@@ -49,6 +62,7 @@ def validate_save_inputs(
     return (
         SaveInputs(
             file_name=clean_file_name,
+            output_channel_name=clean_output_channel_name,
             calibration_payload=dict(calibration_payload),
         ),
         None,
@@ -67,9 +81,14 @@ def save_calibration_payload(
     file_name = service.build_calibration_download_filename(
         name=inputs.file_name,
     )
+    calibration_payload = dict(inputs.calibration_payload)
+
+    if inputs.output_channel_name:
+        calibration_payload["applied_output_channel_name"] = inputs.output_channel_name
+
     json_text = service.serialize_calibration_record(
         name=inputs.file_name,
-        payload=dict(inputs.calibration_payload),
+        payload=calibration_payload,
         calibration_kind=config.calibration_kind,
     )
 
@@ -78,7 +97,7 @@ def save_calibration_payload(
         "file_name=%r payload_keys=%r download_filename=%r",
         config.calibration_kind,
         inputs.file_name,
-        list(inputs.calibration_payload.keys()),
+        list(calibration_payload.keys()),
         file_name,
     )
 
@@ -99,6 +118,7 @@ def save_calibration_payload(
 def run_save_workflow(
     *,
     file_name: str | None,
+    output_channel_name: str | None,
     calibration_payload: dict | None,
     config: SaveConfig,
     logger: logging.Logger,
@@ -108,7 +128,9 @@ def run_save_workflow(
     """
     parsed_inputs, validation_error = validate_save_inputs(
         file_name=file_name,
+        output_channel_name=output_channel_name,
         calibration_payload=calibration_payload,
+        require_output_channel_name=config.require_output_channel_name,
     )
 
     if validation_error is not None:

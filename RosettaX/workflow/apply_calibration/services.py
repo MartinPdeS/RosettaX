@@ -53,6 +53,9 @@ class ApplyCalibrationFilesResult:
     status: str
 
 
+APPLIED_OUTPUT_CHANNEL_NAME_KEY = "applied_output_channel_name"
+
+
 def apply_calibration_to_fcs_files(
     *,
     request: ApplyCalibrationRequest,
@@ -70,7 +73,7 @@ def apply_calibration_to_fcs_files(
     output_channels: list[str] = []
     calibration_descriptions: list[str] = []
     source_channels_seen: set[str] = set()
-    calibration_applications: list[tuple[CalibrationApplication, str, bool]] = []
+    unresolved_calibration_applications: list[tuple[CalibrationApplication, str, bool]] = []
 
     for calibration_application in request.calibrations:
         if not calibration_application.selected_calibration:
@@ -106,30 +109,7 @@ def apply_calibration_to_fcs_files(
             calibration_payload,
         )
 
-        if is_scattering:
-            if calibration_application.scattering_target_model_parameters is None:
-                raise ValueError(
-                    "Scattering target model parameters are required for scattering calibration."
-                )
-
-            resolved_output_channels = build_scattering_output_columns(
-                source_channel=source_channel,
-            ).as_list()
-        else:
-            resolved_output_channels = [
-                source_channel,
-            ]
-
-        for output_channel in resolved_output_channels:
-            if output_channel not in output_channels:
-                output_channels.append(
-                    output_channel,
-                )
-
-        calibration_descriptions.append(
-            f'{calibration_application.selected_calibration} -> "{source_channel}"'
-        )
-        calibration_applications.append(
+        unresolved_calibration_applications.append(
             (
                 calibration_application,
                 source_channel,
@@ -141,6 +121,50 @@ def apply_calibration_to_fcs_files(
         source_channels=input_source_channels,
         export_columns=request.export_columns,
     )
+
+    calibration_applications: list[tuple[CalibrationApplication, str, bool, list[str]]] = []
+    reserved_output_names = set(input_export_columns)
+
+    for calibration_application, source_channel, is_scattering in unresolved_calibration_applications:
+        if is_scattering:
+            if calibration_application.scattering_target_model_parameters is None:
+                raise ValueError(
+                    "Scattering target model parameters are required for scattering calibration."
+                )
+
+            resolved_output_channels = build_scattering_output_columns(
+                source_channel=source_channel,
+            ).as_list()
+        else:
+            resolved_output_channels = [
+                resolve_unique_output_channel_name(
+                    preferred_name=resolve_requested_output_channel_name(
+                        calibration_application.calibration_payload,
+                        default=source_channel,
+                    ),
+                    reserved_names=reserved_output_names,
+                ),
+            ]
+
+        for output_channel in resolved_output_channels:
+            reserved_output_names.add(output_channel)
+
+            if output_channel not in output_channels:
+                output_channels.append(
+                    output_channel,
+                )
+
+        calibration_descriptions.append(
+            f'{calibration_application.selected_calibration} -> "{", ".join(resolved_output_channels)}"'
+        )
+        calibration_applications.append(
+            (
+                calibration_application,
+                source_channel,
+                is_scattering,
+                resolved_output_channels,
+            )
+        )
 
     dataframe_transformer_factory = build_multi_calibration_dataframe_transformer_factory(
         calibration_applications=calibration_applications,
@@ -201,7 +225,7 @@ def apply_calibration_to_fcs_files(
 
 def build_multi_calibration_dataframe_transformer_factory(
     *,
-    calibration_applications: list[tuple[CalibrationApplication, str, bool]],
+    calibration_applications: list[tuple[CalibrationApplication, str, bool, list[str]]],
 ):
     """
     Build one dataframe transformer factory that applies all calibrations in sequence.
@@ -212,7 +236,7 @@ def build_multi_calibration_dataframe_transformer_factory(
     ):
         individual_transformers = []
 
-        for calibration_application, source_channel, is_scattering in calibration_applications:
+        for calibration_application, source_channel, is_scattering, resolved_output_channels in calibration_applications:
             if is_scattering:
                 individual_transformers.append(
                     build_scattering_dataframe_transformer_factory(
@@ -227,6 +251,7 @@ def build_multi_calibration_dataframe_transformer_factory(
                 individual_transformers.append(
                     build_legacy_dataframe_transformer_factory(
                         source_channel=source_channel,
+                        output_channel_name=resolved_output_channels[0],
                         calibration_payload=calibration_application.calibration_payload,
                     )(
                         uploaded_fcs_path,
@@ -333,6 +358,7 @@ def build_scattering_dataframe_transformer_factory(
 def build_legacy_dataframe_transformer_factory(
     *,
     source_channel: str,
+    output_channel_name: str,
     calibration_payload: dict[str, Any],
 ):
     """
@@ -395,12 +421,22 @@ def build_legacy_dataframe_transformer_factory(
                 copy=True,
             )
 
-            output_dataframe[source_channel] = apply_legacy_calibration_to_series(
+            output_dataframe[output_channel_name] = apply_legacy_calibration_to_series(
                 values=np.asarray(
                     values,
                     dtype=float,
                 ),
                 calibration_payload=calibration_payload,
+            )
+
+            attach_detector_metadata_override(
+                dataframe=output_dataframe,
+                column_name=output_channel_name,
+                detector_metadata={
+                    "S": build_applied_output_long_name(
+                        source_channel=source_channel,
+                    ),
+                },
             )
 
             return output_dataframe
@@ -459,6 +495,99 @@ def resolve_source_channel(
             return measured_channel
 
     return ""
+
+
+def resolve_requested_output_channel_name(
+    calibration_payload: dict[str, Any],
+    *,
+    default: str,
+) -> str:
+    """
+    Resolve the preferred applied output channel short name from a calibration payload.
+    """
+    if not isinstance(calibration_payload, dict):
+        return str(default).strip()
+
+    preferred_name = str(
+        calibration_payload.get(
+            APPLIED_OUTPUT_CHANNEL_NAME_KEY,
+            "",
+        )
+    ).strip()
+
+    if preferred_name:
+        return preferred_name
+
+    return str(default).strip()
+
+
+def resolve_unique_output_channel_name(
+    *,
+    preferred_name: str,
+    reserved_names: set[str],
+) -> str:
+    """
+    Ensure an applied output channel name is unique among exported columns.
+    """
+    base_name = str(preferred_name or "").strip() or "Calibrated channel"
+    candidate_name = base_name
+    suffix = 2
+
+    while candidate_name in reserved_names:
+        candidate_name = f"{base_name} {suffix}"
+        suffix += 1
+
+    return candidate_name
+
+
+def build_applied_output_long_name(
+    *,
+    source_channel: str,
+) -> str:
+    """
+    Build the FCS long-name metadata for a calibrated output parameter.
+    """
+    return f"RosettaX based on {str(source_channel).strip()}"
+
+
+def attach_detector_metadata_override(
+    *,
+    dataframe: Any,
+    column_name: str,
+    detector_metadata: dict[str, Any],
+) -> None:
+    """
+    Attach detector metadata overrides consumed by the FCS builder.
+    """
+    attrs = getattr(dataframe, "attrs", {})
+
+    existing_overrides = attrs.get(
+        "fcs_detector_metadata_overrides",
+        {},
+    )
+
+    normalized_overrides = (
+        {
+            str(name): dict(metadata)
+            for name, metadata in existing_overrides.items()
+            if isinstance(metadata, dict)
+        }
+        if isinstance(existing_overrides, dict)
+        else {}
+    )
+
+    current_override = normalized_overrides.get(
+        str(column_name),
+        {},
+    )
+    current_override.update(
+        {
+            str(key): value
+            for key, value in detector_metadata.items()
+        }
+    )
+    normalized_overrides[str(column_name)] = current_override
+    attrs["fcs_detector_metadata_overrides"] = normalized_overrides
 
 
 def build_success_message(

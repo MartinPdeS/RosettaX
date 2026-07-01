@@ -68,7 +68,7 @@ class SaveLayout:
             [
                 dash.html.Br(),
                 dash.html.Div(
-                    "Enter a calibration name to enable download.",
+                    self._build_intro_text(),
                     style={
                         "marginBottom": "8px",
                     },
@@ -86,15 +86,25 @@ class SaveLayout:
         """
         Build the save row.
         """
+        row_children: list[Any] = [
+            self._build_file_name_input(),
+        ]
+
+        row_children.append(
+            self._build_output_channel_name_input(),
+        )
+
+        row_children.append(
+            self._build_save_button(),
+        )
+
         return dash.html.Div(
-            [
-                self._build_file_name_input(),
-                self._build_save_button(),
-            ],
+            row_children,
             style={
                 "display": "flex",
                 "alignItems": "center",
                 "gap": "12px",
+                "flexWrap": "wrap",
             },
         )
 
@@ -124,6 +134,21 @@ class SaveLayout:
             },
         )
 
+    def _build_output_channel_name_input(self) -> dash.dcc.Input:
+        """
+        Build the applied output channel name input.
+        """
+        return dash.dcc.Input(
+            id=self.ids.output_channel_name,
+            type="text",
+            value="",
+            placeholder=self.config.output_channel_name_placeholder,
+            style={
+                "width": "280px",
+                "display": "block" if self.config.require_output_channel_name else "none",
+            },
+        )
+
     def _build_status_output(self) -> dash.html.Div:
         """
         Build the save status output.
@@ -131,3 +156,14 @@ class SaveLayout:
         return dash.html.Div(
             id=self.ids.save_out,
         )
+
+    def _build_intro_text(self) -> str:
+        """
+        Build the explanatory save-section intro text.
+        """
+        if self.config.require_output_channel_name:
+            return (
+                "Enter a calibration name and the applied output channel name to enable download."
+            )
+
+        return "Enter a calibration name to enable download."
