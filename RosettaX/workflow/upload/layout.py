@@ -71,16 +71,13 @@ class UploadLayout:
                         dcc.Upload(
                             id=self.ids.upload,
                             children=html.Div(
-                                [
-                                    "Drag and drop or ",
-                                    html.A(
-                                        self.config.upload_link_text,
-                                        style={
-                                            "fontWeight": "650",
-                                            "textDecoration": "none",
-                                        },
-                                    ),
-                                ]
+                                html.A(
+                                    self.config.upload_link_text,
+                                    style={
+                                        "fontWeight": "650",
+                                        "textDecoration": "none",
+                                    },
+                                )
                             ),
                             style=styling.UPLOAD,
                             max_size=get_max_upload_bytes(),
