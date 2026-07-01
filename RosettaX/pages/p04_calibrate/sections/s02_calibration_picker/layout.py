@@ -156,16 +156,13 @@ class CalibrationPickerLayout:
                     dash.dcc.Upload(
                         id=self.page.ids.CalibrationPicker.upload,
                         children=dash.html.Div(
-                            [
-                                dash.html.Span("Drag and drop or "),
-                                dash.html.A(
-                                    "select calibration.json file(s)",
-                                    style={
-                                        "fontWeight": "650",
-                                        "textDecoration": "none",
-                                    },
-                                ),
-                            ]
+                            dash.html.A(
+                                "select calibration.json file(s)",
+                                style={
+                                    "fontWeight": "650",
+                                    "textDecoration": "none",
+                                },
+                            )
                         ),
                         multiple=True,
                         style=styling.UPLOAD,
