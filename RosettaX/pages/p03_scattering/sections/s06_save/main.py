@@ -37,6 +37,8 @@ class Save:
             header_title=f"{self.section_number}. Save calibration",
             button_text="Download calibration.json",
             file_name_placeholder="calibration name",
+            output_channel_name_placeholder="e.g. Diameter (nm)",
+            require_output_channel_name=True,
             saved_message_prefix="Prepared calibration download",
             failure_message="Failed to prepare calibration download. See terminal logs for details.",
         )
