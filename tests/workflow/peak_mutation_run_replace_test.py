@@ -1,8 +1,35 @@
 # -*- coding: utf-8 -*-
 
+import sys
+import types
 from types import SimpleNamespace
 
+import dash
 import pytest
+
+
+class _DashBootstrapComponentsSentinel:
+    def __init__(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+        self.color = kwargs.get("color")
+
+    def __call__(self, *args, **kwargs):
+        return _DashBootstrapComponentsSentinel(*args, **kwargs)
+
+    def __getattr__(self, name):
+        return self
+
+
+class _DashBootstrapComponentsStub(types.ModuleType):
+    def __getattr__(self, name):
+        return _DashBootstrapComponentsSentinel
+
+
+sys.modules.setdefault(
+    "dash_bootstrap_components",
+    _DashBootstrapComponentsStub("dash_bootstrap_components"),
+)
 
 from RosettaX.workflow.peak.callbacks import mutation
 
@@ -157,3 +184,141 @@ def test_handle_run_action_syncs_reference_table_rows_in_page_state(monkeypatch)
 
     assert table_result == [{"measured_peak_position": 123.0}]
     assert page_state_dict["reference_table_rows"] == table_result
+
+
+def test_handle_manual_graph_click_ignores_empty_selection_reset(monkeypatch):
+    manual_process = SimpleNamespace(
+        supports_manual_click=True,
+        process_name="manual_2d_click",
+    )
+
+    monkeypatch.setattr(
+        mutation.registry,
+        "resolve_process_name",
+        lambda process_name: process_name,
+    )
+    monkeypatch.setattr(
+        mutation.registry,
+        "get_process_instance",
+        lambda **kwargs: manual_process,
+    )
+
+    page_state_result, table_result, status_children = mutation.handle_manual_graph_click(
+        ids=SimpleNamespace(),
+        adapter=SimpleNamespace(),
+        triggered_graph_property="selectedData",
+        click_data=None,
+        selected_data=None,
+        process_name="manual_2d_click",
+        page_state=SimpleNamespace(),
+        detector_dropdown_ids=[],
+        detector_dropdown_values=[],
+        process_setting_ids=[],
+        process_setting_values=[],
+        data_filter_value=None,
+        axis_scale_toggle_values=None,
+        table_data=[],
+        mie_model=None,
+        runtime_config_data={},
+        status_component_ids=[{"process": "manual_2d_click"}],
+    )
+
+    assert page_state_result is dash.no_update
+    assert table_result is dash.no_update
+    assert status_children == [dash.no_update]
+
+
+def test_handle_manual_graph_click_ignores_empty_selection_reset_with_stale_click_data(
+    monkeypatch,
+):
+    manual_process = SimpleNamespace(
+        supports_manual_click=True,
+        process_name="manual_2d_click",
+    )
+
+    monkeypatch.setattr(
+        mutation.registry,
+        "resolve_process_name",
+        lambda process_name: process_name,
+    )
+    monkeypatch.setattr(
+        mutation.registry,
+        "get_process_instance",
+        lambda **kwargs: manual_process,
+    )
+
+    page_state_result, table_result, status_children = mutation.handle_manual_graph_click(
+        ids=SimpleNamespace(),
+        adapter=SimpleNamespace(),
+        triggered_graph_property="selectedData",
+        click_data={
+            "points": [
+                {
+                    "x": 123.0,
+                    "y": 456.0,
+                }
+            ]
+        },
+        selected_data=None,
+        process_name="manual_2d_click",
+        page_state=SimpleNamespace(),
+        detector_dropdown_ids=[],
+        detector_dropdown_values=[],
+        process_setting_ids=[],
+        process_setting_values=[],
+        data_filter_value=None,
+        axis_scale_toggle_values=None,
+        table_data=[],
+        mie_model=None,
+        runtime_config_data={},
+        status_component_ids=[{"process": "manual_2d_click"}],
+    )
+
+    assert page_state_result is dash.no_update
+    assert table_result is dash.no_update
+    assert status_children == [dash.no_update]
+
+
+def test_handle_manual_graph_click_ignores_empty_selection_payload_dict(
+    monkeypatch,
+):
+    manual_process = SimpleNamespace(
+        supports_manual_click=True,
+        process_name="manual_2d_click",
+        extract_selected_xy_range=lambda payload: None,
+    )
+
+    monkeypatch.setattr(
+        mutation.registry,
+        "resolve_process_name",
+        lambda process_name: process_name,
+    )
+    monkeypatch.setattr(
+        mutation.registry,
+        "get_process_instance",
+        lambda **kwargs: manual_process,
+    )
+
+    page_state_result, table_result, status_children = mutation.handle_manual_graph_click(
+        ids=SimpleNamespace(),
+        adapter=SimpleNamespace(),
+        triggered_graph_property="selectedData",
+        click_data=None,
+        selected_data={"points": []},
+        process_name="manual_2d_click",
+        page_state=SimpleNamespace(),
+        detector_dropdown_ids=[],
+        detector_dropdown_values=[],
+        process_setting_ids=[],
+        process_setting_values=[],
+        data_filter_value=None,
+        axis_scale_toggle_values=None,
+        table_data=[],
+        mie_model=None,
+        runtime_config_data={},
+        status_component_ids=[{"process": "manual_2d_click"}],
+    )
+
+    assert page_state_result is dash.no_update
+    assert table_result is dash.no_update
+    assert status_children == [dash.no_update]

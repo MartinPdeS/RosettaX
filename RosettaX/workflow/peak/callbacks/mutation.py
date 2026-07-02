@@ -149,6 +149,7 @@ def register_mutation_callbacks(
         )
 
         triggered_id = dash.ctx.triggered_id
+        triggered_graph_property = resolve_triggered_graph_property_name()
 
         if triggered_id == ids.process_dropdown:
             return clear_peak_context(
@@ -179,6 +180,7 @@ def register_mutation_callbacks(
             return handle_manual_graph_click(
                 ids=ids,
                 adapter=adapter,
+                triggered_graph_property=triggered_graph_property,
                 click_data=click_data,
                 selected_data=selected_data,
                 process_name=process_name,
@@ -287,6 +289,32 @@ def trigger_is_detector_dropdown_change(
     return triggered_id.get("type") == pattern.get("type")
 
 
+def resolve_triggered_graph_property_name() -> Optional[str]:
+    """
+    Return the triggering property name for the active graph callback.
+    """
+    triggered = getattr(
+        dash.ctx,
+        "triggered",
+        None,
+    )
+
+    if not isinstance(triggered, list) or not triggered:
+        return None
+
+    first_trigger = triggered[0]
+
+    if not isinstance(first_trigger, dict):
+        return None
+
+    prop_id = first_trigger.get("prop_id")
+
+    if not isinstance(prop_id, str) or "." not in prop_id:
+        return None
+
+    return prop_id.rsplit(".", 1)[1]
+
+
 def trigger_is_action_button(
     *,
     ids: Any,
@@ -375,6 +403,7 @@ def handle_manual_graph_click(
     *,
     ids: Any,
     adapter: Any,
+    triggered_graph_property: Optional[str],
     click_data: Any,
     selected_data: Any,
     process_name: Any,
@@ -393,6 +422,14 @@ def handle_manual_graph_click(
     """
     Handle a graph click for manual peak selection processes.
     """
+    effective_click_data = click_data
+    effective_selected_data = selected_data
+
+    if triggered_graph_property == "selectedData":
+        effective_click_data = None
+    elif triggered_graph_property == "clickData":
+        effective_selected_data = None
+
     resolved_process_name = registry.resolve_process_name(
         process_name,
     )
@@ -402,6 +439,16 @@ def handle_manual_graph_click(
     )
 
     if process is None or not process.supports_manual_click:
+        return build_no_update_callback_result(
+            status_component_ids=status_component_ids,
+        )
+
+    if not manual_graph_event_has_actionable_payload(
+        process=process,
+        triggered_graph_property=triggered_graph_property,
+        click_data=effective_click_data,
+        selected_data=effective_selected_data,
+    ):
         return build_no_update_callback_result(
             status_component_ids=status_component_ids,
         )
@@ -448,8 +495,8 @@ def handle_manual_graph_click(
 
     result = call_add_clicked_peak_with_supported_arguments(
         process=process,
-        click_data=click_data,
-        selected_data=selected_data,
+        click_data=effective_click_data,
+        selected_data=effective_selected_data,
         existing_peak_lines_payload=adapter.get_peak_lines_payload(
             page_state=page_state,
         ),
@@ -972,6 +1019,61 @@ def call_add_clicked_peak_with_supported_arguments(
     return method(
         **supported_arguments,
     )
+
+
+def manual_graph_event_has_actionable_payload(
+    *,
+    process: Any,
+    triggered_graph_property: Optional[str],
+    click_data: Any,
+    selected_data: Any,
+) -> bool:
+    """
+    Return whether the active manual graph event contains usable selection data.
+    """
+    if triggered_graph_property == "selectedData":
+        extractor = getattr(
+            process,
+            "extract_selected_xy_range",
+            None,
+        )
+
+        if callable(extractor):
+            return extractor(selected_data) is not None
+
+        extractor = getattr(
+            process,
+            "extract_selected_x_range",
+            None,
+        )
+
+        if callable(extractor):
+            return extractor(selected_data) is not None
+
+        return bool(selected_data)
+
+    if triggered_graph_property == "clickData":
+        extractor = getattr(
+            process,
+            "extract_clicked_xy_position",
+            None,
+        )
+
+        if callable(extractor):
+            return extractor(click_data) is not None
+
+        extractor = getattr(
+            process,
+            "extract_clicked_x_position",
+            None,
+        )
+
+        if callable(extractor):
+            return extractor(click_data) is not None
+
+        return bool(click_data)
+
+    return bool(click_data) or bool(selected_data)
 
 
 def touch_peak_graph_revision(

@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
+import json
 from dataclasses import dataclass
+from functools import lru_cache
+from pathlib import Path
 from typing import Any, Optional
 
 from RosettaX.utils import casting
@@ -31,52 +34,57 @@ class FluorescenceReferencePreset:
     description: str = ""
 
 
+@lru_cache(maxsize=1)
+def _load_fluorescence_reference_preset_payloads() -> tuple[dict[str, Any], ...]:
+    """
+    Load fluorescence reference preset payloads from packaged assets.
+    """
+    asset_path = (
+        Path(__file__).resolve().parents[2]
+        / "assets"
+        / "fluorescence_reference_presets.json"
+    )
+
+    with asset_path.open(
+        "r",
+        encoding="utf-8",
+    ) as handle:
+        payload = json.load(handle)
+
+    presets = payload.get("presets")
+
+    if not isinstance(presets, list):
+        raise ValueError(
+            "fluorescence_reference_presets.json must contain a top-level 'presets' list."
+        )
+
+    return tuple(
+        preset
+        for preset in presets
+        if isinstance(preset, dict)
+    )
+
+
 def build_fluorescence_reference_presets() -> dict[str, FluorescenceReferencePreset]:
     """
     Build built-in fluorescence reference presets.
     """
-    return {
-        GENERIC_FLUORESCENCE_REFERENCE_PRESET_NAME: FluorescenceReferencePreset(
-            name=GENERIC_FLUORESCENCE_REFERENCE_PRESET_NAME,
-            mesf_values=[1.0e3, 1.0e4, 1.0e5, 1.0e6],
-            description="Generic four-point MESF ladder.",
-        ),
-        ROSETTA_MIX_FLUORESCENCE_REFERENCE_PRESET_NAME: FluorescenceReferencePreset(
-            name=ROSETTA_MIX_FLUORESCENCE_REFERENCE_PRESET_NAME,
-            mesf_values=[5.0e2, 5.0e3, 5.0e4, 5.0e5, 5.0e6, 5.0e7],
-            description="Rosetta Mix fluorescence ladder.",
-        ),
-        RAINBOW_SIX_FLUORESCENCE_REFERENCE_PRESET_NAME: FluorescenceReferencePreset(
-            name=RAINBOW_SIX_FLUORESCENCE_REFERENCE_PRESET_NAME,
-            mesf_values=[2.0e2, 2.0e3, 2.0e4, 2.0e5, 2.0e6, 2.0e7],
-            description="Six-population rainbow-style MESF ladder.",
-        ),
-        BROAD_EIGHT_FLUORESCENCE_REFERENCE_PRESET_NAME: FluorescenceReferencePreset(
-            name=BROAD_EIGHT_FLUORESCENCE_REFERENCE_PRESET_NAME,
-            mesf_values=[1.0e2, 5.0e2, 2.0e3, 1.0e4, 5.0e4, 2.0e5, 1.0e6, 5.0e6],
-            description="Broad eight-population MESF ladder.",
-        ),
-        SUMMER_SCHOOL_APOGEE_APC_FLUORESCENCE_REFERENCE_PRESET_NAME: FluorescenceReferencePreset(
-            name=SUMMER_SCHOOL_APOGEE_APC_FLUORESCENCE_REFERENCE_PRESET_NAME,
-            mesf_values=[1084, 4068, 15785, 51397, 166228],
-            description="Vesicle Center summer school Apogee APC MESF ladder.",
-        ),
-        SUMMER_SCHOOL_APOGEE_FITC_FLUORESCENCE_REFERENCE_PRESET_NAME: FluorescenceReferencePreset(
-            name=SUMMER_SCHOOL_APOGEE_FITC_FLUORESCENCE_REFERENCE_PRESET_NAME,
-            mesf_values=[3689, 10216, 32597, 108310, 342121],
-            description="Vesicle Center summer school Apogee FITC MESF ladder.",
-        ),
-        SUMMER_SCHOOL_CYTEK_APC_FLUORESCENCE_REFERENCE_PRESET_NAME: FluorescenceReferencePreset(
-            name=SUMMER_SCHOOL_CYTEK_APC_FLUORESCENCE_REFERENCE_PRESET_NAME,
-            mesf_values=[1266, 4265, 15590, 57027, 108185, 108185],
-            description="Vesicle Center summer school Cytek APC MESF ladder.",
-        ),
-        SUMMER_SCHOOL_CYTEK_FITC_FLUORESCENCE_REFERENCE_PRESET_NAME: FluorescenceReferencePreset(
-            name=SUMMER_SCHOOL_CYTEK_FITC_FLUORESCENCE_REFERENCE_PRESET_NAME,
-            mesf_values=[2417, 8043, 27055, 91014, 303940, 943000],
-            description="Vesicle Center summer school Cytek FITC MESF ladder.",
-        ),
-    }
+    presets: dict[str, FluorescenceReferencePreset] = {}
+
+    for preset_payload in _load_fluorescence_reference_preset_payloads():
+        preset = FluorescenceReferencePreset(
+            name=str(preset_payload.get("name") or "").strip(),
+            mesf_values=[
+                float(value)
+                for value in preset_payload.get("mesf_values", [])
+            ],
+            description=str(preset_payload.get("description") or ""),
+        )
+
+        if preset.name:
+            presets[preset.name] = preset
+
+    return presets
 
 
 def build_fluorescence_reference_preset_options() -> list[dict[str, str]]:

@@ -1,0 +1,44 @@
+{
+  "presets": [
+    {
+      "name": "Generic",
+      "mesf_values": [1000.0, 10000.0, 100000.0, 1000000.0],
+      "description": "Generic four-point MESF ladder."
+    },
+    {
+      "name": "Rosetta Mix",
+      "mesf_values": [500.0, 5000.0, 50000.0, 500000.0, 5000000.0, 50000000.0],
+      "description": "Rosetta Mix fluorescence ladder."
+    },
+    {
+      "name": "Rainbow 6",
+      "mesf_values": [200.0, 2000.0, 20000.0, 200000.0, 2000000.0, 20000000.0],
+      "description": "Six-population rainbow-style MESF ladder."
+    },
+    {
+      "name": "Broad 8",
+      "mesf_values": [100.0, 500.0, 2000.0, 10000.0, 50000.0, 200000.0, 1000000.0, 5000000.0],
+      "description": "Broad eight-population MESF ladder."
+    },
+    {
+      "name": "Summer School Apogee APC",
+      "mesf_values": [1084, 4068, 15785, 51397, 166228],
+      "description": "Vesicle Center summer school Apogee APC MESF ladder."
+    },
+    {
+      "name": "Summer School Apogee FITC",
+      "mesf_values": [3689, 10216, 32597, 108310, 342121],
+      "description": "Vesicle Center summer school Apogee FITC MESF ladder."
+    },
+    {
+      "name": "Summer School Cytek APC",
+      "mesf_values": [1266, 4265, 15590, 57027, 108185, 108185],
+      "description": "Vesicle Center summer school Cytek APC MESF ladder."
+    },
+    {
+      "name": "Summer School Cytek FITC",
+      "mesf_values": [2417, 8043, 27055, 91014, 303940, 943000],
+      "description": "Vesicle Center summer school Cytek FITC MESF ladder."
+    }
+  ]
+}

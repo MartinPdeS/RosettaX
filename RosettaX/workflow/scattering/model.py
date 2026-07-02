@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
+import json
 from dataclasses import dataclass
+from functools import lru_cache
+from pathlib import Path
 from typing import Any, Optional, Sequence
 
 import plotly.graph_objs as go
@@ -43,63 +46,86 @@ class ScatteringCalibrationScattererPreset:
     description: str = ""
 
 
+@lru_cache(maxsize=1)
+def _load_scattering_calibration_scatterer_preset_payloads() -> tuple[dict[str, Any], ...]:
+    """
+    Load scatterer preset payloads from the packaged assets directory.
+    """
+    asset_path = Path(__file__).resolve().parents[2] / "assets" / "scatterer_presets.json"
+
+    with asset_path.open(
+        "r",
+        encoding="utf-8",
+    ) as handle:
+        payload = json.load(handle)
+
+    presets = payload.get("presets")
+
+    if not isinstance(presets, list):
+        raise ValueError(
+            "scatterer_presets.json must contain a top-level 'presets' list."
+        )
+
+    return tuple(
+        preset
+        for preset in presets
+        if isinstance(preset, dict)
+    )
+
+
 def build_scattering_calibration_scatterer_presets() -> dict[str, ScatteringCalibrationScattererPreset]:
     """
     Build presets used when creating scattering calibration standards.
     """
-    return {
-        CUSTOM_SCATTERER_PRESET_NAME: ScatteringCalibrationScattererPreset(
-            name=CUSTOM_SCATTERER_PRESET_NAME,
-            mie_model="Solid Sphere",
-            medium_refractive_index=1.333,
-            particle_refractive_index=1.59,
-            core_refractive_index=1.47,
-            shell_refractive_index=1.46,
-            description="Manual scatterer and calibration-standard table configuration.",
-        ),
-        ROSETTA_MIX_PRESET_NAME: ScatteringCalibrationScattererPreset(
-            name=ROSETTA_MIX_PRESET_NAME,
-            mie_model="Solid Sphere",
-            medium_refractive_index=1.333,
-            medium_refractive_index_source="water",
-            particle_refractive_index=1.59,
-            particle_refractive_index_source="polystyrene",
-            core_refractive_index=1.47,
-            core_refractive_index_source="polystyrene",
-            shell_refractive_index=1.46,
-            shell_refractive_index_source="phospholipid",
-            particle_diameters_nm=(994.0, 799.0, 600.0, 400.0, 296.0, 203.0, 194.0, 150.0, 125.0, 100.0, 70.0),
-            description="Six-bead Rosetta mix spanning 70 nm to 500 nm.",
-        ),
-        SMALL_PARTICLE_STANDARD_PRESET_NAME: ScatteringCalibrationScattererPreset(
-            name=SMALL_PARTICLE_STANDARD_PRESET_NAME,
-            mie_model="Solid Sphere",
-            medium_refractive_index=1.333,
-            medium_refractive_index_source="water",
-            particle_refractive_index=1.45,
-            particle_refractive_index_source="silica",
-            core_refractive_index=1.45,
-            core_refractive_index_source="silica",
-            shell_refractive_index=1.45,
-            shell_refractive_index_source="waterlike",
-            particle_diameters_nm=(80.0, 100.0, 125.0, 150.0, 200.0, 240.0),
-            description="Compact small-particle calibration standard.",
-        ),
-        BROAD_PARTICLE_STANDARD_PRESET_NAME: ScatteringCalibrationScattererPreset(
-            name=BROAD_PARTICLE_STANDARD_PRESET_NAME,
-            mie_model="Solid Sphere",
-            medium_refractive_index=1.333,
-            medium_refractive_index_source="water",
-            particle_refractive_index=1.59,
-            particle_refractive_index_source="polystyrene",
-            core_refractive_index=1.59,
-            core_refractive_index_source="polystyrene",
-            shell_refractive_index=1.59,
-            shell_refractive_index_source="polystyrene",
-            particle_diameters_nm=(100.0, 200.0, 300.0, 400.0, 600.0, 800.0),
-            description="Broad dynamic-range bead standard.",
-        ),
-    }
+    presets: dict[str, ScatteringCalibrationScattererPreset] = {}
+
+    for preset_payload in _load_scattering_calibration_scatterer_preset_payloads():
+        preset = ScatteringCalibrationScattererPreset(
+            name=str(preset_payload.get("name") or "").strip(),
+            mie_model=str(preset_payload.get("mie_model") or "Solid Sphere"),
+            medium_refractive_index=float(
+                preset_payload.get("medium_refractive_index", 1.333)
+            ),
+            particle_refractive_index=float(
+                preset_payload.get("particle_refractive_index", 1.59)
+            ),
+            core_refractive_index=float(
+                preset_payload.get("core_refractive_index", 1.47)
+            ),
+            shell_refractive_index=float(
+                preset_payload.get("shell_refractive_index", 1.46)
+            ),
+            medium_refractive_index_source=preset_payload.get(
+                "medium_refractive_index_source"
+            ),
+            particle_refractive_index_source=preset_payload.get(
+                "particle_refractive_index_source"
+            ),
+            core_refractive_index_source=preset_payload.get(
+                "core_refractive_index_source"
+            ),
+            shell_refractive_index_source=preset_payload.get(
+                "shell_refractive_index_source"
+            ),
+            particle_diameters_nm=tuple(
+                float(value)
+                for value in preset_payload.get("particle_diameters_nm", [])
+            ),
+            core_diameters_nm=tuple(
+                float(value)
+                for value in preset_payload.get("core_diameters_nm", [])
+            ),
+            shell_thicknesses_nm=tuple(
+                float(value)
+                for value in preset_payload.get("shell_thicknesses_nm", [])
+            ),
+            description=str(preset_payload.get("description") or ""),
+        )
+
+        if preset.name:
+            presets[preset.name] = preset
+
+    return presets
 
 
 def build_scattering_calibration_scatterer_preset_options() -> list[dict[str, str]]:
