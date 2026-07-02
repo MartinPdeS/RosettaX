@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 _NON_APPLICABLE_DERIVED_DETECTOR_FIELDS = {
-    "E": "",
+    "E": "0,0",
     "G": "",
     "V": "",
 }

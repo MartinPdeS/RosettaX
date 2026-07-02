@@ -204,7 +204,7 @@ def test_builder_from_dataframe_matches_template_detectors_by_name_and_scrubs_de
     assert derived_detector["R"] == pytest.approx(2.0)
     assert derived_detector["V"] == ""
     assert derived_detector["G"] == ""
-    assert derived_detector["E"] == ""
+    assert derived_detector["E"] == "0,0"
 
     assert ssc_detector["N"] == "SSC-A"
     assert ssc_detector["V"] == "450"
@@ -254,6 +254,7 @@ def test_builder_from_dataframe_applies_detector_metadata_overrides_for_derived_
     assert derived_detector["N"] == "FITC (MESF)"
     assert derived_detector["S"] == "RosettaX based on FITC-A"
     assert derived_detector["V"] == ""
+    assert derived_detector["E"] == "0,0"
 
 
 def test_fcs_reader_raises_for_missing_file() -> None:
