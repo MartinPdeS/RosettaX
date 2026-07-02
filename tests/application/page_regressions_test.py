@@ -339,4 +339,12 @@ class Test_SidebarNavigation:
 
         assert "/documentation" in _collect_component_hrefs(navigation)
         assert "/cross-calibration" in _collect_component_hrefs(navigation)
+        assert "/visualization" in _collect_component_hrefs(navigation)
         assert "/sample-files" in _collect_component_hrefs(navigation)
+
+    def test_logo_links_to_home_page(self) -> None:
+        sidebar = Sidebar()
+
+        logo_section = sidebar._build_logo_section()
+
+        assert "/" in _collect_component_hrefs(logo_section)

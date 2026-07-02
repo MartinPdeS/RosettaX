@@ -15,7 +15,7 @@ class SaveConfig:
     calibration_kind: str
     header_title: str = "5. Save calibration"
     button_text: str = "Save calibration"
-    file_name_placeholder: str = "calibration name"
+    file_name_placeholder: str = "file name"
     output_channel_name_label: str = "Applied output channel name"
     output_channel_name_placeholder: str = "e.g. FITC (MESF)"
     require_output_channel_name: bool = False

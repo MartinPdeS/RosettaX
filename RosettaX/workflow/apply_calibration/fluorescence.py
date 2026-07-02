@@ -9,6 +9,8 @@ def apply_legacy_calibration_to_series(
     *,
     values: np.ndarray,
     calibration_payload: dict[str, Any],
+    warning_messages: list[str] | None = None,
+    source_channel: str | None = None,
 ) -> np.ndarray:
     """
     Apply a legacy fluorescence or simple linear calibration payload.
@@ -62,6 +64,8 @@ def apply_legacy_calibration_to_series(
             values=values_array,
             nested_parameters=nested_parameters,
             nested_payload=nested_payload,
+            warning_messages=warning_messages,
+            source_channel=source_channel,
         )
 
     top_level_slope = calibration_payload.get(
@@ -114,6 +118,8 @@ def apply_log_calibration_to_series(
     values: np.ndarray,
     nested_parameters: dict[str, Any],
     nested_payload: dict[str, Any],
+    warning_messages: list[str] | None = None,
+    source_channel: str | None = None,
 ) -> np.ndarray:
     """
     Apply a log power law calibration.
@@ -167,8 +173,22 @@ def apply_log_calibration_to_series(
         )
     )
 
-    if np.any(values_array < 0):
-        raise ValueError("Log calibration cannot be applied to negative values.")
+    negative_mask = values_array < 0
+
+    if np.any(negative_mask):
+        values_array = values_array.copy()
+        values_array[negative_mask] = 0.0
+
+        if warning_messages is not None:
+            negative_count = int(np.count_nonzero(negative_mask))
+            channel_text = str(source_channel or "the source channel").strip()
+            warning_message = (
+                f'Clamped {negative_count} negative event(s) to 0 before applying '
+                f'log calibration to "{channel_text}".'
+            )
+
+            if warning_message not in warning_messages:
+                warning_messages.append(warning_message)
 
     calibrated_values = np.zeros_like(
         values_array,

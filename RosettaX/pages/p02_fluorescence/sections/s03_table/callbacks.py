@@ -14,6 +14,59 @@ from RosettaX.workflow.table.fluorescence import FluorescenceReferenceTable
 logger = logging.getLogger(__name__)
 
 
+def resolve_detector_change_reset(
+    *,
+    detector_dropdown_values: list[Any],
+    page_state_payload: Any,
+    current_table_rows: Optional[list[dict[str, Any]]],
+) -> tuple[Any, Any]:
+    """
+    Resolve whether a fluorescence detector change should reset the table.
+    """
+    page_state = FluorescencePageState.from_dict(
+        page_state_payload if isinstance(page_state_payload, dict) else None
+    )
+
+    normalized_detector_channels = [
+        str(value).strip()
+        for value in (detector_dropdown_values or [])
+        if str(value or "").strip()
+    ]
+    stored_detector_channels = [
+        str(value).strip()
+        for value in (page_state.last_detector_channels or [])
+        if str(value or "").strip()
+    ]
+
+    if normalized_detector_channels == stored_detector_channels:
+        return dash.no_update, dash.no_update
+
+    updated_page_state = page_state.update(
+        last_detector_channels=normalized_detector_channels,
+    )
+
+    if not stored_detector_channels or not normalized_detector_channels:
+        return dash.no_update, updated_page_state.to_dict()
+
+    normalized_current_rows = FluorescenceReferenceTable.normalize_rows(
+        rows=current_table_rows,
+    )
+    row_count = max(
+        3,
+        len(normalized_current_rows),
+    )
+    reset_rows = FluorescenceReferenceTable.reset_rows(
+        row_count=row_count,
+    )
+
+    return (
+        reset_rows,
+        updated_page_state.update(
+            reference_table_rows=reset_rows,
+        ).to_dict(),
+    )
+
+
 def register_callbacks(section) -> None:
     """
     Register reference table callbacks.
@@ -24,6 +77,7 @@ def register_callbacks(section) -> None:
     _register_preset_apply_callback(section)
     _register_preset_sync_callback(section)
     _register_add_row_callback(section)
+    _register_detector_change_reset_callback(section)
     _register_page_state_table_persistence_callback(section)
     _register_table_hydration_from_page_state_callback(section)
 
@@ -207,6 +261,48 @@ def _register_add_row_callback(section) -> None:
         )
 
         return next_rows
+
+
+def _register_detector_change_reset_callback(section) -> None:
+    """
+    Reset the fluorescence reference table when the selected detector changes.
+    """
+
+    @dash.callback(
+        dash.Output(
+            section.ids.bead_table,
+            "data",
+            allow_duplicate=True,
+        ),
+        dash.Output(
+            section.page.ids.State.page_state_store,
+            "data",
+            allow_duplicate=True,
+        ),
+        dash.Input(
+            section.page.ids.Fluorescence.process_detector_dropdown_pattern(),
+            "value",
+        ),
+        dash.State(
+            section.page.ids.State.page_state_store,
+            "data",
+        ),
+        dash.State(
+            section.ids.bead_table,
+            "data",
+        ),
+        prevent_initial_call=True,
+    )
+    def reset_reference_table_on_detector_change(
+        detector_dropdown_values: list[Any],
+        page_state_payload: Any,
+        current_table_rows: Optional[list[dict[str, Any]]],
+    ) -> Any:
+        return resolve_detector_change_reset(
+            detector_dropdown_values=detector_dropdown_values,
+            page_state_payload=page_state_payload,
+            current_table_rows=current_table_rows,
+        )
 
 
 def _register_page_state_table_persistence_callback(section) -> None:

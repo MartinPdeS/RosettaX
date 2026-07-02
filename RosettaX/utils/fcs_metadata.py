@@ -77,6 +77,38 @@ class FCSMetadata:
         return str(version_value)
 
     @property
+    def number_of_events(self) -> Optional[int]:
+        return self._coerce_optional_int(
+            self.keywords.get("$TOT"),
+        )
+
+    @property
+    def number_of_parameters(self) -> Optional[int]:
+        return self._coerce_optional_int(
+            self.keywords.get("$PAR"),
+        )
+
+    @property
+    def datatype(self) -> Optional[str]:
+        datatype_value = self.keywords.get("$DATATYPE")
+
+        if datatype_value is None:
+            return None
+
+        datatype_string = str(datatype_value).strip()
+        return datatype_string or None
+
+    @property
+    def mode(self) -> Optional[str]:
+        mode_value = self.keywords.get("$MODE")
+
+        if mode_value is None:
+            return None
+
+        mode_string = str(mode_value).strip()
+        return mode_string or None
+
+    @property
     def column_names(self) -> list[str]:
         number_of_parameters = int(self.keywords["$PAR"])
 
@@ -147,10 +179,10 @@ class FCSMetadata:
         return {
             "file_name": self.file_name,
             "fcs_version": self.fcs_version,
-            "number_of_events": self.keywords.get("$TOT"),
-            "number_of_parameters": self.keywords.get("$PAR"),
-            "datatype": self.keywords.get("$DATATYPE"),
-            "mode": self.keywords.get("$MODE"),
+            "number_of_events": self.number_of_events,
+            "number_of_parameters": self.number_of_parameters,
+            "datatype": self.datatype,
+            "mode": self.mode,
             "byte_order": self.keywords.get("$BYTEORD"),
             "column_names": list(self.column_names),
             "detector_voltages": dict(self.detector_voltages),
@@ -175,6 +207,28 @@ class FCSMetadata:
             logger.debug(
                 "Could not convert detector voltage to float for detector_name=%r, value=%r",
                 detector_name,
+                value,
+            )
+
+            return None
+
+    @staticmethod
+    def _coerce_optional_int(
+        value: Any,
+    ) -> Optional[int]:
+        if value is None:
+            return None
+
+        value_string = str(value).strip()
+
+        if not value_string:
+            return None
+
+        try:
+            return int(value_string)
+        except ValueError:
+            logger.debug(
+                "Could not convert FCS metadata value to int. value=%r",
                 value,
             )
 

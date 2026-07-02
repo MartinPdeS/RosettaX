@@ -295,15 +295,22 @@ class Sidebar:
         """
         return html.Div(
             [
-                html.Img(
-                    id="sidebar-logo",
-                    src=self.logo_src,
+                dcc.Link(
+                    html.Img(
+                        id="sidebar-logo",
+                        src=self.logo_src,
+                        style={
+                            "width": "100%",
+                            "height": "auto",
+                            "display": "block",
+                            "objectFit": "contain",
+                            "maxHeight": f"{self.logo_max_height_px}px",
+                        },
+                    ),
+                    href="/",
+                    refresh=False,
                     style={
-                        "width": "100%",
-                        "height": "auto",
                         "display": "block",
-                        "objectFit": "contain",
-                        "maxHeight": f"{self.logo_max_height_px}px",
                     },
                 ),
             ],
@@ -325,6 +332,7 @@ class Sidebar:
                         self._nav_link("Scattering calibration", "/scattering"),
                         self._nav_link("Cross calibration", "/cross-calibration"),
                         self._nav_link("Apply calibration", "/calibrate"),
+                        self._nav_link("Visualization", "/visualization"),
                         self._nav_link("Settings", "/settings"),
                         self._nav_link("Sample files", "/sample-files"),
                         self._nav_link("Documentation", "/documentation"),

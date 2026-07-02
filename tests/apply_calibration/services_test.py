@@ -31,7 +31,7 @@ class Test_ApplyCalibrationServices:
         monkeypatch.setattr(
             services,
             "apply_legacy_calibration_to_series",
-            lambda values, calibration_payload: values * 10.0,
+            lambda values, calibration_payload, warning_messages=None, source_channel=None: values * 10.0,
         )
 
         transformer_factory = services.build_legacy_dataframe_transformer_factory(
@@ -59,6 +59,45 @@ class Test_ApplyCalibrationServices:
         assert result.attrs["fcs_detector_metadata_overrides"]["FITC (MESF)"]["S"] == (
             "RosettaX based on FITC-A"
         )
+
+    def test_build_legacy_dataframe_transformer_clamps_negative_values_with_warning(self) -> None:
+        transformer_factory = services.build_legacy_dataframe_transformer_factory(
+            source_channel="FITC-A",
+            output_channel_name="FITC (MESF)",
+            calibration_payload={
+                "source_channel": "FITC-A",
+                "fit_model": "log10(y)=slope*log10(x)+intercept",
+                "parameters": {
+                    "slope": 1.0,
+                    "intercept": 0.0,
+                },
+            },
+            warnings=[],
+        )
+
+        transformer = transformer_factory("/tmp/input.fcs")
+        dataframe = pd.DataFrame(
+            {
+                "FITC-A": [-1.0, 0.0, 10.0],
+            }
+        )
+
+        result = transformer(dataframe)
+
+        assert result["FITC (MESF)"].tolist() == [0.0, 0.0, 10.0]
+
+    def test_build_success_message_appends_warning_text(self) -> None:
+        message = services.build_success_message(
+            selected_calibrations=['fitc.json -> "FITC (MESF)"'],
+            source_channels=["FITC-A"],
+            file_count=1,
+            output_channels=["FITC (MESF)"],
+            warnings=['Clamped 3 negative event(s) to 0 before applying log calibration to "FITC-A".'],
+        )
+
+        assert "Applied calibration(s)" in message
+        assert "Warning:" in message
+        assert 'Clamped 3 negative event(s) to 0 before applying log calibration to "FITC-A".' in message
 
     def test_resolve_unique_output_channel_name_appends_suffix_when_name_is_reserved(self) -> None:
         resolved_name = services.resolve_unique_output_channel_name(

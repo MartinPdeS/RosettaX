@@ -33,3 +33,14 @@ class Test_FluorescencePageState:
                 "col2": "12345",
             }
         ]
+
+    def test_update_persists_last_detector_channels(self) -> None:
+        page_state = FluorescencePageState.empty().update(
+            last_detector_channels=["B1-H", "B2-H"],
+        )
+
+        restored_state = FluorescencePageState.from_dict(
+            page_state.to_dict(),
+        )
+
+        assert restored_state.last_detector_channels == ["B1-H", "B2-H"]

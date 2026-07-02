@@ -46,7 +46,7 @@ class Save:
             calibration_kind="fluorescence",
             header_title=f"{self.section_number}. Save calibration",
             button_text="Download calibration.json",
-            file_name_placeholder="calibration name",
+            file_name_placeholder="file name",
             output_channel_name_placeholder="e.g. FITC (MESF)",
             require_output_channel_name=True,
             saved_message_prefix="Prepared calibration download",

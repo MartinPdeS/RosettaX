@@ -17,6 +17,7 @@ PAGE_MODULES: list[str] = [
     "RosettaX.pages.p06_help.main",
     "RosettaX.pages.p09_sample_files.main",
     "RosettaX.pages.p07_documentation.main",
+    "RosettaX.pages.p10_visualization.main",
 ]
 
 

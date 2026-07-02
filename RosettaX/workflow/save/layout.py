@@ -163,7 +163,7 @@ class SaveLayout:
         """
         if self.config.require_output_channel_name:
             return (
-                "Enter a calibration name and the applied output channel name to enable download."
+                "Enter a file name and the applied output channel name to enable download."
             )
 
-        return "Enter a calibration name to enable download."
+        return "Enter a file name to enable download."

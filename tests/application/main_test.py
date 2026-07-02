@@ -63,3 +63,6 @@ class Test_ApplicationMain:
 
     def test_page_module_registry_includes_sample_files_page(self) -> None:
         assert "RosettaX.pages.p09_sample_files.main" in application_pages.PAGE_MODULES
+
+    def test_page_module_registry_includes_visualization_page(self) -> None:
+        assert "RosettaX.pages.p10_visualization.main" in application_pages.PAGE_MODULES

@@ -72,6 +72,7 @@ def apply_calibration_to_fcs_files(
     input_source_channels: list[str] = []
     output_channels: list[str] = []
     calibration_descriptions: list[str] = []
+    warnings: list[str] = []
     source_channels_seen: set[str] = set()
     unresolved_calibration_applications: list[tuple[CalibrationApplication, str, bool]] = []
 
@@ -168,6 +169,7 @@ def apply_calibration_to_fcs_files(
 
     dataframe_transformer_factory = build_multi_calibration_dataframe_transformer_factory(
         calibration_applications=calibration_applications,
+        warnings=warnings,
     )
 
     if len(request.uploaded_fcs_paths) == 1:
@@ -208,6 +210,7 @@ def apply_calibration_to_fcs_files(
             request.uploaded_fcs_paths,
         ),
         output_channels=output_channels,
+        warnings=warnings,
     )
 
     return ApplyCalibrationFilesResult(
@@ -218,7 +221,7 @@ def apply_calibration_to_fcs_files(
         file_count=len(
             request.uploaded_fcs_paths,
         ),
-        warnings=[],
+        warnings=warnings,
         status=status,
     )
 
@@ -226,6 +229,7 @@ def apply_calibration_to_fcs_files(
 def build_multi_calibration_dataframe_transformer_factory(
     *,
     calibration_applications: list[tuple[CalibrationApplication, str, bool, list[str]]],
+    warnings: list[str],
 ):
     """
     Build one dataframe transformer factory that applies all calibrations in sequence.
@@ -253,6 +257,7 @@ def build_multi_calibration_dataframe_transformer_factory(
                         source_channel=source_channel,
                         output_channel_name=resolved_output_channels[0],
                         calibration_payload=calibration_application.calibration_payload,
+                        warnings=warnings,
                     )(
                         uploaded_fcs_path,
                     )
@@ -360,6 +365,7 @@ def build_legacy_dataframe_transformer_factory(
     source_channel: str,
     output_channel_name: str,
     calibration_payload: dict[str, Any],
+    warnings: list[str] | None = None,
 ):
     """
     Build a per-file dataframe transformer factory for legacy fluorescence calibration.
@@ -427,6 +433,8 @@ def build_legacy_dataframe_transformer_factory(
                     dtype=float,
                 ),
                 calibration_payload=calibration_payload,
+                warning_messages=warnings,
+                source_channel=source_channel,
             )
 
             attach_detector_metadata_override(
@@ -596,6 +604,7 @@ def build_success_message(
     source_channels: list[str],
     file_count: int,
     output_channels: list[str],
+    warnings: list[str],
 ) -> str:
     """
     Build a compact success message for the apply-calibration action.
@@ -632,8 +641,20 @@ def build_success_message(
 
     calibration_text = "; ".join(selected_calibrations)
 
-    return (
+    status_message = (
         f"Applied calibration(s) {calibration_text} to source channel(s) "
         f"{source_channel_text} for {file_count} file(s). Exported column(s): "
         f"{output_channel_text}."
     )
+
+    if warnings:
+        warning_text = " ".join(
+            str(warning).strip()
+            for warning in warnings
+            if str(warning).strip()
+        )
+
+        if warning_text:
+            status_message = f"{status_message} Warning: {warning_text}"
+
+    return status_message
