@@ -25,6 +25,12 @@ def _build_dash_upload_contents(payload: dict) -> str:
 
 
 class Test_CrossCalibrationServices:
+    def test_build_upload_prompt_text_does_not_mention_file_size(self) -> None:
+        prompt_text = services.build_upload_prompt_text("primary reference")
+
+        assert "Maximum file size" not in prompt_text
+        assert prompt_text == "Select primary reference calibration JSON"
+
     def test_parse_uploaded_calibration_rejects_unsupported_schema(self) -> None:
         invalid_record = {
             "schema": "unsupported",

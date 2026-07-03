@@ -47,6 +47,27 @@ def _collect_component_ids(component) -> set[str]:
     return collected_ids
 
 
+def _collect_text(component) -> list[str]:
+    if component is None:
+        return []
+
+    if isinstance(component, str):
+        return [component]
+
+    children = getattr(component, "children", None)
+
+    if children is None:
+        return []
+
+    if isinstance(children, (list, tuple)):
+        collected: list[str] = []
+        for child in children:
+            collected.extend(_collect_text(child))
+        return collected
+
+    return _collect_text(children)
+
+
 class Test_VisualizationPage:
     def test_layout_includes_core_visualization_controls(
         self,
@@ -75,3 +96,22 @@ class Test_VisualizationPage:
         graph_component = _find_component_by_id(layout, page.ids.graph)
         assert graph_component is not None
         assert getattr(graph_component, "style", {}) == services.resolve_visualization_control_defaults()["graph_style"]
+
+    def test_layout_uses_workflow_style_header_and_sections(
+        self,
+        monkeypatch,
+    ) -> None:
+        monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
+
+        visualization_main = importlib.import_module(
+            "RosettaX.pages.p10_visualization.main"
+        )
+        page = visualization_main.VisualizationPage()
+
+        layout = page.layout()
+        text_nodes = _collect_text(layout)
+
+        assert "Upload FCS file" in text_nodes
+        assert "Choose plot settings" in text_nodes
+        assert "Inspect the data" in text_nodes
+        assert "File summary" in text_nodes

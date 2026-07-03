@@ -7,7 +7,6 @@ import dash
 import dash_bootstrap_components as dbc
 
 from RosettaX.utils import styling, ui_forms, RuntimeConfig
-from RosettaX.utils.upload_limits import get_max_upload_bytes
 from RosettaX.workflow import scattering, plotting, apply_calibration
 
 from . import services
@@ -166,7 +165,6 @@ class CalibrationPickerLayout:
                         ),
                         multiple=True,
                         style=styling.UPLOAD,
-                        max_size=get_max_upload_bytes(),
                     ),
                     style={
                         "flex": "1 1 420px",

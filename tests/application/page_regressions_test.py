@@ -243,6 +243,24 @@ class Test_ApplyCalibrationPage:
         assert preview_container is not None
         assert preview_container.style["display"] == "none"
 
+    def test_calibration_json_upload_has_no_component_size_cap(
+        self,
+        monkeypatch,
+    ) -> None:
+        monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
+
+        apply_main = importlib.import_module("RosettaX.pages.p04_calibrate.main")
+        page = apply_main.ApplyCalibrationPage()
+
+        layout = page.layout()
+        upload_component = _find_component_by_id(
+            layout,
+            page.ids.CalibrationPicker.upload,
+        )
+
+        assert upload_component is not None
+        assert getattr(upload_component, "max_size", None) is None
+
     def test_build_apply_calibration_request_requires_target_model_selection_for_scattering(
         self,
     ) -> None:

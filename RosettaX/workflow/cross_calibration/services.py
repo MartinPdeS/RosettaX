@@ -11,8 +11,6 @@ import plotly.graph_objects as go
 
 from RosettaX.utils import plottings
 from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.utils.upload_limits import format_upload_size, get_max_upload_bytes
-
 from .models import CrossCalibrationPoint, CrossCalibrationResult
 
 
@@ -73,10 +71,7 @@ def build_upload_prompt_text(
     Build the upload prompt text for one calibration role.
     """
     resolved_role = str(role_label).strip() or "calibration"
-    return (
-        f"Select {resolved_role} calibration JSON. "
-        f"Maximum file size: {format_upload_size()}."
-    )
+    return f"Select {resolved_role} calibration JSON"
 
 
 def parse_uploaded_calibration(
@@ -101,12 +96,6 @@ def parse_uploaded_calibration(
 
     _, encoded_payload = contents.split(",", 1)
     raw_bytes = base64.b64decode(encoded_payload, validate=True)
-
-    if len(raw_bytes) > get_max_upload_bytes():
-        raise ValueError(
-            "Calibration upload exceeds the maximum supported size of "
-            f"{format_upload_size()}."
-        )
 
     record = json.loads(raw_bytes.decode("utf-8"))
 

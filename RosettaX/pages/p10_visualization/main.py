@@ -7,7 +7,7 @@ import dash
 import dash_bootstrap_components as dbc
 from dash import dcc, html
 
-from RosettaX.utils import styling
+from RosettaX.utils import styling, ui_forms
 from RosettaX.workflow.upload import services as upload_services
 
 from .ids import Ids
@@ -32,278 +32,314 @@ class VisualizationPage:
                     data=None,
                     storage_type="session",
                 ),
-                html.Div(
-                    [
-                        html.H2(
-                            "Visualization",
+                self._build_header_card(),
+                self._build_section_card(
+                    section_number=1,
+                    title="Upload visualization FCS file",
+                    subtitle="Load one FCS file to inspect its channels, metadata, and event distributions.",
+                    tooltip_text=(
+                        "Upload one FCS file that you want to inspect. "
+                        "The visualization page reads the file metadata and exposes "
+                        "its channels for histogram or 2D scatter plotting."
+                    ),
+                    body_children=[
+                        dcc.Upload(
+                            id=self.ids.upload,
+                            children=html.Div("Select FCS file"),
+                            style=styling.UPLOAD,
+                            multiple=False,
+                        ),
+                        html.Div(
+                            "No file loaded.",
+                            id=self.ids.upload_feedback,
                             style={
-                                "marginBottom": "6px",
+                                "marginTop": styling.get_spacing_token("sm"),
+                                "opacity": 0.76,
+                            },
+                        ),
+                    ],
+                ),
+                self._build_section_card(
+                    section_number=2,
+                    title="Configure plot",
+                    subtitle="Choose the plot type, channels, scales, and sampling limits before rendering the graph.",
+                    tooltip_text=(
+                        "Configure how RosettaX draws the plot. "
+                        "Histogram mode uses one channel, while 2D scatter mode adds a Y "
+                        "channel and density-based coloring controls."
+                    ),
+                    body_children=[
+                        html.Div(
+                            [
+                                html.Div(
+                                    [
+                                        html.Label("Plot type"),
+                                        dcc.Dropdown(
+                                            id=self.ids.plot_type,
+                                            options=[
+                                                {"label": "1D histogram", "value": services.PLOT_TYPE_HISTOGRAM},
+                                                {"label": "2D scatter", "value": services.PLOT_TYPE_SCATTER},
+                                            ],
+                                            value=services.PLOT_TYPE_HISTOGRAM,
+                                            clearable=False,
+                                        ),
+                                    ],
+                                    style={"minWidth": "220px", "flex": "1"},
+                                ),
+                                html.Div(
+                                    [
+                                        html.Label("X channel"),
+                                        dcc.Dropdown(
+                                            id=self.ids.x_channel,
+                                            options=[],
+                                            value=None,
+                                            clearable=False,
+                                            placeholder="Select X channel",
+                                        ),
+                                    ],
+                                    style={"minWidth": "260px", "flex": "1"},
+                                ),
+                                html.Div(
+                                    [
+                                        html.Label("Y channel"),
+                                        dcc.Dropdown(
+                                            id=self.ids.y_channel,
+                                            options=[],
+                                            value=None,
+                                            clearable=False,
+                                            placeholder="Select Y channel",
+                                        ),
+                                    ],
+                                    id=self.ids.y_channel_container,
+                                    style={"minWidth": "260px", "flex": "1"},
+                                ),
+                            ],
+                            style={
+                                "display": "flex",
+                                "gap": styling.get_spacing_token("md"),
+                                "flexWrap": "wrap",
+                            },
+                        ),
+                        dbc.Card(
+                            dbc.CardBody(
+                                [
+                                    dbc.Checklist(
+                                        id=self.ids.x_log,
+                                        options=[{"label": "Log X", "value": "enabled"}],
+                                        value=default_controls["x_log_values"],
+                                        inline=True,
+                                        switch=True,
+                                        persistence=True,
+                                        persistence_type="session",
+                                        style={
+                                            "display": "block",
+                                            "width": "fit-content",
+                                        },
+                                    ),
+                                    dbc.Checklist(
+                                        id=self.ids.y_log,
+                                        options=[{"label": "Log Y", "value": "enabled"}],
+                                        value=default_controls["y_log_values"],
+                                        inline=True,
+                                        switch=True,
+                                        persistence=True,
+                                        persistence_type="session",
+                                        style={
+                                            "display": "block",
+                                            "width": "fit-content",
+                                        },
+                                    ),
+                                    dbc.Checklist(
+                                        id=self.ids.colormap_log,
+                                        options=[{"label": "Log colormap", "value": "enabled"}],
+                                        value=default_controls["colormap_log_values"],
+                                        inline=True,
+                                        switch=True,
+                                        persistence=True,
+                                        persistence_type="session",
+                                        style={
+                                            "display": "block",
+                                            "width": "fit-content",
+                                        },
+                                    ),
+                                ],
+                                style={
+                                    "padding": "8px 10px",
+                                    "display": "flex",
+                                    "alignItems": "center",
+                                    "gap": "16px",
+                                    "flexWrap": "wrap",
+                                },
+                            ),
+                            id=self.ids.axis_toggle_container,
+                            style={
+                                **ui_forms.build_compact_control_panel_style(),
+                                "display": "inline-block",
+                                "marginTop": styling.get_spacing_token("md"),
+                                "opacity": 0.95,
                             },
                         ),
                         html.Div(
-                            "Upload one FCS file and inspect it with a 1D histogram or a 2D scatter colored by local event density.",
-                            style={
-                                "opacity": 0.76,
-                                "marginBottom": styling.get_spacing_token("lg"),
-                            },
-                        ),
-                    ]
-                ),
-                dbc.Card(
-                    dbc.CardBody(
-                        [
-                            dcc.Upload(
-                                id=self.ids.upload,
-                                children=html.Div("Select FCS file"),
-                                style=styling.UPLOAD,
-                                multiple=False,
-                            ),
-                            html.Div(
-                                "No file loaded.",
-                                id=self.ids.upload_feedback,
-                                style={
-                                    "marginTop": styling.get_spacing_token("sm"),
-                                    "opacity": 0.76,
-                                },
-                            ),
-                        ]
-                    )
-                ),
-                dbc.Card(
-                    dbc.CardBody(
-                        [
-                            html.Div(
-                                [
-                                    html.Div(
-                                        [
-                                            html.Label("Plot type"),
-                                            dcc.Dropdown(
-                                                id=self.ids.plot_type,
-                                                options=[
-                                                    {"label": "1D histogram", "value": services.PLOT_TYPE_HISTOGRAM},
-                                                    {"label": "2D scatter", "value": services.PLOT_TYPE_SCATTER},
-                                                ],
-                                                value=services.PLOT_TYPE_HISTOGRAM,
-                                                clearable=False,
-                                            ),
-                                        ],
-                                        style={"minWidth": "220px", "flex": "1"},
-                                    ),
-                                    html.Div(
-                                        [
-                                            html.Label("X channel"),
-                                            dcc.Dropdown(
-                                                id=self.ids.x_channel,
-                                                options=[],
-                                                value=None,
-                                                clearable=False,
-                                                placeholder="Select X channel",
-                                            ),
-                                        ],
-                                        style={"minWidth": "260px", "flex": "1"},
-                                    ),
-                                    html.Div(
-                                        [
-                                            html.Label("Y channel"),
-                                            dcc.Dropdown(
-                                                id=self.ids.y_channel,
-                                                options=[],
-                                                value=None,
-                                                clearable=False,
-                                                placeholder="Select Y channel",
-                                            ),
-                                        ],
-                                        id=self.ids.y_channel_container,
-                                        style={"minWidth": "260px", "flex": "1"},
-                                    ),
-                                ],
-                                style={
-                                    "display": "flex",
-                                    "gap": styling.get_spacing_token("md"),
-                                    "flexWrap": "wrap",
-                                },
-                            ),
-                            dbc.Card(
-                                dbc.CardBody(
+                            [
+                                html.Div(
                                     [
-                                        dbc.Checklist(
-                                            id=self.ids.x_log,
-                                            options=[{"label": "Log X", "value": "enabled"}],
-                                            value=default_controls["x_log_values"],
-                                            inline=True,
-                                            switch=True,
-                                            persistence=True,
-                                            persistence_type="session",
+                                        html.Label(
+                                            "Max events",
                                             style={
                                                 "display": "block",
-                                                "width": "fit-content",
+                                                "marginBottom": styling.get_spacing_token("xs"),
                                             },
                                         ),
-                                        dbc.Checklist(
-                                            id=self.ids.y_log,
-                                            options=[{"label": "Log Y", "value": "enabled"}],
-                                            value=default_controls["y_log_values"],
-                                            inline=True,
-                                            switch=True,
-                                            persistence=True,
-                                            persistence_type="session",
+                                        dcc.Input(
+                                            id=self.ids.max_events,
+                                            type="number",
+                                            value=default_controls["max_events"],
+                                            min=0,
+                                            step=1000,
                                             style={
-                                                "display": "block",
-                                                "width": "fit-content",
-                                            },
-                                        ),
-                                        dbc.Checklist(
-                                            id=self.ids.colormap_log,
-                                            options=[{"label": "Log colormap", "value": "enabled"}],
-                                            value=default_controls["colormap_log_values"],
-                                            inline=True,
-                                            switch=True,
-                                            persistence=True,
-                                            persistence_type="session",
-                                            style={
-                                                "display": "block",
-                                                "width": "fit-content",
+                                                "width": "160px",
+                                                "color": "inherit",
                                             },
                                         ),
                                     ],
-                                    style={
-                                        "padding": "8px 10px",
-                                        "display": "flex",
-                                        "alignItems": "center",
-                                        "gap": "16px",
-                                        "flexWrap": "wrap",
-                                    },
+                                    style={"minWidth": "180px"},
                                 ),
-                                id=self.ids.axis_toggle_container,
-                                style={
-                                    "display": "inline-block",
-                                    "marginTop": styling.get_spacing_token("md"),
-                                    "borderRadius": "8px",
-                                    "opacity": 0.95,
-                                },
-                            ),
-                            html.Div(
-                                [
-                                    html.Div(
-                                        [
-                                            html.Label(
-                                                "Max events",
-                                                style={
-                                                    "display": "block",
-                                                    "marginBottom": styling.get_spacing_token("xs"),
-                                                },
-                                            ),
-                                            dcc.Input(
-                                                id=self.ids.max_events,
-                                                type="number",
-                                                value=default_controls["max_events"],
-                                                min=0,
-                                                step=1000,
-                                                style={
-                                                    "width": "160px",
-                                                    "color": "inherit",
-                                                },
-                                            ),
-                                        ],
-                                        style={"minWidth": "180px"},
-                                    ),
-                                    html.Div(
-                                        [
-                                            html.Label(
-                                                "Marker size",
-                                                style={
-                                                    "display": "block",
-                                                    "marginBottom": styling.get_spacing_token("xs"),
-                                                },
-                                            ),
-                                            dcc.Input(
-                                                id=self.ids.marker_size,
-                                                type="number",
-                                                value=default_controls["marker_size"],
-                                                min=1,
-                                                max=24,
-                                                step=1,
-                                                style={"width": "160px"},
-                                            ),
-                                        ],
-                                        id=self.ids.marker_size_container,
-                                        style={"minWidth": "180px"},
-                                    ),
-                                    html.Div(
-                                        [
-                                            html.Label(
-                                                "Marker opacity",
-                                                style={
-                                                    "display": "block",
-                                                    "marginBottom": styling.get_spacing_token("xs"),
-                                                },
-                                            ),
-                                            dcc.Input(
-                                                id=self.ids.marker_opacity,
-                                                type="number",
-                                                value=default_controls["marker_opacity"],
-                                                min=0.05,
-                                                max=1.0,
-                                                step=0.05,
-                                                style={"width": "160px"},
-                                            ),
-                                        ],
-                                        id=self.ids.marker_opacity_container,
-                                        style={"minWidth": "180px"},
-                                    ),
-                                ],
-                                id=self.ids.scatter_controls_container,
-                                style={
-                                    "display": "flex",
-                                    "alignItems": "flex-start",
-                                    "gap": styling.get_spacing_token("md"),
-                                    "marginTop": styling.get_spacing_token("md"),
-                                    "flexWrap": "wrap",
-                                },
-                            ),
-                        ]
-                    )
-                ),
-                html.Div(
-                    [
-                        dbc.Card(
-                            dbc.CardBody(
                                 html.Div(
-                                    id=self.ids.metadata,
-                                )
-                            ),
-                            style={"flex": "0 0 320px"},
-                        ),
-                        dbc.Card(
-                            dbc.CardBody(
-                                [
-                                    html.Div(
-                                        id=self.ids.plot_status,
-                                        style={
-                                            "marginBottom": styling.get_spacing_token("sm"),
-                                            "opacity": 0.8,
-                                        },
-                                    ),
-                                    dcc.Graph(
-                                        id=self.ids.graph,
-                                        figure=services.build_empty_figure(
-                                            message="Upload an FCS file to start visualizing events.",
-                                            runtime_config_data=None,
+                                    [
+                                        html.Label(
+                                            "Marker size",
+                                            style={
+                                                "display": "block",
+                                                "marginBottom": styling.get_spacing_token("xs"),
+                                            },
                                         ),
-                                        config=styling.PLOTLY_GRAPH_CONFIG,
-                                        style=default_controls["graph_style"],
-                                    ),
-                                ]
-                            ),
-                            style={"flex": "1 1 auto", "minWidth": 0},
+                                        dcc.Input(
+                                            id=self.ids.marker_size,
+                                            type="number",
+                                            value=default_controls["marker_size"],
+                                            min=1,
+                                            max=24,
+                                            step=1,
+                                            style={"width": "160px"},
+                                        ),
+                                    ],
+                                    id=self.ids.marker_size_container,
+                                    style={"minWidth": "180px"},
+                                ),
+                                html.Div(
+                                    [
+                                        html.Label(
+                                            "Marker opacity",
+                                            style={
+                                                "display": "block",
+                                                "marginBottom": styling.get_spacing_token("xs"),
+                                            },
+                                        ),
+                                        dcc.Input(
+                                            id=self.ids.marker_opacity,
+                                            type="number",
+                                            value=default_controls["marker_opacity"],
+                                            min=0.05,
+                                            max=1.0,
+                                            step=0.05,
+                                            style={"width": "160px"},
+                                        ),
+                                    ],
+                                    id=self.ids.marker_opacity_container,
+                                    style={"minWidth": "180px"},
+                                ),
+                            ],
+                            id=self.ids.scatter_controls_container,
+                            style={
+                                "display": "flex",
+                                "alignItems": "flex-start",
+                                "gap": styling.get_spacing_token("md"),
+                                "marginTop": styling.get_spacing_token("md"),
+                                "flexWrap": "wrap",
+                            },
                         ),
                     ],
-                    style={
-                        "display": "flex",
-                        "gap": styling.get_spacing_token("lg"),
-                        "alignItems": "stretch",
-                        "flexWrap": "wrap",
-                    },
+                ),
+                self._build_section_card(
+                    section_number=3,
+                    title="Inspect metadata and plot",
+                    subtitle="Review the loaded file summary and interact with the rendered graph.",
+                    tooltip_text=(
+                        "RosettaX summarizes the uploaded file alongside the active plot "
+                        "so you can verify the file context while exploring channels and scales."
+                    ),
+                    body_children=[
+                        html.Div(
+                            [
+                                dbc.Card(
+                                    [
+                                        dbc.CardHeader(
+                                            "File summary",
+                                            style=ui_forms.build_workflow_subpanel_header_style(
+                                                color_name=styling.get_workflow_section_color(3),
+                                            ),
+                                        ),
+                                        dbc.CardBody(
+                                            html.Div(
+                                                id=self.ids.metadata,
+                                            ),
+                                            style=ui_forms.build_workflow_panel_body_style(),
+                                        ),
+                                    ],
+                                    style={
+                                        **ui_forms.build_workflow_subpanel_card_style(
+                                            color_name=styling.get_workflow_section_color(3),
+                                        ),
+                                        "flex": "0 0 320px",
+                                    },
+                                ),
+                                dbc.Card(
+                                    [
+                                        dbc.CardHeader(
+                                            "Visualization",
+                                            style=ui_forms.build_workflow_subpanel_header_style(
+                                                color_name=styling.get_workflow_section_color(3),
+                                            ),
+                                        ),
+                                        dbc.CardBody(
+                                            [
+                                                html.Div(
+                                                    id=self.ids.plot_status,
+                                                    style={
+                                                        "marginBottom": styling.get_spacing_token("sm"),
+                                                        "opacity": 0.8,
+                                                    },
+                                                ),
+                                                dcc.Graph(
+                                                    id=self.ids.graph,
+                                                    figure=services.build_empty_figure(
+                                                        message="Upload an FCS file to start visualizing events.",
+                                                        runtime_config_data=None,
+                                                    ),
+                                                    config=styling.PLOTLY_GRAPH_CONFIG,
+                                                    style=default_controls["graph_style"],
+                                                ),
+                                            ],
+                                            style=ui_forms.build_workflow_panel_body_style(),
+                                        ),
+                                    ],
+                                    style={
+                                        **ui_forms.build_workflow_subpanel_card_style(
+                                            color_name=styling.get_workflow_section_color(3),
+                                        ),
+                                        "flex": "1 1 auto",
+                                        "minWidth": 0,
+                                    },
+                                ),
+                            ],
+                            style={
+                                "display": "flex",
+                                "gap": styling.get_spacing_token("lg"),
+                                "alignItems": "stretch",
+                                "flexWrap": "wrap",
+                            },
+                        ),
+                    ],
                 ),
             ],
             style={
@@ -311,6 +347,159 @@ class VisualizationPage:
                 "flexDirection": "column",
                 "gap": styling.get_spacing_token("lg"),
             },
+        )
+
+    def _build_header_card(self) -> dbc.Card:
+        return dbc.Card(
+            dbc.CardBody(
+                [
+                    ui_forms.build_section_intro(
+                        title="Visualization",
+                        title_component="H2",
+                        description=(
+                            "Upload one FCS file and inspect it with a 1D histogram or a 2D scatter colored by local event density."
+                        ),
+                    ),
+                    dbc.Row(
+                        [
+                            dbc.Col(
+                                self._build_step_card(
+                                    number=step["number"],
+                                    title=step["title"],
+                                    description=step["description"],
+                                    color_name=step["color_name"],
+                                ),
+                                xs=12,
+                                md=6,
+                                lg=4,
+                                style={"marginBottom": "10px"},
+                            )
+                            for step in self._build_steps()
+                        ],
+                        className="g-2",
+                    ),
+                ],
+                style=ui_forms.build_workflow_section_body_style(),
+            ),
+            style={
+                **ui_forms.build_workflow_section_card_style(
+                    color_name=styling.get_workflow_page_header_color(),
+                ),
+                "marginBottom": "16px",
+            },
+        )
+
+    def _build_section_card(
+        self,
+        *,
+        section_number: int,
+        title: str,
+        subtitle: str,
+        tooltip_text: str,
+        body_children: list[Any],
+    ) -> dbc.Card:
+        color_name = styling.get_workflow_section_color(section_number)
+        section_key = title.lower().replace(" ", "-")
+
+        return dbc.Card(
+            [
+                ui_forms.build_card_header_with_info(
+                    title=f"{section_number}. {title}",
+                    tooltip_target_id=f"{self.ids.page_prefix}-{section_key}-info-target",
+                    tooltip_id=f"{self.ids.page_prefix}-{section_key}-info-tooltip",
+                    tooltip_text=tooltip_text,
+                    subtitle=subtitle,
+                    color_name=color_name,
+                ),
+                dbc.CardBody(
+                    body_children,
+                    style=ui_forms.build_workflow_section_body_style(),
+                ),
+            ],
+            style=ui_forms.build_workflow_section_card_style(
+                color_name=color_name,
+            ),
+        )
+
+    def _build_steps(self) -> list[dict[str, str]]:
+        return [
+            {
+                "number": "1",
+                "title": "Upload FCS file",
+                "description": (
+                    "Load one FCS file so RosettaX can read its channels and metadata for plotting."
+                ),
+                "color_name": styling.get_workflow_section_color(1),
+            },
+            {
+                "number": "2",
+                "title": "Choose plot settings",
+                "description": (
+                    "Pick histogram or 2D scatter, then configure the plotted axes, scaling, and event limit."
+                ),
+                "color_name": styling.get_workflow_section_color(2),
+            },
+            {
+                "number": "3",
+                "title": "Inspect the data",
+                "description": (
+                    "Review the file summary and explore the plotted events to validate channels and distributions."
+                ),
+                "color_name": styling.get_workflow_section_color(3),
+            },
+        ]
+
+    def _build_step_card(
+        self,
+        *,
+        number: str,
+        title: str,
+        description: str,
+        color_name: str,
+    ) -> dbc.Card:
+        return dbc.Card(
+            dbc.CardBody(
+                [
+                    html.Div(
+                        number,
+                        style={
+                            "width": "28px",
+                            "height": "28px",
+                            "borderRadius": "50%",
+                            "display": "flex",
+                            "alignItems": "center",
+                            "justifyContent": "center",
+                            "fontWeight": "700",
+                            "fontSize": "0.9rem",
+                            "backgroundColor": styling.build_rgba(color_name, 0.12),
+                            "border": f"1px solid {styling.build_rgba(color_name, 0.35)}",
+                            "marginBottom": "10px",
+                        },
+                    ),
+                    html.H6(
+                        title,
+                        style={"marginBottom": "6px"},
+                    ),
+                    html.P(
+                        description,
+                        style={
+                            "marginBottom": "0px",
+                            "fontSize": "0.86rem",
+                            "opacity": 0.78,
+                        },
+                    ),
+                ],
+                style={
+                    "height": "100%",
+                    "padding": "14px",
+                },
+            ),
+            style=ui_forms.build_workflow_subpanel_card_style(
+                color_name=color_name,
+                style_overrides={
+                    "height": "100%",
+                },
+            ),
         )
 
     def register_callbacks(self) -> "VisualizationPage":
