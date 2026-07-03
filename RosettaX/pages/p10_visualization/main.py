@@ -116,9 +116,83 @@ class VisualizationPage:
                                         id=self.ids.y_channel_container,
                                         style={"minWidth": "260px", "flex": "1"},
                                     ),
+                                ],
+                                style={
+                                    "display": "flex",
+                                    "gap": styling.get_spacing_token("md"),
+                                    "flexWrap": "wrap",
+                                },
+                            ),
+                            dbc.Card(
+                                dbc.CardBody(
+                                    [
+                                        dbc.Checklist(
+                                            id=self.ids.x_log,
+                                            options=[{"label": "Log X", "value": "enabled"}],
+                                            value=default_controls["x_log_values"],
+                                            inline=True,
+                                            switch=True,
+                                            persistence=True,
+                                            persistence_type="session",
+                                            style={
+                                                "display": "block",
+                                                "width": "fit-content",
+                                            },
+                                        ),
+                                        dbc.Checklist(
+                                            id=self.ids.y_log,
+                                            options=[{"label": "Log Y", "value": "enabled"}],
+                                            value=default_controls["y_log_values"],
+                                            inline=True,
+                                            switch=True,
+                                            persistence=True,
+                                            persistence_type="session",
+                                            style={
+                                                "display": "block",
+                                                "width": "fit-content",
+                                            },
+                                        ),
+                                        dbc.Checklist(
+                                            id=self.ids.colormap_log,
+                                            options=[{"label": "Log colormap", "value": "enabled"}],
+                                            value=default_controls["colormap_log_values"],
+                                            inline=True,
+                                            switch=True,
+                                            persistence=True,
+                                            persistence_type="session",
+                                            style={
+                                                "display": "block",
+                                                "width": "fit-content",
+                                            },
+                                        ),
+                                    ],
+                                    style={
+                                        "padding": "8px 10px",
+                                        "display": "flex",
+                                        "alignItems": "center",
+                                        "gap": "16px",
+                                        "flexWrap": "wrap",
+                                    },
+                                ),
+                                id=self.ids.axis_toggle_container,
+                                style={
+                                    "display": "inline-block",
+                                    "marginTop": styling.get_spacing_token("md"),
+                                    "borderRadius": "8px",
+                                    "opacity": 0.95,
+                                },
+                            ),
+                            html.Div(
+                                [
                                     html.Div(
                                         [
-                                            html.Label("Max events"),
+                                            html.Label(
+                                                "Max events",
+                                                style={
+                                                    "display": "block",
+                                                    "marginBottom": styling.get_spacing_token("xs"),
+                                                },
+                                            ),
                                             dcc.Input(
                                                 id=self.ids.max_events,
                                                 type="number",
@@ -131,48 +205,17 @@ class VisualizationPage:
                                                 },
                                             ),
                                         ],
-                                        style={"minWidth": "160px"},
+                                        style={"minWidth": "180px"},
                                     ),
-                                ],
-                                style={
-                                    "display": "flex",
-                                    "gap": styling.get_spacing_token("md"),
-                                    "flexWrap": "wrap",
-                                },
-                            ),
-                            html.Div(
-                                [
-                                    dcc.Checklist(
-                                        id=self.ids.x_log,
-                                        options=[{"label": "Log X", "value": "enabled"}],
-                                        value=default_controls["x_log_values"],
-                                        inline=True,
-                                    ),
-                                    dcc.Checklist(
-                                        id=self.ids.y_log,
-                                        options=[{"label": "Log Y", "value": "enabled"}],
-                                        value=default_controls["y_log_values"],
-                                        inline=True,
-                                    ),
-                                    dcc.Checklist(
-                                        id=self.ids.colormap_log,
-                                        options=[{"label": "Log colormap", "value": "enabled"}],
-                                        value=default_controls["colormap_log_values"],
-                                        inline=True,
-                                    ),
-                                ],
-                                style={
-                                    "display": "flex",
-                                    "gap": styling.get_spacing_token("lg"),
-                                    "marginTop": styling.get_spacing_token("md"),
-                                    "flexWrap": "wrap",
-                                },
-                            ),
-                            html.Div(
-                                [
                                     html.Div(
                                         [
-                                            html.Label("Marker size"),
+                                            html.Label(
+                                                "Marker size",
+                                                style={
+                                                    "display": "block",
+                                                    "marginBottom": styling.get_spacing_token("xs"),
+                                                },
+                                            ),
                                             dcc.Input(
                                                 id=self.ids.marker_size,
                                                 type="number",
@@ -180,14 +223,21 @@ class VisualizationPage:
                                                 min=1,
                                                 max=24,
                                                 step=1,
-                                                style={"width": "140px"},
+                                                style={"width": "160px"},
                                             ),
                                         ],
-                                        style={"minWidth": "140px"},
+                                        id=self.ids.marker_size_container,
+                                        style={"minWidth": "180px"},
                                     ),
                                     html.Div(
                                         [
-                                            html.Label("Marker opacity"),
+                                            html.Label(
+                                                "Marker opacity",
+                                                style={
+                                                    "display": "block",
+                                                    "marginBottom": styling.get_spacing_token("xs"),
+                                                },
+                                            ),
                                             dcc.Input(
                                                 id=self.ids.marker_opacity,
                                                 type="number",
@@ -195,15 +245,17 @@ class VisualizationPage:
                                                 min=0.05,
                                                 max=1.0,
                                                 step=0.05,
-                                                style={"width": "140px"},
+                                                style={"width": "160px"},
                                             ),
                                         ],
-                                        style={"minWidth": "140px"},
+                                        id=self.ids.marker_opacity_container,
+                                        style={"minWidth": "180px"},
                                     ),
                                 ],
                                 id=self.ids.scatter_controls_container,
                                 style={
                                     "display": "flex",
+                                    "alignItems": "flex-start",
                                     "gap": styling.get_spacing_token("md"),
                                     "marginTop": styling.get_spacing_token("md"),
                                     "flexWrap": "wrap",
@@ -236,6 +288,7 @@ class VisualizationPage:
                                         id=self.ids.graph,
                                         figure=services.build_empty_figure(
                                             message="Upload an FCS file to start visualizing events.",
+                                            runtime_config_data=None,
                                         ),
                                         config=styling.PLOTLY_GRAPH_CONFIG,
                                         style=default_controls["graph_style"],
@@ -345,26 +398,35 @@ class VisualizationPage:
 
         @dash.callback(
             dash.Output(self.ids.y_channel_container, "style"),
-            dash.Output(self.ids.scatter_controls_container, "style"),
+            dash.Output(self.ids.marker_size_container, "style"),
+            dash.Output(self.ids.marker_opacity_container, "style"),
+            dash.Output(self.ids.colormap_log, "style"),
             dash.Input(self.ids.plot_type, "value"),
             prevent_initial_call=False,
         )
         def toggle_scatter_control_visibility(
             plot_type: Any,
-        ) -> tuple[dict[str, Any], dict[str, Any]]:
+        ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]]:
             is_histogram = str(plot_type or "") == services.PLOT_TYPE_HISTOGRAM
             y_channel_style = {
                 "minWidth": "260px",
                 "flex": "1",
                 "display": "none" if is_histogram else "block",
             }
-            scatter_controls_style = {
-                "display": "none" if is_histogram else "flex",
-                "gap": styling.get_spacing_token("md"),
-                "marginTop": styling.get_spacing_token("md"),
-                "flexWrap": "wrap",
+            marker_field_style = {
+                "minWidth": "180px",
+                "display": "none" if is_histogram else "block",
             }
-            return y_channel_style, scatter_controls_style
+            colormap_toggle_style = {
+                "display": "none" if is_histogram else "block",
+                "width": "fit-content",
+            }
+            return (
+                y_channel_style,
+                marker_field_style,
+                marker_field_style,
+                colormap_toggle_style,
+            )
 
         @dash.callback(
             dash.Output(self.ids.max_events, "value"),
@@ -426,6 +488,7 @@ class VisualizationPage:
                 return (
                     services.build_empty_figure(
                         message="Upload an FCS file to start visualizing events.",
+                        runtime_config_data=runtime_config_data,
                     ),
                     "No file loaded.",
                 )
@@ -438,6 +501,7 @@ class VisualizationPage:
                 return (
                     services.build_empty_figure(
                         message="Select an X channel to render the plot.",
+                        runtime_config_data=runtime_config_data,
                     ),
                     "Select an X channel.",
                 )
@@ -446,6 +510,7 @@ class VisualizationPage:
                 return (
                     services.build_empty_figure(
                         message="Select a Y channel to render the 2D plot.",
+                        runtime_config_data=runtime_config_data,
                     ),
                     "Select a Y channel.",
                 )
@@ -468,6 +533,7 @@ class VisualizationPage:
                 return (
                     services.build_empty_figure(
                         message=f"Could not load FCS data: {type(exception).__name__}: {exception}",
+                        runtime_config_data=runtime_config_data,
                     ),
                     "Could not render plot.",
                 )
@@ -476,6 +542,7 @@ class VisualizationPage:
                 return (
                     services.build_empty_figure(
                         message="No events remain after filtering for finite/log-compatible values.",
+                        runtime_config_data=runtime_config_data,
                     ),
                     "No plottable events remain for the current axes and scales.",
                 )

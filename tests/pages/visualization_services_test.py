@@ -51,7 +51,7 @@ class Test_VisualizationServices:
 
         assert len(figure.data) == 1
         assert figure.data[0].type == "bar"
-        assert figure.layout.height == services.VISUALIZATION_FIGURE_HEIGHT_PX
+        assert figure.layout.height == services.resolve_visualization_control_defaults()["figure_height_px"]
 
     def test_build_visualization_figure_supports_log_histogram_x_axis(self) -> None:
         dataframe = pd.DataFrame(
@@ -114,3 +114,4 @@ class Test_VisualizationServices:
         assert defaults["marker_size"] == 7.0
         assert defaults["marker_opacity"] == 1.0
         assert defaults["graph_style"] == {"height": "450px"}
+        assert defaults["figure_height_px"] == 450

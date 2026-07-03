@@ -26,6 +26,30 @@ VISUALIZATION_HISTOGRAM_BIN_COUNT = 180
 VISUALIZATION_SCATTER_DENSITY_BIN_COUNT = 120
 
 
+def resolve_graph_height_px(
+    graph_height: Any,
+    *,
+    default: int = VISUALIZATION_FIGURE_HEIGHT_PX,
+) -> int:
+    """
+    Resolve one CSS graph height value to a Plotly layout height in pixels.
+    """
+    graph_height_string = str(graph_height or "").strip().lower()
+
+    if graph_height_string.endswith("px"):
+        graph_height_string = graph_height_string[:-2].strip()
+
+    try:
+        resolved_height = int(float(graph_height_string))
+    except Exception:
+        return int(default)
+
+    return max(
+        250,
+        resolved_height,
+    )
+
+
 def resolve_runtime_config(
     runtime_config_data: Any = None,
 ) -> RuntimeConfig:
@@ -84,6 +108,9 @@ def resolve_visualization_control_defaults(
     )
 
     return {
+        "graph_height": runtime_config.get_graph_height(
+            default=f"{VISUALIZATION_FIGURE_HEIGHT_PX}px",
+        ),
         "max_events": runtime_config.get_int(
             "calibration.max_events_for_analysis",
             default=50_000,
@@ -105,6 +132,11 @@ def resolve_visualization_control_defaults(
                 default=f"{VISUALIZATION_FIGURE_HEIGHT_PX}px",
             )
         },
+        "figure_height_px": resolve_graph_height_px(
+            runtime_config.get_graph_height(
+                default=f"{VISUALIZATION_FIGURE_HEIGHT_PX}px",
+            )
+        ),
         "show_grid": visualization_settings["show_grid"],
         "default_line_width": visualization_settings["default_line_width"],
         "default_font_size": visualization_settings["default_font_size"],
@@ -184,14 +216,18 @@ def build_upload_summary(
 def build_empty_figure(
     *,
     message: str,
+    runtime_config_data: Any = None,
 ) -> go.Figure:
     """
     Build an empty placeholder figure with one centered annotation.
     """
+    visualization_defaults = resolve_visualization_control_defaults(
+        runtime_config_data,
+    )
     figure = go.Figure()
     figure.update_layout(
         template="plotly_white",
-        height=VISUALIZATION_FIGURE_HEIGHT_PX,
+        height=visualization_defaults["figure_height_px"],
         margin={"l": 60, "r": 30, "t": 40, "b": 60},
         xaxis={"visible": False},
         yaxis={"visible": False},
@@ -405,6 +441,16 @@ def build_visualization_figure(
             hovermode="closest",
             uirevision="visualization_scatter_2d",
         )
+        # The visualization page sits directly above the global footer, so we
+        # reserve extra space for long axis labels and dense log tick labels.
+        figure.update_layout(
+            margin={
+                "l": 90,
+                "r": 20,
+                "t": 20,
+                "b": 115,
+            },
+        )
         for trace in figure.data:
             if getattr(trace, "type", "") in ("scatter", "scattergl") and hasattr(trace, "marker"):
                 trace.marker.size = resolved_marker_size
@@ -418,7 +464,7 @@ def build_visualization_figure(
         )
         figure.update_layout(
             showlegend=False,
-            height=VISUALIZATION_FIGURE_HEIGHT_PX,
+            height=visualization_defaults["figure_height_px"],
         )
     else:
         return build_empty_figure(
@@ -428,8 +474,8 @@ def build_visualization_figure(
     if plot_type == PLOT_TYPE_HISTOGRAM:
         figure.update_layout(
             template="plotly_white",
-            height=VISUALIZATION_FIGURE_HEIGHT_PX,
-            margin={"l": 70, "r": 30, "t": 40, "b": 70},
+            height=visualization_defaults["figure_height_px"],
+            margin={"l": 70, "r": 30, "t": 40, "b": 100},
             bargap=0.0,
             legend={
                 "orientation": "h",
