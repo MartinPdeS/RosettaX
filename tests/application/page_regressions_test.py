@@ -299,6 +299,31 @@ class Test_DocumentationPage:
         assert "Cytek Biosciences" in text_nodes
 
 
+class Test_CrossCalibrationPage:
+    def test_layout_includes_upload_build_review_and_export_controls(
+        self,
+        monkeypatch,
+    ) -> None:
+        monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
+
+        cross_main = importlib.import_module("RosettaX.pages.p08_cross_calibration.main")
+        page = cross_main.CrossCalibrationPage()
+
+        layout = page.layout()
+        component_ids = _collect_component_ids(layout)
+        text_nodes = _collect_text(layout)
+
+        assert page.ids.primary_upload in component_ids
+        assert page.ids.secondary_upload in component_ids
+        assert page.ids.build_button in component_ids
+        assert page.ids.graph in component_ids
+        assert page.ids.table in component_ids
+        assert page.ids.export_name in component_ids
+        assert page.ids.export_button in component_ids
+        assert "Create transfer calibration" in text_nodes
+        assert "Download transfer calibration JSON" in text_nodes
+
+
 class Test_ApplicationLayout:
     def test_layout_includes_global_maintainer_footer(self) -> None:
         layout = application_layout.build_application_layout()

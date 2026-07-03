@@ -105,7 +105,7 @@ class HomePage:
     Responsibilities
     ----------------
     - Present RosettaX in one clear message.
-    - Help users choose one of the three main workflows.
+    - Help users choose one of the main workflows.
     - Keep support and external resource links secondary.
     - Avoid help content that belongs on the help page.
     """
@@ -445,7 +445,7 @@ class HomePage:
                         button_color="primary",
                         button_id=self._id("fluorescence-link"),
                     ),
-                    lg=4,
+                    lg=3,
                 ),
                 dbc.Col(
                     self._workflow_card(
@@ -467,7 +467,28 @@ class HomePage:
                         button_color="primary",
                         button_id=self._id("scattering-link"),
                     ),
-                    lg=4,
+                    lg=3,
+                ),
+                dbc.Col(
+                    self._workflow_card(
+                        title="Cross calibration",
+                        subtitle="Experimental",
+                        description=(
+                            "Build an experimental transfer calibration that links a less frequent primary reference bead calibration "
+                            "to a cheaper routine-bead calibration on the same detector."
+                        ),
+                        steps=[
+                            "Upload primary calibration",
+                            "Upload secondary routine-bead calibration",
+                            "Fit transfer relation",
+                            "Export transfer calibration",
+                        ],
+                        button_text="Open cross-calibration workflow",
+                        button_href="/cross-calibration",
+                        button_color="warning",
+                        button_id=self._id("cross-calibration-link"),
+                    ),
+                    lg=3,
                 ),
                 dbc.Col(
                     self._workflow_card(
@@ -487,7 +508,7 @@ class HomePage:
                         button_color="success",
                         button_id=self._id("apply-link"),
                     ),
-                    lg=4,
+                    lg=3,
                 ),
             ],
             className="g-3",
