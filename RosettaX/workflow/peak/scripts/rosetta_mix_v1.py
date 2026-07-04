@@ -65,17 +65,23 @@ class FluorescenceGuidedScatterPeakProcessV1(FluorescenceGuidedScatterPeakProces
             result=result,
         )
 
-        if not resolved_rows:
-            return result
-
         updated_status = str(result.status or "").strip()
 
         if status_suffix:
             updated_status = f"{updated_status} {status_suffix}".strip()
 
+        updated_peak_lines_payload = result.peak_lines_payload
+
+        if isinstance(result.peak_lines_payload, dict):
+            updated_peak_lines_payload = build_rosetta_mix_v1_peak_lines_payload(
+                result=result,
+                resolved_rows=resolved_rows,
+            )
+
         return replace(
             result,
-            table_prefill_rows=resolved_rows,
+            table_prefill_rows=resolved_rows if resolved_rows else result.table_prefill_rows,
+            peak_lines_payload=updated_peak_lines_payload,
             status=updated_status,
         )
 
@@ -171,6 +177,130 @@ def build_rosetta_mix_v1_table_prefill_rows(
     return (
         rows,
         "Rosetta Script V1 kept placeholder Rosetta Mix diameters because the marker anchors were insufficient for size assignment.",
+    )
+
+
+def build_rosetta_mix_v1_peak_lines_payload(
+    *,
+    result: PeakProcessResult,
+    resolved_rows: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """
+    Attach per-peak size annotations to the Rosetta peak payload.
+    """
+    source_payload = result.peak_lines_payload
+
+    if not isinstance(source_payload, dict):
+        return {}
+
+    payload = dict(source_payload)
+    annotation_entries = build_scatter_guide_annotations(
+        result=result,
+        resolved_rows=resolved_rows,
+    )
+
+    payload["scatter_guide_annotations"] = annotation_entries
+
+    return payload
+
+
+def build_scatter_guide_annotations(
+    *,
+    result: PeakProcessResult,
+    resolved_rows: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """
+    Build size labels for Rosetta scatter guide positions.
+    """
+    peak_metadata = build_peak_metadata(
+        peak_lines_payload=result.peak_lines_payload,
+    )
+
+    if not peak_metadata:
+        return []
+
+    resolved_annotations: list[dict[str, Any]] = []
+    used_positions: list[float] = []
+
+    def append_annotation(*, x_value: Any, label: str) -> None:
+        resolved_x_value = _as_positive_float(
+            x_value,
+        )
+
+        if resolved_x_value is None:
+            return
+
+        resolved_label = str(label).strip()
+
+        if not resolved_label:
+            return
+
+        for existing_x_value in used_positions:
+            if np.isclose(
+                float(existing_x_value),
+                float(resolved_x_value),
+                rtol=0.0,
+                atol=max(abs(float(resolved_x_value)) * 1e-6, 1e-9),
+            ):
+                return
+
+        resolved_annotations.append(
+            {
+                "x": float(resolved_x_value),
+                "label": resolved_label,
+            }
+        )
+        used_positions.append(
+            float(resolved_x_value),
+        )
+
+    table_point_metadata = match_table_points_to_peak_metadata(
+        table_points=result.peak_positions,
+        peak_metadata=peak_metadata,
+    )
+
+    for row, metadata in zip(
+        resolved_rows,
+        table_point_metadata,
+    ):
+        if not isinstance(row, dict):
+            continue
+
+        label = format_size_annotation_label(
+            row.get("particle_diameter_nm"),
+        )
+
+        if not label:
+            continue
+
+        x_value = metadata.get("x")
+
+        if x_value is None:
+            x_value = row.get("measured_peak_position")
+
+        append_annotation(
+            x_value=x_value,
+            label=label,
+        )
+
+    for metadata in peak_metadata:
+        marker_diameter_nm = resolve_marker_row_diameter(
+            metadata=metadata,
+        )
+
+        if marker_diameter_nm is None:
+            continue
+
+        append_annotation(
+            x_value=metadata.get("x"),
+            label=format_size_annotation_label(
+                marker_diameter_nm,
+            ),
+        )
+
+    return sorted(
+        resolved_annotations,
+        key=lambda item: float(item["x"]),
     )
 
 
@@ -518,6 +648,33 @@ def resolve_marker_row_diameter(
         return BRIGHT_MARKER_DIAMETER_NM
 
     return None
+
+
+def format_size_annotation_label(value: Any) -> str:
+    """
+    Format one Rosetta size annotation label.
+    """
+    resolved_value = _as_positive_float(
+        value,
+    )
+
+    if resolved_value is None:
+        return ""
+
+    rounded_value = round(
+        float(resolved_value),
+        3,
+    )
+
+    if np.isclose(
+        rounded_value,
+        round(rounded_value),
+        rtol=0.0,
+        atol=1e-9,
+    ):
+        return f"{int(round(rounded_value))} nm"
+
+    return f"{rounded_value:g} nm"
 
 
 def _as_positive_float(

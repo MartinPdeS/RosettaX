@@ -2,6 +2,8 @@
 
 from types import SimpleNamespace
 
+import pytest
+
 from RosettaX.workflow.peak.scripts import rosetta_mix, rosetta_mix_v1
 
 from .rosetta_peak_script_test import _build_synthetic_dataset_with_two_markers
@@ -93,4 +95,87 @@ class Test_RosettaPeakScriptV1:
             row["particle_diameter_nm"]
             for row in result.table_prefill_rows
         ] == [194.0, 296.0, 600.0]
+        scatter_guide_annotations = result.peak_lines_payload.get(
+            "scatter_guide_annotations",
+        )
+
+        assert isinstance(scatter_guide_annotations, list)
+        assert [
+            entry["label"]
+            for entry in scatter_guide_annotations
+        ] == [
+            "194 nm",
+            "296 nm",
+            "380 nm",
+            "600 nm",
+        ]
+        assert [
+            entry["x"]
+            for entry in scatter_guide_annotations
+        ] == [
+            pytest.approx(value)
+            for value in result.peak_lines_payload.get("scatter_guide_positions", [])
+        ]
         assert "single marker anchor" in str(result.status)
+
+    def test_run_automatic_action_adds_marker_size_annotations_without_table_rows(
+        self,
+        monkeypatch,
+    ) -> None:
+        synthetic_result = rosetta_mix_v1.PeakProcessResult(
+            peak_positions=[],
+            new_peak_positions=[],
+            peak_lines_payload={
+                "points": [
+                    {"x": 1400.0, "y": 200.0, "kind": "marker"},
+                    {"x": 3800.0, "y": 400.0, "kind": "marker"},
+                ],
+                "labels": [
+                    "Dim marker",
+                    "Bright marker",
+                ],
+                "scatter_guide_positions": [1400.0, 3800.0],
+                "fluorescence_guide_positions": [200.0, 400.0],
+            },
+            status="Marker-only payload",
+            clear_existing_table_peaks=False,
+            table_prefill_rows=[],
+        )
+
+        def fake_super_run(self, **kwargs):
+            del self
+            del kwargs
+            return synthetic_result
+
+        monkeypatch.setattr(
+            rosetta_mix_v1.FluorescenceGuidedScatterPeakProcess,
+            "run_automatic_action",
+            fake_super_run,
+        )
+
+        process = rosetta_mix_v1.FluorescenceGuidedScatterPeakProcessV1()
+
+        result = process.run_automatic_action(
+            backend=SimpleNamespace(fcs_file_path="dummy.fcs"),
+            detector_channels={
+                "scattering": "SSC-A",
+                "green_fluorescence": "FITC-A",
+            },
+            peak_count=6,
+            max_events_for_analysis=20000,
+            process_settings={},
+        )
+
+        assert result is not None
+        assert result.table_prefill_rows == []
+        scatter_guide_annotations = result.peak_lines_payload.get(
+            "scatter_guide_annotations",
+        )
+        assert isinstance(scatter_guide_annotations, list)
+        assert [
+            entry["label"]
+            for entry in scatter_guide_annotations
+        ] == [
+            "140 nm",
+            "380 nm",
+        ]

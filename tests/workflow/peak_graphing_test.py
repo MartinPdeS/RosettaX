@@ -32,6 +32,7 @@ from RosettaX.workflow.peak.callbacks.graph import (
 )
 from RosettaX.workflow.peak.core.graphing import (
     PeakWorkflowGraphBuilder,
+    add_peak_workflow_post_layout_overlays,
     is_enabled,
     scale_selection_is_log
 )
@@ -552,6 +553,7 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
         builder = PeakWorkflowGraphBuilder.__new__(PeakWorkflowGraphBuilder)
         builder.resolved_process_name = "Rosetta Script V1"
         builder.advanced_mode_value = ["enabled"]
+        builder.yscale_selection = []
         builder.peak_lines_payload = {
             "points": [
                 {"x": 100.0, "y": 200.0},
@@ -559,12 +561,21 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
             ],
             "scatter_guide_positions": [100.0, 300.0],
             "fluorescence_guide_positions": [200.0, 400.0],
+            "scatter_guide_annotations": [
+                {"x": 100.0, "label": "140 nm"},
+                {"x": 300.0, "label": "194 nm"},
+            ],
         }
 
         figure = builder._add_selected_peak_markers(
-            figure=go.Figure(),
+            figure=go.Figure(
+                layout={
+                    "yaxis": {
+                        "range": [0.0, 4.0],
+                    }
+                }
+            ),
         )
-
         shapes = list(figure.layout.shapes or [])
 
         vertical_shapes = [
@@ -580,3 +591,60 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
 
         assert len(vertical_shapes) == 2
         assert len(horizontal_shapes) == 2
+        assert len(figure.data) == 1
+        text_traces = [
+            trace
+            for trace in figure.data
+            if getattr(trace, "mode", None) == "text"
+        ]
+        assert text_traces == []
+        assert not list(figure.layout.annotations or [])
+
+    def test_add_peak_workflow_post_layout_overlays_adds_rosetta_annotations(self):
+        figure = add_peak_workflow_post_layout_overlays(
+            figure=go.Figure(),
+            process_name="Rosetta Script V1",
+            peak_lines_payload={
+                "scatter_guide_annotations": [
+                    {"x": 100.0, "label": "140 nm"},
+                    {"x": 300.0, "label": "194 nm"},
+                ],
+            },
+        )
+
+        annotations = list(figure.layout.annotations or [])
+        assert [annotation.text for annotation in annotations] == ["140 nm", "194 nm"]
+        assert [annotation.xref for annotation in annotations] == ["x", "x"]
+        assert [annotation.yref for annotation in annotations] == ["paper", "paper"]
+        assert [annotation.y for annotation in annotations] == [0.9, 0.9]
+        assert [annotation.x for annotation in annotations] == [100.0, 300.0]
+
+    def test_add_peak_workflow_post_layout_overlays_places_labels_on_log_x_axis(self):
+        figure = go.Figure()
+        figure.update_xaxes(
+            type="log",
+            range=[np.log10(50.0), np.log10(2000.0)],
+        )
+
+        figure = add_peak_workflow_post_layout_overlays(
+            figure=figure,
+            process_name="Rosetta Script V1",
+            peak_lines_payload={
+                "scatter_guide_annotations": [
+                    {"x": 100.0, "label": "140 nm"},
+                    {"x": 900.0, "label": "600 nm"},
+                ],
+            },
+        )
+
+        annotations = list(figure.layout.annotations or [])
+        assert [annotation.text for annotation in annotations] == ["140 nm", "600 nm"]
+
+        x_axis_range = figure.layout.xaxis.range
+
+        for annotation in annotations:
+            assert annotation.xref == "x"
+            assert x_axis_range[0] <= annotation.x <= x_axis_range[1]
+
+        assert annotations[0].x == pytest.approx(np.log10(100.0))
+        assert annotations[1].x == pytest.approx(np.log10(900.0))

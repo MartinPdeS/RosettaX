@@ -213,6 +213,12 @@ def register_graph_callbacks(
                 figure=figure,
             )
 
+            figure = graphing.add_peak_workflow_post_layout_overlays(
+                figure=figure,
+                process_name=process_name,
+                peak_lines_payload=peak_lines_payload,
+            )
+
             process_settings = build_process_settings(
                 process_setting_ids=process_setting_ids,
                 process_setting_values=process_setting_values,

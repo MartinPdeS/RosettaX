@@ -23,6 +23,8 @@ from ..scripts.base import (
 
 logger = logging.getLogger(__name__)
 
+ROSETTA_SCATTER_LABEL_AXIS_POSITION = 0.90
+
 
 def is_enabled(
     graph_toggle_value: Any,
@@ -239,6 +241,44 @@ def build_peak_workflow_graph_figure(
     ).build()
 
 
+def add_peak_workflow_post_layout_overlays(
+    *,
+    figure: go.Figure,
+    process_name: Any,
+    peak_lines_payload: Any,
+) -> go.Figure:
+    """
+    Add overlays that must run after callback-level layout and trace updates.
+    """
+    resolved_process_name = registry.resolve_process_name(
+        process_name,
+    )
+
+    if not _is_rosetta_script_process_name(
+        resolved_process_name,
+    ):
+        return figure
+
+    process = registry.get_process_instance(
+        process_name=resolved_process_name,
+    )
+
+    if getattr(process, "graph_type", "2d_scatter") != "2d_scatter":
+        return figure
+
+    annotation_entries = extract_rosetta_scatter_guide_annotations(
+        peak_lines_payload=peak_lines_payload,
+    )
+
+    if not annotation_entries:
+        return figure
+
+    return add_rosetta_scatter_guide_annotations(
+        figure=figure,
+        annotation_entries=annotation_entries,
+    )
+
+
 def unique_finite_preserving_order(
     values: list[Any],
 ) -> list[float]:
@@ -270,6 +310,157 @@ def unique_finite_preserving_order(
         resolved_values.append(value)
 
     return resolved_values
+
+
+def _is_rosetta_script_process_name(
+    process_name: Any,
+) -> bool:
+    """
+    Return whether a process name refers to one of the Rosetta scripts.
+    """
+    normalized_name = str(process_name or "").strip().lower()
+
+    return normalized_name in {
+        "rosetta script",
+        "rosetta script v1",
+    }
+
+
+def extract_rosetta_scatter_guide_annotations(
+    *,
+    peak_lines_payload: Any,
+) -> list[dict[str, Any]]:
+    """
+    Extract Rosetta scatter guide annotation entries from a payload.
+    """
+    if not isinstance(peak_lines_payload, dict):
+        return []
+
+    raw_entries = peak_lines_payload.get(
+        "scatter_guide_annotations",
+    )
+
+    if not isinstance(raw_entries, list):
+        return []
+
+    resolved_entries: list[dict[str, Any]] = []
+
+    for raw_entry in raw_entries:
+        if not isinstance(raw_entry, dict):
+            continue
+
+        try:
+            x_value = float(raw_entry.get("x"))
+        except (TypeError, ValueError):
+            continue
+
+        if not np.isfinite(x_value):
+            continue
+
+        label = str(raw_entry.get("label") or "").strip()
+
+        if not label:
+            continue
+
+        resolved_entries.append(
+            {
+                "x": float(x_value),
+                "label": label,
+            }
+        )
+
+    return resolved_entries
+
+
+def x_axis_is_log(
+    *,
+    figure: go.Figure,
+) -> bool:
+    """
+    Return whether the primary x-axis of a figure uses a logarithmic scale.
+
+    Plotly places annotation ``x`` values in log10 coordinates when the x-axis
+    type is ``log``. Rosetta size labels must account for this so they line up
+    with the plotted peak positions instead of drifting far off the plot.
+    """
+    x_axis_type = getattr(
+        figure.layout.xaxis,
+        "type",
+        None,
+    )
+
+    return str(x_axis_type or "").strip().lower() == "log"
+
+
+def resolve_annotation_x_value(
+    *,
+    x_value: float,
+    x_axis_is_log_scale: bool,
+) -> Optional[float]:
+    """
+    Resolve one annotation x value for the current x-axis scale.
+
+    On a log x-axis, Plotly expects the annotation x in log10 coordinates.
+    """
+    if not x_axis_is_log_scale:
+        return float(x_value)
+
+    if x_value <= 0.0:
+        return None
+
+    return float(np.log10(x_value))
+
+
+def add_rosetta_scatter_guide_annotations(
+    *,
+    figure: go.Figure,
+    annotation_entries: list[dict[str, Any]],
+) -> go.Figure:
+    """
+    Add Rosetta size labels beside scatter guide lines.
+
+    The label ``x`` follows the real peak position on the x-axis, while the
+    label ``y`` is anchored to paper coordinates so it stays at a fixed height
+    regardless of the y-axis scale or range.
+
+    This runs after the shared axis, type, and style passes so the x-axis scale
+    is final. Annotation x values are converted to log10 when the x-axis is
+    logarithmic, otherwise labels drift off the plot and appear to be missing.
+    """
+    x_axis_is_log_scale = x_axis_is_log(
+        figure=figure,
+    )
+
+    for entry in annotation_entries:
+        resolved_x_value = resolve_annotation_x_value(
+            x_value=float(entry["x"]),
+            x_axis_is_log_scale=x_axis_is_log_scale,
+        )
+
+        if resolved_x_value is None:
+            continue
+
+        figure.add_annotation(
+            x=float(resolved_x_value),
+            y=float(ROSETTA_SCATTER_LABEL_AXIS_POSITION),
+            xref="x",
+            yref="paper",
+            text=str(entry["label"]),
+            showarrow=False,
+            xanchor="left",
+            yanchor="middle",
+            xshift=8,
+            font={
+                "size": 20,
+                "color": "#0f6b3d",
+            },
+            bgcolor="rgba(255,255,255,0.92)",
+            bordercolor="#1f9d55",
+            borderwidth=1,
+            borderpad=2,
+        )
+
+    return figure
 
 
 class PeakWorkflowGraphBuilder:
@@ -2202,7 +2393,9 @@ class PeakWorkflowGraphBuilder:
         """
         Return whether the currently selected process is the Rosetta Script.
         """
-        return str(self.resolved_process_name or "").startswith("Rosetta Script")
+        return _is_rosetta_script_process_name(
+            self.resolved_process_name,
+        )
 
     def _apply_axis_types(
         self,
