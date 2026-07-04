@@ -20,8 +20,8 @@
       "core_refractive_index_source": "polystyrene",
       "shell_refractive_index": 1.46,
       "shell_refractive_index_source": "phospholipid",
-      "particle_diameters_nm": [994.0, 799.0, 600.0, 400.0, 296.0, 203.0, 194.0, 150.0, 125.0, 100.0, 70.0],
-      "description": "Six-bead Rosetta mix spanning 70 nm to 500 nm."
+      "particle_diameters_nm": [994.0, 799.0, 600.0, 400.0, 380.0, 296.0, 203.0, 147.0, 140.0, 125.0, 100.0, 70.0],
+      "description": "Twelve-bead Rosetta mix (Exometry CAL003) spanning 70 nm to 994 nm, with 140 nm and 380 nm green-fluorescent markers."
     },
     {
       "name": "Small particle standard",

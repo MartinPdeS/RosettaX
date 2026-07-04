@@ -17,9 +17,10 @@ class Test_RosettaPeakScriptV1:
                     700.0,
                     1000.0,
                     1250.0,
-                    1940.0,
+                    1470.0,
                     2030.0,
                     2960.0,
+                    4000.0,
                     6000.0,
                     7990.0,
                     9940.0,
@@ -36,9 +37,10 @@ class Test_RosettaPeakScriptV1:
             70.0,
             100.0,
             125.0,
-            194.0,
+            147.0,
             203.0,
             296.0,
+            400.0,
             600.0,
             799.0,
             994.0,
@@ -94,7 +96,7 @@ class Test_RosettaPeakScriptV1:
         assert [
             row["particle_diameter_nm"]
             for row in result.table_prefill_rows
-        ] == [194.0, 296.0, 600.0]
+        ] == [203.0, 296.0, 600.0]
         scatter_guide_annotations = result.peak_lines_payload.get(
             "scatter_guide_annotations",
         )
@@ -104,7 +106,7 @@ class Test_RosettaPeakScriptV1:
             entry["label"]
             for entry in scatter_guide_annotations
         ] == [
-            "194 nm",
+            "203 nm",
             "296 nm",
             "380 nm",
             "600 nm",
