@@ -610,7 +610,7 @@ class Test_RosettaPeakScript:
         assert isinstance(wide_payload, dict)
         assert float(wide_payload["y_upper_gate"]) >= float(narrow_payload["y_upper_gate"])
 
-    def test_single_marker_is_classified_as_bright_without_saturated_counts(self) -> None:
+    def test_single_marker_is_always_classified_as_dim(self) -> None:
         classified = rosetta_mix.classify_marker_peaks(
             marker_peaks=[
                 {
@@ -619,26 +619,32 @@ class Test_RosettaPeakScript:
                     "count": 120,
                 }
             ],
-            has_saturated_counts=False,
-        )
-
-        assert len(classified) == 1
-        assert classified[0]["marker_role"] == "Bright marker"
-
-    def test_single_marker_is_classified_as_dim_with_saturated_counts(self) -> None:
-        classified = rosetta_mix.classify_marker_peaks(
-            marker_peaks=[
-                {
-                    "mean": 2000.0,
-                    "std": 180.0,
-                    "count": 120,
-                }
-            ],
-            has_saturated_counts=True,
         )
 
         assert len(classified) == 1
         assert classified[0]["marker_role"] == "Dim marker"
+
+    def test_lowest_of_two_markers_is_classified_as_dim(self) -> None:
+        classified = rosetta_mix.classify_marker_peaks(
+            marker_peaks=[
+                {
+                    "mean": 6000.0,
+                    "std": 300.0,
+                    "count": 90,
+                },
+                {
+                    "mean": 2000.0,
+                    "std": 180.0,
+                    "count": 120,
+                },
+            ],
+        )
+
+        assert len(classified) == 2
+        assert classified[0]["marker_role"] == "Dim marker"
+        assert classified[0]["mean"] == 2000.0
+        assert classified[1]["marker_role"] == "Bright marker"
+        assert classified[1]["mean"] == 6000.0
 
     def test_find_fit_validate_peaks_1d_returns_validated_peaks_for_clear_mixture(self) -> None:
         rng = np.random.default_rng(2026)

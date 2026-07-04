@@ -46,6 +46,148 @@ class Test_RosettaPeakScriptV1:
             994.0,
         ]
 
+    def test_build_table_prefill_blanks_scatter_peaks_beyond_size_range(self) -> None:
+        scatter_peak_positions = [700.0, 1000.0, 2030.0, 4000.0, 9940.0, 30000.0]
+
+        synthetic_result = rosetta_mix_v1.PeakProcessResult(
+            peak_positions=[
+                {"x": position, "y": 100.0}
+                for position in scatter_peak_positions
+            ],
+            new_peak_positions=list(scatter_peak_positions),
+            peak_lines_payload={
+                "points": [
+                    {"x": 1400.0, "y": 200.0, "kind": "marker"},
+                    {"x": 3800.0, "y": 400.0, "kind": "marker"},
+                ],
+                "labels": [
+                    "Dim marker",
+                    "Bright marker",
+                ],
+            },
+            status="",
+            clear_existing_table_peaks=False,
+            table_prefill_rows=[
+                {
+                    "measured_peak_position": position,
+                    "particle_diameter_nm": float(index),
+                }
+                for index, position in enumerate(scatter_peak_positions, start=1)
+            ],
+        )
+
+        resolved_rows, status_suffix = (
+            rosetta_mix_v1.build_rosetta_mix_v1_table_prefill_rows(
+                result=synthetic_result,
+            )
+        )
+
+        assert [row["particle_diameter_nm"] for row in resolved_rows] == [
+            70.0,
+            100.0,
+            203.0,
+            400.0,
+            994.0,
+            "",
+        ]
+        assert "left blank for manual review" in status_suffix
+
+    def test_bright_marker_scatter_anchor_flags_saturation(self) -> None:
+        peak_metadata = [
+            {"x": 1400.0, "y": 200.0, "label": "Dim marker"},
+            {"x": 3800.0, "y": 990.0, "label": "Bright marker"},
+        ]
+
+        assert (
+            rosetta_mix_v1.bright_marker_scatter_anchor_is_reliable(
+                peak_metadata=peak_metadata,
+                peak_lines_payload={
+                    "fluorescence_saturation_intensity": 1000.0,
+                },
+            )
+            is False
+        )
+        assert (
+            rosetta_mix_v1.bright_marker_scatter_anchor_is_reliable(
+                peak_metadata=peak_metadata,
+                peak_lines_payload={
+                    "fluorescence_saturation_intensity": 2000.0,
+                },
+            )
+            is True
+        )
+
+    def test_infer_falls_back_to_single_anchor_when_bright_marker_unreliable(
+        self,
+    ) -> None:
+        measured_peak_positions = [700.0, 1000.0, 1470.0, 2960.0, 6000.0, 9940.0]
+        marker_positions = {"Dim marker": 1400.0, "Bright marker": 3800.0}
+
+        two_marker_diameters, two_marker_count = (
+            rosetta_mix_v1.infer_rosetta_mix_particle_diameters_nm(
+                measured_peak_positions=measured_peak_positions,
+                marker_positions=marker_positions,
+                bright_marker_is_reliable=True,
+            )
+        )
+        single_anchor_diameters, single_marker_count = (
+            rosetta_mix_v1.infer_rosetta_mix_particle_diameters_nm(
+                measured_peak_positions=measured_peak_positions,
+                marker_positions=marker_positions,
+                bright_marker_is_reliable=False,
+            )
+        )
+
+        assert two_marker_count == 2
+        assert single_marker_count == 1
+        assert single_anchor_diameters != two_marker_diameters
+
+    def test_build_table_prefill_reports_saturated_bright_marker_fallback(
+        self,
+    ) -> None:
+        scatter_peak_positions = [700.0, 1000.0, 2030.0]
+
+        synthetic_result = rosetta_mix_v1.PeakProcessResult(
+            peak_positions=[
+                {"x": position, "y": 100.0}
+                for position in scatter_peak_positions
+            ],
+            new_peak_positions=list(scatter_peak_positions),
+            peak_lines_payload={
+                "points": [
+                    {"x": 1400.0, "y": 200.0, "kind": "marker"},
+                    {"x": 3800.0, "y": 990.0, "kind": "marker"},
+                ],
+                "labels": [
+                    "Dim marker",
+                    "Bright marker",
+                ],
+                "fluorescence_saturation_intensity": 1000.0,
+            },
+            status="",
+            clear_existing_table_peaks=False,
+            table_prefill_rows=[
+                {
+                    "measured_peak_position": position,
+                    "particle_diameter_nm": float(index),
+                }
+                for index, position in enumerate(scatter_peak_positions, start=1)
+            ],
+        )
+
+        resolved_rows, status_suffix = (
+            rosetta_mix_v1.build_rosetta_mix_v1_table_prefill_rows(
+                result=synthetic_result,
+            )
+        )
+
+        assert "fluorescence-saturated" in status_suffix
+        assert all(
+            isinstance(row["particle_diameter_nm"], float)
+            and row["particle_diameter_nm"] > 0.0
+            for row in resolved_rows
+        )
+
     def test_run_automatic_action_replaces_placeholder_diameters_with_rosetta_mix_sizes(
         self,
         monkeypatch,
@@ -96,7 +238,7 @@ class Test_RosettaPeakScriptV1:
         assert [
             row["particle_diameter_nm"]
             for row in result.table_prefill_rows
-        ] == [203.0, 296.0, 600.0]
+        ] == [125.0, 147.0, 203.0]
         scatter_guide_annotations = result.peak_lines_payload.get(
             "scatter_guide_annotations",
         )
@@ -106,10 +248,10 @@ class Test_RosettaPeakScriptV1:
             entry["label"]
             for entry in scatter_guide_annotations
         ] == [
+            "125 nm",
+            "147 nm",
+            "140 nm",
             "203 nm",
-            "296 nm",
-            "380 nm",
-            "600 nm",
         ]
         assert [
             entry["x"]

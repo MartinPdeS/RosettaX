@@ -300,10 +300,6 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
             saturation_quantile=fluorescence_saturation_quantile,
         )
 
-        fluorescence_has_saturated_counts = has_fluorescence_saturated_counts(
-            values=green_fluorescence_values,
-        )
-
         fluorescence_analysis = find_fit_validate_peaks_1d(
             values=green_fluorescence_values,
             peak_count=3,
@@ -396,7 +392,6 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
 
         marker_classification = classify_marker_peaks(
             marker_peaks=marker_peaks,
-            has_saturated_counts=fluorescence_has_saturated_counts,
         )
 
         marker_points: list[dict[str, float]] = []
@@ -1264,29 +1259,18 @@ def resolve_baseline_peak(
 def classify_marker_peaks(
     *,
     marker_peaks: list[dict[str, float]],
-    has_saturated_counts: bool,
 ) -> list[dict[str, float]]:
     """
     Classify marker peaks as dim or bright.
 
-    PDF rule for one marker peak:
-    - no detector saturated counts -> bright marker
-    - detector saturated counts -> dim marker
+    The lowest (or only) fluorescent marker is always the 140 nm dim marker,
+    because the 380 nm bright marker is the more intense population and can
+    saturate the fluorescence detector, so it can never be the faintest peak.
     """
     marker_peaks_sorted = sorted(
         marker_peaks,
         key=lambda peak: float(peak.get("mean", 0.0)),
     )
-
-    if len(marker_peaks_sorted) == 1:
-        single_peak = dict(marker_peaks_sorted[0])
-
-        if bool(has_saturated_counts):
-            single_peak["marker_role"] = "Dim marker"
-        else:
-            single_peak["marker_role"] = "Bright marker"
-
-        return [single_peak]
 
     classified: list[dict[str, float]] = []
 
@@ -1301,50 +1285,6 @@ def classify_marker_peaks(
         classified.append(classified_peak)
 
     return classified
-
-
-def has_fluorescence_saturated_counts(
-    *,
-    values: np.ndarray,
-    top_quantile: float = 0.9995,
-    minimum_top_fraction: float = 0.001,
-) -> bool:
-    """
-    Return whether detector saturation counts are present in fluorescence data.
-
-    Saturation is approximated by a pile-up of events at the highest observed
-    intensity within the top quantile tail of the distribution.
-    """
-    values = np.asarray(values, dtype=float)
-    values = values[np.isfinite(values) & (values > 0.0)]
-
-    if values.size < 100:
-        return False
-
-    try:
-        top_threshold = float(np.quantile(values, float(top_quantile)))
-    except (TypeError, ValueError):
-        return False
-
-    if not np.isfinite(top_threshold):
-        return False
-
-    top_mask = values >= top_threshold
-    top_fraction = float(np.mean(top_mask))
-
-    if top_fraction < float(minimum_top_fraction):
-        return False
-
-    top_values = values[top_mask]
-
-    if top_values.size < 5:
-        return False
-
-    max_value = float(np.max(values))
-    atol = max(abs(max_value) * 1e-6, 1e-9)
-    near_max_count = int(np.count_nonzero(np.isclose(top_values, max_value, rtol=0.0, atol=atol)))
-
-    return near_max_count >= max(3, int(0.2 * top_values.size))
 
 
 def build_sigma_gate_mask(
