@@ -547,3 +547,36 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
 
         assert len(vertical_shapes) == 2
         assert horizontal_shapes == []
+
+    def test_rosetta_v1_selected_peak_markers_use_rosetta_guides(self):
+        builder = PeakWorkflowGraphBuilder.__new__(PeakWorkflowGraphBuilder)
+        builder.resolved_process_name = "Rosetta Script V1"
+        builder.advanced_mode_value = ["enabled"]
+        builder.peak_lines_payload = {
+            "points": [
+                {"x": 100.0, "y": 200.0},
+                {"x": 300.0, "y": 400.0},
+            ],
+            "scatter_guide_positions": [100.0, 300.0],
+            "fluorescence_guide_positions": [200.0, 400.0],
+        }
+
+        figure = builder._add_selected_peak_markers(
+            figure=go.Figure(),
+        )
+
+        shapes = list(figure.layout.shapes or [])
+
+        vertical_shapes = [
+            shape
+            for shape in shapes
+            if shape.type == "line" and float(shape.x0) == float(shape.x1)
+        ]
+        horizontal_shapes = [
+            shape
+            for shape in shapes
+            if shape.type == "line" and float(shape.y0) == float(shape.y1)
+        ]
+
+        assert len(vertical_shapes) == 2
+        assert len(horizontal_shapes) == 2

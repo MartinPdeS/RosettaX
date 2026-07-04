@@ -45,6 +45,14 @@ class PeakProcessResult:
     clear_existing_table_peaks:
         Whether downstream table update logic should clear the measured peak
         column before applying the current result.
+
+    table_prefill_rows:
+        Optional semantic table rows produced by a script. Adapters translate
+        these rows into page-specific DataTable columns when present. Scripts
+        should use semantic keys such as ``measured_intensity``,
+        ``calibrated_intensity``, ``measured_peak_position``,
+        ``particle_diameter_nm``, ``core_diameter_nm``, and
+        ``shell_thickness_nm`` instead of page-local column ids.
     """
 
     peak_positions: list[Any]
@@ -52,6 +60,7 @@ class PeakProcessResult:
     status: str
     new_peak_positions: Optional[list[Any]] = None
     clear_existing_table_peaks: bool = False
+    table_prefill_rows: Optional[list[dict[str, Any]]] = None
 
 
 def resolve_enabled_toggle_value(

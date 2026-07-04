@@ -101,10 +101,10 @@ class Test_RosettaPeakScript:
             for setting in settings
         )
         assert table_non_fluorescent_only_setting["kind"] == "boolean"
-        assert table_non_fluorescent_only_setting["default_value"] is False
-        assert fit_r2_setting["default_value"] == 0.80
-        assert scatter_fit_r2_setting["default_value"] == 0.60
-        assert fluorescence_cv_setting["default_value"] == 1.0
+        assert table_non_fluorescent_only_setting["default_value"] is True
+        assert fit_r2_setting["default_value"] == 0.85
+        assert scatter_fit_r2_setting["default_value"] == 0.70
+        assert fluorescence_cv_setting["default_value"] == 0.60
         assert scatter_cv_setting["default_value"] == 1.0
 
     def test_run_automatic_action_uses_configured_fluorescence_cv_threshold(self, monkeypatch) -> None:
@@ -413,6 +413,13 @@ class Test_RosettaPeakScript:
         assert len(result.peak_lines_payload.get("points", [])) >= len(result.new_peak_positions or [])
         assert len(result.peak_lines_payload.get("scatter_guide_positions", [])) >= len(result.new_peak_positions or [])
         assert len(result.peak_lines_payload.get("fluorescence_guide_positions", [])) >= 1
+        assert result.table_prefill_rows == [
+            {
+                "measured_peak_position": float(value),
+                "particle_diameter_nm": float(index),
+            }
+            for index, value in enumerate(result.new_peak_positions or [], start=1)
+        ]
 
     def test_run_automatic_action_can_insert_marker_associated_scatter_peaks_into_table(
         self,

@@ -87,6 +87,13 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
         "manual_x_position",
     )
 
+    scattering_geometry_column_names: tuple[str, ...] = (
+        "particle_diameter_nm",
+        "core_diameter_nm",
+        "shell_thickness_nm",
+        "outer_diameter_nm",
+    )
+
     def get_backend(self, uploaded_fcs_path: Any = None) -> Any:
         """
         Return the page-owned backend compatible with the shared peak workflow.
@@ -137,6 +144,22 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
         if should_replace_existing_table_peaks:
             working_table_data = self.clear_scattering_peak_column(
                 table_data=table_data,
+                mie_model=mie_model,
+            )
+
+        table_prefill_rows = self.extract_table_prefill_rows_from_result(
+            result=result,
+        )
+
+        if table_prefill_rows:
+            logger.debug(
+                "Applying scattering script table prefill rows: count=%d",
+                len(table_prefill_rows),
+            )
+
+            return self.apply_table_prefill_rows(
+                table_data=working_table_data,
+                table_prefill_rows=table_prefill_rows,
                 mie_model=mie_model,
             )
 
@@ -721,6 +744,73 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
 
         return None
 
+    def apply_table_prefill_rows(
+        self,
+        *,
+        table_data: Optional[list[dict[str, Any]]],
+        table_prefill_rows: list[dict[str, Any]],
+        mie_model: str,
+    ) -> list[dict[str, Any]]:
+        """
+        Merge semantic script-provided rows into the scattering table.
+        """
+        rows = self.normalize_table_data(
+            table_data=table_data,
+        )
+
+        while len(rows) < len(table_prefill_rows):
+            rows.append(
+                build_empty_table_row(
+                    mie_model=mie_model,
+                )
+            )
+
+        for row_index, semantic_row in enumerate(table_prefill_rows):
+            merged_row = dict(
+                rows[row_index] if row_index < len(rows) else build_empty_table_row(mie_model=mie_model),
+            )
+
+            geometry_was_updated = False
+
+            if "measured_peak_position" in semantic_row:
+                merged_row[self.scattering_peak_column_name] = self.normalize_datatable_value(
+                    value=semantic_row.get("measured_peak_position"),
+                )
+
+            for column_name in self.scattering_geometry_column_names:
+                if column_name not in semantic_row:
+                    continue
+
+                merged_row[column_name] = self.normalize_datatable_value(
+                    value=semantic_row.get(column_name),
+                )
+                geometry_was_updated = True
+
+            self.ensure_row_matches_mie_model(
+                row=merged_row,
+                mie_model=mie_model,
+            )
+
+            if geometry_was_updated and mie_model == "Core/Shell Sphere":
+                merged_row["outer_diameter_nm"] = build_outer_diameter_value(
+                    core_diameter_nm=merged_row.get("core_diameter_nm"),
+                    shell_thickness_nm=merged_row.get("shell_thickness_nm"),
+                )
+
+            if geometry_was_updated:
+                merged_row["expected_coupling"] = ""
+                merged_row["expected_cross_section_nm2"] = ""
+
+            rows[row_index] = merged_row
+
+        return ensure_minimum_row_count(
+            rows=self.normalize_table_data(
+                table_data=rows,
+            ),
+            mie_model=mie_model,
+            minimum_row_count=3,
+        )
+
 
 def resolve_mie_model(
     mie_model: Any,
@@ -784,3 +874,32 @@ def ensure_minimum_row_count(
         )
 
     return next_rows
+
+
+def build_outer_diameter_value(
+    *,
+    core_diameter_nm: Any,
+    shell_thickness_nm: Any,
+) -> Any:
+    """
+    Build the derived outer diameter value for a core-shell row.
+    """
+    try:
+        resolved_core_diameter_nm = float(
+            core_diameter_nm,
+        )
+        resolved_shell_thickness_nm = float(
+            shell_thickness_nm,
+        )
+    except (TypeError, ValueError):
+        return ""
+
+    if resolved_core_diameter_nm <= 0.0:
+        return ""
+
+    if resolved_shell_thickness_nm < 0.0:
+        return ""
+
+    return float(
+        resolved_core_diameter_nm + 2.0 * resolved_shell_thickness_nm,
+    )

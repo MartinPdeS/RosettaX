@@ -150,7 +150,7 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
                     "are inserted into the table. Disable this to also insert "
                     "fluorescent marker-associated scatter peaks."
                 ),
-                "default_value": False,
+                "default_value": True,
             },
         ]
 
@@ -575,6 +575,13 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
             peak_lines_payload=peak_lines_payload,
             status=status,
             clear_existing_table_peaks=False,
+            table_prefill_rows=[
+                {
+                    "measured_peak_position": float(point["x"]),
+                    "particle_diameter_nm": float(index),
+                }
+                for index, point in enumerate(table_points, start=1)
+            ],
         )
 
     def _build_stop_result(

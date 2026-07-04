@@ -62,6 +62,16 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
         "peak",
     )
 
+    calibrated_intensity_column_name: str = "col1"
+
+    calibrated_intensity_column_candidates: tuple[str, ...] = (
+        "col1",
+        "Intensity [standard units]",
+        "calibrated_intensity",
+        "standard_intensity",
+        "mesf",
+    )
+
     automatic_peak_position_names: tuple[str, ...] = (
         "new_peak_positions",
         "new_x_positions",
@@ -130,6 +140,21 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
 
             if cleared_table_data is not dash.no_update:
                 working_table_data = cleared_table_data
+
+        table_prefill_rows = self.extract_table_prefill_rows_from_result(
+            result=result,
+        )
+
+        if table_prefill_rows:
+            logger.debug(
+                "Applying fluorescence script table prefill rows: count=%d",
+                len(table_prefill_rows),
+            )
+
+            return self.apply_table_prefill_rows(
+                table_data=working_table_data,
+                table_prefill_rows=table_prefill_rows,
+            )
 
         x_values_to_append = self.extract_x_values_to_append(
             result=result,
@@ -683,3 +708,58 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
             "col1": "",
             "col2": "",
         }
+
+    def apply_table_prefill_rows(
+        self,
+        *,
+        table_data: Optional[list[dict[str, Any]]],
+        table_prefill_rows: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        """
+        Merge semantic script-provided rows into the fluorescence table.
+        """
+        rows = self.normalize_table_data(
+            table_data=table_data,
+        )
+
+        measured_column_name = self.find_first_existing_column_name(
+            table_data=rows,
+            candidate_column_names=self.fluorescence_intensity_column_candidates,
+        )
+
+        if measured_column_name is None:
+            measured_column_name = self.fluorescence_intensity_column_name
+
+        calibrated_column_name = self.find_first_existing_column_name(
+            table_data=rows,
+            candidate_column_names=self.calibrated_intensity_column_candidates,
+        )
+
+        if calibrated_column_name is None:
+            calibrated_column_name = self.calibrated_intensity_column_name
+
+        while len(rows) < len(table_prefill_rows):
+            rows.append(
+                self.build_empty_fluorescence_table_row(),
+            )
+
+        for row_index, semantic_row in enumerate(table_prefill_rows):
+            merged_row = dict(
+                rows[row_index] if row_index < len(rows) else self.build_empty_fluorescence_table_row(),
+            )
+
+            if "measured_intensity" in semantic_row:
+                merged_row[measured_column_name] = self.normalize_datatable_value(
+                    value=semantic_row.get("measured_intensity"),
+                )
+
+            if "calibrated_intensity" in semantic_row:
+                merged_row[calibrated_column_name] = self.normalize_datatable_value(
+                    value=semantic_row.get("calibrated_intensity"),
+                )
+
+            rows[row_index] = merged_row
+
+        return self.normalize_table_data(
+            table_data=rows,
+        )

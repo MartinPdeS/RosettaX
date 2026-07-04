@@ -237,6 +237,39 @@ class BasePeakWorkflowAdapter:
         """
         raise NotImplementedError
 
+    def extract_table_prefill_rows_from_result(
+        self,
+        *,
+        result: Any,
+    ) -> list[dict[str, Any]]:
+        """
+        Extract optional semantic table rows from a process result.
+        """
+        if result is None:
+            return []
+
+        raw_rows = self.get_first_attribute_or_key(
+            source=result,
+            names=(
+                "table_prefill_rows",
+            ),
+        )
+
+        if not isinstance(raw_rows, list):
+            return []
+
+        normalized_rows: list[dict[str, Any]] = []
+
+        for row in raw_rows:
+            if not isinstance(row, dict):
+                continue
+
+            normalized_rows.append(
+                dict(row),
+            )
+
+        return normalized_rows
+
     def extract_peak_values_from_result(
         self,
         *,

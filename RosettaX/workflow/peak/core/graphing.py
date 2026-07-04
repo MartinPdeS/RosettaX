@@ -2202,7 +2202,7 @@ class PeakWorkflowGraphBuilder:
         """
         Return whether the currently selected process is the Rosetta Script.
         """
-        return self.resolved_process_name == "Rosetta Script"
+        return str(self.resolved_process_name or "").startswith("Rosetta Script")
 
     def _apply_axis_types(
         self,

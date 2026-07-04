@@ -185,7 +185,9 @@ def build_rosetta_advanced_only_style(
         process_name,
     )
 
-    if selected_process_name != "Rosetta Script":
+    if not is_rosetta_process_name(
+        selected_process_name,
+    ):
         return {
             "display": "block",
         }
@@ -203,6 +205,15 @@ def build_rosetta_advanced_only_style(
     return {
         "display": "block",
     }
+
+
+def is_rosetta_process_name(
+    process_name: Any,
+) -> bool:
+    """
+    Return whether a selected process is one of the Rosetta variants.
+    """
+    return str(process_name or "").strip().startswith("Rosetta Script")
 
 
 def register_graph_toggle_control_visibility_callback(
@@ -500,7 +511,7 @@ def register_graph_helper_legend_callback(
         )
 
         if (
-            selected_process_name != "Rosetta Script"
+            not is_rosetta_process_name(selected_process_name)
             or not graph_toggle_is_enabled(graph_toggle_value)
             or not graph_toggle_is_enabled(advanced_mode_value)
         ):

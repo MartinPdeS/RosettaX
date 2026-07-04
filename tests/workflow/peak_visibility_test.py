@@ -102,6 +102,23 @@ class Test_PeakProcessSelectionVisibility:
             "display": "block",
         }
 
+    def test_rosetta_v1_advanced_only_helpers_match_rosetta_behavior(self) -> None:
+        assert visibility.build_rosetta_advanced_only_style(
+            process_name="Rosetta Script V1",
+            graph_toggle_value=["enabled"],
+            advanced_mode_value=[],
+        ) == {
+            "display": "none",
+        }
+
+        assert visibility.build_rosetta_advanced_only_style(
+            process_name="Rosetta Script V1",
+            graph_toggle_value=["enabled"],
+            advanced_mode_value=["enabled"],
+        ) == {
+            "display": "block",
+        }
+
 
 class Test_PeakProcessFiltering:
     def test_filter_peak_processes_keeps_only_allowed_names(self) -> None:
