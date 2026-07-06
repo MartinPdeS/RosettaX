@@ -33,6 +33,9 @@ from RosettaX.workflow.peak.callbacks.graph import (
 from RosettaX.workflow.peak.core.graphing import (
     PeakWorkflowGraphBuilder,
     add_peak_workflow_post_layout_overlays,
+    apply_peak_workflow_interaction_revision,
+    axis_scale_selection_is_log,
+    build_peak_workflow_uirevision,
     is_enabled,
     scale_selection_is_log
 )
@@ -149,7 +152,31 @@ class Test_scale_selection_is_log:
         assert scale_selection_is_log(None) is False
         assert scale_selection_is_log([]) is False
         assert scale_selection_is_log(["log"]) is True
+        assert scale_selection_is_log(["x_log"]) is False
+        assert scale_selection_is_log(["y_log"]) is False
         assert scale_selection_is_log({"log"}) is True
+
+
+class Test_axis_scale_selection_is_log:
+    def test_axis_scale_selection_is_log_supports_axis_specific_toggles(self):
+        assert axis_scale_selection_is_log(
+            scale_selection=["x_log"],
+            axis="x",
+        ) is True
+        assert axis_scale_selection_is_log(
+            scale_selection=["y_log"],
+            axis="y",
+        ) is True
+
+    def test_axis_scale_selection_is_log_keeps_axes_independent(self):
+        assert axis_scale_selection_is_log(
+            scale_selection=["x_log"],
+            axis="y",
+        ) is False
+        assert axis_scale_selection_is_log(
+            scale_selection=["y_log"],
+            axis="x",
+        ) is False
 
 
 # Additional test classes for other functions in the graphing module
@@ -447,6 +474,59 @@ class Test_PeakWorkflowGraphBuilder1DHistogramRange:
 
         assert figure.layout.yaxis.autorange is False
         assert tuple(figure.layout.yaxis.range) == pytest.approx((9.7545, 15.2435))
+
+
+class Test_PeakWorkflowInteractionRevision:
+    def test_build_peak_workflow_uirevision_stays_stable_for_overlay_changes(self):
+        first_revision = build_peak_workflow_uirevision(
+            uploaded_fcs_path="/tmp/example.fcs",
+            process_name="Rosetta Script V1",
+            detector_dropdown_values=["SSC-A", "FITC-A"],
+            xscale_selection=["x_log"],
+            yscale_selection=["y_log"],
+        )
+
+        second_revision = build_peak_workflow_uirevision(
+            uploaded_fcs_path="/tmp/example.fcs",
+            process_name="Rosetta Script V1",
+            detector_dropdown_values=["SSC-A", "FITC-A"],
+            xscale_selection=["x_log"],
+            yscale_selection=["y_log"],
+        )
+
+        assert first_revision == second_revision
+
+    def test_build_peak_workflow_uirevision_changes_when_axis_mode_changes(self):
+        log_revision = build_peak_workflow_uirevision(
+            uploaded_fcs_path="/tmp/example.fcs",
+            process_name="Manual 2D",
+            detector_dropdown_values=["SSC-A", "FITC-A"],
+            xscale_selection=["x_log"],
+            yscale_selection=[],
+        )
+
+        linear_revision = build_peak_workflow_uirevision(
+            uploaded_fcs_path="/tmp/example.fcs",
+            process_name="Manual 2D",
+            detector_dropdown_values=["SSC-A", "FITC-A"],
+            xscale_selection=[],
+            yscale_selection=[],
+        )
+
+        assert log_revision != linear_revision
+
+    def test_apply_peak_workflow_interaction_revision_sets_uirevision(self):
+        figure = apply_peak_workflow_interaction_revision(
+            figure=go.Figure(),
+            uploaded_fcs_path="/tmp/example.fcs",
+            process_name="Manual 1D",
+            detector_dropdown_values=["SSC-A"],
+            xscale_selection=[],
+            yscale_selection=["y_log"],
+        )
+
+        assert isinstance(figure.layout.uirevision, str)
+        assert "Manual 1D" in figure.layout.uirevision
 
 
 class Test_PeakWorkflowGraphBuilderRosettaOverlays:

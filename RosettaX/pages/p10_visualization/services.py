@@ -78,6 +78,36 @@ def normalize_axis_scale(
     return default
 
 
+def build_visualization_uirevision(
+    *,
+    uploaded_fcs_path: Any,
+    plot_type: str,
+    x_channel: str,
+    y_channel: Optional[str],
+    log_x: bool,
+    log_y: bool,
+) -> str:
+    """
+    Build a stable Plotly UI revision token for visualization figures.
+
+    Keep the current interaction state only when the user is still looking at
+    the same uploaded file, plot mode, channel pairing, and axis scale modes.
+    Styling-only changes such as marker size, opacity, or color density should
+    not invalidate zoom/pan state.
+    """
+    return repr(
+        (
+            "visualization_graph",
+            str(uploaded_fcs_path or ""),
+            str(plot_type or "").strip().lower(),
+            str(x_channel or "").strip(),
+            str(y_channel or "").strip(),
+            bool(log_x),
+            bool(log_y),
+        )
+    )
+
+
 def resolve_visualization_control_defaults(
     runtime_config_data: Any = None,
 ) -> dict[str, Any]:
@@ -217,6 +247,7 @@ def build_empty_figure(
     *,
     message: str,
     runtime_config_data: Any = None,
+    uirevision: str = "visualization_empty",
 ) -> go.Figure:
     """
     Build an empty placeholder figure with one centered annotation.
@@ -227,6 +258,7 @@ def build_empty_figure(
     figure = go.Figure()
     figure.update_layout(
         template="plotly_white",
+        uirevision=str(uirevision),
         height=visualization_defaults["figure_height_px"],
         margin={"l": 60, "r": 30, "t": 40, "b": 60},
         xaxis={"visible": False},
@@ -312,6 +344,7 @@ def filter_dataframe_for_plot(
 def build_visualization_figure(
     *,
     dataframe: pd.DataFrame,
+    uploaded_fcs_path: str = "",
     plot_type: str,
     x_channel: str,
     y_channel: Optional[str],
@@ -330,6 +363,14 @@ def build_visualization_figure(
     visualization_defaults = resolve_visualization_control_defaults(
         runtime_config_data,
     )
+    visualization_uirevision = build_visualization_uirevision(
+        uploaded_fcs_path=uploaded_fcs_path,
+        plot_type=plot_type,
+        x_channel=x_channel,
+        y_channel=y_channel_string,
+        log_x=log_x,
+        log_y=log_y,
+    )
 
     if plot_type == PLOT_TYPE_HISTOGRAM:
         histogram_values = dataframe[x_channel].to_numpy(dtype=float, copy=False)
@@ -341,6 +382,8 @@ def build_visualization_figure(
         if histogram_values.size == 0:
             return build_empty_figure(
                 message="No plottable events remain for the selected histogram axis.",
+                runtime_config_data=runtime_config_data,
+                uirevision=visualization_uirevision,
             )
 
         histogram_min = float(np.min(histogram_values))
@@ -439,7 +482,7 @@ def build_visualization_figure(
             y_axis_type="log" if log_y else "linear",
             show_grid=bool(visualization_defaults["show_grid"]),
             hovermode="closest",
-            uirevision="visualization_scatter_2d",
+            uirevision=visualization_uirevision,
         )
         # The visualization page sits directly above the global footer, so we
         # reserve extra space for long axis labels and dense log tick labels.
@@ -469,11 +512,14 @@ def build_visualization_figure(
     else:
         return build_empty_figure(
             message="Select a Y channel for 2D plots.",
+            runtime_config_data=runtime_config_data,
+            uirevision=visualization_uirevision,
         )
 
     if plot_type == PLOT_TYPE_HISTOGRAM:
         figure.update_layout(
             template="plotly_white",
+            uirevision=visualization_uirevision,
             height=visualization_defaults["figure_height_px"],
             margin={"l": 70, "r": 30, "t": 40, "b": 100},
             bargap=0.0,

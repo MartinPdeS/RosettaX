@@ -119,6 +119,51 @@ class Test_PeakProcessSelectionVisibility:
             "display": "block",
         }
 
+    def test_graph_helper_panel_guides_user_before_process_selection(self) -> None:
+        children, style = visibility.build_graph_helper_panel(
+            process_name="",
+            graph_toggle_value=[],
+            advanced_mode_value=[],
+        )
+
+        rendered_text = " ".join(
+            str(getattr(child, "children", ""))
+            for child in children
+        )
+
+        assert style["display"] == "block"
+        assert "Select a peak process" in rendered_text
+        assert "Choose the required detector channels" in rendered_text
+
+    def test_graph_helper_panel_shows_manual_2d_instruction(self) -> None:
+        children, _ = visibility.build_graph_helper_panel(
+            process_name="Manual 2D",
+            graph_toggle_value=["enabled"],
+            advanced_mode_value=[],
+        )
+
+        rendered_text = " ".join(
+            str(getattr(child, "children", ""))
+            for child in children
+        )
+
+        assert "Drag a selection box around a cluster" in rendered_text
+
+    def test_graph_helper_panel_shows_rosetta_legend_in_advanced_mode(self) -> None:
+        children, _ = visibility.build_graph_helper_panel(
+            process_name="Rosetta Script V1",
+            graph_toggle_value=["enabled"],
+            advanced_mode_value=["enabled"],
+        )
+
+        rendered_text = " ".join(
+            str(getattr(child, "children", ""))
+            for child in children
+        )
+
+        assert "Rosetta graph legend" in rendered_text
+        assert "Green dashed vertical lines" in rendered_text
+
 
 class Test_PeakProcessFiltering:
     def test_filter_peak_processes_keeps_only_allowed_names(self) -> None:

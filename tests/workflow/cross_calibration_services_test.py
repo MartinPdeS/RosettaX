@@ -25,6 +25,29 @@ def _build_dash_upload_contents(payload: dict) -> str:
 
 
 class Test_CrossCalibrationServices:
+    def test_build_cross_calibration_uirevision_changes_with_result_identity(self) -> None:
+        first_revision = services.build_cross_calibration_uirevision(
+            {
+                "primary_file_name": "primary_a.json",
+                "secondary_file_name": "secondary.json",
+                "calibration_type": "fluorescence",
+                "source_channel": "FITC-A",
+                "point_count": 5,
+            }
+        )
+
+        second_revision = services.build_cross_calibration_uirevision(
+            {
+                "primary_file_name": "primary_b.json",
+                "secondary_file_name": "secondary.json",
+                "calibration_type": "fluorescence",
+                "source_channel": "FITC-A",
+                "point_count": 5,
+            }
+        )
+
+        assert first_revision != second_revision
+
     def test_build_upload_prompt_text_does_not_mention_file_size(self) -> None:
         prompt_text = services.build_upload_prompt_text("primary reference")
 
@@ -121,3 +144,27 @@ class Test_CrossCalibrationServices:
         assert payload["payload"]["calibration_type"] == "cross"
         assert payload["payload"]["transfer_role"] == "primary_to_secondary"
         assert payload["payload"]["name"] == "apogee_fitc_cross"
+
+    def test_build_result_figure_sets_stable_uirevision(self) -> None:
+        result = {
+            "primary_file_name": "primary.json",
+            "secondary_file_name": "secondary.json",
+            "calibration_type": "fluorescence",
+            "source_channel": "FITC-A",
+            "x_axis_label": "Secondary routine-bead peak on FITC-A [a.u.]",
+            "y_axis_label": "Primary calibrated scale: MESF",
+            "slope": 1.1,
+            "intercept": 0.2,
+            "point_count": 2,
+            "points": [
+                {"bead_index": 1, "x_value": 100.0, "y_value": 500.0},
+                {"bead_index": 2, "x_value": 500.0, "y_value": 2000.0},
+            ],
+        }
+
+        figure = services.build_result_figure(
+            result=result,
+        )
+
+        assert isinstance(figure.layout.uirevision, str)
+        assert "primary.json" in figure.layout.uirevision

@@ -685,6 +685,9 @@ class VisualizationPage:
             x_channel_string = str(x_channel or "").strip()
             y_channel_string = str(y_channel or "").strip()
             plot_type_string = str(plot_type or services.PLOT_TYPE_HISTOGRAM)
+            uploaded_fcs_path = str(
+                file_store.get("uploaded_fcs_path") or ""
+            ).strip()
 
             if not x_channel_string:
                 return (
@@ -738,6 +741,7 @@ class VisualizationPage:
 
             figure = services.build_visualization_figure(
                 dataframe=filtered_dataframe,
+                uploaded_fcs_path=uploaded_fcs_path,
                 plot_type=plot_type_string,
                 x_channel=x_channel_string,
                 y_channel=y_channel_string,

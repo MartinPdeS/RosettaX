@@ -6,6 +6,27 @@ from RosettaX.pages.p10_visualization import services
 
 
 class Test_VisualizationServices:
+    def test_build_visualization_uirevision_changes_with_graph_identity(self) -> None:
+        first_revision = services.build_visualization_uirevision(
+            uploaded_fcs_path="/tmp/one.fcs",
+            plot_type=services.PLOT_TYPE_SCATTER,
+            x_channel="FSC-A",
+            y_channel="SSC-A",
+            log_x=True,
+            log_y=False,
+        )
+
+        second_revision = services.build_visualization_uirevision(
+            uploaded_fcs_path="/tmp/two.fcs",
+            plot_type=services.PLOT_TYPE_SCATTER,
+            x_channel="FSC-A",
+            y_channel="SSC-A",
+            log_x=True,
+            log_y=False,
+        )
+
+        assert first_revision != second_revision
+
     def test_build_channel_options_returns_named_dropdown_entries(self) -> None:
         options = services.build_channel_options(["FSC-A", "SSC-A"])
 
@@ -42,6 +63,7 @@ class Test_VisualizationServices:
 
         figure = services.build_visualization_figure(
             dataframe=dataframe,
+            uploaded_fcs_path="/tmp/histogram.fcs",
             plot_type=services.PLOT_TYPE_HISTOGRAM,
             x_channel="FSC-A",
             y_channel=None,
@@ -52,6 +74,7 @@ class Test_VisualizationServices:
         assert len(figure.data) == 1
         assert figure.data[0].type == "bar"
         assert figure.layout.height == services.resolve_visualization_control_defaults()["figure_height_px"]
+        assert isinstance(figure.layout.uirevision, str)
 
     def test_build_visualization_figure_supports_log_histogram_x_axis(self) -> None:
         dataframe = pd.DataFrame(
@@ -62,6 +85,7 @@ class Test_VisualizationServices:
 
         figure = services.build_visualization_figure(
             dataframe=dataframe,
+            uploaded_fcs_path="/tmp/loghist.fcs",
             plot_type=services.PLOT_TYPE_HISTOGRAM,
             x_channel="FSC-A",
             y_channel=None,
@@ -83,6 +107,7 @@ class Test_VisualizationServices:
 
         figure = services.build_visualization_figure(
             dataframe=dataframe,
+            uploaded_fcs_path="/tmp/example.fcs",
             plot_type=services.PLOT_TYPE_SCATTER,
             x_channel="FSC-A",
             y_channel="SSC-A",
@@ -103,6 +128,42 @@ class Test_VisualizationServices:
         assert figure.layout.showlegend is False
         assert figure.layout.xaxis.title.text == "FSC-A [a.u.]"
         assert figure.layout.yaxis.title.text == "SSC-A [a.u.]"
+        assert isinstance(figure.layout.uirevision, str)
+        assert "/tmp/example.fcs" in figure.layout.uirevision
+
+    def test_build_visualization_figure_uirevision_ignores_marker_styling(self) -> None:
+        dataframe = pd.DataFrame(
+            {
+                "FSC-A": [1.0, 2.0, 10.0, 20.0, 100.0],
+                "SSC-A": [5.0, 6.0, 7.0, 30.0, 40.0],
+            }
+        )
+
+        first_figure = services.build_visualization_figure(
+            dataframe=dataframe,
+            uploaded_fcs_path="/tmp/example.fcs",
+            plot_type=services.PLOT_TYPE_SCATTER,
+            x_channel="FSC-A",
+            y_channel="SSC-A",
+            log_x=True,
+            log_y=True,
+            marker_size=5,
+            marker_opacity=0.6,
+        )
+
+        second_figure = services.build_visualization_figure(
+            dataframe=dataframe,
+            uploaded_fcs_path="/tmp/example.fcs",
+            plot_type=services.PLOT_TYPE_SCATTER,
+            x_channel="FSC-A",
+            y_channel="SSC-A",
+            log_x=True,
+            log_y=True,
+            marker_size=9,
+            marker_opacity=1.0,
+        )
+
+        assert first_figure.layout.uirevision == second_figure.layout.uirevision
 
     def test_resolve_visualization_control_defaults_uses_default_profile(self) -> None:
         defaults = services.resolve_visualization_control_defaults()

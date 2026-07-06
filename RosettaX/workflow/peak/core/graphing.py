@@ -8,6 +8,10 @@ import numpy as np
 import plotly.graph_objs as go
 
 from . import detectors
+from .rosetta_annotations import (
+    add_rosetta_scatter_guide_annotations,
+    extract_rosetta_scatter_guide_annotations,
+)
 from .. import registry
 from RosettaX.utils import casting, plottings
 from RosettaX.utils.runtime_config import RuntimeConfig
@@ -22,9 +26,6 @@ from ..scripts.base import (
 
 
 logger = logging.getLogger(__name__)
-
-ROSETTA_SCATTER_LABEL_AXIS_POSITION = 0.90
-
 
 def is_enabled(
     graph_toggle_value: Any,
@@ -48,7 +49,7 @@ def scale_selection_is_log(
     scale_selection: Any,
 ) -> bool:
     """
-    Return whether a checklist style scale selection requests log scale.
+    Return whether a legacy scale selection requests generic log scale.
 
     Compatibility wrapper for older peak workflow code.
     """
@@ -58,8 +59,34 @@ def scale_selection_is_log(
     if isinstance(scale_selection, (list, tuple, set)):
         return "log" in scale_selection
 
+    return False
+
+
+def axis_scale_selection_is_log(
+    *,
+    scale_selection: Any,
+    axis: str,
+) -> bool:
+    """
+    Return whether one axis is configured for log scaling.
+    """
+    expected_toggle = (
+        Scatter2DGraph.x_log_value
+        if axis == "x"
+        else Scatter2DGraph.y_log_value
+    )
+
+    if isinstance(scale_selection, str):
+        return scale_selection in {
+            "log",
+            expected_toggle,
+        }
+
     if isinstance(scale_selection, (list, tuple, set)):
-        return Scatter2DGraph.x_log_value in scale_selection or Scatter2DGraph.y_log_value in scale_selection
+        return (
+            "log" in scale_selection
+            or expected_toggle in scale_selection
+        )
 
     return False
 
@@ -241,6 +268,84 @@ def build_peak_workflow_graph_figure(
     ).build()
 
 
+def build_peak_workflow_uirevision(
+    *,
+    uploaded_fcs_path: Any,
+    process_name: Any,
+    detector_dropdown_values: list[Any],
+    xscale_selection: Any,
+    yscale_selection: Any,
+) -> str:
+    """
+    Build a stable Plotly UI revision token for peak workflow graphs.
+
+    Preserve the current zoom/pan only when the user is still looking at the
+    same underlying graph identity: same file, same process, same detector
+    selection, and same axis scale modes.
+
+    Changes such as overlays, helper traces, peak payload updates, or histogram
+    bin counts should not invalidate the interaction state.
+    """
+    resolved_process_name = registry.resolve_process_name(
+        process_name,
+    )
+
+    normalized_detector_values = tuple(
+        str(value or "").strip()
+        for value in (
+            detector_dropdown_values
+            if isinstance(detector_dropdown_values, list)
+            else []
+        )
+    )
+
+    return repr(
+        (
+            "peak_workflow_graph",
+            str(uploaded_fcs_path or ""),
+            str(resolved_process_name or ""),
+            normalized_detector_values,
+            bool(
+                axis_scale_selection_is_log(
+                    scale_selection=xscale_selection,
+                    axis="x",
+                )
+            ),
+            bool(
+                axis_scale_selection_is_log(
+                    scale_selection=yscale_selection,
+                    axis="y",
+                )
+            ),
+        )
+    )
+
+
+def apply_peak_workflow_interaction_revision(
+    *,
+    figure: go.Figure,
+    uploaded_fcs_path: Any,
+    process_name: Any,
+    detector_dropdown_values: list[Any],
+    xscale_selection: Any,
+    yscale_selection: Any,
+) -> go.Figure:
+    """
+    Apply a stable Plotly interaction contract to a peak workflow figure.
+    """
+    figure.update_layout(
+        uirevision=build_peak_workflow_uirevision(
+            uploaded_fcs_path=uploaded_fcs_path,
+            process_name=process_name,
+            detector_dropdown_values=detector_dropdown_values,
+            xscale_selection=xscale_selection,
+            yscale_selection=yscale_selection,
+        ),
+    )
+
+    return figure
+
+
 def add_peak_workflow_post_layout_overlays(
     *,
     figure: go.Figure,
@@ -324,143 +429,6 @@ def _is_rosetta_script_process_name(
         "rosetta script",
         "rosetta script v1",
     }
-
-
-def extract_rosetta_scatter_guide_annotations(
-    *,
-    peak_lines_payload: Any,
-) -> list[dict[str, Any]]:
-    """
-    Extract Rosetta scatter guide annotation entries from a payload.
-    """
-    if not isinstance(peak_lines_payload, dict):
-        return []
-
-    raw_entries = peak_lines_payload.get(
-        "scatter_guide_annotations",
-    )
-
-    if not isinstance(raw_entries, list):
-        return []
-
-    resolved_entries: list[dict[str, Any]] = []
-
-    for raw_entry in raw_entries:
-        if not isinstance(raw_entry, dict):
-            continue
-
-        try:
-            x_value = float(raw_entry.get("x"))
-        except (TypeError, ValueError):
-            continue
-
-        if not np.isfinite(x_value):
-            continue
-
-        label = str(raw_entry.get("label") or "").strip()
-
-        if not label:
-            continue
-
-        resolved_entries.append(
-            {
-                "x": float(x_value),
-                "label": label,
-            }
-        )
-
-    return resolved_entries
-
-
-def x_axis_is_log(
-    *,
-    figure: go.Figure,
-) -> bool:
-    """
-    Return whether the primary x-axis of a figure uses a logarithmic scale.
-
-    Plotly places annotation ``x`` values in log10 coordinates when the x-axis
-    type is ``log``. Rosetta size labels must account for this so they line up
-    with the plotted peak positions instead of drifting far off the plot.
-    """
-    x_axis_type = getattr(
-        figure.layout.xaxis,
-        "type",
-        None,
-    )
-
-    return str(x_axis_type or "").strip().lower() == "log"
-
-
-def resolve_annotation_x_value(
-    *,
-    x_value: float,
-    x_axis_is_log_scale: bool,
-) -> Optional[float]:
-    """
-    Resolve one annotation x value for the current x-axis scale.
-
-    On a log x-axis, Plotly expects the annotation x in log10 coordinates.
-    """
-    if not x_axis_is_log_scale:
-        return float(x_value)
-
-    if x_value <= 0.0:
-        return None
-
-    return float(np.log10(x_value))
-
-
-def add_rosetta_scatter_guide_annotations(
-    *,
-    figure: go.Figure,
-    annotation_entries: list[dict[str, Any]],
-) -> go.Figure:
-    """
-    Add Rosetta size labels beside scatter guide lines.
-
-    The label ``x`` follows the real peak position on the x-axis, while the
-    label ``y`` is anchored to paper coordinates so it stays at a fixed height
-    regardless of the y-axis scale or range.
-
-    This runs after the shared axis, type, and style passes so the x-axis scale
-    is final. Annotation x values are converted to log10 when the x-axis is
-    logarithmic, otherwise labels drift off the plot and appear to be missing.
-    """
-    x_axis_is_log_scale = x_axis_is_log(
-        figure=figure,
-    )
-
-    for entry in annotation_entries:
-        resolved_x_value = resolve_annotation_x_value(
-            x_value=float(entry["x"]),
-            x_axis_is_log_scale=x_axis_is_log_scale,
-        )
-
-        if resolved_x_value is None:
-            continue
-
-        figure.add_annotation(
-            x=float(resolved_x_value),
-            y=float(ROSETTA_SCATTER_LABEL_AXIS_POSITION),
-            xref="x",
-            yref="paper",
-            text=str(entry["label"]),
-            showarrow=False,
-            xanchor="left",
-            yanchor="middle",
-            xshift=8,
-            font={
-                "size": 20,
-                "color": "#0f6b3d",
-            },
-            bgcolor="rgba(255,255,255,0.92)",
-            bordercolor="#1f9d55",
-            borderwidth=1,
-            borderpad=2,
-        )
-
-    return figure
 
 
 class PeakWorkflowGraphBuilder:
@@ -872,8 +840,9 @@ class PeakWorkflowGraphBuilder:
         figure = plottings.build_histogram_figure(
             histogram_result=histogram_result,
             detector_column=detector_column,
-            use_log_counts=scale_selection_is_log(
-                self.yscale_selection,
+            use_log_counts=axis_scale_selection_is_log(
+                scale_selection=self.yscale_selection,
+                axis="y",
             ),
             peak_positions=peak_positions,
         )
@@ -2585,9 +2554,9 @@ class PeakWorkflowGraphBuilder:
 
         return scale_selection_is_log(
             xscale_selection,
-        ) or (
-            isinstance(xscale_selection, (list, tuple, set))
-            and Scatter2DGraph.x_log_value in xscale_selection
+        ) or axis_scale_selection_is_log(
+            scale_selection=xscale_selection,
+            axis="x",
         )
 
     def _y_axis_is_log(self) -> bool:
@@ -2602,9 +2571,9 @@ class PeakWorkflowGraphBuilder:
 
         return scale_selection_is_log(
             yscale_selection,
-        ) or (
-            isinstance(yscale_selection, (list, tuple, set))
-            and Scatter2DGraph.y_log_value in yscale_selection
+        ) or axis_scale_selection_is_log(
+            scale_selection=yscale_selection,
+            axis="y",
         )
 
     def _get_default_marker_size(self) -> float:

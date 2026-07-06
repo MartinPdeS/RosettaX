@@ -64,6 +64,30 @@ def _resolve_figure_height_px(
     return max(250, resolved_height)
 
 
+def build_cross_calibration_uirevision(
+    result: Optional[dict[str, Any]],
+) -> str:
+    """
+    Build a stable Plotly UI revision token for the cross-calibration graph.
+
+    The view should persist across styling-only redraws, but reset when the
+    underlying relation changes because a different calibration pair is loaded.
+    """
+    if not isinstance(result, dict):
+        return "cross_calibration_empty"
+
+    return repr(
+        (
+            "cross_calibration_graph",
+            str(result.get("primary_file_name") or ""),
+            str(result.get("secondary_file_name") or ""),
+            str(result.get("calibration_type") or ""),
+            str(result.get("source_channel") or ""),
+            int(result.get("point_count") or 0),
+        )
+    )
+
+
 def build_upload_prompt_text(
     role_label: str,
 ) -> str:
@@ -210,6 +234,7 @@ def build_empty_result_figure(
     figure = go.Figure()
     figure.update_layout(
         template="plotly_white",
+        uirevision="cross_calibration_empty",
         height=_resolve_figure_height_px(runtime_config_data),
         margin={"l": 70, "r": 20, "t": 30, "b": 70},
         xaxis={"visible": False},
@@ -606,8 +631,11 @@ def build_result_figure(
     visualization_settings = plottings.resolve_runtime_visualization_settings(
         runtime_config,
     )
+    cross_calibration_uirevision = build_cross_calibration_uirevision(
+        result,
+    )
 
-    return plottings.apply_calibration_chart_style(
+    figure = plottings.apply_calibration_chart_style(
         figure,
         marker_size=float(visualization_settings["default_marker_size"]),
         marker_opacity=float(visualization_settings["default_marker_opacity"]),
@@ -625,6 +653,12 @@ def build_result_figure(
         },
         clear_title_text=False,
     )
+
+    figure.update_layout(
+        uirevision=cross_calibration_uirevision,
+    )
+
+    return figure
 
 
 def build_result_table_data(

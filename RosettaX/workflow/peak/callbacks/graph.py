@@ -213,6 +213,15 @@ def register_graph_callbacks(
                 figure=figure,
             )
 
+            figure = graphing.apply_peak_workflow_interaction_revision(
+                figure=figure,
+                uploaded_fcs_path=uploaded_fcs_path,
+                process_name=process_name,
+                detector_dropdown_values=detector_dropdown_values,
+                xscale_selection=axis_scale_toggle_values,
+                yscale_selection=axis_scale_toggle_values,
+            )
+
             figure = graphing.add_peak_workflow_post_layout_overlays(
                 figure=figure,
                 process_name=process_name,
@@ -255,6 +264,15 @@ def register_graph_callbacks(
 
             figure = apply_peak_graph_layout(
                 figure=figure,
+            )
+
+            figure = graphing.apply_peak_workflow_interaction_revision(
+                figure=figure,
+                uploaded_fcs_path=uploaded_fcs_path,
+                process_name=process_name,
+                detector_dropdown_values=detector_dropdown_values,
+                xscale_selection=axis_scale_toggle_values,
+                yscale_selection=axis_scale_toggle_values,
             )
 
             return figure

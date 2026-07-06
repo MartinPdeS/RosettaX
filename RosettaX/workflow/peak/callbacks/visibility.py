@@ -216,6 +216,145 @@ def is_rosetta_process_name(
     return str(process_name or "").strip().startswith("Rosetta Script")
 
 
+def build_graph_helper_panel(
+    *,
+    process_name: Any,
+    graph_toggle_value: Any,
+    advanced_mode_value: Any,
+) -> tuple[Any, dict[str, Any]]:
+    """
+    Build workflow guidance content for the peak graph helper panel.
+    """
+    base_style = {
+        "display": "block",
+        "marginTop": "8px",
+        "marginBottom": "14px",
+        "padding": "10px 12px",
+        "borderRadius": "8px",
+        "backgroundColor": "#f6f9fc",
+        "border": "1px solid #d6e0ea",
+        "fontSize": "0.9rem",
+        "lineHeight": "1.45",
+        "color": "#22324a",
+    }
+
+    selected_process_name = registry.get_selected_process_name(
+        process_name,
+    )
+
+    title = "Workflow guide"
+    process = None
+
+    if selected_process_name:
+        process = registry.get_process_instance(
+            process_name=selected_process_name,
+        )
+
+    children: list[Any] = [
+        dash.html.Div(
+            title,
+            style={"fontWeight": "600", "marginBottom": "4px"},
+        ),
+    ]
+
+    if not selected_process_name:
+        children.extend(
+            [
+                dash.html.Div("1. Select a peak process to unlock the detector, graph, and action controls."),
+                dash.html.Div("2. Choose the required detector channels in the process card."),
+                dash.html.Div("3. Show the graph when you want to inspect events or interact with peaks."),
+                dash.html.Div("4. Run the process or click on the graph, then review the resulting table before saving."),
+            ]
+        )
+        return children, base_style
+
+    process_label = str(
+        getattr(process, "process_label", selected_process_name)
+        if process is not None
+        else selected_process_name
+    )
+    process_description = str(
+        getattr(process, "description", "")
+        if process is not None
+        else ""
+    ).strip()
+
+    children.append(
+        dash.html.Div(
+            f"Selected process: {process_label}",
+            style={"fontWeight": "500", "marginBottom": "4px"},
+        )
+    )
+
+    if process_description:
+        children.append(
+            dash.html.Div(
+                process_description,
+                style={"marginBottom": "6px", "opacity": 0.88},
+            )
+        )
+
+    children.append(
+        dash.html.Div("1. Confirm the detector channels match the signal you want to calibrate.")
+    )
+
+    if not graph_toggle_is_enabled(graph_toggle_value):
+        children.append(
+            dash.html.Div("2. Enable Show graph to inspect the event distribution before running or clicking peaks.")
+        )
+    else:
+        children.append(
+            dash.html.Div("2. Use the graph to verify the event cloud or histogram before committing peaks.")
+        )
+
+    if process is not None and bool(getattr(process, "supports_automatic_action", False)):
+        children.append(
+            dash.html.Div("3. Run the automatic action to detect peaks from the current data and settings.")
+        )
+    elif str(selected_process_name) == "Manual 1D":
+        children.append(
+            dash.html.Div("3. Click directly on the graph to place 1D peaks manually. Use Clear peaks to reset.")
+        )
+    elif str(selected_process_name) == "Manual 2D":
+        children.append(
+            dash.html.Div("3. Drag a selection box around a cluster to add a 2D peak. Use Clear peaks to reset.")
+        )
+    else:
+        children.append(
+            dash.html.Div("3. Use the process action controls to add or update peaks for the current graph.")
+        )
+
+    children.append(
+        dash.html.Div("4. Review the peak table after each run and adjust settings if the detected peaks look off.")
+    )
+
+    if not graph_toggle_is_enabled(advanced_mode_value):
+        children.append(
+            dash.html.Div("Tip: Advanced mode reveals process-specific diagnostics and extra settings when you need to troubleshoot.")
+        )
+
+    if (
+        is_rosetta_process_name(selected_process_name)
+        and graph_toggle_is_enabled(graph_toggle_value)
+        and graph_toggle_is_enabled(advanced_mode_value)
+    ):
+        children.extend(
+            [
+                dash.html.Hr(style={"margin": "8px 0"}),
+                dash.html.Div(
+                    "Rosetta graph legend",
+                    style={"fontWeight": "600", "marginBottom": "4px"},
+                ),
+                dash.html.Div("Green area: scattering only."),
+                dash.html.Div("Blue area: fluorescence only."),
+                dash.html.Div("Green dashed vertical lines: scattering peak positions."),
+                dash.html.Div("Red dashed horizontal lines: fluorescence peak positions."),
+            ]
+        )
+
+    return children, base_style
+
+
 def register_graph_toggle_control_visibility_callback(
     *,
     ids: Any,
@@ -493,45 +632,10 @@ def register_graph_helper_legend_callback(
         graph_toggle_value: Any,
         advanced_mode_value: Any,
     ) -> tuple[Any, dict[str, Any]]:
-        base_style = {
-            "display": "none",
-            "marginTop": "8px",
-            "marginBottom": "14px",
-            "padding": "10px 12px",
-            "borderRadius": "8px",
-            "backgroundColor": "#f6f9fc",
-            "border": "1px solid #d6e0ea",
-            "fontSize": "0.9rem",
-            "lineHeight": "1.45",
-            "color": "#22324a",
-        }
-
-        selected_process_name = registry.get_selected_process_name(
-            process_name,
-        )
-
-        if (
-            not is_rosetta_process_name(selected_process_name)
-            or not graph_toggle_is_enabled(graph_toggle_value)
-            or not graph_toggle_is_enabled(advanced_mode_value)
-        ):
-            return "", base_style
-
-        return (
-            [
-                dash.html.Div(
-                    "Rosetta legend",
-                    style={"fontWeight": "600", "marginBottom": "4px"},
-                ),
-                dash.html.Div("Green area: scattering only."),
-                dash.html.Div("Blue area: fluorescence only."),
-                dash.html.Div("Green dashed vertical lines: scattering peak positions."),
-                dash.html.Div("Red dashed horizontal lines: fluorescence peak positions."),
-            ],
-            {
-                **base_style,
-                "display": "block",
-            },
+        return build_graph_helper_panel(
+            process_name=process_name,
+            graph_toggle_value=graph_toggle_value,
+            advanced_mode_value=advanced_mode_value,
         )
 
 
