@@ -208,6 +208,22 @@ class Test_DetectorPresetLoaderCatalog:
             "channel": "Weighted",
             "detector_phi_angle_degree": 45.0,
             "detector_gamma_angle_degree": 0.0
+        },
+        {
+            "name": "Example SALS",
+            "manufacturer": "Example",
+            "instrument": "System",
+            "channel": "SALS",
+            "detector_phi_angle_degree": 77.0,
+            "detector_gamma_angle_degree": 21.0
+        },
+        {
+            "name": "Example LALS",
+            "manufacturer": "Example",
+            "instrument": "System",
+            "channel": "LALS",
+            "detector_phi_angle_degree": 13.0,
+            "detector_gamma_angle_degree": 7.0
         }
     ]
 }
@@ -223,6 +239,10 @@ class Test_DetectorPresetLoaderCatalog:
         assert presets["Example SSC"]["detector_phi_angle_degree"] == 90.0
         assert presets["Example SSC"]["detector_gamma_angle_degree"] == 0.0
         assert presets["Apogee - Forward"]["detector_phi_angle_degree"] == 45.0
+        assert presets["Example SALS"]["detector_phi_angle_degree"] == 0.0
+        assert presets["Example SALS"]["detector_gamma_angle_degree"] == 0.0
+        assert presets["Example LALS"]["detector_phi_angle_degree"] == 90.0
+        assert presets["Example LALS"]["detector_gamma_angle_degree"] == 0.0
 
 
 class Test_ScattererPresetDefaults:

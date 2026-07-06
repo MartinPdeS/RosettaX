@@ -2,10 +2,13 @@
 
 import dash
 import dash_bootstrap_components as dbc
-from dash import dcc, html
+from dash import html
 
-from RosettaX.utils import ui_forms
-from RosettaX.workflow.detector.loader import load_detector_configuration_preset_catalog
+from .components import (
+    build_documentation_card,
+    build_documentation_container,
+    build_documentation_hero,
+)
 
 
 class DocumentationPage:
@@ -19,671 +22,91 @@ class DocumentationPage:
 
     def __init__(self) -> None:
         self.page_name = "documentation"
-        self.contact_email = "martin.poinsinet.de.sivry@gmail.com"
 
     def _id(self, name: str) -> str:
         return f"{self.page_name}-{name}"
 
     def layout(self, **_kwargs) -> dbc.Container:
-        return dbc.Container(
+        return build_documentation_container(
             [
                 self._hero_section(),
                 html.Div(style={"height": "18px"}),
-                self._table_of_contents_card(),
-                html.Div(style={"height": "18px"}),
-                self._documentation_sections_stack(),
-            ],
-            fluid=True,
-            style={
-                "paddingLeft": "0px",
-                "paddingRight": "0px",
-                "paddingTop": "12px",
-                "paddingBottom": "40px",
-            },
-        )
-
-    def _documentation_sections_stack(self) -> html.Div:
-        return html.Div(
-            [
-                self._section_wrapper(
-                    section_id=self._id("workflow-map"),
-                    child=self._workflow_map_card(),
+                dbc.Row(
+                    [
+                        dbc.Col(self._subpages_card(), lg=7),
+                        dbc.Col(self._hub_overview_card(), lg=5),
+                    ],
+                    className="g-3",
                 ),
-                html.Div(style={"height": "18px"}),
-                self._section_wrapper(
-                    section_id=self._id("system-model"),
-                    child=self._system_model_row(),
-                ),
-                html.Div(style={"height": "18px"}),
-                self._section_wrapper(
-                    section_id=self._id("supported-cytometers"),
-                    child=self._supported_cytometers_row(),
-                ),
-                html.Div(style={"height": "18px"}),
-                self._section_wrapper(
-                    section_id=self._id("refractive-index"),
-                    child=self._refractive_index_card(),
-                ),
-                html.Div(style={"height": "18px"}),
-                self._section_wrapper(
-                    section_id=self._id("regression-models"),
-                    child=self._regression_row(),
-                ),
-                html.Div(style={"height": "18px"}),
-                self._section_wrapper(
-                    section_id=self._id("calibration-files"),
-                    child=self._calibration_files_row(),
-                ),
-                html.Div(style={"height": "18px"}),
-                self._section_wrapper(
-                    section_id=self._id("apply-checks"),
-                    child=self._apply_checks_card(),
-                ),
-                html.Div(style={"height": "18px"}),
-                self._section_wrapper(
-                    section_id=self._id("reports"),
-                    child=self._reports_card(),
-                ),
-                html.Div(style={"height": "18px"}),
-                self._section_wrapper(
-                    section_id=self._id("peak-identification"),
-                    child=self._peak_identification_card(),
-                ),
-            ],
-            style={
-                "display": "grid",
-                "rowGap": "0px",
-            },
+            ]
         )
 
     def _hero_section(self) -> dbc.Card:
-        card = dbc.Card(
-            dbc.CardBody(
-                [
-                    html.Div(
-                        "Documentation",
-                        id=self._id("hero"),
-                        style={
-                            "fontWeight": "800",
-                            "fontSize": "2.45rem",
-                            "lineHeight": "1.05",
-                            "marginBottom": "10px",
-                        },
-                    ),
-                    html.Div(
-                        (
-                            "This page is the technical reference for what RosettaX is doing under the hood: "
-                            "how refractive indices are resolved, which regression models are fitted, what is "
-                            "saved into calibration JSON files, and which checks guard the apply workflow."
-                        ),
-                        style={
-                            "fontSize": "1.05rem",
-                            "opacity": 0.84,
-                            "maxWidth": "980px",
-                            "marginBottom": "0px",
-                        },
-                    ),
-                ],
-                style={"padding": "26px"},
-            )
+        return build_documentation_hero(
+            hero_id=self._id("hero"),
+            title="Documentation",
+            description=(
+                "This page is the RosettaX technical reference hub: how refractive indices are resolved, "
+                "which regression models are fitted, what is saved into calibration JSON files, and which "
+                "checks guard the apply workflow. Use the deep-dive pages below when you want fuller "
+                "documentation for scripts, cytometer support, or regression behavior."
+            ),
         )
 
-        return ui_forms.apply_workflow_section_card_style(
-            card=card,
-            header_font_weight="750",
-            header_font_size="1.02rem",
-        )
-
-    def _table_of_contents_card(self) -> dbc.Card:
-        card = dbc.Card(
-            [
-                dbc.CardHeader(
+    def _subpages_card(self) -> dbc.Card:
+        return build_documentation_card(
+            title="Documentation sub-pages",
+            subtitle="Use these pages for focused technical documentation by topic.",
+            body=[
+                html.Ul(
                     [
-                        html.Div(
-                            "On this page",
-                            style={"fontWeight": "750", "fontSize": "1.02rem"},
-                        ),
-                        html.Div(
-                            "Jump to the part of the implementation you want to inspect.",
-                            style={"fontSize": "0.86rem", "opacity": 0.76, "marginTop": "3px"},
-                        ),
-                    ]
-                ),
-                dbc.CardBody(
-                    [
-                        self._toc_link("System model", f"#{self._id('system-model')}"),
-                        self._toc_link("Workflow map", f"#{self._id('workflow-map')}"),
-                        self._toc_link("Supported cytometers", f"#{self._id('supported-cytometers')}"),
-                        self._toc_link("Material refractive index", f"#{self._id('refractive-index')}"),
-                        self._toc_link("Regression models", f"#{self._id('regression-models')}"),
-                        self._toc_link("Calibration files", f"#{self._id('calibration-files')}"),
-                        self._toc_link("Apply checks", f"#{self._id('apply-checks')}"),
-                        self._toc_link("Reports and provenance", f"#{self._id('reports')}"),
-                        self._toc_link("Peak identification methods", f"#{self._id('peak-identification')}"),
+                        html.Li(html.A("System model and optics", href="/documentation/system-model", style={"textDecoration": "none", "fontWeight": "600"})),
+                        html.Li(html.A("Peak process scripts", href="/documentation/peak-scripts", style={"textDecoration": "none", "fontWeight": "600"})),
+                        html.Li(html.A("Supported flow cytometers", href="/documentation/supported-cytometers", style={"textDecoration": "none", "fontWeight": "600"})),
+                        html.Li(html.A("Material refractive index resolution", href="/documentation/refractive-index", style={"textDecoration": "none", "fontWeight": "600"})),
+                        html.Li(html.A("Calibration file wrapper and payload", href="/documentation/calibration-payload", style={"textDecoration": "none", "fontWeight": "600"})),
+                        html.Li(html.A("Apply calibration checks", href="/documentation/apply-checks", style={"textDecoration": "none", "fontWeight": "600"})),
+                        html.Li(html.A("Regression models", href="/documentation/regression-models", style={"textDecoration": "none", "fontWeight": "600"})),
+                        html.Li(html.A("Reports and provenance", href="/documentation/reports", style={"textDecoration": "none", "fontWeight": "600"})),
                     ],
-                    style={
-                        "padding": "16px",
-                        "display": "flex",
-                        "flexWrap": "wrap",
-                        "gap": "10px",
-                    },
-                ),
-            ],
-            style=self._documentation_card_style(),
-        )
-
-        return ui_forms.apply_workflow_section_card_style(
-            card=card,
-            header_font_weight="750",
-            header_font_size="1.02rem",
-        )
-
-    def _toc_link(self, label: str, href: str) -> html.A:
-        return html.A(
-            label,
-            href=href,
-            style={
-                "textDecoration": "none",
-                "fontWeight": "600",
-                "padding": "8px 11px",
-                "borderRadius": "10px",
-                "border": "1px solid rgba(13, 110, 253, 0.14)",
-                "background": "rgba(13, 110, 253, 0.04)",
-                "display": "inline-flex",
-                "alignItems": "center",
-                "lineHeight": "1.2",
-            },
-        )
-
-    def _system_model_row(self) -> dbc.Row:
-        return dbc.Row(
-            [
-                dbc.Col(self._fcs_system_card(), lg=6),
-                dbc.Col(self._scattering_optics_card(), lg=6),
-            ],
-            className="g-3",
-        )
-
-    def _workflow_map_card(self) -> dbc.Card:
-        return self._content_card(
-            title="Workflow map",
-            subtitle="RosettaX is organized around three concrete steps: calibrate fluorescence, calibrate scattering, then apply saved records.",
-            body=[
-                html.Div(
-                    [
-                        html.Div("1. Fluorescence", style={"fontWeight": "700", "marginBottom": "4px"}),
-                        html.Div("Choose a detector channel, resolve peaks, assign reference values, and fit a log-log calibration relation."),
-                    ],
-                    style={"marginBottom": "12px"},
-                ),
-                html.Div(
-                    [
-                        html.Div("2. Scattering", style={"fontWeight": "700", "marginBottom": "4px"}),
-                        html.Div("Choose a scatter channel, pick a detector geometry preset or custom optics, model the calibration standards, and fit the instrument response."),
-                    ],
-                    style={"marginBottom": "12px"},
-                ),
-                html.Div(
-                    [
-                        html.Div("3. Apply", style={"fontWeight": "700", "marginBottom": "4px"}),
-                        html.Div("Load a saved calibration, validate the target file and target model, export calibrated FCS files, and keep a PDF report with provenance."),
-                    ]
-                ),
-            ],
-        )
-
-    def _fcs_system_card(self) -> dbc.Card:
-        return self._content_card(
-            title="What kind of system RosettaX assumes",
-            subtitle="RosettaX analyzes exported FCS data. It does not control the cytometer.",
-            body=[
-                html.Div(
-                    "RosettaX assumes a standard event table exported from a flow cytometer, where each row is one event and each selected channel is an already processed instrument observable rather than a raw optical power trace.",
-                ),
-                html.Div(
-                    "For fluorescence, the software works with one selected detector column plus optional gating context. For scattering, it treats the selected detector column as the measured instrument response that must be mapped to modeled optical coupling.",
-                ),
-                html.Div(
-                    "The application therefore sits after acquisition: it inspects histograms and tables, fits calibration relations, serializes calibration records, and later re-applies those records to other FCS files.",
-                ),
-            ],
-        )
-
-    def _scattering_optics_card(self) -> dbc.Card:
-        return self._content_card(
-            title="Scattering optical model",
-            subtitle="The scattering workflow uses a single-wavelength source plus photodiode-style collection geometry.",
-            body=[
-                html.Div(
-                    "The scattering backend builds a Gaussian illumination source and a photodiode detector model through PyMieSim. The configurable optical terms are wavelength, detector NA, cache NA, blocker-bar NA, detector phi offset, detector gamma offset, and detector sampling.",
-                ),
-                html.Div(
-                    "Internally, the modeled source defaults to optical power = 1.0 W, source numerical aperture = 0.1, and polarization angle = 0 degrees. Detector presets can inject angular weights and effective geometry corrections before coupling is computed.",
-                ),
-                html.Div(
-                    "That means RosettaX is calibrating a measured scatter channel against a modeled collection geometry, not against raw Mie intensity integrated over an unspecified instrument.",
-                ),
-            ],
-        )
-
-    def _refractive_index_card(self) -> dbc.Card:
-        return self._content_card(
-            title="Material refractive index resolution",
-            subtitle="Material presets are converted to numeric refractive indices at the selected wavelength.",
-            body=[
-                html.Div(
-                    "When you choose a material such as water, PBS, polystyrene, silica, PMMA, lipid, or phospholipid, RosettaX resolves the refractive index from the packaged Sellmeier bank in RosettaX/assets/sellmeier_equations.json.",
-                ),
-                self._math_block(
-                    "$$n^2 = a + \\sum_i \\frac{B_i \\lambda^2}{\\lambda^2 - C_i}$$\nwith $\\lambda$ converted from nm to $\\mu$m before evaluation.",
-                ),
-                html.Div(
-                    "If the preset is a plain number, RosettaX uses that number directly. If a material source is empty or cannot be resolved, the workflow falls back to the numeric value already present in the input box.",
-                ),
-                html.Div(
-                    "This matters in scattering because wavelength changes can update both medium and particle refractive indices before the Mie relation or calibration-standard model is computed.",
-                ),
-            ],
-        )
-
-    def _supported_cytometers_row(self) -> dbc.Row:
-        return dbc.Row(
-            [
-                dbc.Col(self._supported_cytometers_card(), lg=7),
-                dbc.Col(self._detector_support_card(), lg=5),
-            ],
-            className="g-3",
-        )
-
-    def _supported_cytometers_card(self) -> dbc.Card:
-        catalog = load_detector_configuration_preset_catalog()
-        grouped_rows: dict[str, list[str]] = {}
-
-        for item in catalog:
-            grouped_rows.setdefault(item["brand"], []).append(item["label"])
-
-        summary_row = html.Div(
-            [
-                self._summary_pill(f"{len(grouped_rows)} brands"),
-                self._summary_pill(f"{len(catalog)} packaged presets"),
-            ],
-            style={
-                "display": "flex",
-                "gap": "8px",
-                "flexWrap": "wrap",
-                "marginBottom": "12px",
-            },
-        )
-
-        table = dbc.Table(
-            [
-                html.Thead(
-                    html.Tr(
-                        [
-                            html.Th("Brand", style={"width": "28%"}),
-                            html.Th("Supported models / detector presets"),
-                        ]
-                    )
-                ),
-                html.Tbody(
-                    [
-                        html.Tr(
-                            [
-                                html.Td(brand_name, style={"fontWeight": "700"}),
-                                html.Td(
-                                    ", ".join(model_labels),
-                                    style={"opacity": 0.84},
-                                ),
-                            ]
-                        )
-                        for brand_name, model_labels in grouped_rows.items()
-                    ]
-                ),
-            ],
-            bordered=False,
-            hover=False,
-            responsive=True,
-            size="sm",
-            style={"marginBottom": "12px"},
-        )
-
-        return self._content_card(
-            title="Supported cytometers and detector presets",
-            subtitle="RosettaX currently ships these detector-preset groups for scattering modeling and auto-detect support.",
-            body=[
-                html.Div(
-                    "The support list reflects the packaged detector preset bank. These presets encode one documented RosettaX geometry per instrument family so calibrations are reproducible and reviewable, even when the exact vendor optical train is not fully public.",
-                ),
-                summary_row,
-                table,
-                dbc.Alert(
-                    [
-                        "If your company would like RosettaX to support another cytometer, contact the maintainer with an example FCS file, the detector or channel naming you want recognized, and any public optical-geometry documentation that should inform the preset.",
-                        html.Br(),
-                        html.Br(),
-                        html.Span("Contact: ", style={"fontWeight": "600"}),
-                        html.A(
-                            self.contact_email,
-                            href=f"mailto:{self.contact_email}",
-                            style={"textDecoration": "none"},
-                        ),
-                    ],
-                    color="secondary",
                     style={
                         "marginBottom": "0px",
-                        "borderRadius": "10px",
+                        "paddingLeft": "20px",
+                        "display": "grid",
+                        "rowGap": "8px",
                     },
                 ),
             ],
+            min_height="unset",
         )
 
-    def _detector_support_card(self) -> dbc.Card:
-        return self._content_card(
-            title="How detector support works",
-            subtitle="A RosettaX cytometer preset is two things at once: a named geometry assumption and a set of instrument aliases that help the UI select it.",
+    def _hub_overview_card(self) -> dbc.Card:
+        return build_documentation_card(
+            title="How to use this hub",
+            subtitle="The page is arranged from overview to implementation details.",
             body=[
-                html.Div(
-                    "The detector catalog stores brand, instrument, channel family, wavelength, and effective optical geometry. When RosettaX sees a matching instrument name in FCS metadata, it can suggest the corresponding preset or scatter channel automatically.",
-                ),
-                html.Div(
-                    "The shipped presets are intended as documented starting points. They help you keep calibration assumptions explicit, but they do not claim that every vendor configuration, filter set, or detector option has already been captured exactly.",
-                ),
-                html.Div(
-                    "To add support for another cytometer family, the most useful inputs are one representative FCS file, the exact instrument name written into metadata, common scatter-channel labels, and any public optical notes that justify the chosen geometry.",
-                ),
-            ],
-        )
-
-    def _summary_pill(self, label: str) -> html.Span:
-        return html.Span(
-            label,
-            style={
-                "display": "inline-flex",
-                "alignItems": "center",
-                "padding": "6px 10px",
-                "borderRadius": "999px",
-                "border": "1px solid rgba(13, 110, 253, 0.18)",
-                "background": "rgba(13, 110, 253, 0.06)",
-                "fontWeight": "600",
-                "fontSize": "0.84rem",
-            },
-        )
-
-    def _regression_row(self) -> dbc.Row:
-        return dbc.Row(
-            [
-                dbc.Col(self._fluorescence_regression_card(), lg=6),
-                dbc.Col(self._scattering_regression_card(), lg=6),
-            ],
-            className="g-3",
-        )
-
-    def _fluorescence_regression_card(self) -> dbc.Card:
-        return self._content_card(
-            title="Fluorescence regression",
-            subtitle="Fluorescence calibration is fitted as a log-log linear relation, equivalent to a power law.",
-            body=[
-                self._math_block(
-                    "$$\\log_{10}(y) = \\text{slope} \\cdot \\log_{10}(x) + \\text{intercept}$$\n$$y = 10^{\\text{intercept}} \\cdot x^{\\text{slope}}$$",
-                ),
-                html.Div(
-                    "Before fitting, RosettaX removes non-finite points and any pair where either the measured intensity or calibrated reference value is not strictly positive. The fit itself uses numpy.polyfit on the log10-transformed axes.",
-                ),
-                html.Div(
-                    "The saved fluorescence payload keeps slope, intercept, prefactor, R², point count, source channel, optional gating channel and threshold, and the explicit reference-point table used for the fit.",
-                ),
-            ],
-        )
-
-    def _scattering_regression_card(self) -> dbc.Card:
-        return self._content_card(
-            title="Scattering regression",
-            subtitle="Scattering calibration fits measured peak position to modeled optical coupling with a linear instrument-response model.",
-            body=[
-                self._math_block(
-                    "$$\\text{theoretical coupling} = \\text{slope} \\cdot \\text{measured peak} + \\text{intercept}$$",
-                ),
-                html.Div(
-                    "RosettaX first computes modeled coupling for the calibration-standard particles from the selected Mie model and optical parameters. It then fits a linear response from measured peak positions to those coupling values. The default behavior fixes the intercept to zero.",
-                ),
-                html.Div(
-                    "Only finite calibration pairs are used. For zero-intercept fits, RosettaX also requires non-zero measured peaks so the denominator stays valid. The saved calibration stores slope, intercept, R², whether zero-intercept was enforced, the reference table, and the full calibration-standard Mie relation.",
-                ),
-            ],
-        )
-
-    def _calibration_files_row(self) -> dbc.Row:
-        return dbc.Row(
-            [
-                dbc.Col(self._calibration_record_card(), lg=6),
-                dbc.Col(self._payload_details_card(), lg=6),
-            ],
-            className="g-3",
-        )
-
-    def _calibration_record_card(self) -> dbc.Card:
-        return self._content_card(
-            title="Calibration file wrapper",
-            subtitle="Every saved calibration is wrapped in the same outer record.",
-            body=[
-                html.Pre(
-                    '{\n  "schema": "rosettax_calibration_v1",\n  "kind": "fluorescence" | "scattering",\n  "created_at": "...",\n  "name": "...",\n  "payload": { ... }\n}',
-                    style=self._pre_style(),
-                ),
-                html.Div(
-                    "The outer wrapper is created by the shared save workflow. The inner payload differs by calibration type and is what the apply workflow actually interprets later.",
-                ),
-            ],
-        )
-
-    def _payload_details_card(self) -> dbc.Card:
-        return self._content_card(
-            title="What the inner payload contains",
-            subtitle="Fluorescence and scattering payloads preserve different kinds of evidence.",
-            body=[
-                html.Div(
-                    "Fluorescence payloads store fit_model, fit_metrics, parameters, reference_points, source_channel, optional gating metadata, and a legacy-compatible payload block used during apply.",
-                ),
-                html.Div(
-                    "Scattering payloads store instrument_response, calibration_standard_mie_relation, reference_table, source_channel, output_quantity, version, and metadata describing the optical assumptions and standard table context.",
-                ),
-                html.Div(
-                    "In both cases, the goal is the same: another user should be able to inspect the JSON and understand what was fitted without reopening the original session.",
-                ),
-            ],
-        )
-
-    def _apply_checks_card(self) -> dbc.Card:
-        return self._content_card(
-            title="Checks performed while applying a calibration",
-            subtitle="Apply is not a blind export step. It validates both the request and the target model before producing output.",
-            body=[
-                html.Div(
-                    "At the request level, RosettaX requires at least one uploaded FCS file, a selected calibration, and a non-empty calibration payload. It also resolves the source channel from the payload and fails if that channel is missing.",
-                ),
-                html.Div(
-                    "If the calibration is scattering, target model parameters are mandatory. Diameter grids must be positive and ordered correctly, refractive indices must be finite and physically valid, and the requested source channel must exist in each input dataframe.",
-                ),
-                html.Div(
-                    "For scattering diameter inversion, RosettaX checks whether the target Mie relation is strictly monotonic over the full requested range. If it is not, the apply workflow automatically selects the largest monotonic branch and records a warning so the export remains auditable.",
-                ),
-                html.Div(
-                    "Export columns are normalized before writing output, and warnings collected during the apply run are surfaced again in the PDF report and result payload.",
-                ),
-            ],
-        )
-
-    def _reports_card(self) -> dbc.Card:
-        return self._content_card(
-            title="Reports and provenance",
-            subtitle="The PDF report documents one apply/export run. It complements the calibration JSON instead of replacing it.",
-            body=[
-                html.Div(
-                    "The apply report records the selected calibration, uploaded FCS paths, chosen export columns, output channels, warnings, and a sanitized snapshot of the saved calibration payload so the run can still be interpreted later.",
-                ),
-                html.Div(
-                    "When the export artifact is a ZIP archive, the PDF is embedded into that bundle alongside the calibrated FCS files. This keeps the artifact and its provenance together instead of relying on a separate note or screenshot.",
-                ),
-                html.Div(
-                    "Use the JSON to answer what the calibration is. Use the PDF to answer what happened during this particular apply run.",
-                ),
-            ],
-        )
-
-    def _peak_identification_card(self) -> dbc.Card:
-        scripts = [
-            {
-                "name": "Manual 1D",
-                "when": "You want full control. Click peak positions directly on a 1D histogram.",
-                "how": "Displays a 1D histogram for a single selected detector channel. Each click on the graph registers one peak position. Supports multiple clicks; the clear button resets all registered peaks.",
-                "settings": "Detector channel. No numeric settings.",
-            },
-            {
-                "name": "Manual 2D",
-                "when": "Your data is better understood in a 2D scatter plot (e.g. scatter vs. fluorescence).",
-                "how": "Renders a 2D scatter graph for two detector channels. Clicks register one peak point per event, and the x-coordinate of each click is inserted into the calibration table. Supports multiple clicks and a clear action.",
-                "settings": "Primary detector channel and secondary detector channel.",
-            },
-            {
-                "name": "Automatic 1D",
-                "when": "Peaks are well separated and you want a quick automated result without a fluorescence channel.",
-                "how": "Builds a log-binned histogram in log10 space, smooths it with a Gaussian kernel, detects local maxima, estimates prominence, and returns the N strongest well-separated peaks. Works on any single detector channel.",
-                "settings": "Detector channel. Maximum number of peaks to return.",
-            },
-            {
-                "name": "Prominence 1D",
-                "when": "Same use case as Automatic 1D but you want to tune sensitivity explicitly.",
-                "how": "Identical underlying algorithm to Automatic 1D — log-space histogram, smoothing, prominence-ranked local maxima — with additional exposed controls for the minimum prominence fraction and the minimum inter-peak distance fraction.",
-                "settings": "Detector channel, peak count, minimum prominence fraction, minimum distance fraction.",
-            },
-            {
-                "name": "Prominence 2D",
-                "when": "Populations need to be selected interactively in a 2D scatter view and confirmed against a density criterion.",
-                "how": "Builds a 2D hexbin density grid, finds local density maxima, and lets you inspect clusters visually before committing. Detected peaks can be filtered by a minimum density fraction and a minimum inter-cluster distance.",
-                "settings": "Primary and secondary detector channels, peak count, minimum density fraction, minimum distance.",
-            },
-            {
-                "name": "Gated K-means 1D",
-                "when": "You have a rough idea of how many populations exist and want a clustering approach rather than a histogram peak finder.",
-                "how": "Runs K-means clustering on one selected channel in log10 space. The user defines the expected number of populations. K-means centroids become the reported peak positions. Optionally shows per-cluster histograms.",
-                "settings": "Detector channel, number of clusters.",
-            },
-            {
-                "name": "Gated K-means 2D",
-                "when": "You want clustering in 2D to separate overlapping populations that share the same scatter value but differ in fluorescence, or vice versa.",
-                "how": "Applies K-means in the joint 2D log10 space of two selected channels. Reports cluster centroids; the x-coordinate of each centroid is inserted into the calibration table.",
-                "settings": "Primary and secondary detector channels, number of clusters.",
-            },
-            {
-                "name": "Rosetta",
-                "when": "You are calibrating a Rosetta bead mixture (CAL003 or compatible) that contains fluorescent marker beads and non-fluorescent polystyrene beads.",
-                "how": (
-                    "Follows a structured fluorescence-guided workflow: "
-                    "(1) detect and validate fluorescence peaks on the green channel — baseline noise peak plus up to two fluorescent marker peaks; "
-                    "(2) classify the marker peaks as dim or bright based on relative brightness and saturation fraction; "
-                    "(3) gate each marker using its fitted Gaussian mean and standard deviation, then detect and validate the scatter peak inside the gate; "
-                    "(4) gate non-fluorescent events using the baseline peak mean plus the configured sigma multiplier, then detect and validate all non-fluorescent scatter peaks. "
-                    "All peak validation uses Gaussian fitting with R\u00b2 and CV criteria. Only the non-fluorescent scatter peaks are inserted into the calibration table; marker scatter peaks are shown on the graph for orientation."
-                ),
-                "settings": "Maximum number of scatter peaks, minimum fit R\u00b2, baseline gate width (\u03c3).",
-            },
-        ]
-
-        rows = []
-        for script in scripts:
-            rows.append(
                 html.Div(
                     [
-                        html.Div(
-                            script["name"],
-                            style={"fontWeight": "700", "fontSize": "0.97rem", "marginBottom": "4px"},
-                        ),
-                        html.Div(
-                            [
-                                html.Span("Use when: ", style={"fontWeight": "600", "opacity": 0.80}),
-                                html.Span(script["when"]),
-                            ],
-                            style={"marginBottom": "4px"},
-                        ),
-                        html.Div(
-                            [
-                                html.Span("How it works: ", style={"fontWeight": "600", "opacity": 0.80}),
-                                html.Span(script["how"]),
-                            ],
-                            style={"marginBottom": "4px"},
-                        ),
-                        html.Div(
-                            [
-                                html.Span("Settings: ", style={"fontWeight": "600", "opacity": 0.80}),
-                                html.Span(script["settings"]),
-                            ],
-                        ),
+                        html.Div("1. Pick a sub-page from the list", style={"fontWeight": "700", "marginBottom": "4px"}),
+                        html.Div("Each sub-page focuses on one technical topic so you can find details quickly."),
                     ],
-                    style={
-                        "padding": "14px 16px",
-                        "borderRadius": "10px",
-                        "border": "1px solid rgba(13, 110, 253, 0.12)",
-                        "marginBottom": "10px",
-                    },
-                )
-            )
-
-        return self._content_card(
-            title="Peak identification methods",
-            subtitle="RosettaX ships eight peak identification scripts. Choose the one that matches your data and workflow.",
-            body=rows,
-        )
-
-    def _pre_style(self) -> dict[str, str]:
-        return {
-            "marginBottom": "10px",
-            "padding": "12px 14px",
-            "borderRadius": "10px",
-            "border": "1px solid rgba(13, 110, 253, 0.16)",
-            "background": "rgba(13, 110, 253, 0.04)",
-            "fontSize": "0.9rem",
-            "lineHeight": "1.45",
-            "whiteSpace": "pre-wrap",
-        }
-
-    def _documentation_card_style(self) -> dict[str, str]:
-        return {
-            "height": "100%",
-            "minHeight": "252px",
-        }
-
-    def _math_block(self, expression: str) -> dcc.Markdown:
-        return dcc.Markdown(
-            expression,
-            mathjax=True,
-            style=self._pre_style(),
-        )
-
-    def _content_card(self, *, title: str, subtitle: str, body: list[html.Div | html.Pre]) -> dbc.Card:
-        card = dbc.Card(
-            [
-                dbc.CardHeader(
+                    style={"marginBottom": "12px"},
+                ),
+                html.Div(
                     [
-                        html.Div(title, style={"fontWeight": "750", "fontSize": "1.02rem"}),
-                        html.Div(subtitle, style={"fontSize": "0.86rem", "opacity": 0.76, "marginTop": "3px"}),
+                        html.Div("2. Use related-page links inside each sub-page", style={"fontWeight": "700", "marginBottom": "4px"}),
+                        html.Div("Those links move you between modeling assumptions, calibration structure, and apply behavior."),
+                    ],
+                    style={"marginBottom": "12px"},
+                ),
+                html.Div(
+                    [
+                        html.Div("3. Treat this page as an index", style={"fontWeight": "700", "marginBottom": "4px"}),
+                        html.Div("The implementation details now live in dedicated pages rather than long inline sections."),
                     ]
                 ),
-                dbc.CardBody(
-                    body,
-                    style={"padding": "16px"},
-                ),
             ],
-            style=self._documentation_card_style(),
         )
-
-        return ui_forms.apply_workflow_section_card_style(
-            card=card,
-            header_font_weight="750",
-            header_font_size="1.02rem",
-        )
-
-    def _section_wrapper(self, *, section_id: str, child: html.Div) -> html.Div:
-        return html.Div(child, id=section_id)
 
 
 _page = DocumentationPage()

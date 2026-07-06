@@ -13,6 +13,9 @@ from . import mie_relation
 logger = logging.getLogger(__name__)
 
 
+DEFAULT_SOURCE_POLARIZATION_ANGLE_DEGREE = 90.0
+
+
 @dataclass(frozen=True)
 class OpticalParameters:
     """
@@ -35,7 +38,7 @@ class OpticalParameters:
     detector_gamma_angle_degree: float
     optical_power_watt: float = 1.0
     source_numerical_aperture: float = 0.1
-    polarization_angle_degree: float = 0.0
+    polarization_angle_degree: float = DEFAULT_SOURCE_POLARIZATION_ANGLE_DEGREE
     detector_configuration_preset_name: str = ""
     detector_angular_weights: Optional[np.ndarray] = None
     effective_detector_cache_numerical_aperture: Optional[float] = None

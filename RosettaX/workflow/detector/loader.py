@@ -479,12 +479,17 @@ def _normalize_standard_scatter_angles(
         normalized_detector_preset.get("channel"),
     ).upper()
 
-    if channel_name == "FSC":
+    normalized_scatter_channel_name = {
+        "SALS": "FSC",
+        "LALS": "SSC",
+    }.get(channel_name, channel_name)
+
+    if normalized_scatter_channel_name == "FSC":
         normalized_detector_preset["detector_phi_angle_degree"] = 0.0
         normalized_detector_preset["detector_gamma_angle_degree"] = 0.0
         return normalized_detector_preset
 
-    if channel_name == "SSC":
+    if normalized_scatter_channel_name == "SSC":
         normalized_detector_preset["detector_phi_angle_degree"] = 90.0
         normalized_detector_preset["detector_gamma_angle_degree"] = 0.0
         return normalized_detector_preset

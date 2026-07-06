@@ -305,16 +305,177 @@ class Test_DocumentationPage:
         text_nodes = _collect_text(layout)
 
         assert page._id("hero") in component_ids
-        assert page._id("workflow-map") in component_ids
-        assert page._id("system-model") in component_ids
-        assert page._id("supported-cytometers") in component_ids
-        assert page._id("refractive-index") in component_ids
-        assert page._id("regression-models") in component_ids
-        assert page._id("calibration-files") in component_ids
-        assert page._id("apply-checks") in component_ids
-        assert page._id("reports") in component_ids
-        assert "How detector support works" in text_nodes
+        assert page._id("workflow-map") not in component_ids
+        assert page._id("refractive-index") not in component_ids
+        assert page._id("calibration-files") not in component_ids
+        assert page._id("apply-checks") not in component_ids
+        assert page._id("system-model") not in component_ids
+        assert page._id("supported-cytometers") not in component_ids
+        assert page._id("regression-models") not in component_ids
+        assert page._id("peak-identification") not in component_ids
+        assert page._id("reports") not in component_ids
+        assert "How detector support works" not in text_nodes
+
+    def test_layout_links_to_documentation_deep_dive_pages(self, monkeypatch) -> None:
+        monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
+
+        documentation_main = importlib.import_module(
+            "RosettaX.pages.p07_documentation.main"
+        )
+        page = documentation_main.DocumentationPage()
+
+        layout = page.layout()
+        hrefs = _collect_component_hrefs(layout)
+
+        assert "/documentation/system-model" in hrefs
+        assert "/documentation/peak-scripts" in hrefs
+        assert "/documentation/supported-cytometers" in hrefs
+        assert "/documentation/refractive-index" in hrefs
+        assert "/documentation/calibration-payload" in hrefs
+        assert "/documentation/apply-checks" in hrefs
+        assert "/documentation/regression-models" in hrefs
+        assert "/documentation/reports" in hrefs
+
+
+class Test_DocumentationDeepDivePages:
+    def test_peak_scripts_page_layout_contains_related_navigation(self, monkeypatch) -> None:
+        monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
+
+        peak_docs_main = importlib.import_module(
+            "RosettaX.pages.p11_docs_peak_scripts.main"
+        )
+        page = peak_docs_main.PeakScriptsDocumentationPage()
+
+        layout = page.layout()
+        text_nodes = _collect_text(layout)
+        hrefs = _collect_component_hrefs(layout)
+
+        assert "Peak Process Scripts" in text_nodes
+        assert "Rosetta script" in text_nodes
+        assert "/documentation" in hrefs
+        assert "/documentation/regression-models" in hrefs
+
+    def test_system_model_page_layout_contains_instrument_assumptions(self, monkeypatch) -> None:
+        monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
+
+        system_docs_main = importlib.import_module(
+            "RosettaX.pages.p15_docs_system_model.main"
+        )
+        page = system_docs_main.SystemModelDocumentationPage()
+
+        layout = page.layout()
+        text_nodes = _collect_text(layout)
+        hrefs = _collect_component_hrefs(layout)
+
+        assert "System Model and Optics" in text_nodes
+        assert "What kind of system RosettaX assumes" in text_nodes
+        assert "Scattering optical model" in text_nodes
+        assert "/documentation" in hrefs
+        assert "/documentation/supported-cytometers" in hrefs
+
+    def test_supported_cytometers_page_layout_contains_catalog_and_contact(self, monkeypatch) -> None:
+        monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
+
+        cytometer_docs_main = importlib.import_module(
+            "RosettaX.pages.p12_docs_supported_cytometers.main"
+        )
+        page = cytometer_docs_main.SupportedCytometersDocumentationPage()
+
+        layout = page.layout()
+        text_nodes = _collect_text(layout)
+        hrefs = _collect_component_hrefs(layout)
+
+        assert "Supported Flow Cytometers" in text_nodes
+        assert "Packaged detector preset catalog" in text_nodes
         assert "Cytek Biosciences" in text_nodes
+        assert f"mailto:{page.contact_email}" in hrefs
+
+    def test_regression_models_page_layout_contains_fit_descriptions(self, monkeypatch) -> None:
+        monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
+
+        regression_docs_main = importlib.import_module(
+            "RosettaX.pages.p13_docs_regression_models.main"
+        )
+        page = regression_docs_main.RegressionModelsDocumentationPage()
+
+        layout = page.layout()
+        text_nodes = _collect_text(layout)
+        hrefs = _collect_component_hrefs(layout)
+
+        assert "Regression Models" in text_nodes
+        assert "Fluorescence fit model" in text_nodes
+        assert "Scattering fit model" in text_nodes
+        assert "/documentation/peak-scripts" in hrefs
+
+    def test_reports_page_layout_contains_provenance_descriptions(self, monkeypatch) -> None:
+        monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
+
+        reports_docs_main = importlib.import_module(
+            "RosettaX.pages.p14_docs_reports.main"
+        )
+        page = reports_docs_main.ReportsDocumentationPage()
+
+        layout = page.layout()
+        text_nodes = _collect_text(layout)
+        hrefs = _collect_component_hrefs(layout)
+
+        assert "Reports and Provenance" in text_nodes
+        assert "What the PDF report records" in text_nodes
+        assert "How the report differs from calibration JSON" in text_nodes
+        assert "/documentation" in hrefs
+        assert "/documentation/regression-models" in hrefs
+
+    def test_refractive_index_page_layout_contains_resolution_details(self, monkeypatch) -> None:
+        monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
+
+        refractive_docs_main = importlib.import_module(
+            "RosettaX.pages.p16_docs_refractive_index.main"
+        )
+        page = refractive_docs_main.RefractiveIndexDocumentationPage()
+
+        layout = page.layout()
+        text_nodes = _collect_text(layout)
+        hrefs = _collect_component_hrefs(layout)
+
+        assert "Material Refractive Index Resolution" in text_nodes
+        assert "How RosettaX resolves refractive indices" in text_nodes
+        assert "/documentation" in hrefs
+        assert "/documentation/system-model" in hrefs
+
+    def test_calibration_payload_page_layout_contains_wrapper_and_payload_sections(self, monkeypatch) -> None:
+        monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
+
+        payload_docs_main = importlib.import_module(
+            "RosettaX.pages.p17_docs_calibration_payload.main"
+        )
+        page = payload_docs_main.CalibrationPayloadDocumentationPage()
+
+        layout = page.layout()
+        text_nodes = _collect_text(layout)
+        hrefs = _collect_component_hrefs(layout)
+
+        assert "Calibration File Wrapper and Payload" in text_nodes
+        assert "Calibration file wrapper" in text_nodes
+        assert "What the inner payload contains" in text_nodes
+        assert "/documentation" in hrefs
+        assert "/documentation/apply-checks" in hrefs
+
+    def test_apply_checks_page_layout_contains_validation_rules(self, monkeypatch) -> None:
+        monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
+
+        apply_checks_docs_main = importlib.import_module(
+            "RosettaX.pages.p18_docs_apply_checks.main"
+        )
+        page = apply_checks_docs_main.ApplyChecksDocumentationPage()
+
+        layout = page.layout()
+        text_nodes = _collect_text(layout)
+        hrefs = _collect_component_hrefs(layout)
+
+        assert "Checks Performed While Applying a Calibration" in text_nodes
+        assert "Apply-time checks" in text_nodes
+        assert "/documentation" in hrefs
+        assert "/documentation/calibration-payload" in hrefs
 
 
 class Test_CrossCalibrationPage:

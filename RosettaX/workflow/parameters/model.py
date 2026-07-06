@@ -6,6 +6,9 @@ import logging
 import numpy as np
 
 from RosettaX.pages.p03_scattering.backend import BackEnd
+from RosettaX.workflow.scattering.calibration_services import (
+    DEFAULT_SOURCE_POLARIZATION_ANGLE_DEGREE,
+)
 from RosettaX.workflow.detector import (
     resolve_detector_angular_weights,
     resolve_detector_modeling_geometry_values,
@@ -360,7 +363,7 @@ def _compute_core_shell_model_for_rows(
             detector_cache_numerical_aperture=resolved_detector_cache_numerical_aperture,
             detector_phi_offset_degree=detector_phi_angle_degree,
             detector_gamma_offset_degree=detector_gamma_angle_degree,
-            polarization_angle_degree=0.0,
+            polarization_angle_degree=DEFAULT_SOURCE_POLARIZATION_ANGLE_DEGREE,
             detector_sampling=detector_sampling,
             detector_angular_weights=detector_angular_weights,
         )
@@ -543,7 +546,7 @@ def _compute_solid_sphere_model_for_rows(
             detector_cache_numerical_aperture=resolved_detector_cache_numerical_aperture,
             detector_phi_offset_degree=detector_phi_angle_degree,
             detector_gamma_offset_degree=detector_gamma_angle_degree,
-            polarization_angle_degree=0.0,
+            polarization_angle_degree=DEFAULT_SOURCE_POLARIZATION_ANGLE_DEGREE,
             detector_sampling=detector_sampling,
             detector_angular_weights=detector_angular_weights,
         )

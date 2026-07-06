@@ -416,16 +416,25 @@ class PeakLayout:
         """
         Build the shared process status area below the graph.
         """
-        return html.Div(
-            [
-                html.Div(
-                    id=self.ids.process_status(
-                        process_name=self._get_process_name(process=process),
-                    ),
-                )
-                for process in (processes or [])
-            ],
+        return dcc.Loading(
+            html.Div(
+                [
+                    html.Div(
+                        id=self.ids.process_status(
+                            process_name=self._get_process_name(process=process),
+                        ),
+                    )
+                    for process in (processes or [])
+                ],
+                style={
+                    "display": "flex",
+                    "flexDirection": "column",
+                    "gap": "10px",
+                },
+            ),
             id=self.ids.script_status,
+            type="default",
+            color="#0d6efd",
             style={
                 "marginTop": "12px",
                 "display": "flex",
@@ -855,30 +864,35 @@ class PeakLayout:
         return html.Div(
             id=container_id,
             children=[
-                Scatter2DGraph.build_component(
-                    component_ids=Scatter2DGraphIds(
-                        graph=graph_id,
-                        axis_scale_toggle=axis_scale_toggle_id,
-                    ),
-                    figure=Scatter2DGraph.build_empty_figure(
-                        message="Upload an FCS file and select a peak process.",
-                    ),
-                    x_log_enabled=self._get_default_xscale() == "log",
-                    y_log_enabled=self._get_default_yscale() == "log",
-                    colormap_log_toggle_enabled=True,
-                    colormap_log_enabled=self._get_default_colormap_log(),
-                    graph_style={
-                        "height": self._get_default_graph_height(),
-                        "width": "100%",
-                    },
-                    bottom_controls=[
-                        self._build_graph_controls(
-                            container_id=self.ids.histogram_controls_container,
-                            nbins_control_container_id=self.ids.nbins_control_container,
-                            nbins_input_id=self.ids.nbins_input,
-                            number_of_bins=self._get_default_number_of_bins(),
+                dcc.Loading(
+                    Scatter2DGraph.build_component(
+                        component_ids=Scatter2DGraphIds(
+                            graph=graph_id,
+                            axis_scale_toggle=axis_scale_toggle_id,
                         ),
-                    ],
+                        figure=Scatter2DGraph.build_empty_figure(
+                            message="Upload an FCS file and select a peak process.",
+                        ),
+                        x_log_enabled=self._get_default_xscale() == "log",
+                        y_log_enabled=self._get_default_yscale() == "log",
+                        colormap_log_toggle_enabled=True,
+                        colormap_log_enabled=self._get_default_colormap_log(),
+                        graph_style={
+                            "height": self._get_default_graph_height(),
+                            "width": "100%",
+                        },
+                        bottom_controls=[
+                            self._build_graph_controls(
+                                container_id=self.ids.histogram_controls_container,
+                                nbins_control_container_id=self.ids.nbins_control_container,
+                                nbins_input_id=self.ids.nbins_input,
+                                number_of_bins=self._get_default_number_of_bins(),
+                            ),
+                        ],
+                    ),
+                    type="circle",
+                    color="#0d6efd",
+                    delay_show=150,
                 )
             ],
             style={

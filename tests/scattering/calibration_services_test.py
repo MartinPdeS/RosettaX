@@ -6,6 +6,7 @@ from dataclasses import FrozenInstanceError
 from unittest.mock import patch
 
 from RosettaX.workflow.scattering.calibration_services import (
+    DEFAULT_SOURCE_POLARIZATION_ANGLE_DEGREE,
     OpticalParameters,
     ParsedSphereStandardRows,
     parse_optical_parameters,
@@ -67,7 +68,7 @@ class Test_OpticalParameters:
         # Test default values
         assert params.optical_power_watt == 1.0
         assert params.source_numerical_aperture == 0.1
-        assert params.polarization_angle_degree == 0.0
+        assert params.polarization_angle_degree == DEFAULT_SOURCE_POLARIZATION_ANGLE_DEGREE
 
     def test_optical_parameters_creation_with_custom_defaults(self, valid_optical_params):
         """Test OpticalParameters creation with custom default values."""
@@ -121,7 +122,7 @@ class Test_OpticalParameters:
         assert result['base'] == 'payload'
         assert result['optical_power_watt'] == 1.0
         assert result['source_numerical_aperture'] == 0.1
-        assert result['polarization_angle_degree'] == 0.0
+        assert result['polarization_angle_degree'] == DEFAULT_SOURCE_POLARIZATION_ANGLE_DEGREE
         assert result['particle_diameter_nm'] == [100.0, 200.0, 300.0]
 
     @patch('RosettaX.workflow.scattering.calibration_services.mie_relation.build_mie_parameter_payload')

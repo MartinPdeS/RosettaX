@@ -226,6 +226,7 @@ class Test_RosettaPeakScriptV1:
             process_settings={
                 "fit_r2_threshold": 0.60,
                 "baseline_sigma_multiplier": 3.0,
+                "advanced_mode": ["enabled"],
             },
         )
 
@@ -261,6 +262,63 @@ class Test_RosettaPeakScriptV1:
             for value in result.peak_lines_payload.get("scatter_guide_positions", [])
         ]
         assert "single marker anchor" in str(result.status)
+
+    def test_run_automatic_action_hides_status_when_advanced_mode_disabled(
+        self,
+        monkeypatch,
+    ) -> None:
+        synthetic_result = rosetta_mix_v1.PeakProcessResult(
+            peak_positions=[1000.0],
+            new_peak_positions=[1000.0],
+            peak_lines_payload={
+                "points": [
+                    {"x": 1000.0, "y": 100.0, "kind": "peak"},
+                    {"x": 1400.0, "y": 200.0, "kind": "marker"},
+                ],
+                "labels": [
+                    "Peak 1",
+                    "Dim marker",
+                ],
+                "scatter_guide_positions": [1000.0, 1400.0],
+                "fluorescence_guide_positions": [100.0, 200.0],
+            },
+            status="Base status",
+            clear_existing_table_peaks=False,
+            table_prefill_rows=[
+                {
+                    "label": "Peak 1",
+                    "measured_peak_position": 1000.0,
+                    "particle_diameter_nm": "",
+                }
+            ],
+        )
+
+        def fake_super_run(self, **kwargs):
+            del self
+            del kwargs
+            return synthetic_result
+
+        monkeypatch.setattr(
+            rosetta_mix_v1.FluorescenceGuidedScatterPeakProcess,
+            "run_automatic_action",
+            fake_super_run,
+        )
+
+        process = rosetta_mix_v1.FluorescenceGuidedScatterPeakProcessV1()
+
+        result = process.run_automatic_action(
+            backend=SimpleNamespace(fcs_file_path="dummy.fcs"),
+            detector_channels={
+                "scattering": "SSC-A",
+                "green_fluorescence": "FITC-A",
+            },
+            peak_count=6,
+            max_events_for_analysis=20000,
+            process_settings={"advanced_mode": []},
+        )
+
+        assert result is not None
+        assert result.status == ""
 
     def test_run_automatic_action_adds_marker_size_annotations_without_table_rows(
         self,

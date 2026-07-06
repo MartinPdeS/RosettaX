@@ -95,6 +95,11 @@ class FluorescenceGuidedScatterPeakProcessV1(FluorescenceGuidedScatterPeakProces
         if status_suffix:
             updated_status = f"{updated_status} {status_suffix}".strip()
 
+        if not _advanced_mode_enabled(
+            process_settings=process_settings,
+        ):
+            updated_status = ""
+
         updated_peak_lines_payload = result.peak_lines_payload
 
         if isinstance(result.peak_lines_payload, dict):
@@ -109,6 +114,27 @@ class FluorescenceGuidedScatterPeakProcessV1(FluorescenceGuidedScatterPeakProces
             peak_lines_payload=updated_peak_lines_payload,
             status=updated_status,
         )
+
+
+def _advanced_mode_enabled(
+    *,
+    process_settings: Optional[dict[str, Any]],
+) -> bool:
+    """
+    Return whether the peak workflow advanced mode toggle is enabled.
+    """
+    if not isinstance(process_settings, dict):
+        return False
+
+    value = process_settings.get("advanced_mode")
+
+    if isinstance(value, str):
+        return value == "enabled"
+
+    if isinstance(value, (list, tuple, set)):
+        return "enabled" in value
+
+    return bool(value)
 
 
 def build_rosetta_mix_v1_table_prefill_rows(

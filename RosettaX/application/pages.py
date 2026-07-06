@@ -18,6 +18,11 @@ PAGE_MODULES: list[str] = [
     "RosettaX.pages.p09_sample_files.main",
     "RosettaX.pages.p07_documentation.main",
     "RosettaX.pages.p10_visualization.main",
+    "RosettaX.pages.p11_docs_peak_scripts.main",
+    "RosettaX.pages.p12_docs_supported_cytometers.main",
+    "RosettaX.pages.p13_docs_regression_models.main",
+    "RosettaX.pages.p14_docs_reports.main",
+    "RosettaX.pages.p15_docs_system_model.main",
 ]
 
 
