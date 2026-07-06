@@ -169,6 +169,10 @@ class Model:
                             color="secondary",
                             outline=True,
                             size="sm",
+                            style={
+                                "whiteSpace": "nowrap",
+                                "flexShrink": 0,
+                            },
                         ),
                         dbc.Alert(
                             "",

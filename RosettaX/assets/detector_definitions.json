@@ -22,7 +22,7 @@
       "detector_angular_weighting": {
         "mode": "split",
         "metric": "x-minus-z",
-        "keep": "negative"
+        "keep": "positive"
       }
     },
     {
@@ -45,7 +45,7 @@
       "detector_angular_weighting": {
         "mode": "split",
         "metric": "x-minus-z",
-        "keep": "positive"
+        "keep": "negative"
       }
     },
     {

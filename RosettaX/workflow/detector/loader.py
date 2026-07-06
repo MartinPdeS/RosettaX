@@ -416,12 +416,12 @@ def _normalize_angular_weighting_definition(
         "split-side-half": {
             "mode": "split",
             "metric": "x-minus-z",
-            "keep": "positive",
+            "keep": "negative",
         },
         "split-forward-half": {
             "mode": "split",
             "metric": "x-minus-z",
-            "keep": "negative",
+            "keep": "positive",
         },
         "zero-x-positive": {
             "mode": "split",

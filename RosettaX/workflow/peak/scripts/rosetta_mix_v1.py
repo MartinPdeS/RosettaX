@@ -6,11 +6,6 @@ from typing import Any, Optional
 
 import numpy as np
 
-from RosettaX.workflow.scattering.model import (
-    ROSETTA_MIX_PRESET_NAME,
-    get_scattering_calibration_scatterer_preset,
-)
-
 from .base import PeakProcessResult
 from .rosetta_mix import FluorescenceGuidedScatterPeakProcess
 
@@ -19,6 +14,24 @@ logger = logging.getLogger(__name__)
 
 DIM_MARKER_DIAMETER_NM = 140.0
 BRIGHT_MARKER_DIAMETER_NM = 380.0
+
+# Rosetta Mix (Exometry CAL003) bead diameters spanning 70 nm to 994 nm. The
+# 140 nm and 380 nm beads are the green-fluorescent markers; the remaining ten
+# are the non-fluorescent scatter beads this script assigns diameters to.
+ROSETTA_MIX_PARTICLE_DIAMETERS_NM = (
+    994.0,
+    799.0,
+    600.0,
+    400.0,
+    380.0,
+    296.0,
+    203.0,
+    147.0,
+    140.0,
+    125.0,
+    100.0,
+    70.0,
+)
 
 # Single-anchor fallback: diameter scales with SSC-A as d proportional to
 # scatter ** exponent. An exponent of 0.25 corresponds to SSC-A growing with
@@ -440,14 +453,10 @@ def build_rosetta_mix_non_fluorescent_candidates() -> list[float]:
     """
     Build Rosetta Mix candidate diameters excluding the fluorescent markers.
     """
-    preset = get_scattering_calibration_scatterer_preset(
-        ROSETTA_MIX_PRESET_NAME,
-    )
-
     candidate_diameters_nm = sorted(
         {
             float(value)
-            for value in preset.particle_diameters_nm
+            for value in ROSETTA_MIX_PARTICLE_DIAMETERS_NM
             if float(value) > 0.0
         }
     )

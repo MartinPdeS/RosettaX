@@ -13,7 +13,7 @@ from RosettaX.utils import casting, plottings
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.utils.io import column_copy
 from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
-from RosettaX.workflow.plotting.scatter2d import Scatter2DTrace
+
 from ..scripts.base import (
     filter_edge_artifact_pairs,
     filter_edge_artifact_values,
