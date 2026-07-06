@@ -36,7 +36,7 @@
     <link rel="stylesheet" type="text/css" href="_static/sg_gallery-binder.css?v=f4aeca0c" />
     <link rel="stylesheet" type="text/css" href="_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="_static/sg_gallery-rendered-html.css?v=1277b6f3" />
-    <link rel="stylesheet" type="text/css" href="_static/default.css?v=265c6c44" />
+    <link rel="stylesheet" type="text/css" href="_static/default.css?v=22616357" />
   
   <!-- So that users can add custom icons -->
   <script defer src="_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
@@ -512,14 +512,56 @@
                   
   <section id="rosettax-documentation">
 <h1>RosettaX documentation<a class="headerlink" href="#rosettax-documentation" title="Link to this heading">#</a></h1>
-<p><strong>Date</strong>: Jul 06, 2026, <strong>Version</strong>: 0.2.1</p>
-<p>RosettaX calibrates exported FCS data for fluorescence and scattering workflows
-and then re-applies saved calibrations to experimental files. This reference is
-written for users who want to understand what the software is doing under the
-hood: which models are fitted, how refractive indices are computed, what is
-saved in calibration files, and which checks run before exports are produced.</p>
-<section id="start-here">
-<h2>Start here<a class="headerlink" href="#start-here" title="Link to this heading">#</a></h2>
+<div class="rx-hero docutils container">
+<p>RosettaX calibrates exported FCS data for fluorescence and scattering
+workflows and then reapplies saved calibrations to experimental files.
+This reference focuses on practical workflow guidance and the modeling
+details behind each output.</p>
+<div class="line-block">
+<div class="line"><strong>Date</strong>: Jul 06, 2026</div>
+<div class="line"><strong>Version</strong>: 0.2.1</div>
+</div>
+</div>
+<section id="choose-your-path">
+<h2>Choose your path<a class="headerlink" href="#choose-your-path" title="Link to this heading">#</a></h2>
+<div class="rx-card-grid docutils container">
+<div class="rx-card docutils container">
+<p><strong>First run and setup</strong></p>
+<p>Start here if you are configuring RosettaX for the first time or walking
+through the interface.</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="quickstart.html"><span class="doc">Quick start</span></a></p></li>
+<li><p><a class="reference internal" href="interface.html"><span class="doc">Interface guide</span></a></p></li>
+<li><p><a class="reference internal" href="troubleshooting.html"><span class="doc">Troubleshooting</span></a></p></li>
+</ul>
+</div>
+<div class="rx-card docutils container">
+<p><strong>Calibration workflows</strong></p>
+<p>Follow the complete workflow sequence for fluorescence, scattering, peak
+identification, and apply-calibration steps.</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="workflows/index.html"><span class="doc">Workflow guides</span></a></p></li>
+<li><p><a class="reference internal" href="workflows/fluorescence.html"><span class="doc">Fluorescence workflow</span></a></p></li>
+<li><p><a class="reference internal" href="workflows/scattering.html"><span class="doc">Scattering workflow</span></a></p></li>
+<li><p><a class="reference internal" href="workflows/peak_identification.html"><span class="doc">Peak identification scripts</span></a></p></li>
+<li><p><a class="reference internal" href="workflows/apply.html"><span class="doc">Apply-calibration workflow</span></a></p></li>
+</ul>
+</div>
+<div class="rx-card docutils container">
+<p><strong>Modeling and internals</strong></p>
+<p>Use these pages when you want the theory, assumptions, and implementation
+references behind the calculations and generated reports.</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="theory.html"><span class="doc">Implementation model</span></a></p></li>
+<li><p><a class="reference internal" href="references.html"><span class="doc">Calibration file format</span></a></p></li>
+<li><p><a class="reference internal" href="reports.html"><span class="doc">Reports and export provenance</span></a></p></li>
+<li><p><a class="reference internal" href="code.html"><span class="doc">API reference</span></a></p></li>
+</ul>
+</div>
+</div>
+</section>
+<section id="recommended-reading-order">
+<h2>Recommended reading order<a class="headerlink" href="#recommended-reading-order" title="Link to this heading">#</a></h2>
 <p>If you want the technical picture first, read these pages in order:</p>
 <ol class="arabic simple">
 <li><p><a class="reference internal" href="theory.html"><span class="doc">Implementation model</span></a></p></li>
@@ -527,11 +569,9 @@ saved in calibration files, and which checks run before exports are produced.</p
 <li><p><a class="reference internal" href="references.html"><span class="doc">Calibration file format</span></a></p></li>
 <li><p><a class="reference internal" href="reports.html"><span class="doc">Reports and export provenance</span></a></p></li>
 </ol>
-<p>If you need first-run guidance or debugging help, use the in-app Help page and
-the support pages listed below.</p>
 </section>
-<section id="documentation-map">
-<h2>Documentation map<a class="headerlink" href="#documentation-map" title="Link to this heading">#</a></h2>
+<section id="full-documentation-map">
+<h2>Full documentation map<a class="headerlink" href="#full-documentation-map" title="Link to this heading">#</a></h2>
 <div class="toctree-wrapper compound">
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Under the hood</span></p>
 <ul>
@@ -568,6 +608,7 @@ the support pages listed below.</p>
 <li class="toctree-l1"><a class="reference internal" href="workflows/index.html">Workflow guides</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="workflows/fluorescence.html">Fluorescence workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="workflows/scattering.html">Scattering workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflows/systems.html">Flow-cytometer systems</a></li>
 <li class="toctree-l2"><a class="reference internal" href="workflows/apply.html">Apply-calibration workflow</a></li>
 </ul>
 </li>
@@ -655,8 +696,9 @@ the support pages listed below.</p>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#start-here">Start here</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#documentation-map">Documentation map</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#choose-your-path">Choose your path</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#recommended-reading-order">Recommended reading order</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#full-documentation-map">Full documentation map</a><ul class="nav section-nav flex-column">
 </ul>
 </li>
 </ul>

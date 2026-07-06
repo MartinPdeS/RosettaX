@@ -1,17 +1,61 @@
 RosettaX documentation
 ======================
 
-**Date**: |today|, **Version**: |version|
+.. container:: rx-hero
 
-RosettaX calibrates exported FCS data for fluorescence and scattering workflows
-and then re-applies saved calibrations to experimental files. This reference is
-written for users who want to understand what the software is doing under the
-hood: which models are fitted, how refractive indices are computed, what is
-saved in calibration files, and which checks run before exports are produced.
+    RosettaX calibrates exported FCS data for fluorescence and scattering
+    workflows and then reapplies saved calibrations to experimental files.
+    This reference focuses on practical workflow guidance and the modeling
+    details behind each output.
+
+    | **Date**: |today|
+    | **Version**: |version|
 
 
-Start here
-----------
+Choose your path
+----------------
+
+.. container:: rx-card-grid
+
+    .. container:: rx-card
+
+        **First run and setup**
+
+        Start here if you are configuring RosettaX for the first time or walking
+        through the interface.
+
+        - :doc:`quickstart`
+        - :doc:`interface`
+        - :doc:`troubleshooting`
+
+    .. container:: rx-card
+
+        **Calibration workflows**
+
+        Follow the complete workflow sequence for fluorescence, scattering, peak
+        identification, and apply-calibration steps.
+
+        - :doc:`workflows/index`
+        - :doc:`workflows/fluorescence`
+        - :doc:`workflows/scattering`
+        - :doc:`workflows/peak_identification`
+        - :doc:`workflows/apply`
+
+    .. container:: rx-card
+
+        **Modeling and internals**
+
+        Use these pages when you want the theory, assumptions, and implementation
+        references behind the calculations and generated reports.
+
+        - :doc:`theory`
+        - :doc:`references`
+        - :doc:`reports`
+        - :doc:`code`
+
+
+Recommended reading order
+-------------------------
 
 If you want the technical picture first, read these pages in order:
 
@@ -20,12 +64,9 @@ If you want the technical picture first, read these pages in order:
 #. :doc:`references`
 #. :doc:`reports`
 
-If you need first-run guidance or debugging help, use the in-app Help page and
-the support pages listed below.
 
-
-Documentation map
------------------
+Full documentation map
+----------------------
 
 .. toctree::
     :maxdepth: 2

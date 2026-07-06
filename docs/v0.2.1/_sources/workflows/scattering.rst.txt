@@ -45,6 +45,10 @@ maintainer with an example FCS file, the detector naming you want recognized,
 and any public optical-geometry documentation that should inform the preset.
 
 
+For the full per-system detector geometry overview (one card per cytometer
+system with 3D figures and placeholders), see :doc:`systems`.
+
+
 How the calibration-standard relation is built
 ----------------------------------------------
 
