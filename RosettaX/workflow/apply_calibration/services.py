@@ -133,9 +133,22 @@ def apply_calibration_to_fcs_files(
                     "Scattering target model parameters are required for scattering calibration."
                 )
 
-            resolved_output_channels = build_scattering_output_columns(
+            default_output_columns = build_scattering_output_columns(
                 source_channel=source_channel,
-            ).as_list()
+            )
+            resolved_output_channels = [
+                resolve_unique_output_channel_name(
+                    preferred_name=resolve_requested_output_channel_name(
+                        calibration_application.calibration_payload,
+                        default=default_output_columns.mie_equivalent_diameter_nm,
+                    ),
+                    reserved_names=reserved_output_names.union(
+                        {
+                            default_output_columns.estimated_coupling,
+                        },
+                    ),
+                ),
+            ]
         else:
             resolved_output_channels = [
                 resolve_unique_output_channel_name(
@@ -245,6 +258,7 @@ def build_multi_calibration_dataframe_transformer_factory(
                 individual_transformers.append(
                     build_scattering_dataframe_transformer_factory(
                         source_channel=source_channel,
+                        output_channel_names=resolved_output_channels,
                         calibration_payload=calibration_application.calibration_payload,
                         target_model_parameters=calibration_application.scattering_target_model_parameters,
                     )(
@@ -283,6 +297,7 @@ def build_multi_calibration_dataframe_transformer_factory(
 def build_scattering_dataframe_transformer_factory(
     *,
     source_channel: str,
+    output_channel_names: list[str],
     calibration_payload: dict[str, Any],
     target_model_parameters: ScatteringTargetModelParameters,
 ):
@@ -343,6 +358,7 @@ def build_scattering_dataframe_transformer_factory(
             result = apply_scattering_calibration_to_dataframe(
                 dataframe=dataframe,
                 source_channel=source_channel,
+                output_channel_names=output_channel_names,
                 calibration_payload=calibration_payload,
                 target_model_parameters=target_model_parameters,
                 metadata={

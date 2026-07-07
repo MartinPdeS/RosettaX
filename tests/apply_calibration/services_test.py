@@ -2,6 +2,7 @@
 
 import sys
 import types
+from types import SimpleNamespace
 
 import pandas as pd
 
@@ -106,3 +107,78 @@ class Test_ApplyCalibrationServices:
         )
 
         assert resolved_name == "FITC (MESF) 3"
+
+    def test_apply_calibration_to_fcs_files_uses_saved_scattering_output_channel_name(self, monkeypatch) -> None:
+        monkeypatch.setattr(
+            services.io,
+            "build_input_export_columns",
+            lambda source_channels, export_columns: list(export_columns),
+        )
+        monkeypatch.setattr(
+            services.io,
+            "build_exported_fcs_bytes",
+            lambda uploaded_fcs_path, input_export_columns, dataframe_transformer: b"payload",
+        )
+        monkeypatch.setattr(
+            services.io,
+            "build_export_filename",
+            lambda uploaded_fcs_path, output_channels: "export.fcs",
+        )
+
+        result = services.apply_calibration_to_fcs_files(
+            request=services.ApplyCalibrationRequest(
+                uploaded_fcs_paths=["/tmp/input.fcs"],
+                export_columns=["Time"],
+                calibrations=[
+                    services.CalibrationApplication(
+                        selected_calibration="scatter.json",
+                        calibration_payload={
+                            "calibration_type": "scattering",
+                            "version": 2,
+                            "source_channel": "SSC-A",
+                            "applied_output_channel_name": "Diameter (nm)",
+                        },
+                        scattering_target_model_parameters=object(),
+                    ),
+                ],
+            ),
+        )
+
+        assert result.output_channels == ["Diameter (nm)"]
+        assert '"Diameter (nm)"' in result.status
+
+    def test_build_scattering_dataframe_transformer_factory_passes_resolved_output_channel_names(self, monkeypatch) -> None:
+        captured_arguments = {}
+
+        def _fake_apply_scattering_calibration_to_dataframe(**kwargs):
+            captured_arguments.update(kwargs)
+            return SimpleNamespace(
+                dataframe=kwargs["dataframe"],
+                output_columns=list(kwargs["output_channel_names"]),
+                warnings=[],
+                target_mie_relation=None,
+            )
+
+        monkeypatch.setattr(
+            services,
+            "apply_scattering_calibration_to_dataframe",
+            _fake_apply_scattering_calibration_to_dataframe,
+        )
+
+        transformer_factory = services.build_scattering_dataframe_transformer_factory(
+            source_channel="SSC-A",
+            output_channel_names=["Diameter (nm)"],
+            calibration_payload={
+                "source_channel": "SSC-A",
+                "applied_output_channel_name": "Diameter (nm)",
+            },
+            target_model_parameters=object(),
+        )
+
+        transformer = transformer_factory("/tmp/input.fcs")
+        dataframe = pd.DataFrame({"SSC-A": [1.0, 2.0]})
+
+        result = transformer(dataframe)
+
+        assert result.equals(dataframe)
+        assert captured_arguments["output_channel_names"] == ["Diameter (nm)"]

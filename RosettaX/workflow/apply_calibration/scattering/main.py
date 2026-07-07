@@ -90,6 +90,7 @@ def apply_scattering_calibration_to_dataframe(
     *,
     dataframe: Any,
     source_channel: str,
+    output_channel_names: list[str] | None = None,
     calibration_payload: dict[str, Any],
     target_model_parameters: ScatteringTargetModelParameters,
     metadata: Optional[dict[str, Any]] = None,
@@ -161,17 +162,23 @@ def apply_scattering_calibration_to_dataframe(
         values=mie_equivalent_diameter_nm,
     )
 
-    output_columns = build_scattering_output_columns(
-        source_channel=source_channel,
-    )
+    if output_channel_names is None:
+        output_columns = build_scattering_output_columns(
+            source_channel=source_channel,
+        )
+    else:
+        if len(output_channel_names) != 1:
+            raise ValueError(
+                "Scattering output_channel_names must contain exactly 1 entry."
+            )
+
+        output_columns = ScatteringOutputColumns(
+            estimated_coupling="",
+            mie_equivalent_diameter_nm=str(output_channel_names[0]).strip(),
+        )
 
     output_dataframe = dataframe.copy(
         deep=True,
-    )
-
-    output_dataframe[output_columns.estimated_coupling] = np.asarray(
-        estimated_coupling,
-        dtype=float,
     )
 
     output_dataframe[output_columns.mie_equivalent_diameter_nm] = np.asarray(
