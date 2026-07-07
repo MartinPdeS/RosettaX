@@ -61,49 +61,53 @@ class Test_ApplyCalibrationReport:
                 "/tmp/input-a.fcs",
                 "/tmp/input-b.fcs",
             ],
-            selected_calibration="scatter-calibration.json",
-            calibration_payload={
-                "calibration_type": "scattering",
-                "source_channel": "SSC-A",
-                "output_quantity": "particle_diameter_nm",
-                "instrument_response": {
-                    "measured_channel": "SSC-A",
-                    "slope": 1.23,
-                    "intercept": 4.56,
-                    "r_squared": 0.998,
-                    "force_zero_intercept": False,
-                    "input_quantity": "measured_peak_position",
-                    "output_quantity": "particle_diameter_nm",
-                    "model_name": "Linear",
-                },
-                "reference_table": [
-                    {
-                        "measured_peak_position": 1200.0,
-                        "particle_diameter_nm": 180.0,
-                    },
-                    {
-                        "measured_peak_position": 2100.0,
-                        "particle_diameter_nm": 240.0,
-                    },
-                ],
-                "metadata": {
-                    "detector_configuration_preset_name": "Side scatter preset",
-                    "wavelength_nm": 488,
-                    "notes": "Silica standards",
-                },
-            },
             export_columns=[
                 "FSC-A",
                 "Time",
             ],
-            scattering_target_model_parameters=ScatteringTargetModelParameters.from_raw_values(
-                target_mie_model="Solid Sphere",
-                target_medium_refractive_index=1.335,
-                target_particle_refractive_index=1.59,
-                target_diameter_min_nm=100,
-                target_diameter_max_nm=500,
-                target_diameter_count=41,
-            ),
+            calibrations=[
+                CalibrationApplication(
+                    selected_calibration="scatter-calibration.json",
+                    calibration_payload={
+                        "calibration_type": "scattering",
+                        "source_channel": "SSC-A",
+                        "output_quantity": "particle_diameter_nm",
+                        "instrument_response": {
+                            "measured_channel": "SSC-A",
+                            "slope": 1.23,
+                            "intercept": 4.56,
+                            "r_squared": 0.998,
+                            "force_zero_intercept": False,
+                            "input_quantity": "measured_peak_position",
+                            "output_quantity": "particle_diameter_nm",
+                            "model_name": "Linear",
+                        },
+                        "reference_table": [
+                            {
+                                "measured_peak_position": 1200.0,
+                                "particle_diameter_nm": 180.0,
+                            },
+                            {
+                                "measured_peak_position": 2100.0,
+                                "particle_diameter_nm": 240.0,
+                            },
+                        ],
+                        "metadata": {
+                            "detector_configuration_preset_name": "Side scatter preset",
+                            "wavelength_nm": 488,
+                            "notes": "Silica standards",
+                        },
+                    },
+                    scattering_target_model_parameters=ScatteringTargetModelParameters.from_raw_values(
+                        target_mie_model="Solid Sphere",
+                        target_medium_refractive_index=1.335,
+                        target_particle_refractive_index=1.59,
+                        target_diameter_min_nm=100,
+                        target_diameter_max_nm=500,
+                        target_diameter_count=41,
+                    ),
+                ),
+            ],
         )
 
         result = ApplyCalibrationFilesResult(
@@ -166,11 +170,15 @@ class Test_ApplyCalibrationReport:
     def test_apply_report_matches_request_detects_request_changes(self) -> None:
         request = ApplyCalibrationRequest(
             uploaded_fcs_paths=["/tmp/input-a.fcs"],
-            selected_calibration="fluorescence-calibration.json",
-            calibration_payload={
-                "source_channel": "FITC-A",
-            },
             export_columns=["Time"],
+            calibrations=[
+                CalibrationApplication(
+                    selected_calibration="fluorescence-calibration.json",
+                    calibration_payload={
+                        "source_channel": "FITC-A",
+                    },
+                ),
+            ],
         )
 
         result = ApplyCalibrationFilesResult(
@@ -194,11 +202,15 @@ class Test_ApplyCalibrationReport:
 
         changed_request = ApplyCalibrationRequest(
             uploaded_fcs_paths=["/tmp/input-a.fcs"],
-            selected_calibration="fluorescence-calibration.json",
-            calibration_payload={
-                "source_channel": "FITC-A",
-            },
             export_columns=["Time", "FSC-A"],
+            calibrations=[
+                CalibrationApplication(
+                    selected_calibration="fluorescence-calibration.json",
+                    calibration_payload={
+                        "source_channel": "FITC-A",
+                    },
+                ),
+            ],
         )
 
         assert apply_report_matches_request(
@@ -213,52 +225,56 @@ class Test_ApplyCalibrationReport:
     def test_build_apply_report_pdf_bytes_returns_pdf_with_expected_text(self) -> None:
         request = ApplyCalibrationRequest(
             uploaded_fcs_paths=["/tmp/input-a.fcs"],
-            selected_calibration="fluorescence-calibration.json",
-            calibration_payload={
-                "schema_version": "1.0",
-                "calibration_type": "fluorescence",
-                "name": "FITC MESF calibration",
-                "created_at": "2026-06-09T15:30:00Z",
-                "source_file": "beads.fcs",
-                "source_channel": "FITC-A",
-                "gating_channel": "SSC-A",
-                "gating_threshold": 1200.0,
-                "fit_model": "power-law",
-                "fit_metrics": {
-                    "r_squared": 0.999,
-                    "point_count": 3,
-                },
-                "parameters": {
-                    "slope": 0.98,
-                    "intercept": 0.12,
-                    "prefactor": 1.32,
-                },
-                "export_notes": "Generated from MESF bead batch 24A.",
-                "payload": {
-                    "slope": 0.98,
-                    "intercept": 0.12,
-                    "prefactor": 1.32,
-                    "R_squared": 0.999,
-                    "model": "power-law",
-                    "x_definition": "Intensity [a.u.]",
-                    "y_definition": "Intensity [MESF]",
-                },
-                "reference_points": [
-                    {
-                        "reference_value": 1.0e3,
-                        "measured_value": 9.0e2,
-                    },
-                    {
-                        "reference_value": 1.0e4,
-                        "measured_value": 8.4e3,
-                    },
-                    {
-                        "reference_value": 1.0e5,
-                        "measured_value": 7.6e4,
-                    },
-                ],
-            },
             export_columns=[],
+            calibrations=[
+                CalibrationApplication(
+                    selected_calibration="fluorescence-calibration.json",
+                    calibration_payload={
+                        "schema_version": "1.0",
+                        "calibration_type": "fluorescence",
+                        "name": "FITC MESF calibration",
+                        "created_at": "2026-06-09T15:30:00Z",
+                        "source_file": "beads.fcs",
+                        "source_channel": "FITC-A",
+                        "gating_channel": "SSC-A",
+                        "gating_threshold": 1200.0,
+                        "fit_model": "power-law",
+                        "fit_metrics": {
+                            "r_squared": 0.999,
+                            "point_count": 3,
+                        },
+                        "parameters": {
+                            "slope": 0.98,
+                            "intercept": 0.12,
+                            "prefactor": 1.32,
+                        },
+                        "export_notes": "Generated from MESF bead batch 24A.",
+                        "payload": {
+                            "slope": 0.98,
+                            "intercept": 0.12,
+                            "prefactor": 1.32,
+                            "R_squared": 0.999,
+                            "model": "power-law",
+                            "x_definition": "Intensity [a.u.]",
+                            "y_definition": "Intensity [MESF]",
+                        },
+                        "reference_points": [
+                            {
+                                "reference_value": 1.0e3,
+                                "measured_value": 9.0e2,
+                            },
+                            {
+                                "reference_value": 1.0e4,
+                                "measured_value": 8.4e3,
+                            },
+                            {
+                                "reference_value": 1.0e5,
+                                "measured_value": 7.6e4,
+                            },
+                        ],
+                    },
+                ),
+            ],
         )
 
         result = ApplyCalibrationFilesResult(
@@ -303,39 +319,43 @@ class Test_ApplyCalibrationReport:
     def test_build_apply_report_pdf_bytes_includes_saved_scattering_metadata(self) -> None:
         request = ApplyCalibrationRequest(
             uploaded_fcs_paths=["/tmp/input-a.fcs"],
-            selected_calibration="scatter-calibration.json",
-            calibration_payload={
-                "calibration_type": "scattering",
-                "version": 2,
-                "source_channel": "SSC-A",
-                "output_quantity": "particle_diameter_nm",
-                "instrument_response": {
-                    "measured_channel": "SSC-A",
-                    "slope": 1.23,
-                    "intercept": 4.56,
-                    "r_squared": 0.998,
-                    "force_zero_intercept": False,
-                    "input_quantity": "measured_peak_position",
-                    "output_quantity": "particle_diameter_nm",
-                    "model_name": "Linear",
-                },
-                "metadata": {
-                    "detector_configuration_preset_name": "Small particle SSC",
-                    "wavelength_nm": 488,
-                    "notes": "Lot 42",
-                },
-                "reference_table": [
-                    {
-                        "measured_peak_position": 1200.0,
-                        "particle_diameter_nm": 180.0,
-                    },
-                    {
-                        "measured_peak_position": 2100.0,
-                        "particle_diameter_nm": 240.0,
-                    },
-                ],
-            },
             export_columns=["Time"],
+            calibrations=[
+                CalibrationApplication(
+                    selected_calibration="scatter-calibration.json",
+                    calibration_payload={
+                        "calibration_type": "scattering",
+                        "version": 2,
+                        "source_channel": "SSC-A",
+                        "output_quantity": "particle_diameter_nm",
+                        "instrument_response": {
+                            "measured_channel": "SSC-A",
+                            "slope": 1.23,
+                            "intercept": 4.56,
+                            "r_squared": 0.998,
+                            "force_zero_intercept": False,
+                            "input_quantity": "measured_peak_position",
+                            "output_quantity": "particle_diameter_nm",
+                            "model_name": "Linear",
+                        },
+                        "metadata": {
+                            "detector_configuration_preset_name": "Small particle SSC",
+                            "wavelength_nm": 488,
+                            "notes": "Lot 42",
+                        },
+                        "reference_table": [
+                            {
+                                "measured_peak_position": 1200.0,
+                                "particle_diameter_nm": 180.0,
+                            },
+                            {
+                                "measured_peak_position": 2100.0,
+                                "particle_diameter_nm": 240.0,
+                            },
+                        ],
+                    },
+                ),
+            ],
         )
 
         result = ApplyCalibrationFilesResult(

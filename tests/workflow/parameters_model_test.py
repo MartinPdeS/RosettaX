@@ -97,14 +97,14 @@ class Test_DetectorPresetLoaderCatalog:
 
         assert loader.load_model_options("Apogee") == [
             {
-                "label": "Apogee",
-                "value": "Apogee",
+                "label": "A60 - Micro",
+                "value": "A60 - Micro",
             },
         ]
 
         assert loader.load_type_options(
             brand="Apogee",
-            model="Apogee",
+            model="A60 - Micro",
         ) == [
             {
                 "label": "Forward",
@@ -625,14 +625,14 @@ class Test_compute_model_for_rows:
         )
 
         side_visible_mask = (
-            (split_metric < 0.0)
+            (split_metric > 0.0)
             & (
                 side_blocker_bar_numerical_aperture
                 >= float(apogee_side_preset['blocker_bar_numerical_aperture'])
             )
         )
         forward_visible_mask = (
-            (split_metric > 0.0)
+            (split_metric < 0.0)
             & (
                 forward_blocker_bar_numerical_aperture
                 >= float(apogee_forward_preset['blocker_bar_numerical_aperture'])
@@ -645,8 +645,8 @@ class Test_compute_model_for_rows:
         assert np.allclose(forward_weights[~forward_visible_mask], 0.0)
         assert int(np.count_nonzero(side_weights)) == int(np.count_nonzero(side_visible_mask))
         assert int(np.count_nonzero(forward_weights)) == int(np.count_nonzero(forward_visible_mask))
-        assert np.allclose(side_weights[split_metric > 0.0], 0.0)
-        assert np.allclose(forward_weights[split_metric < 0.0], 0.0)
+        assert np.allclose(side_weights[split_metric < 0.0], 0.0)
+        assert np.allclose(forward_weights[split_metric > 0.0], 0.0)
 
     def test_detector_preset_loader_normalizes_apogee_split_definition(self):
         loader = DetectorPresetLoader()
@@ -657,7 +657,7 @@ class Test_compute_model_for_rows:
         assert apogee_side_preset['detector_angular_weighting'] == {
             'mode': 'split',
             'metric': 'local-top-bottom',
-            'keep': 'negative',
+            'keep': 'positive',
         }
         assert apogee_side_preset['alias'] == ['apogee']
         assert preset_path.name == 'detector_definitions.json'

@@ -1191,15 +1191,27 @@ class Automatic1DPeaksProcess(BasePeakProcess):
         """
         candidate_indices: list[int] = []
 
-        if counts.size < 3:
+        if counts.size == 0:
             return np.asarray(
                 candidate_indices,
                 dtype=int,
             )
 
+        if counts.size == 1:
+            return np.asarray(
+                [0],
+                dtype=int,
+            )
+
+        if counts[0] > counts[1]:
+            candidate_indices.append(0)
+
         for index in range(1, counts.size - 1):
             if counts[index] > counts[index - 1] and counts[index] > counts[index + 1]:
                 candidate_indices.append(index)
+
+        if counts[-1] > counts[-2]:
+            candidate_indices.append(counts.size - 1)
 
         return np.asarray(
             candidate_indices,

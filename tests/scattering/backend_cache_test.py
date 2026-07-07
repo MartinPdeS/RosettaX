@@ -15,7 +15,11 @@ class Test_ScatteringBackendCache:
             BackEnd,
             "_compute_coupling_values_with_fallback",
             return_value=np.asarray([1.0, 2.0], dtype=float),
-        ) as mocked_compute:
+        ) as mocked_compute, patch.object(
+            BackEnd,
+            "_compute_cached_solid_sphere_cross_section_nm2",
+            return_value=(3.0, 4.0),
+        ):
             first_result = BackEnd.compute_modeled_coupling_from_diameters(
                 particle_diameters_nm=np.asarray([100.0, 200.0], dtype=float),
                 wavelength_nm=488.0,
