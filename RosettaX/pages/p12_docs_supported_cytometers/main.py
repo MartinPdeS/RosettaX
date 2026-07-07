@@ -135,6 +135,14 @@ class SupportedCytometersDocumentationPage:
                     className="g-3",
                 ),
                 html.Div(style={"height": "18px"}),
+                dbc.Row(
+                    [
+                        dbc.Col(self._selection_guidance_card(), lg=6),
+                        dbc.Col(self._review_checklist_card(), lg=6),
+                    ],
+                    className="g-3",
+                ),
+                html.Div(style={"height": "18px"}),
                 self._request_support_card(),
                 self._figure_preview_modal(),
             ]
@@ -320,6 +328,32 @@ class SupportedCytometersDocumentationPage:
                         "borderRadius": "10px",
                     },
                 ),
+            ],
+            min_height="unset",
+        )
+
+    def _selection_guidance_card(self) -> dbc.Card:
+        return build_documentation_card(
+            title="How to choose a detector preset",
+            subtitle="Use model family, channel semantics, and fit behavior together rather than relying on instrument name alone.",
+            body=[
+                html.Div("Start with the preset family whose brand and model labels match the FCS metadata closest."),
+                html.Div("Confirm the selected channel behaves like the expected detector type (forward, side, fluorescence-like) for that preset."),
+                html.Div("If multiple presets appear plausible, compare calibration fit consistency across the same standard table before deciding."),
+                html.Div("Treat preset selection as a modeling choice to be recorded, not a hidden implementation detail."),
+            ],
+            min_height="unset",
+        )
+
+    def _review_checklist_card(self) -> dbc.Card:
+        return build_documentation_card(
+            title="Preset review checklist",
+            subtitle="Use this checklist when you onboard a new cytometer configuration to avoid silent drift.",
+            body=[
+                html.Div("Check channel aliases and auto-detect behavior against at least one representative FCS file."),
+                html.Div("Regenerate detector geometry figures and verify they match the intended collection orientation."),
+                html.Div("Run a known calibration standard and compare slope stability with expected instrument behavior."),
+                html.Div("Capture limitations explicitly if one preset is only valid for specific lasers or channels."),
             ],
             min_height="unset",
         )

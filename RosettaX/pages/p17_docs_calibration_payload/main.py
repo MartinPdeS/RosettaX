@@ -71,6 +71,14 @@ class CalibrationPayloadDocumentationPage:
                     ],
                     className="g-3",
                 ),
+                html.Div(style={"height": "18px"}),
+                dbc.Row(
+                    [
+                        dbc.Col(self._field_semantics_card(), lg=6),
+                        dbc.Col(self._compatibility_card(), lg=6),
+                    ],
+                    className="g-3",
+                ),
             ]
         )
 
@@ -113,6 +121,30 @@ class CalibrationPayloadDocumentationPage:
                     "In both cases, the goal is the same: another user should be able to inspect the JSON and understand what was fitted without reopening the original session.",
                 ),
             ],
+        )
+
+    def _field_semantics_card(self) -> dbc.Card:
+        return build_documentation_card(
+            title="Field semantics that matter",
+            subtitle="Some payload fields are descriptive metadata; others are required for apply-time computation.",
+            body=[
+                html.Div("Required computational fields include source channel, fit parameters, and reference data used by the chosen calibration type."),
+                html.Div("Context fields such as model labels, version tags, and metadata support review and reproducibility even when not directly used in one apply step."),
+                html.Div("When extending payload structure, preserve existing keys or provide explicit migration handling to avoid breaking older saved calibrations."),
+            ],
+            min_height="unset",
+        )
+
+    def _compatibility_card(self) -> dbc.Card:
+        return build_documentation_card(
+            title="Compatibility expectations",
+            subtitle="Payload stability is part of the calibration contract across versions and users.",
+            body=[
+                html.Div("Wrapper schema identifies the record type so apply workflows can dispatch correctly."),
+                html.Div("Legacy-compatible blocks are retained where needed so older calibrations continue to load."),
+                html.Div("If a payload is incomplete, apply-time checks should fail clearly rather than silently falling back to ambiguous defaults."),
+            ],
+            min_height="unset",
         )
 
 

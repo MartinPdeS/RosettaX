@@ -73,7 +73,13 @@ class RegressionModelsDocumentationPage:
                     className="g-3",
                 ),
                 html.Div(style={"height": "18px"}),
-                self._interpretation_card(),
+                dbc.Row(
+                    [
+                        dbc.Col(self._interpretation_card(), lg=7),
+                        dbc.Col(self._diagnostics_card(), lg=5),
+                    ],
+                    className="g-3",
+                ),
             ]
         )
 
@@ -141,6 +147,19 @@ class RegressionModelsDocumentationPage:
                 html.Div(
                     "In both cases, the saved calibration JSON should be treated as the authoritative context. The regression numbers alone are not enough to decide whether two calibrations are scientifically equivalent.",
                 ),
+            ],
+            min_height="unset",
+        )
+
+    def _diagnostics_card(self) -> dbc.Card:
+        return build_documentation_card(
+            title="Fit diagnostics checklist",
+            subtitle="Use this checklist before accepting a calibration for export workflows.",
+            body=[
+                html.Div("Verify fit points span the intended dynamic range; narrow ranges can make coefficients unstable."),
+                html.Div("Inspect residual directionality; systematic curvature often means model mismatch rather than random noise."),
+                html.Div("Compare repeated runs with the same standards to estimate practical coefficient variability."),
+                html.Div("Do not compare coefficients across incompatible payload contexts even if R² appears high."),
             ],
             min_height="unset",
         )

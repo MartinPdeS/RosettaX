@@ -64,7 +64,13 @@ class ApplyChecksDocumentationPage:
                     min_height="unset",
                 ),
                 html.Div(style={"height": "18px"}),
-                self._checks_card(),
+                dbc.Row(
+                    [
+                        dbc.Col(self._checks_card(), lg=7),
+                        dbc.Col(self._warning_interpretation_card(), lg=5),
+                    ],
+                    className="g-3",
+                ),
             ]
         )
 
@@ -85,6 +91,19 @@ class ApplyChecksDocumentationPage:
                 html.Div(
                     "Export columns are normalized before writing output, and warnings collected during the apply run are surfaced again in the PDF report and result payload.",
                 ),
+            ],
+            min_height="unset",
+        )
+
+    def _warning_interpretation_card(self) -> dbc.Card:
+        return build_documentation_card(
+            title="How to interpret apply warnings",
+            subtitle="Warnings indicate reduced confidence or constrained model behavior, not always a hard failure.",
+            body=[
+                html.Div("Warnings about non-monotonic target relations mean inversion used a restricted monotonic branch."),
+                html.Div("Channel-missing or payload-structure errors should be treated as blocking issues and resolved before export."),
+                html.Div("Repeated warnings across runs are usually a model/input mismatch signal rather than random runtime noise."),
+                html.Div("Always cross-check warning context in the generated report before sharing calibrated outputs."),
             ],
             min_height="unset",
         )

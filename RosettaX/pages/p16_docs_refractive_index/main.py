@@ -64,7 +64,15 @@ class RefractiveIndexDocumentationPage:
                     min_height="unset",
                 ),
                 html.Div(style={"height": "18px"}),
-                self._resolution_card(),
+                dbc.Row(
+                    [
+                        dbc.Col(self._resolution_card(), lg=7),
+                        dbc.Col(self._resolution_order_card(), lg=5),
+                    ],
+                    className="g-3",
+                ),
+                html.Div(style={"height": "18px"}),
+                self._quality_checks_card(),
             ]
         )
 
@@ -101,6 +109,48 @@ class RefractiveIndexDocumentationPage:
                 html.Div(
                     "This matters in scattering because wavelength changes can update both medium and particle refractive indices before the Mie relation or calibration-standard model is computed.",
                 ),
+            ],
+            min_height="unset",
+        )
+
+    def _resolution_order_card(self) -> dbc.Card:
+        return build_documentation_card(
+            title="Resolution precedence",
+            subtitle="RosettaX follows a deterministic order so the same input state yields the same numeric index values.",
+            body=[
+                html.Div(
+                    [
+                        html.Div("1. Source preset value", style={"fontWeight": "700", "marginBottom": "3px"}),
+                        html.Div("If a material source is selected, RosettaX attempts to resolve it at the current wavelength."),
+                    ],
+                    style={"marginBottom": "10px"},
+                ),
+                html.Div(
+                    [
+                        html.Div("2. Direct numeric source", style={"fontWeight": "700", "marginBottom": "3px"}),
+                        html.Div("If the source itself is numeric, that value is used directly without Sellmeier evaluation."),
+                    ],
+                    style={"marginBottom": "10px"},
+                ),
+                html.Div(
+                    [
+                        html.Div("3. Current input fallback", style={"fontWeight": "700", "marginBottom": "3px"}),
+                        html.Div("If source resolution fails, RosettaX keeps the current numeric value entered in the field."),
+                    ]
+                ),
+            ],
+            min_height="unset",
+        )
+
+    def _quality_checks_card(self) -> dbc.Card:
+        return build_documentation_card(
+            title="Quality checks before fitting",
+            subtitle="Refractive index errors propagate directly into modeled coupling and can dominate scattering fit drift.",
+            body=[
+                html.Div("Re-check wavelength units and selected laser line when switching between instrument configurations."),
+                html.Div("Ensure medium and particle values are physically plausible for the sample temperature and composition."),
+                html.Div("When using core-shell models, verify core and shell values are intentionally different and consistent with the standard material."),
+                html.Div("If calibration fit quality changes unexpectedly, re-validate refractive index sources before changing regression settings."),
             ],
             min_height="unset",
         )

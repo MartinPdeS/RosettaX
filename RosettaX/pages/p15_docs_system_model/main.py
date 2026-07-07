@@ -71,6 +71,14 @@ class SystemModelDocumentationPage:
                     ],
                     className="g-3",
                 ),
+                html.Div(style={"height": "18px"}),
+                dbc.Row(
+                    [
+                        dbc.Col(self._assumption_boundaries_card(), lg=6),
+                        dbc.Col(self._practical_validation_card(), lg=6),
+                    ],
+                    className="g-3",
+                ),
             ]
         )
 
@@ -100,12 +108,37 @@ class SystemModelDocumentationPage:
                     "The scattering backend builds a Gaussian illumination source and a photodiode detector model through PyMieSim. The configurable optical terms are wavelength, detector NA, cache NA, blocker-bar NA, detector phi offset, detector gamma offset, and detector sampling.",
                 ),
                 html.Div(
-                        "Internally, the modeled source defaults to optical power = 1.0 W, source numerical aperture = 0.1, and polarization angle = 90 degrees. Detector presets can inject angular weights and effective geometry corrections before coupling is computed.",
+                        "Internally, the modeled source defaults to optical power = 1.0 W, source numerical aperture = 0.1, and polarization angle = 0 degrees. Detector presets can inject angular weights and effective geometry corrections before coupling is computed.",
                 ),
                 html.Div(
                     "That means RosettaX is calibrating a measured scatter channel against a modeled collection geometry, not against raw Mie intensity integrated over an unspecified instrument.",
                 ),
             ],
+        )
+
+    def _assumption_boundaries_card(self) -> dbc.Card:
+        return build_documentation_card(
+            title="Assumption boundaries",
+            subtitle="Use these boundaries to decide when a packaged detector preset is adequate versus when custom tuning is required.",
+            body=[
+                html.Div("Preset support means the geometry is documented and reproducible, not that every hardware detail of an instrument is reverse engineered."),
+                html.Div("If your cytometer uses unusual collection optics, aperture masks, or channel definitions, treat packaged presets as starting points and verify against known standards."),
+                html.Div("Strong calibration agreement across standards is a practical validation signal; weak agreement usually points to geometry mismatch, peak selection issues, or sample/model incompatibility."),
+            ],
+            min_height="unset",
+        )
+
+    def _practical_validation_card(self) -> dbc.Card:
+        return build_documentation_card(
+            title="Practical validation checklist",
+            subtitle="A compact set of checks before trusting fitted scattering coefficients.",
+            body=[
+                html.Div("Check that peak positions are stable under small script parameter changes and not driven by one ambiguous peak."),
+                html.Div("Confirm detector preset and channel mapping match expected FSC/SSC semantics for the instrument family."),
+                html.Div("Verify refractive index inputs and wavelength are physically reasonable for the actual sample and buffer."),
+                html.Div("Inspect the fitted line and residual behavior before exporting; do not rely only on one scalar metric."),
+            ],
+            min_height="unset",
         )
 
 

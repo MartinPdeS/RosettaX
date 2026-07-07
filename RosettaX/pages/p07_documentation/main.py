@@ -33,11 +33,21 @@ class DocumentationPage:
                 html.Div(style={"height": "18px"}),
                 dbc.Row(
                     [
+                        dbc.Col(self._quick_start_card(), lg=8),
+                        dbc.Col(self._audience_card(), lg=4),
+                    ],
+                    className="g-3",
+                ),
+                html.Div(style={"height": "18px"}),
+                dbc.Row(
+                    [
                         dbc.Col(self._subpages_card(), lg=7),
                         dbc.Col(self._hub_overview_card(), lg=5),
                     ],
                     className="g-3",
                 ),
+                html.Div(style={"height": "18px"}),
+                self._coverage_card(),
             ]
         )
 
@@ -80,6 +90,54 @@ class DocumentationPage:
             min_height="unset",
         )
 
+    def _quick_start_card(self) -> dbc.Card:
+        return build_documentation_card(
+            title="Quick Start Through The Documentation",
+            subtitle="Follow this order when you need to understand a calibration from first principles to export checks.",
+            body=[
+                html.Div(
+                    [
+                        html.Div("1. System model and optics", style={"fontWeight": "700", "marginBottom": "3px"}),
+                        html.Div("Start with instrument assumptions, detector geometry, and where RosettaX sits in the workflow."),
+                    ],
+                    style={"marginBottom": "10px"},
+                ),
+                html.Div(
+                    [
+                        html.Div("2. Peak scripts and detector support", style={"fontWeight": "700", "marginBottom": "3px"}),
+                        html.Div("Confirm how peaks are extracted and whether your cytometer family uses an appropriate preset."),
+                    ],
+                    style={"marginBottom": "10px"},
+                ),
+                html.Div(
+                    [
+                        html.Div("3. Regression model and refractive index pages", style={"fontWeight": "700", "marginBottom": "3px"}),
+                        html.Div("Review the fitted equations and optical constants that turn detected peaks into calibration parameters."),
+                    ],
+                    style={"marginBottom": "10px"},
+                ),
+                html.Div(
+                    [
+                        html.Div("4. Payload, apply checks, and reports", style={"fontWeight": "700", "marginBottom": "3px"}),
+                        html.Div("Use these pages to validate what was saved, what is checked at apply time, and what provenance is retained."),
+                    ]
+                ),
+            ],
+            min_height="unset",
+        )
+
+    def _audience_card(self) -> dbc.Card:
+        return build_documentation_card(
+            title="Who Should Use This Hub",
+            subtitle="Documentation depth is tuned for practical calibration debugging and auditability.",
+            body=[
+                html.Div("Calibration operators who need repeatable procedures for day-to-day FCS processing."),
+                html.Div("Method developers comparing detector geometry assumptions across instruments."),
+                html.Div("Reviewers who need to trace exported files back to model choices and checks."),
+            ],
+            min_height="unset",
+        )
+
     def _hub_overview_card(self) -> dbc.Card:
         return build_documentation_card(
             title="How to use this hub",
@@ -106,6 +164,19 @@ class DocumentationPage:
                     ]
                 ),
             ],
+        )
+
+    def _coverage_card(self) -> dbc.Card:
+        return build_documentation_card(
+            title="Coverage Summary",
+            subtitle="The documentation pages are organized by lifecycle stage so the same calibration can be understood end-to-end.",
+            body=[
+                html.Div("Configuration stage: system model, detector presets, and refractive index resolution."),
+                html.Div("Calibration stage: peak scripts, regression fitting, and calibration payload structure."),
+                html.Div("Application stage: apply checks, export-time warnings, and report provenance."),
+                html.Div("Cross-stage navigation is intentionally redundant so a page can be read independently without losing context."),
+            ],
+            min_height="unset",
         )
 
 

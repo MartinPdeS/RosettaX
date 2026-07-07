@@ -81,7 +81,11 @@ class PeakScriptsDocumentationPage:
                     className="g-3",
                 ),
                 html.Div(style={"height": "18px"}),
+                self._comparison_matrix_card(),
+                html.Div(style={"height": "18px"}),
                 self._workflow_advice_card(),
+                html.Div(style={"height": "18px"}),
+                self._troubleshooting_card(),
             ]
         )
 
@@ -162,6 +166,83 @@ class PeakScriptsDocumentationPage:
                 html.Div("Move to Manual 2D or Prominence 2D when a second channel makes the populations visually obvious."),
                 html.Div("Use K-means when the number of populations is known but their shapes are broad or uneven."),
                 html.Div("Use the Rosetta script when you are specifically working with the Rosetta bead mixture and want marker-guided interpretation."),
+            ],
+            min_height="unset",
+        )
+
+    def _comparison_matrix_card(self) -> dbc.Card:
+        table = dbc.Table(
+            [
+                html.Thead(
+                    html.Tr(
+                        [
+                            html.Th("Script family"),
+                            html.Th("Best when"),
+                            html.Th("Main control"),
+                            html.Th("Common failure mode"),
+                        ]
+                    )
+                ),
+                html.Tbody(
+                    [
+                        html.Tr(
+                            [
+                                html.Td("Manual 1D / 2D", style={"fontWeight": "700"}),
+                                html.Td("Peaks are visually clear but automation is unstable."),
+                                html.Td("User clicks and axis scaling."),
+                                html.Td("Inconsistent click placement across repeats."),
+                            ]
+                        ),
+                        html.Tr(
+                            [
+                                html.Td("Automatic / Prominence", style={"fontWeight": "700"}),
+                                html.Td("Histogram or density ridges are distinct."),
+                                html.Td("Prominence, width, and minimum distance thresholds."),
+                                html.Td("Over-splitting shoulders or missing weak peaks."),
+                            ]
+                        ),
+                        html.Tr(
+                            [
+                                html.Td("K-means", style={"fontWeight": "700"}),
+                                html.Td("Population count is known but peaks are broad."),
+                                html.Td("Number of clusters and selected channel(s)."),
+                                html.Td("Forced clusters for weak or absent populations."),
+                            ]
+                        ),
+                        html.Tr(
+                            [
+                                html.Td("Rosetta script", style={"fontWeight": "700"}),
+                                html.Td("Rosetta mixture with marker-guided structure."),
+                                html.Td("Correct fluorescence marker channel."),
+                                html.Td("Marker mismatch when fluorescence channel selection is wrong."),
+                            ]
+                        ),
+                    ]
+                ),
+            ],
+            bordered=False,
+            hover=False,
+            responsive=True,
+            size="sm",
+            style={"marginBottom": "0px"},
+        )
+
+        return build_documentation_card(
+            title="Script comparison matrix",
+            subtitle="Use this matrix to pick the first script family before tuning parameters.",
+            body=[table],
+            min_height="unset",
+        )
+
+    def _troubleshooting_card(self) -> dbc.Card:
+        return build_documentation_card(
+            title="Troubleshooting pattern",
+            subtitle="A repeatable escalation path when first-pass peak selection is poor.",
+            body=[
+                html.Div("Step 1: verify detector channel selection and axis scale before changing script parameters."),
+                html.Div("Step 2: tighten or loosen one parameter at a time, then compare resulting peak tables."),
+                html.Div("Step 3: switch script family only after confirming the data topology does not suit the current method."),
+                html.Div("Step 4: if ambiguity remains, keep manual picks and document why automation was rejected for that run."),
             ],
             min_height="unset",
         )

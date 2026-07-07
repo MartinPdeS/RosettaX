@@ -72,7 +72,13 @@ class ReportsDocumentationPage:
                     className="g-3",
                 ),
                 html.Div(style={"height": "18px"}),
-                self._artifact_card(),
+                dbc.Row(
+                    [
+                        dbc.Col(self._artifact_card(), lg=7),
+                        dbc.Col(self._review_workflow_card(), lg=5),
+                    ],
+                    className="g-3",
+                ),
             ]
         )
 
@@ -115,6 +121,19 @@ class ReportsDocumentationPage:
                 html.Div(
                     "The practical goal is reproducibility: someone opening the export later should be able to see both the calibrated files and the report that explains how they were generated.",
                 ),
+            ],
+            min_height="unset",
+        )
+
+    def _review_workflow_card(self) -> dbc.Card:
+        return build_documentation_card(
+            title="Recommended review workflow",
+            subtitle="A lightweight audit path after each apply run.",
+            body=[
+                html.Div("Open the report first and verify source files, selected calibration, and warning summary."),
+                html.Div("Cross-check report context against calibration JSON when coefficients or assumptions look unusual."),
+                html.Div("Archive calibrated outputs and report together; avoid separating files from provenance metadata."),
+                html.Div("If JSON and PDF disagree, treat it as a documentation inconsistency and re-run apply."),
             ],
             min_height="unset",
         )
