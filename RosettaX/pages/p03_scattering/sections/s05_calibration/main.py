@@ -283,10 +283,15 @@ class Calibration:
                             "height": "12px",
                         },
                     ),
-                    dash.dcc.Graph(
-                        id=graph_id,
-                        style=self._build_graph_style(),
-                        config=styling.PLOTLY_GRAPH_CONFIG,
+                    dash.dcc.Loading(
+                        dash.dcc.Graph(
+                            id=graph_id,
+                            style=self._build_graph_style(),
+                            config=styling.PLOTLY_GRAPH_CONFIG,
+                        ),
+                        type="circle",
+                        color="#0d6efd",
+                        delay_show=150,
                     ),
                 ],
                 style={
