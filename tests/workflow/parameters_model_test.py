@@ -14,7 +14,7 @@ from RosettaX.workflow.detector import (
     resolve_detector_angular_weights,
     resolve_detector_modeling_geometry_values,
 )
-from RosettaX.workflow.detector.configuration import _build_blocker_bar_numerical_aperture, resolve_detector_configuration_values, resolve_detector_preset_wavelength_nm
+from RosettaX.workflow.detector.configuration import _build_blocker_bar_numerical_aperture, _build_local_top_bottom_split_metric, resolve_detector_configuration_values, resolve_detector_preset_wavelength_nm
 from RosettaX.workflow.scattering.model import ModelConfiguration
 from RosettaX.workflow.parameters.model import (
     SOLID_SPHERE_MODEL_NAME,
@@ -541,20 +541,21 @@ class Test_compute_model_for_rows:
         )
 
         detector_angular_weights = mock_compute_coupling.call_args.kwargs['detector_angular_weights']
+        apogee_side_preset = DetectorPresetLoader().load_preset('Apogee - Side')
         coordinate_array = build_pymiesim_photodiode_mesh_coordinates(
-            detector_numerical_aperture=1.2,
+            detector_numerical_aperture=float(apogee_side_preset['detector_numerical_aperture']),
             medium_refractive_index=1.333,
-            detector_phi_angle_degree=45.0,
-            detector_gamma_angle_degree=0.0,
+            detector_phi_angle_degree=float(apogee_side_preset['detector_phi_angle_degree']),
+            detector_gamma_angle_degree=float(apogee_side_preset['detector_gamma_angle_degree']),
             detector_sampling=1000,
         )
-        apogee_side_preset = DetectorPresetLoader().load_preset('Apogee - Side')
+        split_metric = _build_local_top_bottom_split_metric(coordinate_array)
         blocker_bar_numerical_aperture = _build_blocker_bar_numerical_aperture(
             preset=apogee_side_preset,
             coordinate_array=coordinate_array,
         )
         expected_visible_mask = (
-            (coordinate_array[:, 0] < coordinate_array[:, 2])
+            (split_metric < 0.0)
             & (
                 blocker_bar_numerical_aperture
                 >= float(apogee_side_preset['blocker_bar_numerical_aperture'])
@@ -607,13 +608,13 @@ class Test_compute_model_for_rows:
         )
 
         coordinate_array = build_pymiesim_photodiode_mesh_coordinates(
-            detector_numerical_aperture=1.2,
+            detector_numerical_aperture=float(apogee_side_preset['detector_numerical_aperture']),
             medium_refractive_index=1.333,
-            detector_phi_angle_degree=45.0,
-            detector_gamma_angle_degree=0.0,
+            detector_phi_angle_degree=float(apogee_side_preset['detector_phi_angle_degree']),
+            detector_gamma_angle_degree=float(apogee_side_preset['detector_gamma_angle_degree']),
             detector_sampling=1000,
         )
-        split_metric = coordinate_array[:, 0] - coordinate_array[:, 2]
+        split_metric = _build_local_top_bottom_split_metric(coordinate_array)
         side_blocker_bar_numerical_aperture = _build_blocker_bar_numerical_aperture(
             preset=apogee_side_preset,
             coordinate_array=coordinate_array,
@@ -655,7 +656,7 @@ class Test_compute_model_for_rows:
 
         assert apogee_side_preset['detector_angular_weighting'] == {
             'mode': 'split',
-            'metric': 'x-minus-z',
+            'metric': 'local-top-bottom',
             'keep': 'negative',
         }
         assert apogee_side_preset['alias'] == ['apogee']

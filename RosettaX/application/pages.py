@@ -23,6 +23,9 @@ PAGE_MODULES: list[str] = [
     "RosettaX.pages.p13_docs_regression_models.main",
     "RosettaX.pages.p14_docs_reports.main",
     "RosettaX.pages.p15_docs_system_model.main",
+    "RosettaX.pages.p16_docs_refractive_index.main",
+    "RosettaX.pages.p17_docs_calibration_payload.main",
+    "RosettaX.pages.p18_docs_apply_checks.main",
 ]
 
 

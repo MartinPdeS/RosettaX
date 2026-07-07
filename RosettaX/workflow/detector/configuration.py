@@ -64,9 +64,10 @@ SSC_FAMILY_ALIASES: tuple[str, ...] = (
     "sidescattering",
     "sidescattered",
     "side",
-    "sals",
+    "lals",
+    "lasl",
     "mals",
-    "smallanglelightscatter",
+    "largeanglelightscatter",
     "mediumanglelightscatter",
     "anglelightscatter",
     "405ls",
@@ -84,9 +85,8 @@ FSC_FAMILY_ALIASES: tuple[str, ...] = (
     "forwardscattering",
     "forward",
     "smallangle",
-    "lals",
-    "lasl",
-    "largeanglelightscatter",
+    "sals",
+    "smallanglelightscatter",
 )
 
 FLUORESCENCE_FAMILY_ALIASES: tuple[str, ...] = (
@@ -1437,6 +1437,13 @@ def _build_split_metric(
         )
         return _build_local_split_metric(coordinate_array)
 
+    if metric_name == "local-top-bottom":
+        coordinate_array = _build_profile_coordinate_array(
+            preset=preset,
+            sampling_size=sampling_size,
+        )
+        return _build_local_top_bottom_split_metric(coordinate_array)
+
     raise ValueError(
         f"Unsupported detector split metric: {angular_weighting.get('metric')!r}"
     )
@@ -1496,6 +1503,18 @@ def _build_local_split_metric(
         coordinate_array,
     )
     _, split_normal, _ = _build_local_detector_basis(
+        normalized_coordinate_array,
+    )
+    return normalized_coordinate_array @ split_normal
+
+
+def _build_local_top_bottom_split_metric(
+    coordinate_array: np.ndarray,
+) -> np.ndarray:
+    normalized_coordinate_array = _normalize_coordinate_array(
+        coordinate_array,
+    )
+    _, _, split_normal = _build_local_detector_basis(
         normalized_coordinate_array,
     )
     return normalized_coordinate_array @ split_normal

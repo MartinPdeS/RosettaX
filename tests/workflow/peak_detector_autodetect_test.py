@@ -191,7 +191,7 @@ class Test_DetectorAutoDetect:
             selected_detector_channel="405SALS(Area)",
         )
 
-        assert resolved_preset == "nanoFCM NanoAnalyzer SSC"
+        assert resolved_preset == "nanoFCM NanoAnalyzer FSC"
 
     def test_infer_default_detector_channel_uses_packaged_nanofcm_rule(
         self,
@@ -208,7 +208,7 @@ class Test_DetectorAutoDetect:
             selection_mode="auto-detect",
         )
 
-        assert resolved_channel == "405SALS(Area)"
+        assert resolved_channel == "405LALS(Area)"
 
     def test_infer_default_detector_channel_prefers_fluorescence_for_green_role(
         self,
@@ -268,9 +268,9 @@ class Test_DetectorAutoDetect:
     @pytest.mark.parametrize(
         ("channel_name", "expected_family"),
         [
-            ("405SALS(Area)", "ssc"),
-            ("405LALS(Area)", "fsc"),
-            ("LASL", "fsc"),
+            ("405SALS(Area)", "fsc"),
+            ("405LALS(Area)", "ssc"),
+            ("LASL", "ssc"),
             ("VSSC-A", "ssc"),
             ("FSC-A", "fsc"),
             ("FL1-A", "fl"),
@@ -321,7 +321,7 @@ class Test_DetectorAutoDetect:
             selected_detector_channel="405SALS(Area)",
         )
 
-        assert resolved_preset == "Beckman Coulter CytoFLEX SSC"
+        assert resolved_preset is None
 
     def test_detect_detector_preset_from_uploaded_fcs_maps_lals_aliases_to_fsc(
         self,
@@ -359,7 +359,7 @@ class Test_DetectorAutoDetect:
             selected_detector_channel="405LALS(Area)",
         )
 
-        assert resolved_preset == "BD FACSCanto II FSC"
+        assert resolved_preset == "BD FACSCanto II SSC"
 
     def test_classify_detector_preset_family_falls_back_to_name_when_channel_is_generic(
         self,
