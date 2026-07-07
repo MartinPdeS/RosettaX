@@ -117,6 +117,7 @@ class HomePage:
         self.pypi_url = "https://pypi.org/project/RosettaX/"
         self.anaconda_url = "https://anaconda.org/channels/MartinPdeS/packages/Rosettax/overview"
         self.documentation_url = "/documentation"
+        self.install_local_release_url = "/documentation/install-local"
         self.support_url = "https://github.com/sponsors/MartinPdeS"
         self.lab_url = "https://www.vesiclecenter.com/"
         self.contact_email = "martin.poinsinet.de.sivry@gmail.com"
@@ -307,6 +308,12 @@ class HomePage:
                                     outline=True,
                                     target="_blank",
                                     rel="noopener noreferrer",
+                                ),
+                                dbc.Button(
+                                    "Install locally (Releases)",
+                                    href=self.install_local_release_url,
+                                    color="secondary",
+                                    outline=True,
                                 ),
                             ],
                             style={

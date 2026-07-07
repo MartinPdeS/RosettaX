@@ -78,6 +78,7 @@ class DocumentationPage:
                         html.Li(html.A("Apply calibration checks", href="/documentation/apply-checks", style={"textDecoration": "none", "fontWeight": "600"})),
                         html.Li(html.A("Regression models", href="/documentation/regression-models", style={"textDecoration": "none", "fontWeight": "600"})),
                         html.Li(html.A("Reports and provenance", href="/documentation/reports", style={"textDecoration": "none", "fontWeight": "600"})),
+                        html.Li(html.A("Install locally from releases", href="/documentation/install-local", style={"textDecoration": "none", "fontWeight": "600"})),
                     ],
                     style={
                         "marginBottom": "0px",
