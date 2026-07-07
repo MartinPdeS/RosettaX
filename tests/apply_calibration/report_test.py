@@ -305,12 +305,12 @@ class Test_ApplyCalibrationReport:
         )
 
         assert pdf_bytes.startswith(b"%PDF-1.4")
-        assert b"RosettaX Apply Calibration Report" in pdf_bytes
+        assert b"Apply Calibration Report" in pdf_bytes
         assert b"fluorescence-calibration.json" in pdf_bytes
         assert b"Applied fluorescence calibration to 1 file." in pdf_bytes
         assert b"MESF and peak positions" in pdf_bytes
         assert b"Measured peak position" in pdf_bytes
-        assert b"Saved calibration JSON" in pdf_bytes
+        assert b"Additional calibration fields" in pdf_bytes
         assert b"Generated from MESF bead batch 24A." in pdf_bytes
         assert b"Intensity [MESF]" in pdf_bytes
         assert pdf_filename.startswith("rosettax_apply_report_fluorescence-calibration_")
@@ -381,7 +381,7 @@ class Test_ApplyCalibrationReport:
 
         pdf_bytes = build_apply_report_pdf_bytes(report_payload=payload)
 
-        assert b"Saved calibration JSON: Metadata" in pdf_bytes
+        assert b"Additional calibration fields: Metadata" in pdf_bytes
         assert b"Small particle SSC" in pdf_bytes
         assert b"Lot 42" in pdf_bytes
 

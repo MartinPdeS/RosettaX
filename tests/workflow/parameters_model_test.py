@@ -554,8 +554,18 @@ class Test_compute_model_for_rows:
             preset=apogee_side_preset,
             coordinate_array=coordinate_array,
         )
+        keep_direction = (
+            apogee_side_preset
+            .get('detector_angular_weighting', {})
+            .get('keep', 'positive')
+        )
+        split_visible_mask = split_metric > 0.0
+
+        if keep_direction == 'negative':
+            split_visible_mask = split_metric < 0.0
+
         expected_visible_mask = (
-            (split_metric < 0.0)
+            split_visible_mask
             & (
                 blocker_bar_numerical_aperture
                 >= float(apogee_side_preset['blocker_bar_numerical_aperture'])
