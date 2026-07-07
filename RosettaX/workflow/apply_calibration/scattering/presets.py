@@ -6,6 +6,8 @@ from typing import Any
 
 CUSTOM_PRESET_NAME = "Custom"
 EXTRACELLULAR_VESICLES_PRESET_NAME = "Extracellular Vesicles"
+POLYSTYRENE_BEADS_PRESET_NAME = "Polystyrene Beads"
+SILICA_BEADS_PRESET_NAME = "Silica Beads"
 
 
 @dataclass(frozen=True)
@@ -86,6 +88,44 @@ def build_scattering_target_model_presets() -> dict[str, ScatteringTargetModelPr
             description=(
                 "Core shell approximation for extracellular vesicles. "
                 "The diameter axis is core diameter and the shell thickness is constant."
+            ),
+        ),
+        POLYSTYRENE_BEADS_PRESET_NAME: ScatteringTargetModelPreset(
+            name=POLYSTYRENE_BEADS_PRESET_NAME,
+            mie_model="Solid Sphere",
+            medium_refractive_index=1.333,
+            particle_refractive_index=1.59,
+            particle_diameter_min_nm=50.0,
+            particle_diameter_max_nm=2000.0,
+            particle_diameter_count=500,
+            core_refractive_index=1.59,
+            shell_refractive_index=1.59,
+            shell_thickness_nm=5.0,
+            core_diameter_min_nm=50.0,
+            core_diameter_max_nm=2000.0,
+            core_diameter_count=500,
+            description=(
+                "Solid sphere model for polystyrene calibration beads in aqueous medium. "
+                "Uses n=1.59 (polystyrene at 488 nm) and n=1.333 (water)."
+            ),
+        ),
+        SILICA_BEADS_PRESET_NAME: ScatteringTargetModelPreset(
+            name=SILICA_BEADS_PRESET_NAME,
+            mie_model="Solid Sphere",
+            medium_refractive_index=1.333,
+            particle_refractive_index=1.43,
+            particle_diameter_min_nm=50.0,
+            particle_diameter_max_nm=2000.0,
+            particle_diameter_count=500,
+            core_refractive_index=1.43,
+            shell_refractive_index=1.43,
+            shell_thickness_nm=5.0,
+            core_diameter_min_nm=50.0,
+            core_diameter_max_nm=2000.0,
+            core_diameter_count=500,
+            description=(
+                "Solid sphere model for amorphous silica calibration beads in aqueous medium. "
+                "Uses n=1.43 (fused silica at 488 nm) and n=1.333 (water)."
             ),
         ),
     }

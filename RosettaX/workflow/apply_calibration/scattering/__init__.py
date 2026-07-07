@@ -40,6 +40,8 @@ from .monotonic import validate_target_mie_relation_for_diameter_inversion
 
 from .presets import CUSTOM_PRESET_NAME
 from .presets import EXTRACELLULAR_VESICLES_PRESET_NAME
+from .presets import POLYSTYRENE_BEADS_PRESET_NAME
+from .presets import SILICA_BEADS_PRESET_NAME
 from .presets import ScatteringTargetModelPreset
 from .presets import build_scattering_target_model_preset_options
 from .presets import build_scattering_target_model_presets
@@ -49,6 +51,8 @@ from .presets import get_scattering_target_model_preset
 __all__ = [
     "CORE_SHELL_SPHERE_MODEL_NAME",
     "CUSTOM_PRESET_NAME",
+    "POLYSTYRENE_BEADS_PRESET_NAME",
+    "SILICA_BEADS_PRESET_NAME",
     "EXTRACELLULAR_VESICLES_PRESET_NAME",
     "SOLID_SPHERE_MODEL_NAME",
     "CoreShellSphereTargetModel",
