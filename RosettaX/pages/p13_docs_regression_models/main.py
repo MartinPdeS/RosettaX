@@ -3,6 +3,9 @@
 import dash
 import dash_bootstrap_components as dbc
 from dash import dcc, html
+import numpy as np
+import plotly.graph_objs as go
+from plotly.subplots import make_subplots
 
 from RosettaX.pages.p07_documentation.components import (
     build_documentation_card,
@@ -75,6 +78,16 @@ class RegressionModelsDocumentationPage:
                 html.Div(style={"height": "18px"}),
                 dbc.Row(
                     [
+                        dbc.Col(self._why_log_regression_card(), lg=7),
+                        dbc.Col(self._when_linear_is_right_card(), lg=5),
+                    ],
+                    className="g-3",
+                ),
+                html.Div(style={"height": "18px"}),
+                self._example_graph_card(),
+                html.Div(style={"height": "18px"}),
+                dbc.Row(
+                    [
                         dbc.Col(self._interpretation_card(), lg=7),
                         dbc.Col(self._diagnostics_card(), lg=5),
                     ],
@@ -131,6 +144,187 @@ class RegressionModelsDocumentationPage:
                     "The default workflow usually fixes the intercept to zero. When that assumption is used, the fitted slope represents the conversion factor from measured channel units into modeled coupling units under the chosen optical model.",
                 ),
             ],
+        )
+
+    def _why_log_regression_card(self) -> dbc.Card:
+        return build_documentation_card(
+            title="Why log regression for fluorescence",
+            subtitle="Fluorescence calibration usually behaves closer to multiplicative scaling than additive offset across decades of signal.",
+            body=[
+                html.Div(
+                    "Fluorescence detector signals and reference units such as MESF usually span multiple orders of magnitude. In that regime, absolute errors naturally grow with signal level, so linear-space least squares can over-weight the high end.",
+                ),
+                html.Div(
+                    "Log-space fitting treats proportional error more uniformly: a 10% miss at low signal and a 10% miss at high signal have comparable influence. That is typically closer to how calibration uncertainty behaves in practice.",
+                ),
+                html.Div(
+                    "A log-log line also maps to a power law in original units, which is a practical model for detector-response scaling while preserving positivity of predictions.",
+                ),
+                self._math_block(
+                    "$$\\text{Linear-space model: } y = m x + b$$\n$$\\text{Log-space model: } \\log_{10}(y) = s \\log_{10}(x) + i\\Rightarrow y = 10^i x^s$$"
+                ),
+            ],
+            min_height="unset",
+        )
+
+    def _when_linear_is_right_card(self) -> dbc.Card:
+        return build_documentation_card(
+            title="When linear regression is still the right choice",
+            subtitle="RosettaX uses linear response fitting for scattering because the modeled target quantity is treated as affine in measured peak units over the calibration range.",
+            body=[
+                html.Div(
+                    "Scattering calibration in RosettaX maps measured peak positions to modeled coupling under a fixed optical model. In that workflow, a linear response model is used as an instrument conversion relation.",
+                ),
+                html.Div(
+                    "This is not contradictory with fluorescence log fitting: the choice depends on the quantity being modeled, dynamic range behavior, and error structure for that workflow.",
+                ),
+                html.Div(
+                    "In short: use log regression when multiplicative scaling dominates; use linear regression when affine response is the explicit instrument model assumption.",
+                ),
+            ],
+            min_height="unset",
+        )
+
+    def _build_log_vs_linear_example_figure(self) -> go.Figure:
+        x_values = np.geomspace(1.0e2, 1.0e6, 11)
+        multiplicative_noise = np.asarray(
+            [0.93, 1.06, 0.97, 1.11, 0.92, 1.08, 0.95, 1.04, 0.9, 1.07, 0.96],
+            dtype=float,
+        )
+
+        y_values = 0.085 * np.power(x_values, 0.9) * multiplicative_noise
+
+        linear_slope, linear_intercept = np.polyfit(
+            x_values,
+            y_values,
+            deg=1,
+        )
+        y_linear_fit = linear_slope * x_values + linear_intercept
+
+        log_x_values = np.log10(x_values)
+        log_y_values = np.log10(y_values)
+        log_slope, log_intercept = np.polyfit(
+            log_x_values,
+            log_y_values,
+            deg=1,
+        )
+        y_log_fit = np.power(10.0, log_intercept) * np.power(x_values, log_slope)
+
+        figure = make_subplots(
+            rows=1,
+            cols=2,
+            subplot_titles=(
+                "Linear Axes",
+                "Log-Log Axes",
+            ),
+            horizontal_spacing=0.12,
+        )
+
+        for column in (1, 2):
+            figure.add_trace(
+                go.Scatter(
+                    x=x_values,
+                    y=y_values,
+                    mode="markers",
+                    marker={"size": 8, "color": "#111111"},
+                    name="Synthetic fluorescence points",
+                    legendgroup="data",
+                    showlegend=column == 1,
+                ),
+                row=1,
+                col=column,
+            )
+            figure.add_trace(
+                go.Scatter(
+                    x=x_values,
+                    y=y_linear_fit,
+                    mode="lines",
+                    line={"width": 2.4, "color": "#d62728"},
+                    name="Linear-space fit",
+                    legendgroup="linear",
+                    showlegend=column == 1,
+                ),
+                row=1,
+                col=column,
+            )
+            figure.add_trace(
+                go.Scatter(
+                    x=x_values,
+                    y=y_log_fit,
+                    mode="lines",
+                    line={"width": 2.4, "color": "#1f77b4", "dash": "dash"},
+                    name="Log-space fit (mapped back)",
+                    legendgroup="log",
+                    showlegend=column == 1,
+                ),
+                row=1,
+                col=column,
+            )
+
+        figure.update_xaxes(
+            title_text="Measured signal",
+            row=1,
+            col=1,
+        )
+        figure.update_yaxes(
+            title_text="Reference quantity",
+            row=1,
+            col=1,
+        )
+        figure.update_xaxes(
+            type="log",
+            title_text="Measured signal (log10)",
+            row=1,
+            col=2,
+        )
+        figure.update_yaxes(
+            type="log",
+            title_text="Reference quantity (log10)",
+            row=1,
+            col=2,
+        )
+
+        figure.update_layout(
+            margin={"l": 44, "r": 18, "t": 56, "b": 44},
+            legend={"orientation": "h", "y": -0.18, "x": 0.0},
+            template="plotly_white",
+            height=520,
+        )
+
+        return figure
+
+    def _example_graph_card(self) -> dbc.Card:
+        code_snippet = (
+            "```python\n"
+            "import numpy as np\n"
+            "\n"
+            "x = np.geomspace(1e2, 1e6, 11)\n"
+            "y = 0.085 * x**0.9 * np.array([0.93, 1.06, 0.97, 1.11, 0.92, 1.08, 0.95, 1.04, 0.9, 1.07, 0.96])\n"
+            "\n"
+            "m_lin, b_lin = np.polyfit(x, y, 1)\n"
+            "m_log, b_log = np.polyfit(np.log10(x), np.log10(y), 1)\n"
+            "\n"
+            "y_linear = m_lin * x + b_lin\n"
+            "y_log = (10**b_log) * x**m_log\n"
+            "```"
+        )
+
+        return build_documentation_card(
+            title="Python example: linear fit vs log fit",
+            subtitle="Synthetic example showing why linear-space fit can visually bias high-intensity points, while log-space fit better tracks proportional structure.",
+            body=[
+                dcc.Graph(
+                    id=self._id("log-vs-linear-example"),
+                    figure=self._build_log_vs_linear_example_figure(),
+                    config={"displayModeBar": False},
+                    style={"height": "540px", "width": "100%"},
+                ),
+                dcc.Markdown(
+                    code_snippet,
+                    style={"marginTop": "8px", "marginBottom": "0px"},
+                ),
+            ],
+            min_height="unset",
         )
 
     def _interpretation_card(self) -> dbc.Card:

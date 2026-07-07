@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+import json
+from pathlib import Path
+from typing import Any
+
 import dash
 import dash_bootstrap_components as dbc
 from dash import html
@@ -22,6 +26,112 @@ class CalibrationPayloadDocumentationPage:
 
     def _id(self, name: str) -> str:
         return f"{self.page_name}-{name}"
+
+    @staticmethod
+    def _load_sample_calibration_payload(
+        *,
+        file_name: str,
+    ) -> dict[str, Any]:
+        sample_path = Path(__file__).resolve().parents[2] / "assets" / file_name
+
+        with sample_path.open("r", encoding="utf-8") as stream:
+            payload = json.load(stream)
+
+        if not isinstance(payload, dict):
+            return {}
+
+        return payload
+
+    @classmethod
+    def _collect_key_paths(
+        cls,
+        value: Any,
+        *,
+        prefix: str = "",
+        max_depth: int = 8,
+    ) -> list[str]:
+        if max_depth <= 0:
+            return []
+
+        key_paths: list[str] = []
+
+        if isinstance(value, dict):
+            for key, nested_value in value.items():
+                key_text = str(key)
+                nested_prefix = f"{prefix}.{key_text}" if prefix else key_text
+                key_paths.append(nested_prefix)
+                key_paths.extend(
+                    cls._collect_key_paths(
+                        nested_value,
+                        prefix=nested_prefix,
+                        max_depth=max_depth - 1,
+                    )
+                )
+
+            return key_paths
+
+        if isinstance(value, list):
+            list_prefix = f"{prefix}[]" if prefix else "[]"
+            key_paths.append(list_prefix)
+
+            if value:
+                key_paths.extend(
+                    cls._collect_key_paths(
+                        value[0],
+                        prefix=list_prefix,
+                        max_depth=max_depth - 1,
+                    )
+                )
+
+            return key_paths
+
+        return key_paths
+
+    @staticmethod
+    def _build_key_table(
+        *,
+        key_paths: list[str],
+    ) -> dbc.Table:
+        return dbc.Table(
+            [
+                html.Thead(
+                    html.Tr(
+                        [
+                            html.Th("Key path", style={"width": "78%"}),
+                            html.Th("Level", style={"width": "22%"}),
+                        ]
+                    )
+                ),
+                html.Tbody(
+                    [
+                        html.Tr(
+                            [
+                                html.Td(
+                                    key_path,
+                                    style={
+                                        "fontFamily": "monospace",
+                                        "fontSize": "0.81rem",
+                                    },
+                                ),
+                                html.Td(
+                                    str(max(1, key_path.count(".") + 1)),
+                                    style={
+                                        "fontFamily": "monospace",
+                                        "fontSize": "0.81rem",
+                                    },
+                                ),
+                            ]
+                        )
+                        for key_path in key_paths
+                    ]
+                ),
+            ],
+            bordered=False,
+            hover=False,
+            responsive=True,
+            size="sm",
+            style={"marginBottom": "0px"},
+        )
 
     def layout(self, **_kwargs) -> dbc.Container:
         return build_documentation_container(
@@ -76,6 +186,14 @@ class CalibrationPayloadDocumentationPage:
                     [
                         dbc.Col(self._field_semantics_card(), lg=6),
                         dbc.Col(self._compatibility_card(), lg=6),
+                    ],
+                    className="g-3",
+                ),
+                html.Div(style={"height": "18px"}),
+                dbc.Row(
+                    [
+                        dbc.Col(self._fluorescence_keys_card(), lg=6),
+                        dbc.Col(self._scattering_keys_card(), lg=6),
                     ],
                     className="g-3",
                 ),
@@ -143,6 +261,54 @@ class CalibrationPayloadDocumentationPage:
                 html.Div("Wrapper schema identifies the record type so apply workflows can dispatch correctly."),
                 html.Div("Legacy-compatible blocks are retained where needed so older calibrations continue to load."),
                 html.Div("If a payload is incomplete, apply-time checks should fail clearly rather than silently falling back to ambiguous defaults."),
+            ],
+            min_height="unset",
+        )
+
+    def _fluorescence_keys_card(self) -> dbc.Card:
+        fluorescence_payload = self._load_sample_calibration_payload(
+            file_name="sample_fluorescence_calibration.json",
+        )
+        fluorescence_key_paths = self._collect_key_paths(
+            fluorescence_payload,
+            max_depth=7,
+        )
+
+        return build_documentation_card(
+            title="Fluorescence JSON keys (sample file)",
+            subtitle="Key map extracted from RosettaX/assets/sample_fluorescence_calibration.json.",
+            body=[
+                html.Div(
+                    "This list shows nested wrapper and payload fields exactly as represented in the packaged fluorescence sample calibration.",
+                    style={"marginBottom": "10px"},
+                ),
+                self._build_key_table(
+                    key_paths=fluorescence_key_paths,
+                ),
+            ],
+            min_height="unset",
+        )
+
+    def _scattering_keys_card(self) -> dbc.Card:
+        scattering_payload = self._load_sample_calibration_payload(
+            file_name="sample_scatter_calibration.json.json",
+        )
+        scattering_key_paths = self._collect_key_paths(
+            scattering_payload,
+            max_depth=7,
+        )
+
+        return build_documentation_card(
+            title="Scattering JSON keys (sample file)",
+            subtitle="Key map extracted from RosettaX/assets/sample_scatter_calibration.json.json.",
+            body=[
+                html.Div(
+                    "This list highlights instrument_response, calibration_standard_mie_relation, metadata, reference_table, and wrapper fields used in the packaged scattering sample calibration.",
+                    style={"marginBottom": "10px"},
+                ),
+                self._build_key_table(
+                    key_paths=scattering_key_paths,
+                ),
             ],
             min_height="unset",
         )

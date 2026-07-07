@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import json
+from pathlib import Path
+
 import dash
 import dash_bootstrap_components as dbc
 from dash import dcc, html
@@ -22,6 +25,53 @@ class RefractiveIndexDocumentationPage:
 
     def _id(self, name: str) -> str:
         return f"{self.page_name}-{name}"
+
+    @staticmethod
+    def _load_sellmeier_material_catalog() -> list[dict[str, str]]:
+        sellmeier_bank_path = (
+            Path(__file__).resolve().parents[2]
+            / "assets"
+            / "sellmeier_equations.json"
+        )
+
+        with sellmeier_bank_path.open("r", encoding="utf-8") as stream:
+            payload = json.load(stream)
+
+        materials = payload.get("materials", {})
+
+        if not isinstance(materials, dict):
+            return []
+
+        rows: list[dict[str, str]] = []
+
+        for material_id, material_payload in sorted(materials.items()):
+            if not isinstance(material_payload, dict):
+                continue
+
+            coefficient_payload = material_payload.get("coefficients", {})
+
+            if not isinstance(coefficient_payload, dict):
+                continue
+
+            b_coefficients = coefficient_payload.get("b", [])
+            c_coefficients = coefficient_payload.get("c", [])
+
+            b_text = ", ".join(f"{float(value):.10g}" for value in (b_coefficients or []))
+            c_text = ", ".join(f"{float(value):.10g}" for value in (c_coefficients or []))
+
+            rows.append(
+                {
+                    "id": str(material_id),
+                    "label": str(material_payload.get("label") or material_id),
+                    "a": f"{float(coefficient_payload.get('a', 1.0)):.10g}",
+                    "b": b_text,
+                    "c": c_text,
+                    "notes": str(material_payload.get("notes") or ""),
+                    "source": str(material_payload.get("source") or ""),
+                }
+            )
+
+        return rows
 
     def layout(self, **_kwargs) -> dbc.Container:
         return build_documentation_container(
@@ -73,6 +123,8 @@ class RefractiveIndexDocumentationPage:
                 ),
                 html.Div(style={"height": "18px"}),
                 self._quality_checks_card(),
+                html.Div(style={"height": "18px"}),
+                self._sellmeier_catalog_card(),
             ]
         )
 
@@ -151,6 +203,66 @@ class RefractiveIndexDocumentationPage:
                 html.Div("Ensure medium and particle values are physically plausible for the sample temperature and composition."),
                 html.Div("When using core-shell models, verify core and shell values are intentionally different and consistent with the standard material."),
                 html.Div("If calibration fit quality changes unexpectedly, re-validate refractive index sources before changing regression settings."),
+            ],
+            min_height="unset",
+        )
+
+    def _sellmeier_catalog_card(self) -> dbc.Card:
+        material_rows = self._load_sellmeier_material_catalog()
+
+        table = dbc.Table(
+            [
+                html.Thead(
+                    html.Tr(
+                        [
+                            html.Th("Material ID", style={"width": "11%"}),
+                            html.Th("Label", style={"width": "16%"}),
+                            html.Th("a", style={"width": "7%"}),
+                            html.Th("b coefficients", style={"width": "20%"}),
+                            html.Th("c coefficients", style={"width": "20%"}),
+                            html.Th("Notes", style={"width": "16%"}),
+                            html.Th("Source", style={"width": "10%"}),
+                        ]
+                    )
+                ),
+                html.Tbody(
+                    [
+                        html.Tr(
+                            [
+                                html.Td(row["id"], style={"fontFamily": "monospace", "fontSize": "0.82rem"}),
+                                html.Td(row["label"], style={"fontWeight": "700"}),
+                                html.Td(row["a"], style={"fontFamily": "monospace", "fontSize": "0.82rem"}),
+                                html.Td(row["b"], style={"fontFamily": "monospace", "fontSize": "0.8rem"}),
+                                html.Td(row["c"], style={"fontFamily": "monospace", "fontSize": "0.8rem"}),
+                                html.Td(row["notes"], style={"fontSize": "0.82rem", "opacity": 0.9}),
+                                html.Td(
+                                    html.A("link", href=row["source"], target="_blank", style={"textDecoration": "none"})
+                                    if row["source"]
+                                    else "",
+                                    style={"fontSize": "0.82rem"},
+                                ),
+                            ]
+                        )
+                        for row in material_rows
+                    ]
+                ),
+            ],
+            bordered=False,
+            hover=False,
+            responsive=True,
+            size="sm",
+            style={"marginBottom": "0px"},
+        )
+
+        return build_documentation_card(
+            title="Sellmeier model catalog and coefficients",
+            subtitle="Packaged refractive index models in RosettaX. Formula used: n^2 = a + sum(B_i * lambda^2 / (lambda^2 - C_i)), with wavelength in um.",
+            body=[
+                html.Div(
+                    "The table below is loaded directly from RosettaX/assets/sellmeier_equations.json so documentation stays aligned with runtime behavior.",
+                    style={"marginBottom": "10px"},
+                ),
+                table,
             ],
             min_height="unset",
         )

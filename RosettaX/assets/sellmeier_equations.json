@@ -75,14 +75,45 @@
       },
       "notes": "Visible-range one-term Sellmeier fit for phospholipid shells."
     },
-    "waterlike": {
-      "label": "Waterlike",
+    "fused_silica": {
+      "label": "Fused silica (SiO2, Malitson)",
       "coefficients": {
         "a": 1.0,
-        "b": [0.757],
-        "c": [0.00923]
+        "b": [0.6961663, 0.4079426, 0.8974794],
+        "c": [0.00467914825849, 0.01351206312196, 97.934002537921]
       },
-      "notes": "Visible-range one-term Sellmeier fit for water-like media."
+      "notes": "Three-term Sellmeier fit for fused silica at 20 C. Converted from refractiveindex.info Formula 1 coefficients by squaring resonance wavelengths in um.",
+      "source": "https://refractiveindex.info/database/data/main/SiO2/nk/Malitson.yml"
+    },
+    "calcium_fluoride": {
+      "label": "Calcium fluoride (CaF2, Malitson)",
+      "coefficients": {
+        "a": 1.0,
+        "b": [0.5675888, 0.4710914, 3.8484723],
+        "c": [0.002526429994596025, 0.01007833372881, 1200.5569690816]
+      },
+      "notes": "Three-term Sellmeier fit for calcium fluoride at 24 C. Converted from refractiveindex.info Formula 1 coefficients by squaring resonance wavelengths in um.",
+      "source": "https://refractiveindex.info/database/data/main/CaF2/nk/Malitson.yml"
+    },
+    "bk7": {
+      "label": "N-BK7 (Schott)",
+      "coefficients": {
+        "a": 1.0,
+        "b": [1.03961212, 0.231792344, 1.01046945],
+        "c": [0.00600069867, 0.0200179144, 103.560653]
+      },
+      "notes": "Three-term Sellmeier fit for Schott N-BK7 optical glass in the visible/near-IR range.",
+      "source": "https://refractiveindex.info"
+    },
+    "sf10": {
+      "label": "N-SF10 (Schott)",
+      "coefficients": {
+        "a": 1.0,
+        "b": [1.62153902, 0.256287842, 1.64447552],
+        "c": [0.0122241457, 0.0595736775, 147.468793]
+      },
+      "notes": "Three-term Sellmeier fit for Schott N-SF10 flint glass in the visible/near-IR range.",
+      "source": "https://refractiveindex.info"
     }
   }
 }
