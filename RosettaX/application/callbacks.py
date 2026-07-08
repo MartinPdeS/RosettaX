@@ -57,16 +57,14 @@ def register_application_callbacks(app: Dash) -> None:
 
     @app.callback(
         Output("sidebar-content", "children"),
-        Input("url", "pathname"),
         Input("apply-calibration-store", "data"),
+        prevent_initial_call=False,
     )
     def update_sidebar(
-        pathname: Optional[str],
         sidebar_refresh_signal: Any,
     ):
         logger.debug(
-            "Refreshing sidebar for pathname=%r sidebar_refresh_signal=%r",
-            pathname,
+            "Refreshing sidebar for sidebar_refresh_signal=%r",
             sidebar_refresh_signal,
         )
 
