@@ -188,8 +188,12 @@ def _export_figure(
     figure_height_inch = max(height, 1) / 100.0
     render_dpi = max(1.0, float(scale)) * 100.0
 
-    unit_sphere_x, unit_sphere_y, unit_sphere_z = optical_preview.get_unit_sphere_coordinates()
-    center_sphere_x, center_sphere_y, center_sphere_z = optical_preview.get_center_sphere_coordinates()
+    unit_sphere_x, unit_sphere_y, unit_sphere_z = optical_preview._rotate_preview_display_surface_coordinates(
+        *optical_preview.get_unit_sphere_coordinates(),
+    )
+    center_sphere_x, center_sphere_y, center_sphere_z = optical_preview._rotate_preview_display_surface_coordinates(
+        *optical_preview.get_center_sphere_coordinates(),
+    )
     scatter_coordinates = np.asarray(
         figure.get("scatter_coordinates", np.empty((0, 3), dtype=float)),
         dtype=float,
@@ -226,6 +230,10 @@ def _export_figure(
     )
 
     if scatter_coordinates.size > 0:
+        scatter_coordinates = optical_preview._rotate_preview_display_coordinate_array(
+            scatter_coordinates,
+        )
+
         axis.scatter(
             scatter_coordinates[:, 0],
             scatter_coordinates[:, 1],
@@ -236,9 +244,15 @@ def _export_figure(
             depthshade=False,
         )
 
-    origin = np.asarray([-0.78, 0.0, 0.0], dtype=float)
-    k_tip = np.asarray([-0.14, 0.0, 0.0], dtype=float)
-    electric_field_tip = np.asarray([-0.78, 0.0, 0.52], dtype=float)
+    origin = optical_preview._rotate_preview_display_coordinate_array(
+        np.asarray([[-0.78, 0.0, 0.0]], dtype=float),
+    ).reshape(3)
+    k_tip = optical_preview._rotate_preview_display_coordinate_array(
+        np.asarray([[-0.14, 0.0, 0.0]], dtype=float),
+    ).reshape(3)
+    electric_field_tip = optical_preview._rotate_preview_display_coordinate_array(
+        np.asarray([[-0.78, 0.0, 0.52]], dtype=float),
+    ).reshape(3)
 
     axis.quiver(
         origin[0],
@@ -259,17 +273,17 @@ def _export_figure(
         arrow_length_ratio=0.18,
     )
     axis.text(
-        -0.11,
-        0.0,
-        0.08,
+        float(k_tip[0] + 0.03),
+        float(k_tip[1]),
+        float(k_tip[2] + 0.08),
         "k",
         color="#d62728",
         fontsize=12,
     )
     axis.text(
-        -0.72,
-        0.0,
-        0.59,
+        float(electric_field_tip[0] + 0.06),
+        float(electric_field_tip[1]),
+        float(electric_field_tip[2] + 0.07),
         "E",
         color="#1f77b4",
         fontsize=12,

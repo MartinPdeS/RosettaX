@@ -467,7 +467,10 @@ def _make_info_figure(
         xref="paper",
         yref="paper",
         showarrow=False,
-        font={"size": float(font_size)},
+        font={
+            "family": styling.CHART_STYLE["font_family"],
+            "size": float(font_size),
+        },
     )
     figure.update_xaxes(visible=False)
     figure.update_yaxes(visible=False)
@@ -475,7 +478,10 @@ def _make_info_figure(
         height=350,
         margin=dict(l=20, r=20, t=20, b=20),
         separators=".,",
-        font={"size": float(font_size)},
+        font={
+            "family": styling.CHART_STYLE["font_family"],
+            "size": float(font_size),
+        },
     )
     return figure
 
