@@ -9,6 +9,7 @@ import numpy as np
 import pytest
 
 from RosettaX.application import layout as application_layout
+from RosettaX.pages.p00_sidebar.ids import SidebarIds
 from RosettaX.pages.p00_sidebar.main import Sidebar
 from RosettaX.pages.p02_fluorescence.ids import Ids as FluorescenceIds
 from RosettaX.pages.p02_fluorescence.sections.s04_calibration.main import Calibration
@@ -589,7 +590,19 @@ class Test_SidebarNavigation:
         sidebar = Sidebar()
 
         navigation = sidebar._build_navigation_section()
+        text_nodes = _collect_text(navigation)
+        component_ids = _collect_component_ids(navigation)
 
+        assert "Calibration" in text_nodes
+        assert "Tools" in text_nodes
+        assert ">" in text_nodes
+        assert "Fluorescence" in text_nodes
+        assert "Scattering" in text_nodes
+        assert "Apply" in text_nodes
+        assert SidebarIds.calibration_toggle_button in component_ids
+        assert SidebarIds.calibration_collapse in component_ids
+        assert SidebarIds.tools_toggle_button in component_ids
+        assert SidebarIds.tools_collapse in component_ids
         assert "/documentation" in _collect_component_hrefs(navigation)
         assert "/cross-calibration" in _collect_component_hrefs(navigation)
         assert "/visualization" in _collect_component_hrefs(navigation)

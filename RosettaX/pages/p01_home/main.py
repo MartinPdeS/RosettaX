@@ -479,7 +479,7 @@ class HomePage:
                 dbc.Col(
                     self._workflow_card(
                         title="Cross calibration",
-                        subtitle="Experimental",
+                        subtitle="",
                         description=(
                             "Build an experimental transfer calibration that links a less frequent primary reference bead calibration "
                             "to a cheaper routine-bead calibration on the same detector."

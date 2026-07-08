@@ -1,5 +1,9 @@
 class SidebarIds:
     prefix = "sidebar"
+    calibration_toggle_button = f"{prefix}-calibration-toggle-button"
+    calibration_collapse = f"{prefix}-calibration-collapse"
+    tools_toggle_button = f"{prefix}-tools-toggle-button"
+    tools_collapse = f"{prefix}-tools-collapse"
 
     saved_calibrations_refresh_button = f"{prefix}-saved-calibrations-refresh-button"
     saved_calibrations_open_folder_button = f"{prefix}-saved-calibrations-open-folder-button"

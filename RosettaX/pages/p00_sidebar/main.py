@@ -51,6 +51,17 @@ class Sidebar:
             self.logo_src,
         )
 
+    calibration_paths = {
+        "/fluorescence",
+        "/scattering",
+        "/cross-calibration",
+        "/calibrate",
+    }
+    tools_paths = {
+        "/visualization",
+        "/sample-files",
+    }
+
     def _get_default_profile_name(
         self,
         profile_options: list[dict[str, Any]],
@@ -237,6 +248,86 @@ class Sidebar:
 
             return f"Selected profile: {profile_label}"
 
+        @dash.callback(
+            dash.Output(SidebarIds.calibration_collapse, "is_open"),
+            dash.Output(SidebarIds.calibration_toggle_button, "children"),
+            dash.Input(SidebarIds.calibration_toggle_button, "n_clicks"),
+            dash.Input("url", "pathname"),
+            dash.State(SidebarIds.calibration_collapse, "is_open"),
+            prevent_initial_call=False,
+        )
+        def toggle_calibration_navigation(
+            n_clicks: Optional[int],
+            pathname: Optional[str],
+            is_open: Optional[bool],
+        ):
+            logger.debug(
+                "toggle_calibration_navigation called with n_clicks=%r pathname=%r is_open=%r",
+                n_clicks,
+                pathname,
+                is_open,
+            )
+
+            if pathname in self.calibration_paths:
+                return True, self._nav_toggle_button_children(
+                    label="Calibration",
+                    is_open=True,
+                )
+
+            triggered_id = dash.callback_context.triggered_id
+
+            if triggered_id == SidebarIds.calibration_toggle_button:
+                next_is_open = not bool(is_open)
+                return next_is_open, self._nav_toggle_button_children(
+                    label="Calibration",
+                    is_open=next_is_open,
+                )
+
+            return False, self._nav_toggle_button_children(
+                label="Calibration",
+                is_open=False,
+            )
+
+        @dash.callback(
+            dash.Output(SidebarIds.tools_collapse, "is_open"),
+            dash.Output(SidebarIds.tools_toggle_button, "children"),
+            dash.Input(SidebarIds.tools_toggle_button, "n_clicks"),
+            dash.Input("url", "pathname"),
+            dash.State(SidebarIds.tools_collapse, "is_open"),
+            prevent_initial_call=False,
+        )
+        def toggle_tools_navigation(
+            n_clicks: Optional[int],
+            pathname: Optional[str],
+            is_open: Optional[bool],
+        ):
+            logger.debug(
+                "toggle_tools_navigation called with n_clicks=%r pathname=%r is_open=%r",
+                n_clicks,
+                pathname,
+                is_open,
+            )
+
+            if pathname in self.tools_paths:
+                return True, self._nav_toggle_button_children(
+                    label="Tools",
+                    is_open=True,
+                )
+
+            triggered_id = dash.callback_context.triggered_id
+
+            if triggered_id == SidebarIds.tools_toggle_button:
+                next_is_open = not bool(is_open)
+                return next_is_open, self._nav_toggle_button_children(
+                    label="Tools",
+                    is_open=next_is_open,
+                )
+
+            return False, self._nav_toggle_button_children(
+                label="Tools",
+                is_open=False,
+            )
+
     def layout(
         self,
         sidebar: Optional[dict[str, list[str]]] = None,
@@ -327,35 +418,190 @@ class Sidebar:
             [
                 dbc.Nav(
                     [
-                        self._nav_link("Home", "/"),
-                        self._nav_link("Fluorescence calibration", "/fluorescence"),
-                        self._nav_link("Scattering calibration", "/scattering"),
-                        self._nav_link("Cross calibration", "/cross-calibration"),
-                        self._nav_link("Apply calibration", "/calibrate"),
-                        self._nav_link("Visualization", "/visualization"),
-                        self._nav_link("Settings", "/settings"),
-                        self._nav_link("Sample files", "/sample-files"),
-                        self._nav_link("Documentation", "/documentation"),
-                        self._nav_link("Help", "/help"),
+                        self._nav_link("Home", "/", tier="top"),
+                        html.Div(
+                            [
+                                self._nav_toggle_button(
+                                    self._nav_toggle_button_children(
+                                        label="Calibration",
+                                        is_open=False,
+                                    ),
+                                ),
+                                dbc.Collapse(
+                                    html.Div(
+                                        dbc.Nav(
+                                            [
+                                                self._nav_link(
+                                                    "Fluorescence",
+                                                    "/fluorescence",
+                                                    tier="child",
+                                                ),
+                                                self._nav_link(
+                                                    "Scattering",
+                                                    "/scattering",
+                                                    tier="child",
+                                                ),
+                                                self._nav_link(
+                                                    "Cross",
+                                                    "/cross-calibration",
+                                                    tier="child",
+                                                ),
+                                                self._nav_link(
+                                                    "Apply",
+                                                    "/calibrate",
+                                                    tier="child",
+                                                ),
+                                            ],
+                                            vertical=True,
+                                            pills=True,
+                                        ),
+                                        style={
+                                            "marginLeft": "1.45rem",
+                                            "paddingLeft": "0.6rem",
+                                            "marginTop": "0.1rem",
+                                        },
+                                    ),
+                                    id=SidebarIds.calibration_collapse,
+                                    is_open=False,
+                                ),
+                            ]
+                        ),
+                        html.Div(
+                            [
+                                self._nav_toggle_button(
+                                    self._nav_toggle_button_children(
+                                        label="Tools",
+                                        is_open=False,
+                                    ),
+                                    button_id=SidebarIds.tools_toggle_button,
+                                ),
+                                dbc.Collapse(
+                                    html.Div(
+                                        dbc.Nav(
+                                            [
+                                                self._nav_link(
+                                                    "Visualization",
+                                                    "/visualization",
+                                                    tier="child",
+                                                ),
+                                                self._nav_link(
+                                                    "Sample files",
+                                                    "/sample-files",
+                                                    tier="child",
+                                                ),
+                                            ],
+                                            vertical=True,
+                                            pills=True,
+                                        ),
+                                        style={
+                                            "marginLeft": "1.45rem",
+                                            "paddingLeft": "0.6rem",
+                                            "marginTop": "0.1rem",
+                                        },
+                                    ),
+                                    id=SidebarIds.tools_collapse,
+                                    is_open=False,
+                                ),
+                            ]
+                        ),
+                        self._nav_link("Settings", "/settings", tier="top"),
+                        self._nav_link("Documentation", "/documentation", tier="top"),
+                        self._nav_link("Help", "/help", tier="top"),
                     ],
                     vertical=True,
                     pills=True,
+                    style={
+                        "gap": "0.2rem",
+                    },
                 ),
             ]
+        )
+
+    def _nav_toggle_button_children(
+        self,
+        *,
+        label: str,
+        is_open: bool,
+    ) -> list[html.Span]:
+        """
+        Build the toggle button label and chevron.
+        """
+        return [
+            html.Span(label),
+            html.Span(
+                "v" if is_open else ">",
+                style={
+                    "fontSize": "0.82rem",
+                    "opacity": 0.7,
+                },
+            ),
+        ]
+
+    def _nav_toggle_button(
+        self,
+        children: Any,
+        *,
+        button_id: str = SidebarIds.calibration_toggle_button,
+    ) -> dbc.Button:
+        """
+        Build a sidebar submenu toggle button.
+        """
+        return dbc.Button(
+            children,
+            id=button_id,
+            color="link",
+            style={
+                "width": "100%",
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "space-between",
+                "textAlign": "left",
+                "textDecoration": "none",
+                "fontWeight": 500,
+                "fontSize": "1.08rem",
+                "lineHeight": "1.2",
+                "padding": "0.78rem 1rem",
+                "color": "inherit",
+                "border": "0",
+                "boxShadow": "none",
+                "borderRadius": "0.9rem",
+                "background": "transparent",
+                "margin": "0",
+            },
         )
 
     def _nav_link(
         self,
         label: str,
         href: str,
+        *,
+        tier: str = "top",
     ) -> dbc.NavLink:
         """
         Build a sidebar navigation link.
         """
+        if tier == "child":
+            link_style = {
+                "padding": "0.42rem 0.6rem",
+                "margin": "0",
+                "fontSize": "0.96rem",
+                "lineHeight": "1.25",
+                "borderRadius": "0.65rem",
+            }
+        else:
+            link_style = {
+                "padding": "0.78rem 1rem",
+                "margin": "0",
+                "fontSize": "1.08rem",
+                "lineHeight": "1.2",
+                "borderRadius": "0.9rem",
+            }
+
         return dbc.NavLink(
             label,
             href=href,
             active="exact",
+            style=link_style,
         )
 
     def _build_saved_profiles_section(
