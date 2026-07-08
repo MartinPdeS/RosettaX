@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from pathlib import Path
 from typing import Any, Optional
 import logging
 
@@ -1052,6 +1053,14 @@ def resolve_detector_channel_saturation_value_from_metadata(
     normalized_detector_column = str(detector_column or "").strip().lower()
 
     if not normalized_detector_column:
+        return None
+
+    if not Path(uploaded_fcs_path).exists():
+        logger.debug(
+            "Metadata saturation source file is missing for detector_column=%r fcs=%r",
+            detector_column,
+            uploaded_fcs_path,
+        )
         return None
 
     try:

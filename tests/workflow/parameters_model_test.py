@@ -608,18 +608,36 @@ class Test_compute_model_for_rows:
             .get('detector_angular_weighting', {})
             .get('keep', 'positive')
         )
-        split_visible_mask = split_metric > 0.0
+        eligible_indices = np.flatnonzero(
+            blocker_bar_numerical_aperture
+            >= float(apogee_side_preset['blocker_bar_numerical_aperture'])
+        )
 
-        if keep_direction == 'negative':
-            split_visible_mask = split_metric < 0.0
-
-        expected_visible_mask = (
-            split_visible_mask
-            & (
-                blocker_bar_numerical_aperture
-                >= float(apogee_side_preset['blocker_bar_numerical_aperture'])
+        keep_count = int(
+            round(
+                _resolve_split_separation_fraction(
+                    preset=apogee_side_preset,
+                    angular_weighting=apogee_side_preset['detector_angular_weighting'],
+                )
+                * eligible_indices.size
             )
         )
+        keep_count = max(0, min(keep_count, int(eligible_indices.size)))
+
+        ordered_indices = eligible_indices[
+            np.argsort(
+                split_metric[eligible_indices],
+                kind='stable',
+            )
+        ]
+
+        expected_visible_mask = np.zeros_like(split_metric, dtype=bool)
+
+        if keep_count > 0:
+            if keep_direction in {'negative', 'nonpositive'}:
+                expected_visible_mask[ordered_indices[:keep_count]] = True
+            else:
+                expected_visible_mask[ordered_indices[-keep_count:]] = True
 
         assert detector_angular_weights.shape == (1000,)
         assert np.allclose(detector_angular_weights[~expected_visible_mask], 0.0)

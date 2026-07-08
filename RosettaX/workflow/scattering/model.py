@@ -722,7 +722,7 @@ class ModelConfiguration:
         medium_refractive_index: Any,
         detector_phi_angle_degree: Any,
         detector_gamma_angle_degree: Any,
-        polarization_angle_degree: Any,
+        polarization_angle_degree: Any = 0.0,
         detector_sampling: Any,
         detector_configuration_preset: Any,
         camera: Any = None,

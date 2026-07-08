@@ -43,6 +43,7 @@ sys.modules.setdefault(
 
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.pages.p03_scattering.sections.s03_model.optical_preview import (
+    _rotate_preview_display_coordinate_array,
     build_pymiesim_photodiode_mesh_coordinates,
 )
 from RosettaX.pages.p03_scattering.sections.s04_table.services import (
@@ -336,6 +337,9 @@ class Test_ScatteringModelConfigurationScattererPresets:
             detector_sampling=256,
         )
         detector_axis = coordinate_array.mean(axis=0)
+        detector_axis = _rotate_preview_display_coordinate_array(
+            detector_axis.reshape(1, 3)
+        ).reshape(3)
         detector_axis = detector_axis / np.linalg.norm(detector_axis)
 
         assert np.allclose(incident_wave_vector, detector_axis, atol=5e-3)

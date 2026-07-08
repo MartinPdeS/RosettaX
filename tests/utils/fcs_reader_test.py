@@ -16,16 +16,23 @@ def sample_fcs_file_path() -> Path:
     """
     Return one bundled FCS file from the RosettaX FCS data directory.
     """
-    fcs_directory = directories.fcs_data
+    candidate_directories = [
+        directories.fcs_data,
+        directories.asset_directory / "sample-files",
+        directories.asset_directory,
+    ]
 
-    assert fcs_directory.exists(), f"Missing FCS data directory: {fcs_directory}"
-    assert fcs_directory.is_dir(), f"FCS data path is not a directory: {fcs_directory}"
+    for candidate_directory in candidate_directories:
+        if not candidate_directory.exists() or not candidate_directory.is_dir():
+            continue
 
-    fcs_file_paths = sorted(fcs_directory.glob("*.fcs"))
+        fcs_file_paths = sorted(candidate_directory.glob("*.fcs"))
 
-    assert len(fcs_file_paths) > 0, f"No .fcs files found in: {fcs_directory}"
+        if fcs_file_paths:
+            return fcs_file_paths[0]
 
-    return fcs_file_paths[0]
+    searched_paths = ", ".join(str(path) for path in candidate_directories)
+    raise AssertionError(f"No .fcs files found in expected directories: {searched_paths}")
 
 
 def test_fcs_reader_loads_sample_file(sample_fcs_file_path: Path) -> None:
