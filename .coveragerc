@@ -1,0 +1,30 @@
+# .coveragerc
+[run]
+source = RosettaX
+branch = True
+relative_files = True
+parallel = True
+omit =
+    **/__init__.py
+    RosettaX/_version.py
+    RosettaX/directories.py
+    RosettaX/**/__main__.py
+    RosettaX/application/**
+    RosettaX/pages/**/ids.py
+    RosettaX/pages/**/main.py
+    RosettaX/pages/**/layout.py
+    RosettaX/pages/**/callbacks.py
+    RosettaX/workflow/**/ids.py
+    RosettaX/workflow/**/layout.py
+    RosettaX/workflow/**/callbacks.py
+
+[report]
+skip_covered = True
+show_missing = True
+precision = 2
+
+[html]
+directory = htmlcov
+
+[xml]
+output = coverage.xml

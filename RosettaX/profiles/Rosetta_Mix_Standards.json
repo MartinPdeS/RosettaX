@@ -1,0 +1,80 @@
+{
+  "profile_name": "Rosetta Mix Standards",
+  "ui": {
+    "theme_mode": "light",
+    "show_graphs": true,
+    "show_preset_configuration": false
+  },
+  "files": {
+    "fluorescence_fcs_file_path": "",
+    "scattering_fcs_file_path": ""
+  },
+  "calibration": {
+    "mesf_values": [],
+    "default_fluorescence_peak_process": "Automatic 1D",
+    "histogram_scale": "log",
+    "histogram_xscale": "linear",
+    "histogram_yscale": "log",
+    "max_events_for_analysis": 100000,
+    "n_bins_for_plots": 256,
+    "peak_graph_colormap_log": true,
+    "target_model_preset": "Extracellular Vesicles",
+    "target_mie_relation_xscale": "linear",
+    "target_mie_relation_yscale": "log"
+  },
+  "fluorescence_calibration": {
+    "peak_table_sort_order": "ascending"
+  },
+  "optics": {
+    "wavelength_nm": 488.0,
+    "medium_refractive_index": 1.333,
+    "detector_configuration_preset": "",
+    "detector_numerical_aperture": 0.45,
+    "detector_cache_numerical_aperture": 0.45,
+    "blocker_bar_numerical_aperture": 0.0,
+    "detector_sampling": 1000,
+    "detector_phi_angle_degree": 0.0,
+    "detector_gamma_angle_degree": 0.0
+  },
+  "particle_model": {
+    "mie_model": "Solid Sphere",
+    "scatterer_preset": "Rosetta Mix",
+    "particle_refractive_index": 1.59,
+    "core_refractive_index": 1.47,
+    "shell_refractive_index": 1.46,
+    "particle_diameter_nm": [
+      994.0,
+      799.0,
+      600.0,
+      400.0,
+      380.0,
+      296.0,
+      203.0,
+      147.0,
+      140.0,
+      125.0,
+      100.0,
+      70.0
+    ],
+    "core_diameter_nm": [],
+    "shell_thickness_nm": []
+  },
+  "scattering_calibration": {
+    "peak_table_sort_order": "descending",
+    "default_peak_process": "Rosetta Script",
+    "default_detector_selection_mode": "auto-detect"
+  },
+  "metadata": {
+    "operator_name": "",
+    "instrument_name": ""
+  },
+  "visualization": {
+    "graph_height": "450px",
+    "default_marker_opacity": 0.72,
+    "default_marker_size": 7.0,
+    "default_line_width": 2.0,
+    "default_font_size": 14.0,
+    "default_tick_size": 12.0,
+    "show_grid_by_default": true
+  }
+}

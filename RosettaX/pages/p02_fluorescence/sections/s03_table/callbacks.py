@@ -1,0 +1,383 @@
+# -*- coding: utf-8 -*-
+
+from typing import Any, Optional
+import logging
+
+import dash
+
+from RosettaX.pages.p00_sidebar.ids import SidebarIds
+from RosettaX.pages.p02_fluorescence.state import FluorescencePageState
+from RosettaX.utils import RuntimeConfig
+from RosettaX.workflow.table.fluorescence import FluorescenceReferenceTable
+
+
+logger = logging.getLogger(__name__)
+
+
+def resolve_detector_change_reset(
+    *,
+    detector_dropdown_values: list[Any],
+    page_state_payload: Any,
+    current_table_rows: Optional[list[dict[str, Any]]],
+) -> tuple[Any, Any]:
+    """
+    Resolve whether a fluorescence detector change should reset the table.
+    """
+    page_state = FluorescencePageState.from_dict(
+        page_state_payload if isinstance(page_state_payload, dict) else None
+    )
+
+    normalized_detector_channels = [
+        str(value).strip()
+        for value in (detector_dropdown_values or [])
+        if str(value or "").strip()
+    ]
+    stored_detector_channels = [
+        str(value).strip()
+        for value in (page_state.last_detector_channels or [])
+        if str(value or "").strip()
+    ]
+
+    if normalized_detector_channels == stored_detector_channels:
+        return dash.no_update, dash.no_update
+
+    updated_page_state = page_state.update(
+        last_detector_channels=normalized_detector_channels,
+    )
+
+    if not stored_detector_channels or not normalized_detector_channels:
+        return dash.no_update, updated_page_state.to_dict()
+
+    normalized_current_rows = FluorescenceReferenceTable.normalize_rows(
+        rows=current_table_rows,
+    )
+    row_count = max(
+        3,
+        len(normalized_current_rows),
+    )
+    reset_rows = FluorescenceReferenceTable.reset_rows(
+        row_count=row_count,
+    )
+
+    return (
+        reset_rows,
+        updated_page_state.update(
+            reference_table_rows=reset_rows,
+        ).to_dict(),
+    )
+
+
+def register_callbacks(section) -> None:
+    """
+    Register reference table callbacks.
+    """
+    logger.debug("Registering fluorescence reference table callbacks.")
+
+    _register_runtime_table_sync_callback(section)
+    _register_preset_apply_callback(section)
+    _register_preset_sync_callback(section)
+    _register_add_row_callback(section)
+    _register_detector_change_reset_callback(section)
+    _register_page_state_table_persistence_callback(section)
+    _register_table_hydration_from_page_state_callback(section)
+
+
+def _register_runtime_table_sync_callback(section) -> None:
+    """
+    Register runtime config to table synchronization.
+    """
+
+    @dash.callback(
+        dash.Output(
+            section.ids.bead_table,
+            "data",
+            allow_duplicate=True,
+        ),
+        dash.Output(
+            section.ids.bead_table_preset_dropdown,
+            "value",
+            allow_duplicate=True,
+        ),
+        dash.Input("runtime-config-store", "data"),
+        dash.Input(SidebarIds.profile_load_event_store, "data"),
+        dash.State(section.ids.bead_table, "data"),
+        prevent_initial_call=True,
+    )
+    def sync_bead_table_from_runtime_store(
+        runtime_config_data: Any,
+        profile_load_event_data: Any,
+        current_rows: Optional[list[dict[str, Any]]],
+    ) -> Any:
+        if not isinstance(runtime_config_data, dict):
+            logger.debug(
+                "sync_bead_table_from_runtime_store received no runtime config. "
+                "Keeping current table data."
+            )
+
+            return dash.no_update, dash.no_update
+
+        should_rebuild_table = FluorescenceReferenceTable.should_rebuild_from_runtime_config(
+            profile_load_event_data=profile_load_event_data,
+            current_rows=current_rows,
+        )
+
+        normalized_current_rows = FluorescenceReferenceTable.normalize_rows(
+            rows=current_rows,
+        )
+
+        logger.debug(
+            "sync_bead_table_from_runtime_store called with triggered_id=%r "
+            "should_rebuild_table=%r profile_load_event_data=%r current_rows=%r",
+            dash.ctx.triggered_id,
+            should_rebuild_table,
+            profile_load_event_data,
+            normalized_current_rows,
+        )
+
+        if not should_rebuild_table:
+            logger.debug(
+                "Fluorescence reference table already contains user data "
+                "and no profile load was requested. Leaving it unchanged."
+            )
+
+            return dash.no_update, dash.no_update
+
+        runtime_config = RuntimeConfig.from_dict(
+            runtime_config_data,
+        )
+
+        resolved_rows = FluorescenceReferenceTable.build_rows_from_runtime_config(
+            runtime_config=runtime_config,
+        )
+        resolved_preset_name = FluorescenceReferenceTable.resolve_runtime_preset_name(
+            runtime_config=runtime_config,
+        )
+
+        logger.debug(
+            "Rebuilt fluorescence reference table from runtime config. "
+            "preset=%r row_count=%r rows=%r",
+            resolved_preset_name,
+            len(resolved_rows),
+            resolved_rows,
+        )
+
+        return resolved_rows, resolved_preset_name
+
+
+def _register_preset_apply_callback(section) -> None:
+    """
+    Register the preset-to-table callback.
+    """
+
+    @dash.callback(
+        dash.Output(
+            section.ids.bead_table,
+            "data",
+            allow_duplicate=True,
+        ),
+        dash.Input(section.ids.bead_table_preset_dropdown, "value"),
+        dash.State(section.ids.bead_table, "data"),
+        prevent_initial_call=True,
+    )
+    def apply_reference_preset(
+        preset_name: Any,
+        current_rows: Optional[list[dict[str, Any]]],
+    ) -> Any:
+        if dash.ctx.triggered_id != section.ids.bead_table_preset_dropdown:
+            return dash.no_update
+
+        resolved_rows = FluorescenceReferenceTable.build_rows_from_preset_name(
+            preset_name=preset_name,
+            current_rows=current_rows,
+        )
+
+        if resolved_rows == FluorescenceReferenceTable.normalize_rows(rows=current_rows):
+            return dash.no_update
+
+        return resolved_rows
+
+
+def _register_preset_sync_callback(section) -> None:
+    """
+    Keep the preset dropdown aligned with the calibrated-intensity column.
+    """
+
+    @dash.callback(
+        dash.Output(
+            section.ids.bead_table_preset_dropdown,
+            "value",
+            allow_duplicate=True,
+        ),
+        dash.Input(section.ids.bead_table, "data"),
+        dash.State(section.ids.bead_table_preset_dropdown, "value"),
+        prevent_initial_call=True,
+    )
+    def sync_reference_preset_from_rows(
+        rows: Optional[list[dict[str, Any]]],
+        current_preset_name: Any,
+    ) -> Any:
+        resolved_preset_name = FluorescenceReferenceTable.resolve_matching_preset_name(
+            rows=rows,
+        )
+
+        if resolved_preset_name == str(current_preset_name or ""):
+            return dash.no_update
+
+        return resolved_preset_name
+
+
+def _register_add_row_callback(section) -> None:
+    """
+    Register the add row callback.
+    """
+
+    @dash.callback(
+        dash.Output(
+            section.ids.bead_table,
+            "data",
+            allow_duplicate=True,
+        ),
+        dash.Input(section.ids.add_row_btn, "n_clicks"),
+        dash.State(section.ids.bead_table, "data"),
+        prevent_initial_call=True,
+    )
+    def add_row(
+        n_clicks: int,
+        rows: Optional[list[dict[str, Any]]],
+    ) -> list[dict[str, Any]]:
+        logger.debug(
+            "add_row called with n_clicks=%r existing_row_count=%r",
+            n_clicks,
+            None if rows is None else len(rows),
+        )
+
+        next_rows = FluorescenceReferenceTable.add_empty_row(
+            rows=rows,
+        )
+
+        logger.debug(
+            "add_row returning next_row_count=%r",
+            len(next_rows),
+        )
+
+        return next_rows
+
+
+def _register_detector_change_reset_callback(section) -> None:
+    """
+    Reset the fluorescence reference table when the selected detector changes.
+    """
+
+    @dash.callback(
+        dash.Output(
+            section.ids.bead_table,
+            "data",
+            allow_duplicate=True,
+        ),
+        dash.Output(
+            section.page.ids.State.page_state_store,
+            "data",
+            allow_duplicate=True,
+        ),
+        dash.Input(
+            section.page.ids.Fluorescence.process_detector_dropdown_pattern(),
+            "value",
+        ),
+        dash.State(
+            section.page.ids.State.page_state_store,
+            "data",
+        ),
+        dash.State(
+            section.ids.bead_table,
+            "data",
+        ),
+        prevent_initial_call=True,
+    )
+    def reset_reference_table_on_detector_change(
+        detector_dropdown_values: list[Any],
+        page_state_payload: Any,
+        current_table_rows: Optional[list[dict[str, Any]]],
+    ) -> Any:
+        return resolve_detector_change_reset(
+            detector_dropdown_values=detector_dropdown_values,
+            page_state_payload=page_state_payload,
+            current_table_rows=current_table_rows,
+        )
+
+
+def _register_page_state_table_persistence_callback(section) -> None:
+    """
+    Persist fluorescence table rows into the page state store.
+    """
+
+    @dash.callback(
+        dash.Output(
+            section.page.ids.State.page_state_store,
+            "data",
+            allow_duplicate=True,
+        ),
+        dash.Input(section.ids.bead_table, "data"),
+        dash.State(section.page.ids.State.page_state_store, "data"),
+        prevent_initial_call=True,
+    )
+    def persist_reference_table_rows_to_page_state(
+        table_rows: Optional[list[dict[str, Any]]],
+        page_state_payload: Any,
+    ) -> Any:
+        page_state = FluorescencePageState.from_dict(
+            page_state_payload if isinstance(page_state_payload, dict) else None
+        )
+
+        normalized_table_rows = FluorescenceReferenceTable.normalize_rows(
+            rows=table_rows,
+        )
+
+        normalized_stored_rows = FluorescenceReferenceTable.normalize_rows(
+            rows=page_state.reference_table_rows,
+        )
+
+        if normalized_table_rows == normalized_stored_rows:
+            return dash.no_update
+
+        return page_state.update(
+            reference_table_rows=normalized_table_rows,
+        ).to_dict()
+
+
+def _register_table_hydration_from_page_state_callback(section) -> None:
+    """
+    Restore fluorescence table rows from page state when revisiting the page.
+    """
+
+    @dash.callback(
+        dash.Output(
+            section.ids.bead_table,
+            "data",
+            allow_duplicate=True,
+        ),
+        dash.Input(section.page.ids.State.page_state_store, "data"),
+        dash.State(section.ids.bead_table, "data"),
+        prevent_initial_call="initial_duplicate",
+    )
+    def hydrate_reference_table_from_page_state(
+        page_state_payload: Any,
+        current_table_rows: Optional[list[dict[str, Any]]],
+    ) -> Any:
+        page_state = FluorescencePageState.from_dict(
+            page_state_payload if isinstance(page_state_payload, dict) else None
+        )
+
+        if page_state.reference_table_rows is None:
+            return dash.no_update
+
+        normalized_stored_rows = FluorescenceReferenceTable.normalize_rows(
+            rows=page_state.reference_table_rows,
+        )
+        normalized_current_rows = FluorescenceReferenceTable.normalize_rows(
+            rows=current_table_rows,
+        )
+
+        if normalized_stored_rows == normalized_current_rows:
+            return dash.no_update
+
+        return normalized_stored_rows

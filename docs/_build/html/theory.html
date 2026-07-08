@@ -1,0 +1,1148 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Implementation model &#8212; RosettaX  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=55c26ed414f5f8a31ebb" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="/Users/m.poinsinetdesivry-houle/Desktop/GitRepositories/RosettaX/docs/source/_static/default.css?v=6285c03f" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="_static/default.css?v=6285c03f" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=55c26ed414f5f8a31ebb"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
+
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/sg-tags.js?v=d80f6fa4"></script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'theory';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/MartinPdeS/RosettaX/documentation_page/version_switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="_static/logo_light.svg"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Workflow guides" href="workflows/index.html" />
+    <link rel="prev" title="RosettaX documentation" href="index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.0.18" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/logo_light.svg" class="logo__image only-light" alt=""/>
+    <img src="_static/logo_light.svg" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">RosettaX</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Implementation model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="workflows/index.html">
+    Workflow guides
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="references.html">
+    Calibration file format
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="reports.html">
+    Reports and export provenance
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="quickstart.html">
+    Quick start
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="interface.html">
+    Interface guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="troubleshooting.html">
+    Troubleshooting
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="code.html">
+    API reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="gallery/index.html">
+    Examples
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MartinPdeS/RosettaX" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/RosettaX/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-box fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://anaconda.org/MartinPdeS/RosettaX" title="Anaconda" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Anaconda</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Implementation model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="workflows/index.html">
+    Workflow guides
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="references.html">
+    Calibration file format
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="reports.html">
+    Reports and export provenance
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="interface.html">
+    Interface guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="troubleshooting.html">
+    Troubleshooting
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="code.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="gallery/index.html">
+    Examples
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MartinPdeS/RosettaX" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/RosettaX/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-box fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://anaconda.org/MartinPdeS/RosettaX" title="Anaconda" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Anaconda</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar"><svg class="pst-icon svg-inline--fa" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"></div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Implementation model</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="implementation-model">
+<span id="theory"></span><h1>Implementation model<a class="headerlink" href="#implementation-model" title="Link to this heading">#</a></h1>
+<p>RosettaX operates on exported flow-cytometry data, not on raw detector traces
+or acquisition hardware. The software assumes the cytometer has already turned
+optical signals into event-level columns stored in an FCS file. RosettaX then
+does three things:</p>
+<ol class="arabic simple">
+<li><p>inspect the exported measurement distributions</p></li>
+<li><p>fit a calibration relation against a reference table or optical model</p></li>
+<li><p>save that relation as JSON and later apply it to other FCS files</p></li>
+</ol>
+<p>That boundary matters. A RosettaX calibration is a mapping from a processed
+instrument observable to a calibrated quantity. It is not a claim that the FCS
+value was a raw optical power in the first place.</p>
+<section id="what-kind-of-flow-cytometry-system-is-modeled">
+<h2>What kind of flow-cytometry system is modeled<a class="headerlink" href="#what-kind-of-flow-cytometry-system-is-modeled" title="Link to this heading">#</a></h2>
+<p>RosettaX assumes a conventional event-based flow-cytometry workflow where:</p>
+<ul class="simple">
+<li><p>each FCS row is one event</p></li>
+<li><p>each selected column is an exported instrument feature</p></li>
+<li><p>fluorescence and scattering are calibrated from one chosen source channel at a time</p></li>
+<li><p>the calibration is built after acquisition, from saved files</p></li>
+</ul>
+<p>For fluorescence, RosettaX treats the selected detector column as the measured
+instrument quantity to be related to an assigned reference intensity scale.</p>
+<p>For scattering, RosettaX goes further and models the optical system used to
+generate the calibration-standard relation. The scattering backend uses a
+Gaussian illumination source and a photodiode-style collection model through
+PyMieSim. The configurable geometry includes wavelength, detector numerical
+aperture, detector cache numerical aperture, blocker-bar numerical aperture,
+detector phi angle, detector gamma angle, detector sampling, and preset-based
+angular weights or effective geometry corrections.</p>
+<p>The practical consequence is that RosettaX does not simply fit scatter peak to
+diameter. It fits measured scatter peak to modeled optical coupling, then uses a
+target Mie relation to convert coupling to equivalent diameter during apply.</p>
+</section>
+<section id="how-material-refractive-indices-are-computed">
+<h2>How material refractive indices are computed<a class="headerlink" href="#how-material-refractive-indices-are-computed" title="Link to this heading">#</a></h2>
+<p>Scattering presets can refer either to plain numeric refractive indices or to
+named materials stored in <code class="docutils literal notranslate"><span class="pre">RosettaX/assets/sellmeier_equations.json</span></code>.</p>
+<p>When a named material is selected, RosettaX evaluates a Sellmeier relation at
+the current wavelength:</p>
+<div class="math notranslate nohighlight">
+\[n^2 = a + \sum_i \frac{B_i \lambda^2}{\lambda^2 - C_i}\]</div>
+<p>The user-facing wavelength is entered in nanometers and converted to
+micrometers before the Sellmeier expression is evaluated. The resulting numeric
+value is then written back into the refractive-index field and used by the
+scattering model.</p>
+<p>This means that changing wavelength can change the resolved refractive index for
+water, PBS, polystyrene, silica, PMMA, lipid-like materials, and other packaged
+presets. If a preset is already numeric, RosettaX uses the numeric value
+directly instead of evaluating the material bank.</p>
+</section>
+<section id="regression-models-used-by-rosettax">
+<h2>Regression models used by RosettaX<a class="headerlink" href="#regression-models-used-by-rosettax" title="Link to this heading">#</a></h2>
+<p>RosettaX uses a different regression model for each calibration family.</p>
+<p>Fluorescence uses a log-log linear fit:</p>
+<div class="math notranslate nohighlight">
+\[\log_{10}(y) = m \log_{10}(x) + b\]</div>
+<p>which is equivalent to the power law</p>
+<div class="math notranslate nohighlight">
+\[y = 10^b x^m\]</div>
+<p>The fit is performed with <code class="docutils literal notranslate"><span class="pre">numpy.polyfit</span></code> after discarding any pair where the
+measured intensity, reference intensity, or transformed value is not finite and
+strictly positive.</p>
+<p>Scattering uses a linear instrument-response model:</p>
+<div class="math notranslate nohighlight">
+\[\mathrm{theoretical\_coupling} = m \cdot \mathrm{measured\_peak} + b\]</div>
+<p>The theoretical coupling values come from the optical model. The default
+behavior is to force <span class="math notranslate nohighlight">\(b = 0\)</span>, which makes the fit a pure slope estimate.
+RosettaX stores <code class="docutils literal notranslate"><span class="pre">R^2</span></code> for both workflows so the saved calibration still shows
+the quality of the fitted relation.</p>
+</section>
+<section id="why-the-saved-record-matters">
+<h2>Why the saved record matters<a class="headerlink" href="#why-the-saved-record-matters" title="Link to this heading">#</a></h2>
+<p>RosettaX is deliberately opinionated about serialization. A calibration is only
+reusable if the saved JSON explains what was fitted. That is why fluorescence
+payloads preserve reference points and fit parameters, while scattering payloads
+also preserve the modeled calibration-standard relation and optical metadata.</p>
+<p>The apply workflow then uses that saved payload as the authoritative source for
+which channel is calibrated and how the conversion should be interpreted.
+* detector responsivity</p>
+<p>For spherical particles, scattering is often modeled using Mie theory. Mie
+theory provides an exact solution of Maxwell’s equations for a homogeneous
+sphere in a homogeneous medium illuminated by a plane wave.</p>
+<p>The model produces quantities such as:</p>
+<ul class="simple">
+<li><p>scattering efficiency</p></li>
+<li><p>extinction efficiency</p></li>
+<li><p>angular scattering amplitudes</p></li>
+<li><p>differential scattering intensity</p></li>
+<li><p>collected optical power over a detector acceptance region</p></li>
+</ul>
+<p>For cytometry calibration, the relevant quantity is usually not the total
+scattered power over all angles. Instead, it is the portion of scattered light
+that is collected by the instrument optics and routed to a specific detector.</p>
+<p>This means that the optical model must account for the collection geometry.
+Forward scatter and side scatter channels do not measure the same angular
+region, and they may not respond similarly to particle size or refractive index.</p>
+</section>
+<section id="size-parameter-and-refractive-index-contrast">
+<h2>Size parameter and refractive index contrast<a class="headerlink" href="#size-parameter-and-refractive-index-contrast" title="Link to this heading">#</a></h2>
+<p>A central dimensionless quantity in scattering theory is the size parameter,</p>
+<div class="math notranslate nohighlight">
+\[x = \frac{2 \pi r n_m}{\lambda}\]</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">r</span></code> is the particle radius, <code class="docutils literal notranslate"><span class="pre">n_m</span></code> is the refractive index of the
+surrounding medium, and <code class="docutils literal notranslate"><span class="pre">lambda</span></code> is the wavelength in vacuum.</p>
+<p>The scattering response depends strongly on the size parameter and on the
+relative refractive index,</p>
+<div class="math notranslate nohighlight">
+\[m = \frac{n_p}{n_m}\]</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">n_p</span></code> is the particle refractive index.</p>
+<p>Small particles with weak refractive index contrast may scatter very little
+light. In the Rayleigh regime, the scattering intensity approximately scales
+with the sixth power of particle radius,</p>
+<div class="math notranslate nohighlight">
+\[I_\mathrm{sca} \propto r^6\]</div>
+<p>This scaling is only an approximation for sufficiently small particles, but it
+is useful for intuition. It shows why small changes in particle size can produce
+large changes in scattering signal.</p>
+<p>For extracellular vesicles, lipoproteins, small beads, and other submicron
+particles, this strong size dependence is particularly important. The measured
+scatter distribution may be dominated by the largest particles even if smaller
+particles are far more numerous.</p>
+</section>
+<section id="angular-collection">
+<h2>Angular collection<a class="headerlink" href="#angular-collection" title="Link to this heading">#</a></h2>
+<p>A flow cytometer does not usually collect all scattered light. Each scatter
+channel collects a limited angular range determined by the optical design.</p>
+<p>A simplified collected signal can be written as an angular integral,</p>
+<div class="math notranslate nohighlight">
+\[S = C \int_{\Omega_D} I_\mathrm{sca}(\theta, \phi) \, d\Omega\]</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">I_sca</span></code> is the angular scattering intensity, <code class="docutils literal notranslate"><span class="pre">Omega_D</span></code> is the
+detector collection solid angle, and <code class="docutils literal notranslate"><span class="pre">C</span></code> is an instrument dependent
+proportionality factor.</p>
+<p>This expression emphasizes three important points.</p>
+<p>First, the collected signal depends on the detector geometry. A particle may
+produce strong scattering at angles that are not collected by a given channel.</p>
+<p>Second, the forward and side scatter responses can have different size and
+refractive index dependence.</p>
+<p>Third, the absolute scaling factor is usually instrument dependent. Unless all
+optical throughput, detector responsivity, gain, and processing steps are known,
+the measured channel value should be calibrated empirically.</p>
+</section>
+<section id="calibration-curves-and-monotonicity">
+<h2>Calibration curves and monotonicity<a class="headerlink" href="#calibration-curves-and-monotonicity" title="Link to this heading">#</a></h2>
+<p>A scattering calibration often requires a relation between a particle property
+and a predicted scatter signal. For example, a bead diameter may be mapped to a
+predicted collected scattering intensity.</p>
+<p>However, scattering curves are not always monotonic. Mie resonances and angular
+collection effects can produce oscillations, plateaus, or multiple particle
+sizes that yield similar collected signals.</p>
+<p>This has important consequences.</p>
+<p>If the relation between diameter and signal is not monotonic, then the inverse
+problem is ambiguous. A single measured signal may correspond to multiple
+possible diameters or optical configurations.</p>
+<p>For calibration workflows, RosettaX therefore treats monotonicity as an
+important quality criterion. When a model relation is used as a target
+calibration curve, the usable branch should be inspected. A calibration based
+on a non monotonic region can produce unstable or physically ambiguous results.</p>
+<p>In practical terms, the user should verify:</p>
+<ul class="simple">
+<li><p>whether the calibration range is monotonic</p></li>
+<li><p>whether the selected reference populations fall on a single branch</p></li>
+<li><p>whether the inverse mapping is unique over the intended range</p></li>
+<li><p>whether extrapolation would cross a non monotonic region</p></li>
+<li><p>whether the channel geometry is appropriate for the target size range</p></li>
+</ul>
+</section>
+<section id="instrument-response">
+<h2>Instrument response<a class="headerlink" href="#instrument-response" title="Link to this heading">#</a></h2>
+<p>The optical signal produced by a particle is not the final value stored in an
+FCS file.</p>
+<p>The measured value is affected by the instrument response, including:</p>
+<ul class="simple">
+<li><p>optical transmission</p></li>
+<li><p>filter transmission</p></li>
+<li><p>detector responsivity</p></li>
+<li><p>analog gain</p></li>
+<li><p>electronic bandwidth</p></li>
+<li><p>digitization</p></li>
+<li><p>baseline processing</p></li>
+<li><p>pulse detection</p></li>
+<li><p>trigger thresholds</p></li>
+<li><p>exported feature definitions</p></li>
+</ul>
+<p>A simplified measurement model can be written as</p>
+<div class="math notranslate nohighlight">
+\[x_\mathrm{meas} = h(S_\mathrm{optical}) + \epsilon\]</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">S_optical</span></code> is the collected optical signal, <code class="docutils literal notranslate"><span class="pre">h</span></code> represents the
+instrument response, and <code class="docutils literal notranslate"><span class="pre">epsilon</span></code> represents noise and residual variability.</p>
+<p>In ideal conditions, <code class="docutils literal notranslate"><span class="pre">h</span></code> may be approximated as a linear function over a
+limited dynamic range. In real instruments, the response may include offsets,
+nonlinearities, saturation, filtering, baseline correction, or proprietary
+processing.</p>
+<p>This is why RosettaX focuses on empirical calibration using measured reference
+data. The optical model provides the target reference values, but the measured
+instrument response is estimated from experimental data.</p>
+</section>
+<section id="noise-and-detection-limits">
+<h2>Noise and detection limits<a class="headerlink" href="#noise-and-detection-limits" title="Link to this heading">#</a></h2>
+<p>Calibration is most reliable when reference populations are well above the
+noise floor and well separated from background.</p>
+<p>In low signal regimes, several effects can complicate calibration:</p>
+<ul class="simple">
+<li><p>detector noise</p></li>
+<li><p>shot noise</p></li>
+<li><p>electronic noise</p></li>
+<li><p>background light</p></li>
+<li><p>autofluorescence</p></li>
+<li><p>coincident particles</p></li>
+<li><p>unresolved reference populations</p></li>
+<li><p>thresholding bias</p></li>
+<li><p>feature extraction variability</p></li>
+</ul>
+<p>The lower limit of detection is especially important for small particle
+scattering. Particles that produce signals close to the background may not form
+stable peaks, and their measured distributions may be distorted by triggering
+and event selection.</p>
+<p>If a reference population is only partially detected, the measured peak may not
+represent the true population response. It may represent only the high signal
+tail that crossed the event threshold.</p>
+<p>For this reason, calibration points near the detection limit should be reviewed
+carefully. They may be useful for understanding instrument sensitivity, but they
+may be unsuitable for fitting a stable calibration relation.</p>
+</section>
+<section id="triggering-and-selection-bias">
+<h2>Triggering and selection bias<a class="headerlink" href="#triggering-and-selection-bias" title="Link to this heading">#</a></h2>
+<p>Flow cytometers record events only when the acquisition logic decides that a
+signal satisfies the trigger condition. This means the recorded event
+population can be biased relative to the particles that passed through the
+interrogation region.</p>
+<p>A trigger condition may depend on:</p>
+<ul class="simple">
+<li><p>one selected channel</p></li>
+<li><p>one selected pulse feature</p></li>
+<li><p>a threshold</p></li>
+<li><p>hysteresis</p></li>
+<li><p>debounce logic</p></li>
+<li><p>coincidence behavior</p></li>
+<li><p>electronic filtering</p></li>
+<li><p>digital processing</p></li>
+</ul>
+<p>If the trigger channel is not the same as the calibration channel, the recorded
+events may be selected by one physical observable and calibrated in another.
+This can affect the apparent distribution and peak positions.</p>
+<p>For example, a sample triggered on side scatter may have a different recorded
+population than the same sample triggered on fluorescence or forward scatter.</p>
+<p>When interpreting calibration results, it is therefore important to know:</p>
+<ul class="simple">
+<li><p>which channel was used for triggering</p></li>
+<li><p>whether the reference populations were fully detected</p></li>
+<li><p>whether the selected peaks are affected by thresholding</p></li>
+<li><p>whether the same trigger settings were used across measurements</p></li>
+<li><p>whether the calibration will be applied to data acquired under compatible
+conditions</p></li>
+</ul>
+</section>
+<section id="pulse-features">
+<h2>Pulse features<a class="headerlink" href="#pulse-features" title="Link to this heading">#</a></h2>
+<p>A particle crossing the interrogation region produces a time dependent pulse.
+The FCS file may contain several features extracted from this pulse.</p>
+<p>Common pulse features include:</p>
+<ul class="simple">
+<li><p>height</p></li>
+<li><p>area</p></li>
+<li><p>width</p></li>
+</ul>
+<p>Pulse height is often related to the maximum signal amplitude. Pulse area is
+related to the integrated signal over the event duration. Pulse width is related
+to the temporal extent of the event.</p>
+<p>These features are not interchangeable. Their relationship depends on particle
+velocity, beam shape, signal processing, and event extraction.</p>
+<p>For calibration, the selected feature should match the intended interpretation.
+A calibration built from pulse height should not be applied blindly to pulse
+area unless the relationship between the two is known and stable.</p>
+<p>RosettaX therefore keeps calibration workflows organized around explicit
+channel and feature choices.</p>
+</section>
+<section id="fitting-calibration-relations">
+<h2>Fitting calibration relations<a class="headerlink" href="#fitting-calibration-relations" title="Link to this heading">#</a></h2>
+<p>Once measured peak positions and reference values are associated, RosettaX can
+fit a calibration relation.</p>
+<p>The fitting problem can be written generally as</p>
+<div class="math notranslate nohighlight">
+\[y_i = f(x_i; \boldsymbol{\theta}) + \epsilon_i\]</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">x_i</span></code> are the measured peak positions, <code class="docutils literal notranslate"><span class="pre">y_i</span></code> are the reference
+values, <code class="docutils literal notranslate"><span class="pre">f</span></code> is the calibration model, <code class="docutils literal notranslate"><span class="pre">theta</span></code> are the fitted parameters,
+and <code class="docutils literal notranslate"><span class="pre">epsilon_i</span></code> are residual errors.</p>
+<p>The choice of model should reflect the expected instrument response and the
+calibration range. A more complex model is not always better. It may fit the
+reference points more closely while producing unstable interpolation or
+unreasonable extrapolation.</p>
+<p>When reviewing a calibration fit, the user should inspect:</p>
+<ul class="simple">
+<li><p>the fitted curve</p></li>
+<li><p>the calibration points</p></li>
+<li><p>the residuals</p></li>
+<li><p>the dynamic range covered by the references</p></li>
+<li><p>the behavior near the lower and upper ends of the range</p></li>
+<li><p>whether the relation is physically plausible</p></li>
+<li><p>whether the model will be used for interpolation or extrapolation</p></li>
+</ul>
+<p>A calibration fit should be considered a model with assumptions, not just a
+numerical conversion table.</p>
+</section>
+<section id="interpolation-and-extrapolation">
+<h2>Interpolation and extrapolation<a class="headerlink" href="#interpolation-and-extrapolation" title="Link to this heading">#</a></h2>
+<p>Calibration is most reliable within the range spanned by the reference
+populations. Applying a calibration inside this range is interpolation.
+Applying it outside this range is extrapolation.</p>
+<p>Interpolation can still be affected by model choice, noise, and reference
+quality, but it is generally better constrained than extrapolation.</p>
+<p>Extrapolation is riskier because the fitted relation is being used outside the
+region where it was supported by data. In this case, nonlinear detector
+response, saturation, noise floor effects, or non monotonic scattering behavior
+can produce large errors.</p>
+<p>For this reason, exported calibrations should be interpreted together with
+their valid range. Users should avoid applying a calibration to signal values
+far outside the reference range unless the extrapolation has been explicitly
+validated.</p>
+</section>
+<section id="calibration-export">
+<h2>Calibration export<a class="headerlink" href="#calibration-export" title="Link to this heading">#</a></h2>
+<p>A useful calibration result should be reusable. It should not exist only as a
+plot or as values copied manually from one script to another.</p>
+<p>RosettaX therefore supports calibration export. The exported calibration should
+contain enough information to identify:</p>
+<ul class="simple">
+<li><p>the calibration type</p></li>
+<li><p>the fitted parameters</p></li>
+<li><p>the reference data used for the fit</p></li>
+<li><p>the measured peak positions</p></li>
+<li><p>the selected channel and feature</p></li>
+<li><p>the model assumptions</p></li>
+<li><p>the runtime profile or relevant settings</p></li>
+<li><p>the software version when available</p></li>
+</ul>
+<p>The exact contents may evolve with the application, but the goal remains the
+same: exported calibrations should be traceable and reusable in downstream
+analysis.</p>
+<p>A calibration file should be treated as part of the experimental record.</p>
+</section>
+<section id="runtime-profiles">
+<h2>Runtime profiles<a class="headerlink" href="#runtime-profiles" title="Link to this heading">#</a></h2>
+<p>Runtime profiles are used to organize repeated calibration settings.</p>
+<p>A profile may contain default parameters such as detector names, channel
+choices, optical assumptions, reference material settings, or workflow options.
+This avoids repeatedly entering the same information and reduces the chance of
+copying inconsistent values between calibration sessions.</p>
+<p>Profiles are not a substitute for experimental metadata. Instead, they provide a
+structured way to keep frequently reused assumptions and application settings
+together.</p>
+<p>When using profiles, users should ensure that the selected profile corresponds
+to the instrument configuration and reference materials used in the actual
+measurement.</p>
+</section>
+<section id="local-execution-and-reproducibility">
+<h2>Local execution and reproducibility<a class="headerlink" href="#local-execution-and-reproducibility" title="Link to this heading">#</a></h2>
+<p>RosettaX is designed to run locally. The application serves a graphical
+interface from the user’s machine and does not require a remote calibration
+server.</p>
+<p>Local execution has practical advantages:</p>
+<ul class="simple">
+<li><p>FCS files remain on the user’s machine</p></li>
+<li><p>calibration work can be performed without uploading data</p></li>
+<li><p>local files and profiles can be reused across sessions</p></li>
+<li><p>the workflow can be integrated into laboratory data management practices</p></li>
+</ul>
+<p>Reproducibility depends on more than local execution. A reproducible calibration
+workflow should also preserve:</p>
+<ul class="simple">
+<li><p>input FCS files or their identifiers</p></li>
+<li><p>reference material information</p></li>
+<li><p>selected peaks</p></li>
+<li><p>fitted model type</p></li>
+<li><p>fitted parameters</p></li>
+<li><p>software version</p></li>
+<li><p>runtime profile</p></li>
+<li><p>acquisition settings</p></li>
+<li><p>relevant instrument metadata</p></li>
+</ul>
+<p>RosettaX is intended to make these elements easier to organize, but users
+should still maintain complete experimental records when using calibration
+results for scientific reporting.</p>
+</section>
+<section id="limitations">
+<h2>Limitations<a class="headerlink" href="#limitations" title="Link to this heading">#</a></h2>
+<p>RosettaX does not make calibration automatically correct. It provides a
+structured workflow, but the quality of the result still depends on the quality
+of the input data, reference materials, model assumptions, and user choices.</p>
+<p>Important limitations include:</p>
+<ul class="simple">
+<li><p>FCS data may already contain instrument specific processing</p></li>
+<li><p>proprietary instrument internals may be unknown</p></li>
+<li><p>reference populations may overlap or be partially detected</p></li>
+<li><p>scattering models require assumptions about size, refractive index, and
+collection geometry</p></li>
+<li><p>calibration fits may be unreliable outside the reference range</p></li>
+<li><p>peak identification may require user review</p></li>
+<li><p>low signal populations may be biased by triggering and detection limits</p></li>
+<li><p>exported calibration files are only valid under compatible acquisition and
+analysis conditions</p></li>
+</ul>
+<p>These limitations are not specific to RosettaX. They are general features of
+calibration workflows in flow cytometry. RosettaX aims to make them more
+visible and easier to manage.</p>
+</section>
+<section id="best-practices">
+<h2>Best practices<a class="headerlink" href="#best-practices" title="Link to this heading">#</a></h2>
+<p>For reliable calibration workflows, users should follow several practical
+guidelines.</p>
+</section>
+</section>
+<section id="use-appropriate-reference-materials">
+<h1>Use appropriate reference materials<a class="headerlink" href="#use-appropriate-reference-materials" title="Link to this heading">#</a></h1>
+<p>The reference material should be suitable for the channel and dynamic range
+being calibrated. Reference populations should be detectable, separable, and
+matched to the intended measurement regime.</p>
+</section>
+<section id="inspect-the-data-before-fitting">
+<h1>Inspect the data before fitting<a class="headerlink" href="#inspect-the-data-before-fitting" title="Link to this heading">#</a></h1>
+<p>Do not fit a calibration relation blindly. Inspect histograms, density plots,
+peak positions, and possible background populations before accepting the
+calibration points.</p>
+</section>
+<section id="avoid-unsupported-extrapolation">
+<h1>Avoid unsupported extrapolation<a class="headerlink" href="#avoid-unsupported-extrapolation" title="Link to this heading">#</a></h1>
+<p>Use calibrations primarily within the range covered by the reference
+populations. Treat extrapolated values as uncertain unless the extrapolation has
+been validated independently.</p>
+</section>
+<section id="keep-acquisition-settings-consistent">
+<h1>Keep acquisition settings consistent<a class="headerlink" href="#keep-acquisition-settings-consistent" title="Link to this heading">#</a></h1>
+<p>Calibration is only transferable when the relevant acquisition and processing
+conditions are compatible. Changes in detector gain, trigger settings, optical
+configuration, filters, or exported feature definitions can invalidate a
+calibration.</p>
+</section>
+<section id="review-monotonicity-for-scattering-calibration">
+<h1>Review monotonicity for scattering calibration<a class="headerlink" href="#review-monotonicity-for-scattering-calibration" title="Link to this heading">#</a></h1>
+<p>When a scattering model is used, verify that the relevant calibration branch is
+monotonic over the intended range. Non monotonic scattering relations can make
+inverse calibration ambiguous.</p>
+</section>
+<section id="preserve-calibration-metadata">
+<h1>Preserve calibration metadata<a class="headerlink" href="#preserve-calibration-metadata" title="Link to this heading">#</a></h1>
+<p>Save the calibration file, runtime profile, reference material information, FCS
+file identifiers, acquisition settings, and software version whenever possible.
+These elements are necessary for later interpretation.</p>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">#</a></h2>
+<p>RosettaX treats calibration as a structured mapping between measured flow
+cytometry signals and reference or model based quantities.</p>
+<p>For fluorescence workflows, this mapping is usually empirical and based on
+reference intensity populations. For scattering workflows, the mapping connects
+measured scatter signals with optical models that depend on particle size,
+refractive index, wavelength, and collection geometry.</p>
+<p>In both cases, the calibration result is only meaningful when the reference
+populations, measured peaks, fitted relation, acquisition settings, and model
+assumptions remain traceable.</p>
+<p>RosettaX is designed to make this calibration chain explicit, inspectable, and
+reusable.</p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Implementation model</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-kind-of-flow-cytometry-system-is-modeled">What kind of flow-cytometry system is modeled</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-material-refractive-indices-are-computed">How material refractive indices are computed</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#regression-models-used-by-rosettax">Regression models used by RosettaX</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-the-saved-record-matters">Why the saved record matters</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#size-parameter-and-refractive-index-contrast">Size parameter and refractive index contrast</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#angular-collection">Angular collection</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#calibration-curves-and-monotonicity">Calibration curves and monotonicity</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#instrument-response">Instrument response</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#noise-and-detection-limits">Noise and detection limits</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#triggering-and-selection-bias">Triggering and selection bias</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pulse-features">Pulse features</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fitting-calibration-relations">Fitting calibration relations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#interpolation-and-extrapolation">Interpolation and extrapolation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#calibration-export">Calibration export</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#runtime-profiles">Runtime profiles</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#local-execution-and-reproducibility">Local execution and reproducibility</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#limitations">Limitations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#best-practices">Best practices</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#use-appropriate-reference-materials">Use appropriate reference materials</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#inspect-the-data-before-fitting">Inspect the data before fitting</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#avoid-unsupported-extrapolation">Avoid unsupported extrapolation</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#keep-acquisition-settings-consistent">Keep acquisition settings consistent</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#review-monotonicity-for-scattering-calibration">Review monotonicity for scattering calibration</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#preserve-calibration-metadata">Preserve calibration metadata</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary">Summary</a></li>
+</ul>
+</li>
+</ul>
+
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/theory.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024, Martin Poinsinet de Sivry-Houle.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.17.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,275 @@
+# -*- coding: utf-8 -*-
+
+from typing import Any
+import logging
+
+import dash
+import dash_bootstrap_components as dbc
+
+from RosettaX.utils import styling, ui_forms
+from RosettaX.utils.runtime_config import RuntimeConfig
+
+
+logger = logging.getLogger(__name__)
+
+
+def get_layout(section) -> dbc.Card:
+    """
+    Build the calibration section layout.
+    """
+    logger.debug("Building calibration section layout.")
+
+    return dbc.Card(
+        [
+            _build_header(section),
+            _build_collapse(section),
+        ],
+        style=ui_forms.build_workflow_section_card_style(
+            color_name=section.card_color,
+        ),
+    )
+
+
+def _build_header(section) -> dbc.CardHeader:
+    """
+    Build the card header.
+    """
+    return dbc.CardHeader(
+        [
+            ui_forms.build_title_with_info(
+                title=f"{section.section_number}. Calibration",
+                tooltip_target_id=section.section_tooltip_target_id,
+                tooltip_id=section.section_tooltip_id,
+                tooltip_text=(
+                    "This section creates the fluorescence calibration from the "
+                    "measured bead peak positions and the known MESF values in the "
+                    "reference table."
+                ),
+                subtitle=(
+                    "Fit the fluorescence response from reference MESF values and "
+                    "measured bead peaks."
+                ),
+            ),
+        ],
+        style=ui_forms.build_workflow_section_header_style(
+            color_name=section.card_color,
+        ),
+    )
+
+
+def _build_collapse(section) -> dbc.Collapse:
+    """
+    Build the collapsible section body.
+    """
+    return dbc.Collapse(
+        _build_body(section),
+        id=section.ids.collapse,
+        is_open=True,
+    )
+
+
+def _build_body(section) -> dbc.CardBody:
+    """
+    Build the card body.
+    """
+    return dbc.CardBody(
+        [
+            _build_graph_store(section),
+            _build_calibration_store(section),
+            _build_action_panel(section),
+            dash.html.Div(
+                style={
+                    "height": "18px",
+                },
+            ),
+            _build_graph_block(section),
+            dash.html.Div(
+                style={
+                    "height": "12px",
+                },
+            ),
+            _build_status_block(section),
+        ],
+        style=ui_forms.build_workflow_section_body_style(),
+    )
+
+
+def _build_graph_store(section) -> dash.dcc.Store:
+    """
+    Build the graph store.
+    """
+    return dash.dcc.Store(
+        id=section.ids.graph_store,
+        storage_type="session",
+    )
+
+
+def _build_calibration_store(section) -> dash.dcc.Store:
+    """
+    Build the calibration store.
+    """
+    return dash.dcc.Store(
+        id=section.ids.calibration_store,
+        storage_type="session",
+    )
+
+
+def _build_action_panel(section) -> dash.html.Div:
+    """
+    Build calibration action controls.
+    """
+    return dash.html.Div(
+        [
+            dbc.Button(
+                "Create calibration",
+                id=section.ids.calibrate_btn,
+                n_clicks=0,
+                color="primary",
+            ),
+            ui_forms.build_info_badge(
+                tooltip_target_id=section.create_calibration_tooltip_target_id,
+            ),
+            dbc.Tooltip(
+                (
+                    "Create the fluorescence calibration by matching the measured "
+                    "fluorescence peak positions to the known MESF values from "
+                    "the reference table. Use the current bead peaks and MESF "
+                    "reference values to compute the fitted response."
+                ),
+                id=section.create_calibration_tooltip_id,
+                target=section.create_calibration_tooltip_target_id,
+                placement="right",
+            ),
+        ],
+        style={
+            "display": "flex",
+            "alignItems": "center",
+            "justifyContent": "flex-start",
+            "gap": "0px",
+            "overflow": "visible",
+        },
+    )
+
+
+def _build_graph_block(section) -> dash.html.Div:
+    """
+    Build the calibration graph content inside the main section card.
+    """
+    return dash.html.Div(
+        [
+            dash.dcc.Loading(
+                dash.dcc.Graph(
+                    id=section.ids.graph_calibration,
+                    style=_build_graph_style(section),
+                    config=styling.PLOTLY_GRAPH_CONFIG,
+                ),
+                type="default",
+            ),
+            dash.html.Div(
+                style={
+                    "height": "12px",
+                },
+            ),
+            _build_calibration_footer(section),
+        ],
+        style={
+            "width": "100%",
+            "overflowY": "visible",
+        },
+    )
+
+
+def _build_graph_style(section) -> dict[str, Any]:
+    """
+    Build the Plotly graph CSS style.
+
+    The graph height is controlled by the runtime profile setting
+    ``visualization.graph_height``.
+    """
+    graph_style = dict(styling.PLOTLY_GRAPH_STYLE)
+    graph_style["height"] = _get_default_graph_height()
+    graph_style["width"] = "100%"
+    graph_style["display"] = "block"
+
+    return graph_style
+
+
+def _get_default_graph_height() -> str:
+    """
+    Return the default graph height from the runtime profile.
+    """
+    runtime_config = RuntimeConfig.from_default_profile()
+
+    graph_height = runtime_config.get_str(
+        "visualization.graph_height",
+        default="850px",
+    )
+
+    graph_height = str(graph_height or "").strip()
+
+    if not graph_height:
+        return "850px"
+
+    return graph_height
+
+
+def _build_calibration_footer(section) -> dash.html.Div:
+    """
+    Build the calibration graph footer with fit outputs.
+    """
+    return dash.html.Div(
+        [
+            _build_fit_metric("Slope", section.ids.slope_out),
+            _build_fit_metric("Intercept", section.ids.intercept_out),
+            _build_fit_metric("R²", section.ids.r_squared_out),
+        ],
+        style={
+            "display": "grid",
+            "gridTemplateColumns": "repeat(3, minmax(120px, 1fr))",
+            "gap": "10px",
+            "alignItems": "stretch",
+        },
+    )
+
+
+def _build_fit_metric(
+    label: str,
+    output_id: str,
+) -> dash.html.Div:
+    """
+    Build one compact fit metric box.
+    """
+    return dash.html.Div(
+        [
+            dash.html.Div(
+                label,
+                style={
+                    "fontWeight": "600",
+                    "fontSize": "0.9rem",
+                    "opacity": 0.85,
+                },
+            ),
+            dash.html.Div(
+                "",
+                id=output_id,
+                style={
+                    "fontFamily": "monospace",
+                    "fontSize": "0.95rem",
+                    "marginTop": "2px",
+                },
+            ),
+        ],
+        style=ui_forms.build_metric_box_style(),
+    )
+
+
+def _build_status_block(section) -> dash.html.Div:
+    """
+    Build the status output.
+    """
+    return dash.html.Div(
+        id=section.ids.apply_status,
+        style={
+            "marginTop": "8px",
+        },
+    )

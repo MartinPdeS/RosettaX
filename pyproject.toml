@@ -1,0 +1,85 @@
+[build-system]
+requires = ["setuptools>=40.8.0", "wheel", "setuptools_scm[toml]>=8.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "RosettaX"
+dynamic = ["version"]
+description = "Interactive fluorescence and scattering calibration workflows for flow cytometry."
+license = "AGPL-3.0-or-later"
+readme = "README.rst"
+requires-python = ">=3.10"
+authors = [{ name="Martin Poinsinet de Sivry-Houle", email="martin.poinsinet.de.sivry@gmail.com"}]
+classifiers = [
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Development Status :: 3 - Alpha",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Intended Audience :: Science/Research"
+]
+
+keywords = [
+    "flow-cytometry",
+    "calibration",
+    "scattering",
+    "fluorescence",
+    "data-analysis",
+]
+
+dependencies = [
+    "PyMieSim ==5.1.2",
+    "numpy >=2.2.6",
+    "dash >=4.1.0",
+    "dash-bootstrap-components >=2.0.4",
+    "plotly >=6.7.0",
+    "gunicorn >=23.0.0",
+    "psycopg[binary] >=3.2.9",
+]
+
+[project.scripts]
+rosettax = "RosettaX.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/MartinPdeS/RosettaX"
+Documentation = "https://martinpdes.github.io/RosettaX/"
+Repository = "https://github.com/MartinPdeS/RosettaX.git"
+
+[tool.setuptools.package-data]
+RosettaX = [
+    "assets/*",
+    "presets/**/*.json",
+    "profiles/**/*.json",
+    "calibrations/**/*.json",
+    "data/**/*",
+]
+
+[tool.setuptools_scm]
+write_to = "RosettaX/_version.py"
+version_scheme = "only-version"
+local_scheme = "no-local-version"
+
+[project.optional-dependencies]
+testing = [
+    "pytest >=7.4,<10.0",
+    "pytest-cov >=2,<8",
+    "pytest-json-report ~=1.5",
+    "coverage ~=7.6"
+]
+
+documentation = [
+    "numpydoc ~=1.8",
+    "sphinx >=6",
+    "sphinx-gallery ~=0.17",
+    "sphinx-rtd-theme ~=3.0",
+    "pydata-sphinx-theme ~=0.15"
+]
+
+dev = [
+    "flake8 ==7.3.0",
+]
+
+bundling = [
+    "pyinstaller >=6.14,<7",
+]

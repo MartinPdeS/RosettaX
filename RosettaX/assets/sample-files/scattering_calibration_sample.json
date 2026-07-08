@@ -1,0 +1,13 @@
+{
+  "calibration_type": "scattering",
+  "description": "Template sample for Apply calibration workflow",
+  "metadata": {
+    "instrument": "replace-with-instrument",
+    "operator": "replace-with-operator"
+  },
+  "calibration": {
+    "detector": "replace-with-detector-channel",
+    "model": "replace-with-mie-model",
+    "parameters": {}
+  }
+}

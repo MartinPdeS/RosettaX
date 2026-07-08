@@ -1,0 +1,56 @@
+{
+  "presets": [
+    {
+      "name": "Custom",
+      "mie_model": "Solid Sphere",
+      "medium_refractive_index": 1.333,
+      "particle_refractive_index": 1.59,
+      "core_refractive_index": 1.47,
+      "shell_refractive_index": 1.46,
+      "description": "Manual scatterer and calibration-standard table configuration."
+    },
+    {
+      "name": "Rosetta Mix",
+      "mie_model": "Solid Sphere",
+      "medium_refractive_index": 1.333,
+      "medium_refractive_index_source": "water",
+      "particle_refractive_index": 1.59,
+      "particle_refractive_index_source": "polystyrene",
+      "core_refractive_index": 1.47,
+      "core_refractive_index_source": "polystyrene",
+      "shell_refractive_index": 1.46,
+      "shell_refractive_index_source": "phospholipid",
+      "particle_diameters_nm": [994.0, 799.0, 600.0, 400.0, 380.0, 296.0, 203.0, 147.0, 140.0, 125.0, 100.0, 70.0],
+      "description": "Twelve-bead Rosetta mix (Exometry CAL003) spanning 70 nm to 994 nm, with 140 nm and 380 nm green-fluorescent markers."
+    },
+    {
+      "name": "Small particle standard",
+      "mie_model": "Solid Sphere",
+      "medium_refractive_index": 1.333,
+      "medium_refractive_index_source": "water",
+      "particle_refractive_index": 1.45,
+      "particle_refractive_index_source": "silica",
+      "core_refractive_index": 1.45,
+      "core_refractive_index_source": "silica",
+      "shell_refractive_index": 1.45,
+      "shell_refractive_index_source": "waterlike",
+      "particle_diameters_nm": [80.0, 100.0, 125.0, 150.0, 200.0, 240.0],
+      "description": "Compact small-particle calibration standard."
+    },
+    {
+      "name": "Broad particle standard",
+      "mie_model": "Solid Sphere",
+      "medium_refractive_index": 1.333,
+      "medium_refractive_index_source": "water",
+      "particle_refractive_index": 1.59,
+      "particle_refractive_index_source": "polystyrene",
+      "core_refractive_index": 1.59,
+      "core_refractive_index_source": "polystyrene",
+      "shell_refractive_index": 1.59,
+      "shell_refractive_index_source": "polystyrene",
+      "particle_diameters_nm": [100.0, 200.0, 300.0, 400.0, 600.0, 800.0],
+      "description": "Broad dynamic-range bead standard."
+    }
+  ]
+}
+

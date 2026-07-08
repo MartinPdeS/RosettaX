@@ -1,0 +1,75 @@
+package:
+  name: rosettax
+  version: {{ GIT_DESCRIBE_TAG | replace("v", "") }}
+
+source:
+  git_url: https://github.com/MartinPdeS/RosettaX.git
+
+build:
+  number: 0
+  script: "{{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation"
+  skip: true  # [py<310 or py>=314]
+
+
+requirements:
+  host:
+    - python {{ python }}
+    - pip
+    - setuptools >=64
+    - setuptools-scm >=8
+    - wheel
+
+  run:
+    - python {{ python }}
+    - numpy >=2.2.6
+    - plotly >=6.7.0
+    - dash >=4.1.0
+    - dash-bootstrap-components >=2.0.4
+    - martinpdes::pymiesim >=5.1.2
+    - gunicorn >=23.0.0  # [not win]
+
+test:
+  imports:
+    - RosettaX
+
+  requires:
+    - pytest >=7
+    - pytest-cov >=4
+    - pytest-json-report >=1.5
+    - coverage >=7
+
+  source_files:
+    - tests
+
+  commands:
+    - python -m pytest tests
+
+about:
+  home: https://github.com/MartinPdeS/RosettaX
+  dev_url: https://github.com/MartinPdeS/RosettaX
+  doc_url: https://martinpdes.github.io/RosettaX/
+  license: AGPL-3.0-or-later
+  license_file: LICENSE
+  summary: Interactive fluorescence and scattering calibration workflows for flow cytometry.
+  description: |
+    RosettaX is an interactive application for fluorescence and scattering
+    calibration workflows in flow cytometry. It provides graphical tools for
+    calibration setup, FCS data inspection, peak detection, optical modeling,
+    calibration fitting, profile management, and calibrated result export.
+
+    The application is designed to connect experimental calibration data,
+    Mie based optical modeling, and reusable instrument settings in a
+    reproducible workflow.
+
+  keywords:
+    - flow-cytometry
+    - calibration
+    - fluorescence
+    - scattering
+    - mie-theory
+    - optical-modeling
+    - data-analysis
+
+extra:
+  recipe-maintainers:
+    - MartinPdeS

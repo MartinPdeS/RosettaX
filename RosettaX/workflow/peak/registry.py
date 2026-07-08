@@ -1,0 +1,460 @@
+# -*- coding: utf-8 -*-
+
+import importlib
+import inspect
+import logging
+import pkgutil
+from functools import lru_cache
+from typing import Any
+
+
+logger = logging.getLogger(__name__)
+
+
+PEAK_SCRIPT_PACKAGE_NAME = "RosettaX.workflow.peak.scripts"
+DEFAULT_PROCESS_NAME = "automatic_1d"
+
+
+def clean_optional_string(value: Any) -> str:
+    """
+    Normalize an optional string value.
+
+    Parameters
+    ----------
+    value:
+        Raw value.
+
+    Returns
+    -------
+    str
+        Cleaned string value.
+    """
+    if value is None:
+        return ""
+
+    cleaned_value = str(value).strip()
+
+    if not cleaned_value:
+        return ""
+
+    if cleaned_value.lower() == "none":
+        return ""
+
+    return cleaned_value
+
+
+def get_selected_process_name(process_name: Any) -> str:
+    """
+    Return the explicitly selected peak process name, if any.
+    """
+    return clean_optional_string(process_name)
+
+
+@lru_cache(maxsize=1)
+def load_peak_scripts() -> tuple[Any, ...]:
+    """
+    Load all shared peak scripts once per Python process.
+
+    A valid script class is any concrete class in RosettaX.workflow.peak.scripts
+    that has:
+    - process_name
+    - get_process_option
+    - get_required_detector_channels
+    - build_controls
+
+    Returns
+    -------
+    tuple[Any, ...]
+        Instantiated peak script objects.
+    """
+    try:
+        package = importlib.import_module(
+            PEAK_SCRIPT_PACKAGE_NAME,
+        )
+
+    except Exception:
+        logger.exception(
+            "Failed to import peak script package %r.",
+            PEAK_SCRIPT_PACKAGE_NAME,
+        )
+
+        return tuple()
+
+    scripts: list[Any] = []
+
+    for module_info in pkgutil.iter_modules(package.__path__):
+        module_name = module_info.name
+
+        if module_name.startswith("_"):
+            continue
+
+        if module_name in {"base", "__init__", "registry"}:
+            continue
+
+        full_module_name = f"{PEAK_SCRIPT_PACKAGE_NAME}.{module_name}"
+
+        try:
+            module = importlib.import_module(
+                full_module_name,
+            )
+
+        except Exception:
+            logger.exception(
+                "Failed to import peak script module %r.",
+                full_module_name,
+            )
+
+            continue
+
+        script_class = find_script_class_in_module(
+            module=module,
+        )
+
+        if script_class is None:
+            logger.debug(
+                "No valid peak script class found in module %r.",
+                full_module_name,
+            )
+
+            continue
+
+        try:
+            scripts.append(
+                script_class(),
+            )
+
+        except Exception:
+            logger.exception(
+                "Failed to instantiate peak script class %r from module %r.",
+                script_class,
+                full_module_name,
+            )
+
+    logger.debug(
+        "Loaded %d peak scripts once: %r",
+        len(scripts),
+        [
+            getattr(script, "process_name", None)
+            for script in scripts
+        ],
+    )
+
+    return tuple(scripts)
+
+
+def clear_peak_script_cache() -> None:
+    """
+    Clear the cached peak script instances.
+
+    This is mainly useful for tests or explicit development reloads.
+    The normal application path should not call this.
+    """
+    load_peak_scripts.cache_clear()
+
+    logger.debug(
+        "Cleared cached peak script instances."
+    )
+
+
+def find_script_class_in_module(
+    *,
+    module: Any,
+) -> type | None:
+    """
+    Find the first concrete peak script class in a module.
+
+    Parameters
+    ----------
+    module:
+        Imported Python module.
+
+    Returns
+    -------
+    type | None
+        Peak script class if one is found.
+    """
+    candidates: list[type] = []
+
+    for value in vars(module).values():
+        if not inspect.isclass(value):
+            continue
+
+        if value.__module__ != module.__name__:
+            continue
+
+        if not hasattr(value, "process_name"):
+            continue
+
+        if not hasattr(value, "get_process_option"):
+            continue
+
+        if not hasattr(value, "get_required_detector_channels"):
+            continue
+
+        if not hasattr(value, "build_controls"):
+            continue
+
+        candidates.append(value)
+
+    if not candidates:
+        return None
+
+    if len(candidates) > 1:
+        logger.warning(
+            "Multiple peak script classes found in module %r. Using %r.",
+            module.__name__,
+            candidates[0].__name__,
+        )
+
+    return candidates[0]
+
+
+def get_peak_process_instances() -> list[Any]:
+    """
+    Return cached peak process instances.
+
+    Returns
+    -------
+    list[Any]
+        Instantiated peak process objects.
+    """
+    return list(load_peak_scripts())
+
+
+def filter_peak_processes(
+    *,
+    scripts: list[Any],
+    allowed_process_names: Any = None,
+) -> list[Any]:
+    """
+    Filter peak process instances by allowed process names.
+
+    Parameters
+    ----------
+    scripts:
+        Peak process instances.
+
+    allowed_process_names:
+        Optional iterable of process names. If omitted or empty, scripts are
+        returned unchanged.
+
+    Returns
+    -------
+    list[Any]
+        Filtered process instances.
+    """
+    if not isinstance(allowed_process_names, (list, tuple, set)):
+        return list(scripts)
+
+    allowed_name_set = {
+        clean_optional_string(name)
+        for name in allowed_process_names
+        if clean_optional_string(name)
+    }
+
+    if not allowed_name_set:
+        return list(scripts)
+
+    return [
+        script
+        for script in scripts
+        if clean_optional_string(getattr(script, "process_name", None)) in allowed_name_set
+    ]
+
+
+def build_script_map(
+    scripts: list[Any],
+) -> dict[str, Any]:
+    """
+    Build a script lookup by process name.
+
+    Parameters
+    ----------
+    scripts:
+        Peak script instances.
+
+    Returns
+    -------
+    dict[str, Any]
+        Mapping from process name to script instance.
+    """
+    return {
+        str(script.process_name): script
+        for script in scripts
+    }
+
+
+def get_cached_script_map() -> dict[str, Any]:
+    """
+    Build a script lookup from the cached script instances.
+
+    Returns
+    -------
+    dict[str, Any]
+        Mapping from process name to cached script instance.
+    """
+    return build_script_map(
+        get_peak_process_instances()
+    )
+
+
+def resolve_process_name(process_name: Any) -> str:
+    """
+    Resolve a process name to a valid non empty string.
+
+    Parameters
+    ----------
+    process_name:
+        Raw process name.
+
+    Returns
+    -------
+    str
+        Resolved process name.
+    """
+    process_name_clean = get_selected_process_name(process_name)
+
+    if process_name_clean:
+        return process_name_clean
+
+    return DEFAULT_PROCESS_NAME
+
+
+def get_process_instance(
+    *,
+    process_name: Any,
+) -> Any:
+    """
+    Return a cached peak process instance for a selected process name.
+
+    Parameters
+    ----------
+    process_name:
+        Selected process name.
+
+    Returns
+    -------
+    Any
+        Matching peak process instance, or None.
+    """
+    resolved_process_name = resolve_process_name(
+        process_name,
+    )
+
+    scripts = get_peak_process_instances()
+
+    for script in scripts:
+        if getattr(script, "process_name", None) == resolved_process_name:
+            return script
+
+    for script in scripts:
+        option = script.get_process_option()
+
+        if option.get("value") == resolved_process_name:
+            return script
+
+    return None
+
+
+def build_peak_process_options(
+    *,
+    include_empty_option: bool = False,
+    empty_label: str = "Select",
+) -> list[dict[str, str]]:
+    """
+    Build peak process dropdown options from cached peak scripts.
+
+    Returns
+    -------
+    list[dict[str, str]]
+        Dropdown options.
+    """
+    options = [
+        script.get_process_option()
+        for script in get_peak_process_instances()
+    ]
+
+    if include_empty_option:
+        return [
+            {
+                "label": empty_label,
+                "value": "",
+            },
+            *options,
+        ]
+
+    return options
+
+
+def get_default_script_name(
+    scripts: list[Any],
+) -> str | None:
+    """
+    Return the first available script name.
+
+    Parameters
+    ----------
+    scripts:
+        Peak script instances.
+
+    Returns
+    -------
+    str | None
+        Default script name.
+    """
+    if not scripts:
+        return None
+
+    return str(scripts[0].process_name)
+
+
+def resolve_detector_channel_state(
+    *,
+    detector_dropdown_ids: list[dict[str, Any]],
+    detector_dropdown_values: list[Any],
+    process_name: Any,
+) -> dict[str, Any]:
+    """
+    Resolve detector dropdown values for one selected peak process.
+
+    Parameters
+    ----------
+    detector_dropdown_ids:
+        Pattern matched detector dropdown IDs.
+
+    detector_dropdown_values:
+        Pattern matched detector dropdown values.
+
+    process_name:
+        Selected peak process name.
+
+    Returns
+    -------
+    dict[str, Any]
+        Mapping from required process channel name to selected detector column.
+    """
+    resolved_process_name = resolve_process_name(
+        process_name,
+    )
+
+    detector_channel_state: dict[str, Any] = {}
+
+    for detector_dropdown_id, detector_dropdown_value in zip(
+        detector_dropdown_ids or [],
+        detector_dropdown_values or [],
+        strict=False,
+    ):
+        if not isinstance(detector_dropdown_id, dict):
+            continue
+
+        if detector_dropdown_id.get("process") != resolved_process_name:
+            continue
+
+        channel_name = detector_dropdown_id.get("channel")
+
+        if not channel_name:
+            continue
+
+        detector_channel_state[str(channel_name)] = detector_dropdown_value
+
+    return detector_channel_state

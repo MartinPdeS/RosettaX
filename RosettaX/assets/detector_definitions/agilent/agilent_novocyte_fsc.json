@@ -1,0 +1,21 @@
+{
+  "name": "Agilent NovoCyte FSC",
+  "manufacturer": "Agilent",
+  "instrument": "NovoCyte",
+  "channel": "FSC",
+  "alias": [
+    "agilent novocyte",
+    "novocyte",
+    "novocyte advanteon",
+    "novocyte quattro"
+  ],
+  "description": "Forward scatter detector preset for Agilent NovoCyte style modeling. The numerical aperture values here are effective modeling assumptions intended to give RosettaX a documented starting point rather than an instrument-certified optical reconstruction.",
+  "detector_type": "photodiode",
+  "wavelength_nm": 488.0,
+  "detector_numerical_aperture": 0.2,
+  "detector_cache_numerical_aperture": 0.08,
+  "detector_sampling": 700,
+  "blocker_bar_numerical_aperture": 0.0,
+  "detector_phi_angle_degree": 0.0,
+  "detector_gamma_angle_degree": 0.0
+}
