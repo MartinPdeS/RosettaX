@@ -306,7 +306,7 @@ class Calibration:
                             "value": "force_zero_intercept",
                         }
                     ],
-                    value=[],
+                    value=["force_zero_intercept"],
                     switch=True,
                     inline=True,
                     persistence=True,
@@ -702,6 +702,7 @@ class Calibration:
             dash.State(self.page.ids.Parameters.detector_phi_angle_degree, "value"),
             dash.State(self.page.ids.Parameters.detector_gamma_angle_degree, "value"),
             dash.State(self.page.ids.Parameters.detector_configuration_preset, "value"),
+            dash.State(self.page.ids.Parameters.detector_angular_weighting_json, "value"),
             dash.State(self.ids.force_zero_intercept_toggle, "value"),
             prevent_initial_call=True,
         )
@@ -725,6 +726,7 @@ class Calibration:
             detector_phi_angle_degree: Any,
             detector_gamma_angle_degree: Any,
             detector_configuration_preset: Any,
+            detector_angular_weighting_json: Any,
             force_zero_intercept_toggle_value: Any,
         ) -> tuple[Any, Any, Any, Any, Any, Any]:
             del n_clicks
@@ -772,6 +774,7 @@ class Calibration:
                 detector_phi_angle_degree=detector_phi_angle_degree,
                 detector_gamma_angle_degree=detector_gamma_angle_degree,
                 detector_configuration_preset=detector_configuration_preset,
+                detector_angular_weighting_json=detector_angular_weighting_json,
                 force_zero_intercept=force_zero_intercept,
                 simulated_curve_point_count=self.simulated_curve_point_count,
                 logger=logger,

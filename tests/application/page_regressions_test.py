@@ -183,6 +183,25 @@ class Test_ScatteringModelLayout:
 
         assert custom_values_container is not None
         assert section.ids.wavelength_nm in _collect_component_ids(custom_values_container)
+        assert section.ids.detector_angular_weighting_json in _collect_component_ids(
+            custom_values_container
+        )
+
+        wavelength_input = _find_component_by_id(
+            custom_values_container,
+            section.ids.wavelength_nm,
+        )
+        detector_sampling_input = _find_component_by_id(
+            custom_values_container,
+            section.ids.detector_sampling,
+        )
+
+        assert wavelength_input is not None
+        assert wavelength_input.type == "text"
+        assert wavelength_input.inputMode == "numeric"
+        assert detector_sampling_input is not None
+        assert detector_sampling_input.type == "text"
+        assert detector_sampling_input.inputMode == "numeric"
 
 
 class Test_ScatteringCalibrationCallbackOutputs:

@@ -538,6 +538,7 @@ class ReferenceTable:
             dash.State(self.page.ids.Parameters.detector_phi_angle_degree, "value"),
             dash.State(self.page.ids.Parameters.detector_gamma_angle_degree, "value"),
             dash.State(self.page.ids.Parameters.detector_configuration_preset, "value"),
+            dash.State(self.page.ids.Parameters.detector_angular_weighting_json, "value"),
             dash.State(self.page.ids.State.page_state_store, "data"),
             prevent_initial_call=True,
         )
@@ -557,6 +558,7 @@ class ReferenceTable:
             detector_phi_angle_degree: Any,
             detector_gamma_angle_degree: Any,
             detector_configuration_preset: Any,
+            detector_angular_weighting_json: Any,
             page_state_payload: Any,
         ) -> tuple[list[dict[str, str]], dict[str, Any]]:
             logger.debug(
@@ -606,6 +608,7 @@ class ReferenceTable:
                 detector_phi_angle_degree=detector_phi_angle_degree,
                 detector_gamma_angle_degree=detector_gamma_angle_degree,
                 detector_configuration_preset=detector_configuration_preset,
+                detector_angular_weighting_json=detector_angular_weighting_json,
                 logger=logger,
             )
 
@@ -626,6 +629,7 @@ class ReferenceTable:
                     detector_phi_angle_degree=detector_phi_angle_degree,
                     detector_gamma_angle_degree=detector_gamma_angle_degree,
                     detector_configuration_preset=detector_configuration_preset,
+                    detector_angular_weighting_json=detector_angular_weighting_json,
                     simulated_curve_point_count=self.simulated_curve_point_count,
                     logger=logger,
                 ),

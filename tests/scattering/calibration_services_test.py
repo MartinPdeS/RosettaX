@@ -277,3 +277,25 @@ class Test_parse_optical_parameters:
         assert optical_parameters.blocker_bar_numerical_aperture == 0.0
         assert optical_parameters.modeling_detector_cache_numerical_aperture == 0.0
         assert optical_parameters.modeling_blocker_bar_numerical_aperture == 0.0
+
+    def test_generic_detector_accepts_custom_detector_angular_weighting_json(self):
+        optical_parameters = parse_optical_parameters(
+            medium_refractive_index=1.33,
+            particle_refractive_index=1.59,
+            core_refractive_index=None,
+            shell_refractive_index=None,
+            wavelength_nm=488.0,
+            detector_numerical_aperture=1.2,
+            detector_cache_numerical_aperture=None,
+            blocker_bar_numerical_aperture=None,
+            detector_sampling=4,
+            detector_phi_angle_degree=0.0,
+            detector_gamma_angle_degree=0.0,
+            detector_configuration_preset='Generic detector',
+            detector_angular_weighting_json='{"mode":"explicit","weights":[1,0,0.5,0]}',
+        )
+
+        np.testing.assert_array_equal(
+            optical_parameters.detector_angular_weights,
+            np.asarray([1.0, 0.0, 0.5, 0.0], dtype=np.complex128),
+        )

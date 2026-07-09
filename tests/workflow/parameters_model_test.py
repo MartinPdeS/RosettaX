@@ -871,12 +871,42 @@ class Test_compute_model_for_rows:
         assert np.allclose(detector_angular_weights[visible_mask], 1.0)
         assert np.allclose(detector_angular_weights[~visible_mask], 0.0)
 
+    def test_resolve_detector_angular_weights_generic_detector_accepts_custom_weighting_json(self):
+        detector_angular_weights = resolve_detector_angular_weights(
+            preset_name='Generic detector',
+            detector_sampling=4,
+            current_detector_numerical_aperture=1.2,
+            current_detector_cache_numerical_aperture=0.0,
+            current_blocker_bar_numerical_aperture=0.0,
+            current_detector_phi_angle_degree=0.0,
+            current_detector_gamma_angle_degree=0.0,
+            current_medium_refractive_index=1.333,
+            current_detector_angular_weighting='{"mode":"explicit","weights":[1,0,0.5,0]}',
+        )
+
+        np.testing.assert_array_equal(
+            detector_angular_weights,
+            np.asarray([1.0, 0.0, 0.5, 0.0], dtype=np.complex128),
+        )
+
     def test_resolve_detector_modeling_geometry_values_zeroes_scalar_geometry_for_generic_detector_blocker_bar(self):
         resolved_detector_cache_numerical_aperture, resolved_blocker_bar_numerical_aperture = (
             resolve_detector_modeling_geometry_values(
                 preset_name='Generic detector',
                 current_detector_cache_numerical_aperture=0.0,
                 current_blocker_bar_numerical_aperture=0.1,
+            )
+        )
+
+        assert resolved_detector_cache_numerical_aperture == 0.0
+        assert resolved_blocker_bar_numerical_aperture == 0.0
+
+    def test_resolve_detector_modeling_geometry_values_allows_missing_generic_detector_geometry(self):
+        resolved_detector_cache_numerical_aperture, resolved_blocker_bar_numerical_aperture = (
+            resolve_detector_modeling_geometry_values(
+                preset_name='Generic detector',
+                current_detector_cache_numerical_aperture=None,
+                current_blocker_bar_numerical_aperture=None,
             )
         )
 
@@ -895,6 +925,19 @@ class Test_compute_model_for_rows:
         )
 
         assert resolved_values == (1.2, 0.3, 0.1, 1000, 45.0, 0.0)
+
+    def test_resolve_detector_configuration_values_fills_missing_generic_detector_defaults(self):
+        resolved_values = resolve_detector_configuration_values(
+            preset_name='Generic detector',
+            current_detector_numerical_aperture=None,
+            current_detector_cache_numerical_aperture=None,
+            current_blocker_bar_numerical_aperture=None,
+            current_detector_sampling=None,
+            current_detector_phi_angle_degree=None,
+            current_detector_gamma_angle_degree=None,
+        )
+
+        assert resolved_values == (0.2, 0.0, 0.0, 600, 0.0, 0.0)
 
     def test_resolve_detector_preset_wavelength_uses_preset_value(self):
         assert resolve_detector_preset_wavelength_nm(

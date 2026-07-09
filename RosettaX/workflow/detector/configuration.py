@@ -23,6 +23,12 @@ DETECTOR_AUTO_DETECT_RULES_PATH = Path(__file__).with_name(
 
 
 CUSTOM_DETECTOR_PRESET_NAME = "Generic detector"
+CUSTOM_DETECTOR_DEFAULT_NUMERICAL_APERTURE = 0.2
+CUSTOM_DETECTOR_DEFAULT_CACHE_NUMERICAL_APERTURE = 0.0
+CUSTOM_DETECTOR_DEFAULT_BLOCKER_BAR_NUMERICAL_APERTURE = 0.0
+CUSTOM_DETECTOR_DEFAULT_SAMPLING = 600
+CUSTOM_DETECTOR_DEFAULT_PHI_ANGLE_DEGREE = 0.0
+CUSTOM_DETECTOR_DEFAULT_GAMMA_ANGLE_DEGREE = 0.0
 
 COMMON_LASER_WAVELENGTHS_NM: tuple[int, ...] = (
     355,
@@ -794,12 +800,30 @@ def resolve_detector_configuration_values(
 
     if detector_preset_is_custom(preset_name):
         resolved_custom_values = (
-            current_detector_numerical_aperture,
-            current_detector_cache_numerical_aperture,
-            current_blocker_bar_numerical_aperture,
-            current_detector_sampling,
-            current_detector_phi_angle_degree,
-            current_detector_gamma_angle_degree,
+            _coalesce_custom_detector_value(
+                current_detector_numerical_aperture,
+                CUSTOM_DETECTOR_DEFAULT_NUMERICAL_APERTURE,
+            ),
+            _coalesce_custom_detector_value(
+                current_detector_cache_numerical_aperture,
+                CUSTOM_DETECTOR_DEFAULT_CACHE_NUMERICAL_APERTURE,
+            ),
+            _coalesce_custom_detector_value(
+                current_blocker_bar_numerical_aperture,
+                CUSTOM_DETECTOR_DEFAULT_BLOCKER_BAR_NUMERICAL_APERTURE,
+            ),
+            _coalesce_custom_detector_value(
+                current_detector_sampling,
+                CUSTOM_DETECTOR_DEFAULT_SAMPLING,
+            ),
+            _coalesce_custom_detector_value(
+                current_detector_phi_angle_degree,
+                CUSTOM_DETECTOR_DEFAULT_PHI_ANGLE_DEGREE,
+            ),
+            _coalesce_custom_detector_value(
+                current_detector_gamma_angle_degree,
+                CUSTOM_DETECTOR_DEFAULT_GAMMA_ANGLE_DEGREE,
+            ),
         )
 
         logger.debug(
@@ -902,15 +926,28 @@ def resolve_detector_modeling_geometry_values(
     PyMieSim and the preview are neutralized to avoid double-applying the mask.
     """
     if detector_preset_is_custom(preset_name):
+        resolved_detector_cache_numerical_aperture = (
+            _coerce_optional_float(
+                current_detector_cache_numerical_aperture,
+            )
+            or 0.0
+        )
+        resolved_blocker_bar_numerical_aperture = (
+            _coerce_optional_float(
+                current_blocker_bar_numerical_aperture,
+            )
+            or 0.0
+        )
+
         if (
-            float(current_detector_cache_numerical_aperture) > 0.0
-            or float(current_blocker_bar_numerical_aperture) > 0.0
+            resolved_detector_cache_numerical_aperture > 0.0
+            or resolved_blocker_bar_numerical_aperture > 0.0
         ):
             return 0.0, 0.0
 
         return (
-            current_detector_cache_numerical_aperture,
-            current_blocker_bar_numerical_aperture,
+            resolved_detector_cache_numerical_aperture,
+            resolved_blocker_bar_numerical_aperture,
         )
 
     preset = _DETECTOR_PRESET_LOADER.load_preset(
@@ -926,6 +963,34 @@ def resolve_detector_modeling_geometry_values(
     return 0.0, 0.0
 
 
+def _coalesce_custom_detector_value(
+    current_value: Any,
+    default_value: Any,
+) -> Any:
+    """
+    Fill missing custom detector fields with the standard generic defaults.
+    """
+    if current_value in (None, ""):
+        return default_value
+
+    return current_value
+
+
+def _coerce_optional_float(
+    value: Any,
+) -> float | None:
+    """
+    Convert a candidate detector geometry value to float when possible.
+    """
+    if value in (None, ""):
+        return None
+
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
 def resolve_detector_angular_weights(
     *,
     preset_name: Any,
@@ -936,6 +1001,7 @@ def resolve_detector_angular_weights(
     current_detector_phi_angle_degree: Any = None,
     current_detector_gamma_angle_degree: Any = None,
     current_medium_refractive_index: Any = None,
+    current_detector_angular_weighting: Any = None,
 ) -> np.ndarray | None:
     """
     Resolve optional angular weights for a detector preset.
@@ -963,34 +1029,25 @@ def resolve_detector_angular_weights(
         return None
 
     if detector_preset_is_custom(preset_name):
-        custom_geometry_preset = _build_custom_geometry_preset(
+        preset = _build_custom_geometry_preset(
             current_detector_numerical_aperture=current_detector_numerical_aperture,
             current_detector_cache_numerical_aperture=current_detector_cache_numerical_aperture,
             current_blocker_bar_numerical_aperture=current_blocker_bar_numerical_aperture,
             current_detector_phi_angle_degree=current_detector_phi_angle_degree,
             current_detector_gamma_angle_degree=current_detector_gamma_angle_degree,
             current_medium_refractive_index=current_medium_refractive_index,
+            current_detector_angular_weighting=current_detector_angular_weighting,
         )
 
-        if custom_geometry_preset is None:
+        if preset is None:
             return None
-
-        sampling_size = resolve_sampling_size()
-
-        if sampling_size is None:
-            return None
-
-        return _build_geometry_angular_weights(
-            preset=custom_geometry_preset,
-            sampling_size=sampling_size,
+    else:
+        preset = _DETECTOR_PRESET_LOADER.load_preset(
+            preset_name,
         )
 
-    preset = _DETECTOR_PRESET_LOADER.load_preset(
-        preset_name,
-    )
-
-    if not preset:
-        return None
+        if not preset:
+            return None
 
     sampling_size = resolve_sampling_size(
         preset,
@@ -1075,7 +1132,11 @@ def _build_custom_geometry_preset(
     current_detector_phi_angle_degree: Any,
     current_detector_gamma_angle_degree: Any,
     current_medium_refractive_index: Any,
+    current_detector_angular_weighting: Any = None,
 ) -> dict[str, Any] | None:
+    detector_angular_weighting = _parse_custom_detector_angular_weighting(
+        current_detector_angular_weighting,
+    )
     detector_cache_numerical_aperture = float(
         current_detector_cache_numerical_aperture or 0.0,
     )
@@ -1083,10 +1144,14 @@ def _build_custom_geometry_preset(
         current_blocker_bar_numerical_aperture or 0.0,
     )
 
-    if detector_cache_numerical_aperture <= 0.0 and blocker_bar_numerical_aperture <= 0.0:
+    if (
+        detector_cache_numerical_aperture <= 0.0
+        and blocker_bar_numerical_aperture <= 0.0
+        and detector_angular_weighting is None
+    ):
         return None
 
-    return {
+    custom_preset = {
         "name": CUSTOM_DETECTOR_PRESET_NAME,
         "detector_numerical_aperture": float(
             current_detector_numerical_aperture or 0.0,
@@ -1103,6 +1168,38 @@ def _build_custom_geometry_preset(
             current_medium_refractive_index or 1.333,
         ),
     }
+
+    if detector_angular_weighting is not None:
+        custom_preset["detector_angular_weighting"] = detector_angular_weighting
+
+    return custom_preset
+
+
+def _parse_custom_detector_angular_weighting(
+    current_detector_angular_weighting: Any,
+) -> dict[str, Any] | None:
+    if current_detector_angular_weighting in (None, ""):
+        return None
+
+    if isinstance(current_detector_angular_weighting, dict):
+        return dict(current_detector_angular_weighting)
+
+    try:
+        parsed_payload = json.loads(str(current_detector_angular_weighting))
+    except json.JSONDecodeError as exc:
+        raise ValueError(
+            "Custom detector angular weighting must be valid JSON."
+        ) from exc
+
+    if parsed_payload in (None, ""):
+        return None
+
+    if not isinstance(parsed_payload, dict):
+        raise ValueError(
+            "Custom detector angular weighting JSON must define an object."
+        )
+
+    return dict(parsed_payload)
 
 
 def _build_geometry_angular_weights(

@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 
+import json
 import logging
 from typing import Any, Optional, Sequence
 
 import dash
 import dash_bootstrap_components as dbc
+import numpy as np
 
 from RosettaX.utils import styling, ui_forms, RuntimeConfig, casting
 from RosettaX.workflow.peak.core import detectors as peak_detectors
-from RosettaX.workflow import scattering
+from RosettaX.workflow import detector, scattering
 from RosettaX.workflow.scattering.calibration_services import (
     DEFAULT_SOURCE_POLARIZATION_ANGLE_DEGREE,
 )
@@ -316,6 +318,7 @@ class Model:
                             value=self.default_values.wavelength_nm,
                             min_value=1,
                             step=1,
+                            input_mode="numeric",
                             width_px=220,
                         ),
                         self._build_numeric_input_row(
@@ -355,6 +358,7 @@ class Model:
                             value=self.default_values.detector_sampling,
                             min_value=1,
                             step=1,
+                            input_mode="numeric",
                             width_px=220,
                         ),
                         self._build_numeric_input_row(
@@ -376,6 +380,66 @@ class Model:
                             max_value=360.0,
                             step=0.1,
                             width_px=220,
+                        ),
+                        ui_forms.build_inline_row(
+                            label="Detector angular weighting:",
+                            control=dash.html.Div(
+                                [
+                                    dash.dcc.Textarea(
+                                        id=self.ids.detector_angular_weighting_json,
+                                        value="",
+                                        persistence=True,
+                                        persistence_type="session",
+                                        style={
+                                            "width": "520px",
+                                            "height": "120px",
+                                            "fontFamily": "SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                                            "fontSize": "0.84rem",
+                                        },
+                                        placeholder=(
+                                            '{\n'
+                                            '  "mode": "split-separation-angle",\n'
+                                            '  "metric": "local-top-bottom",\n'
+                                            '  "keep": "positive",\n'
+                                            '  "separation_angle_degree": 20.0\n'
+                                            '}'
+                                        ),
+                                    ),
+                                    dbc.FormText(
+                                        "Optional JSON object using the detector_angular_weighting schema from detector definition files.",
+                                        style={
+                                            "maxWidth": "520px",
+                                        },
+                                    ),
+                                ],
+                                style={
+                                    "display": "flex",
+                                    "flexDirection": "column",
+                                    "gap": "6px",
+                                },
+                            ),
+                            margin_top_px=8,
+                            label_style_overrides=FIELD_LABEL_STYLE_OVERRIDES,
+                            row_style_overrides={
+                                "overflow": "visible",
+                                "alignItems": "flex-start",
+                            },
+                            control_wrapper_style_overrides={
+                                "overflow": "visible",
+                            },
+                        ),
+                        dbc.Alert(
+                            "",
+                            id=self.ids.detector_angular_weighting_alert,
+                            color="warning",
+                            is_open=False,
+                            style={
+                                "marginTop": "4px",
+                                "marginBottom": "0px",
+                                "borderRadius": "10px",
+                                "padding": "8px 12px",
+                                "fontSize": "0.9rem",
+                            },
                         ),
                     ],
                     id=self.ids.detector_configuration_custom_values_container,
@@ -754,6 +818,7 @@ class Model:
         min_value: Optional[float] = None,
         max_value: Optional[float] = None,
         step: Optional[float] = None,
+        input_mode: str = "decimal",
         width_px: int = 220,
     ) -> dash.html.Div:
         """
@@ -763,12 +828,10 @@ class Model:
             label=label,
             control=dash.dcc.Input(
                 id=component_id,
-                type="number",
+                type="text",
                 placeholder=placeholder,
                 value=value,
-                min=min_value,
-                max=max_value,
-                step=step,
+                inputMode=input_mode,
                 debounce=True,
                 persistence=True,
                 persistence_type="session",
@@ -1654,6 +1717,7 @@ class Model:
             dash.Output(self.ids.detector_sampling, "disabled"),
             dash.Output(self.ids.detector_phi_angle_degree, "disabled"),
             dash.Output(self.ids.detector_gamma_angle_degree, "disabled"),
+            dash.Output(self.ids.detector_angular_weighting_json, "disabled"),
             dash.Input(self.ids.detector_configuration_preset, "value"),
             prevent_initial_call=False,
         )
@@ -1667,6 +1731,7 @@ class Model:
             )
 
             return (
+                is_locked,
                 is_locked,
                 is_locked,
                 is_locked,
@@ -1890,6 +1955,7 @@ class Model:
             dash.Input(self.ids.detector_gamma_angle_degree, "value"),
             dash.Input(self.ids.detector_sampling, "value"),
             dash.Input(self.ids.detector_configuration_preset, "value"),
+            dash.Input(self.ids.detector_angular_weighting_json, "value"),
             dash.State(self.ids.optical_configuration_preview, "relayoutData"),
             prevent_initial_call=False,
         )
@@ -1902,6 +1968,7 @@ class Model:
             detector_gamma_angle_degree: Any,
             detector_sampling: Any,
             detector_configuration_preset: Any,
+            detector_angular_weighting_json: Any,
             relayout_data: Any,
         ):
             logger.debug(
@@ -1919,6 +1986,7 @@ class Model:
                 detector_gamma_angle_degree,
                 detector_sampling,
                 detector_configuration_preset,
+                detector_angular_weighting_json,
                 relayout_data,
             )
 
@@ -1932,7 +2000,91 @@ class Model:
                 polarization_angle_degree=DEFAULT_SOURCE_POLARIZATION_ANGLE_DEGREE,
                 detector_sampling=detector_sampling,
                 detector_configuration_preset=detector_configuration_preset,
+                detector_angular_weighting_json=detector_angular_weighting_json,
                 camera=optical_preview.resolve_locked_camera_from_relayout_data(
                     relayout_data=relayout_data,
                 ),
+            )
+
+        @dash.callback(
+            dash.Output(self.ids.detector_angular_weighting_alert, "children"),
+            dash.Output(self.ids.detector_angular_weighting_alert, "is_open"),
+            dash.Output(self.ids.detector_angular_weighting_alert, "color"),
+            dash.Input(self.ids.detector_angular_weighting_json, "value"),
+            dash.Input(self.ids.detector_configuration_preset, "value"),
+            dash.Input(self.ids.detector_numerical_aperture, "value"),
+            dash.Input(self.ids.detector_cache_numerical_aperture, "value"),
+            dash.Input(self.ids.blocker_bar_numerical_aperture, "value"),
+            dash.Input(self.ids.medium_refractive_index_custom, "value"),
+            dash.Input(self.ids.detector_phi_angle_degree, "value"),
+            dash.Input(self.ids.detector_gamma_angle_degree, "value"),
+            dash.Input(self.ids.detector_sampling, "value"),
+            prevent_initial_call=False,
+        )
+        def validate_detector_angular_weighting_json(
+            detector_angular_weighting_json: Any,
+            detector_configuration_preset: Any,
+            detector_numerical_aperture: Any,
+            detector_cache_numerical_aperture: Any,
+            blocker_bar_numerical_aperture: Any,
+            medium_refractive_index: Any,
+            detector_phi_angle_degree: Any,
+            detector_gamma_angle_degree: Any,
+            detector_sampling: Any,
+        ) -> tuple[str, bool, str]:
+            if (
+                str(detector_configuration_preset or "").strip()
+                != self.model_configuration.custom_detector_preset_name
+            ):
+                return "", False, "warning"
+
+            if detector_angular_weighting_json in (None, ""):
+                return "", False, "warning"
+
+            try:
+                parsed_payload = json.loads(str(detector_angular_weighting_json))
+            except json.JSONDecodeError as exc:
+                return f"Invalid detector angular weighting JSON: {exc.msg}.", True, "warning"
+
+            if not isinstance(parsed_payload, dict):
+                return "Detector angular weighting JSON must define an object.", True, "warning"
+
+            try:
+                detector_angular_weights = detector.resolve_detector_angular_weights(
+                    preset_name=detector_configuration_preset,
+                    detector_sampling=detector_sampling,
+                    current_detector_numerical_aperture=detector_numerical_aperture,
+                    current_detector_cache_numerical_aperture=detector_cache_numerical_aperture,
+                    current_blocker_bar_numerical_aperture=blocker_bar_numerical_aperture,
+                    current_detector_phi_angle_degree=detector_phi_angle_degree,
+                    current_detector_gamma_angle_degree=detector_gamma_angle_degree,
+                    current_medium_refractive_index=medium_refractive_index,
+                    current_detector_angular_weighting=parsed_payload,
+                )
+            except Exception as exc:
+                return f"Detector angular weighting is invalid: {exc}", True, "warning"
+
+            if detector_angular_weights is None:
+                return (
+                    "Custom detector angular weighting is loaded, but no detector geometry is available to display yet.",
+                    True,
+                    "info",
+                )
+
+            weight_array = np.asarray(
+                detector_angular_weights,
+                dtype=np.complex128,
+            ).reshape(-1)
+            kept_count = int(
+                np.count_nonzero(
+                    weight_array != 0.0
+                )
+            )
+            total_count = int(weight_array.size)
+            kept_fraction = 0.0 if total_count == 0 else kept_count / total_count
+
+            return (
+                f"Custom detector angular weighting is active: keeping {kept_count}/{total_count} angular samples ({kept_fraction:.1%}).",
+                True,
+                "info",
             )

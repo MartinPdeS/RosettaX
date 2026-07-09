@@ -37,6 +37,7 @@ def compute_model_for_rows(
     detector_phi_angle_degree: Any,
     detector_gamma_angle_degree: Any,
     detector_configuration_preset: Any = None,
+    detector_angular_weighting_json: Any = None,
     logger: logging.Logger,
 ) -> list[dict[str, str]]:
     """
@@ -181,6 +182,7 @@ def compute_model_for_rows(
             detector_phi_angle_degree=resolved_detector_phi_angle_degree,
             detector_gamma_angle_degree=resolved_detector_gamma_angle_degree,
             detector_configuration_preset=detector_configuration_preset,
+            detector_angular_weighting_json=detector_angular_weighting_json,
             logger=logger,
         )
 
@@ -197,6 +199,7 @@ def compute_model_for_rows(
         detector_phi_angle_degree=resolved_detector_phi_angle_degree,
         detector_gamma_angle_degree=resolved_detector_gamma_angle_degree,
         detector_configuration_preset=detector_configuration_preset,
+        detector_angular_weighting_json=detector_angular_weighting_json,
         logger=logger,
     )
 
@@ -216,6 +219,7 @@ def _compute_core_shell_model_for_rows(
     detector_phi_angle_degree: float,
     detector_gamma_angle_degree: float,
     detector_configuration_preset: Any,
+    detector_angular_weighting_json: Any,
     logger: logging.Logger,
 ) -> list[dict[str, str]]:
     """
@@ -342,6 +346,7 @@ def _compute_core_shell_model_for_rows(
         current_detector_phi_angle_degree=detector_phi_angle_degree,
         current_detector_gamma_angle_degree=detector_gamma_angle_degree,
         current_medium_refractive_index=medium_refractive_index,
+        current_detector_angular_weighting=detector_angular_weighting_json,
     )
     resolved_detector_cache_numerical_aperture, _ = resolve_detector_modeling_geometry_values(
         preset_name=detector_configuration_preset,
@@ -424,6 +429,7 @@ def _compute_solid_sphere_model_for_rows(
     detector_phi_angle_degree: float,
     detector_gamma_angle_degree: float,
     detector_configuration_preset: Any,
+    detector_angular_weighting_json: Any,
     logger: logging.Logger,
 ) -> list[dict[str, str]]:
     """
@@ -527,6 +533,7 @@ def _compute_solid_sphere_model_for_rows(
         current_detector_phi_angle_degree=detector_phi_angle_degree,
         current_detector_gamma_angle_degree=detector_gamma_angle_degree,
         current_medium_refractive_index=medium_refractive_index,
+        current_detector_angular_weighting=detector_angular_weighting_json,
     )
     resolved_detector_cache_numerical_aperture, _ = resolve_detector_modeling_geometry_values(
         preset_name=detector_configuration_preset,

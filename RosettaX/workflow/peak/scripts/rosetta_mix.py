@@ -173,10 +173,10 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
                     "Exclude table peaks above detector_saturation * this fraction "
                     "for the selected scatter channel when metadata includes "
                     "detector range values. This guard does not change detected "
-                    "peaks or plotted events. Example: 0.25 means 4,000,000 "
-                    "saturation becomes a 1,000,000 table threshold."
+                    "peaks or plotted events. Example: 0.5 means 4,000,000 "
+                    "saturation becomes a 2,000,000 table threshold."
                 ),
-                "default_value": 0.25,
+                "default_value": 0.5,
                 "min_value": 0.0,
                 "max_value": 1.0,
                 "step": 0.01,
@@ -279,7 +279,7 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
         )
         saturation_guard_fraction = resolve_float(
             value=process_settings.get("saturation_guard_fraction"),
-            default=0.25,
+            default=0.5,
             minimum=0.0,
             maximum=1.0,
         )

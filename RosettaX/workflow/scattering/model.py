@@ -725,6 +725,7 @@ class ModelConfiguration:
         polarization_angle_degree: Any = 0.0,
         detector_sampling: Any,
         detector_configuration_preset: Any,
+        detector_angular_weighting_json: Any = None,
         camera: Any = None,
     ) -> go.Figure:
         """
@@ -756,6 +757,7 @@ class ModelConfiguration:
             current_detector_phi_angle_degree=resolved_detector_phi_angle_degree,
             current_detector_gamma_angle_degree=resolved_detector_gamma_angle_degree,
             current_medium_refractive_index=medium_refractive_index,
+            current_detector_angular_weighting=detector_angular_weighting_json,
         )
         effective_detector_cache_numerical_aperture, effective_blocker_bar_numerical_aperture = detector.resolve_detector_modeling_geometry_values(
             preset_name=detector_configuration_preset,

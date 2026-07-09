@@ -356,6 +356,7 @@ def build_calibration_standard_mie_relation_figure_store(
     detector_phi_angle_degree: Any,
     detector_gamma_angle_degree: Any,
     detector_configuration_preset: Any = None,
+    detector_angular_weighting_json: Any = None,
     simulated_curve_point_count: int,
     logger: logging.Logger,
 ) -> dict[str, Any]:
@@ -377,6 +378,7 @@ def build_calibration_standard_mie_relation_figure_store(
             detector_phi_angle_degree=detector_phi_angle_degree,
             detector_gamma_angle_degree=detector_gamma_angle_degree,
             detector_configuration_preset=detector_configuration_preset,
+            detector_angular_weighting_json=detector_angular_weighting_json,
         )
 
         if resolved_mie_model == "Core/Shell Sphere":
@@ -718,7 +720,8 @@ def run_scattering_calibration(
     detector_phi_angle_degree: Any,
     detector_gamma_angle_degree: Any,
     detector_configuration_preset: Any = None,
-    force_zero_intercept: Any = False,
+    detector_angular_weighting_json: Any = None,
+    force_zero_intercept: Any = True,
     simulated_curve_point_count: int,
     logger: logging.Logger,
 ) -> CalibrationResult:
@@ -757,6 +760,7 @@ def run_scattering_calibration(
             detector_phi_angle_degree=detector_phi_angle_degree,
             detector_gamma_angle_degree=detector_gamma_angle_degree,
             detector_configuration_preset=detector_configuration_preset,
+            detector_angular_weighting_json=detector_angular_weighting_json,
         )
 
         logger.debug("Resolved optical parameters=%r", optical_parameters)

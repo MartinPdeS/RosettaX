@@ -91,6 +91,14 @@ class ParameterSectionIds:
         return f"{self.prefix}-detector-gamma-angle-degree"
 
     @property
+    def detector_angular_weighting_json(self) -> str:
+        return f"{self.prefix}-detector-angular-weighting-json"
+
+    @property
+    def detector_angular_weighting_alert(self) -> str:
+        return f"{self.prefix}-detector-angular-weighting-alert"
+
+    @property
     def optical_configuration_preview(self) -> str:
         return f"{self.prefix}-optical-configuration-preview"
 

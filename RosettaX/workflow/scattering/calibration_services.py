@@ -650,6 +650,7 @@ def parse_optical_parameters(
     detector_phi_angle_degree: Any,
     detector_gamma_angle_degree: Any,
     detector_configuration_preset: Any = None,
+    detector_angular_weighting_json: Any = None,
 ) -> OpticalParameters:
     """
     Parse raw callback values into typed optical parameters.
@@ -661,7 +662,7 @@ def parse_optical_parameters(
         "detector_numerical_aperture=%r detector_cache_numerical_aperture=%r "
         "blocker_bar_numerical_aperture=%r detector_sampling=%r "
         "detector_phi_angle_degree=%r detector_gamma_angle_degree=%r "
-        "detector_configuration_preset=%r",
+        "detector_configuration_preset=%r detector_angular_weighting_json=%r",
         medium_refractive_index,
         particle_refractive_index,
         core_refractive_index,
@@ -674,6 +675,7 @@ def parse_optical_parameters(
         detector_phi_angle_degree,
         detector_gamma_angle_degree,
         detector_configuration_preset,
+        detector_angular_weighting_json,
     )
 
     resolved_detector_sampling = casting.as_required_int(
@@ -754,6 +756,7 @@ def parse_optical_parameters(
                 medium_refractive_index,
                 "medium_refractive_index",
             ),
+            current_detector_angular_weighting=detector_angular_weighting_json,
         ),
         effective_detector_cache_numerical_aperture=float(
             effective_detector_cache_numerical_aperture
