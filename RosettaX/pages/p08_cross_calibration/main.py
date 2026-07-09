@@ -43,10 +43,19 @@ class CrossCalibrationPage:
                 dcc.Download(
                     id=self.ids.export_download,
                 ),
-                self._build_header_card(),
-                self._build_upload_card(),
-                self._build_result_card(),
-                self._build_export_card(),
+                html.Div(
+                    [
+                        self._build_header_card(),
+                        self._build_upload_card(),
+                        self._build_result_card(),
+                        self._build_export_card(),
+                    ],
+                    style={
+                        "display": "flex",
+                        "flexDirection": "column",
+                        "gap": "18px",
+                    },
+                ),
             ],
             fluid=True,
             style={
