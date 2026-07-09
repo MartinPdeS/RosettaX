@@ -291,7 +291,7 @@ def build_export_filename(
     else:
         safe_output_channel = "scattering_calibrated"
 
-    return f"{input_path.stem}_calibrated_{safe_output_channel}.fcs"
+    return f"{input_path.stem}_calibrated_{safe_output_channel}_RosettaX.fcs"
 
 
 def build_zip_filename(
@@ -310,7 +310,7 @@ def build_zip_filename(
     else:
         safe_output_channel = "scattering_calibrated"
 
-    return f"calibrated_{file_count}_files_{safe_output_channel}.zip"
+    return f"calibrated_{file_count}_files_{safe_output_channel}_RosettaX.zip"
 
 
 def safe_filename_fragment(

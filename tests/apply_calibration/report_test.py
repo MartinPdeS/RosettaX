@@ -112,7 +112,7 @@ class Test_ApplyCalibrationReport:
 
         result = ApplyCalibrationFilesResult(
             payload_bytes=b"zip-bytes",
-            download_filename="scattering_calibrated_2_files.zip",
+            download_filename="scattering_calibrated_2_files_RosettaX.zip",
             source_channel="SSC-A",
             output_channels=[
                 "SSC-A",
@@ -152,7 +152,7 @@ class Test_ApplyCalibrationReport:
         ]
         assert payload["calibration_summary"]["calibration_type"] == "scattering"
         assert payload["scattering_target_model_parameters"]["mie_model"] == "Solid Sphere"
-        assert payload["result"]["download_filename"] == "scattering_calibrated_2_files.zip"
+        assert payload["result"]["download_filename"] == "scattering_calibrated_2_files_RosettaX.zip"
         assert payload["result"]["warnings"] == [
             "Monotonic branch fallback used.",
         ]
@@ -183,7 +183,7 @@ class Test_ApplyCalibrationReport:
 
         result = ApplyCalibrationFilesResult(
             payload_bytes=b"fcs-bytes",
-            download_filename="input-a_calibrated.fcs",
+            download_filename="input-a_calibrated_RosettaX.fcs",
             source_channel="FITC-A",
             output_channels=["FITC-A"],
             file_count=1,
@@ -279,7 +279,7 @@ class Test_ApplyCalibrationReport:
 
         result = ApplyCalibrationFilesResult(
             payload_bytes=b"fcs-bytes",
-            download_filename="input-a_calibrated.fcs",
+            download_filename="input-a_calibrated_RosettaX.fcs",
             source_channel="FITC-A",
             output_channels=["FITC-A"],
             file_count=1,
@@ -360,7 +360,7 @@ class Test_ApplyCalibrationReport:
 
         result = ApplyCalibrationFilesResult(
             payload_bytes=b"zip-bytes",
-            download_filename="scattering_calibrated_1_file.zip",
+            download_filename="scattering_calibrated_1_file_RosettaX.zip",
             source_channel="SSC-A",
             output_channels=["SSC-A", "particle_diameter_nm"],
             file_count=1,
@@ -434,7 +434,7 @@ class Test_ApplyCalibrationReport:
 
         result = ApplyCalibrationFilesResult(
             payload_bytes=b"zip-bytes",
-            download_filename="calibrated_2_files.zip",
+            download_filename="calibrated_2_files_RosettaX.zip",
             source_channel="FITC-A, SSC-A",
             output_channels=["FITC-A", "SSC-A", "particle_diameter_nm"],
             file_count=2,
