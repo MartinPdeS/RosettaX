@@ -125,6 +125,7 @@ def apply_scattering_calibration_to_dataframe(
 
     relation_resolution = resolve_monotonic_target_mie_relation(
         target_mie_relation=full_target_mie_relation,
+        target_model_parameters=target_model_parameters,
     )
 
     scattering_calibration = scattering.ScatteringCalibration.from_dict(

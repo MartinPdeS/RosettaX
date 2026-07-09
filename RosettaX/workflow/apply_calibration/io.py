@@ -282,16 +282,7 @@ def build_export_filename(
             uploaded_fcs_path,
         )
     )
-
-    if len(output_channels) == 1:
-        safe_output_channel = safe_filename_fragment(
-            output_channels[0],
-        )
-
-    else:
-        safe_output_channel = "scattering_calibrated"
-
-    return f"{input_path.stem}_calibrated_{safe_output_channel}_RosettaX.fcs"
+    return f"{input_path.stem}_RosettaX.fcs"
 
 
 def build_zip_filename(

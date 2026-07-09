@@ -47,6 +47,7 @@ class CalibrationPickerCallbacks:
         self._register_target_model_preset_disabled_state_callback()
         self._register_target_model_details_visibility_callback()
         self._register_target_model_parameter_visibility_callback()
+        self._register_target_monotonic_advanced_visibility_callback()
         self._register_target_mie_relation_preview_callback()
         self._register_target_mie_relation_axis_scale_runtime_sync_callback()
 
@@ -648,6 +649,32 @@ class CalibrationPickerCallbacks:
                 is_visible=bool(is_visible),
             )
 
+    def _register_target_monotonic_advanced_visibility_callback(self) -> None:
+        """
+        Show advanced monotonic controls only when enabled by the user.
+        """
+
+        @dash.callback(
+            dash.Output(
+                self.page.ids.CalibrationPicker.target_monotonic_advanced_container,
+                "style",
+            ),
+            dash.Input(
+                self.page.ids.CalibrationPicker.target_monotonic_advanced_toggle,
+                "value",
+            ),
+            prevent_initial_call=False,
+        )
+        def toggle_target_monotonic_advanced_controls(
+            advanced_toggle_value: Any,
+        ) -> dict[str, str]:
+            return services.build_target_parameter_container_style(
+                is_visible=bool(
+                    isinstance(advanced_toggle_value, list)
+                    and advanced_toggle_value
+                ),
+            )
+
     def _register_target_mie_relation_preview_callback(self) -> None:
         """
         Register target Mie relation preview callback.
@@ -729,6 +756,18 @@ class CalibrationPickerCallbacks:
                 "value",
             ),
             dash.Input(
+                self.page.ids.CalibrationPicker.target_monotonic_advanced_toggle,
+                "value",
+            ),
+            dash.Input(
+                self.page.ids.CalibrationPicker.target_monotonic_smoothing_toggle,
+                "value",
+            ),
+            dash.Input(
+                self.page.ids.CalibrationPicker.target_monotonic_smoothing_sigma_points,
+                "value",
+            ),
+            dash.Input(
                 self.page.ids.CalibrationPicker.target_mie_relation_axis_scale_toggle,
                 "value",
             ),
@@ -749,6 +788,9 @@ class CalibrationPickerCallbacks:
             target_core_shell_core_diameter_max_nm: Any,
             target_core_shell_core_diameter_count: Any,
             target_model_preset: Any,
+            advanced_monotonic_mode_enabled: Any,
+            use_monotonic_smoothing_kernel: Any,
+            monotonic_smoothing_sigma_points: Any,
             axis_scale_toggle_values: Any,
         ) -> tuple[Any, str, str]:
             logger.debug(
@@ -764,6 +806,9 @@ class CalibrationPickerCallbacks:
                 "target_core_shell_core_diameter_max_nm=%r "
                 "target_core_shell_core_diameter_count=%r "
                 "target_model_preset=%r "
+                "advanced_monotonic_mode_enabled=%r "
+                "use_monotonic_smoothing_kernel=%r "
+                "monotonic_smoothing_sigma_points=%r "
                 "axis_scale_toggle_values=%r",
                 selected_calibration_summary,
                 target_mie_model,
@@ -779,6 +824,9 @@ class CalibrationPickerCallbacks:
                 target_core_shell_core_diameter_max_nm,
                 target_core_shell_core_diameter_count,
                 target_model_preset,
+                advanced_monotonic_mode_enabled,
+                use_monotonic_smoothing_kernel,
+                monotonic_smoothing_sigma_points,
                 axis_scale_toggle_values,
             )
 
@@ -847,6 +895,9 @@ class CalibrationPickerCallbacks:
                     target_diameter_min_nm=resolved_target_diameter_min_nm,
                     target_diameter_max_nm=resolved_target_diameter_max_nm,
                     target_diameter_count=resolved_target_diameter_count,
+                    advanced_monotonic_mode_enabled=advanced_monotonic_mode_enabled,
+                    use_monotonic_smoothing_kernel=use_monotonic_smoothing_kernel,
+                    monotonic_smoothing_sigma_points=monotonic_smoothing_sigma_points,
                 )
 
                 full_target_mie_relation = build_target_mie_relation(
@@ -862,6 +913,7 @@ class CalibrationPickerCallbacks:
 
                 relation_resolution = resolve_monotonic_target_mie_relation(
                     target_mie_relation=full_target_mie_relation,
+                    target_model_parameters=target_model_parameters,
                 )
 
                 if relation_resolution.used_auto_largest_branch:
@@ -893,7 +945,7 @@ class CalibrationPickerCallbacks:
 
                     logger.info(
                         "Target Mie relation was not strictly monotonic. "
-                        "Auto largest branch selected. selected_interval=%r "
+                        "Auto left-most branch selected. selected_interval=%r "
                         "all_interval_suggestions=%s",
                         relation_resolution.selected_interval,
                         format_monotonic_interval_suggestions(
@@ -921,8 +973,16 @@ class CalibrationPickerCallbacks:
                         figure,
                         (
                             "Target Mie relation is not monotonic over the full range. "
-                            "Using auto largest monotonic branch to build a monotone approximation: "
+                            "Using auto left-most monotonic branch to build a monotone approximation: "
                             f"{selected_interval_message}."
+                            + (
+                                " Gaussian smoothing is enabled."
+                                if (
+                                    target_model_parameters.advanced_monotonic_mode_enabled
+                                    and target_model_parameters.use_monotonic_smoothing_kernel
+                                )
+                                else ""
+                            )
                         ),
                         "warning",
                     )

@@ -376,9 +376,10 @@ def build_target_mie_relation_figure(
             plotting.scatter2d.Scatter2DTrace(
                 x_values=selected_diameter_values_nm,
                 y_values=selected_coupling_values,
-                name="Valid monotonic branch",
+                name="Used for calibration (valid branch)",
                 mode="lines",
                 color="#1f77b4",
+                line_width=3.2,
             )
         )
 
@@ -387,9 +388,11 @@ def build_target_mie_relation_figure(
                 plotting.scatter2d.Scatter2DTrace(
                     x_values=full_diameter_array,
                     y_values=invalid_coupling_values,
-                    name="Invalid non-monotonic region",
+                    name="Diagnostic: invalid non-monotonic region",
                     mode="lines",
                     color="#d62728",
+                    line_width=1.6,
+                    line_dash="dash",
                 )
             )
 
@@ -421,9 +424,10 @@ def build_target_mie_relation_figure(
                 plotting.scatter2d.Scatter2DTrace(
                     x_values=approximation_diameter_array,
                     y_values=approximation_coupling_array,
-                    name="Monotone approximation",
+                    name="Used for calibration (monotone extension)",
                     mode="lines",
                     color="#2ca02c",
+                    line_width=3.2,
                 )
             )
 
@@ -432,9 +436,10 @@ def build_target_mie_relation_figure(
             plotting.scatter2d.Scatter2DTrace(
                 x_values=full_diameter_values_nm,
                 y_values=full_coupling_values,
-                name="Valid monotonic relation",
+                name="Used for calibration (monotonic relation)",
                 mode="lines",
                 color="#1f77b4",
+                line_width=3.2,
             )
         )
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from typing import Any
+from typing import Any, Optional
 import logging
 
 import numpy as np
@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 def resolve_monotonic_target_mie_relation(
     *,
     target_mie_relation: scattering.MieRelation,
+    target_model_parameters: Optional[ScatteringTargetModelParameters] = None,
 ) -> MonotonicRelationResolution:
     """
     Resolve the monotonic target relation used for diameter inversion.
@@ -78,15 +79,29 @@ def resolve_monotonic_target_mie_relation(
     approximated_mie_relation = build_monotonic_approximation_mie_relation(
         target_mie_relation=target_mie_relation,
         selected_interval=selected_interval,
+        target_model_parameters=target_model_parameters,
+    )
+
+    smoothing_is_enabled = bool(
+        target_model_parameters is not None
+        and target_model_parameters.advanced_monotonic_mode_enabled
+        and target_model_parameters.use_monotonic_smoothing_kernel
     )
 
     warning = (
         "Target Mie relation was not strictly monotonic over the full selected "
-        "diameter range. RosettaX automatically selected the largest monotonic "
+        "diameter range. RosettaX automatically selected the left-most monotonic "
         f"branch: {selected_interval.to_message_fragment()}. A monotone "
         "approximation based on that branch is used across the selected "
         "diameter range."
     )
+
+    if smoothing_is_enabled:
+        warning = (
+            f"{warning[:-1]} A Gaussian smoothing kernel "
+            f"(sigma={target_model_parameters.monotonic_smoothing_sigma_points:.3g} points) "
+            "was then applied to soften sharp transitions."
+        )
 
     logger.debug(
         "resolve_monotonic_target_mie_relation selected_interval=%r",
@@ -108,9 +123,10 @@ def select_largest_monotonic_interval(
     monotonic_intervals: list[MonotonicDiameterInterval],
 ) -> MonotonicDiameterInterval:
     """
-    Select the widest monotonic branch.
+    Select the left-most monotonic branch.
 
-    Ties are resolved by keeping the branch with more points.
+    If multiple intervals start at the same index, keep the widest one, then
+    the one with more points.
     """
     if not monotonic_intervals:
         raise ValueError("No monotonic intervals were provided.")
@@ -118,14 +134,14 @@ def select_largest_monotonic_interval(
     selected_interval = sorted(
         monotonic_intervals,
         key=lambda interval: (
-            interval.diameter_width_nm,
-            interval.point_count,
+            interval.start_index,
+            -interval.diameter_width_nm,
+            -interval.point_count,
         ),
-        reverse=True,
     )[0]
 
     logger.debug(
-        "select_largest_monotonic_interval selected_interval=%r from interval_count=%r",
+        "select_largest_monotonic_interval selected left-most interval=%r from interval_count=%r",
         selected_interval,
         len(monotonic_intervals),
     )
@@ -199,6 +215,7 @@ def build_monotonic_approximation_mie_relation(
     *,
     target_mie_relation: scattering.MieRelation,
     selected_interval: MonotonicDiameterInterval,
+    target_model_parameters: Optional[ScatteringTargetModelParameters] = None,
 ) -> scattering.MieRelation:
     """
     Build a monotone approximation of the full Mie relation.
@@ -215,6 +232,7 @@ def build_monotonic_approximation_mie_relation(
     approximated_coupling_values = build_monotonic_coupling_approximation(
         theoretical_coupling_values=theoretical_coupling_values,
         selected_interval=selected_interval,
+        target_model_parameters=target_model_parameters,
     )
 
     parameters = dict(
@@ -232,6 +250,16 @@ def build_monotonic_approximation_mie_relation(
             "extrapolation_enabled": True,
             "monotonic_approximation_enabled": True,
             "monotonic_approximation_strategy": "cumulative_envelope",
+            "monotonic_smoothing_enabled": bool(
+                target_model_parameters is not None
+                and target_model_parameters.advanced_monotonic_mode_enabled
+                and target_model_parameters.use_monotonic_smoothing_kernel
+            ),
+            "monotonic_smoothing_sigma_points": (
+                float(target_model_parameters.monotonic_smoothing_sigma_points)
+                if target_model_parameters is not None
+                else 0.0
+            ),
         }
     )
 
@@ -248,6 +276,7 @@ def build_monotonic_coupling_approximation(
     *,
     theoretical_coupling_values: np.ndarray,
     selected_interval: MonotonicDiameterInterval,
+    target_model_parameters: Optional[ScatteringTargetModelParameters] = None,
 ) -> np.ndarray:
     """
     Build a monotone coupling envelope anchored on the selected branch.
@@ -312,7 +341,165 @@ def build_monotonic_coupling_approximation(
                 )[1:]
             )
 
+    if (
+        target_model_parameters is not None
+        and target_model_parameters.advanced_monotonic_mode_enabled
+        and target_model_parameters.use_monotonic_smoothing_kernel
+    ):
+        flattened_mask = np.ones(
+            approximated_coupling_values.shape,
+            dtype=bool,
+        )
+        flattened_mask[
+            selected_interval.start_index : selected_interval.end_index + 1
+        ] = False
+
+        approximated_coupling_values = smooth_monotonic_coupling_approximation(
+            approximated_coupling_values=approximated_coupling_values,
+            selected_interval=selected_interval,
+            sigma_points=target_model_parameters.monotonic_smoothing_sigma_points,
+            smoothing_mask=flattened_mask,
+        )
+
     return approximated_coupling_values
+
+
+def smooth_monotonic_coupling_approximation(
+    *,
+    approximated_coupling_values: np.ndarray,
+    selected_interval: MonotonicDiameterInterval,
+    sigma_points: float,
+    smoothing_mask: np.ndarray,
+) -> np.ndarray:
+    """
+    Smooth a monotone approximation and project it back onto a monotone curve.
+    """
+    coupling_values = np.asarray(
+        approximated_coupling_values,
+        dtype=float,
+    ).reshape(-1)
+    mask_values = np.asarray(
+        smoothing_mask,
+        dtype=bool,
+    ).reshape(-1)
+
+    if coupling_values.size < 3:
+        return coupling_values
+
+    if coupling_values.size != mask_values.size or not np.any(mask_values):
+        return coupling_values
+
+    gaussian_kernel = build_gaussian_kernel_1d(
+        sigma_points=sigma_points,
+    )
+
+    padding_radius = gaussian_kernel.size // 2
+
+    padded_values = np.pad(
+        coupling_values,
+        pad_width=padding_radius,
+        mode="edge",
+    )
+
+    smoothed_values = np.convolve(
+        padded_values,
+        gaussian_kernel,
+        mode="valid",
+    )
+
+    blended_values = coupling_values.copy()
+    blended_values[mask_values] = smoothed_values[mask_values]
+
+    start_index = selected_interval.start_index
+    end_index = selected_interval.end_index
+    branch_values = coupling_values[start_index : end_index + 1]
+    blended_values[start_index : end_index + 1] = branch_values
+
+    if selected_interval.trend == "increasing":
+        if start_index > 0:
+            left_values = np.maximum.accumulate(
+                blended_values[:start_index],
+            )
+            left_values = np.minimum(
+                left_values,
+                branch_values[0],
+            )
+            blended_values[:start_index] = left_values
+
+        if end_index + 1 < blended_values.size:
+            right_values = np.maximum.accumulate(
+                np.concatenate(
+                    (
+                        np.asarray([branch_values[-1]], dtype=float),
+                        blended_values[end_index + 1 :],
+                    )
+                )
+            )[1:]
+            blended_values[end_index + 1 :] = right_values
+
+    else:
+        if start_index > 0:
+            left_values = np.minimum.accumulate(
+                blended_values[:start_index],
+            )
+            left_values = np.maximum(
+                left_values,
+                branch_values[0],
+            )
+            blended_values[:start_index] = left_values
+
+        if end_index + 1 < blended_values.size:
+            right_values = np.minimum.accumulate(
+                np.concatenate(
+                    (
+                        np.asarray([branch_values[-1]], dtype=float),
+                        blended_values[end_index + 1 :],
+                    )
+                )
+            )[1:]
+            blended_values[end_index + 1 :] = right_values
+
+    return blended_values
+
+
+def build_gaussian_kernel_1d(
+    *,
+    sigma_points: float,
+) -> np.ndarray:
+    """
+    Build a normalized 1-D Gaussian kernel in index space.
+    """
+    resolved_sigma_points = max(
+        float(sigma_points),
+        1e-6,
+    )
+
+    kernel_radius = max(
+        1,
+        int(np.ceil(3.0 * resolved_sigma_points)),
+    )
+
+    offsets = np.arange(
+        -kernel_radius,
+        kernel_radius + 1,
+        dtype=float,
+    )
+
+    kernel = np.exp(
+        -0.5 * np.square(offsets / resolved_sigma_points),
+    )
+
+    kernel_sum = float(
+        np.sum(kernel),
+    )
+
+    if kernel_sum <= 0.0 or not np.isfinite(kernel_sum):
+        return np.asarray(
+            [1.0],
+            dtype=float,
+        )
+
+    return kernel / kernel_sum
 
 
 def coupling_to_diameter_with_linear_extrapolation(

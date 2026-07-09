@@ -176,6 +176,9 @@ class ScatteringTargetModelParameters:
     """
 
     target_model: ScatteringTargetModel
+    advanced_monotonic_mode_enabled: bool = False
+    use_monotonic_smoothing_kernel: bool = False
+    monotonic_smoothing_sigma_points: float = 20.0
 
     @property
     def mie_model(self) -> str:
@@ -275,7 +278,21 @@ class ScatteringTargetModelParameters:
         """
         Convert the wrapped target model into a serializable parameter payload.
         """
-        return self.target_model.to_parameter_payload()
+        payload = self.target_model.to_parameter_payload()
+        payload.update(
+            {
+                "advanced_monotonic_mode_enabled": bool(
+                    self.advanced_monotonic_mode_enabled
+                ),
+                "use_monotonic_smoothing_kernel": bool(
+                    self.use_monotonic_smoothing_kernel
+                ),
+                "monotonic_smoothing_sigma_points": float(
+                    self.monotonic_smoothing_sigma_points
+                ),
+            }
+        )
+        return payload
 
     @classmethod
     def from_raw_values(
@@ -290,6 +307,9 @@ class ScatteringTargetModelParameters:
         target_diameter_min_nm: Any,
         target_diameter_max_nm: Any,
         target_diameter_count: Any,
+        advanced_monotonic_mode_enabled: Any = None,
+        use_monotonic_smoothing_kernel: Any = None,
+        monotonic_smoothing_sigma_points: Any = None,
     ) -> "ScatteringTargetModelParameters":
         """
         Parse target model values from Dash controls.
@@ -324,6 +344,24 @@ class ScatteringTargetModelParameters:
             diameter_count=resolved_diameter_count,
         )
 
+        resolved_advanced_monotonic_mode_enabled = parse_boolean_flag(
+            advanced_monotonic_mode_enabled,
+        )
+        resolved_use_monotonic_smoothing_kernel = parse_boolean_flag(
+            use_monotonic_smoothing_kernel,
+        )
+
+        if monotonic_smoothing_sigma_points in {
+            None,
+            "",
+        }:
+            resolved_monotonic_smoothing_sigma_points = 20.0
+        else:
+            resolved_monotonic_smoothing_sigma_points = parse_positive_float(
+                value=monotonic_smoothing_sigma_points,
+                name="monotonic_smoothing_sigma_points",
+            )
+
         if resolved_mie_model == SOLID_SPHERE_MODEL_NAME:
             target_model = SolidSphereTargetModel(
                 medium_refractive_index=resolved_medium_refractive_index,
@@ -338,6 +376,9 @@ class ScatteringTargetModelParameters:
 
             return cls(
                 target_model=target_model,
+                advanced_monotonic_mode_enabled=resolved_advanced_monotonic_mode_enabled,
+                use_monotonic_smoothing_kernel=resolved_use_monotonic_smoothing_kernel,
+                monotonic_smoothing_sigma_points=resolved_monotonic_smoothing_sigma_points,
             )
 
         target_model = CoreShellSphereTargetModel(
@@ -361,6 +402,9 @@ class ScatteringTargetModelParameters:
 
         return cls(
             target_model=target_model,
+            advanced_monotonic_mode_enabled=resolved_advanced_monotonic_mode_enabled,
+            use_monotonic_smoothing_kernel=resolved_use_monotonic_smoothing_kernel,
+            monotonic_smoothing_sigma_points=resolved_monotonic_smoothing_sigma_points,
         )
 
 
@@ -527,6 +571,38 @@ def parse_finite_float(
         raise ValueError(f"{name} must be finite.")
 
     return parsed_value
+
+
+def parse_boolean_flag(
+    value: Any,
+) -> bool:
+    """
+    Parse a Dash checklist style toggle value into a boolean.
+    """
+    if isinstance(
+        value,
+        list,
+    ):
+        return bool(value)
+
+    if isinstance(
+        value,
+        bool,
+    ):
+        return value
+
+    if value is None:
+        return False
+
+    normalized_value = str(value).strip().lower()
+
+    return normalized_value in {
+        "1",
+        "true",
+        "yes",
+        "on",
+        "enabled",
+    }
 
 
 def parse_positive_int(

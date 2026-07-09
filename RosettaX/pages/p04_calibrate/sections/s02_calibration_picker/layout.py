@@ -358,6 +358,7 @@ class CalibrationPickerLayout:
                                 ),
                                 self._build_solid_sphere_parameters(),
                                 self._build_core_shell_parameters(),
+                                self._build_monotonic_advanced_controls(),
                             ],
                             id=self.page.ids.CalibrationPicker.target_model_details_container,
                             style=services.build_scattering_target_model_container_style(
@@ -480,6 +481,68 @@ class CalibrationPickerLayout:
             ),
         )
 
+    def _build_monotonic_advanced_controls(self) -> dash.html.Div:
+        """
+        Build advanced controls for non-monotonic target Mie relations.
+        """
+        return dash.html.Div(
+            [
+                ui_forms.build_inline_row(
+                    label="Advanced mode:",
+                    control=dbc.Checklist(
+                        id=self.page.ids.CalibrationPicker.target_monotonic_advanced_toggle,
+                        options=[
+                            {
+                                "label": "Show smoothing options",
+                                "value": "enabled",
+                            },
+                        ],
+                        value=["enabled"],
+                        switch=True,
+                        style={
+                            "paddingTop": "2px",
+                        },
+                    ),
+                    label_width_px=230,
+                    margin_top=True,
+                ),
+                dash.html.Div(
+                    [
+                        ui_forms.build_inline_row(
+                            label="Smoothing kernel:",
+                            control=dbc.Checklist(
+                                id=self.page.ids.CalibrationPicker.target_monotonic_smoothing_toggle,
+                                options=[
+                                    {
+                                        "label": "Use Gaussian smoothing",
+                                        "value": "enabled",
+                                    },
+                                ],
+                                value=["enabled"],
+                                switch=True,
+                                style={
+                                    "paddingTop": "2px",
+                                },
+                            ),
+                            label_width_px=230,
+                            margin_top=True,
+                        ),
+                        self._build_numeric_input_row(
+                            label="Kernel sigma [points]:",
+                            component_id=self.page.ids.CalibrationPicker.target_monotonic_smoothing_sigma_points,
+                            value=20.0,
+                            min_value=0.1,
+                            step=0.1,
+                        ),
+                    ],
+                    id=self.page.ids.CalibrationPicker.target_monotonic_advanced_container,
+                    style=services.build_target_parameter_container_style(
+                        is_visible=True,
+                    ),
+                ),
+            ]
+        )
+
     def _build_target_mie_relation_preview_panel(self) -> dbc.Card:
         """
         Build the target Mie relation preview panel.
@@ -496,7 +559,7 @@ class CalibrationPickerLayout:
                                 tooltip_text=(
                                     "This preview shows the target Mie relation used for "
                                     "diameter inversion. If the full relation is not monotonic, "
-                                    "RosettaX automatically selects the largest monotonic branch."
+                                    "RosettaX automatically selects the left-most monotonic branch."
                                 ),
                                 subtitle="Full relation and selected monotonic branch when needed.",
                                 title_style_overrides={

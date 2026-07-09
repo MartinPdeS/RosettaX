@@ -38,6 +38,22 @@ class Ids:
             f"{page_name}-calibration-picker-target-mie-relation-preview-container"
         )
 
+        target_monotonic_advanced_toggle = (
+            f"{page_name}-calibration-picker-target-monotonic-advanced-toggle"
+        )
+
+        target_monotonic_advanced_container = (
+            f"{page_name}-calibration-picker-target-monotonic-advanced-container"
+        )
+
+        target_monotonic_smoothing_toggle = (
+            f"{page_name}-calibration-picker-target-monotonic-smoothing-toggle"
+        )
+
+        target_monotonic_smoothing_sigma_points = (
+            f"{page_name}-calibration-picker-target-monotonic-smoothing-sigma-points"
+        )
+
         target_solid_sphere_parameter_container = (
             f"{page_name}-calibration-picker-target-solid-sphere-parameter-container"
         )

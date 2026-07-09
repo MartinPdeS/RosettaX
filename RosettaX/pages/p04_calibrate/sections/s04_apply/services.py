@@ -78,6 +78,9 @@ def _build_target_model_parameters_from_resolved_preset(
         target_diameter_min_nm=diameter_min_nm,
         target_diameter_max_nm=diameter_max_nm,
         target_diameter_count=diameter_count,
+        advanced_monotonic_mode_enabled=fallback_target_model_parameters.advanced_monotonic_mode_enabled,
+        use_monotonic_smoothing_kernel=fallback_target_model_parameters.use_monotonic_smoothing_kernel,
+        monotonic_smoothing_sigma_points=fallback_target_model_parameters.monotonic_smoothing_sigma_points,
     )
 
 
@@ -120,6 +123,9 @@ def build_scattering_target_model_parameters_if_required(
     target_core_shell_core_diameter_min_nm: Any,
     target_core_shell_core_diameter_max_nm: Any,
     target_core_shell_core_diameter_count: Any,
+    advanced_monotonic_mode_enabled: Any,
+    use_monotonic_smoothing_kernel: Any,
+    monotonic_smoothing_sigma_points: Any,
 ) -> Optional[apply_calibration.ScatteringTargetModelParameters]:
     """
     Build scattering target model parameters when the selected calibration requires them.
@@ -135,7 +141,10 @@ def build_scattering_target_model_parameters_if_required(
         "target_shell_thickness_nm=%r "
         "target_core_shell_core_diameter_min_nm=%r "
         "target_core_shell_core_diameter_max_nm=%r "
-        "target_core_shell_core_diameter_count=%r",
+        "target_core_shell_core_diameter_count=%r "
+        "advanced_monotonic_mode_enabled=%r "
+        "use_monotonic_smoothing_kernel=%r "
+        "monotonic_smoothing_sigma_points=%r",
         selected_calibration_summary,
         target_mie_model,
         target_medium_refractive_index,
@@ -149,6 +158,9 @@ def build_scattering_target_model_parameters_if_required(
         target_core_shell_core_diameter_min_nm,
         target_core_shell_core_diameter_max_nm,
         target_core_shell_core_diameter_count,
+        advanced_monotonic_mode_enabled,
+        use_monotonic_smoothing_kernel,
+        monotonic_smoothing_sigma_points,
     )
 
     if not calibration_picker_services.calibration_summaries_require_target_model(
@@ -195,6 +207,9 @@ def build_scattering_target_model_parameters_if_required(
         target_diameter_min_nm=resolved_target_diameter_min_nm,
         target_diameter_max_nm=resolved_target_diameter_max_nm,
         target_diameter_count=resolved_target_diameter_count,
+        advanced_monotonic_mode_enabled=advanced_monotonic_mode_enabled,
+        use_monotonic_smoothing_kernel=use_monotonic_smoothing_kernel,
+        monotonic_smoothing_sigma_points=monotonic_smoothing_sigma_points,
     )
 
     logger.debug(
@@ -288,6 +303,9 @@ def build_apply_calibration_request(
     target_core_shell_core_diameter_min_nm: Any,
     target_core_shell_core_diameter_max_nm: Any,
     target_core_shell_core_diameter_count: Any,
+    advanced_monotonic_mode_enabled: Any,
+    use_monotonic_smoothing_kernel: Any,
+    monotonic_smoothing_sigma_points: Any,
 ) -> apply_calibration.ApplyCalibrationRequest:
     """
     Build an apply calibration request from Dash callback values.
@@ -331,6 +349,9 @@ def build_apply_calibration_request(
         target_core_shell_core_diameter_min_nm=target_core_shell_core_diameter_min_nm,
         target_core_shell_core_diameter_max_nm=target_core_shell_core_diameter_max_nm,
         target_core_shell_core_diameter_count=target_core_shell_core_diameter_count,
+        advanced_monotonic_mode_enabled=advanced_monotonic_mode_enabled,
+        use_monotonic_smoothing_kernel=use_monotonic_smoothing_kernel,
+        monotonic_smoothing_sigma_points=monotonic_smoothing_sigma_points,
     )
 
     calibration_applications: list[apply_calibration.CalibrationApplication] = []

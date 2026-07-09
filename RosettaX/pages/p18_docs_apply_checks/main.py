@@ -86,7 +86,7 @@ class ApplyChecksDocumentationPage:
                     "If the calibration is scattering, target model parameters are mandatory. Diameter grids must be positive and ordered correctly, refractive indices must be finite and physically valid, and the requested source channel must exist in each input dataframe.",
                 ),
                 html.Div(
-                    "For scattering diameter inversion, RosettaX checks whether the target Mie relation is strictly monotonic over the full requested range. If it is not, the apply workflow automatically selects the largest monotonic branch and records a warning so the export remains auditable.",
+                    "For scattering diameter inversion, RosettaX checks whether the target Mie relation is strictly monotonic over the full requested range. If it is not, the apply workflow automatically selects the left-most monotonic branch and records a warning so the export remains auditable.",
                 ),
                 html.Div(
                     "Export columns are normalized before writing output, and warnings collected during the apply run are surfaced again in the PDF report and result payload.",

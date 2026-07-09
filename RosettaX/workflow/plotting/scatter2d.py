@@ -37,6 +37,8 @@ class Scatter2DTrace:
     marker_opacity: float = 0.75
     mode: str = "markers"
     color: Optional[str] = None
+    line_width: Optional[float] = None
+    line_dash: Optional[str] = None
 
 
 class Scatter2DGraph:
@@ -329,6 +331,12 @@ class Scatter2DGraph:
                     line=(
                         {
                             "color": trace.color,
+                            "width": (
+                                float(trace.line_width)
+                                if trace.line_width is not None
+                                else None
+                            ),
+                            "dash": trace.line_dash,
                         }
                         if trace.color is not None
                         else None

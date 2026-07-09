@@ -357,7 +357,7 @@ def resolve_monotonic_target_mie_relation(
 
     warning = (
         "Target Mie relation was not strictly monotonic over the full selected "
-        "diameter range. RosettaX automatically selected the largest monotonic "
+        "diameter range. RosettaX automatically selected the left-most monotonic "
         f"branch: {selected_interval.to_message_fragment()}. Linear extrapolation "
         "is enabled outside the selected branch coupling range."
     )
@@ -382,9 +382,10 @@ def select_largest_monotonic_interval(
     monotonic_intervals: list[MonotonicDiameterInterval],
 ) -> MonotonicDiameterInterval:
     """
-    Select the widest monotonic branch.
+    Select the left-most monotonic branch.
 
-    Ties are resolved by keeping the branch with more points.
+    If multiple intervals start at the same index, keep the widest one, then
+    the one with more points.
     """
     if not monotonic_intervals:
         raise ValueError("No monotonic intervals were provided.")
@@ -392,14 +393,14 @@ def select_largest_monotonic_interval(
     selected_interval = sorted(
         monotonic_intervals,
         key=lambda interval: (
-            interval.diameter_width_nm,
-            interval.point_count,
+            interval.start_index,
+            -interval.diameter_width_nm,
+            -interval.point_count,
         ),
-        reverse=True,
     )[0]
 
     logger.debug(
-        "select_largest_monotonic_interval selected_interval=%r from interval_count=%r",
+        "select_largest_monotonic_interval selected left-most interval=%r from interval_count=%r",
         selected_interval,
         len(monotonic_intervals),
     )
