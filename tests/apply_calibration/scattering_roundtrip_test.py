@@ -10,6 +10,7 @@ from RosettaX.pages.p03_scattering.sections.s05_calibration import (
     services as calibration_services,
 )
 from RosettaX.workflow.apply_calibration.scattering import (
+    CoreShellSphereTargetModel,
     ScatteringTargetModelParameters,
     SolidSphereTargetModel,
     apply_scattering_calibration_to_dataframe,
@@ -25,6 +26,24 @@ def _fake_modeled_coupling_from_diameters(*args, **kwargs) -> SimpleNamespace:
 
     return SimpleNamespace(
         particle_diameters_nm=particle_diameters_nm,
+        expected_coupling_values=expected_coupling_values,
+    )
+
+
+def _fake_modeled_coupling_from_core_shell_dimensions(*args, **kwargs) -> SimpleNamespace:
+    core_diameters_nm = np.asarray(
+        kwargs["core_diameters_nm"],
+        dtype=float,
+    ).reshape(-1)
+    shell_thicknesses_nm = np.asarray(
+        kwargs["shell_thicknesses_nm"],
+        dtype=float,
+    ).reshape(-1)
+    outer_diameters_nm = core_diameters_nm + (2.0 * shell_thicknesses_nm)
+    expected_coupling_values = outer_diameters_nm * 1e-8
+
+    return SimpleNamespace(
+        particle_diameters_nm=outer_diameters_nm,
         expected_coupling_values=expected_coupling_values,
     )
 
@@ -110,3 +129,82 @@ class Test_ScatteringRoundTrip:
             for warning in apply_result.warnings
         )
 
+    def test_synthetic_core_shell_apply_outputs_outer_diameter(
+        self,
+        monkeypatch,
+    ) -> None:
+        monkeypatch.setattr(
+            calibration_services.BackEnd,
+            "compute_modeled_coupling_from_core_shell_dimensions",
+            staticmethod(_fake_modeled_coupling_from_core_shell_dimensions),
+        )
+        monkeypatch.setattr(
+            "RosettaX.workflow.apply_calibration.scattering.mie_relation_builder.BackEnd.compute_modeled_coupling_from_core_shell_dimensions",
+            _fake_modeled_coupling_from_core_shell_dimensions,
+        )
+
+        calibration_result = calibration_services.run_scattering_calibration(
+            uploaded_fcs_path="/tmp/synthetic.fcs",
+            detector_column="SSC-A",
+            mie_model="Core/Shell Sphere",
+            bead_table_data=[
+                {
+                    "core_diameter_nm": "80",
+                    "shell_thickness_nm": "10",
+                    "measured_peak_position": "10000",
+                },
+                {
+                    "core_diameter_nm": "180",
+                    "shell_thickness_nm": "10",
+                    "measured_peak_position": "20000",
+                },
+            ],
+            medium_refractive_index=1.333,
+            particle_refractive_index=1.59,
+            core_refractive_index=1.45,
+            shell_refractive_index=1.38,
+            wavelength_nm=405.0,
+            detector_numerical_aperture=1.2,
+            detector_cache_numerical_aperture=0.0,
+            blocker_bar_numerical_aperture=0.0,
+            detector_sampling=32,
+            detector_phi_angle_degree=28.0,
+            detector_gamma_angle_degree=0.0,
+            detector_configuration_preset="",
+            simulated_curve_point_count=32,
+            logger=logging.getLogger(__name__),
+        )
+
+        assert calibration_result.calibration_store is not None
+        assert calibration_result.apply_status == "Core shell instrument response fitted successfully."
+
+        apply_result = apply_scattering_calibration_to_dataframe(
+            dataframe=pd.DataFrame(
+                {
+                    "SSC-A": [10000.0, 20000.0],
+                }
+            ),
+            source_channel="SSC-A",
+            output_channel_names=["nm"],
+            calibration_payload=calibration_result.calibration_store,
+            target_model_parameters=ScatteringTargetModelParameters(
+                target_model=CoreShellSphereTargetModel(
+                    medium_refractive_index=1.333,
+                    core_refractive_index=1.45,
+                    shell_refractive_index=1.38,
+                    shell_thickness_nm=10.0,
+                    core_diameter_min_nm=50.0,
+                    core_diameter_max_nm=250.0,
+                    core_diameter_count=201,
+                )
+            ),
+        )
+
+        assert apply_result.output_columns == ["", "nm"]
+        assert list(apply_result.dataframe.columns) == ["SSC-A", "nm"]
+        assert np.allclose(
+            apply_result.dataframe["nm"].to_numpy(),
+            np.asarray([100.0, 200.0], dtype=float),
+            atol=1e-9,
+        )
+        assert apply_result.target_mie_relation.parameters["diameter_axis"] == "outer_diameter_nm"

@@ -89,6 +89,10 @@ class Test_ApplyCalibrationScatteringMieRelationBuilder:
 
         assert relation.relation_role == "target_particle"
         assert relation.mie_model == "Core/Shell Sphere"
+        assert relation.parameters["diameter_axis"] == "outer_diameter_nm"
+        assert relation.parameters["diameter_min_nm"] == 120.0
+        assert relation.parameters["diameter_max_nm"] == 320.0
+        assert relation.diameter_nm == [120.0, 220.0, 320.0]
         assert relation.theoretical_coupling == [5.0, 6.0, 7.0]
 
     def test_build_target_mie_relation_rejects_unknown_target_model(self) -> None:

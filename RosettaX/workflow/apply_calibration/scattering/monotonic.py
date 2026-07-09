@@ -415,6 +415,51 @@ def smooth_monotonic_coupling_approximation(
     branch_values = coupling_values[start_index : end_index + 1]
     blended_values[start_index : end_index + 1] = branch_values
 
+    transition_point_count = max(
+        8,
+        int(np.ceil(float(sigma_points))),
+    )
+
+    if selected_interval.trend == "increasing":
+        blended_values = blend_transition_window(
+            blended_values=blended_values,
+            start_index=start_index,
+            end_index=end_index,
+            boundary_value=branch_values[0],
+            transition_point_count=transition_point_count,
+            trend="increasing",
+            side="left",
+        )
+        blended_values = blend_transition_window(
+            blended_values=blended_values,
+            start_index=start_index,
+            end_index=end_index,
+            boundary_value=branch_values[-1],
+            transition_point_count=transition_point_count,
+            trend="increasing",
+            side="right",
+        )
+
+    else:
+        blended_values = blend_transition_window(
+            blended_values=blended_values,
+            start_index=start_index,
+            end_index=end_index,
+            boundary_value=branch_values[0],
+            transition_point_count=transition_point_count,
+            trend="decreasing",
+            side="left",
+        )
+        blended_values = blend_transition_window(
+            blended_values=blended_values,
+            start_index=start_index,
+            end_index=end_index,
+            boundary_value=branch_values[-1],
+            transition_point_count=transition_point_count,
+            trend="decreasing",
+            side="right",
+        )
+
     if selected_interval.trend == "increasing":
         if start_index > 0:
             left_values = np.maximum.accumulate(
@@ -460,6 +505,106 @@ def smooth_monotonic_coupling_approximation(
             blended_values[end_index + 1 :] = right_values
 
     return blended_values
+
+
+def blend_transition_window(
+    *,
+    blended_values: np.ndarray,
+    start_index: int,
+    end_index: int,
+    boundary_value: float,
+    transition_point_count: int,
+    trend: str,
+    side: str,
+) -> np.ndarray:
+    """
+    Blend a short transition window around the monotonic branch boundary.
+
+    The exact branch values stay unchanged; only the points immediately outside
+    the branch are eased toward the boundary value to reduce visible kinks.
+    """
+    values = np.asarray(
+        blended_values,
+        dtype=float,
+    ).copy()
+
+    if transition_point_count < 1:
+        return values
+
+    if side == "left":
+        window_start = max(
+            0,
+            start_index - transition_point_count,
+        )
+        window_end = start_index
+        if window_end <= window_start:
+            return values
+
+        window_values = values[window_start:window_end]
+        if window_values.size == 0:
+            return values
+
+        if trend == "increasing":
+            values[window_start:window_end] = np.minimum(
+                window_values + _smoothstep_weights(window_values.size) * (
+                    boundary_value - window_values
+                ),
+                boundary_value,
+            )
+        else:
+            values[window_start:window_end] = np.maximum(
+                window_values + _smoothstep_weights(window_values.size) * (
+                    boundary_value - window_values
+                ),
+                boundary_value,
+            )
+
+    elif side == "right":
+        window_start = end_index + 1
+        window_end = min(
+            values.size,
+            end_index + 1 + transition_point_count,
+        )
+        if window_end <= window_start:
+            return values
+
+        window_values = values[window_start:window_end]
+        if window_values.size == 0:
+            return values
+
+        if trend == "increasing":
+            values[window_start:window_end] = np.minimum(
+                boundary_value + _smoothstep_weights(window_values.size) * (
+                    window_values - boundary_value
+                ),
+                window_values,
+            )
+        else:
+            values[window_start:window_end] = np.maximum(
+                boundary_value + _smoothstep_weights(window_values.size) * (
+                    window_values - boundary_value
+                ),
+                window_values,
+            )
+
+    return values
+
+
+def _smoothstep_weights(count: int) -> np.ndarray:
+    """
+    Build a smoothstep ramp from 0 to 1 over the requested count.
+    """
+    if count <= 1:
+        return np.ones((count,), dtype=float)
+
+    t_values = np.linspace(
+        0.0,
+        1.0,
+        count,
+        dtype=float,
+    )
+
+    return t_values * t_values * (3.0 - 2.0 * t_values)
 
 
 def build_gaussian_kernel_1d(

@@ -12,7 +12,7 @@
   "description": "Side scatter detector preset for Cytek Aurora style modeling. These values are effective geometry assumptions for RosettaX, chosen to support consistent calibration workflows rather than exact vendor reconstruction.",
   "detector_type": "PMT",
   "wavelength_nm": 405.0,
-  "detector_numerical_aperture": 0.95,
+  "detector_numerical_aperture": 1.2,
   "detector_cache_numerical_aperture": 0.0,
   "detector_sampling": 900,
   "blocker_bar_numerical_aperture": 0.0,

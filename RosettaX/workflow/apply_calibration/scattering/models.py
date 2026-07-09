@@ -78,8 +78,8 @@ class CoreShellSphereTargetModel:
     """
     Target model used when applying a scattering calibration to core shell spheres.
 
-    The diameter axis represents the core diameter. The shell thickness is a
-    constant user supplied value.
+    The user supplies a core diameter range and a constant shell thickness.
+    Apply-time diameter inversion is reported on the full outer diameter axis.
 
     The outer diameter is therefore:
 
@@ -100,14 +100,14 @@ class CoreShellSphereTargetModel:
         """
         Return the generic diameter minimum expected by downstream Mie relation code.
         """
-        return self.core_diameter_min_nm
+        return self.outer_diameter_min_nm
 
     @property
     def diameter_max_nm(self) -> float:
         """
         Return the generic diameter maximum expected by downstream Mie relation code.
         """
-        return self.core_diameter_max_nm
+        return self.outer_diameter_max_nm
 
     @property
     def diameter_count(self) -> int:
@@ -135,7 +135,7 @@ class CoreShellSphereTargetModel:
         """
         Return the semantic diameter axis represented by this model.
         """
-        return "core_diameter_nm"
+        return "outer_diameter_nm"
 
     def to_parameter_payload(self) -> dict[str, Any]:
         """

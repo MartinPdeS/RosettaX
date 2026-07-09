@@ -5,7 +5,7 @@ import re
 from typing import Any
 
 
-DEFAULT_MAX_UPLOAD_BYTES = 100 * 1024 * 1024
+DEFAULT_MAX_UPLOAD_BYTES = 2 * 1024**3
 
 _configured_max_upload_bytes = DEFAULT_MAX_UPLOAD_BYTES
 

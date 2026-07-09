@@ -97,7 +97,7 @@ def build_instrument_response_figure(
         )
     )
 
-    x_min = float(np.min(measured_peak_positions))
+    x_min = 0.0
     x_max = float(np.max(measured_peak_positions))
 
     if x_max == x_min:
@@ -109,7 +109,7 @@ def build_instrument_response_figure(
     fit_mask = (
         np.isfinite(fit_x_values)
         & np.isfinite(fit_y_values)
-        & (fit_x_values > 0.0)
+        & (fit_x_values >= 0.0)
         & (fit_y_values > 0.0)
     )
 

@@ -120,8 +120,8 @@ def build_target_mie_relation(
 
     Core/Shell Sphere
     -----------------
-    The diameter axis is the core diameter. The shell thickness is constant and
-    supplied by the user.
+    The shell thickness is constant and supplied by the user. The returned
+    apply-time diameter axis is the full outer diameter.
     """
     logger.debug(
         "build_target_mie_relation called with target_model_parameters=%r",
@@ -253,7 +253,8 @@ def build_core_shell_target_mie_relation(
     """
     Build a core shell target Mie relation.
 
-    The relation diameter axis is core diameter. Shell thickness is fixed.
+    The computation grid is defined from core diameter, but the returned
+    relation diameter axis is outer diameter. Shell thickness is fixed.
     """
     logger.debug(
         "build_core_shell_target_mie_relation called with target_model=%r",
@@ -301,7 +302,7 @@ def build_core_shell_target_mie_relation(
     )
 
     relation_diameter_nm = np.asarray(
-        core_diameter_grid_nm,
+        core_diameter_grid_nm + 2.0 * shell_thicknesses_nm,
         dtype=float,
     ).reshape(-1)
 
@@ -326,10 +327,10 @@ def build_core_shell_target_mie_relation(
 
     logger.debug(
         "build_core_shell_target_mie_relation returning relation with point_count=%r "
-        "core_diameter_min_nm=%r core_diameter_max_nm=%r shell_thickness_nm=%r",
+        "outer_diameter_min_nm=%r outer_diameter_max_nm=%r shell_thickness_nm=%r",
         relation_diameter_nm.size,
-        target_model.core_diameter_min_nm,
-        target_model.core_diameter_max_nm,
+        target_model.outer_diameter_min_nm,
+        target_model.outer_diameter_max_nm,
         target_model.shell_thickness_nm,
     )
 

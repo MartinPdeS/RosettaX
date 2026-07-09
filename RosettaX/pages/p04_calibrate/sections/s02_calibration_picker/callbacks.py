@@ -957,12 +957,8 @@ class CalibrationPickerCallbacks:
                     figure = services.build_target_mie_relation_figure(
                         full_diameter_values_nm=full_diameter_values_nm,
                         full_coupling_values=full_coupling_values,
-                        selected_diameter_values_nm=selected_diameter_values_nm,
-                        selected_coupling_values=selected_coupling_values,
-                        approximation_diameter_values_nm=approximation_diameter_values_nm,
-                        approximation_coupling_values=approximation_coupling_values,
-                        selected_interval=relation_resolution.selected_interval,
-                        show_selected_branch=True,
+                        monotone_diameter_values_nm=approximation_diameter_values_nm,
+                        monotone_coupling_values=approximation_coupling_values,
                         axis_scale_toggle_values=axis_scale_toggle_values,
                         x_axis_title=x_axis_title,
                     )
@@ -987,7 +983,7 @@ class CalibrationPickerCallbacks:
                         "warning",
                     )
 
-                selected_diameter_values_nm, selected_coupling_values = (
+                monotone_diameter_values_nm, monotone_coupling_values = (
                     get_finite_positive_mie_relation_arrays(
                         target_mie_relation=relation_resolution.target_mie_relation,
                     )
@@ -996,12 +992,8 @@ class CalibrationPickerCallbacks:
                 figure = services.build_target_mie_relation_figure(
                     full_diameter_values_nm=full_diameter_values_nm,
                     full_coupling_values=full_coupling_values,
-                    selected_diameter_values_nm=selected_diameter_values_nm,
-                    selected_coupling_values=selected_coupling_values,
-                    approximation_diameter_values_nm=None,
-                    approximation_coupling_values=None,
-                    selected_interval=None,
-                    show_selected_branch=False,
+                    monotone_diameter_values_nm=monotone_diameter_values_nm,
+                    monotone_coupling_values=monotone_coupling_values,
                     axis_scale_toggle_values=axis_scale_toggle_values,
                     x_axis_title=x_axis_title,
                 )
