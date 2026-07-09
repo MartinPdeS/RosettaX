@@ -58,31 +58,71 @@ class DeleteProfile:
         return dbc.Card(
             [
                 dbc.CardHeader(
-                    "3. Delete settings profile",
-                    style=ui_forms.build_workflow_section_header_style(
-                        color_name=styling.get_workflow_section_color(3),
-                    ),
-                ),
-                dbc.CardBody(
                     [
-                        html.P(
-                            "Delete an existing settings profile saved in this browser.",
-                            style={
-                                "opacity": 0.8,
-                                "marginBottom": "14px",
-                            },
-                        ),
-                        self._build_delete_profile_controls(),
                         html.Div(
-                            id=self.ids.delete_profile_status,
+                            [
+                                html.Div(
+                                    "3. Delete settings profile",
+                                    style={"fontWeight": "700"},
+                                ),
+                                html.Div(
+                                    "Remove browser-saved presets you no longer need so the active list stays short and clear.",
+                                    style={
+                                        "fontSize": "0.85rem",
+                                        "opacity": 0.8,
+                                        "marginTop": "2px",
+                                    },
+                                ),
+                            ]
+                        ),
+                        dbc.Button(
+                            "Hide",
+                            id=self.ids.toggle_button,
+                            color="link",
+                            n_clicks=0,
+                            class_name="text-decoration-none",
                             style={
-                                "marginTop": "10px",
+                                "padding": "0px",
+                                "fontWeight": "700",
+                                "color": "inherit",
                             },
                         ),
                     ],
-                    style=ui_forms.build_workflow_section_body_style(
-                        style_overrides=self.page.style["card_body_scroll"],
+                    style={
+                        **ui_forms.build_workflow_section_header_style(
+                            color_name=styling.get_workflow_section_color(3),
+                        ),
+                        "display": "flex",
+                        "alignItems": "center",
+                        "justifyContent": "space-between",
+                        "gap": "12px",
+                        "flexWrap": "wrap",
+                    },
+                ),
+                dbc.Collapse(
+                    dbc.CardBody(
+                        [
+                            html.P(
+                                "Delete an existing settings profile saved in this browser.",
+                                style={
+                                    "opacity": 0.8,
+                                    "marginBottom": "14px",
+                                },
+                            ),
+                            self._build_delete_profile_controls(),
+                            html.Div(
+                                id=self.ids.delete_profile_status,
+                                style={
+                                    "marginTop": "10px",
+                                },
+                            ),
+                        ],
+                        style=ui_forms.build_workflow_section_body_style(
+                            style_overrides=self.page.style["card_body_scroll"],
+                        ),
                     ),
+                    id=self.ids.collapse,
+                    is_open=False,
                 ),
             ],
             style={
@@ -137,6 +177,23 @@ class DeleteProfile:
         Register callbacks for the delete profile section.
         """
         logger.debug("Registering delete profile callbacks.")
+
+        @callback(
+            Output(self.ids.collapse, "is_open"),
+            Output(self.ids.toggle_button, "children"),
+            Input(self.ids.toggle_button, "n_clicks"),
+            State(self.ids.collapse, "is_open"),
+            prevent_initial_call=True,
+        )
+        def toggle_delete_profile_section(
+            n_clicks: Any,
+            is_open: Any,
+        ) -> tuple[bool, str]:
+            if not n_clicks:
+                return False, "Show"
+
+            next_is_open = not bool(is_open)
+            return next_is_open, "Hide" if next_is_open else "Show"
 
         @callback(
             Output(self.ids.delete_profile_name, "options"),

@@ -23,8 +23,6 @@ class SettingsPage:
 
         self.sections = [
             sections.DefaultProfile(page=self),
-            sections.CreateProfile(page=self),
-            sections.DeleteProfile(page=self),
         ]
 
         self.backend = None
@@ -96,7 +94,7 @@ class SettingsPage:
                 **ui_forms.build_workflow_section_card_style(
                     color_name=styling.get_workflow_page_header_color(),
                 ),
-                "marginBottom": "8px",
+                "marginBottom": "16px",
             },
         )
 

@@ -38,34 +38,74 @@ class CreateProfile:
         return dbc.Card(
             [
                 dbc.CardHeader(
-                    "2. Create settings profile",
-                    style=ui_forms.build_workflow_section_header_style(
-                        color_name=styling.get_workflow_section_color(2),
-                    ),
-                ),
-                dbc.CardBody(
                     [
-                        html.P(
-                            (
-                                "Create a new settings profile saved in this browser "
-                                "to keep a separate RosettaX configuration."
-                            ),
-                            style={
-                                "opacity": 0.8,
-                                "marginBottom": "14px",
-                            },
-                        ),
-                        self._build_create_profile_controls(),
                         html.Div(
-                            id=self.ids.new_profile_status,
+                            [
+                                html.Div(
+                                    "2. Create settings profile",
+                                    style={"fontWeight": "700"},
+                                ),
+                                html.Div(
+                                    "Create a separate browser-saved preset when you want a different default environment.",
+                                    style={
+                                        "fontSize": "0.85rem",
+                                        "opacity": 0.8,
+                                        "marginTop": "2px",
+                                    },
+                                ),
+                            ]
+                        ),
+                        dbc.Button(
+                            "Hide",
+                            id=self.ids.toggle_button,
+                            color="link",
+                            n_clicks=0,
+                            class_name="text-decoration-none",
                             style={
-                                "marginTop": "10px",
+                                "padding": "0px",
+                                "fontWeight": "700",
+                                "color": "inherit",
                             },
                         ),
                     ],
-                    style=ui_forms.build_workflow_section_body_style(
-                        style_overrides=self.page.style["card_body_scroll"],
+                    style={
+                        **ui_forms.build_workflow_section_header_style(
+                            color_name=styling.get_workflow_section_color(2),
+                        ),
+                        "display": "flex",
+                        "alignItems": "center",
+                        "justifyContent": "space-between",
+                        "gap": "12px",
+                        "flexWrap": "wrap",
+                    },
+                ),
+                dbc.Collapse(
+                    dbc.CardBody(
+                        [
+                            html.P(
+                                (
+                                    "Create a new settings profile saved in this browser "
+                                    "to keep a separate RosettaX configuration."
+                                ),
+                                style={
+                                    "opacity": 0.8,
+                                    "marginBottom": "14px",
+                                },
+                            ),
+                            self._build_create_profile_controls(),
+                            html.Div(
+                                id=self.ids.new_profile_status,
+                                style={
+                                    "marginTop": "10px",
+                                },
+                            ),
+                        ],
+                        style=ui_forms.build_workflow_section_body_style(
+                            style_overrides=self.page.style["card_body_scroll"],
+                        ),
                     ),
+                    id=self.ids.collapse,
+                    is_open=False,
                 ),
             ],
             style={
@@ -119,6 +159,23 @@ class CreateProfile:
         Register callbacks for the create profile section.
         """
         logger.debug("Registering create profile callbacks.")
+
+        @callback(
+            Output(self.ids.collapse, "is_open"),
+            Output(self.ids.toggle_button, "children"),
+            Input(self.ids.toggle_button, "n_clicks"),
+            State(self.ids.collapse, "is_open"),
+            prevent_initial_call=True,
+        )
+        def toggle_create_profile_section(
+            n_clicks: Any,
+            is_open: Any,
+        ) -> tuple[bool, str]:
+            if not n_clicks:
+                return False, "Show"
+
+            next_is_open = not bool(is_open)
+            return next_is_open, "Hide" if next_is_open else "Show"
 
         @callback(
             Output(self.ids.new_profile_status, "children"),

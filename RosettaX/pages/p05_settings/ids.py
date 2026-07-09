@@ -117,7 +117,26 @@ class Ids:
         default_marker_opacity = f"{PAGE_NAME}-default-marker-opacity"
         show_preset_configuration = f"{PAGE_NAME}-show-preset-configuration"
 
+        @staticmethod
+        def section_toggle_target(section_key: str) -> dict[str, str]:
+            return {
+                "type": f"{PAGE_NAME}-default-section-toggle-target",
+                "section": str(section_key),
+            }
 
+        @staticmethod
+        def section_collapse(section_key: str) -> dict[str, str]:
+            return {
+                "type": f"{PAGE_NAME}-default-section-collapse",
+                "section": str(section_key),
+            }
+
+        @staticmethod
+        def section_toggle_label(section_key: str) -> dict[str, str]:
+            return {
+                "type": f"{PAGE_NAME}-default-section-toggle-label",
+                "section": str(section_key),
+            }
 
     class NewProfile:
         """
@@ -127,6 +146,8 @@ class Ids:
         new_profile_name = f"{PAGE_NAME}-new-profile-name"
         save_new_profile_button = f"{PAGE_NAME}-save-new-profile-button"
         new_profile_status = f"{PAGE_NAME}-new-profile-status"
+        collapse = f"{PAGE_NAME}-new-profile-collapse"
+        toggle_button = f"{PAGE_NAME}-new-profile-toggle-button"
 
     class DeleteProfile:
         """
@@ -136,3 +157,5 @@ class Ids:
         delete_profile_name = f"{PAGE_NAME}-delete-profile-name"
         delete_profile_button = f"{PAGE_NAME}-delete-profile-button"
         delete_profile_status = f"{PAGE_NAME}-delete-profile-status"
+        collapse = f"{PAGE_NAME}-delete-profile-collapse"
+        toggle_button = f"{PAGE_NAME}-delete-profile-toggle-button"

@@ -34,7 +34,14 @@ class DefaultProfile:
     section local dcc.Store.
     """
 
-    vertical_spacing_px = 16
+    collapsed_sections = {
+        "fluorescence": True,
+        "scattering": True,
+        "apply_calibration": True,
+        "figure_style": True,
+        "metadata": True,
+        "misc": True,
+    }
 
     def __init__(
         self,
@@ -53,18 +60,16 @@ class DefaultProfile:
 
         return html.Div(
             [
-                self._build_vertical_spacer(),
                 self._build_profile_controls_card(),
-                self._build_vertical_spacer(),
                 self._build_settings_sections_stack(
                     form_store_data=form_store_data,
                 ),
-                self._build_vertical_spacer(),
                 self._build_save_card(),
             ],
             style={
                 "display": "flex",
                 "flexDirection": "column",
+                "gap": "18px",
             },
         )
 
@@ -81,15 +86,15 @@ class DefaultProfile:
         return dbc.Card(
             [
                 dbc.CardHeader(
-                    "Profile",
-                    style={
-                        "fontWeight": "700",
-                    },
+                    "1. Edit default settings",
+                    style=ui_forms.build_workflow_section_header_style(
+                        color_name=styling.get_workflow_section_color(1),
+                    ),
                 ),
                 dbc.CardBody(
                     [
                         html.Div(
-                            "Choose a saved profile to load its page-specific defaults below.",
+                            "Choose a saved browser profile, review the grouped defaults below, then save changes back to that profile.",
                             style={
                                 "opacity": 0.78,
                                 "fontSize": "0.92rem",
@@ -116,14 +121,12 @@ class DefaultProfile:
                             className="g-2",
                         ),
                     ],
-                    style={
-                        "padding": "18px 20px",
-                    },
+                    style=ui_forms.build_workflow_section_body_style(),
                 ),
             ],
-            style={
-                "borderRadius": "14px",
-            },
+            style=ui_forms.build_workflow_section_card_style(
+                color_name=styling.get_workflow_section_color(1),
+            ),
         )
 
     def _build_settings_sections_stack(
@@ -177,25 +180,76 @@ class DefaultProfile:
         return dbc.Card(
             [
                 dbc.CardHeader(
-                    [
-                        html.Div(
-                            section_title,
-                            style={
-                                "fontWeight": "750",
-                                "fontSize": "1.02rem",
-                            },
-                        ),
-                        html.Div(
-                            self._section_description(
-                                section_key,
+                    html.Div(
+                        [
+                            html.Div(
+                                [
+                                    html.Div(
+                                        section_title,
+                                        style={
+                                            "fontWeight": "750",
+                                            "fontSize": "1.02rem",
+                                        },
+                                    ),
+                                    html.Div(
+                                        self._section_description(
+                                            section_key,
+                                        ),
+                                        style={
+                                            "fontSize": "0.86rem",
+                                            "opacity": 0.76,
+                                            "marginTop": "3px",
+                                        },
+                                    ),
+                                ],
+                                style={
+                                    "minWidth": "0",
+                                },
                             ),
-                            style={
-                                "fontSize": "0.86rem",
-                                "opacity": 0.76,
-                                "marginTop": "3px",
-                            },
-                        ),
-                    ],
+                            html.Div(
+                                [
+                                    html.Span(
+                                        self._build_section_summary_text(section_key),
+                                        style={
+                                            "fontSize": "0.79rem",
+                                            "fontWeight": "600",
+                                            "padding": "4px 10px",
+                                            "borderRadius": "999px",
+                                            "background": "rgba(255, 255, 255, 0.6)",
+                                            "border": "1px solid rgba(0, 0, 0, 0.08)",
+                                        },
+                                    ),
+                                    html.Span(
+                                        self._build_collapse_button_children(
+                                            is_open=not self.collapsed_sections.get(section_key, False),
+                                        ),
+                                        id=self.ids.section_toggle_label(section_key),
+                                        style={
+                                            "fontSize": "0.8rem",
+                                            "fontWeight": "700",
+                                            "opacity": 0.78,
+                                        },
+                                    ),
+                                ],
+                                style={
+                                    "display": "flex",
+                                    "alignItems": "center",
+                                    "gap": "10px",
+                                    "flexWrap": "wrap",
+                                },
+                            ),
+                        ],
+                        id=self.ids.section_toggle_target(section_key),
+                        n_clicks=0,
+                        style={
+                            "display": "flex",
+                            "alignItems": "center",
+                            "justifyContent": "space-between",
+                            "gap": "12px",
+                            "flexWrap": "wrap",
+                            "cursor": "pointer",
+                        },
+                    ),
                     style={
                         "background": section_style["header"]["background"],
                         "borderBottom": section_style["header"]["borderBottom"],
@@ -204,16 +258,20 @@ class DefaultProfile:
                         "borderTopRightRadius": "15px",
                     },
                 ),
-                dbc.CardBody(
-                    self._build_section_fields(
-                        section_key=section_key,
-                        section_field_names=section_field_names,
-                        form_store_data=form_store_data,
+                dbc.Collapse(
+                    dbc.CardBody(
+                        self._build_section_fields(
+                            section_key=section_key,
+                            section_field_names=section_field_names,
+                            form_store_data=form_store_data,
+                        ),
+                        style={
+                            "padding": "18px",
+                            "overflow": "visible",
+                        },
                     ),
-                    style={
-                        "padding": "18px",
-                        "overflow": "visible",
-                    },
+                    id=self.ids.section_collapse(section_key),
+                    is_open=not self.collapsed_sections.get(section_key, False),
                 ),
             ],
             style={
@@ -479,28 +537,11 @@ class DefaultProfile:
                         },
                     ),
                 ],
-                style={
-                    "padding": "18px 20px",
-                },
+                style=ui_forms.build_workflow_section_body_style(),
             ),
-            style={
-                "borderRadius": "14px",
-            },
-            className="mb-4",
-        )
-
-    def _build_vertical_spacer(
-        self,
-        *,
-        height_px: Optional[int] = None,
-    ) -> html.Div:
-        """
-        Build a vertical spacer.
-        """
-        return html.Div(
-            style={
-                "height": f"{height_px or self.vertical_spacing_px}px",
-            }
+            style=ui_forms.build_workflow_section_card_style(
+                color_name=styling.get_workflow_section_color(1),
+            ),
         )
 
     def _section_visual_style(
@@ -511,8 +552,21 @@ class DefaultProfile:
         Return visual styling for one settings section.
         """
         return styling.build_workflow_section_style(
-            styling.get_section_color_name(section_key),
+            self._resolve_section_color_name(section_key),
         )
+
+    def _resolve_section_color_name(
+        self,
+        section_key: str,
+    ) -> str:
+        for section_index, (candidate_section_key, _section_title) in enumerate(
+            schema.PROFILE_SECTION_ORDER,
+            start=1,
+        ):
+            if candidate_section_key == section_key:
+                return styling.get_workflow_section_color(section_index)
+
+        return styling.get_workflow_section_color(1)
 
     def _section_description(
         self,
@@ -546,6 +600,23 @@ class DefaultProfile:
             section_key,
             "",
         )
+
+    def _build_section_summary_text(
+        self,
+        section_key: str,
+    ) -> str:
+        field_count = len(schema.section_field_names(section_key))
+        group_count = len(schema.section_field_groups(section_key))
+        group_label = "group" if group_count == 1 else "groups"
+        field_label = "field" if field_count == 1 else "fields"
+        return f"{group_count} {group_label}, {field_count} {field_label}"
+
+    @staticmethod
+    def _build_collapse_button_children(
+        *,
+        is_open: bool,
+    ) -> str:
+        return "Hide" if is_open else "Show"
 
     def _build_field_ids(self) -> dict[str, str]:
         """
@@ -881,3 +952,25 @@ class DefaultProfile:
         )
         def clear_save_confirmation(*_args):
             return "", False
+
+        for section_key, _section_title in schema.PROFILE_SECTION_ORDER:
+            @callback(
+                Output(self.ids.section_collapse(section_key), "is_open"),
+                Output(self.ids.section_toggle_label(section_key), "children"),
+                Input(self.ids.section_toggle_target(section_key), "n_clicks"),
+                State(self.ids.section_collapse(section_key), "is_open"),
+                prevent_initial_call=True,
+            )
+            def toggle_settings_section(
+                n_clicks: Any,
+                is_open: Any,
+                _section_key: str = section_key,
+            ) -> tuple[bool, str]:
+                if not n_clicks:
+                    next_is_open = not self.collapsed_sections.get(_section_key, False)
+                else:
+                    next_is_open = not bool(is_open)
+
+                return next_is_open, self._build_collapse_button_children(
+                    is_open=next_is_open,
+                )
