@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
+import json
 from dataclasses import asdict, dataclass
+from functools import lru_cache
+from pathlib import Path
 from typing import Any, Optional
 
 from RosettaX.workflow.parameters.refractive_index import (
@@ -54,93 +57,99 @@ class ScatteringTargetModelPreset:
         )
 
 
+@lru_cache(maxsize=1)
+def _load_scattering_target_model_preset_payloads() -> tuple[dict[str, Any], ...]:
+    """
+    Load scattering target model preset payloads from packaged assets.
+    """
+    asset_path = (
+        Path(__file__).resolve().parents[3]
+        / "assets"
+        / "apply_calibration_scattering_target_model_presets.json"
+    )
+
+    with asset_path.open(
+        "r",
+        encoding="utf-8",
+    ) as handle:
+        payload = json.load(handle)
+
+    presets = payload.get("presets")
+
+    if not isinstance(presets, list):
+        raise ValueError(
+            "apply_calibration_scattering_target_model_presets.json must contain a top-level 'presets' list."
+        )
+
+    return tuple(
+        preset
+        for preset in presets
+        if isinstance(preset, dict)
+    )
+
+
 def build_scattering_target_model_presets() -> dict[str, ScatteringTargetModelPreset]:
     """
     Build available scattering target model presets.
-
-    The extracellular vesicle preset assumes the core shell model because it
-    provides an explicit membrane shell thickness and lets the fitted diameter
-    axis represent the vesicle core diameter.
     """
-    return {
-        CUSTOM_PRESET_NAME: ScatteringTargetModelPreset(
-            name=CUSTOM_PRESET_NAME,
-            mie_model="Solid Sphere",
-            medium_refractive_index=1.333,
-            particle_refractive_index=1.39,
-            particle_diameter_min_nm=30.0,
-            particle_diameter_max_nm=1000.0,
-            particle_diameter_count=500,
-            core_refractive_index=1.37,
-            shell_refractive_index=1.46,
-            shell_thickness_nm=5.0,
-            core_diameter_min_nm=30.0,
-            core_diameter_max_nm=1000.0,
-            core_diameter_count=500,
-            description="Manual target model configuration.",
-        ),
-        EXTRACELLULAR_VESICLES_PRESET_NAME: ScatteringTargetModelPreset(
-            name=EXTRACELLULAR_VESICLES_PRESET_NAME,
-            mie_model="Core/Shell Sphere",
-            medium_refractive_index=1.333,
-            particle_refractive_index=1.38,
-            particle_diameter_min_nm=30.0,
-            particle_diameter_max_nm=1000.0,
-            particle_diameter_count=500,
-            core_refractive_index=1.37,
-            shell_refractive_index=1.46,
-            shell_thickness_nm=5.0,
-            core_diameter_min_nm=30.0,
-            core_diameter_max_nm=1000.0,
-            core_diameter_count=500,
-            description=(
-                "Core shell approximation for extracellular vesicles. "
-                "The diameter axis is core diameter and the shell thickness is constant."
+    presets: dict[str, ScatteringTargetModelPreset] = {}
+
+    for preset_payload in _load_scattering_target_model_preset_payloads():
+        preset = ScatteringTargetModelPreset(
+            name=str(preset_payload.get("name") or "").strip(),
+            mie_model=str(preset_payload.get("mie_model") or "Solid Sphere"),
+            medium_refractive_index=float(
+                preset_payload.get("medium_refractive_index", 1.333)
             ),
-        ),
-        POLYSTYRENE_BEADS_PRESET_NAME: ScatteringTargetModelPreset(
-            name=POLYSTYRENE_BEADS_PRESET_NAME,
-            mie_model="Solid Sphere",
-            medium_refractive_index=1.333,
-            medium_refractive_index_source="water",
-            particle_refractive_index=1.59,
-            particle_refractive_index_source="polystyrene",
-            particle_diameter_min_nm=50.0,
-            particle_diameter_max_nm=2000.0,
-            particle_diameter_count=500,
-            core_refractive_index=1.59,
-            core_refractive_index_source="polystyrene",
-            shell_refractive_index=1.59,
-            shell_refractive_index_source="polystyrene",
-            shell_thickness_nm=5.0,
-            core_diameter_min_nm=50.0,
-            core_diameter_max_nm=2000.0,
-            core_diameter_count=500,
-            description=(
-                "Solid sphere model for polystyrene calibration beads in aqueous medium. "
-                "Uses wavelength-resolved Sellmeier values for polystyrene and water."
+            particle_refractive_index=float(
+                preset_payload.get("particle_refractive_index", 1.39)
             ),
-        ),
-        SILICA_BEADS_PRESET_NAME: ScatteringTargetModelPreset(
-            name=SILICA_BEADS_PRESET_NAME,
-            mie_model="Solid Sphere",
-            medium_refractive_index=1.333,
-            particle_refractive_index=1.43,
-            particle_diameter_min_nm=50.0,
-            particle_diameter_max_nm=2000.0,
-            particle_diameter_count=500,
-            core_refractive_index=1.43,
-            shell_refractive_index=1.43,
-            shell_thickness_nm=5.0,
-            core_diameter_min_nm=50.0,
-            core_diameter_max_nm=2000.0,
-            core_diameter_count=500,
-            description=(
-                "Solid sphere model for amorphous silica calibration beads in aqueous medium. "
-                "Uses n=1.43 (fused silica at 488 nm) and n=1.333 (water)."
+            particle_diameter_min_nm=float(
+                preset_payload.get("particle_diameter_min_nm", 30.0)
             ),
-        ),
-    }
+            particle_diameter_max_nm=float(
+                preset_payload.get("particle_diameter_max_nm", 1000.0)
+            ),
+            particle_diameter_count=int(
+                preset_payload.get("particle_diameter_count", 500)
+            ),
+            core_refractive_index=float(
+                preset_payload.get("core_refractive_index", 1.37)
+            ),
+            shell_refractive_index=float(
+                preset_payload.get("shell_refractive_index", 1.46)
+            ),
+            shell_thickness_nm=float(
+                preset_payload.get("shell_thickness_nm", 5.0)
+            ),
+            core_diameter_min_nm=float(
+                preset_payload.get("core_diameter_min_nm", 30.0)
+            ),
+            core_diameter_max_nm=float(
+                preset_payload.get("core_diameter_max_nm", 1000.0)
+            ),
+            core_diameter_count=int(
+                preset_payload.get("core_diameter_count", 500)
+            ),
+            medium_refractive_index_source=preset_payload.get(
+                "medium_refractive_index_source"
+            ),
+            particle_refractive_index_source=preset_payload.get(
+                "particle_refractive_index_source"
+            ),
+            core_refractive_index_source=preset_payload.get(
+                "core_refractive_index_source"
+            ),
+            shell_refractive_index_source=preset_payload.get(
+                "shell_refractive_index_source"
+            ),
+            description=str(preset_payload.get("description") or ""),
+        )
+
+        if preset.name:
+            presets[preset.name] = preset
+
+    return presets
 
 
 def build_scattering_target_model_preset_options(
