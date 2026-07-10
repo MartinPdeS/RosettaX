@@ -34,15 +34,6 @@ SECTION_TITLE_STYLE_OVERRIDES = {
 }
 
 
-def _is_rosetta_process_name(
-    process_name: Any,
-) -> bool:
-    """
-    Return whether the selected process is one of the Rosetta variants.
-    """
-    return str(process_name or "").strip().startswith("Rosetta Script")
-
-
 class Model:
     """
     Scattering parameter section.
@@ -985,7 +976,6 @@ class Model:
 
         self._register_visibility_callbacks()
         self._register_scatterer_preset_callbacks()
-        self._register_rosetta_process_default_scatterer_preset_callback()
         self._register_refractive_index_callbacks()
         self._register_detector_configuration_callbacks()
         self._register_detector_numerical_aperture_warning_callback()
@@ -1244,49 +1234,6 @@ class Model:
                 is_locked,
                 is_locked,
             )
-
-    def _register_rosetta_process_default_scatterer_preset_callback(self) -> None:
-        """
-        Default Rosetta workflows to the Rosetta Mix scatterer preset.
-        """
-
-        @dash.callback(
-            dash.Output(
-                self.ids.scatterer_preset,
-                "value",
-                allow_duplicate=True,
-            ),
-            dash.Input(self.page.ids.Scattering.process_dropdown, "value"),
-            dash.State(self.ids.scatterer_preset, "value"),
-            prevent_initial_call="initial_duplicate",
-        )
-        def default_rosetta_process_scatterer_preset(
-            selected_process_name: Any,
-            current_scatterer_preset: Any,
-        ) -> Any:
-            if not _is_rosetta_process_name(
-                selected_process_name,
-            ):
-                return dash.no_update
-
-            resolved_current_preset = str(
-                current_scatterer_preset or "",
-            ).strip()
-
-            if resolved_current_preset not in {
-                "",
-                self.model_configuration.custom_scatterer_preset_name,
-            }:
-                return dash.no_update
-
-            logger.debug(
-                "default_rosetta_process_scatterer_preset applying preset=%r for selected_process_name=%r current_scatterer_preset=%r",
-                scattering.ROSETTA_MIX_PRESET_NAME,
-                selected_process_name,
-                current_scatterer_preset,
-            )
-
-            return scattering.ROSETTA_MIX_PRESET_NAME
 
     def _register_visibility_callbacks(self) -> None:
         """
