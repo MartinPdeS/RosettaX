@@ -268,16 +268,19 @@ class ReferenceTable:
                 allow_duplicate=True,
             ),
             dash.Input(self.page.ids.Parameters.scatterer_preset, "value"),
+            dash.Input(self.page.ids.Parameters.wavelength_nm, "value"),
             dash.State(self.ids.bead_table, "data"),
             prevent_initial_call=True,
         )
         def populate_table_from_scatterer_preset(
             scatterer_preset: Any,
+            wavelength_nm: Any,
             current_rows: Any,
         ) -> tuple[Any, Any]:
             preset_table_state = scattering.ModelConfiguration.build_table_state_from_scatterer_preset(
                 preset_name=scatterer_preset,
                 current_rows=current_rows,
+                wavelength_nm=wavelength_nm,
             )
 
             if preset_table_state is None:

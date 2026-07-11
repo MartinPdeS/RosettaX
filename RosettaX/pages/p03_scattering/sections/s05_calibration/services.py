@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from typing import Any, Optional
 import logging
+import re
 
 import numpy as np
 import plotly.graph_objs as go
@@ -13,6 +14,59 @@ from RosettaX.workflow import scattering
 
 
 logger = logging.getLogger(__name__)
+
+
+_LABELED_REFRACTIVE_INDEX_PATTERN = re.compile(
+    r"^[^()]+\(\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?)\s*\)$"
+)
+
+
+def resolve_table_refractive_index(
+    rows: list[dict[str, Any]],
+    *,
+    column_name: str,
+    fallback_value: Any,
+) -> Any:
+    """Use a material-labeled table index when a script or preset supplied one."""
+    for row in rows:
+        raw_value = row.get(column_name)
+
+        if isinstance(raw_value, bool) or raw_value in (None, ""):
+            continue
+
+        if isinstance(raw_value, (int, float)):
+            parsed_value = float(raw_value)
+
+            if np.isfinite(parsed_value) and parsed_value > 0.0:
+                return parsed_value
+
+            continue
+
+        if not isinstance(raw_value, str):
+            continue
+
+        raw_value_text = raw_value.strip()
+
+        try:
+            parsed_value = float(raw_value_text)
+        except ValueError:
+            parsed_value = None
+
+        if parsed_value is not None:
+            if np.isfinite(parsed_value) and parsed_value > 0.0:
+                return parsed_value
+
+            continue
+
+        match = _LABELED_REFRACTIVE_INDEX_PATTERN.fullmatch(raw_value_text)
+
+        if match is not None:
+            parsed_value = float(match.group(1))
+
+            if np.isfinite(parsed_value) and parsed_value > 0.0:
+                return parsed_value
+
+    return fallback_value
 
 
 @dataclass(frozen=True)
@@ -746,6 +800,30 @@ def run_scattering_calibration(
 
         if not detector_column:
             return build_missing_input_result("Missing scattering detector.")
+
+        medium_refractive_index = resolve_table_refractive_index(
+            current_table_rows,
+            column_name="medium_refractive_index",
+            fallback_value=medium_refractive_index,
+        )
+
+        if resolved_mie_model == "Solid Sphere":
+            particle_refractive_index = resolve_table_refractive_index(
+                current_table_rows,
+                column_name="particle_refractive_index",
+                fallback_value=particle_refractive_index,
+            )
+        else:
+            core_refractive_index = resolve_table_refractive_index(
+                current_table_rows,
+                column_name="core_refractive_index",
+                fallback_value=core_refractive_index,
+            )
+            shell_refractive_index = resolve_table_refractive_index(
+                current_table_rows,
+                column_name="shell_refractive_index",
+                fallback_value=shell_refractive_index,
+            )
 
         optical_parameters = scattering.parse_optical_parameters(
             medium_refractive_index=medium_refractive_index,

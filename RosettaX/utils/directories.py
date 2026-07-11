@@ -24,9 +24,9 @@ css = documentation.joinpath("source/_static/default.css")
 
 fcs_data = root / "data"
 
-profiles = root / "profiles"
-
 asset_directory = root / "assets"
+
+profiles = asset_directory / "profiles"
 
 default_profile = profiles / "default_profile.json"
 

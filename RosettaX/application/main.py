@@ -108,8 +108,8 @@ class RosettaXApplication:
     <head>
         {%metas%}
         <title>{%title%}</title>
-        <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg?v=2">
-        <link rel="shortcut icon" href="/assets/favicon.svg?v=2">
+        <link rel="icon" type="image/svg+xml" href="/assets/logo/favicon.svg?v=2">
+        <link rel="shortcut icon" href="/assets/logo/favicon.svg?v=2">
         {%css%}
     </head>
     <body>

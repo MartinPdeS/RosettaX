@@ -1,0 +1,14 @@
+{
+  "id": "polystyrene",
+  "label": "Polystyrene",
+  "coefficients": {
+    "a": 1.0,
+    "b": [
+      1.469
+    ],
+    "c": [
+      0.01295
+    ]
+  },
+  "notes": "Visible-range one-term Sellmeier fit for polystyrene microspheres."
+}

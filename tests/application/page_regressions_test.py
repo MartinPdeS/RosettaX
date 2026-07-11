@@ -205,6 +205,25 @@ class Test_ScatteringModelLayout:
 
 
 class Test_ScatteringCalibrationCallbackOutputs:
+    def test_table_refractive_index_accepts_float_and_numeric_text(self) -> None:
+        assert scattering_services.resolve_table_refractive_index(
+            [{"particle_refractive_index": 1.51}],
+            column_name="particle_refractive_index",
+            fallback_value=1.59,
+        ) == pytest.approx(1.51)
+        assert scattering_services.resolve_table_refractive_index(
+            [{"medium_refractive_index": "1.345"}],
+            column_name="medium_refractive_index",
+            fallback_value=1.333,
+        ) == pytest.approx(1.345)
+
+    def test_table_refractive_index_still_accepts_material_label(self) -> None:
+        assert scattering_services.resolve_table_refractive_index(
+            [{"medium_refractive_index": "Water(1.33698)"}],
+            column_name="medium_refractive_index",
+            fallback_value=1.333,
+        ) == pytest.approx(1.33698)
+
     def test_missing_table_update_keeps_existing_rows(self) -> None:
         assert ScatteringCalibration._resolve_bead_table_output(None) is dash.no_update
 

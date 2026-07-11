@@ -1,0 +1,19 @@
+{
+  "id": "calcium_fluoride",
+  "label": "Calcium fluoride (CaF2, Malitson)",
+  "coefficients": {
+    "a": 1.0,
+    "b": [
+      0.5675888,
+      0.4710914,
+      3.8484723
+    ],
+    "c": [
+      0.002526429994596025,
+      0.01007833372881,
+      1200.5569690816
+    ]
+  },
+  "notes": "Three-term Sellmeier fit for calcium fluoride at 24 C. Converted from refractiveindex.info Formula 1 coefficients by squaring resonance wavelengths in um.",
+  "source": "https://refractiveindex.info/database/data/main/CaF2/nk/Malitson.yml"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "silica",
+  "label": "Silica",
+  "coefficients": {
+    "a": 1.0,
+    "b": [
+      1.0969
+    ],
+    "c": [
+      0.00906
+    ]
+  },
+  "notes": "Visible-range one-term Sellmeier fit for silica particles."
+}

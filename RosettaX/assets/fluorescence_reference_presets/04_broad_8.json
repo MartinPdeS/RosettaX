@@ -1,0 +1,14 @@
+{
+  "name": "Broad 8",
+  "mesf_values": [
+    100.0,
+    500.0,
+    2000.0,
+    10000.0,
+    50000.0,
+    200000.0,
+    1000000.0,
+    5000000.0
+  ],
+  "description": "Broad eight-population MESF ladder."
+}

@@ -40,7 +40,7 @@ class Sidebar:
 
     def __init__(self) -> None:
         self.page_name = "sidebar"
-        self.logo_src = "/assets/logo_light.svg"
+        self.logo_src = "/assets/logo/logo_light.svg"
         self.logo_max_height_px = 156
         self.sidebar_width_px = 346
         self.style = styling.PAGE

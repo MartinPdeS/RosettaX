@@ -11,6 +11,7 @@ import plotly.graph_objs as go
 from RosettaX.utils import RuntimeConfig
 from RosettaX.workflow import detector, parameters
 from RosettaX.workflow.parameters.refractive_index import (
+    format_refractive_index_display,
     resolve_refractive_index_source_value,
     resolve_refractive_index_value,
 )
@@ -51,26 +52,29 @@ def _load_scattering_calibration_scatterer_preset_payloads() -> tuple[dict[str, 
     """
     Load scatterer preset payloads from the packaged assets directory.
     """
-    asset_path = Path(__file__).resolve().parents[2] / "assets" / "scatterer_presets.json"
-
-    with asset_path.open(
-        "r",
-        encoding="utf-8",
-    ) as handle:
-        payload = json.load(handle)
-
-    presets = payload.get("presets")
-
-    if not isinstance(presets, list):
-        raise ValueError(
-            "scatterer_presets.json must contain a top-level 'presets' list."
-        )
-
-    return tuple(
-        preset
-        for preset in presets
-        if isinstance(preset, dict)
+    asset_directory = (
+        Path(__file__).resolve().parents[2]
+        / "assets"
+        / "scatterer_presets"
     )
+
+    preset_payloads: list[dict[str, Any]] = []
+
+    for json_path in sorted(asset_directory.glob("*.json")):
+        with json_path.open(
+            "r",
+            encoding="utf-8",
+        ) as handle:
+            payload = json.load(handle)
+
+        if not isinstance(payload, dict):
+            raise ValueError(
+                f"Scatterer preset file must contain a JSON object: {json_path.name}."
+            )
+
+        preset_payloads.append(payload)
+
+    return tuple(preset_payloads)
 
 
 def build_scattering_calibration_scatterer_presets() -> dict[str, ScatteringCalibrationScattererPreset]:
@@ -563,6 +567,7 @@ class ModelConfiguration:
         *,
         preset_name: Any,
         current_rows: Optional[list[dict[str, Any]]] = None,
+        wavelength_nm: Any = None,
     ) -> Optional[tuple[list[dict[str, Any]], list[dict[str, str]]]]:
         """
         Build calibration table columns and rows from a scatterer preset.
@@ -589,6 +594,58 @@ class ModelConfiguration:
             runtime_core_diameters_nm=preset.core_diameters_nm,
             runtime_shell_thicknesses_nm=preset.shell_thicknesses_nm,
         )
+
+        medium_refractive_index = resolve_refractive_index_source_value(
+            preset.medium_refractive_index_source,
+            wavelength_nm=(wavelength_nm if wavelength_nm not in (None, "") else 488.0),
+            fallback_value=preset.medium_refractive_index,
+        )
+        for row in rows:
+            row[parameters.table.COLUMN_MEDIUM_REFRACTIVE_INDEX] = (
+                format_refractive_index_display(
+                    medium_refractive_index,
+                    source_value=preset.medium_refractive_index_source,
+                )
+            )
+
+        if preset.mie_model == parameters.table.MIE_MODEL_CORE_SHELL_SPHERE:
+            core_refractive_index = resolve_refractive_index_source_value(
+                preset.core_refractive_index_source,
+                wavelength_nm=(wavelength_nm if wavelength_nm not in (None, "") else 488.0),
+                fallback_value=preset.core_refractive_index,
+            )
+            shell_refractive_index = resolve_refractive_index_source_value(
+                preset.shell_refractive_index_source,
+                wavelength_nm=(wavelength_nm if wavelength_nm not in (None, "") else 488.0),
+                fallback_value=preset.shell_refractive_index,
+            )
+            for row in rows:
+                row[parameters.table.COLUMN_CORE_REFRACTIVE_INDEX] = (
+                    format_refractive_index_display(
+                        core_refractive_index,
+                        source_value=preset.core_refractive_index_source,
+                    )
+                )
+                row[parameters.table.COLUMN_SHELL_REFRACTIVE_INDEX] = (
+                    format_refractive_index_display(
+                        shell_refractive_index,
+                        source_value=preset.shell_refractive_index_source,
+                    )
+                )
+
+        if preset.mie_model == parameters.table.MIE_MODEL_SOLID_SPHERE:
+            particle_refractive_index = resolve_refractive_index_source_value(
+                preset.particle_refractive_index_source,
+                wavelength_nm=(wavelength_nm if wavelength_nm not in (None, "") else 488.0),
+                fallback_value=preset.particle_refractive_index,
+            )
+            for row in rows:
+                row[parameters.table.COLUMN_PARTICLE_REFRACTIVE_INDEX] = (
+                    format_refractive_index_display(
+                        particle_refractive_index,
+                        source_value=preset.particle_refractive_index_source,
+                    )
+                )
 
         if current_rows is not None:
             rows = ModelConfiguration._merge_preset_geometry_with_current_table_rows(
@@ -650,6 +707,27 @@ class ModelConfiguration:
             for column_id in geometry_column_ids:
                 if column_id in preset_row:
                     merged_row[column_id] = preset_row[column_id]
+
+            if resolved_mie_model == parameters.table.MIE_MODEL_SOLID_SPHERE:
+                merged_row[parameters.table.COLUMN_PARTICLE_REFRACTIVE_INDEX] = preset_row.get(
+                    parameters.table.COLUMN_PARTICLE_REFRACTIVE_INDEX,
+                    "",
+                )
+
+            merged_row[parameters.table.COLUMN_MEDIUM_REFRACTIVE_INDEX] = preset_row.get(
+                parameters.table.COLUMN_MEDIUM_REFRACTIVE_INDEX,
+                "",
+            )
+
+            if resolved_mie_model == parameters.table.MIE_MODEL_CORE_SHELL_SPHERE:
+                merged_row[parameters.table.COLUMN_CORE_REFRACTIVE_INDEX] = preset_row.get(
+                    parameters.table.COLUMN_CORE_REFRACTIVE_INDEX,
+                    "",
+                )
+                merged_row[parameters.table.COLUMN_SHELL_REFRACTIVE_INDEX] = preset_row.get(
+                    parameters.table.COLUMN_SHELL_REFRACTIVE_INDEX,
+                    "",
+                )
 
             merged_rows.append(merged_row)
 

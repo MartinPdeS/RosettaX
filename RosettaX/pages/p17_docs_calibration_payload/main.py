@@ -32,7 +32,12 @@ class CalibrationPayloadDocumentationPage:
         *,
         file_name: str,
     ) -> dict[str, Any]:
-        sample_path = Path(__file__).resolve().parents[2] / "assets" / file_name
+        sample_path = (
+            Path(__file__).resolve().parents[2]
+            / "assets"
+            / "sample-files"
+            / file_name
+        )
 
         with sample_path.open("r", encoding="utf-8") as stream:
             payload = json.load(stream)
@@ -267,7 +272,7 @@ class CalibrationPayloadDocumentationPage:
 
     def _fluorescence_keys_card(self) -> dbc.Card:
         fluorescence_payload = self._load_sample_calibration_payload(
-            file_name="sample_fluorescence_calibration.json",
+            file_name="fluorescence_calibration_sample.json",
         )
         fluorescence_key_paths = self._collect_key_paths(
             fluorescence_payload,
@@ -276,7 +281,7 @@ class CalibrationPayloadDocumentationPage:
 
         return build_documentation_card(
             title="Fluorescence JSON keys (sample file)",
-            subtitle="Key map extracted from RosettaX/assets/sample_fluorescence_calibration.json.",
+            subtitle="Key map extracted from RosettaX/assets/sample-files/fluorescence_calibration_sample.json.",
             body=[
                 html.Div(
                     "This list shows nested wrapper and payload fields exactly as represented in the packaged fluorescence sample calibration.",
@@ -291,7 +296,7 @@ class CalibrationPayloadDocumentationPage:
 
     def _scattering_keys_card(self) -> dbc.Card:
         scattering_payload = self._load_sample_calibration_payload(
-            file_name="sample_scatter_calibration.json.json",
+            file_name="scattering_calibration_sample.json",
         )
         scattering_key_paths = self._collect_key_paths(
             scattering_payload,
@@ -300,7 +305,7 @@ class CalibrationPayloadDocumentationPage:
 
         return build_documentation_card(
             title="Scattering JSON keys (sample file)",
-            subtitle="Key map extracted from RosettaX/assets/sample_scatter_calibration.json.json.",
+            subtitle="Key map extracted from RosettaX/assets/sample-files/scattering_calibration_sample.json.",
             body=[
                 html.Div(
                     "This list highlights instrument_response, calibration_standard_mie_relation, metadata, reference_table, and wrapper fields used in the packaged scattering sample calibration.",

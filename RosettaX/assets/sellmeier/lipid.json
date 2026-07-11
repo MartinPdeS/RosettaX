@@ -1,0 +1,14 @@
+{
+  "id": "lipid",
+  "label": "Lipid",
+  "coefficients": {
+    "a": 1.0,
+    "b": [
+      1.128
+    ],
+    "c": [
+      0.00802
+    ]
+  },
+  "notes": "Visible-range one-term Sellmeier fit for lipid-rich particles."
+}

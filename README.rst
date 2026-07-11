@@ -1,7 +1,7 @@
 RosettaX
 ========
 
-.. image:: https://raw.githubusercontent.com/MartinPdeS/RosettaX/master/RosettaX/assets/logo_light.svg
+.. image:: https://raw.githubusercontent.com/MartinPdeS/RosettaX/master/RosettaX/assets/logo/logo_light.svg
    :alt: RosettaX logo
 
 .. list-table::

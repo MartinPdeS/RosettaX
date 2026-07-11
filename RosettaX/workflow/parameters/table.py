@@ -3,6 +3,7 @@
 from typing import Any, Optional
 
 import numpy as np
+from dash.dash_table.Format import Format, Scheme
 
 from RosettaX.workflow.table import services as table_services
 
@@ -11,6 +12,10 @@ MIE_MODEL_SOLID_SPHERE = "Solid Sphere"
 MIE_MODEL_CORE_SHELL_SPHERE = "Core/Shell Sphere"
 
 COLUMN_PARTICLE_DIAMETER_NM = "particle_diameter_nm"
+COLUMN_PARTICLE_REFRACTIVE_INDEX = "particle_refractive_index"
+COLUMN_MEDIUM_REFRACTIVE_INDEX = "medium_refractive_index"
+COLUMN_CORE_REFRACTIVE_INDEX = "core_refractive_index"
+COLUMN_SHELL_REFRACTIVE_INDEX = "shell_refractive_index"
 COLUMN_CORE_DIAMETER_NM = "core_diameter_nm"
 COLUMN_SHELL_THICKNESS_NM = "shell_thickness_nm"
 COLUMN_OUTER_DIAMETER_NM = "outer_diameter_nm"
@@ -24,10 +29,22 @@ sphere_table_columns = [
         "name": "Measured peak position [a.u.]",
         "id": COLUMN_MEASURED_PEAK_POSITION,
         "editable": True,
+        "type": "numeric",
+        "format": Format(precision=1, scheme=Scheme.fixed),
     },
     {
         "name": "Particle diameter [nm]",
         "id": COLUMN_PARTICLE_DIAMETER_NM,
+        "editable": True,
+    },
+    {
+        "name": "Refractive index",
+        "id": COLUMN_PARTICLE_REFRACTIVE_INDEX,
+        "editable": True,
+    },
+    {
+        "name": "Medium refractive index",
+        "id": COLUMN_MEDIUM_REFRACTIVE_INDEX,
         "editable": True,
     },
     {
@@ -47,6 +64,8 @@ core_shell_table_columns = [
         "name": "Measured peak position [a.u.]",
         "id": COLUMN_MEASURED_PEAK_POSITION,
         "editable": True,
+        "type": "numeric",
+        "format": Format(precision=1, scheme=Scheme.fixed),
     },
     {
         "name": "Core diameter [nm]",
@@ -62,6 +81,21 @@ core_shell_table_columns = [
         "name": "Outer diameter [nm]",
         "id": COLUMN_OUTER_DIAMETER_NM,
         "editable": False,
+    },
+    {
+        "name": "Medium refractive index",
+        "id": COLUMN_MEDIUM_REFRACTIVE_INDEX,
+        "editable": True,
+    },
+    {
+        "name": "Core refractive index",
+        "id": COLUMN_CORE_REFRACTIVE_INDEX,
+        "editable": True,
+    },
+    {
+        "name": "Shell refractive index",
+        "id": COLUMN_SHELL_REFRACTIVE_INDEX,
+        "editable": True,
     },
     {
         "name": "Coupling [W]",
@@ -142,6 +176,9 @@ def build_empty_row_for_model(
             COLUMN_CORE_DIAMETER_NM: "",
             COLUMN_SHELL_THICKNESS_NM: "",
             COLUMN_OUTER_DIAMETER_NM: "",
+            COLUMN_MEDIUM_REFRACTIVE_INDEX: "",
+            COLUMN_CORE_REFRACTIVE_INDEX: "",
+            COLUMN_SHELL_REFRACTIVE_INDEX: "",
             COLUMN_MEASURED_PEAK_POSITION: "",
             COLUMN_EXPECTED_COUPLING: "",
             COLUMN_EXPECTED_CROSS_SECTION_NM2: "",
@@ -149,6 +186,8 @@ def build_empty_row_for_model(
 
     return {
         COLUMN_PARTICLE_DIAMETER_NM: "",
+        COLUMN_PARTICLE_REFRACTIVE_INDEX: "",
+        COLUMN_MEDIUM_REFRACTIVE_INDEX: "",
         COLUMN_MEASURED_PEAK_POSITION: "",
         COLUMN_EXPECTED_COUPLING: "",
         COLUMN_EXPECTED_CROSS_SECTION_NM2: "",
@@ -325,6 +364,15 @@ def remap_row_to_core_shell_model(
             core_diameter_nm=core_diameter_nm,
             shell_thickness_nm=shell_thickness_nm,
         ),
+        COLUMN_MEDIUM_REFRACTIVE_INDEX: normalize_cell_value(
+            row.get(COLUMN_MEDIUM_REFRACTIVE_INDEX)
+        ),
+        COLUMN_CORE_REFRACTIVE_INDEX: normalize_cell_value(
+            row.get(COLUMN_CORE_REFRACTIVE_INDEX)
+        ),
+        COLUMN_SHELL_REFRACTIVE_INDEX: normalize_cell_value(
+            row.get(COLUMN_SHELL_REFRACTIVE_INDEX)
+        ),
         COLUMN_MEASURED_PEAK_POSITION: measured_peak_position,
         COLUMN_EXPECTED_COUPLING: expected_coupling,
         COLUMN_EXPECTED_CROSS_SECTION_NM2: expected_cross_section_nm2,
@@ -384,6 +432,12 @@ def remap_row_to_solid_sphere_model(
 
     return {
         COLUMN_PARTICLE_DIAMETER_NM: particle_diameter_nm,
+        COLUMN_PARTICLE_REFRACTIVE_INDEX: normalize_cell_value(
+            row.get(COLUMN_PARTICLE_REFRACTIVE_INDEX)
+        ),
+        COLUMN_MEDIUM_REFRACTIVE_INDEX: normalize_cell_value(
+            row.get(COLUMN_MEDIUM_REFRACTIVE_INDEX)
+        ),
         COLUMN_MEASURED_PEAK_POSITION: measured_peak_position,
         COLUMN_EXPECTED_COUPLING: expected_coupling,
         COLUMN_EXPECTED_CROSS_SECTION_NM2: expected_cross_section_nm2,
@@ -448,6 +502,15 @@ def normalize_core_shell_row(
             core_diameter_nm=core_diameter_nm,
             shell_thickness_nm=shell_thickness_nm,
         ),
+        COLUMN_MEDIUM_REFRACTIVE_INDEX: normalize_cell_value(
+            row.get(COLUMN_MEDIUM_REFRACTIVE_INDEX)
+        ),
+        COLUMN_CORE_REFRACTIVE_INDEX: normalize_cell_value(
+            row.get(COLUMN_CORE_REFRACTIVE_INDEX)
+        ),
+        COLUMN_SHELL_REFRACTIVE_INDEX: normalize_cell_value(
+            row.get(COLUMN_SHELL_REFRACTIVE_INDEX)
+        ),
         COLUMN_MEASURED_PEAK_POSITION: normalize_cell_value(
             row.get(
                 COLUMN_MEASURED_PEAK_POSITION,
@@ -482,6 +545,12 @@ def normalize_solid_sphere_row(
             row.get(
                 COLUMN_PARTICLE_DIAMETER_NM,
             )
+        ),
+        COLUMN_PARTICLE_REFRACTIVE_INDEX: normalize_cell_value(
+            row.get(COLUMN_PARTICLE_REFRACTIVE_INDEX)
+        ),
+        COLUMN_MEDIUM_REFRACTIVE_INDEX: normalize_cell_value(
+            row.get(COLUMN_MEDIUM_REFRACTIVE_INDEX)
         ),
         COLUMN_MEASURED_PEAK_POSITION: normalize_cell_value(
             row.get(
@@ -654,6 +723,9 @@ def populate_core_shell_rows_from_runtime_defaults(
                     core_diameter_nm=core_diameter_nm,
                     shell_thickness_nm=shell_thickness_nm,
                 ),
+                COLUMN_MEDIUM_REFRACTIVE_INDEX: "",
+                COLUMN_CORE_REFRACTIVE_INDEX: "",
+                COLUMN_SHELL_REFRACTIVE_INDEX: "",
                 COLUMN_MEASURED_PEAK_POSITION: "",
                 COLUMN_EXPECTED_COUPLING: "",
                 COLUMN_EXPECTED_CROSS_SECTION_NM2: "",
@@ -695,6 +767,8 @@ def populate_solid_sphere_rows_from_runtime_defaults(
         rows.append(
             {
                 COLUMN_PARTICLE_DIAMETER_NM: particle_diameter_nm,
+                COLUMN_PARTICLE_REFRACTIVE_INDEX: "",
+                COLUMN_MEDIUM_REFRACTIVE_INDEX: "",
                 COLUMN_MEASURED_PEAK_POSITION: "",
                 COLUMN_EXPECTED_COUPLING: "",
                 COLUMN_EXPECTED_CROSS_SECTION_NM2: "",

@@ -51,8 +51,10 @@ class PeakProcessResult:
         these rows into page-specific DataTable columns when present. Scripts
         should use semantic keys such as ``measured_intensity``,
         ``calibrated_intensity``, ``measured_peak_position``,
-        ``particle_diameter_nm``, ``core_diameter_nm``, and
-        ``shell_thickness_nm`` instead of page-local column ids.
+        ``particle_diameter_nm``, ``particle_refractive_index``,
+        ``medium_refractive_index``, ``core_diameter_nm``, and
+        ``shell_thickness_nm``, ``core_refractive_index``, and
+        ``shell_refractive_index`` instead of page-local column ids.
     """
 
     peak_positions: list[Any]

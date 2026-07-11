@@ -39,6 +39,10 @@ class ScatteringCalibrationStandardTable:
         ):
             preset_table_state = scattering.ModelConfiguration.build_table_state_from_scatterer_preset(
                 preset_name=resolved_scatterer_preset,
+                wavelength_nm=runtime_config.get_float(
+                    "optics.wavelength_nm",
+                    default=488.0,
+                ),
             )
 
             if preset_table_state is not None:

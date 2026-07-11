@@ -62,30 +62,29 @@ def _load_scattering_target_model_preset_payloads() -> tuple[dict[str, Any], ...
     """
     Load scattering target model preset payloads from packaged assets.
     """
-    asset_path = (
+    asset_directory = (
         Path(__file__).resolve().parents[3]
         / "assets"
-        / "apply_calibration_scattering_target_model_presets.json"
+        / "apply_calibration_scattering_target_model_presets"
     )
 
-    with asset_path.open(
-        "r",
-        encoding="utf-8",
-    ) as handle:
-        payload = json.load(handle)
+    preset_payloads: list[dict[str, Any]] = []
 
-    presets = payload.get("presets")
+    for json_path in sorted(asset_directory.glob("*.json")):
+        with json_path.open(
+            "r",
+            encoding="utf-8",
+        ) as handle:
+            payload = json.load(handle)
 
-    if not isinstance(presets, list):
-        raise ValueError(
-            "apply_calibration_scattering_target_model_presets.json must contain a top-level 'presets' list."
-        )
+        if not isinstance(payload, dict):
+            raise ValueError(
+                f"Apply-calibration target model preset file must contain a JSON object: {json_path.name}."
+            )
 
-    return tuple(
-        preset
-        for preset in presets
-        if isinstance(preset, dict)
-    )
+        preset_payloads.append(payload)
+
+    return tuple(preset_payloads)
 
 
 def build_scattering_target_model_presets() -> dict[str, ScatteringTargetModelPreset]:

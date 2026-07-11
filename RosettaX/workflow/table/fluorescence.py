@@ -39,30 +39,29 @@ def _load_fluorescence_reference_preset_payloads() -> tuple[dict[str, Any], ...]
     """
     Load fluorescence reference preset payloads from packaged assets.
     """
-    asset_path = (
+    asset_directory = (
         Path(__file__).resolve().parents[2]
         / "assets"
-        / "fluorescence_reference_presets.json"
+        / "fluorescence_reference_presets"
     )
 
-    with asset_path.open(
-        "r",
-        encoding="utf-8",
-    ) as handle:
-        payload = json.load(handle)
+    preset_payloads: list[dict[str, Any]] = []
 
-    presets = payload.get("presets")
+    for json_path in sorted(asset_directory.glob("*.json")):
+        with json_path.open(
+            "r",
+            encoding="utf-8",
+        ) as handle:
+            payload = json.load(handle)
 
-    if not isinstance(presets, list):
-        raise ValueError(
-            "fluorescence_reference_presets.json must contain a top-level 'presets' list."
-        )
+        if not isinstance(payload, dict):
+            raise ValueError(
+                f"Fluorescence preset file must contain a JSON object: {json_path.name}."
+            )
 
-    return tuple(
-        preset
-        for preset in presets
-        if isinstance(preset, dict)
-    )
+        preset_payloads.append(payload)
+
+    return tuple(preset_payloads)
 
 
 def build_fluorescence_reference_presets() -> dict[str, FluorescenceReferencePreset]:

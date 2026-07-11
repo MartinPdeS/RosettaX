@@ -28,24 +28,24 @@ class RefractiveIndexDocumentationPage:
 
     @staticmethod
     def _load_sellmeier_material_catalog() -> list[dict[str, str]]:
-        sellmeier_bank_path = (
+        sellmeier_directory = (
             Path(__file__).resolve().parents[2]
             / "assets"
-            / "sellmeier_equations.json"
+            / "sellmeier"
         )
-
-        with sellmeier_bank_path.open("r", encoding="utf-8") as stream:
-            payload = json.load(stream)
-
-        materials = payload.get("materials", {})
-
-        if not isinstance(materials, dict):
-            return []
 
         rows: list[dict[str, str]] = []
 
-        for material_id, material_payload in sorted(materials.items()):
+        for json_path in sorted(sellmeier_directory.glob("*.json")):
+            with json_path.open("r", encoding="utf-8") as stream:
+                material_payload = json.load(stream)
+
             if not isinstance(material_payload, dict):
+                continue
+
+            material_id = str(material_payload.get("id") or json_path.stem).strip()
+
+            if not material_id:
                 continue
 
             coefficient_payload = material_payload.get("coefficients", {})
@@ -150,7 +150,7 @@ class RefractiveIndexDocumentationPage:
             subtitle="Material presets are converted to numeric refractive indices at the selected wavelength.",
             body=[
                 html.Div(
-                    "When you choose a material such as water, PBS, polystyrene, silica, PMMA, lipid, or phospholipid, RosettaX resolves the refractive index from the packaged Sellmeier bank in RosettaX/assets/sellmeier_equations.json.",
+                    "When you choose a material such as water, PBS, polystyrene, silica, PMMA, lipid, or phospholipid, RosettaX resolves the refractive index from the packaged Sellmeier files in RosettaX/assets/sellmeier/.",
                 ),
                 self._math_block(
                     "$$n^2 = a + \\sum_i \\frac{B_i \\lambda^2}{\\lambda^2 - C_i}$$\nwith $\\lambda$ converted from nm to $\\mu$m before evaluation.",
@@ -259,7 +259,7 @@ class RefractiveIndexDocumentationPage:
             subtitle="Packaged refractive index models in RosettaX. Formula used: n^2 = a + sum(B_i * lambda^2 / (lambda^2 - C_i)), with wavelength in um.",
             body=[
                 html.Div(
-                    "The table below is loaded directly from RosettaX/assets/sellmeier_equations.json so documentation stays aligned with runtime behavior.",
+                    "The table below is loaded directly from RosettaX/assets/sellmeier/ so documentation stays aligned with runtime behavior.",
                     style={"marginBottom": "10px"},
                 ),
                 table,

@@ -1,0 +1,9 @@
+{
+  "name": "Custom",
+  "mie_model": "Solid Sphere",
+  "medium_refractive_index": 1.333,
+  "particle_refractive_index": 1.59,
+  "core_refractive_index": 1.47,
+  "shell_refractive_index": 1.46,
+  "description": "Manual scatterer and calibration-standard table configuration."
+}

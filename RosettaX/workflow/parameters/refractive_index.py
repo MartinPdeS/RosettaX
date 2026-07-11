@@ -7,13 +7,41 @@ from pathlib import Path
 from typing import Any
 
 
-_SELLMEIER_BANK_PATH = Path(__file__).resolve().parents[2] / "assets" / "sellmeier_equations.json"
+_SELLMEIER_DIRECTORY_PATH = Path(__file__).resolve().parents[2] / "assets" / "sellmeier"
 
 
 @lru_cache(maxsize=1)
 def _load_sellmeier_bank() -> dict[str, Any]:
-    with _SELLMEIER_BANK_PATH.open("r", encoding="utf-8") as stream:
-        return json.load(stream)
+    materials: dict[str, Any] = {}
+
+    for json_path in sorted(_SELLMEIER_DIRECTORY_PATH.glob("*.json")):
+        with json_path.open("r", encoding="utf-8") as stream:
+            payload = json.load(stream)
+
+        if not isinstance(payload, dict):
+            raise ValueError(
+                f"Sellmeier material file must contain a JSON object: {json_path.name}."
+            )
+
+        material_id = str(payload.get("id") or json_path.stem).strip().lower()
+
+        if not material_id:
+            raise ValueError(
+                f"Sellmeier material file must define a material id: {json_path.name}."
+            )
+
+        materials[material_id] = {
+            key: value
+            for key, value in payload.items()
+            if key != "id"
+        }
+
+    return {
+        "schema_version": 1,
+        "wavelength_unit": "um",
+        "formula": "n^2 = a + sum(B_i * lambda^2 / (lambda^2 - C_i))",
+        "materials": materials,
+    }
 
 
 def calculate_sellmeier_refractive_index(
@@ -117,3 +145,19 @@ def resolve_refractive_index_source_value(
             pass
 
     return float(fallback_value)
+
+
+def format_refractive_index_display(
+    value: Any,
+    *,
+    source_value: Any = None,
+) -> str:
+    """Format a resolved index, including its Sellmeier material when known."""
+    formatted_value = f"{float(value):.6g}"
+    material_key = str(source_value or "").strip().lower()
+
+    if material_key and material_key in _load_sellmeier_bank().get("materials", {}):
+        material_label = material_key.replace("_", " ").replace("-", " ").title()
+        return f"{material_label}({formatted_value})"
+
+    return formatted_value

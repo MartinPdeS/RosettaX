@@ -1,0 +1,14 @@
+{
+  "id": "soybean_oil",
+  "label": "Soybean oil",
+  "coefficients": {
+    "a": 1.0,
+    "b": [
+      1.1276
+    ],
+    "c": [
+      0.00911
+    ]
+  },
+  "notes": "Visible-range one-term Sellmeier fit for soybean-oil-like cores."
+}

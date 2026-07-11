@@ -1,0 +1,17 @@
+{
+  "name": "Extracellular Vesicles",
+  "mie_model": "Core/Shell Sphere",
+  "medium_refractive_index_source": "water",
+  "medium_refractive_index": 1.333,
+  "particle_refractive_index": 1.38,
+  "particle_diameter_min_nm": 30.0,
+  "particle_diameter_max_nm": 1000.0,
+  "particle_diameter_count": 500,
+  "core_refractive_index": 1.38,
+  "shell_refractive_index": 1.48,
+  "shell_thickness_nm": 6.0,
+  "core_diameter_min_nm": 10.0,
+  "core_diameter_max_nm": 1000.0,
+  "core_diameter_count": 500,
+  "description": "Core shell approximation for extracellular vesicles. The diameter axis is core diameter and the shell thickness is constant."
+}

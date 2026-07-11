@@ -1,0 +1,19 @@
+{
+  "id": "bk7",
+  "label": "N-BK7 (Schott)",
+  "coefficients": {
+    "a": 1.0,
+    "b": [
+      1.03961212,
+      0.231792344,
+      1.01046945
+    ],
+    "c": [
+      0.00600069867,
+      0.0200179144,
+      103.560653
+    ]
+  },
+  "notes": "Three-term Sellmeier fit for Schott N-BK7 optical glass in the visible/near-IR range.",
+  "source": "https://refractiveindex.info"
+}

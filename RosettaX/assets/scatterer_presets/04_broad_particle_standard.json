@@ -1,0 +1,21 @@
+{
+  "name": "Broad particle standard",
+  "mie_model": "Solid Sphere",
+  "medium_refractive_index": 1.333,
+  "medium_refractive_index_source": "water",
+  "particle_refractive_index": 1.59,
+  "particle_refractive_index_source": "polystyrene",
+  "core_refractive_index": 1.59,
+  "core_refractive_index_source": "polystyrene",
+  "shell_refractive_index": 1.59,
+  "shell_refractive_index_source": "polystyrene",
+  "particle_diameters_nm": [
+    100.0,
+    200.0,
+    300.0,
+    400.0,
+    600.0,
+    800.0
+  ],
+  "description": "Broad dynamic-range bead standard."
+}

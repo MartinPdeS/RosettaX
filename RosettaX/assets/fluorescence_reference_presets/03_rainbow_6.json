@@ -1,0 +1,12 @@
+{
+  "name": "Rainbow 6",
+  "mesf_values": [
+    200.0,
+    2000.0,
+    20000.0,
+    200000.0,
+    2000000.0,
+    20000000.0
+  ],
+  "description": "Six-population rainbow-style MESF ladder."
+}

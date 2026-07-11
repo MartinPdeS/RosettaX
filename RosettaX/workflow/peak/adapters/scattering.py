@@ -6,6 +6,11 @@ from typing import Any, Optional
 import dash
 import numpy as np
 
+from RosettaX.workflow.parameters.refractive_index import (
+    format_refractive_index_display,
+    resolve_refractive_index_source_value,
+)
+
 from .base import BasePeakWorkflowAdapter
 
 logger = logging.getLogger(__name__)
@@ -157,10 +162,16 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
                 len(table_prefill_rows),
             )
 
-            return self.apply_table_prefill_rows(
+            prefilled_rows = self.apply_table_prefill_rows(
                 table_data=working_table_data,
                 table_prefill_rows=table_prefill_rows,
                 mie_model=mie_model,
+            )
+            return fill_missing_refractive_indices(
+                rows=prefilled_rows,
+                mie_model=mie_model,
+                runtime_config_data=context.get("runtime_config_data"),
+                process_name=context.get("process_name"),
             )
 
         x_values_to_append = self.extract_x_values_to_append(
@@ -185,11 +196,17 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
             context=context,
         )
 
-        return self.append_x_values_to_scattering_table(
+        appended_rows = self.append_x_values_to_scattering_table(
             table_data=working_table_data,
             x_values=x_values_to_append,
             mie_model=mie_model,
             descending=peak_table_sort_order == "descending",
+        )
+        return fill_missing_refractive_indices(
+            rows=appended_rows,
+            mie_model=mie_model,
+            runtime_config_data=context.get("runtime_config_data"),
+            process_name=context.get("process_name"),
         )
 
     def extract_x_values_to_append(
@@ -641,9 +658,18 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
 
         if isinstance(
             normalized_value,
-            (str, int, float, bool),
+            bool,
         ):
             return normalized_value
+
+        if isinstance(normalized_value, (int, float)):
+            return round(float(normalized_value), 1)
+
+        if isinstance(normalized_value, str):
+            try:
+                return round(float(normalized_value.strip()), 1)
+            except ValueError:
+                return normalized_value
 
         return str(
             normalized_value,
@@ -773,7 +799,7 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
             geometry_was_updated = False
 
             if "measured_peak_position" in semantic_row:
-                merged_row[self.scattering_peak_column_name] = self.normalize_datatable_value(
+                merged_row[self.scattering_peak_column_name] = self.normalize_single_x_value_for_table(
                     value=semantic_row.get("measured_peak_position"),
                 )
 
@@ -785,6 +811,25 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
                     value=semantic_row.get(column_name),
                 )
                 geometry_was_updated = True
+
+            if "particle_refractive_index" in semantic_row:
+                merged_row["particle_refractive_index"] = self.normalize_datatable_value(
+                    value=semantic_row.get("particle_refractive_index"),
+                )
+
+            if "medium_refractive_index" in semantic_row:
+                merged_row["medium_refractive_index"] = self.normalize_datatable_value(
+                    value=semantic_row.get("medium_refractive_index"),
+                )
+
+            for refractive_index_column in (
+                "core_refractive_index",
+                "shell_refractive_index",
+            ):
+                if refractive_index_column in semantic_row:
+                    merged_row[refractive_index_column] = self.normalize_datatable_value(
+                        value=semantic_row.get(refractive_index_column),
+                    )
 
             self.ensure_row_matches_mie_model(
                 row=merged_row,
@@ -810,6 +855,98 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
             mie_model=mie_model,
             minimum_row_count=3,
         )
+
+
+def fill_missing_refractive_indices(
+    *,
+    rows: list[dict[str, Any]],
+    mie_model: str,
+    runtime_config_data: Any,
+    process_name: Any = None,
+) -> list[dict[str, Any]]:
+    """Fill blank particle and medium refractive-index cells from runtime optics."""
+    if not isinstance(runtime_config_data, dict):
+        return rows
+
+    particle_model = runtime_config_data.get("particle_model", {})
+    optics = runtime_config_data.get("optics", {})
+
+    if not isinstance(particle_model, dict) or not isinstance(optics, dict):
+        return rows
+
+    resolved_rows = [dict(row) for row in rows]
+    wavelength_nm = optics.get("wavelength_nm", 488.0)
+    force_rosetta_materials = str(process_name or "").strip().startswith(
+        "Rosetta Script"
+    )
+    refractive_index_specs = [
+        (
+            "medium_refractive_index",
+            optics.get("medium_refractive_index_source"),
+            optics.get("medium_refractive_index"),
+        ),
+    ]
+
+    if force_rosetta_materials:
+        refractive_index_specs = [
+            ("medium_refractive_index", "water", 1.333),
+        ]
+
+    if mie_model == "Solid Sphere":
+        refractive_index_specs.append(
+            (
+                "particle_refractive_index",
+                (
+                    "polystyrene"
+                    if force_rosetta_materials
+                    else particle_model.get("particle_refractive_index_source")
+                ),
+                (
+                    1.59
+                    if force_rosetta_materials
+                    else particle_model.get("particle_refractive_index")
+                ),
+            )
+        )
+    elif mie_model == "Core/Shell Sphere":
+        refractive_index_specs.extend(
+            [
+                (
+                    "core_refractive_index",
+                    particle_model.get("core_refractive_index_source"),
+                    particle_model.get("core_refractive_index"),
+                ),
+                (
+                    "shell_refractive_index",
+                    particle_model.get("shell_refractive_index_source"),
+                    particle_model.get("shell_refractive_index"),
+                ),
+            ]
+        )
+
+    for column_name, source_value, fallback_value in refractive_index_specs:
+        if fallback_value in (None, ""):
+            continue
+
+        try:
+            refractive_index = resolve_refractive_index_source_value(
+                source_value,
+                wavelength_nm=wavelength_nm,
+                fallback_value=fallback_value,
+            )
+        except (TypeError, ValueError):
+            continue
+
+        formatted_value = format_refractive_index_display(
+            refractive_index,
+            source_value=source_value,
+        )
+
+        for row in resolved_rows:
+            if force_rosetta_materials or row.get(column_name) in (None, ""):
+                row[column_name] = formatted_value
+
+    return resolved_rows
 
 
 def resolve_mie_model(

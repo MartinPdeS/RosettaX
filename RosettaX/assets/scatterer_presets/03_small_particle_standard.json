@@ -1,0 +1,21 @@
+{
+  "name": "Small particle standard",
+  "mie_model": "Solid Sphere",
+  "medium_refractive_index": 1.333,
+  "medium_refractive_index_source": "water",
+  "particle_refractive_index": 1.45,
+  "particle_refractive_index_source": "silica",
+  "core_refractive_index": 1.45,
+  "core_refractive_index_source": "silica",
+  "shell_refractive_index": 1.45,
+  "shell_refractive_index_source": "waterlike",
+  "particle_diameters_nm": [
+    80.0,
+    100.0,
+    125.0,
+    150.0,
+    200.0,
+    240.0
+  ],
+  "description": "Compact small-particle calibration standard."
+}

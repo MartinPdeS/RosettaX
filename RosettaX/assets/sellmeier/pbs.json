@@ -1,0 +1,14 @@
+{
+  "id": "pbs",
+  "label": "PBS",
+  "coefficients": {
+    "a": 1.0,
+    "b": [
+      0.7619
+    ],
+    "c": [
+      0.00918
+    ]
+  },
+  "notes": "Visible-range one-term Sellmeier fit for PBS-like aqueous buffer."
+}

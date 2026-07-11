@@ -18,8 +18,8 @@ from RosettaX.utils.runtime_config import RuntimeConfig
 logger = logging.getLogger(__name__)
 
 
-LOGO_LIGHT = "/assets/logo_light.svg"
-LOGO_DARK = "/assets/logo_dark.svg"
+LOGO_LIGHT = "/assets/logo/logo_light.svg"
+LOGO_DARK = "/assets/logo/logo_dark.svg"
 
 
 def register_application_callbacks(app: Dash) -> None:
