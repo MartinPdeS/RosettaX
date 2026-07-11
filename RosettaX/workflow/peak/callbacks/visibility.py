@@ -122,6 +122,21 @@ def build_advanced_mode_control_style(
     )
 
 
+def build_data_filter_control_style(
+    *,
+    process_name: Any,
+    advanced_mode_value: Any,
+) -> dict[str, str]:
+    """Show the shared zero/saturation filter only in advanced mode."""
+    if not has_selected_process(process_name):
+        return {"display": "none"}
+
+    if not graph_toggle_is_enabled(advanced_mode_value):
+        return {"display": "none"}
+
+    return {"display": "inline-flex"}
+
+
 def build_process_settings_container_style(
     *,
     process_name: Any,
@@ -241,6 +256,12 @@ def build_graph_helper_panel(
     selected_process_name = registry.get_selected_process_name(
         process_name,
     )
+
+    if (
+        is_rosetta_process_name(selected_process_name)
+        and not graph_toggle_is_enabled(advanced_mode_value)
+    ):
+        return [], {**base_style, "display": "none"}
 
     title = "Workflow guide"
     process = None
@@ -410,7 +431,7 @@ def register_data_filter_control_visibility_callback(
     ids: Any,
 ) -> None:
     """
-    Hide the shared zero/saturation filter toggle until a process is selected.
+    Show the shared zero/saturation filter toggle only in advanced mode.
     """
 
     @dash.callback(
@@ -422,12 +443,20 @@ def register_data_filter_control_visibility_callback(
             ids.process_dropdown,
             "value",
         ),
+        dash.Input(
+            ids.advanced_mode_switch,
+            "value",
+        ),
         prevent_initial_call=False,
     )
     def toggle_data_filter_control(
         process_name: Any,
+        advanced_mode_value: Any,
     ) -> dict[str, str]:
-        return build_graph_toggle_control_style(process_name)
+        return build_data_filter_control_style(
+            process_name=process_name,
+            advanced_mode_value=advanced_mode_value,
+        )
 
 
 def register_process_visibility_callback(

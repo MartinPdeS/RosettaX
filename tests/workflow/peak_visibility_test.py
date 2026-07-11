@@ -22,6 +22,10 @@ class Test_PeakProcessSelectionVisibility:
         assert visibility.build_advanced_mode_control_style("") == {
             "display": "none",
         }
+        assert visibility.build_data_filter_control_style(
+            process_name="",
+            advanced_mode_value=["enabled"],
+        ) == {"display": "none"}
         assert visibility.build_graph_toggle_control_style("") == {
             "display": "none",
         }
@@ -45,6 +49,14 @@ class Test_PeakProcessSelectionVisibility:
         assert visibility.build_advanced_mode_control_style("Automatic 1D") == {
             "display": "inline-flex",
         }
+        assert visibility.build_data_filter_control_style(
+            process_name="Automatic 1D",
+            advanced_mode_value=[],
+        ) == {"display": "none"}
+        assert visibility.build_data_filter_control_style(
+            process_name="Automatic 1D",
+            advanced_mode_value=["enabled"],
+        ) == {"display": "inline-flex"}
         assert visibility.build_graph_toggle_control_style("Automatic 1D") == {
             "display": "inline-flex",
         }
@@ -78,6 +90,14 @@ class Test_PeakProcessSelectionVisibility:
         }
 
     def test_rosetta_advanced_only_helpers_hide_without_advanced_mode(self) -> None:
+        children, guide_style = visibility.build_graph_helper_panel(
+            process_name="Rosetta Script",
+            graph_toggle_value=["enabled"],
+            advanced_mode_value=[],
+        )
+        assert children == []
+        assert guide_style["display"] == "none"
+
         assert visibility.build_rosetta_advanced_only_style(
             process_name="Rosetta Script",
             graph_toggle_value=["enabled"],
