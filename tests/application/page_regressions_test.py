@@ -250,7 +250,7 @@ class Test_ApplyCalibrationPage:
         assert "Model parameters" in text_nodes
         assert "Target Mie relation preview" in text_nodes
 
-    def test_layout_starts_with_select_placeholder_and_hidden_target_model_boxes(
+    def test_layout_starts_with_custom_preset_and_hidden_target_model_boxes(
         self,
         monkeypatch,
     ) -> None:

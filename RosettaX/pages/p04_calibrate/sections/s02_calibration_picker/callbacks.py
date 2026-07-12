@@ -10,7 +10,6 @@ from RosettaX.workflow.apply_calibration.scattering import (
     CUSTOM_PRESET_NAME,
     build_scattering_target_model_preset_options,
     get_calibration_standard_parameters,
-    get_scattering_target_model_preset,
     parse_optical_geometry_from_calibration_standard_parameters,
     resolve_scattering_target_model_preset,
 )
@@ -69,7 +68,7 @@ class CalibrationPickerCallbacks:
         )
         def sync_target_model_preset_from_runtime_config(
             runtime_config_data: Any,
-        ) -> str:
+        ) -> Optional[str]:
             runtime_config = RuntimeConfig.from_dict(
                 runtime_config_data if isinstance(runtime_config_data, dict) else None
             )
@@ -82,8 +81,6 @@ class CalibrationPickerCallbacks:
             available_values = {
                 option.get("value")
                 for option in build_scattering_target_model_preset_options(
-                    include_empty_option=True,
-                    empty_label="Select",
                 )
                 if isinstance(option, dict)
             }
@@ -91,13 +88,11 @@ class CalibrationPickerCallbacks:
             if configured_value in available_values:
                 return configured_value
 
-            return get_scattering_target_model_preset(
-                configured_value,
-            ).name
+            return ""
 
     def _register_target_model_details_visibility_callback(self) -> None:
         """
-        Show target model detail boxes only after a preset is selected.
+        Show target model detail boxes only for the custom preset.
         """
 
         @dash.callback(
@@ -118,12 +113,10 @@ class CalibrationPickerCallbacks:
         def toggle_target_model_detail_boxes(
             target_model_preset: Any,
         ) -> tuple[dict[str, str], dict[str, str]]:
-            has_selected_preset = services.has_selected_target_model_preset(
-                target_model_preset,
-            )
+            is_custom_preset = str(target_model_preset or "").strip() == CUSTOM_PRESET_NAME
 
             visible_style = services.build_scattering_target_model_container_style(
-                is_visible=has_selected_preset,
+                is_visible=is_custom_preset,
             )
 
             return visible_style, dict(visible_style)
