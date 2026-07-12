@@ -62,6 +62,7 @@ class FilePickerCallbacks:
         services.validate_checks_contract()
 
         self._register_upload_callback()
+        self._register_preview_callbacks()
 
     def _register_upload_callback(self) -> None:
         """
@@ -167,3 +168,64 @@ class FilePickerCallbacks:
                     alert_color="danger",
                     alert_is_open=True,
                 ).to_tuple()
+
+    def _register_preview_callbacks(self) -> None:
+        """Register uploaded-file selection and histogram preview callbacks."""
+
+        @dash.callback(
+            dash.Output(self.page.ids.FilePicker.preview_file, "options"),
+            dash.Output(self.page.ids.FilePicker.preview_file, "value"),
+            dash.Input(self.page.ids.Stores.uploaded_fcs_path_store, "data"),
+            dash.State(self.page.ids.FilePicker.preview_file, "value"),
+            prevent_initial_call=False,
+        )
+        def sync_preview_file_options(
+            uploaded_fcs_paths: Any,
+            current_file: Any,
+        ) -> tuple[list[dict[str, str]], Optional[str]]:
+            return services.build_preview_file_selection(
+                uploaded_fcs_paths,
+                current_value=current_file,
+            )
+
+        @dash.callback(
+            dash.Output(self.page.ids.FilePicker.preview_channel, "options"),
+            dash.Output(self.page.ids.FilePicker.preview_channel, "value"),
+            dash.Input(self.page.ids.FilePicker.preview_file, "value"),
+            dash.Input(self.page.ids.Stores.uploaded_fcs_path_store, "data"),
+            dash.State(self.page.ids.FilePicker.preview_channel, "value"),
+            prevent_initial_call=False,
+        )
+        def sync_preview_channel_options(
+            selected_file: Any,
+            uploaded_fcs_paths: Any,
+            current_channel: Any,
+        ) -> tuple[list[dict[str, str]], Optional[str]]:
+            return services.build_preview_channel_selection(
+                selected_file=selected_file,
+                uploaded_fcs_paths=uploaded_fcs_paths,
+                current_value=current_channel,
+            )
+
+        @dash.callback(
+            dash.Output(self.page.ids.FilePicker.preview_graph, "figure"),
+            dash.Output(self.page.ids.FilePicker.preview_graph, "style"),
+            dash.Output(self.page.ids.FilePicker.preview_status, "children"),
+            dash.Input(self.page.ids.FilePicker.preview_file, "value"),
+            dash.Input(self.page.ids.FilePicker.preview_channel, "value"),
+            dash.Input(self.page.ids.Stores.uploaded_fcs_path_store, "data"),
+            dash.Input("runtime-config-store", "data"),
+            prevent_initial_call=False,
+        )
+        def update_preview_histogram(
+            selected_file: Any,
+            selected_channel: Any,
+            uploaded_fcs_paths: Any,
+            runtime_config_data: Any,
+        ) -> tuple[Any, dict[str, str], str]:
+            return services.build_preview_histogram_payload(
+                selected_file=selected_file,
+                selected_channel=selected_channel,
+                uploaded_fcs_paths=uploaded_fcs_paths,
+                runtime_config_data=runtime_config_data,
+            )

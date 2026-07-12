@@ -303,6 +303,11 @@ class Test_ApplyCalibrationPage:
         assert upload_component is not None
         assert getattr(upload_component, "max_size", None) is None
 
+        component_ids = _collect_component_ids(layout)
+        assert page.ids.FilePicker.preview_file in component_ids
+        assert page.ids.FilePicker.preview_channel in component_ids
+        assert page.ids.FilePicker.preview_graph in component_ids
+
     def test_build_apply_calibration_request_requires_target_model_selection_for_scattering(
         self,
     ) -> None:

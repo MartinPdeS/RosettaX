@@ -93,7 +93,8 @@ class FilePickerLayout:
                     self._build_alert(),
                     type="default",
                 ),
-                self._build_upload_store(),
+                dash.html.Div(style={"height": "16px"}),
+                self._build_preview_panel(),
             ],
             style=ui_forms.build_workflow_section_body_style(),
         )
@@ -147,11 +148,93 @@ class FilePickerLayout:
             },
         )
 
-    def _build_upload_store(self) -> dash.dcc.Store:
-        """
-        Build the uploaded file path store.
-        """
-        return dash.dcc.Store(
-            id=self.page.ids.Stores.uploaded_fcs_path_store,
-            storage_type="session",
+    def _build_preview_panel(self) -> dbc.Card:
+        """Build the uploaded FCS histogram preview panel."""
+        return dbc.Card(
+            dbc.CardBody(
+                [
+                    dash.html.Div(
+                        [
+                            dash.html.Div(
+                                [
+                                    dash.html.H5(
+                                        "Preview uploaded data",
+                                        style={"marginBottom": "4px"},
+                                    ),
+                                    dash.html.Div(
+                                        "Choose an uploaded file and signal channel to inspect before applying the calibration.",
+                                        style={"fontSize": "0.88rem", "opacity": 0.76},
+                                    ),
+                                ]
+                            ),
+                            dash.html.Div(
+                                [
+                                    dash.html.Div(
+                                        [
+                                            dash.html.Label("File", style={"fontWeight": "650"}),
+                                            ui_forms.persistent_dropdown(
+                                                id=self.page.ids.FilePicker.preview_file,
+                                                options=[],
+                                                value=None,
+                                                clearable=False,
+                                                placeholder="Upload an FCS file",
+                                            ),
+                                        ],
+                                        style={"minWidth": "260px", "flex": "1 1 320px"},
+                                    ),
+                                    dash.html.Div(
+                                        [
+                                            dash.html.Label("Channel", style={"fontWeight": "650"}),
+                                            ui_forms.persistent_dropdown(
+                                                id=self.page.ids.FilePicker.preview_channel,
+                                                options=[],
+                                                value=None,
+                                                clearable=False,
+                                                placeholder="Select a channel",
+                                            ),
+                                        ],
+                                        style={"minWidth": "240px", "flex": "1 1 280px"},
+                                    ),
+                                ],
+                                style={
+                                    "display": "flex",
+                                    "gap": "14px",
+                                    "flexWrap": "wrap",
+                                    "alignItems": "end",
+                                },
+                            ),
+                        ],
+                        style={
+                            "display": "flex",
+                            "flexDirection": "column",
+                            "gap": "14px",
+                        },
+                    ),
+                    dash.html.Div(
+                        id=self.page.ids.FilePicker.preview_status,
+                        children="Upload an FCS file to preview its histogram.",
+                        style={
+                            "minHeight": "22px",
+                            "marginTop": "12px",
+                            "fontSize": "0.88rem",
+                            "opacity": 0.78,
+                        },
+                    ),
+                    dash.dcc.Loading(
+                        dash.dcc.Graph(
+                            id=self.page.ids.FilePicker.preview_graph,
+                            figure=services.build_empty_preview_figure(
+                                "Upload an FCS file to preview its histogram."
+                            ),
+                            config=styling.PLOTLY_GRAPH_CONFIG,
+                            style={"height": "360px"},
+                        ),
+                        type="default",
+                    ),
+                ],
+                style=ui_forms.build_workflow_panel_body_style(),
+            ),
+            style=ui_forms.build_workflow_subpanel_card_style(
+                color_name=self.card_color,
+            ),
         )

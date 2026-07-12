@@ -127,6 +127,10 @@ class Ids:
         upload = f"{page_name}-upload"
         upload_status = f"{page_name}-upload-status"
         column_consistency_alert = f"{page_name}-column-consistency-alert"
+        preview_file = f"{page_name}-preview-file"
+        preview_channel = f"{page_name}-preview-channel"
+        preview_graph = f"{page_name}-preview-graph"
+        preview_status = f"{page_name}-preview-status"
 
     class Export:
         download = f"{page_name}-download"

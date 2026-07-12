@@ -2,15 +2,24 @@
 
 import base64
 import logging
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from RosettaX.utils import checks
+import plotly.graph_objects as go
+
+from RosettaX.utils import checks, plottings
+from RosettaX.utils.reader import FCSFile
+from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.utils.upload_limits import format_upload_size, get_max_upload_bytes
+from RosettaX.workflow.apply_calibration.io import resolve_uploaded_fcs_paths
 
 
 logger = logging.getLogger(__name__)
+
+
+_SAVED_UPLOAD_TIMESTAMP = re.compile(r"_\d{8}_\d{6}_\d{6}$")
 
 
 def build_upload_prompt_text() -> str:
@@ -59,6 +68,10 @@ def validate_page_contract(
         "ids.FilePicker",
         "ids.FilePicker.upload",
         "ids.FilePicker.column_consistency_alert",
+        "ids.FilePicker.preview_file",
+        "ids.FilePicker.preview_channel",
+        "ids.FilePicker.preview_graph",
+        "ids.FilePicker.preview_status",
         "ids.Stores",
         "ids.Stores.uploaded_fcs_path_store",
     ]
@@ -312,3 +325,174 @@ def build_success_alert_payload(
         return f"Uploaded 1 FCS file: {saved_paths[0].name}", "success", True
 
     return f"Uploaded {len(saved_paths)} FCS files.", "success", True
+
+
+def build_preview_file_selection(
+    uploaded_fcs_paths: Any,
+    *,
+    current_value: Any = None,
+) -> tuple[list[dict[str, str]], str | None]:
+    """Build stable file options for one or many uploaded FCS paths."""
+    paths = resolve_uploaded_fcs_paths(uploaded_fcs_paths)
+    options = [
+        {
+            "label": _SAVED_UPLOAD_TIMESTAMP.sub("", Path(path).stem) + Path(path).suffix,
+            "value": path,
+        }
+        for path in paths
+    ]
+    current_path = str(current_value or "").strip()
+    selected_path = current_path if current_path in paths else (paths[0] if paths else None)
+    return options, selected_path
+
+
+def resolve_selected_preview_path(
+    *,
+    selected_file: Any,
+    uploaded_fcs_paths: Any,
+) -> str | None:
+    """Resolve a selected preview path only when it belongs to the upload store."""
+    paths = resolve_uploaded_fcs_paths(uploaded_fcs_paths)
+    selected_path = str(selected_file or "").strip()
+    if selected_path and selected_path in paths:
+        return selected_path
+    return paths[0] if paths else None
+
+
+def build_preview_channel_selection(
+    *,
+    selected_file: Any,
+    uploaded_fcs_paths: Any,
+    current_value: Any = None,
+) -> tuple[list[dict[str, str]], str | None]:
+    """Read FCS channel names and build the preview channel selection."""
+    selected_path = resolve_selected_preview_path(
+        selected_file=selected_file,
+        uploaded_fcs_paths=uploaded_fcs_paths,
+    )
+    if selected_path is None:
+        return [], None
+
+    try:
+        with FCSFile(selected_path) as fcs_file:
+            channel_names = [
+                str(name) for name in fcs_file.get_column_names() if str(name).strip()
+            ]
+    except Exception:
+        logger.exception("Failed to read preview channels from selected_path=%r", selected_path)
+        return [], None
+
+    options = [{"label": name, "value": name} for name in channel_names]
+    current_channel = str(current_value or "").strip()
+    selected_channel = (
+        current_channel
+        if current_channel in channel_names
+        else (channel_names[0] if channel_names else None)
+    )
+    return options, selected_channel
+
+
+def build_empty_preview_figure(message: str) -> go.Figure:
+    """Build a compact placeholder for the input FCS histogram."""
+    figure = go.Figure()
+    figure.update_layout(
+        template="plotly_white",
+        margin={"l": 55, "r": 25, "t": 30, "b": 50},
+        xaxis={"visible": False},
+        yaxis={"visible": False},
+        annotations=[
+            {
+                "text": str(message),
+                "xref": "paper",
+                "yref": "paper",
+                "x": 0.5,
+                "y": 0.5,
+                "showarrow": False,
+            }
+        ],
+    )
+    return figure
+
+
+def _resolve_preview_graph_style(runtime_config: RuntimeConfig) -> dict[str, str]:
+    return {"height": runtime_config.get_graph_height(default="360px")}
+
+
+def build_preview_histogram_payload(
+    *,
+    selected_file: Any,
+    selected_channel: Any,
+    uploaded_fcs_paths: Any,
+    runtime_config_data: Any,
+) -> tuple[go.Figure, dict[str, str], str]:
+    """Build a profile-styled histogram for the selected uploaded FCS file."""
+    runtime_config = RuntimeConfig.from_dict(
+        runtime_config_data if isinstance(runtime_config_data, dict) else None
+    )
+    graph_style = _resolve_preview_graph_style(runtime_config)
+    selected_path = resolve_selected_preview_path(
+        selected_file=selected_file,
+        uploaded_fcs_paths=uploaded_fcs_paths,
+    )
+    channel = str(selected_channel or "").strip()
+
+    if selected_path is None:
+        message = "Upload an FCS file to preview its histogram."
+        return build_empty_preview_figure(message), graph_style, message
+    if not channel:
+        message = "Select a channel to preview its histogram."
+        return build_empty_preview_figure(message), graph_style, message
+
+    use_log_x = runtime_config.get_str(
+        "calibration.histogram_xscale", default="linear"
+    ).lower() == "log"
+    use_log_y = runtime_config.get_str(
+        "calibration.histogram_yscale",
+        default=runtime_config.get_str("calibration.histogram_scale", default="log"),
+    ).lower() == "log"
+
+    try:
+        histogram = plottings.build_histogram(
+            fcs_file_path=selected_path,
+            detector_column=channel,
+            n_bins_for_plots=runtime_config.get_int(
+                "calibration.n_bins_for_plots", default=180
+            ),
+            max_events_for_analysis=runtime_config.get_int(
+                "calibration.max_events_for_analysis", default=100_000
+            ),
+            use_log_x_bins=use_log_x,
+        )
+        figure = plottings.build_histogram_figure(
+            detector_column=channel,
+            histogram_result=histogram,
+            use_log_counts=use_log_y,
+        )
+        visual_settings = plottings.resolve_runtime_visualization_settings(runtime_config)
+        plottings.apply_default_visual_style(
+            figure,
+            marker_size=visual_settings["default_marker_size"],
+            line_width=visual_settings["default_line_width"],
+            font_size=visual_settings["default_font_size"],
+            tick_size=visual_settings["default_tick_size"],
+            show_grid=visual_settings["show_grid"],
+        )
+        figure.update_xaxes(type="log" if use_log_x else "linear")
+        figure.update_layout(
+            uirevision=repr((selected_path, channel, use_log_x, use_log_y)),
+            margin={"l": 60, "r": 25, "t": 30, "b": 60},
+        )
+    except Exception as exception:
+        logger.exception(
+            "Failed to build input FCS preview for path=%r channel=%r",
+            selected_path,
+            channel,
+        )
+        message = f"Could not render histogram: {type(exception).__name__}: {exception}"
+        return build_empty_preview_figure(message), graph_style, message
+
+    return (
+        figure,
+        graph_style,
+        f"Showing {len(histogram.values):,} events from {Path(selected_path).name} · {channel}",
+    )
