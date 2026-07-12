@@ -340,6 +340,7 @@ def build_target_mie_relation_figure(
     monotone_coupling_values: Any,
     axis_scale_toggle_values: Any,
     x_axis_title: str,
+    uirevision: str = "target_mie_relation_preview",
 ) -> Any:
     """
     Build the target Mie relation preview figure.
@@ -379,7 +380,7 @@ def build_target_mie_relation_figure(
         axis_scale_toggle_values=axis_scale_toggle_values,
         show_grid=True,
         hovermode="closest",
-        uirevision="target_mie_relation_preview",
+        uirevision=uirevision,
     )
 
     figure.update_layout(

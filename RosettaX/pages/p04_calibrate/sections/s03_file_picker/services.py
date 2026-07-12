@@ -7,13 +7,17 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import plotly.graph_objects as go
 
 from RosettaX.utils import checks, plottings
 from RosettaX.utils.reader import FCSFile
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.utils.upload_limits import format_upload_size, get_max_upload_bytes
+from RosettaX.workflow.apply_calibration.fluorescence import apply_legacy_calibration_to_series
 from RosettaX.workflow.apply_calibration.io import resolve_uploaded_fcs_paths
+from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
+from RosettaX.pages.p04_calibrate.sections.s02_calibration_picker import services as calibration_picker_services
 
 
 logger = logging.getLogger(__name__)
@@ -363,6 +367,7 @@ def build_preview_channel_selection(
     *,
     selected_file: Any,
     uploaded_fcs_paths: Any,
+    selected_calibration_summary: Any = None,
     current_value: Any = None,
 ) -> tuple[list[dict[str, str]], str | None]:
     """Read FCS channel names and build the preview channel selection."""
@@ -381,6 +386,15 @@ def build_preview_channel_selection(
     except Exception:
         logger.exception("Failed to read preview channels from selected_path=%r", selected_path)
         return [], None
+
+    affected_source_channels = _resolve_preview_source_channels(selected_calibration_summary)
+
+    if affected_source_channels:
+        channel_names = [
+            name
+            for name in channel_names
+            if name in affected_source_channels
+        ]
 
     options = [{"label": name, "value": name} for name in channel_names]
     current_channel = str(current_value or "").strip()
@@ -418,18 +432,165 @@ def _resolve_preview_graph_style(runtime_config: RuntimeConfig) -> dict[str, str
     return {"height": runtime_config.get_graph_height(default="360px")}
 
 
+def _resolve_preview_calibration_summaries(calibration_summary_data: Any) -> list[dict[str, Any]]:
+    return calibration_picker_services.normalize_calibration_summaries(calibration_summary_data)
+
+
+def _resolve_preview_source_channels(calibration_summary_data: Any) -> list[str]:
+    source_channels: list[str] = []
+
+    for calibration_summary in _resolve_preview_calibration_summaries(calibration_summary_data):
+        source_channel = str(calibration_summary.get("source_channel", "")).strip()
+
+        if source_channel and source_channel not in source_channels:
+            source_channels.append(source_channel)
+
+    return source_channels
+
+
+def _resolve_preview_calibration_summary(
+    calibration_summary_data: Any,
+    *,
+    selected_channel: str,
+) -> dict[str, Any] | None:
+    calibration_summaries = _resolve_preview_calibration_summaries(calibration_summary_data)
+
+    if not calibration_summaries:
+        return None
+
+    for calibration_summary in calibration_summaries:
+        source_channel = str(calibration_summary.get("source_channel", "")).strip()
+
+        if source_channel and source_channel == selected_channel:
+            return calibration_summary
+
+    return calibration_summaries[0]
+
+
+def _build_histogram_result_from_values(
+    values: Any,
+    *,
+    n_bins_for_plots: int,
+    use_log_x_bins: bool,
+) -> plottings.HistogramResult:
+    values_array = np.asarray(values, dtype=float)
+    values_array = values_array[np.isfinite(values_array)]
+
+    if values_array.size == 0:
+        raise ValueError("No finite signal values available to build histogram.")
+
+    if use_log_x_bins:
+        values_array = values_array[values_array > 0.0]
+
+        if values_array.size == 0:
+            raise ValueError("No positive signal values available for logarithmic histogram bins.")
+
+        lower_edge = float(np.min(values_array))
+        upper_edge = float(np.max(values_array))
+
+        if not np.isfinite(lower_edge) or not np.isfinite(upper_edge):
+            raise ValueError("No finite signal values available to build histogram.")
+
+        if lower_edge == upper_edge:
+            upper_edge = lower_edge * 1.01
+
+        edges = np.geomspace(
+            lower_edge,
+            upper_edge,
+            num=int(n_bins_for_plots) + 1,
+        )
+        counts, edges = np.histogram(values_array, bins=edges)
+        centers = np.sqrt(edges[:-1] * edges[1:])
+
+    else:
+        counts, edges = np.histogram(values_array, bins=int(n_bins_for_plots))
+        centers = 0.5 * (edges[:-1] + edges[1:])
+
+    return plottings.HistogramResult(
+        values=np.asarray(values_array, dtype=float),
+        counts=np.asarray(counts, dtype=float),
+        edges=np.asarray(edges, dtype=float),
+        centers=np.asarray(centers, dtype=float),
+    )
+
+
+def resolve_preview_control_defaults(runtime_config_data: Any = None) -> dict[str, Any]:
+    """Resolve the file preview control defaults from the active profile."""
+    runtime_config = RuntimeConfig.from_dict(
+        runtime_config_data if isinstance(runtime_config_data, dict) else None
+    )
+
+    calibration_config = (
+        runtime_config_data.get("calibration", {})
+        if isinstance(runtime_config_data, dict)
+        else {}
+    )
+    if not isinstance(calibration_config, dict):
+        calibration_config = {}
+
+    histogram_xscale = str(
+        calibration_config.get("histogram_xscale", "log")
+    ).strip().lower()
+    histogram_yscale = str(
+        calibration_config.get(
+            "histogram_yscale",
+            calibration_config.get("histogram_scale", "log"),
+        )
+    ).strip().lower()
+
+    return {
+        "graph_height": runtime_config.get_graph_height(default="360px"),
+        "x_log_values": ["enabled"] if histogram_xscale == "log" else [],
+        "y_log_values": ["enabled"] if histogram_yscale == "log" else [],
+        "n_bins_for_plots": _resolve_histogram_bin_count(
+            calibration_config.get("n_bins_for_plots", 200),
+            default=200,
+        ),
+    }
+
+
+def _resolve_histogram_bin_count(value: Any, *, default: int) -> int:
+    try:
+        resolved_value = int(float(value))
+    except Exception:
+        return int(default)
+
+    return max(1, resolved_value)
+
+
 def build_preview_histogram_payload(
     *,
     selected_file: Any,
     selected_channel: Any,
     uploaded_fcs_paths: Any,
+    selected_calibration_summary: Any = None,
     runtime_config_data: Any,
-) -> tuple[go.Figure, dict[str, str], str]:
+    axis_scale_toggle_values: Any = None,
+    preview_graph_visibility_toggle_values: Any = None,
+    n_bins_for_plots: Any = None,
+    target_mie_model: Any = None,
+    target_medium_refractive_index: Any = None,
+    target_particle_refractive_index: Any = None,
+    target_solid_sphere_diameter_min_nm: Any = None,
+    target_solid_sphere_diameter_max_nm: Any = None,
+    target_solid_sphere_diameter_count: Any = None,
+    target_core_refractive_index: Any = None,
+    target_shell_refractive_index: Any = None,
+    target_shell_thickness_nm: Any = None,
+    target_core_shell_core_diameter_min_nm: Any = None,
+    target_core_shell_core_diameter_max_nm: Any = None,
+    target_core_shell_core_diameter_count: Any = None,
+    target_model_preset: Any = None,
+    advanced_monotonic_mode_enabled: Any = None,
+    use_monotonic_smoothing_kernel: Any = None,
+    monotonic_smoothing_sigma_points: Any = None,
+) -> tuple[str, go.Figure, dict[str, str], str]:
     """Build a profile-styled histogram for the selected uploaded FCS file."""
     runtime_config = RuntimeConfig.from_dict(
         runtime_config_data if isinstance(runtime_config_data, dict) else None
     )
     graph_style = _resolve_preview_graph_style(runtime_config)
+    control_defaults = resolve_preview_control_defaults(runtime_config_data)
     selected_path = resolve_selected_preview_path(
         selected_file=selected_file,
         uploaded_fcs_paths=uploaded_fcs_paths,
@@ -438,35 +599,98 @@ def build_preview_histogram_payload(
 
     if selected_path is None:
         message = "Upload an FCS file to preview its histogram."
-        return build_empty_preview_figure(message), graph_style, message
+        return "0", build_empty_preview_figure(message), graph_style, message
     if not channel:
-        message = "Select a channel to preview its histogram."
-        return build_empty_preview_figure(message), graph_style, message
+        message = "Select a calibration-affected channel to preview its histogram."
+        return "0", build_empty_preview_figure(message), graph_style, message
 
-    use_log_x = runtime_config.get_str(
-        "calibration.histogram_xscale", default="linear"
-    ).lower() == "log"
-    use_log_y = runtime_config.get_str(
-        "calibration.histogram_yscale",
-        default=runtime_config.get_str("calibration.histogram_scale", default="log"),
-    ).lower() == "log"
+    use_log_x, use_log_y = Scatter2DGraph.axis_scale_from_toggle_values(
+        axis_scale_toggle_values,
+    )
+    histogram_bin_count = _resolve_histogram_bin_count(
+        n_bins_for_plots,
+        default=control_defaults["n_bins_for_plots"],
+    )
+    show_preview_graph = isinstance(preview_graph_visibility_toggle_values, list) and (
+        "enabled" in preview_graph_visibility_toggle_values
+    )
 
     try:
-        histogram = plottings.build_histogram(
-            fcs_file_path=selected_path,
-            detector_column=channel,
-            n_bins_for_plots=runtime_config.get_int(
-                "calibration.n_bins_for_plots", default=180
-            ),
-            max_events_for_analysis=runtime_config.get_int(
-                "calibration.max_events_for_analysis", default=100_000
-            ),
-            use_log_x_bins=use_log_x,
+        calibration_summary = _resolve_preview_calibration_summary(
+            selected_calibration_summary,
+            selected_channel=channel,
+        )
+
+        if calibration_summary is None:
+            message = "Select a calibration file to preview the calibrated channel."
+            return "0", build_empty_preview_figure(message), graph_style, message
+
+        calibration_payload = calibration_summary.get("calibration_payload", {})
+        if not isinstance(calibration_payload, dict) or not calibration_payload:
+            raise ValueError("Selected calibration payload is missing.")
+
+        with FCSFile(selected_path) as fcs_file:
+            selected_channel_dataframe = fcs_file.dataframe_copy(columns=[channel])
+
+        calibrated_channel_label = str(
+            calibration_summary.get("applied_output_channel_name", "")
+        ).strip() or channel
+
+        if bool(calibration_summary.get("requires_target_model")):
+            from RosettaX.pages.p04_calibrate.sections.s04_apply import services as apply_services
+            from RosettaX.workflow.apply_calibration.scattering import apply_scattering_calibration_to_dataframe
+
+            target_model_parameters = apply_services.build_scattering_target_model_parameters_if_required(
+                selected_calibration_summary=selected_calibration_summary,
+                target_mie_model=target_mie_model,
+                target_medium_refractive_index=target_medium_refractive_index,
+                target_particle_refractive_index=target_particle_refractive_index,
+                target_solid_sphere_diameter_min_nm=target_solid_sphere_diameter_min_nm,
+                target_solid_sphere_diameter_max_nm=target_solid_sphere_diameter_max_nm,
+                target_solid_sphere_diameter_count=target_solid_sphere_diameter_count,
+                target_core_refractive_index=target_core_refractive_index,
+                target_shell_refractive_index=target_shell_refractive_index,
+                target_shell_thickness_nm=target_shell_thickness_nm,
+                target_core_shell_core_diameter_min_nm=target_core_shell_core_diameter_min_nm,
+                target_core_shell_core_diameter_max_nm=target_core_shell_core_diameter_max_nm,
+                target_core_shell_core_diameter_count=target_core_shell_core_diameter_count,
+                advanced_monotonic_mode_enabled=advanced_monotonic_mode_enabled,
+                use_monotonic_smoothing_kernel=use_monotonic_smoothing_kernel,
+                monotonic_smoothing_sigma_points=monotonic_smoothing_sigma_points,
+            )
+
+            if target_model_parameters is None:
+                raise ValueError("Target model parameters are required for scattering calibration preview.")
+
+            scattering_result = apply_scattering_calibration_to_dataframe(
+                dataframe=selected_channel_dataframe,
+                source_channel=channel,
+                calibration_payload=calibration_payload,
+                target_model_parameters=target_model_parameters,
+            )
+
+            calibrated_values = scattering_result.dataframe[
+                scattering_result.output_columns[-1]
+            ].to_numpy(copy=True)
+
+            calibrated_channel_label = scattering_result.output_columns[-1]
+
+        else:
+            calibrated_values = apply_legacy_calibration_to_series(
+                values=selected_channel_dataframe[channel].to_numpy(copy=True),
+                calibration_payload=calibration_payload,
+                source_channel=channel,
+            )
+
+        histogram = _build_histogram_result_from_values(
+            calibrated_values,
+            n_bins_for_plots=histogram_bin_count,
+            use_log_x_bins=use_log_x == "log",
         )
         figure = plottings.build_histogram_figure(
-            detector_column=channel,
+            detector_column=calibrated_channel_label,
             histogram_result=histogram,
-            use_log_counts=use_log_y,
+            use_log_counts=use_log_y == "log",
         )
         visual_settings = plottings.resolve_runtime_visualization_settings(runtime_config)
         plottings.apply_default_visual_style(
@@ -477,22 +701,34 @@ def build_preview_histogram_payload(
             tick_size=visual_settings["default_tick_size"],
             show_grid=visual_settings["show_grid"],
         )
-        figure.update_xaxes(type="log" if use_log_x else "linear")
+        figure.update_xaxes(type=use_log_x)
         figure.update_layout(
-            uirevision=repr((selected_path, channel, use_log_x, use_log_y)),
+            uirevision=repr((
+                selected_path,
+                channel,
+                calibrated_channel_label,
+                use_log_x,
+                use_log_y,
+                histogram_bin_count,
+                str(calibration_summary.get("file_name", "")),
+            )),
             margin={"l": 60, "r": 25, "t": 30, "b": 60},
         )
+
+        if not show_preview_graph:
+            graph_style = {**graph_style, "display": "none"}
     except Exception as exception:
         logger.exception(
-            "Failed to build input FCS preview for path=%r channel=%r",
+            "Failed to build calibrated input FCS preview for path=%r channel=%r",
             selected_path,
             channel,
         )
-        message = f"Could not render histogram: {type(exception).__name__}: {exception}"
-        return build_empty_preview_figure(message), graph_style, message
+        message = f"Could not render calibrated preview: {type(exception).__name__}: {exception}"
+        return "0", build_empty_preview_figure(message), graph_style, message
 
     return (
+        str(int(histogram.values.size)),
         figure,
         graph_style,
-        f"Showing {len(histogram.values):,} events from {Path(selected_path).name} · {channel}",
+        f"Showing calibrated preview for {Path(selected_path).name} · {channel} -> {calibrated_channel_label}",
     )

@@ -9,6 +9,8 @@ import dash_bootstrap_components as dbc
 from RosettaX.utils import styling
 from RosettaX.utils import ui_forms
 from RosettaX.utils.upload_limits import get_max_upload_bytes
+from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
+from RosettaX.workflow.plotting.scatter2d import Scatter2DGraphIds
 
 from . import services
 
@@ -150,6 +152,8 @@ class FilePickerLayout:
 
     def _build_preview_panel(self) -> dbc.Card:
         """Build the uploaded FCS histogram preview panel."""
+        defaults = services.resolve_preview_control_defaults()
+
         return dbc.Card(
             dbc.CardBody(
                 [
@@ -162,7 +166,7 @@ class FilePickerLayout:
                                         style={"marginBottom": "4px"},
                                     ),
                                     dash.html.Div(
-                                        "Choose an uploaded file and signal channel to inspect before applying the calibration.",
+                                        "Choose an uploaded file and one of the calibration-affected source channels to preview the calibrated values.",
                                         style={"fontSize": "0.88rem", "opacity": 0.76},
                                     ),
                                 ]
@@ -190,7 +194,7 @@ class FilePickerLayout:
                                                 options=[],
                                                 value=None,
                                                 clearable=False,
-                                                placeholder="Select a channel",
+                                                placeholder="Select an affected channel",
                                             ),
                                         ],
                                         style={"minWidth": "240px", "flex": "1 1 280px"},
@@ -221,13 +225,33 @@ class FilePickerLayout:
                         },
                     ),
                     dash.dcc.Loading(
-                        dash.dcc.Graph(
-                            id=self.page.ids.FilePicker.preview_graph,
+                        Scatter2DGraph.build_component(
+                            component_ids=Scatter2DGraphIds(
+                                graph=self.page.ids.FilePicker.preview_graph,
+                                axis_scale_toggle=self.page.ids.FilePicker.preview_axis_scale_toggle,
+                            ),
                             figure=services.build_empty_preview_figure(
                                 "Upload an FCS file to preview its histogram."
                             ),
-                            config=styling.PLOTLY_GRAPH_CONFIG,
-                            style={"height": "360px"},
+                            x_log_enabled=bool(defaults["x_log_values"]),
+                            y_log_enabled=bool(defaults["y_log_values"]),
+                            graph_style={
+                                "height": defaults["graph_height"],
+                                "width": "100%",
+                            },
+                            bottom_controls=[
+                                self._build_preview_visibility_control(
+                                    input_id=self.page.ids.FilePicker.preview_graph_visibility_toggle,
+                                ),
+                                self._build_number_of_bins_control(
+                                    input_id=self.page.ids.FilePicker.preview_nbins_input,
+                                    value=defaults["n_bins_for_plots"],
+                                ),
+                                self._build_event_count_control(
+                                    input_id=self.page.ids.FilePicker.preview_event_count_input,
+                                    value="0",
+                                ),
+                            ],
                         ),
                         type="default",
                     ),
@@ -237,4 +261,94 @@ class FilePickerLayout:
             style=ui_forms.build_workflow_subpanel_card_style(
                 color_name=self.card_color,
             ),
+        )
+
+    def _build_number_of_bins_control(self, *, input_id: str, value: int) -> dash.html.Div:
+        """Build the histogram bin count control."""
+        return dash.html.Div(
+            [
+                dbc.Label(
+                    "Bins",
+                    html_for=input_id,
+                    style={
+                        "marginBottom": "0px",
+                        "fontSize": "0.85rem",
+                    },
+                ),
+                dbc.Input(
+                    id=input_id,
+                    type="text",
+                    inputMode="numeric",
+                    value=str(value),
+                    debounce=True,
+                    size="sm",
+                    style={
+                        "width": "110px",
+                    },
+                    persistence=True,
+                    persistence_type="session",
+                ),
+            ],
+            style={
+                "display": "flex",
+                "alignItems": "center",
+                "gap": "8px",
+            },
+        )
+
+    def _build_preview_visibility_control(self, *, input_id: str) -> dash.html.Div:
+        """Build the show/hide preview toggle."""
+        return dash.html.Div(
+            dbc.Checklist(
+                id=input_id,
+                options=[
+                    {
+                        "label": "Show plot",
+                        "value": "enabled",
+                    }
+                ],
+                value=["enabled"],
+                inline=True,
+                switch=True,
+                persistence=True,
+                persistence_type="session",
+                style={
+                    "display": "block",
+                    "width": "fit-content",
+                },
+            ),
+            style={
+                "display": "flex",
+                "alignItems": "center",
+            },
+        )
+
+    def _build_event_count_control(self, *, input_id: str, value: str) -> dash.html.Div:
+        """Build the read-only total event count control."""
+        return dash.html.Div(
+            [
+                dbc.Label(
+                    "Events used",
+                    html_for=input_id,
+                    style={
+                        "marginBottom": "0px",
+                        "fontSize": "0.85rem",
+                    },
+                ),
+                dbc.Input(
+                    id=input_id,
+                    type="text",
+                    value=str(value),
+                    readonly=True,
+                    size="sm",
+                    style={
+                        "width": "130px",
+                    },
+                ),
+            ],
+            style={
+                "display": "flex",
+                "alignItems": "center",
+                "gap": "8px",
+            },
         )

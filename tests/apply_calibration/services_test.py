@@ -5,6 +5,7 @@ import types
 from types import SimpleNamespace
 
 import pandas as pd
+import numpy as np
 
 
 class _PyMieSimStub(types.ModuleType):
@@ -25,6 +26,7 @@ sys.modules.setdefault(
 )
 
 from RosettaX.workflow.apply_calibration import services
+from RosettaX.pages.p04_calibrate.sections.s02_calibration_picker import services as calibration_picker_services
 
 
 class Test_ApplyCalibrationServices:
@@ -182,3 +184,29 @@ class Test_ApplyCalibrationServices:
 
         assert result.equals(dataframe)
         assert captured_arguments["output_channel_names"] == ["Diameter (nm)"]
+
+    def test_build_target_mie_relation_figure_uses_custom_uirevision(self, monkeypatch) -> None:
+        class FakeFigure:
+            def __init__(self, uirevision: str) -> None:
+                self.layout = SimpleNamespace(uirevision=uirevision)
+
+            def update_layout(self, **kwargs):
+                return None
+
+        monkeypatch.setattr(
+            calibration_picker_services.plotting.scatter2d.Scatter2DGraph,
+            "build_figure",
+            lambda **kwargs: FakeFigure(kwargs["uirevision"]),
+        )
+
+        figure = calibration_picker_services.build_target_mie_relation_figure(
+            full_diameter_values_nm=np.asarray([100.0, 200.0]),
+            full_coupling_values=np.asarray([1.0, 2.0]),
+            monotone_diameter_values_nm=np.asarray([100.0, 200.0]),
+            monotone_coupling_values=np.asarray([1.0, 2.0]),
+            axis_scale_toggle_values=[],
+            x_axis_title="Target particle diameter [nm]",
+            uirevision="custom-revision-token",
+        )
+
+        assert figure.layout.uirevision == "custom-revision-token"

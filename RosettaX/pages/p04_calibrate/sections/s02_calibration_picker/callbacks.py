@@ -900,6 +900,30 @@ class CalibrationPickerCallbacks:
                     monotonic_smoothing_sigma_points=monotonic_smoothing_sigma_points,
                 )
 
+                calibration_file_name = str(
+                    scattering_calibration_summary.get("file_name", "") if isinstance(scattering_calibration_summary, dict) else ""
+                ).strip()
+
+                preview_uirevision = repr(
+                    (
+                        calibration_file_name,
+                        resolved_target_mie_model,
+                        target_medium_refractive_index,
+                        target_particle_refractive_index,
+                        target_core_refractive_index,
+                        target_shell_refractive_index,
+                        target_shell_thickness_nm,
+                        resolved_target_diameter_min_nm,
+                        resolved_target_diameter_max_nm,
+                        resolved_target_diameter_count,
+                        target_model_preset,
+                        bool(advanced_monotonic_mode_enabled),
+                        bool(use_monotonic_smoothing_kernel),
+                        monotonic_smoothing_sigma_points,
+                        axis_scale_toggle_values,
+                    )
+                )
+
                 full_target_mie_relation = build_target_mie_relation(
                     calibration_payload=calibration_payload,
                     target_model_parameters=target_model_parameters,
@@ -961,6 +985,7 @@ class CalibrationPickerCallbacks:
                         monotone_coupling_values=approximation_coupling_values,
                         axis_scale_toggle_values=axis_scale_toggle_values,
                         x_axis_title=x_axis_title,
+                        uirevision=preview_uirevision,
                     )
 
                     selected_interval_message = selected_interval.to_message_fragment()
@@ -996,6 +1021,7 @@ class CalibrationPickerCallbacks:
                     monotone_coupling_values=monotone_coupling_values,
                     axis_scale_toggle_values=axis_scale_toggle_values,
                     x_axis_title=x_axis_title,
+                    uirevision=preview_uirevision,
                 )
 
                 return (

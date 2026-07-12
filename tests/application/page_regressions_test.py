@@ -306,6 +306,10 @@ class Test_ApplyCalibrationPage:
         component_ids = _collect_component_ids(layout)
         assert page.ids.FilePicker.preview_file in component_ids
         assert page.ids.FilePicker.preview_channel in component_ids
+        assert page.ids.FilePicker.preview_axis_scale_toggle in component_ids
+        assert page.ids.FilePicker.preview_graph_visibility_toggle in component_ids
+        assert page.ids.FilePicker.preview_nbins_input in component_ids
+        assert page.ids.FilePicker.preview_event_count_input in component_ids
         assert page.ids.FilePicker.preview_graph in component_ids
 
     def test_build_apply_calibration_request_requires_target_model_selection_for_scattering(

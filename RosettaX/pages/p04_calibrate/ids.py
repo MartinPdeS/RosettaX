@@ -129,6 +129,10 @@ class Ids:
         column_consistency_alert = f"{page_name}-column-consistency-alert"
         preview_file = f"{page_name}-preview-file"
         preview_channel = f"{page_name}-preview-channel"
+        preview_axis_scale_toggle = f"{page_name}-preview-axis-scale-toggle"
+        preview_nbins_input = f"{page_name}-preview-nbins-input"
+        preview_event_count_input = f"{page_name}-preview-event-count-input"
+        preview_graph_visibility_toggle = f"{page_name}-preview-graph-visibility-toggle"
         preview_graph = f"{page_name}-preview-graph"
         preview_status = f"{page_name}-preview-status"
 
