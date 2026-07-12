@@ -116,6 +116,7 @@ class Ids:
         graph_height = f"{PAGE_NAME}-graph-height"
         default_marker_opacity = f"{PAGE_NAME}-default-marker-opacity"
         show_preset_configuration = f"{PAGE_NAME}-show-preset-configuration"
+        collapse_calibration_cards = f"{PAGE_NAME}-collapse-calibration-cards"
 
         @staticmethod
         def section_toggle_target(section_key: str) -> dict[str, str]:

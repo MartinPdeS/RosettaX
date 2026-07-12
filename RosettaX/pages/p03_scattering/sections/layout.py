@@ -2,6 +2,8 @@
 
 import dash
 
+from RosettaX.workflow.calibration_cards import build_collapsible_section_layout
+
 from ..state import ScatteringPageState
 
 
@@ -18,7 +20,10 @@ def build_page_layout(page, sections) -> dash.html.Div:
             ),
             dash.html.Div(
                 [
-                    section.get_layout()
+                    build_collapsible_section_layout(
+                        section,
+                        page_name=page.ids.page_name,
+                    )
                     for section in sections
                 ],
                 style={

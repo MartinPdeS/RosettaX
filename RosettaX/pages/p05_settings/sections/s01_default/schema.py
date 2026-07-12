@@ -763,6 +763,18 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         default=False,
         options=YES_NO_OPTIONS,
     ),
+    FieldDefinition(
+        name="collapse_calibration_cards",
+        section="misc",
+        group="Interface",
+        label="Collapse workflow cards:",
+        component_kind="dropdown",
+        value_kind="yes_no_bool",
+        runtime_path="ui.collapse_calibration_cards",
+        profile_path="misc.ui.collapse_calibration_cards",
+        default=False,
+        options=YES_NO_OPTIONS,
+    ),
 ]
 
 

@@ -3,6 +3,8 @@
 import dash_bootstrap_components as dbc
 from dash import dcc
 
+from RosettaX.workflow.calibration_cards import build_collapsible_section_layout
+
 from ..state import ApplyCalibrationPageState
 
 
@@ -19,7 +21,10 @@ def build_page_layout(page, sections) -> dbc.Container:
             *_build_stores(page),
             dbc.Container(
                 [
-                    section.get_layout()
+                    build_collapsible_section_layout(
+                        section,
+                        page_name="apply_calibration",
+                    )
                     for section in sections
                 ],
                 fluid=True,

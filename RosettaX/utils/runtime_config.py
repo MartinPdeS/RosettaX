@@ -141,6 +141,7 @@ class RuntimeConfig:
         "misc.ui.theme_mode": "ui.theme_mode",
         "misc.ui.show_graphs": "ui.show_graphs",
         "misc.ui.show_preset_configuration": "ui.show_preset_configuration",
+        "misc.ui.collapse_calibration_cards": "ui.collapse_calibration_cards",
         "scattering_calibration.target_mie_relation_xscale": "calibration.target_mie_relation_xscale",
         "scattering_calibration.target_mie_relation_yscale": "calibration.target_mie_relation_yscale",
         # Older profiles stored the scattering peak process under calibration.
@@ -168,6 +169,11 @@ class RuntimeConfig:
             expected_type=bool,
             default=False,
             description="Whether preset-owned configuration values remain visible in the UI.",
+        ),
+        "ui.collapse_calibration_cards": RuntimeConfigField(
+            expected_type=bool,
+            default=False,
+            description="Whether calibration workflow cards start collapsed.",
         ),
         # ---------------------------------------------------------------------
         # Files

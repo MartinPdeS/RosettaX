@@ -8,6 +8,7 @@ import dash_bootstrap_components as dbc
 from dash import dcc, html
 
 from RosettaX.utils import styling, ui_forms
+from RosettaX.workflow.calibration_cards import make_profile_aware_collapsible_card
 from RosettaX.workflow.upload import services as upload_services
 
 from .ids import Ids
@@ -401,7 +402,7 @@ class VisualizationPage:
         color_name = styling.get_workflow_section_color(section_number)
         section_key = title.lower().replace(" ", "-")
 
-        return dbc.Card(
+        card = dbc.Card(
             [
                 ui_forms.build_card_header_with_info(
                     title=f"{section_number}. {title}",
@@ -419,6 +420,11 @@ class VisualizationPage:
             style=ui_forms.build_workflow_section_card_style(
                 color_name=color_name,
             ),
+        )
+        return make_profile_aware_collapsible_card(
+            card,
+            page_name=self.ids.page_prefix,
+            section_key=str(section_number),
         )
 
     def _build_steps(self) -> list[dict[str, str]]:

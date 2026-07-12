@@ -8,6 +8,7 @@ import dash_bootstrap_components as dbc
 from dash import dash_table, dcc, html
 
 from RosettaX.utils import styling, ui_forms
+from RosettaX.workflow.calibration_cards import make_profile_aware_collapsible_card
 from RosettaX.workflow.cross_calibration import services
 
 from .ids import Ids
@@ -46,9 +47,21 @@ class CrossCalibrationPage:
                 html.Div(
                     [
                         self._build_header_card(),
-                        self._build_upload_card(),
-                        self._build_result_card(),
-                        self._build_export_card(),
+                        make_profile_aware_collapsible_card(
+                            self._build_upload_card(),
+                            page_name=self.ids.page_prefix,
+                            section_key="1",
+                        ),
+                        make_profile_aware_collapsible_card(
+                            self._build_result_card(),
+                            page_name=self.ids.page_prefix,
+                            section_key="2",
+                        ),
+                        make_profile_aware_collapsible_card(
+                            self._build_export_card(),
+                            page_name=self.ids.page_prefix,
+                            section_key="3",
+                        ),
                     ],
                     style={
                         "display": "flex",

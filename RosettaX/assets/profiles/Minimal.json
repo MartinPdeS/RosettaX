@@ -3,7 +3,8 @@
   "ui": {
     "theme_mode": "light",
     "show_graphs": false,
-    "show_preset_configuration": false
+    "show_preset_configuration": false,
+    "collapse_calibration_cards": false
   },
   "files": {
     "fluorescence_fcs_file_path": "",

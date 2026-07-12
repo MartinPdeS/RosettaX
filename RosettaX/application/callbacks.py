@@ -4,7 +4,7 @@ import logging
 from typing import Any, Optional
 
 import dash
-from dash import Dash, Input, Output, State
+from dash import MATCH, Dash, Input, Output, State
 
 from RosettaX.application.layout import THEME_DARK, THEME_LIGHT
 from RosettaX.pages.p00_sidebar.main import SidebarIds, sidebar_html
@@ -13,6 +13,7 @@ from RosettaX.utils.browser_profiles import (
     BrowserProfileLibrary,
 )
 from RosettaX.utils.runtime_config import RuntimeConfig
+from RosettaX.workflow import calibration_cards
 
 
 logger = logging.getLogger(__name__)
@@ -27,6 +28,37 @@ def register_application_callbacks(app: Dash) -> None:
     Register application-level Dash callbacks.
     """
     logger.debug("Registering app-level callbacks")
+
+    @app.callback(
+        Output(
+            {"type": calibration_cards.COLLAPSE_ID_TYPE, "page": MATCH, "section": MATCH},
+            "is_open",
+        ),
+        Output(
+            {"type": calibration_cards.TOGGLE_LABEL_ID_TYPE, "page": MATCH, "section": MATCH},
+            "children",
+        ),
+        Input(
+            {"type": calibration_cards.TOGGLE_ID_TYPE, "page": MATCH, "section": MATCH},
+            "n_clicks",
+        ),
+        Input("runtime-config-store", "data"),
+        State(
+            {"type": calibration_cards.COLLAPSE_ID_TYPE, "page": MATCH, "section": MATCH},
+            "is_open",
+        ),
+        prevent_initial_call=False,
+    )
+    def toggle_calibration_card(
+        _n_clicks: Any,
+        runtime_config_data: Any,
+        is_open: Any,
+    ) -> tuple[bool, str]:
+        return calibration_cards.resolve_card_toggle(
+            triggered_id=dash.ctx.triggered_id,
+            is_open=is_open,
+            runtime_config_data=runtime_config_data,
+        )
 
     @app.callback(
         Output("theme-link", "href"),
