@@ -121,7 +121,7 @@ class HomePage:
         self.support_url = "https://github.com/sponsors/MartinPdeS"
         self.lab_url = "https://www.vesiclecenter.com/"
         self.contact_email = "martin.poinsinet.de.sivry@gmail.com"
-        self.zenodo_doi_url = "https://doi.org/10.5281/zenodo.20709591"
+        self.citation_url = "/citation"
         self.zenodo_badge_url = "https://zenodo.org/badge/1087203577.svg"
 
     def _id(
@@ -295,11 +295,9 @@ class HomePage:
                                 ),
                                 dbc.Button(
                                     "Citing this work",
-                                    href=self.zenodo_doi_url,
+                                    href=self.citation_url,
                                     color="primary",
                                     outline=True,
-                                    target="_blank",
-                                    rel="noopener noreferrer",
                                 ),
                                 dbc.Button(
                                     "Amsterdam Vesicle Center",

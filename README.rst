@@ -302,14 +302,22 @@ direction can be discussed before implementation.
 Citation
 ********
 
-If you use RosettaX in scientific work, please cite the repository and the
-archived Zenodo release:
+If you use RosettaX in scientific work, please cite the versioned Zenodo
+release used for your work. For RosettaX v0.5.0, use:
 
-.. code-block:: text
+.. code-block:: bibtex
 
-   Martin Poinsinet de Sivry-Houle. (2026). MartinPdeS/RosettaX: Pre-release (v0.0.10). Zenodo. https://doi.org/10.5281/zenodo.20709591
+   @software{poinsinet_de_sivry_houle_2026_21309433,
+     author = {Poinsinet de Sivry-Houle, Martin},
+     title = {MartinPdeS/RosettaX: v0.5.0},
+     year = {2026},
+     publisher = {Zenodo},
+     version = {v0.5.0},
+     doi = {10.5281/zenodo.21309433},
+     url = {https://doi.org/10.5281/zenodo.21309433}
+   }
 
-A formal citation file may be added in a future release.
+The archived record is available at https://zenodo.org/records/21309433.
 
 
 Contact
@@ -334,8 +342,8 @@ Commercial licensing, support, validation, or custom deployment agreements may
 be discussed with the author.
 
 
-.. |zenodo| image:: https://zenodo.org/badge/1087203577.svg
-  :target: https://doi.org/10.5281/zenodo.20709591
+.. |zenodo| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.21309433.svg
+   :target: https://zenodo.org/records/21309433
 
 
 .. |python| image:: https://img.shields.io/pypi/pyversions/rosettax.svg

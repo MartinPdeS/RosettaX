@@ -28,6 +28,22 @@ def _collect_text(component) -> list[str]:
     return _collect_text(children)
 
 
+def _collect_components(component) -> list[object]:
+    if component is None or isinstance(component, str):
+        return []
+
+    collected = [component]
+    children = getattr(component, "children", None)
+
+    if isinstance(children, (list, tuple)):
+        for child in children:
+            collected.extend(_collect_components(child))
+    else:
+        collected.extend(_collect_components(children))
+
+    return collected
+
+
 class Test_HomePage:
     def test_layout_includes_usage_metrics_card(
         self,
@@ -67,6 +83,14 @@ class Test_HomePage:
         assert "56" in text_nodes
         assert "12" in text_nodes
         assert "34" in text_nodes
+
+        citation_buttons = [
+            component
+            for component in _collect_components(layout)
+            if getattr(component, "children", None) == "Citing this work"
+        ]
+        assert len(citation_buttons) == 1
+        assert citation_buttons[0].href == "/citation"
 
 
 class Test_GitHubTagResolution:
