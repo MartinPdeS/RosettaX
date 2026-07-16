@@ -46,7 +46,7 @@ class Test_table_columns:
     def test_sphere_table_columns_structure(self):
         """Test sphere_table_columns has correct structure."""
         assert isinstance(sphere_table_columns, list)
-        assert len(sphere_table_columns) == 4
+        assert len(sphere_table_columns) == 6
 
         # Check each column has required fields
         for column in sphere_table_columns:
@@ -85,7 +85,7 @@ class Test_table_columns:
     def test_core_shell_table_columns_structure(self):
         """Test core_shell_table_columns has correct structure."""
         assert isinstance(core_shell_table_columns, list)
-        assert len(core_shell_table_columns) == 6
+        assert len(core_shell_table_columns) == 9
 
         # Check each column has required fields
         for column in core_shell_table_columns:
@@ -124,7 +124,7 @@ class Test_table_columns:
         columns_copy = list(sphere_table_columns)
         columns_copy.append({"name": "Extra", "id": "extra", "editable": True})
 
-        assert len(sphere_table_columns) == 4  # Original unchanged
+        assert len(sphere_table_columns) == 6  # Original unchanged
 
 
 class Test_resolve_mie_model:
@@ -310,14 +310,14 @@ class Test_table_integration:
         columns = get_table_columns_for_model(resolved_model)
 
         assert resolved_model == MIE_MODEL_SOLID_SPHERE
-        assert len(columns) == 4
+        assert len(columns) == 6
 
         # Test core-shell consistency
         resolved_model = resolve_mie_model(MIE_MODEL_CORE_SHELL_SPHERE)
         columns = get_table_columns_for_model(resolved_model)
 
         assert resolved_model == MIE_MODEL_CORE_SHELL_SPHERE
-        assert len(columns) == 6
+        assert len(columns) == 9
 
     def test_all_columns_have_required_structure(self):
         """Test that all columns from both models have required structure."""

@@ -152,19 +152,11 @@ class CalibrationPickerLayout:
         return dash.html.Div(
             [
                 dash.html.Div(
-                    dash.dcc.Upload(
-                        id=self.page.ids.CalibrationPicker.upload,
-                        children=dash.html.Div(
-                            dash.html.A(
-                                "select calibration.json file(s)",
-                                style={
-                                    "fontWeight": "650",
-                                    "textDecoration": "none",
-                                },
-                            )
-                        ),
+                    ui_forms.build_upload_widget(
+                        upload_id=self.page.ids.CalibrationPicker.upload,
+                        prompt_text="Select calibration JSON files",
+                        accepted_file_extensions=".json",
                         multiple=True,
-                        style=styling.UPLOAD,
                     ),
                     style={
                         "flex": "1 1 420px",
@@ -186,15 +178,10 @@ class CalibrationPickerLayout:
         """
         Build the calibration upload status alert.
         """
-        return dbc.Alert(
-            services.build_upload_prompt_text(),
-            id=self.page.ids.CalibrationPicker.upload_status,
-            color="secondary",
-            is_open=True,
-            style={
-                "marginBottom": "0px",
-                "borderRadius": "10px",
-            },
+        return ui_forms.build_upload_status(
+            status_id=self.page.ids.CalibrationPicker.upload_status,
+            initial_text=services.build_upload_prompt_text(),
+            class_name="mb-0",
         )
 
     def _build_calibration_preview_card(self) -> dash.html.Div:

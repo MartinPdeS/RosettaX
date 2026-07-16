@@ -6,10 +6,8 @@ from typing import Any, Optional
 
 import dash_bootstrap_components as dbc
 from dash import dcc
-from dash import html
 
-from RosettaX.utils import styling
-from RosettaX.utils.upload_limits import get_max_upload_bytes
+from RosettaX.utils import styling, ui_forms
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.upload import services
 from RosettaX.workflow.upload.models import UploadConfig
@@ -68,31 +66,18 @@ class UploadLayout:
                 ),
                 dbc.CardBody(
                     [
-                        dcc.Upload(
-                            id=self.ids.upload,
-                            children=html.Div(
-                                html.A(
-                                    self.config.upload_link_text,
-                                    style={
-                                        "fontWeight": "650",
-                                        "textDecoration": "none",
-                                    },
-                                )
-                            ),
-                            style=styling.UPLOAD,
-                            max_size=get_max_upload_bytes(),
+                        ui_forms.build_upload_widget(
+                            upload_id=self.ids.upload,
+                            prompt_text=self.config.upload_link_text,
+                            accepted_file_extensions=self.config.accepted_file_extensions,
                             multiple=False,
-                            accept=self.config.accepted_file_extensions,
                         ),
                         dcc.Loading(
-                            html.Div(
-                                id=self.ids.upload_filename,
-                                children=services.build_loaded_filename_text(
+                            ui_forms.build_upload_status(
+                                status_id=self.ids.upload_filename,
+                                initial_text=services.build_loaded_filename_text(
                                     initial_filename,
                                 ),
-                                style={
-                                    "marginTop": "10px",
-                                },
                             ),
                             type="default",
                         ),

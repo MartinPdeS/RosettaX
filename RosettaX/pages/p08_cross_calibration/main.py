@@ -300,19 +300,15 @@ class CrossCalibrationPage:
                         title,
                         style={"marginBottom": "10px"},
                     ),
-                    dcc.Upload(
-                        id=upload_id,
-                        children=html.Div(button_text),
-                        style=styling.UPLOAD,
+                    ui_forms.build_upload_widget(
+                        upload_id=upload_id,
+                        prompt_text=button_text,
+                        accepted_file_extensions=".json",
                         multiple=False,
                     ),
-                    html.Div(
-                        "No file loaded.",
-                        id=feedback_id,
-                        style={
-                            "marginTop": styling.get_spacing_token("sm"),
-                            "opacity": 0.76,
-                        },
+                    ui_forms.build_upload_status(
+                        status_id=feedback_id,
+                        initial_text="No file loaded.",
                     ),
                     html.Hr(),
                     html.Div(

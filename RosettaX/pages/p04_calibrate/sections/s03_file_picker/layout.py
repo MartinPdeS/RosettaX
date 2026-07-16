@@ -8,7 +8,6 @@ import dash_bootstrap_components as dbc
 
 from RosettaX.utils import styling
 from RosettaX.utils import ui_forms
-from RosettaX.utils.upload_limits import get_max_upload_bytes
 from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
 from RosettaX.workflow.plotting.scatter2d import Scatter2DGraphIds
 
@@ -119,35 +118,21 @@ class FilePickerLayout:
         """
         Build the Dash upload widget.
         """
-        return dash.dcc.Upload(
-            id=self.page.ids.FilePicker.upload,
-            children=dash.html.Div(
-                dash.html.A(
-                    "select one or more .fcs files",
-                    style={
-                        "fontWeight": "650",
-                        "textDecoration": "none",
-                    },
-                )
-            ),
+        return ui_forms.build_upload_widget(
+            upload_id=self.page.ids.FilePicker.upload,
+            prompt_text="Select one or more FCS files",
+            accepted_file_extensions=".fcs",
             multiple=True,
-            style=styling.UPLOAD,
-            max_size=get_max_upload_bytes(),
         )
 
     def _build_alert(self) -> dbc.Alert:
         """
         Build the upload status alert.
         """
-        return dbc.Alert(
-            services.build_upload_prompt_text(),
-            id=self.page.ids.FilePicker.column_consistency_alert,
-            color="secondary",
-            is_open=True,
-            style={
-                "marginBottom": "0px",
-                "borderRadius": "10px",
-            },
+        return ui_forms.build_upload_status(
+            status_id=self.page.ids.FilePicker.column_consistency_alert,
+            initial_text=services.build_upload_prompt_text(),
+            class_name="mb-0",
         )
 
     def _build_preview_panel(self) -> dbc.Card:

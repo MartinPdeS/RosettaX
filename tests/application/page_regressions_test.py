@@ -18,6 +18,7 @@ from RosettaX.pages.p03_scattering.sections.s03_model.main import Model as Scatt
 from RosettaX.pages.p03_scattering.sections.s05_calibration.main import Calibration as ScatteringCalibration
 from RosettaX.pages.p03_scattering.sections.s05_calibration import services as scattering_services
 from RosettaX.pages.p04_calibrate.sections.s04_apply import services as apply_services
+from RosettaX.utils.upload_limits import get_max_upload_bytes
 from RosettaX.workflow.parameters.refractive_index import (
     calculate_sellmeier_refractive_index,
 )
@@ -285,7 +286,7 @@ class Test_ApplyCalibrationPage:
         assert preview_container is not None
         assert preview_container.style["display"] == "none"
 
-    def test_calibration_json_upload_has_no_component_size_cap(
+    def test_calibration_json_upload_uses_configured_size_cap(
         self,
         monkeypatch,
     ) -> None:
@@ -301,7 +302,7 @@ class Test_ApplyCalibrationPage:
         )
 
         assert upload_component is not None
-        assert getattr(upload_component, "max_size", None) is None
+        assert upload_component.max_size == get_max_upload_bytes()
 
         component_ids = _collect_component_ids(layout)
         assert page.ids.FilePicker.preview_file in component_ids

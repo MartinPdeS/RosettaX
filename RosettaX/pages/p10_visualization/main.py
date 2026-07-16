@@ -44,19 +44,15 @@ class VisualizationPage:
                         "its channels for histogram or 2D scatter plotting."
                     ),
                     body_children=[
-                        dcc.Upload(
-                            id=self.ids.upload,
-                            children=html.Div("Select FCS file"),
-                            style=styling.UPLOAD,
+                        ui_forms.build_upload_widget(
+                            upload_id=self.ids.upload,
+                            prompt_text="Select FCS file",
+                            accepted_file_extensions=".fcs",
                             multiple=False,
                         ),
-                        html.Div(
-                            "No file loaded.",
-                            id=self.ids.upload_feedback,
-                            style={
-                                "marginTop": styling.get_spacing_token("sm"),
-                                "opacity": 0.76,
-                            },
+                        ui_forms.build_upload_status(
+                            status_id=self.ids.upload_feedback,
+                            initial_text="No file loaded.",
                         ),
                     ],
                 ),

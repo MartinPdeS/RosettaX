@@ -2,21 +2,44 @@
 
 import base64
 import json
-from pathlib import Path
 
 import pytest
 
 from RosettaX.workflow.cross_calibration import services
 
 
-def _load_asset_payload(file_name: str) -> dict:
-    asset_path = (
-        Path(__file__).resolve().parents[2]
-        / "RosettaX"
-        / "assets"
-        / file_name
-    )
-    return json.loads(asset_path.read_text(encoding="utf-8"))
+def _build_fluorescence_record() -> dict:
+    return {
+        "schema": "rosettax_calibration_v1",
+        "payload": {
+            "calibration_type": "fluorescence",
+            "source_channel": "FITC-A",
+            "reference_points": [
+                {"measured_value": 100.0, "reference_value": 500.0},
+                {"measured_value": 200.0, "reference_value": 5_000.0},
+                {"measured_value": 300.0, "reference_value": 50_000.0},
+                {"measured_value": 400.0, "reference_value": 500_000.0},
+                {"measured_value": 500.0, "reference_value": 5_000_000.0},
+            ],
+            "payload": {
+                "y_definition": "Intensity [calibrated units]",
+            },
+        },
+    }
+
+
+def _build_scattering_record() -> dict:
+    return {
+        "schema": "rosettax_calibration_v1",
+        "payload": {
+            "calibration_type": "scattering",
+            "source_channel": "SSC-A",
+            "reference_table": [
+                {"measured_peak_position": 100.0, "expected_coupling": 1.0},
+                {"measured_peak_position": 200.0, "expected_coupling": 2.0},
+            ],
+        },
+    }
 
 
 def _build_dash_upload_contents(payload: dict) -> str:
@@ -71,8 +94,8 @@ class Test_CrossCalibrationServices:
     def test_build_cross_calibration_result_builds_primary_to_secondary_transfer_relation(
         self,
     ) -> None:
-        primary_record = _load_asset_payload("sample_fluorescence_calibration.json")
-        secondary_record = _load_asset_payload("sample_fluorescence_calibration.json")
+        primary_record = _build_fluorescence_record()
+        secondary_record = _build_fluorescence_record()
         secondary_record["payload"]["reference_points"] = [
             {
                 "measured_value": point["measured_value"] * 0.5,
@@ -108,8 +131,8 @@ class Test_CrossCalibrationServices:
         assert result.points[0].secondary_measured_value is not None
 
     def test_build_cross_calibration_result_rejects_mismatched_types(self) -> None:
-        fluorescence_record = _load_asset_payload("sample_fluorescence_calibration.json")
-        scattering_record = _load_asset_payload("sample_scatter_calibration.json.json")
+        fluorescence_record = _build_fluorescence_record()
+        scattering_record = _build_scattering_record()
 
         primary_summary = services.build_calibration_summary(
             filename="primary.json",

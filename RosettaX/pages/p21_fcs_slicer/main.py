@@ -7,6 +7,7 @@ import dash_bootstrap_components as dbc
 from dash import dcc, html
 
 from RosettaX.utils import styling, ui_forms
+from RosettaX.workflow.calibration_cards import make_collapsible_section_card
 
 from .ids import Ids
 from . import services
@@ -166,19 +167,15 @@ class FCSSlicerPage:
                 "Files must have the same channels, FCS version, and detector voltages."
             ),
             children=[
-                dcc.Upload(
-                    id=self.ids.upload,
-                    children=html.Div("Select one or more FCS files"),
-                    style=styling.UPLOAD,
+                ui_forms.build_upload_widget(
+                    upload_id=self.ids.upload,
+                    prompt_text="Select one or more FCS files",
+                    accepted_file_extensions=".fcs",
                     multiple=True,
-                    accept=".fcs",
                 ),
-                dbc.Alert(
-                    "No files loaded.",
-                    id=self.ids.upload_feedback,
-                    color="secondary",
-                    is_open=True,
-                    className="mb-0 mt-3",
+                ui_forms.build_upload_status(
+                    status_id=self.ids.upload_feedback,
+                    initial_text="No files loaded.",
                 ),
             ],
         )
@@ -231,7 +228,7 @@ class FCSSlicerPage:
         subtitle: str,
         children: list[Any],
     ) -> dbc.Card:
-        return dbc.Card(
+        card = dbc.Card(
             [
                 dbc.CardHeader(
                     [
@@ -256,6 +253,12 @@ class FCSSlicerPage:
                 ),
                 "marginBottom": "16px",
             },
+        )
+        return make_collapsible_section_card(
+            card,
+            page_name=self.ids.page_prefix,
+            section_key=str(number),
+            initially_collapsed=True,
         )
 
     def register_callbacks(self) -> "FCSSlicerPage":

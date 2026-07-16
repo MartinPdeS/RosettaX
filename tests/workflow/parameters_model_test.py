@@ -684,21 +684,29 @@ class Test_compute_model_for_rows:
             detector_sampling=1000,
         )
 
-        coordinate_array = build_pymiesim_photodiode_mesh_coordinates(
+        side_coordinate_array = build_pymiesim_photodiode_mesh_coordinates(
             detector_numerical_aperture=float(apogee_side_preset['detector_numerical_aperture']),
             medium_refractive_index=1.333,
             detector_phi_angle_degree=float(apogee_side_preset['detector_phi_angle_degree']),
             detector_gamma_angle_degree=float(apogee_side_preset['detector_gamma_angle_degree']),
             detector_sampling=1000,
         )
-        split_metric = _build_local_top_bottom_split_metric(coordinate_array)
+        forward_coordinate_array = build_pymiesim_photodiode_mesh_coordinates(
+            detector_numerical_aperture=float(apogee_forward_preset['detector_numerical_aperture']),
+            medium_refractive_index=1.333,
+            detector_phi_angle_degree=float(apogee_forward_preset['detector_phi_angle_degree']),
+            detector_gamma_angle_degree=float(apogee_forward_preset['detector_gamma_angle_degree']),
+            detector_sampling=1000,
+        )
+        side_split_metric = _build_local_top_bottom_split_metric(side_coordinate_array)
+        forward_split_metric = _build_local_top_bottom_split_metric(forward_coordinate_array)
         side_blocker_bar_numerical_aperture = _build_blocker_bar_numerical_aperture(
             preset=apogee_side_preset,
-            coordinate_array=coordinate_array,
+            coordinate_array=side_coordinate_array,
         )
         forward_blocker_bar_numerical_aperture = _build_blocker_bar_numerical_aperture(
             preset=apogee_forward_preset,
-            coordinate_array=coordinate_array,
+            coordinate_array=forward_coordinate_array,
         )
 
         side_eligible_indices = np.flatnonzero(
@@ -730,19 +738,19 @@ class Test_compute_model_for_rows:
 
         side_ordered_indices = side_eligible_indices[
             np.argsort(
-                split_metric[side_eligible_indices],
+                side_split_metric[side_eligible_indices],
                 kind="stable",
             )
         ]
         forward_ordered_indices = forward_eligible_indices[
             np.argsort(
-                split_metric[forward_eligible_indices],
+                forward_split_metric[forward_eligible_indices],
                 kind="stable",
             )
         ]
 
-        side_visible_mask = np.zeros_like(split_metric, dtype=bool)
-        forward_visible_mask = np.zeros_like(split_metric, dtype=bool)
+        side_visible_mask = np.zeros_like(side_split_metric, dtype=bool)
+        forward_visible_mask = np.zeros_like(forward_split_metric, dtype=bool)
         side_visible_mask[side_ordered_indices[-side_keep_count:]] = True
         forward_visible_mask[forward_ordered_indices[:forward_keep_count]] = True
 

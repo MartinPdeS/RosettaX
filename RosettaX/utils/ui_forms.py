@@ -6,6 +6,7 @@ import dash_bootstrap_components as dbc
 from dash import dcc, html
 
 from RosettaX.utils import styling
+from RosettaX.utils.upload_limits import format_upload_size, get_max_upload_bytes
 
 
 def _token_px_to_int(token_value: str, fallback: int) -> int:
@@ -122,6 +123,78 @@ def persistent_checklist(
         persistence=persistence,
         persistence_type=persistence_type,
         **kwargs,
+    )
+
+
+def build_upload_widget(
+    *,
+    upload_id: Any,
+    prompt_text: str,
+    accepted_file_extensions: str,
+    multiple: bool,
+    max_size_bytes: Optional[int] = None,
+) -> dcc.Upload:
+    """Build the standard RosettaX file upload control and information text."""
+    resolved_max_size = (
+        get_max_upload_bytes() if max_size_bytes is None else int(max_size_bytes)
+    )
+    selection_text = "Multiple files allowed" if multiple else "One file"
+
+    return dcc.Upload(
+        id=upload_id,
+        children=html.Div(
+            [
+                html.Div(
+                    prompt_text,
+                    style={
+                        "fontWeight": "650",
+                        "textDecoration": "none",
+                    },
+                ),
+                html.Div(
+                    (
+                        f"{selection_text} · Accepted: {accepted_file_extensions} · "
+                        f"Maximum file size: {format_upload_size(resolved_max_size)}"
+                    ),
+                    style={
+                        "fontSize": "0.82rem",
+                        "marginTop": "4px",
+                        "opacity": 0.72,
+                    },
+                ),
+            ]
+        ),
+        style=styling.merge_style(
+            styling.UPLOAD,
+            {
+                "lineHeight": "1.35",
+                "padding": "14px 16px",
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center",
+            },
+        ),
+        max_size=resolved_max_size,
+        multiple=multiple,
+        accept=accepted_file_extensions,
+    )
+
+
+def build_upload_status(
+    *,
+    status_id: Any,
+    initial_text: Any,
+    color: str = "secondary",
+    class_name: str = "mb-0 mt-3",
+) -> dbc.Alert:
+    """Build the standard status message shown below an upload control."""
+    return dbc.Alert(
+        initial_text,
+        id=status_id,
+        color=color,
+        is_open=True,
+        className=class_name,
+        style={"borderRadius": styling.get_radius_token("sm", "8px")},
     )
 
 
