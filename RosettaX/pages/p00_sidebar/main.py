@@ -59,7 +59,7 @@ class Sidebar:
     }
     tools_paths = {
         "/visualization",
-        "/sample-files",
+        "/fcs-slicer",
     }
 
     def _get_default_profile_name(
@@ -485,8 +485,8 @@ class Sidebar:
                                                     tier="child",
                                                 ),
                                                 self._nav_link(
-                                                    "Sample files",
-                                                    "/sample-files",
+                                                    "Slicing",
+                                                    "/fcs-slicer",
                                                     tier="child",
                                                 ),
                                             ],
@@ -506,6 +506,7 @@ class Sidebar:
                         ),
                         self._nav_link("Settings", "/settings", tier="top"),
                         self._nav_link("Documentation", "/documentation", tier="top"),
+                        self._nav_link("Sample files", "/sample-files", tier="top"),
                         self._nav_link("Help", "/help", tier="top"),
                     ],
                     vertical=True,

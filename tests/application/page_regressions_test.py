@@ -660,6 +660,18 @@ class Test_SidebarNavigation:
         assert "/cross-calibration" in _collect_component_hrefs(navigation)
         assert "/visualization" in _collect_component_hrefs(navigation)
         assert "/sample-files" in _collect_component_hrefs(navigation)
+        assert "/fcs-slicer" in _collect_component_hrefs(navigation)
+        assert "Slicing" in text_nodes
+
+        tools_collapse = _find_component_by_id(
+            navigation,
+            SidebarIds.tools_collapse,
+        )
+        assert tools_collapse is not None
+        assert "/fcs-slicer" in _collect_component_hrefs(tools_collapse)
+        assert "/sample-files" not in _collect_component_hrefs(tools_collapse)
+        assert text_nodes.index("Documentation") < text_nodes.index("Sample files")
+        assert text_nodes.index("Sample files") < text_nodes.index("Help")
 
     def test_logo_links_to_home_page(self) -> None:
         sidebar = Sidebar()
