@@ -13,6 +13,11 @@ import plotly.graph_objects as go
 from RosettaX.utils import checks, plottings
 from RosettaX.utils.reader import FCSFile
 from RosettaX.utils.runtime_config import RuntimeConfig
+from RosettaX.utils.streamed_uploads import (
+    is_streamed_upload_token,
+    raise_for_streamed_upload_error,
+    resolve_streamed_upload,
+)
 from RosettaX.utils.upload_limits import format_upload_size, get_max_upload_bytes
 from RosettaX.workflow.apply_calibration.fluorescence import apply_legacy_calibration_to_series
 from RosettaX.workflow.apply_calibration.io import resolve_uploaded_fcs_paths
@@ -198,6 +203,14 @@ def save_single_uploaded_file(
         filename,
         str(upload_directory),
     )
+
+    raise_for_streamed_upload_error(contents)
+
+    if is_streamed_upload_token(contents):
+        streamed_upload = resolve_streamed_upload(contents)
+        if streamed_upload.file_path.suffix.lower() != ".fcs":
+            raise ValueError("Uploaded input file must be an .fcs file.")
+        return streamed_upload.file_path
 
     if "," not in contents:
         raise ValueError(

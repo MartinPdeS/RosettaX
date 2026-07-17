@@ -31,6 +31,7 @@ def test_upload_widget_shows_the_standard_file_information() -> None:
     assert upload.accept == ".fcs"
     assert upload.multiple is True
     assert upload.max_size == get_max_upload_bytes()
+    assert upload.className == "rosettax-stream-upload"
     assert " ".join(_collect_text(upload)) == (
         "Select FCS files Multiple files allowed · Accepted: .fcs · "
         f"Maximum file size: {format_upload_size()}"

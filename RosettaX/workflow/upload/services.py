@@ -8,6 +8,11 @@ from pathlib import Path
 from typing import Any, Optional
 
 from RosettaX.utils.upload_limits import format_upload_size, get_max_upload_bytes
+from RosettaX.utils.streamed_uploads import (
+    is_streamed_upload_token,
+    raise_for_streamed_upload_error,
+    resolve_streamed_upload,
+)
 
 from RosettaX.workflow.upload.models import UploadConfig, UploadState
 
@@ -177,6 +182,27 @@ def decode_dash_upload_contents(
     return decoded_bytes
 
 
+def read_uploaded_file_bytes(
+    contents: str,
+    *,
+    max_upload_bytes: Optional[int] = None,
+) -> bytes:
+    """Read a streamed upload token or decode a legacy Dash upload payload."""
+    raise_for_streamed_upload_error(contents)
+
+    if is_streamed_upload_token(contents):
+        streamed_upload = resolve_streamed_upload(
+            contents,
+            max_upload_bytes=max_upload_bytes,
+        )
+        return streamed_upload.file_path.read_bytes()
+
+    return decode_dash_upload_contents(
+        contents,
+        max_upload_bytes=max_upload_bytes,
+    )
+
+
 def resolve_upload_directory(
     config: UploadConfig,
 ) -> Path:
@@ -202,19 +228,32 @@ def save_uploaded_file(
     """
     Save one uploaded file and return its path.
     """
-    upload_directory.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
-
     safe_filename = validate_upload_filename(
         filename,
         allowed_extensions=allowed_extensions,
     )
 
+    raise_for_streamed_upload_error(contents)
+
+    if is_streamed_upload_token(contents):
+        streamed_upload = resolve_streamed_upload(
+            contents,
+            max_upload_bytes=max_upload_bytes,
+        )
+        validate_upload_filename(
+            streamed_upload.filename,
+            allowed_extensions=allowed_extensions,
+        )
+        return streamed_upload.file_path
+
+    upload_directory.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
     file_path = upload_directory / safe_filename
 
-    file_bytes = decode_dash_upload_contents(
+    file_bytes = read_uploaded_file_bytes(
         contents,
         max_upload_bytes=max_upload_bytes,
     )

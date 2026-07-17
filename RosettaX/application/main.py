@@ -16,6 +16,7 @@ from RosettaX.utils.upload_limits import (
     format_upload_size,
     get_max_upload_bytes,
 )
+from RosettaX.utils.streamed_uploads import DEFAULT_STREAMED_UPLOAD_DIRECTORY
 
 from .callbacks import register_application_callbacks
 from .layout import build_application_layout
@@ -125,6 +126,9 @@ class RosettaXApplication:
 
         self.app.server.config["MAX_CONTENT_LENGTH"] = self.max_upload_bytes
         self.app.server.config["ROSETTAX_MAX_UPLOAD_BYTES"] = self.max_upload_bytes
+        self.app.server.config["ROSETTAX_STREAMED_UPLOAD_DIRECTORY"] = str(
+            DEFAULT_STREAMED_UPLOAD_DIRECTORY
+        )
 
         logger.debug("Dash application instantiated")
 

@@ -170,6 +170,7 @@ def build_upload_widget(
                 "lineHeight": "1.35",
                 "padding": "14px 16px",
                 "display": "flex",
+                "flexDirection": "column",
                 "alignItems": "center",
                 "justifyContent": "center",
             },
@@ -177,6 +178,7 @@ def build_upload_widget(
         max_size=resolved_max_size,
         multiple=multiple,
         accept=accepted_file_extensions,
+        className="rosettax-stream-upload",
     )
 
 

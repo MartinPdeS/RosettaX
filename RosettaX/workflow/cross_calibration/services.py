@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import base64
 import json
 from datetime import datetime
 from pathlib import Path
@@ -11,6 +10,7 @@ import plotly.graph_objects as go
 
 from RosettaX.utils import plottings
 from RosettaX.utils.runtime_config import RuntimeConfig
+from RosettaX.workflow.upload.services import read_uploaded_file_bytes
 from .models import CrossCalibrationPoint, CrossCalibrationResult
 
 
@@ -115,11 +115,10 @@ def parse_uploaded_calibration(
     if Path(resolved_filename).suffix.lower() != ".json":
         raise ValueError("Calibration upload must be a .json file.")
 
-    if not isinstance(contents, str) or "," not in contents:
+    if not isinstance(contents, str):
         raise ValueError("Uploaded calibration file has a malformed Dash contents payload.")
 
-    _, encoded_payload = contents.split(",", 1)
-    raw_bytes = base64.b64decode(encoded_payload, validate=True)
+    raw_bytes = read_uploaded_file_bytes(contents)
 
     record = json.loads(raw_bytes.decode("utf-8"))
 

@@ -4,13 +4,20 @@ import json
 import logging
 from html import escape
 from pathlib import Path
+from urllib.parse import unquote
 
 from dash import Dash
-from flask import Response
+from flask import Response, jsonify, request
+from werkzeug.exceptions import RequestEntityTooLarge
 
 from RosettaX.utils.paths import (
     resolve_calibration_file_path as resolve_safe_calibration_file_path,
 )
+from RosettaX.utils.streamed_uploads import (
+    DEFAULT_STREAMED_UPLOAD_DIRECTORY,
+    stage_streamed_upload,
+)
+from RosettaX.utils.upload_limits import format_upload_size
 
 logger = logging.getLogger(__name__)
 
@@ -101,6 +108,50 @@ def register_server_routes(app: Dash) -> None:
     Register Flask routes that should bypass Dash page routing.
     """
     logger.debug("Registering Flask server routes")
+
+    @app.server.post("/api/uploads/stream")
+    def receive_streamed_upload():
+        """Persist a raw request body and return an opaque upload token."""
+        encoded_filename = request.headers.get("X-RosettaX-Filename", "")
+
+        try:
+            streamed_upload = stage_streamed_upload(
+                stream=request.stream,
+                filename=unquote(encoded_filename),
+                content_length=request.content_length,
+                staging_directory=Path(
+                    app.server.config.get(
+                        "ROSETTAX_STREAMED_UPLOAD_DIRECTORY",
+                        DEFAULT_STREAMED_UPLOAD_DIRECTORY,
+                    )
+                ),
+                max_upload_bytes=app.server.config.get("ROSETTAX_MAX_UPLOAD_BYTES"),
+            )
+            return jsonify(
+                {
+                    "token": streamed_upload.token,
+                    "filename": streamed_upload.filename,
+                    "size_bytes": streamed_upload.size_bytes,
+                }
+            )
+        except RequestEntityTooLarge:
+            max_upload_bytes = app.server.config.get("ROSETTAX_MAX_UPLOAD_BYTES")
+            size_text = (
+                format_upload_size(max_upload_bytes) if max_upload_bytes else "configured limit"
+            )
+            return jsonify(
+                {
+                    "error": f"Upload exceeds the maximum file size of {size_text}."
+                }
+            ), 413
+        except ValueError as exception:
+            logger.warning("Rejected streamed upload: %s", exception)
+            return jsonify({"error": str(exception)}), 400
+        except Exception as exception:
+            logger.exception("Failed to receive streamed upload")
+            return jsonify(
+                {"error": f"Upload failed: {type(exception).__name__}: {exception}"}
+            ), 500
 
     @app.server.route("/calibration-json/<folder>/<path:file_name>")
     def serve_calibration_json(folder: str, file_name: str):
