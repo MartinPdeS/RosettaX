@@ -539,6 +539,12 @@ def build_visualization_figure(
             showgrid=bool(visualization_defaults["show_grid"]),
             zeroline=False,
         )
+        figure.update_yaxes(
+            title_text="Count",
+            type="log" if log_y else "linear",
+            showgrid=bool(visualization_defaults["show_grid"]),
+            zeroline=False,
+        )
 
     plottings.apply_default_visual_style(
         figure,

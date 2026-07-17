@@ -97,6 +97,26 @@ class Test_VisualizationServices:
         assert figure.data[0].type == "bar"
         assert figure.layout.xaxis.type == "log"
 
+    def test_build_visualization_figure_supports_log_histogram_y_axis(self) -> None:
+        dataframe = pd.DataFrame(
+            {
+                "FSC-A": [1.0, 1.0, 1.0, 2.0, 3.0, 4.0],
+            }
+        )
+
+        figure = services.build_visualization_figure(
+            dataframe=dataframe,
+            uploaded_fcs_path="/tmp/log-y-histogram.fcs",
+            plot_type=services.PLOT_TYPE_HISTOGRAM,
+            x_channel="FSC-A",
+            y_channel=None,
+            log_x=False,
+            log_y=True,
+        )
+
+        assert figure.layout.yaxis.type == "log"
+        assert figure.layout.yaxis.title.text == "Count"
+
     def test_build_visualization_figure_returns_density_colored_scatter(self) -> None:
         dataframe = pd.DataFrame(
             {
