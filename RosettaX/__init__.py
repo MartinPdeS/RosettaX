@@ -1,5 +1,5 @@
 """
-PyMieSim package initialization.
+RosettaX package initialization.
 """
 
 try:

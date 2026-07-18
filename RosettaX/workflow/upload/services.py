@@ -64,7 +64,22 @@ def build_upload_error_text(
     """
     Build a user visible upload error message.
     """
-    return f"Upload failed: {type(error).__name__}: {error}"
+    error_text = str(error).strip()
+    lowered_error_text = error_text.lower()
+
+    if "maximum supported size" in lowered_error_text or "exceeds" in lowered_error_text:
+        return f"Upload rejected: {error_text}"
+
+    if "unsupported uploaded file type" in lowered_error_text:
+        return f"Upload rejected: {error_text}"
+
+    if "could not read" in lowered_error_text or "metadata" in lowered_error_text:
+        return (
+            "Upload rejected because the file does not contain readable FCS metadata. "
+            f"Details: {error_text}"
+        )
+
+    return f"Upload failed: {error_text or type(error).__name__}"
 
 
 def sanitize_filename(
@@ -341,20 +356,60 @@ def build_upload_feedback(
 ) -> tuple[str, str]:
     """Build the user-visible batch validation message and Bootstrap color."""
     if not consistency_report.get("are_all_files_consistent", False):
-        mismatch_details = consistency_report.get("mismatch_details") or []
-        detail = "; ".join(str(item) for item in mismatch_details[:3])
-        message = "The uploaded FCS files are not mutually compatible."
-        if detail:
-            message = f"{message} {detail}"
-        return message, "danger"
+        return build_consistency_error_text(consistency_report), "danger"
 
     file_count = len(filenames)
     channel_count = len(consistency_report.get("reference_column_names") or [])
-    return (
+    version = clean_optional_string(consistency_report.get("reference_fcs_version"))
+    file_text = ", ".join(str(filename) for filename in filenames[:4])
+    if len(filenames) > 4:
+        file_text = f"{file_text}, and {len(filenames) - 4} more"
+
+    summary = (
         f"Loaded {file_count} compatible FCS file{'s' if file_count != 1 else ''} "
-        f"with {channel_count} channel{'s' if channel_count != 1 else ''}.",
-        "success",
+        f"with {channel_count} channel{'s' if channel_count != 1 else ''}"
     )
+    if version:
+        summary = f"{summary} ({version})"
+
+    return f"{summary}. Files: {file_text}.", "success"
+
+
+def build_consistency_error_text(
+    consistency_report: dict[str, Any],
+) -> str:
+    """Build an actionable message for an invalid FCS batch."""
+    messages: list[str] = ["The uploaded FCS files cannot be used together."]
+    category_labels = (
+        ("column_name_consistency", "Invalid channels or missing channel metadata"),
+        ("version_consistency", "Incompatible FCS versions or missing version metadata"),
+        ("detector_voltage_consistency", "Incompatible detector settings or missing detector metadata"),
+    )
+
+    for report_key, label in category_labels:
+        category_report = consistency_report.get(report_key)
+        if not isinstance(category_report, dict):
+            continue
+        if category_report.get("are_all_files_consistent", True):
+            continue
+
+        details = category_report.get("mismatch_details") or []
+        detail_text = " ".join(str(detail) for detail in details[:3])
+        messages.append(f"{label}: {detail_text or 'check the uploaded file metadata.'}")
+
+    if len(messages) == 1:
+        details = consistency_report.get("mismatch_details") or []
+        messages.append(" ".join(str(detail) for detail in details[:3]))
+
+    return " ".join(message for message in messages if message.strip())
+
+
+def validate_fcs_metadata(file_path: str | Path) -> dict[str, Any]:
+    """Validate one saved FCS file and return its metadata consistency report."""
+    consistency_report = inspect_compatible_fcs_batch([file_path])
+    if not consistency_report.get("are_all_files_consistent", False):
+        raise ValueError(build_consistency_error_text(consistency_report))
+    return consistency_report
 
 
 def set_nested_dict_value(
@@ -463,6 +518,9 @@ def build_upload_state(
         upload_directory=upload_directory,
         allowed_extensions=allowed_extensions,
     )
+
+    if ".fcs" in allowed_extensions:
+        validate_fcs_metadata(saved_file_path)
 
     next_uploaded_filename = clean_filename or saved_file_path.name
 

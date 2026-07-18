@@ -29,6 +29,7 @@ def build_workflow_page_header(
     column_kwargs: dict[str, Any] | None = None,
     component_id: Any | None = None,
     style_overrides: dict[str, Any] | None = None,
+    progress_id: Any | None = None,
 ) -> dbc.Card:
     """Build the standard explanatory header for a workflow page."""
     resolved_column_kwargs = {
@@ -49,6 +50,17 @@ def build_workflow_page_header(
     ]
     if alert is not None:
         children.append(alert)
+
+    if progress_id is not None:
+        children.append(
+            html.Div(
+                build_workflow_progress_content(
+                    steps=steps,
+                    completed_count=0,
+                ),
+                id=progress_id,
+            )
+        )
 
     children.append(
         dbc.Row(
@@ -81,6 +93,56 @@ def build_workflow_page_header(
             style=ui_forms.build_workflow_section_body_style(),
         ),
         **card_kwargs,
+    )
+
+
+def build_workflow_progress_content(
+    *,
+    steps: Sequence[WorkflowStep],
+    completed_count: int,
+) -> html.Div:
+    """Build the compact, state-aware workflow progress indicator."""
+    step_list = list(steps)
+    step_count = len(step_list)
+    bounded_completed_count = max(0, min(int(completed_count), step_count))
+    active_index = min(bounded_completed_count, max(step_count - 1, 0))
+    active_step = step_list[active_index] if step_list else None
+    progress_value = (100 * bounded_completed_count / step_count) if step_count else 0
+
+    if active_step is None:
+        status_text = "Workflow ready"
+    elif bounded_completed_count >= step_count:
+        status_text = "Workflow complete"
+    else:
+        status_text = (
+            f"Step {active_index + 1} of {step_count}: {active_step.title}"
+        )
+
+    return html.Div(
+        [
+            html.Div(
+                [
+                    html.Strong("Workflow progress"),
+                    html.Span(
+                        f" · {bounded_completed_count}/{step_count} completed",
+                        style={"opacity": 0.72},
+                    ),
+                    html.Span(
+                        f" · {status_text}",
+                        style={"marginLeft": "8px", "opacity": 0.86},
+                    ),
+                ],
+                style={"fontSize": "0.88rem", "marginBottom": "6px"},
+            ),
+            dbc.Progress(
+                value=progress_value,
+                color="success" if bounded_completed_count >= step_count else "primary",
+                striped=bounded_completed_count < step_count,
+                animated=bounded_completed_count < step_count,
+                style={"height": "8px", "borderRadius": "8px"},
+            ),
+        ],
+        style={"marginBottom": "14px"},
     )
 
 

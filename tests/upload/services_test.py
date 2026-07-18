@@ -10,11 +10,54 @@ from RosettaX.workflow.upload.services import (
     DEFAULT_UPLOAD_DIRECTORY,
     clean_optional_string,
     build_loaded_filename_text,
+    build_consistency_error_text,
+    build_upload_feedback,
     sanitize_filename,
     decode_dash_upload_contents,
     resolve_upload_directory
 )
 from RosettaX.workflow.upload.models import UploadConfig
+
+
+def test_build_upload_feedback_includes_file_summary_and_fcs_version() -> None:
+    message, color = build_upload_feedback(
+        filenames=["first.fcs", "second.fcs"],
+        consistency_report={
+            "are_all_files_consistent": True,
+            "reference_column_names": ["FSC-A", "SSC-A"],
+            "reference_fcs_version": "FCS3.1",
+        },
+    )
+
+    assert color == "success"
+    assert "2 compatible FCS files" in message
+    assert "2 channels" in message
+    assert "FCS3.1" in message
+    assert "first.fcs, second.fcs" in message
+
+
+def test_build_consistency_error_text_identifies_invalid_categories() -> None:
+    message = build_consistency_error_text(
+        {
+            "are_all_files_consistent": False,
+            "column_name_consistency": {
+                "are_all_files_consistent": False,
+                "mismatch_details": ["sample.fcs: columns do not match reference.fcs"],
+            },
+            "version_consistency": {
+                "are_all_files_consistent": False,
+                "mismatch_details": ["sample.fcs: FCS version does not match reference.fcs"],
+            },
+            "detector_voltage_consistency": {
+                "are_all_files_consistent": True,
+                "mismatch_details": [],
+            },
+        }
+    )
+
+    assert "Invalid channels or missing channel metadata" in message
+    assert "Incompatible FCS versions or missing version metadata" in message
+    assert "columns do not match" in message
 
 
 class Test_clean_optional_string:

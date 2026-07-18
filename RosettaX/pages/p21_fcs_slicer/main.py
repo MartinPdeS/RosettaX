@@ -100,9 +100,12 @@ class FCSSlicerPage:
                     accepted_file_extensions=".fcs",
                     multiple=True,
                 ),
-                ui_forms.build_upload_status(
-                    status_id=self.ids.upload_feedback,
-                    initial_text="No files loaded.",
+                dcc.Loading(
+                    ui_forms.build_upload_status(
+                        status_id=self.ids.upload_feedback,
+                        initial_text="No files loaded.",
+                    ),
+                    type="default",
                 ),
             ],
         )

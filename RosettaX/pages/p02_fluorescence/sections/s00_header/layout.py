@@ -8,12 +8,15 @@ from RosettaX.utils import styling
 
 def get_layout(section) -> dbc.Card:
     """Build the fluorescence calibration workflow header."""
+    page_ids = getattr(getattr(section, "page", None), "ids", None)
+    state_ids = getattr(page_ids, "State", None)
     return build_workflow_page_header(
         title="Fluorescence calibration",
         description=(
             "Convert arbitrary units of fluorescence intensity into standard units (ABC, ERF, or MESF)."
         ),
         steps=_build_steps(),
+        progress_id=getattr(state_ids, "workflow_progress", None),
         card_color=section.card_color,
         column_kwargs={"xl": True},
     )

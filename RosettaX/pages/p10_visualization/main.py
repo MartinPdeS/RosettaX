@@ -59,9 +59,12 @@ class VisualizationPage:
                             accepted_file_extensions=".fcs",
                             multiple=True,
                         ),
-                        ui_forms.build_upload_status(
-                            status_id=self.ids.upload_feedback,
-                            initial_text="No file loaded.",
+                        dcc.Loading(
+                            ui_forms.build_upload_status(
+                                status_id=self.ids.upload_feedback,
+                                initial_text="No file loaded.",
+                            ),
+                            type="default",
                         ),
                     ],
                 ),

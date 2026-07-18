@@ -129,6 +129,8 @@ class SaveLayout:
             type="text",
             value="",
             placeholder=self.config.file_name_placeholder,
+            persistence=True,
+            persistence_type="session",
             style={
                 "width": "280px",
             },
@@ -143,6 +145,8 @@ class SaveLayout:
             type="text",
             value="",
             placeholder=self.config.output_channel_name_placeholder,
+            persistence=True,
+            persistence_type="session",
             style={
                 "width": "280px",
                 "display": "block" if self.config.require_output_channel_name else "none",

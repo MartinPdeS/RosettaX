@@ -8,6 +8,7 @@ from .graph import register_graph_callbacks
 from .mutation import register_mutation_callbacks
 from .visibility import register_visibility_callbacks
 from RosettaX.utils.runtime_config import RuntimeConfig
+from RosettaX.pages.p00_sidebar.ids import SidebarIds
 from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
 
 from .. import registry
@@ -126,13 +127,18 @@ class PeakWorkflowCallbacks:
         @dash.callback(
             outputs,
             dash.Input(runtime_config_store_id, "data"),
+            dash.Input(SidebarIds.profile_load_event_store, "data"),
             *states,
             prevent_initial_call=True,
         )
         def sync_graph_controls_from_runtime_store(
             runtime_config_data: Any,
+            _profile_load_event_data: Any,
             process_dropdown_options: Any = None,
         ) -> tuple[Any, ...]:
+            if dash.ctx.triggered_id == runtime_config_store_id:
+                return tuple(dash.no_update for _ in outputs)
+
             runtime_config = RuntimeConfig.from_dict(
                 runtime_config_data if isinstance(runtime_config_data, dict) else None
             )

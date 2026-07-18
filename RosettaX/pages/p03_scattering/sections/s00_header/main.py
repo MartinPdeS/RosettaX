@@ -3,9 +3,14 @@
 import logging
 from typing import Any
 
+import dash
 import dash_bootstrap_components as dbc
 
-from RosettaX.ui import WorkflowStep, build_workflow_page_header
+from RosettaX.ui import (
+    WorkflowStep,
+    build_workflow_page_header,
+    build_workflow_progress_content,
+)
 from RosettaX.utils import styling
 
 logger = logging.getLogger(__name__)
@@ -40,12 +45,15 @@ class Header:
         """
         Build the scattering calibration header layout.
         """
+        page_ids = getattr(self.page, "ids", None)
+        state_ids = getattr(page_ids, "State", None)
         return build_workflow_page_header(
             title="Scattering calibration",
             description=(
                 "Create a scattering calibration from bead FCS data by detecting bead populations, configuring the Mie model, computing coupling values, fitting the response, and saving the result for reuse."
             ),
             steps=self._build_steps(),
+            progress_id=getattr(state_ids, "workflow_progress", None),
             card_color=self.card_color,
             column_kwargs={"xs": 12, "md": 6, "lg": 4, "xl": 2},
         )
@@ -110,3 +118,26 @@ class Header:
                 styling.get_workflow_section_color(6),
             ),
         ]
+
+    def build_progress_content(self, page_state_payload: Any) -> dash.html.Div:
+        """Build progress content from the serialized scattering page state."""
+        state = page_state_payload if isinstance(page_state_payload, dict) else {}
+        completed_count = 0
+        if state.get("uploaded_fcs_path"):
+            completed_count = 1
+        peak_payload = state.get("scattering_peak_lines_payload") or state.get(
+            "peak_lines_payload"
+        )
+        if completed_count == 1 and isinstance(peak_payload, dict) and peak_payload.get("positions"):
+            completed_count = 2
+        if completed_count == 2 and state.get("scattering_parameters_payload"):
+            completed_count = 3
+        if completed_count == 3 and state.get("calibration_graph_payload"):
+            completed_count = 4
+        if completed_count == 4 and state.get("calibration_payload"):
+            completed_count = 5
+
+        return build_workflow_progress_content(
+            steps=self._build_steps(),
+            completed_count=completed_count,
+        )

@@ -206,9 +206,12 @@ class CrossCalibrationPage:
                         accepted_file_extensions=".json",
                         multiple=False,
                     ),
-                    ui_forms.build_upload_status(
-                        status_id=feedback_id,
-                        initial_text="No file loaded.",
+                    dcc.Loading(
+                        ui_forms.build_upload_status(
+                            status_id=feedback_id,
+                            initial_text="No file loaded.",
+                        ),
+                        type="default",
                     ),
                     html.Hr(),
                     html.Div(

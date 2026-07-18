@@ -9,6 +9,7 @@ import dash_bootstrap_components as dbc
 import numpy as np
 
 from RosettaX.utils import styling, ui_forms, RuntimeConfig, casting
+from RosettaX.pages.p00_sidebar.ids import SidebarIds
 from RosettaX.workflow.peak.core import detectors as peak_detectors
 from RosettaX.workflow import detector, scattering
 from RosettaX.workflow.scattering.calibration_services import (
@@ -217,6 +218,8 @@ class Model:
                                 placeholder="Select brand",
                                 clearable=False,
                                 searchable=False,
+                                persistence=True,
+                                persistence_type="session",
                                 style={
                                     "width": "220px",
                                 },
@@ -229,6 +232,8 @@ class Model:
                                 clearable=True,
                                 searchable=False,
                                 disabled=True,
+                                persistence=True,
+                                persistence_type="session",
                                 style={
                                     "width": "220px",
                                     "marginLeft": "10px",
@@ -242,6 +247,8 @@ class Model:
                                 clearable=True,
                                 searchable=False,
                                 disabled=True,
+                                persistence=True,
+                                persistence_type="session",
                                 style={
                                     "width": "220px",
                                     "marginLeft": "10px",
@@ -1003,11 +1010,16 @@ class Model:
             dash.Output(self.ids.detector_phi_angle_degree, "value"),
             dash.Output(self.ids.detector_gamma_angle_degree, "value"),
             dash.Input("runtime-config-store", "data"),
+            dash.Input(SidebarIds.profile_load_event_store, "data"),
             prevent_initial_call=False,
         )
         def sync_parameters_from_runtime_config(
             runtime_config_data: Any,
+            _profile_load_event_data: Any,
         ) -> tuple[Any, ...]:
+            if dash.ctx.triggered_id == "runtime-config-store":
+                return tuple(dash.no_update for _ in range(14))
+
             logger.debug(
                 "sync_parameters_from_runtime_config called with runtime_config_data=%r",
                 runtime_config_data,

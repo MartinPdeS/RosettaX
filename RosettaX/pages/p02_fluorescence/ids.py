@@ -96,6 +96,7 @@ class Ids:
 
     class State:
         page_state_store = f"{PAGE_NAME}-page-state-store"
+        workflow_progress = f"{PAGE_NAME}-workflow-progress"
 
     Upload = UploadSectionIds(
         prefix=PAGE_NAME,
