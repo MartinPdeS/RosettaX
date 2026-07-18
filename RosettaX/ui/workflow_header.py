@@ -63,19 +63,24 @@ def build_workflow_page_header(
         )
     )
 
-    return dbc.Card(
-        dbc.CardBody(
-            children,
-            style=ui_forms.build_workflow_section_body_style(),
-        ),
-        id=component_id,
-        style=styling.merge_style(
+    card_kwargs: dict[str, Any] = {
+        "style": styling.merge_style(
             ui_forms.build_workflow_section_card_style(
                 color_name=card_color or styling.get_workflow_page_header_color(),
             ),
             {"marginBottom": "16px"},
             style_overrides,
         ),
+    }
+    if component_id is not None:
+        card_kwargs["id"] = component_id
+
+    return dbc.Card(
+        dbc.CardBody(
+            children,
+            style=ui_forms.build_workflow_section_body_style(),
+        ),
+        **card_kwargs,
     )
 
 

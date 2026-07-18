@@ -58,6 +58,17 @@ class Test_VisualizationServices:
             {"label": "SSC-A", "value": "SSC-A"},
         ]
 
+    def test_build_upload_batch_summary_keeps_shared_channel_names(self) -> None:
+        summary = services.build_upload_batch_summary(
+            uploaded_fcs_paths=["/tmp/sample.fcs"],
+            uploaded_filenames=["sample.fcs"],
+            consistency_report={
+                "reference_column_names": ["FSC-A", "SSC-A", "FITC-A"],
+            },
+        )
+
+        assert summary["reference_column_names"] == ["FSC-A", "SSC-A", "FITC-A"]
+
     def test_filter_dataframe_for_plot_filters_non_positive_log_values(self) -> None:
         dataframe = pd.DataFrame(
             {

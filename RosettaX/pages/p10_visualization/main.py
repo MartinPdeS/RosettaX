@@ -17,6 +17,7 @@ from RosettaX.workflow.file_selection.services import (
     build_file_options,
     resolve_selected_file,
 )
+from RosettaX.workflow.file_selection import UploadedFileBatch
 from RosettaX.workflow.upload import services as upload_services
 
 from .ids import Ids
@@ -425,7 +426,9 @@ class VisualizationPage:
             if not isinstance(file_store, dict):
                 return [], None, [], None, [], None
 
-            column_names = list(file_store.get("column_names") or [])
+            column_names = list(
+                UploadedFileBatch.from_dict(file_store).reference_column_names
+            )
             options = services.build_channel_options(column_names)
             x_channel = services.resolve_default_channel(
                 column_names,
