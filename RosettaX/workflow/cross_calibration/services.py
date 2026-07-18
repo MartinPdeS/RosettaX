@@ -11,6 +11,7 @@ import plotly.graph_objects as go
 from RosettaX.utils import plottings
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.upload.services import read_uploaded_file_bytes
+from RosettaX.workflow.save.services import build_json_download_filename
 from .models import CrossCalibrationPoint, CrossCalibrationResult
 
 
@@ -736,5 +737,7 @@ def build_export_filename(
     """
     Build one stable cross-calibration download filename.
     """
-    stem = Path(str(export_name or DEFAULT_EXPORT_FILE_NAME)).stem or DEFAULT_EXPORT_FILE_NAME
-    return f"{stem}.json"
+    return build_json_download_filename(
+        export_name,
+        default=DEFAULT_EXPORT_FILE_NAME,
+    )

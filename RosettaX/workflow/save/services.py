@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from pathlib import Path
 from typing import Any
 import logging
 
@@ -9,6 +10,12 @@ from RosettaX.utils import service
 from RosettaX.workflow.save.models import SaveConfig
 from RosettaX.workflow.save.models import SaveInputs
 from RosettaX.workflow.save.models import SaveResult
+
+
+def build_json_download_filename(name: Any, *, default: str = "calibration") -> str:
+    """Build a safe, consistently suffixed JSON download filename."""
+    stem = Path(str(name or default)).stem.strip() or default
+    return f"{stem}.json"
 
 
 def validate_save_inputs(
