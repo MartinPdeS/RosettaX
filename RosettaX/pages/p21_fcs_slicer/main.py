@@ -13,6 +13,7 @@ from RosettaX.ui import (
 )
 from RosettaX.utils import styling, ui_forms
 from RosettaX.workflow.calibration_cards import make_collapsible_section_card
+from RosettaX.workflow.file_selection import UploadedFile, UploadedFileBatch
 
 from .ids import Ids
 from . import services
@@ -195,11 +196,13 @@ class FCSSlicerPage:
 
                 channels = [str(name) for name in report["reference_column_names"]]
                 options = [{"label": channel, "value": channel} for channel in channels]
-                store_data = {
-                    "file_paths": [str(path) for path in saved_paths],
-                    "filenames": safe_filenames,
-                    "available_channels": channels,
-                }
+                store_data = UploadedFileBatch(
+                    files=tuple(
+                        UploadedFile(path=str(path), filename=filename)
+                        for path, filename in zip(saved_paths, safe_filenames, strict=True)
+                    ),
+                    reference_column_names=tuple(channels),
+                ).to_dict()
                 return store_data, options, channels, message, color
             except Exception as exception:
                 return (
@@ -220,7 +223,8 @@ class FCSSlicerPage:
             if not isinstance(file_store, dict):
                 return True, "No channels available."
 
-            available_channels = file_store.get("available_channels") or []
+            batch = UploadedFileBatch.from_dict(file_store)
+            available_channels = list(batch.reference_column_names)
             try:
                 selected = services.validate_selected_channels(
                     selected_channels=selected_channels,
@@ -244,13 +248,14 @@ class FCSSlicerPage:
                 return dash.no_update, dash.no_update
 
             try:
+                batch = UploadedFileBatch.from_dict(file_store)
                 payload = services.build_sliced_fcs_zip(
-                    file_paths=file_store.get("file_paths") or [],
-                    filenames=file_store.get("filenames") or [],
+                    file_paths=[file.path for file in batch.files],
+                    filenames=[file.filename for file in batch.files],
                     selected_channels=selected_channels,
-                    available_channels=file_store.get("available_channels") or [],
+                    available_channels=list(batch.reference_column_names),
                 )
-                file_count = len(file_store.get("file_paths") or [])
+                file_count = len(batch.files)
                 return (
                     dcc.send_bytes(payload, "rosettax_sliced_fcs_files.zip"),
                     f"Prepared {file_count} sliced FCS file{'s' if file_count != 1 else ''}.",

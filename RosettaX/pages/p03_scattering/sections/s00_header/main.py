@@ -4,9 +4,9 @@ import logging
 from typing import Any
 
 import dash_bootstrap_components as dbc
-from dash import html
 
-from RosettaX.utils import styling, ui_forms
+from RosettaX.ui import WorkflowStep, build_workflow_page_header
+from RosettaX.utils import styling
 
 logger = logging.getLogger(__name__)
 
@@ -40,49 +40,14 @@ class Header:
         """
         Build the scattering calibration header layout.
         """
-        return dbc.Card(
-            dbc.CardBody(
-                [
-                    ui_forms.build_section_intro(
-                        title="Scattering calibration",
-                        title_component="H2",
-                        description=(
-                            "Create a scattering calibration from bead FCS data by "
-                            "detecting bead populations, configuring the Mie model, "
-                            "computing coupling values, fitting the response, and saving "
-                            "the result for reuse."
-                        ),
-                    ),
-                    dbc.Row(
-                        [
-                            dbc.Col(
-                                self._build_step_card(
-                                    number=step["number"],
-                                    title=step["title"],
-                                    description=step["description"],
-                                    color_name=step["color_name"],
-                                ),
-                                xs=12,
-                                md=6,
-                                lg=4,
-                                xl=2,
-                                style={
-                                    "marginBottom": "10px",
-                                },
-                            )
-                            for step in self._build_steps()
-                        ],
-                        className="g-2",
-                    ),
-                ],
-                style=ui_forms.build_workflow_section_body_style(),
+        return build_workflow_page_header(
+            title="Scattering calibration",
+            description=(
+                "Create a scattering calibration from bead FCS data by detecting bead populations, configuring the Mie model, computing coupling values, fitting the response, and saving the result for reuse."
             ),
-            style={
-                **ui_forms.build_workflow_section_card_style(
-                    color_name=self.card_color,
-                ),
-                "marginBottom": "16px",
-            },
+            steps=self._build_steps(),
+            card_color=self.card_color,
+            column_kwargs={"xs": 12, "md": 6, "lg": 4, "xl": 2},
         )
 
     def register_callbacks(self) -> None:
@@ -91,124 +56,57 @@ class Header:
         """
         return None
 
-    def _build_steps(self) -> list[dict[str, str]]:
+    def _build_steps(self) -> list[WorkflowStep]:
         """
         Build the workflow step metadata.
         """
         return [
-            {
-                "number": "1",
-                "title": "Upload bead FCS",
-                "description": (
+            WorkflowStep(
+                "1", "Upload bead FCS",
+                (
                     "Load the scattering bead file acquired on the instrument. "
                     "This file becomes the source for detector selection and peak detection."
                 ),
-                "color_name": styling.get_workflow_section_color(1),
-            },
-            {
-                "number": "2",
-                "title": "Detect peaks",
-                "description": (
+                styling.get_workflow_section_color(1),
+            ),
+            WorkflowStep(
+                "2", "Detect peaks",
+                (
                     "Select the scattering detector channel, inspect the event distribution, "
                     "and detect the bead population peaks from the uploaded FCS file."
                 ),
-                "color_name": styling.get_workflow_section_color(2),
-            },
-            {
-                "number": "3",
-                "title": "Define Mie model parameters",
-                "description": (
+                styling.get_workflow_section_color(2),
+            ),
+            WorkflowStep(
+                "3", "Define Mie model parameters",
+                (
                     "Set the optical and particle model parameters, including wavelength, "
                     "medium refractive index, particle refractive index, and particle type."
                 ),
-                "color_name": styling.get_workflow_section_color(3),
-            },
-            {
-                "number": "4",
-                "title": "Compute coupling",
-                "description": (
+                styling.get_workflow_section_color(3),
+            ),
+            WorkflowStep(
+                "4", "Compute coupling",
+                (
                     "Enter the particle diameters and compute the expected scattering "
                     "coupling from the selected Mie model."
                 ),
-                "color_name": styling.get_workflow_section_color(4),
-            },
-            {
-                "number": "5",
-                "title": "Create calibration",
-                "description": (
+                styling.get_workflow_section_color(4),
+            ),
+            WorkflowStep(
+                "5", "Create calibration",
+                (
                     "Match detected peak positions to the computed coupling values and fit "
                     "the scattering calibration relation."
                 ),
-                "color_name": styling.get_workflow_section_color(5),
-            },
-            {
-                "number": "6",
-                "title": "Save calibration",
-                "description": (
+                styling.get_workflow_section_color(5),
+            ),
+            WorkflowStep(
+                "6", "Save calibration",
+                (
                     "Save the fitted calibration so it can be reused later when applying "
                     "calibration to experimental FCS files."
                 ),
-                "color_name": styling.get_workflow_section_color(6),
-            },
+                styling.get_workflow_section_color(6),
+            ),
         ]
-
-    def _build_step_card(
-        self,
-        *,
-        number: str,
-        title: str,
-        description: str,
-        color_name: str,
-    ) -> dbc.Card:
-        """
-        Build one workflow step card.
-        """
-        return dbc.Card(
-            dbc.CardBody(
-                [
-                    html.Div(
-                        number,
-                        style={
-                            "width": "28px",
-                            "height": "28px",
-                            "borderRadius": "50%",
-                            "display": "flex",
-                            "alignItems": "center",
-                            "justifyContent": "center",
-                            "fontWeight": "700",
-                            "fontSize": "0.9rem",
-                            "backgroundColor": styling.build_rgba(
-                                color_name,
-                                0.12,
-                            ),
-                            "border": f"1px solid {styling.build_rgba(color_name, 0.35)}",
-                            "marginBottom": "10px",
-                        },
-                    ),
-                    html.H6(
-                        title,
-                        style={
-                            "marginBottom": "6px",
-                        },
-                    ),
-                    html.P(
-                        description,
-                        style={
-                            "marginBottom": "0px",
-                            "fontSize": "0.86rem",
-                            "opacity": 0.78,
-                        },
-                    ),
-                ],
-                style={
-                    "height": "100%",
-                    "padding": "14px",
-                },
-            ),
-            style=ui_forms.build_workflow_subpanel_card_style(
-                color_name=color_name,
-                style_overrides={
-                    "height": "100%",
-                },
-            ),
-        )

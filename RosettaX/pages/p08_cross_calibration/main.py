@@ -7,6 +7,7 @@ import dash
 import dash_bootstrap_components as dbc
 from dash import dash_table, dcc, html
 
+from RosettaX.ui import WorkflowStep, build_workflow_page_header, build_workflow_section_card
 from RosettaX.utils import styling, ui_forms
 from RosettaX.workflow.calibration_cards import make_profile_aware_collapsible_card
 from RosettaX.workflow.cross_calibration import services
@@ -80,143 +81,49 @@ class CrossCalibrationPage:
         )
 
     def _build_header_card(self) -> dbc.Card:
-        return dbc.Card(
-            dbc.CardBody(
-                [
-                    ui_forms.build_section_intro(
-                        title="Cross calibration",
-                        title_component="H2",
-                        description=(
-                            "Create a transfer calibration from a primary reference bead set "
-                            "used less often to a cheaper routine bead set measured more often."
-                        ),
-                    ),
-                    dbc.Alert(
-                        "Experimental workflow: this page is still under active development and may change as the transfer-calibration workflow matures.",
-                        color="warning",
-                        className="mb-3",
-                    ),
-                    dbc.Row(
-                        [
-                            dbc.Col(
-                                self._build_step_card(
-                                    number=step["number"],
-                                    title=step["title"],
-                                    description=step["description"],
-                                    color_name=step["color_name"],
-                                ),
-                                xs=12,
-                                md=6,
-                                xl=True,
-                                style={"marginBottom": "10px"},
-                            )
-                            for step in self._build_header_steps()
-                        ],
-                        className="g-2",
-                    ),
-                ],
-                style=ui_forms.build_workflow_section_body_style(),
+        return build_workflow_page_header(
+            title="Cross calibration",
+            description=(
+                "Create a transfer calibration from a primary reference bead set used less often to a cheaper routine bead set measured more often."
             ),
-            style={
-                **ui_forms.build_workflow_section_card_style(
-                    color_name=styling.get_workflow_page_header_color(),
-                ),
-                "marginBottom": "16px",
-            },
+            alert=dbc.Alert(
+                "Experimental workflow: this page is still under active development and may change as the transfer-calibration workflow matures.",
+                color="warning",
+                className="mb-3",
+            ),
+            steps=self._build_header_steps(),
+            column_kwargs={"xl": True},
         )
 
-    def _build_header_steps(self) -> list[dict[str, str]]:
+    def _build_header_steps(self) -> list[WorkflowStep]:
         return [
-            {
-                "number": "1",
-                "title": "Load primary calibration",
-                "description": (
+            WorkflowStep(
+                "1", "Load primary calibration",
+                (
                     "Upload the high-confidence calibration built from the expensive bead set. "
                     "This defines the primary calibrated scale you want to preserve over time."
                 ),
-                "color_name": styling.get_workflow_section_color(1),
-            },
-            {
-                "number": "2",
-                "title": "Load routine-bead calibration",
-                "description": (
+                styling.get_workflow_section_color(1),
+            ),
+            WorkflowStep(
+                "2", "Load routine-bead calibration",
+                (
                     "Upload the cheaper secondary bead calibration measured more often on the same detector."
                 ),
-                "color_name": styling.get_workflow_section_color(2),
-            },
-            {
-                "number": "3",
-                "title": "Build transfer relation",
-                "description": (
+                styling.get_workflow_section_color(2),
+            ),
+            WorkflowStep(
+                "3", "Build transfer relation",
+                (
                     "Fit the routine bead peaks onto the primary calibrated scale so the secondary bead set can act as a weekly bridge."
                 ),
-                "color_name": styling.get_workflow_section_color(3),
-            },
+                styling.get_workflow_section_color(3),
+            ),
         ]
 
-    def _build_step_card(
-        self,
-        *,
-        number: str,
-        title: str,
-        description: str,
-        color_name: str,
-    ) -> dbc.Card:
-        return dbc.Card(
-            dbc.CardBody(
-                [
-                    html.Div(
-                        number,
-                        style={
-                            "width": "28px",
-                            "height": "28px",
-                            "borderRadius": "50%",
-                            "display": "flex",
-                            "alignItems": "center",
-                            "justifyContent": "center",
-                            "fontWeight": "700",
-                            "fontSize": "0.9rem",
-                            "backgroundColor": styling.build_rgba(color_name, 0.12),
-                            "border": f"1px solid {styling.build_rgba(color_name, 0.35)}",
-                            "marginBottom": "10px",
-                        },
-                    ),
-                    html.H6(
-                        title,
-                        style={"marginBottom": "6px"},
-                    ),
-                    html.P(
-                        description,
-                        style={
-                            "marginBottom": "0px",
-                            "fontSize": "0.86rem",
-                            "opacity": 0.78,
-                        },
-                    ),
-                ],
-                style={
-                    "height": "100%",
-                    "padding": "14px",
-                },
-            ),
-            style=ui_forms.build_workflow_subpanel_card_style(
-                color_name=color_name,
-                style_overrides={"height": "100%"},
-            ),
-        )
-
     def _build_upload_card(self) -> dbc.Card:
-        return dbc.Card(
-            [
-                dbc.CardHeader(
-                    "1. Load primary and secondary calibrations",
-                    style=ui_forms.build_workflow_section_header_style(
-                        color_name=styling.get_workflow_section_color(1),
-                    ),
-                ),
-                dbc.CardBody(
-                    [
-                        dbc.Row(
+        body_children = [
+            dbc.Row(
                             [
                                 dbc.Col(
                                     self._build_upload_panel(
@@ -246,41 +153,34 @@ class CrossCalibrationPage:
                                     xs=12,
                                     lg=6,
                                 ),
-                            ],
-                            className="g-3",
-                        ),
-                        html.Div(
-                            [
-                                dbc.Button(
-                                    "Create transfer calibration",
-                                    id=self.ids.build_button,
-                                    n_clicks=0,
-                                    color="primary",
-                                ),
-                                html.Div(
-                                    id=self.ids.status,
-                                    style={
-                                        "minHeight": "24px",
-                                        "display": "flex",
-                                        "alignItems": "center",
-                                    },
-                                ),
-                            ],
-                            style={
-                                "display": "flex",
-                                "gap": "14px",
-                                "alignItems": "center",
-                                "marginTop": "16px",
-                                "flexWrap": "wrap",
-                            },
-                        ),
-                    ],
-                    style=ui_forms.build_workflow_section_body_style(),
-                ),
-            ],
-            style=ui_forms.build_workflow_section_card_style(
-                color_name=styling.get_workflow_section_color(1),
+                ],
+                className="g-3",
             ),
+            html.Div(
+                [
+                    dbc.Button(
+                        "Create transfer calibration",
+                        id=self.ids.build_button,
+                        n_clicks=0,
+                        color="primary",
+                    ),
+                    html.Div(
+                        id=self.ids.status,
+                        style={"minHeight": "24px", "display": "flex", "alignItems": "center"},
+                    ),
+                ],
+                style={
+                    "display": "flex", "gap": "14px", "alignItems": "center",
+                    "marginTop": "16px", "flexWrap": "wrap",
+                },
+            ),
+        ]
+        return build_workflow_section_card(
+            section_number=1,
+            title="Load primary and secondary calibrations",
+            subtitle=None,
+            body_children=body_children,
+            color_name=styling.get_workflow_section_color(1),
         )
 
     def _build_upload_panel(
@@ -376,16 +276,11 @@ class CrossCalibrationPage:
         return children
 
     def _build_result_card(self) -> dbc.Card:
-        return dbc.Card(
-            [
-                dbc.CardHeader(
-                    "2. Review transfer relation",
-                    style=ui_forms.build_workflow_section_header_style(
-                        color_name=styling.get_workflow_section_color(2),
-                    ),
-                ),
-                dbc.CardBody(
-                    [
+        return build_workflow_section_card(
+            section_number=2,
+            title="Review transfer relation",
+            subtitle=None,
+            body_children=[
                         dcc.Graph(
                             id=self.ids.graph,
                             figure=services.build_empty_result_figure(
@@ -408,26 +303,16 @@ class CrossCalibrationPage:
                             style_cell={"textAlign": "left", "padding": "8px"},
                             style_header={"fontWeight": "700"},
                         ),
-                    ],
-                    style=ui_forms.build_workflow_section_body_style(),
-                ),
             ],
-            style=ui_forms.build_workflow_section_card_style(
-                color_name=styling.get_workflow_section_color(2),
-            ),
+            color_name=styling.get_workflow_section_color(2),
         )
 
     def _build_export_card(self) -> dbc.Card:
-        return dbc.Card(
-            [
-                dbc.CardHeader(
-                    "3. Export transfer relation",
-                    style=ui_forms.build_workflow_section_header_style(
-                        color_name=styling.get_workflow_section_color(3),
-                    ),
-                ),
-                dbc.CardBody(
-                    [
+        return build_workflow_section_card(
+            section_number=3,
+            title="Export transfer relation",
+            subtitle=None,
+            body_children=[
                         html.Div(
                             "Provide a file name to export the generated transfer calibration JSON.",
                             style={"marginBottom": "10px"},
@@ -455,13 +340,8 @@ class CrossCalibrationPage:
                                 "flexWrap": "wrap",
                             },
                         ),
-                    ],
-                    style=ui_forms.build_workflow_section_body_style(),
-                ),
             ],
-            style=ui_forms.build_workflow_section_card_style(
-                color_name=styling.get_workflow_section_color(3),
-            ),
+            color_name=styling.get_workflow_section_color(3),
         )
 
     def register_callbacks(self) -> "CrossCalibrationPage":

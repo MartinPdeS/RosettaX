@@ -13,6 +13,10 @@ from RosettaX.ui import (
 )
 from RosettaX.utils import styling, ui_forms
 from RosettaX.workflow.calibration_cards import make_profile_aware_collapsible_card
+from RosettaX.workflow.file_selection.services import (
+    build_file_options,
+    resolve_selected_file,
+)
 from RosettaX.workflow.upload import services as upload_services
 
 from .ids import Ids
@@ -433,11 +437,12 @@ class VisualizationPage:
                 current_value=current_y_channel,
                 fallback_index=1,
             )
-            file_options = services.build_file_options(file_store)
-            file_path = services.resolve_default_file(
+            file_options = build_file_options(file_store)
+            selected_file = resolve_selected_file(
                 file_store,
-                current_value=current_file_path,
+                current_path=current_file_path,
             )
+            file_path = selected_file.path if selected_file is not None else None
 
             return options, x_channel, options, y_channel, file_options, file_path
 
@@ -557,10 +562,11 @@ class VisualizationPage:
             x_channel_string = str(x_channel or "").strip()
             y_channel_string = str(y_channel or "").strip()
             plot_type_string = str(plot_type or services.PLOT_TYPE_HISTOGRAM)
-            uploaded_fcs_path = services.resolve_default_file(
+            selected_file = resolve_selected_file(
                 file_store,
-                current_value=selected_file_path,
-            ) or ""
+                current_path=selected_file_path,
+            )
+            uploaded_fcs_path = selected_file.path if selected_file is not None else ""
 
             if not x_channel_string:
                 return (

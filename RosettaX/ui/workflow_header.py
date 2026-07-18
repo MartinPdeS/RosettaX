@@ -27,6 +27,7 @@ def build_workflow_page_header(
     card_color: str | None = None,
     alert: Any | None = None,
     column_kwargs: dict[str, Any] | None = None,
+    component_id: Any | None = None,
     style_overrides: dict[str, Any] | None = None,
 ) -> dbc.Card:
     """Build the standard explanatory header for a workflow page."""
@@ -67,6 +68,7 @@ def build_workflow_page_header(
             children,
             style=ui_forms.build_workflow_section_body_style(),
         ),
+        id=component_id,
         style=styling.merge_style(
             ui_forms.build_workflow_section_card_style(
                 color_name=card_color or styling.get_workflow_page_header_color(),

@@ -11,6 +11,15 @@ from RosettaX.utils import plottings, styling
 from RosettaX.utils.reader import FCSFile
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.peak.core.graphing import apply_stable_2d_axis_ranges
+from RosettaX.workflow.file_selection import UploadedFile, UploadedFileBatch
+from RosettaX.workflow.file_selection import (
+    build_channel_options as build_shared_channel_options,
+    resolve_selected_channel,
+)
+from RosettaX.workflow.file_selection.services import (
+    build_file_options as build_uploaded_file_options,
+    resolve_selected_file,
+)
 from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
 from RosettaX.workflow.upload import services as upload_services
 
@@ -185,14 +194,7 @@ def build_channel_options(
     """
     Build dropdown options from FCS parameter names.
     """
-    return [
-        {
-            "label": str(column_name),
-            "value": str(column_name),
-        }
-        for column_name in column_names
-        if str(column_name).strip()
-    ]
+    return build_shared_channel_options(column_names)
 
 
 def resolve_default_channel(
@@ -204,26 +206,11 @@ def resolve_default_channel(
     """
     Resolve a stable channel selection from the available columns.
     """
-    normalized_names = [
-        str(column_name)
-        for column_name in column_names
-        if str(column_name).strip()
-    ]
-
-    current_value_string = str(current_value or "").strip()
-
-    if current_value_string and current_value_string in normalized_names:
-        return current_value_string
-
-    if not normalized_names:
-        return None
-
-    resolved_index = min(
-        max(int(fallback_index), 0),
-        len(normalized_names) - 1,
+    return resolve_selected_channel(
+        column_names,
+        current_value=current_value,
+        fallback_index=fallback_index,
     )
-
-    return normalized_names[resolved_index]
 
 
 def build_upload_summary(
@@ -258,29 +245,24 @@ def build_upload_batch_summary(
     if len(uploaded_fcs_paths) != len(uploaded_filenames):
         raise ValueError("Stored FCS paths and filenames do not match.")
 
-    return {
-        "files": [
-            {
-                "uploaded_fcs_path": str(path),
-                "uploaded_filename": str(filename),
-            }
+    batch = UploadedFileBatch(
+        files=tuple(
+            UploadedFile(
+                path=str(path),
+                filename=str(filename),
+            )
             for path, filename in zip(uploaded_fcs_paths, uploaded_filenames, strict=True)
-        ],
-        "column_names": list(consistency_report.get("reference_column_names") or []),
-        "number_of_files": len(uploaded_fcs_paths),
-    }
+        ),
+        reference_column_names=tuple(
+            str(name) for name in consistency_report.get("reference_column_names") or []
+        ),
+    )
+    return batch.to_dict()
 
 
 def build_file_options(file_store: dict[str, Any]) -> list[dict[str, str]]:
-    """Build the file-selection dropdown options from visualization state."""
-    return [
-        {
-            "label": str(file.get("uploaded_filename") or Path(file["uploaded_fcs_path"]).name),
-            "value": str(file["uploaded_fcs_path"]),
-        }
-        for file in file_store.get("files") or []
-        if isinstance(file, dict) and file.get("uploaded_fcs_path")
-    ]
+    """Compatibility facade for callers using the visualization service module."""
+    return build_uploaded_file_options(file_store)
 
 
 def resolve_default_file(
@@ -288,13 +270,9 @@ def resolve_default_file(
     *,
     current_value: Any = None,
 ) -> Optional[str]:
-    """Keep the selected file when possible, otherwise select the first file."""
-    options = build_file_options(file_store)
-    values = [option["value"] for option in options]
-    current_value_string = str(current_value or "").strip()
-    if current_value_string in values:
-        return current_value_string
-    return values[0] if values else None
+    """Compatibility facade for callers using the visualization service module."""
+    selected_file = resolve_selected_file(file_store, current_path=current_value)
+    return selected_file.path if selected_file is not None else None
 
 
 def build_empty_figure(

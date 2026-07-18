@@ -12,7 +12,7 @@ def build_workflow_section_card(
     *,
     section_number: int,
     title: str,
-    subtitle: str,
+    subtitle: str | None,
     body_children: list[Any],
     tooltip_text: str | None = None,
     tooltip_target_id: Any | None = None,
@@ -37,17 +37,21 @@ def build_workflow_section_card(
             color_name=resolved_color,
         )
     else:
-        header = dbc.CardHeader(
-            [
-                html.Div(
-                    f"{section_number}. {title}",
-                    style={"fontWeight": 750, "marginBottom": "0px"},
-                ),
+        header_children = [
+            html.Div(
+                f"{section_number}. {title}",
+                style={"fontWeight": 750, "marginBottom": "0px"},
+            )
+        ]
+        if subtitle:
+            header_children.append(
                 html.Div(
                     subtitle,
                     style=ui_forms.build_workflow_section_subtitle_style(),
-                ),
-            ],
+                )
+            )
+        header = dbc.CardHeader(
+            header_children,
             style=ui_forms.build_workflow_subpanel_header_style(
                 color_name=resolved_color,
             ),

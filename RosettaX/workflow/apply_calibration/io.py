@@ -8,6 +8,7 @@ from typing import Any, Callable, Optional
 
 from RosettaX.utils.paths import resolve_selected_calibration_file_path
 from RosettaX.utils.reader import FCSFile
+from RosettaX.workflow.file_selection import UploadedFileBatch
 
 
 def resolve_first_uploaded_fcs_path(
@@ -34,6 +35,12 @@ def resolve_uploaded_fcs_paths(
     """
     if uploaded_fcs_path is None:
         return []
+
+    if isinstance(uploaded_fcs_path, (dict, UploadedFileBatch)):
+        return [
+            file.path
+            for file in UploadedFileBatch.from_value(uploaded_fcs_path).files
+        ]
 
     if isinstance(uploaded_fcs_path, list):
         return [str(path) for path in uploaded_fcs_path if str(path).strip()]

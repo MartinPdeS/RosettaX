@@ -7,6 +7,8 @@ from typing import Any, Optional
 
 import dash
 
+from RosettaX.workflow.file_selection import UploadedFile, UploadedFileBatch
+
 from . import services
 
 
@@ -131,6 +133,17 @@ class FilePickerCallbacks:
                     saved_paths=saved_paths,
                 )
 
+                upload_batch = UploadedFileBatch(
+                    files=tuple(
+                        UploadedFile(path=str(path), filename=str(filename))
+                        for path, filename in zip(saved_paths, filenames, strict=True)
+                    ),
+                    reference_column_names=tuple(
+                        str(name)
+                        for name in consistency_report.get("reference_column_names") or []
+                    ),
+                )
+
                 alert_children, alert_color, alert_is_open = services.build_success_alert_payload(
                     saved_paths=saved_paths,
                     consistency_report=consistency_report,
@@ -147,10 +160,7 @@ class FilePickerCallbacks:
                 )
 
                 return FilePickerResult(
-                    uploaded_fcs_path_store=[
-                        str(path)
-                        for path in saved_paths
-                    ],
+                    uploaded_fcs_path_store=upload_batch.to_dict(),
                     alert_children=alert_children,
                     alert_color=alert_color,
                     alert_is_open=alert_is_open,
