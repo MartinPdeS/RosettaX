@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
+import hashlib
 from pathlib import Path
 from typing import Any, Optional
 import json
@@ -10,6 +11,57 @@ from RosettaX.utils.reader import FCSFile
 
 
 logger = logging.getLogger(__name__)
+
+
+REPRODUCIBILITY_SCHEMA = "rosettax_reproducibility_v1"
+
+
+def build_reproducibility_metadata(
+    *,
+    calibration_kind: str,
+    payload: dict[str, Any],
+) -> dict[str, str]:
+    """Build stable provenance metadata for a calibration result.
+
+    The fingerprint intentionally excludes the export timestamp and filename.
+    This means that the same calibration payload produces the same fingerprint
+    across sessions and can be compared without relying on byte-for-byte file
+    equality.
+    """
+    fingerprint_input = json.dumps(
+        {
+            "kind": str(calibration_kind),
+            "payload": payload,
+        },
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+        default=str,
+    ).encode("utf-8")
+
+    return {
+        "schema": REPRODUCIBILITY_SCHEMA,
+        "fingerprint": hashlib.sha256(fingerprint_input).hexdigest(),
+        "fingerprint_algorithm": "sha256",
+        "fingerprint_scope": "calibration kind and payload",
+    }
+
+
+def verify_reproducibility_metadata(
+    *,
+    calibration_kind: str,
+    payload: dict[str, Any],
+    metadata: dict[str, Any] | None,
+) -> bool:
+    """Return whether stored provenance matches the supplied calibration."""
+    if not isinstance(metadata, dict):
+        return False
+
+    expected = build_reproducibility_metadata(
+        calibration_kind=calibration_kind,
+        payload=payload,
+    )
+    return metadata.get("fingerprint") == expected["fingerprint"]
 
 
 SCATTER_KEYWORDS = [
@@ -93,6 +145,10 @@ def build_calibration_record(
         "kind": str(calibration_kind),
         "created_at": datetime.now().isoformat(timespec="seconds"),
         "name": str(name),
+        "reproducibility": build_reproducibility_metadata(
+            calibration_kind=calibration_kind,
+            payload=payload,
+        ),
         "payload": payload,
     }
 

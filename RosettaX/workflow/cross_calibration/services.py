@@ -9,6 +9,7 @@ import numpy as np
 import plotly.graph_objects as go
 
 from RosettaX.utils import plottings
+from RosettaX.utils import service
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.upload.services import read_uploaded_file_bytes
 from RosettaX.workflow.save.services import build_json_download_filename
@@ -724,6 +725,14 @@ def build_export_payload(
     payload["transfer_role"] = "primary_to_secondary"
     payload["name"] = clean_export_name
     payload["created_at"] = datetime.now().isoformat(timespec="seconds")
+    payload["reproducibility"] = service.build_reproducibility_metadata(
+        calibration_kind="cross",
+        payload={
+            key: value
+            for key, value in payload.items()
+            if key not in {"created_at", "name"}
+        },
+    )
     return {
         "schema": EXPORT_SCHEMA,
         "name": clean_export_name,

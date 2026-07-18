@@ -378,12 +378,14 @@ def fit_log10_calibration(
             "Need at least 2 positive finite bead points for log10 fit."
         )
 
-    intensity_au_log10 = np.log10(
-        intensity_au,
-    )
-    intensity_calibrated_units_log10 = np.log10(
-        intensity_calibrated_units,
-    )
+    intensity_au_log10 = np.log10(intensity_au)
+    intensity_calibrated_units_log10 = np.log10(intensity_calibrated_units)
+
+    if np.ptp(intensity_au_log10) == 0.0:
+        raise ValueError(
+            "Measured bead intensities must contain at least two distinct "
+            "positive values for a log10 calibration fit."
+        )
 
     slope, intercept = np.polyfit(
         intensity_au_log10,
@@ -401,6 +403,15 @@ def fit_log10_calibration(
     )
 
     prefactor = 10.0 ** float(intercept)
+
+    if not np.isfinite(slope) or not np.isfinite(intercept) or not np.isfinite(prefactor):
+        raise ValueError("Calibration fit produced non-finite parameters.")
+
+    if not np.isfinite(r_squared):
+        raise ValueError(
+            "Calibration fit quality is undefined because the reference "
+            "values have no measurable variance."
+        )
 
     return FluorescenceFitResult(
         slope=float(slope),

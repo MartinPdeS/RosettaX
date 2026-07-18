@@ -8,6 +8,7 @@ import numpy as np
 
 from RosettaX.utils import casting
 from RosettaX.workflow import scattering, detector
+from .validation import validate_optical_parameters
 from . import mie_relation
 
 logger = logging.getLogger(__name__)
@@ -766,6 +767,8 @@ def parse_optical_parameters(
         ),
     )
 
+    validate_optical_parameters(optical_parameters)
+
     logger.debug(
         "parse_optical_parameters returning optical_parameters=%r",
         optical_parameters,
@@ -1398,6 +1401,16 @@ def fit_linear_instrument_response(
     measured_array = measured_array[valid_mask]
     coupling_array = coupling_array[valid_mask]
 
+    if np.any(measured_array <= 0.0):
+        raise ValueError(
+            "measured_peak_values must contain only positive finite values."
+        )
+
+    if np.any(coupling_array <= 0.0):
+        raise ValueError(
+            "theoretical_coupling_values must contain only positive finite values."
+        )
+
     if measured_array.size < 2:
         logger.error(
             "fit_linear_instrument_response failed because finite calibration point count=%r.",
@@ -1472,6 +1485,12 @@ def fit_linear_instrument_response(
         observed_values=coupling_array,
         predicted_values=predicted_coupling,
     )
+
+    if not np.isfinite(slope) or not np.isfinite(intercept) or not np.isfinite(r_squared):
+        raise ValueError(
+            "Instrument-response fit produced non-finite parameters or "
+            "undefined fit quality."
+        )
 
     logger.debug(
         "fit_linear_instrument_response fitted slope=%r intercept=%r r_squared=%r "

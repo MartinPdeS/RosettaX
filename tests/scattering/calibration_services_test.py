@@ -9,6 +9,7 @@ from RosettaX.workflow.scattering.calibration_services import (
     DEFAULT_SOURCE_POLARIZATION_ANGLE_DEGREE,
     OpticalParameters,
     ParsedSphereStandardRows,
+    fit_linear_instrument_response,
     parse_optical_parameters,
 )
 
@@ -254,6 +255,48 @@ class Test_ParsedSphereStandardRows:
         assert rows.row_count == 2  # Based on row_indices
         assert len(rows.particle_diameters_nm) == 3
         assert len(rows.measured_peak_positions) == 2
+
+
+class Test_ScientificValidation:
+    def test_parse_optical_parameters_rejects_nonphysical_wavelength(self) -> None:
+        with pytest.raises(ValueError, match="wavelength_nm.*greater than zero"):
+            parse_optical_parameters(
+                medium_refractive_index=1.33,
+                particle_refractive_index=1.59,
+                core_refractive_index=None,
+                shell_refractive_index=None,
+                wavelength_nm=0.0,
+                detector_numerical_aperture=1.2,
+                detector_cache_numerical_aperture=0.5,
+                blocker_bar_numerical_aperture=0.1,
+                detector_sampling=100,
+                detector_phi_angle_degree=0.0,
+                detector_gamma_angle_degree=0.0,
+            )
+
+    def test_parse_optical_parameters_rejects_cache_aperture_above_detector(self) -> None:
+        with pytest.raises(ValueError, match="detector_cache_numerical_aperture"):
+            parse_optical_parameters(
+                medium_refractive_index=1.33,
+                particle_refractive_index=1.59,
+                core_refractive_index=None,
+                shell_refractive_index=None,
+                wavelength_nm=488.0,
+                detector_numerical_aperture=0.4,
+                detector_cache_numerical_aperture=0.5,
+                blocker_bar_numerical_aperture=0.1,
+                detector_sampling=100,
+                detector_phi_angle_degree=0.0,
+                detector_gamma_angle_degree=0.0,
+            )
+
+    def test_linear_instrument_response_rejects_nonpositive_values(self) -> None:
+        with pytest.raises(ValueError, match="measured_peak_values"):
+            fit_linear_instrument_response(
+                measured_peak_values=np.asarray([0.0, 2.0]),
+                theoretical_coupling_values=np.asarray([1.0, 2.0]),
+                measured_channel="SSC-A",
+            )
 
 
 class Test_parse_optical_parameters:

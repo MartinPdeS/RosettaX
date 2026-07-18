@@ -118,6 +118,36 @@ class Test_Service:
         assert record["name"] == " Test Calibration! "
         assert record["payload"] == payload
         assert record["created_at"]
+        assert record["reproducibility"]["fingerprint"]
+        assert service.verify_reproducibility_metadata(
+            calibration_kind=record["kind"],
+            payload=record["payload"],
+            metadata=record["reproducibility"],
+        ) is True
+
+    def test_reproducibility_fingerprint_is_stable_and_detects_payload_changes(self) -> None:
+        payload = {"gain": 42, "channels": ["FSC-A"]}
+
+        first = service.build_reproducibility_metadata(
+            calibration_kind="fluorescence",
+            payload=payload,
+        )
+        second = service.build_reproducibility_metadata(
+            calibration_kind="fluorescence",
+            payload={"channels": ["FSC-A"], "gain": 42},
+        )
+        changed = service.build_reproducibility_metadata(
+            calibration_kind="fluorescence",
+            payload={"gain": 43, "channels": ["FSC-A"]},
+        )
+
+        assert first == second
+        assert first["fingerprint"] != changed["fingerprint"]
+        assert service.verify_reproducibility_metadata(
+            calibration_kind="fluorescence",
+            payload=payload,
+            metadata=changed,
+        ) is False
 
     def test_list_saved_calibrations_from_directory_returns_sorted_json_files(
         self,

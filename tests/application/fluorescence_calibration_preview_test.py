@@ -2,12 +2,22 @@
 
 import logging
 
+import numpy as np
+import pytest
+
 import plotly.graph_objs as go
 
 from RosettaX.pages.p02_fluorescence.sections.s04_calibration import services
 
 
 class Test_FluorescenceCalibrationPreview:
+    def test_log_fit_rejects_degenerate_measured_values(self) -> None:
+        with pytest.raises(ValueError, match="distinct"):
+            services.fit_log10_calibration(
+                intensity_calibrated_units=np.asarray([100.0, 1000.0]),
+                intensity_au=np.asarray([10.0, 10.0]),
+            )
+
     def test_run_calibration_workflow_returns_preview_metrics_and_figure_store(
         self,
         monkeypatch,
