@@ -5,8 +5,10 @@ import binascii
 import logging
 import re
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Iterable, Optional
+from uuid import uuid4
 
+from RosettaX.utils.checks import FCSMultiFileConsistencyChecker
 from RosettaX.utils.upload_limits import format_upload_size, get_max_upload_bytes
 from RosettaX.utils.streamed_uploads import (
     is_streamed_upload_token,
@@ -263,6 +265,96 @@ def save_uploaded_file(
     )
 
     return file_path
+
+
+def normalize_multiple_upload_values(value: Any) -> list[str]:
+    """Normalize a scalar or multi-file Dash upload value to a string list."""
+    if value is None:
+        return []
+    if isinstance(value, (list, tuple)):
+        return [str(item) for item in value]
+    return [str(value)]
+
+
+def save_uploaded_batch(
+    *,
+    contents: Any,
+    filenames: Any,
+    upload_directory: Path = DEFAULT_UPLOAD_DIRECTORY,
+) -> tuple[list[Path], list[str]]:
+    """Save one Dash multi-file upload in an isolated batch directory."""
+    contents_list = normalize_multiple_upload_values(contents)
+    filename_list = normalize_multiple_upload_values(filenames)
+
+    if not contents_list:
+        raise ValueError("Select at least one FCS file.")
+    if len(contents_list) != len(filename_list):
+        raise ValueError("The uploaded file payload is malformed.")
+
+    batch_directory = Path(upload_directory) / uuid4().hex
+    saved_paths: list[Path] = []
+    safe_filenames: list[str] = []
+    used_storage_filenames: set[str] = set()
+
+    for index, (file_contents, filename) in enumerate(
+        zip(contents_list, filename_list, strict=True),
+        start=1,
+    ):
+        safe_filename = validate_upload_filename(
+            filename or f"uploaded_file_{index}.fcs",
+            allowed_extensions=DEFAULT_ALLOWED_UPLOAD_EXTENSIONS,
+        )
+        storage_filename = safe_filename
+        if storage_filename in used_storage_filenames:
+            safe_path = Path(safe_filename)
+            storage_filename = f"{safe_path.stem}_{index}{safe_path.suffix}"
+        used_storage_filenames.add(storage_filename)
+
+        saved_paths.append(
+            save_uploaded_file(
+                contents=file_contents,
+                filename=storage_filename,
+                upload_directory=batch_directory,
+                allowed_extensions=DEFAULT_ALLOWED_UPLOAD_EXTENSIONS,
+            )
+        )
+        safe_filenames.append(safe_filename)
+
+    return saved_paths, safe_filenames
+
+
+def inspect_compatible_fcs_batch(file_paths: Iterable[str | Path]) -> dict[str, Any]:
+    """Return the full consistency report for a batch of FCS files."""
+    normalized_paths = [str(Path(file_path)) for file_path in file_paths]
+    if not normalized_paths:
+        raise ValueError("Select at least one FCS file.")
+
+    return FCSMultiFileConsistencyChecker(
+        file_paths=normalized_paths,
+    ).check_multifiles_consistency()
+
+
+def build_upload_feedback(
+    *,
+    filenames: list[str],
+    consistency_report: dict[str, Any],
+) -> tuple[str, str]:
+    """Build the user-visible batch validation message and Bootstrap color."""
+    if not consistency_report.get("are_all_files_consistent", False):
+        mismatch_details = consistency_report.get("mismatch_details") or []
+        detail = "; ".join(str(item) for item in mismatch_details[:3])
+        message = "The uploaded FCS files are not mutually compatible."
+        if detail:
+            message = f"{message} {detail}"
+        return message, "danger"
+
+    file_count = len(filenames)
+    channel_count = len(consistency_report.get("reference_column_names") or [])
+    return (
+        f"Loaded {file_count} compatible FCS file{'s' if file_count != 1 else ''} "
+        f"with {channel_count} channel{'s' if channel_count != 1 else ''}.",
+        "success",
+    )
 
 
 def set_nested_dict_value(

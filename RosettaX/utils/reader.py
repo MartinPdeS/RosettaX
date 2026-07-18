@@ -462,11 +462,13 @@ class FCSFile:
             )
 
         if len(items) % 2 == 1:
-            logger.warning(
-                "FCS TEXT contains an odd number of tokens. Dropping the last token for file_path=%r",
-                self.file_path,
-            )
+            trailing_token = items[-1]
             items = items[:-1]
+            if trailing_token.strip():
+                logger.warning(
+                    "FCS TEXT contains an odd number of tokens. Dropping the last token for file_path=%r",
+                    self.file_path,
+                )
 
         keywords: Dict[str, Any] = {}
 

@@ -20,6 +20,9 @@ VISUALIZATION_UPLOAD_DIRECTORY = (
 )
 
 PLOT_TYPE_HISTOGRAM = "histogram"
+PLOT_TYPE_SMOOTHED_HISTOGRAM = "smoothed_histogram"
+# Backward-compatible alias for callers using the initial name.
+PLOT_TYPE_FILLED_HISTOGRAM = PLOT_TYPE_SMOOTHED_HISTOGRAM
 PLOT_TYPE_SCATTER = "scatter"
 VISUALIZATION_FIGURE_HEIGHT_PX = 600
 VISUALIZATION_HISTOGRAM_BIN_COUNT = 180
@@ -86,6 +89,7 @@ def build_visualization_uirevision(
     y_channel: Optional[str],
     log_x: bool,
     log_y: bool,
+    smoothing_sigma_points: float = 0.0,
 ) -> str:
     """
     Build a stable Plotly UI revision token for visualization figures.
@@ -104,6 +108,7 @@ def build_visualization_uirevision(
             str(y_channel or "").strip(),
             bool(log_x),
             bool(log_y),
+            float(smoothing_sigma_points),
         )
     )
 
@@ -243,6 +248,55 @@ def build_upload_summary(
         }
 
 
+def build_upload_batch_summary(
+    *,
+    uploaded_fcs_paths: list[str | Path],
+    uploaded_filenames: list[str],
+    consistency_report: dict[str, Any],
+) -> dict[str, Any]:
+    """Build the serializable state for a compatible visualization batch."""
+    if len(uploaded_fcs_paths) != len(uploaded_filenames):
+        raise ValueError("Stored FCS paths and filenames do not match.")
+
+    return {
+        "files": [
+            {
+                "uploaded_fcs_path": str(path),
+                "uploaded_filename": str(filename),
+            }
+            for path, filename in zip(uploaded_fcs_paths, uploaded_filenames, strict=True)
+        ],
+        "column_names": list(consistency_report.get("reference_column_names") or []),
+        "number_of_files": len(uploaded_fcs_paths),
+    }
+
+
+def build_file_options(file_store: dict[str, Any]) -> list[dict[str, str]]:
+    """Build the file-selection dropdown options from visualization state."""
+    return [
+        {
+            "label": str(file.get("uploaded_filename") or Path(file["uploaded_fcs_path"]).name),
+            "value": str(file["uploaded_fcs_path"]),
+        }
+        for file in file_store.get("files") or []
+        if isinstance(file, dict) and file.get("uploaded_fcs_path")
+    ]
+
+
+def resolve_default_file(
+    file_store: dict[str, Any],
+    *,
+    current_value: Any = None,
+) -> Optional[str]:
+    """Keep the selected file when possible, otherwise select the first file."""
+    options = build_file_options(file_store)
+    values = [option["value"] for option in options]
+    current_value_string = str(current_value or "").strip()
+    if current_value_string in values:
+        return current_value_string
+    return values[0] if values else None
+
+
 def build_empty_figure(
     *,
     message: str,
@@ -341,6 +395,33 @@ def filter_dataframe_for_plot(
     return filtered_dataframe, skipped_events
 
 
+def smooth_histogram_counts(
+    histogram_counts: Any,
+    *,
+    sigma_points: Any,
+) -> np.ndarray:
+    """Apply Gaussian smoothing in histogram-bin space."""
+    counts = np.asarray(histogram_counts, dtype=float).reshape(-1)
+    if counts.size < 3:
+        return counts
+
+    try:
+        resolved_sigma = max(float(sigma_points), 0.0)
+    except (TypeError, ValueError):
+        resolved_sigma = 2.0
+
+    if resolved_sigma <= 0.0:
+        return counts
+
+    radius = max(1, int(np.ceil(3.0 * resolved_sigma)))
+    offsets = np.arange(-radius, radius + 1, dtype=float)
+    kernel = np.exp(-0.5 * np.square(offsets / resolved_sigma))
+    kernel /= np.sum(kernel)
+
+    padded_counts = np.pad(counts, radius, mode="edge")
+    return np.convolve(padded_counts, kernel, mode="valid")
+
+
 def build_visualization_figure(
     *,
     dataframe: pd.DataFrame,
@@ -353,6 +434,7 @@ def build_visualization_figure(
     colormap_log_scale: bool = False,
     marker_size: float = 5.0,
     marker_opacity: float = 0.72,
+    smoothing_sigma_points: float = 2.0,
     runtime_config_data: Any = None,
 ) -> go.Figure:
     """
@@ -370,9 +452,19 @@ def build_visualization_figure(
         y_channel=y_channel_string,
         log_x=log_x,
         log_y=log_y,
+        smoothing_sigma_points=(
+            smoothing_sigma_points
+            if plot_type == PLOT_TYPE_SMOOTHED_HISTOGRAM
+            else 0.0
+        ),
     )
 
-    if plot_type == PLOT_TYPE_HISTOGRAM:
+    is_histogram = plot_type in {
+        PLOT_TYPE_HISTOGRAM,
+        PLOT_TYPE_FILLED_HISTOGRAM,
+    }
+
+    if is_histogram:
         histogram_values = dataframe[x_channel].to_numpy(dtype=float, copy=False)
         histogram_values = histogram_values[np.isfinite(histogram_values)]
 
@@ -417,23 +509,51 @@ def build_visualization_figure(
         bin_widths = np.diff(bin_edges)
         bin_centers = bin_edges[:-1] + (bin_widths / 2.0)
 
-        figure.add_trace(
-            go.Bar(
-                x=bin_centers,
-                y=histogram_counts,
-                width=bin_widths,
-                name=x_channel,
-                marker={
-                    "color": "#355070",
-                    "line": {
-                        "color": "#1b263b",
-                        "width": 0.35,
-                    },
-                },
-                opacity=0.92,
-                hovertemplate="%{y} event(s)<extra></extra>",
+        if plot_type == PLOT_TYPE_FILLED_HISTOGRAM:
+            smoothed_counts = smooth_histogram_counts(
+                histogram_counts,
+                sigma_points=smoothing_sigma_points,
             )
-        )
+            figure.add_trace(
+                go.Scatter(
+                    x=bin_centers,
+                    y=smoothed_counts,
+                    mode="lines",
+                    fill="tozeroy",
+                    line={
+                        "color": "#2f63b8",
+                        "width": 2.4,
+                    },
+                    fillcolor="rgba(70, 115, 185, 0.42)",
+                    name=x_channel,
+                    hovertemplate="%{y} event(s)<extra></extra>",
+                )
+            )
+            figure.update_layout(
+                title={
+                    "text": Path(uploaded_fcs_path).name,
+                    "x": 0.5,
+                    "xanchor": "center",
+                },
+            )
+        else:
+            figure.add_trace(
+                go.Bar(
+                    x=bin_centers,
+                    y=histogram_counts,
+                    width=bin_widths,
+                    name=x_channel,
+                    marker={
+                        "color": "#355070",
+                        "line": {
+                            "color": "#1b263b",
+                            "width": 0.35,
+                        },
+                    },
+                    opacity=0.92,
+                    hovertemplate="%{y} event(s)<extra></extra>",
+                )
+            )
         figure.update_yaxes(
             title_text="Count",
         )
@@ -516,7 +636,7 @@ def build_visualization_figure(
             uirevision=visualization_uirevision,
         )
 
-    if plot_type == PLOT_TYPE_HISTOGRAM:
+    if is_histogram:
         figure.update_layout(
             template="plotly_white",
             uirevision=visualization_uirevision,

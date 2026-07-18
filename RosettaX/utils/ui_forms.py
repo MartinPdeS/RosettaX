@@ -347,6 +347,7 @@ def build_workflow_section_header_style(
                 "1px solid "
                 f"{build_rgba_from_color_name(color_name=color_name, accent_rgba=accent_rgba, opacity=0.20)}"
             ),
+            "fontWeight": "700",
             "padding": f"{styling.get_spacing_token('sm')} {styling.get_spacing_token('lg')}",
             "borderTopLeftRadius": f"{border_radius_px}px",
             "borderTopRightRadius": f"{border_radius_px}px",

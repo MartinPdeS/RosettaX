@@ -84,6 +84,7 @@ class Test_VisualizationPage:
         component_ids = _collect_component_ids(layout)
 
         assert page.ids.upload in component_ids
+        assert page.ids.file_selection in component_ids
         assert page.ids.x_channel in component_ids
         assert page.ids.y_channel in component_ids
         assert page.ids.plot_type in component_ids

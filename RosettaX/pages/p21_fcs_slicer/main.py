@@ -6,6 +6,11 @@ import dash
 import dash_bootstrap_components as dbc
 from dash import dcc, html
 
+from RosettaX.ui import (
+    WorkflowStep,
+    build_workflow_page_header,
+    build_workflow_section_card,
+)
 from RosettaX.utils import styling, ui_forms
 from RosettaX.workflow.calibration_cards import make_collapsible_section_card
 
@@ -39,125 +44,46 @@ class FCSSlicerPage:
         )
 
     def _build_header_card(self) -> dbc.Card:
-        return dbc.Card(
-            dbc.CardBody(
-                [
-                    ui_forms.build_section_intro(
-                        title="Slicing",
-                        title_component="H2",
-                        description=(
-                            "Upload a compatible batch, choose the detector channels to keep, "
-                            "and download sliced FCS copies with every event preserved."
-                        ),
-                    ),
-                    dbc.Row(
-                        [
-                            dbc.Col(
-                                self._build_step_card(
-                                    number=step["number"],
-                                    title=step["title"],
-                                    description=step["description"],
-                                    color_name=step["color_name"],
-                                ),
-                                xs=12,
-                                md=6,
-                                lg=4,
-                                style={"marginBottom": "10px"},
-                            )
-                            for step in self._build_header_steps()
-                        ],
-                        className="g-2",
-                    ),
-                ],
-                style=ui_forms.build_workflow_section_body_style(),
+        return build_workflow_page_header(
+            title="Slicing",
+            description=(
+                "Upload a compatible batch, choose the detector channels to keep, "
+                "and download sliced FCS copies with every event preserved."
             ),
-            style={
-                **ui_forms.build_workflow_section_card_style(
-                    color_name=styling.get_workflow_page_header_color(),
-                ),
-                "marginBottom": "16px",
-            },
+            steps=self._build_header_steps(),
         )
 
-    def _build_header_steps(self) -> list[dict[str, str]]:
+    def _build_header_steps(self) -> list[WorkflowStep]:
         """Build the FCS slicing workflow overview shown in the page header."""
         return [
-            {
-                "number": "1",
-                "title": "Upload compatible files",
-                "description": (
+            WorkflowStep(
+                number="1",
+                title="Upload compatible files",
+                description=(
                     "Load one or more FCS files. RosettaX checks that their channels, "
                     "FCS versions, and detector voltages match."
                 ),
-                "color_name": styling.get_workflow_section_color(1),
-            },
-            {
-                "number": "2",
-                "title": "Choose channels",
-                "description": (
+                color_name=styling.get_workflow_section_color(1),
+            ),
+            WorkflowStep(
+                number="2",
+                title="Choose channels",
+                description=(
                     "Select the detector channels to retain. The original channel order "
                     "and every recorded event are preserved."
                 ),
-                "color_name": styling.get_workflow_section_color(2),
-            },
-            {
-                "number": "3",
-                "title": "Download sliced files",
-                "description": (
+                color_name=styling.get_workflow_section_color(2),
+            ),
+            WorkflowStep(
+                number="3",
+                title="Download sliced files",
+                description=(
                     "Export the sliced FCS copies together in one ZIP package while "
                     "keeping the selected channel metadata."
                 ),
-                "color_name": styling.get_workflow_section_color(3),
-            },
+                color_name=styling.get_workflow_section_color(3),
+            ),
         ]
-
-    def _build_step_card(
-        self,
-        *,
-        number: str,
-        title: str,
-        description: str,
-        color_name: str,
-    ) -> dbc.Card:
-        """Build one compact workflow step card for the page header."""
-        return dbc.Card(
-            dbc.CardBody(
-                [
-                    html.Div(
-                        number,
-                        style={
-                            "width": "28px",
-                            "height": "28px",
-                            "borderRadius": "50%",
-                            "display": "flex",
-                            "alignItems": "center",
-                            "justifyContent": "center",
-                            "fontWeight": "700",
-                            "fontSize": "0.9rem",
-                            "backgroundColor": styling.build_rgba(color_name, 0.12),
-                            "border": (
-                                f"1px solid {styling.build_rgba(color_name, 0.35)}"
-                            ),
-                            "marginBottom": "10px",
-                        },
-                    ),
-                    html.H6(title, style={"marginBottom": "6px"}),
-                    html.P(
-                        description,
-                        style={
-                            "marginBottom": "0px",
-                            "fontSize": "0.86rem",
-                            "opacity": 0.78,
-                        },
-                    ),
-                ],
-                style={"height": "100%", "padding": "14px"},
-            ),
-            style=ui_forms.build_workflow_subpanel_card_style(
-                color_name=color_name,
-                style_overrides={"height": "100%"},
-            ),
-        )
 
     def _build_upload_card(self) -> dbc.Card:
         return self._build_section_card(
@@ -228,31 +154,12 @@ class FCSSlicerPage:
         subtitle: str,
         children: list[Any],
     ) -> dbc.Card:
-        card = dbc.Card(
-            [
-                dbc.CardHeader(
-                    [
-                        html.Div(f"{number}. {title}", style={"fontWeight": 750}),
-                        html.Div(
-                            subtitle,
-                            style=ui_forms.build_workflow_section_subtitle_style(),
-                        ),
-                    ],
-                    style=ui_forms.build_workflow_subpanel_header_style(
-                        color_name=styling.get_workflow_section_color(number),
-                    ),
-                ),
-                dbc.CardBody(
-                    children,
-                    style=ui_forms.build_workflow_section_body_style(),
-                ),
-            ],
-            style={
-                **ui_forms.build_workflow_section_card_style(
-                    color_name=styling.get_workflow_section_color(number),
-                ),
-                "marginBottom": "16px",
-            },
+        card = build_workflow_section_card(
+            section_number=number,
+            title=title,
+            subtitle=subtitle,
+            body_children=children,
+            style_overrides={"marginBottom": "16px"},
         )
         return make_collapsible_section_card(
             card,

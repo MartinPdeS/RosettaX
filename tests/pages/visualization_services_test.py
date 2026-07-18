@@ -6,6 +6,29 @@ from RosettaX.pages.p10_visualization import services
 
 
 class Test_VisualizationServices:
+    def test_build_file_options_exposes_each_uploaded_file(self) -> None:
+        file_store = {
+            "files": [
+                {
+                    "uploaded_fcs_path": "/tmp/first.fcs",
+                    "uploaded_filename": "first.fcs",
+                },
+                {
+                    "uploaded_fcs_path": "/tmp/second.fcs",
+                    "uploaded_filename": "second.fcs",
+                },
+            ]
+        }
+
+        assert services.build_file_options(file_store) == [
+            {"label": "first.fcs", "value": "/tmp/first.fcs"},
+            {"label": "second.fcs", "value": "/tmp/second.fcs"},
+        ]
+        assert services.resolve_default_file(
+            file_store,
+            current_value="/tmp/second.fcs",
+        ) == "/tmp/second.fcs"
+
     def test_build_visualization_uirevision_changes_with_graph_identity(self) -> None:
         first_revision = services.build_visualization_uirevision(
             uploaded_fcs_path="/tmp/one.fcs",
@@ -96,6 +119,39 @@ class Test_VisualizationServices:
         assert len(figure.data) == 1
         assert figure.data[0].type == "bar"
         assert figure.layout.xaxis.type == "log"
+
+    def test_build_visualization_figure_returns_filled_histogram(self) -> None:
+        dataframe = pd.DataFrame(
+            {
+                "FSC-A": [1.0, 2.0, 3.0, 4.0, 5.0],
+            }
+        )
+
+        figure = services.build_visualization_figure(
+            dataframe=dataframe,
+            uploaded_fcs_path="/tmp/example.fcs",
+            plot_type=services.PLOT_TYPE_SMOOTHED_HISTOGRAM,
+            x_channel="FSC-A",
+            y_channel=None,
+            log_x=False,
+            log_y=False,
+        )
+
+        assert len(figure.data) == 1
+        assert figure.data[0].type == "scatter"
+        assert figure.data[0].fill == "tozeroy"
+        assert figure.data[0].mode == "lines"
+        assert figure.layout.title.text == "example.fcs"
+
+    def test_smooth_histogram_counts_uses_sigma_points(self) -> None:
+        smoothed_counts = services.smooth_histogram_counts(
+            [0.0, 0.0, 10.0, 0.0, 0.0],
+            sigma_points=1.0,
+        )
+
+        assert smoothed_counts[1] > 0.0
+        assert smoothed_counts[2] < 10.0
+        assert smoothed_counts[3] > 0.0
 
     def test_build_visualization_figure_supports_log_histogram_y_axis(self) -> None:
         dataframe = pd.DataFrame(

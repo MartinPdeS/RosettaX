@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
 
-from pathlib import Path
 from typing import Any
 
 import dash
 import dash_bootstrap_components as dbc
 from dash import dcc, html
 
+from RosettaX.ui import (
+    WorkflowStep,
+    build_workflow_page_header,
+    build_workflow_section_card,
+)
 from RosettaX.utils import styling, ui_forms
 from RosettaX.workflow.calibration_cards import make_profile_aware_collapsible_card
 from RosettaX.workflow.upload import services as upload_services
@@ -36,19 +40,19 @@ class VisualizationPage:
                 self._build_header_card(),
                 self._build_section_card(
                     section_number=1,
-                    title="Upload visualization FCS file",
-                    subtitle="Load one FCS file to inspect its channels, metadata, and event distributions.",
+                    title="Upload visualization FCS files",
+                    subtitle="Load compatible FCS files, then choose which file to inspect.",
                     tooltip_text=(
-                        "Upload one FCS file that you want to inspect. "
-                        "The visualization page reads the file metadata and exposes "
-                        "its channels for histogram or 2D scatter plotting."
+                        "Upload one or more FCS files with matching channels, FCS versions, "
+                        "and detector voltages. The file selector in the plot settings lets "
+                        "you choose which compatible file to inspect."
                     ),
                     body_children=[
                         ui_forms.build_upload_widget(
                             upload_id=self.ids.upload,
-                            prompt_text="Select FCS file",
+                            prompt_text="Select one or more compatible FCS files",
                             accepted_file_extensions=".fcs",
-                            multiple=False,
+                            multiple=True,
                         ),
                         ui_forms.build_upload_status(
                             status_id=self.ids.upload_feedback,
@@ -79,6 +83,19 @@ class VisualizationPage:
                     [
                         html.Div(
                             [
+                                html.Label("FCS file", style=field_label_style),
+                                dcc.Dropdown(
+                                    id=self.ids.file_selection,
+                                    options=[],
+                                    value=None,
+                                    clearable=False,
+                                    placeholder="Upload compatible FCS files",
+                                ),
+                            ],
+                            style={"minWidth": "260px", "flex": "1"},
+                        ),
+                        html.Div(
+                            [
                                 html.Label("Plot type", style=field_label_style),
                                 dcc.Dropdown(
                                     id=self.ids.plot_type,
@@ -86,6 +103,10 @@ class VisualizationPage:
                                         {
                                             "label": "1D histogram",
                                             "value": services.PLOT_TYPE_HISTOGRAM,
+                                        },
+                                        {
+                                            "label": "Smoothed histogram",
+                                            "value": services.PLOT_TYPE_SMOOTHED_HISTOGRAM,
                                         },
                                         {
                                             "label": "2D scatter",
@@ -220,6 +241,25 @@ class VisualizationPage:
                             id=self.ids.marker_opacity_container,
                             style={"minWidth": "180px"},
                         ),
+                        html.Div(
+                            [
+                                html.Label(
+                                    "Smoothing strength (sigma points)",
+                                    style=field_label_style,
+                                ),
+                                dcc.Input(
+                                    id=self.ids.histogram_smoothing_sigma,
+                                    type="number",
+                                    min=0,
+                                    max=100,
+                                    step=0.5,
+                                    value=2.0,
+                                    style={"width": "180px", "color": "inherit"},
+                                ),
+                            ],
+                            id=self.ids.histogram_smoothing_container,
+                            style={"minWidth": "220px", "display": "none"},
+                        ),
                     ],
                     id=self.ids.scatter_controls_container,
                     style={
@@ -252,43 +292,12 @@ class VisualizationPage:
         )
 
     def _build_header_card(self) -> dbc.Card:
-        return dbc.Card(
-            dbc.CardBody(
-                [
-                    ui_forms.build_section_intro(
-                        title="Visualization",
-                        title_component="H2",
-                        description=(
-                            "Upload one FCS file and inspect it with a 1D histogram or a 2D scatter colored by local event density."
-                        ),
-                    ),
-                    dbc.Row(
-                        [
-                            dbc.Col(
-                                self._build_step_card(
-                                    number=step["number"],
-                                    title=step["title"],
-                                    description=step["description"],
-                                    color_name=step["color_name"],
-                                ),
-                                xs=12,
-                                md=6,
-                                lg=4,
-                                style={"marginBottom": "10px"},
-                            )
-                            for step in self._build_steps()
-                        ],
-                        className="g-2",
-                    ),
-                ],
-                style=ui_forms.build_workflow_section_body_style(),
+        return build_workflow_page_header(
+            title="Visualization",
+            description=(
+                "Upload compatible FCS files, choose one to inspect, and view it with a 1D histogram or a 2D scatter colored by local event density."
             ),
-            style={
-                **ui_forms.build_workflow_section_card_style(
-                    color_name=styling.get_workflow_page_header_color(),
-                ),
-                "marginBottom": "16px",
-            },
+            steps=self._build_steps(),
         )
 
     def _build_section_card(
@@ -300,27 +309,15 @@ class VisualizationPage:
         tooltip_text: str,
         body_children: list[Any],
     ) -> dbc.Card:
-        color_name = styling.get_workflow_section_color(section_number)
         section_key = title.lower().replace(" ", "-")
-
-        card = dbc.Card(
-            [
-                ui_forms.build_card_header_with_info(
-                    title=f"{section_number}. {title}",
-                    tooltip_target_id=f"{self.ids.page_prefix}-{section_key}-info-target",
-                    tooltip_id=f"{self.ids.page_prefix}-{section_key}-info-tooltip",
-                    tooltip_text=tooltip_text,
-                    subtitle=subtitle,
-                    color_name=color_name,
-                ),
-                dbc.CardBody(
-                    body_children,
-                    style=ui_forms.build_workflow_section_body_style(),
-                ),
-            ],
-            style=ui_forms.build_workflow_section_card_style(
-                color_name=color_name,
-            ),
+        card = build_workflow_section_card(
+            section_number=section_number,
+            title=title,
+            subtitle=subtitle,
+            body_children=body_children,
+            tooltip_text=tooltip_text,
+            tooltip_target_id=f"{self.ids.page_prefix}-{section_key}-info-target",
+            tooltip_id=f"{self.ids.page_prefix}-{section_key}-info-tooltip",
         )
         return make_profile_aware_collapsible_card(
             card,
@@ -328,91 +325,39 @@ class VisualizationPage:
             section_key=str(section_number),
         )
 
-    def _build_steps(self) -> list[dict[str, str]]:
+    def _build_steps(self) -> list[WorkflowStep]:
         return [
-            {
-                "number": "1",
-                "title": "Upload FCS file",
-                "description": (
-                    "Load one FCS file so RosettaX can read its channels and metadata for plotting."
+            WorkflowStep(
+                number="1",
+                title="Upload FCS file",
+                description=(
+                    "Load one or more compatible FCS files so RosettaX can read their channels and metadata for plotting."
                 ),
-                "color_name": styling.get_workflow_section_color(1),
-            },
-            {
-                "number": "2",
-                "title": "Choose plot settings",
-                "description": (
+                color_name=styling.get_workflow_section_color(1),
+            ),
+            WorkflowStep(
+                number="2",
+                title="Choose plot settings",
+                description=(
                     "Pick histogram or 2D scatter, then configure the plotted axes, scaling, and event limit."
                 ),
-                "color_name": styling.get_workflow_section_color(2),
-            },
-            {
-                "number": "3",
-                "title": "Inspect the data",
-                "description": (
+                color_name=styling.get_workflow_section_color(2),
+            ),
+            WorkflowStep(
+                number="3",
+                title="Inspect the data",
+                description=(
                     "Explore the plotted events to validate channels and distributions."
                 ),
-                "color_name": styling.get_workflow_section_color(3),
-            },
+                color_name=styling.get_workflow_section_color(3),
+            ),
         ]
-
-    def _build_step_card(
-        self,
-        *,
-        number: str,
-        title: str,
-        description: str,
-        color_name: str,
-    ) -> dbc.Card:
-        return dbc.Card(
-            dbc.CardBody(
-                [
-                    html.Div(
-                        number,
-                        style={
-                            "width": "28px",
-                            "height": "28px",
-                            "borderRadius": "50%",
-                            "display": "flex",
-                            "alignItems": "center",
-                            "justifyContent": "center",
-                            "fontWeight": "700",
-                            "fontSize": "0.9rem",
-                            "backgroundColor": styling.build_rgba(color_name, 0.12),
-                            "border": f"1px solid {styling.build_rgba(color_name, 0.35)}",
-                            "marginBottom": "10px",
-                        },
-                    ),
-                    html.H6(
-                        title,
-                        style={"marginBottom": "6px"},
-                    ),
-                    html.P(
-                        description,
-                        style={
-                            "marginBottom": "0px",
-                            "fontSize": "0.86rem",
-                            "opacity": 0.78,
-                        },
-                    ),
-                ],
-                style={
-                    "height": "100%",
-                    "padding": "14px",
-                },
-            ),
-            style=ui_forms.build_workflow_subpanel_card_style(
-                color_name=color_name,
-                style_overrides={
-                    "height": "100%",
-                },
-            ),
-        )
 
     def register_callbacks(self) -> "VisualizationPage":
         @dash.callback(
             dash.Output(self.ids.file_store, "data"),
             dash.Output(self.ids.upload_feedback, "children"),
+            dash.Output(self.ids.upload_feedback, "color"),
             dash.Input(self.ids.upload, "contents"),
             dash.State(self.ids.upload, "filename"),
             prevent_initial_call=True,
@@ -420,45 +365,61 @@ class VisualizationPage:
         def upload_visualization_file(
             contents: Any,
             filename: Any,
-        ) -> tuple[Any, str]:
+        ) -> tuple[Any, str, str]:
             if not contents:
-                return dash.no_update, "No file loaded."
+                return dash.no_update, "No file loaded.", "secondary"
 
             try:
-                saved_file_path = upload_services.save_uploaded_file(
-                    contents=str(contents),
-                    filename=filename,
+                saved_file_paths, safe_filenames = upload_services.save_uploaded_batch(
+                    contents=contents,
+                    filenames=filename,
                     upload_directory=services.VISUALIZATION_UPLOAD_DIRECTORY,
                 )
-                summary = services.build_upload_summary(
-                    uploaded_fcs_path=str(saved_file_path),
-                    uploaded_filename=str(filename or Path(saved_file_path).name),
+                consistency_report = upload_services.inspect_compatible_fcs_batch(
+                    saved_file_paths,
+                )
+                feedback_text, feedback_color = upload_services.build_upload_feedback(
+                    filenames=safe_filenames,
+                    consistency_report=consistency_report,
+                )
+                if not consistency_report.get("are_all_files_consistent", False):
+                    return dash.no_update, feedback_text, feedback_color
+
+                summary = services.build_upload_batch_summary(
+                    uploaded_fcs_paths=saved_file_paths,
+                    uploaded_filenames=safe_filenames,
+                    consistency_report=consistency_report,
                 )
             except Exception as exception:
                 return (
                     dash.no_update,
                     upload_services.build_upload_error_text(exception),
+                    "danger",
                 )
 
-            return summary, upload_services.build_loaded_filename_text(summary["uploaded_filename"])
+            return summary, feedback_text, feedback_color
 
         @dash.callback(
             dash.Output(self.ids.x_channel, "options"),
             dash.Output(self.ids.x_channel, "value"),
             dash.Output(self.ids.y_channel, "options"),
             dash.Output(self.ids.y_channel, "value"),
+            dash.Output(self.ids.file_selection, "options"),
+            dash.Output(self.ids.file_selection, "value"),
             dash.Input(self.ids.file_store, "data"),
             dash.State(self.ids.x_channel, "value"),
             dash.State(self.ids.y_channel, "value"),
+            dash.State(self.ids.file_selection, "value"),
             prevent_initial_call=False,
         )
         def sync_visualization_controls(
             file_store: Any,
             current_x_channel: Any,
             current_y_channel: Any,
-        ) -> tuple[list[dict[str, str]], Any, list[dict[str, str]], Any]:
+            current_file_path: Any,
+        ) -> tuple[list[dict[str, str]], Any, list[dict[str, str]], Any, list[dict[str, str]], Any]:
             if not isinstance(file_store, dict):
-                return [], None, [], None
+                return [], None, [], None, [], None
 
             column_names = list(file_store.get("column_names") or [])
             options = services.build_channel_options(column_names)
@@ -472,21 +433,31 @@ class VisualizationPage:
                 current_value=current_y_channel,
                 fallback_index=1,
             )
+            file_options = services.build_file_options(file_store)
+            file_path = services.resolve_default_file(
+                file_store,
+                current_value=current_file_path,
+            )
 
-            return options, x_channel, options, y_channel
+            return options, x_channel, options, y_channel, file_options, file_path
 
         @dash.callback(
             dash.Output(self.ids.y_channel_container, "style"),
             dash.Output(self.ids.marker_size_container, "style"),
             dash.Output(self.ids.marker_opacity_container, "style"),
             dash.Output(self.ids.colormap_log, "style"),
+            dash.Output(self.ids.histogram_smoothing_container, "style"),
             dash.Input(self.ids.plot_type, "value"),
             prevent_initial_call=False,
         )
         def toggle_scatter_control_visibility(
             plot_type: Any,
-        ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]]:
-            is_histogram = str(plot_type or "") == services.PLOT_TYPE_HISTOGRAM
+        ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]]:
+            plot_type_string = str(plot_type or "")
+            is_histogram = plot_type_string in {
+                services.PLOT_TYPE_HISTOGRAM,
+                services.PLOT_TYPE_SMOOTHED_HISTOGRAM,
+            }
             y_channel_style = {
                 "minWidth": "260px",
                 "flex": "1",
@@ -500,11 +471,18 @@ class VisualizationPage:
                 "display": "none" if is_histogram else "block",
                 "width": "fit-content",
             }
+            smoothing_style = {
+                "minWidth": "220px",
+                "display": "block"
+                if plot_type_string == services.PLOT_TYPE_SMOOTHED_HISTOGRAM
+                else "none",
+            }
             return (
                 y_channel_style,
                 marker_field_style,
                 marker_field_style,
                 colormap_toggle_style,
+                smoothing_style,
             )
 
         @dash.callback(
@@ -538,6 +516,7 @@ class VisualizationPage:
             dash.Output(self.ids.graph, "figure"),
             dash.Output(self.ids.plot_status, "children"),
             dash.Input(self.ids.file_store, "data"),
+            dash.Input(self.ids.file_selection, "value"),
             dash.Input(self.ids.plot_type, "value"),
             dash.Input(self.ids.x_channel, "value"),
             dash.Input(self.ids.y_channel, "value"),
@@ -546,12 +525,14 @@ class VisualizationPage:
             dash.Input(self.ids.colormap_log, "value"),
             dash.Input(self.ids.marker_size, "value"),
             dash.Input(self.ids.marker_opacity, "value"),
+            dash.Input(self.ids.histogram_smoothing_sigma, "value"),
             dash.Input(self.ids.max_events, "value"),
             dash.Input("runtime-config-store", "data"),
             prevent_initial_call=False,
         )
         def update_visualization_plot(
             file_store: Any,
+            selected_file_path: Any,
             plot_type: Any,
             x_channel: Any,
             y_channel: Any,
@@ -560,13 +541,14 @@ class VisualizationPage:
             colormap_log_values: Any,
             marker_size: Any,
             marker_opacity: Any,
+            smoothing_sigma_points: Any,
             max_events: Any,
             runtime_config_data: Any,
         ) -> tuple[Any, str]:
             if not isinstance(file_store, dict):
                 return (
                     services.build_empty_figure(
-                        message="Upload an FCS file to start visualizing events.",
+                        message="Upload compatible FCS files to start visualizing events.",
                         runtime_config_data=runtime_config_data,
                     ),
                     "No file loaded.",
@@ -575,9 +557,10 @@ class VisualizationPage:
             x_channel_string = str(x_channel or "").strip()
             y_channel_string = str(y_channel or "").strip()
             plot_type_string = str(plot_type or services.PLOT_TYPE_HISTOGRAM)
-            uploaded_fcs_path = str(
-                file_store.get("uploaded_fcs_path") or ""
-            ).strip()
+            uploaded_fcs_path = services.resolve_default_file(
+                file_store,
+                current_value=selected_file_path,
+            ) or ""
 
             if not x_channel_string:
                 return (
@@ -588,7 +571,7 @@ class VisualizationPage:
                     "Select an X channel.",
                 )
 
-            if plot_type_string != services.PLOT_TYPE_HISTOGRAM and not y_channel_string:
+            if plot_type_string == services.PLOT_TYPE_SCATTER and not y_channel_string:
                 return (
                     services.build_empty_figure(
                         message="Select a Y channel to render the 2D plot.",
@@ -599,7 +582,7 @@ class VisualizationPage:
 
             try:
                 dataframe = services.load_plot_dataframe(
-                    uploaded_fcs_path=str(file_store["uploaded_fcs_path"]),
+                    uploaded_fcs_path=uploaded_fcs_path,
                     x_channel=x_channel_string,
                     y_channel=y_channel_string,
                     max_events=services.clamp_max_events(max_events),
@@ -640,6 +623,7 @@ class VisualizationPage:
                 colormap_log_scale="enabled" in (colormap_log_values or []),
                 marker_size=marker_size,
                 marker_opacity=marker_opacity,
+                smoothing_sigma_points=smoothing_sigma_points,
                 runtime_config_data=runtime_config_data,
             )
 
