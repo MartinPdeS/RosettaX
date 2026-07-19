@@ -21,6 +21,7 @@ class SaveConfig:
     require_output_channel_name: bool = False
     saved_message_prefix: str = "Prepared calibration download"
     failure_message: str = "Failed to prepare calibration download. See terminal logs for details."
+    page_state_saved_field: str | None = None
 
 
 @dataclass(frozen=True)

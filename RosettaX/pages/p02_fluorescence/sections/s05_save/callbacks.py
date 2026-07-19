@@ -19,5 +19,5 @@ def register_callbacks(section) -> None:
         config=section.config,
         logger=logger,
         calibration_store_id=section.page.ids.Calibration.calibration_store,
-        page_state_store_id=None,
+        page_state_store_id=section.page.ids.State.page_state_store,
     )

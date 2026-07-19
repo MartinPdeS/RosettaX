@@ -41,6 +41,7 @@ class Save:
             require_output_channel_name=True,
             saved_message_prefix="Prepared calibration download",
             failure_message="Failed to prepare calibration download. See terminal logs for details.",
+            page_state_saved_field="calibration_saved",
         )
 
         self.adapter = PageStateSaveAdapter(

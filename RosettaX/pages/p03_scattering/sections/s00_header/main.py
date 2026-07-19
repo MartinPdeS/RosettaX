@@ -13,6 +13,8 @@ from RosettaX.ui import (
 )
 from RosettaX.utils import styling
 
+from . import callbacks
+
 logger = logging.getLogger(__name__)
 
 
@@ -60,9 +62,9 @@ class Header:
 
     def register_callbacks(self) -> None:
         """
-        Header section has no callbacks.
+        Register the live workflow progress callback.
         """
-        return None
+        callbacks.register_callbacks(self)
 
     def _build_steps(self) -> list[WorkflowStep]:
         """
@@ -86,10 +88,9 @@ class Header:
                 styling.get_workflow_section_color(2),
             ),
             WorkflowStep(
-                "3", "Define Mie model parameters",
+                "3", "Configure detector",
                 (
-                    "Set the optical and particle model parameters, including wavelength, "
-                    "medium refractive index, particle refractive index, and particle type."
+                    "Choose the scattering detector channel used for the calibration workflow."
                 ),
                 styling.get_workflow_section_color(3),
             ),
@@ -119,25 +120,55 @@ class Header:
             ),
         ]
 
-    def build_progress_content(self, page_state_payload: Any) -> dash.html.Div:
+    def build_progress_content(
+        self,
+        page_state_payload: Any,
+        *,
+        detector_configuration_values: Any = None,
+    ) -> dash.html.Div:
         """Build progress content from the serialized scattering page state."""
         state = page_state_payload if isinstance(page_state_payload, dict) else {}
         completed_count = 0
         if state.get("uploaded_fcs_path"):
             completed_count = 1
-        peak_payload = state.get("scattering_peak_lines_payload") or state.get(
-            "peak_lines_payload"
-        )
+        peak_payload = self._find_completed_peak_payload(state)
         if completed_count == 1 and isinstance(peak_payload, dict) and peak_payload.get("positions"):
             completed_count = 2
-        if completed_count == 2 and state.get("scattering_parameters_payload"):
+        detector_configured = _has_complete_detector_configuration(
+            detector_configuration_values,
+        )
+        if completed_count == 2 and detector_configured:
             completed_count = 3
-        if completed_count == 3 and state.get("calibration_graph_payload"):
+        if completed_count == 3 and (
+            state.get("calibration_model_graph_payload")
+            or state.get("calibration_graph_payload")
+        ):
             completed_count = 4
         if completed_count == 4 and state.get("calibration_payload"):
             completed_count = 5
+        if completed_count == 5 and state.get("calibration_saved"):
+            completed_count = 6
 
         return build_workflow_progress_content(
             steps=self._build_steps(),
             completed_count=completed_count,
         )
+
+    @staticmethod
+    def _find_completed_peak_payload(state: dict) -> dict:
+        """Return the first scattering peak payload containing positions."""
+        for field_name in (
+            "scattering_peak_lines_payload",
+            "peak_lines_payload",
+        ):
+            payload = state.get(field_name)
+            if isinstance(payload, dict) and payload.get("positions"):
+                return payload
+        return {}
+
+
+def _has_complete_detector_configuration(values: Any) -> bool:
+    """Return whether the preset, model, and detector type are all filled."""
+    if not isinstance(values, (list, tuple)):
+        return False
+    return len(values) == 3 and all(str(value or "").strip() for value in values)

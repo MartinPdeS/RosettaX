@@ -139,7 +139,7 @@ def build_workflow_progress_content(
                 color="success" if bounded_completed_count >= step_count else "primary",
                 striped=bounded_completed_count < step_count,
                 animated=bounded_completed_count < step_count,
-                style={"height": "8px", "borderRadius": "8px"},
+                style={"height": "12px", "borderRadius": "8px"},
             ),
         ],
         style={"marginBottom": "14px"},

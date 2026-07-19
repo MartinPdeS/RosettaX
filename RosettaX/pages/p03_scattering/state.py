@@ -24,6 +24,7 @@ class ScatteringPageState:
     calibration_graph_payload: Optional[dict[str, Any]] = None
     calibration_model_graph_payload: Optional[dict[str, Any]] = None
     calibration_payload: Optional[dict[str, Any]] = None
+    calibration_saved: bool = False
 
     status_message: str = ""
 
@@ -46,6 +47,7 @@ class ScatteringPageState:
                 "positions": [],
                 "labels": [],
             },
+            calibration_saved=False,
         )
 
     @classmethod

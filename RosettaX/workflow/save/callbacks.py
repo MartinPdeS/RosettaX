@@ -121,9 +121,21 @@ def _register_save_callback(
             )
         )
 
-    @dash.callback(
+    callback_outputs = [
         dash.Output(ids.save_out, "children"),
         dash.Output(ids.download, "data"),
+    ]
+    if page_state_store_id is not None and config.page_state_saved_field:
+        callback_outputs.append(
+            dash.Output(
+                page_state_store_id,
+                "data",
+                allow_duplicate=True,
+            )
+        )
+
+    @dash.callback(
+        *callback_outputs,
         dash.Input(ids.save_calibration_btn, "n_clicks"),
         *callback_states,
         prevent_initial_call=True,
@@ -133,7 +145,7 @@ def _register_save_callback(
         file_name: str,
         output_channel_name: str,
         *optional_state_payloads: Any,
-    ) -> tuple[Any, Any]:
+    ) -> tuple[Any, ...]:
         del n_clicks
 
         calibration_store_payload = None
@@ -172,10 +184,22 @@ def _register_save_callback(
             logger=logger,
         )
 
+        page_state_update = dash.no_update
+        if (
+            page_state_store_id is not None
+            and config.page_state_saved_field
+            and result.download_data is not dash.no_update
+        ):
+            page_state_update = dict(page_state_payload or {})
+            page_state_update[config.page_state_saved_field] = True
+
         logger.debug(
             "save_callback returning save_out=%r download_data_type=%s",
             result.save_out,
             type(result.download_data).__name__,
         )
+
+        if page_state_store_id is not None and config.page_state_saved_field:
+            return (*result.to_tuple(), page_state_update)
 
         return result.to_tuple()

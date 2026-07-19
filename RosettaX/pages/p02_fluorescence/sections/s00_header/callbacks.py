@@ -20,7 +20,11 @@ def register_callbacks(section) -> None:
         completed_count = 0
         if state.get("uploaded_fcs_path"):
             completed_count = 1
-        peak_payload = state.get("peak_lines_payload") or {}
+        peak_payload = _find_completed_peak_payload(
+            state,
+            "peak_lines_payload",
+            "fluorescence_peak_lines_payload",
+        )
         if completed_count == 1 and (
             state.get("fluorescence_peak_lines")
             or peak_payload.get("positions")
@@ -30,8 +34,19 @@ def register_callbacks(section) -> None:
             completed_count = 3
         if completed_count == 3 and state.get("calibration_payload"):
             completed_count = 4
+        if completed_count == 4 and state.get("calibration_saved"):
+            completed_count = 5
 
         return build_workflow_progress_content(
             steps=_build_steps(),
             completed_count=completed_count,
         )
+
+
+def _find_completed_peak_payload(state: dict, *field_names: str) -> dict:
+    """Return the first peak payload containing detected positions."""
+    for field_name in field_names:
+        payload = state.get(field_name)
+        if isinstance(payload, dict) and payload.get("positions"):
+            return payload
+    return {}

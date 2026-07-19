@@ -97,6 +97,8 @@ class FluorescenceUploadAdapter:
             fluorescence_peak_lines=[],
             fluorescence_histogram_payload=None,
             fluorescence_source_channel=None,
+            calibration_payload=None,
+            calibration_saved=False,
             status_message="",
         )
 
@@ -160,10 +162,20 @@ class ScatteringUploadAdapter:
             "uploaded_fcs_path": uploaded_fcs_path,
             "uploaded_filename": uploaded_filename,
             "status_message": "",
+            "calibration_graph_payload": None,
+            "calibration_model_graph_payload": None,
+            "calibration_payload": None,
+            "calibration_saved": False,
+            "scattering_parameters_payload": None,
         }
 
-        if self.empty_peak_lines_payload_builder is not None:
-            requested_updates["peak_lines_payload"] = self.empty_peak_lines_payload_builder()
+        empty_peak_payload = (
+            self.empty_peak_lines_payload_builder()
+            if self.empty_peak_lines_payload_builder is not None
+            else {"positions": [], "labels": []}
+        )
+        requested_updates["peak_lines_payload"] = empty_peak_payload
+        requested_updates["scattering_peak_lines_payload"] = dict(empty_peak_payload)
 
         existing_fields = set(
             current_page_state.to_dict().keys()

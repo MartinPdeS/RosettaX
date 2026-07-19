@@ -46,6 +46,7 @@ class FluorescencePageState:
     uploaded_filename: str = ""
 
     calibration_payload: Optional[dict[str, Any]] = None
+    calibration_saved: bool = False
 
     scattering_threshold: Optional[float] = None
 
@@ -73,6 +74,7 @@ class FluorescencePageState:
             uploaded_fcs_path=None,
             uploaded_filename="",
             calibration_payload=None,
+            calibration_saved=False,
             scattering_threshold=None,
             fluorescence_histogram_payload=None,
             fluorescence_source_channel=None,
