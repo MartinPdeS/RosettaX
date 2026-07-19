@@ -124,6 +124,7 @@ class RuntimeConfig:
         "apply_calibration.calibration.histogram_xscale": "calibration.histogram_xscale",
         "apply_calibration.calibration.histogram_yscale": "calibration.histogram_yscale",
         "apply_calibration.calibration.max_events_for_analysis": "calibration.max_events_for_analysis",
+        "apply_calibration.calibration.max_events_for_plots": "calibration.max_events_for_plots",
         "apply_calibration.calibration.n_bins_for_plots": "calibration.n_bins_for_plots",
         "apply_calibration.calibration.peak_graph_colormap_log": "calibration.peak_graph_colormap_log",
         "apply_calibration.calibration.histogram_scale": "calibration.histogram_scale",
@@ -224,6 +225,12 @@ class RuntimeConfig:
             default=100000,
             minimum=1,
             description="Maximum number of events used for analysis.",
+        ),
+        "calibration.max_events_for_plots": RuntimeConfigField(
+            expected_type=int,
+            default=100000,
+            minimum=1,
+            description="Maximum number of events displayed in plots.",
         ),
         "calibration.n_bins_for_plots": RuntimeConfigField(
             expected_type=int,

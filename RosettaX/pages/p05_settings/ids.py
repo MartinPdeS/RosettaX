@@ -94,6 +94,7 @@ class Ids:
         )
 
         max_events_for_analysis = f"{PAGE_NAME}-max-events-for-analysis"
+        max_events_for_plots = f"{PAGE_NAME}-max-events-for-plots"
         n_bins = f"{PAGE_NAME}-n-bins-for-plots"
         operator_name = f"{PAGE_NAME}-operator-name"
         instrument_name = f"{PAGE_NAME}-instrument-name"

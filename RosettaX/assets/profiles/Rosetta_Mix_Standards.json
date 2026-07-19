@@ -17,6 +17,7 @@
     "histogram_xscale": "linear",
     "histogram_yscale": "log",
     "max_events_for_analysis": 100000,
+    "max_events_for_plots": 100000,
     "n_bins_for_plots": 256,
     "peak_graph_colormap_log": true,
     "target_model_preset": "Extracellular Vesicles",

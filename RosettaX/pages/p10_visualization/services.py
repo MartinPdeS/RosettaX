@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from pathlib import Path
+from functools import lru_cache
 from typing import Any, Optional
 
 import numpy as np
@@ -167,7 +168,7 @@ def resolve_visualization_control_defaults(
             default=f"{VISUALIZATION_FIGURE_HEIGHT_PX}px",
         ),
         "max_events": runtime_config.get_int(
-            "calibration.max_events_for_analysis",
+            "calibration.max_events_for_plots",
             default=50_000,
         ),
         "x_log_values": ["enabled"] if histogram_xscale == "log" else [],
@@ -232,7 +233,7 @@ def build_upload_summary(
     """
     Build one serializable uploaded-file summary for the visualization page.
     """
-    with FCSFile(uploaded_fcs_path) as fcs_file:
+    with FCSFile(file_path) as fcs_file:
         metadata = fcs_file.get_metadata()
 
         return {
@@ -332,7 +333,12 @@ def load_plot_dataframe(
 ) -> pd.DataFrame:
     """
     Load one plotting dataframe from the requested FCS columns.
+
+    The parsed dataframe is cached so changing plot styling or axis options
+    does not reopen and reread the same FCS file on every callback.
     """
+    file_path = Path(uploaded_fcs_path).expanduser().resolve()
+    file_stat = file_path.stat()
     selected_columns = [
         str(x_channel),
     ]
@@ -342,11 +348,30 @@ def load_plot_dataframe(
     if y_channel_string and y_channel_string not in selected_columns:
         selected_columns.append(y_channel_string)
 
+    return _load_plot_dataframe_cached(
+        file_path=str(file_path),
+        modified_time_ns=int(file_stat.st_mtime_ns),
+        file_size=int(file_stat.st_size),
+        selected_columns=tuple(selected_columns),
+        max_events=int(max_events),
+    )
+
+
+@lru_cache(maxsize=16)
+def _load_plot_dataframe_cached(
+    *,
+    file_path: str,
+    modified_time_ns: int,
+    file_size: int,
+    selected_columns: tuple[str, ...],
+    max_events: int,
+) -> pd.DataFrame:
+    """Read and cache one bounded FCS dataframe for plotting."""
     with FCSFile(uploaded_fcs_path) as fcs_file:
         return fcs_file.dataframe_copy(
-            columns=selected_columns,
+            columns=list(selected_columns),
             dtype=float,
-            n=int(max_events),
+            n=max_events,
         )
 
 
