@@ -112,6 +112,8 @@ def build_peak_workflow_graph_figure(
     nbins: Any = None,
     peak_lines_payload: Any = None,
     max_events_for_plots: Any = None,
+    marker_size: Any = None,
+    marker_opacity: Any = None,
     runtime_config_data: Any = None,
 ) -> go.Figure:
     """
@@ -136,6 +138,8 @@ def build_peak_workflow_graph_figure(
         nbins=nbins,
         peak_lines_payload=peak_lines_payload,
         max_events_for_plots=max_events_for_plots,
+        marker_size=marker_size,
+        marker_opacity=marker_opacity,
         runtime_config_data=runtime_config_data,
     ).build()
 
@@ -353,6 +357,8 @@ class PeakWorkflowGraphBuilder:
         nbins: Any = None,
         peak_lines_payload: Any = None,
         max_events_for_plots: Any = None,
+        marker_size: Any = None,
+        marker_opacity: Any = None,
         runtime_config_data: Any = None,
     ) -> None:
         self.backend = backend
@@ -370,6 +376,8 @@ class PeakWorkflowGraphBuilder:
         self.nbins = nbins
         self.peak_lines_payload = peak_lines_payload
         self.max_events_for_plots = max_events_for_plots
+        self.marker_size = marker_size
+        self.marker_opacity = marker_opacity
         self.runtime_config_data = runtime_config_data
 
         self.runtime_config = RuntimeConfig.from_dict(
@@ -2452,19 +2460,25 @@ class PeakWorkflowGraphBuilder:
         """
         Return default marker size from runtime config.
         """
-        return self._get_nested_config_float(
+        configured_value = self._get_nested_config_float(
             path="visualization.default_marker_size",
             default=10.0,
         )
+        if self.marker_size is not None:
+            configured_value = casting.as_float(self.marker_size) or configured_value
+        return max(1.0, min(24.0, float(configured_value)))
 
     def _get_default_marker_opacity(self) -> float:
         """
         Return default marker opacity from runtime config.
         """
-        return self._get_nested_config_float(
+        configured_value = self._get_nested_config_float(
             path="visualization.default_marker_opacity",
             default=0.72,
         )
+        if self.marker_opacity is not None:
+            configured_value = casting.as_float(self.marker_opacity) or configured_value
+        return max(0.05, min(1.0, float(configured_value)))
 
     def _show_grid_by_default(self) -> bool:
         """

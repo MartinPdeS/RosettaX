@@ -801,6 +801,8 @@ def register_bins_visibility_callback(
             ids.nbins_control_container,
             "style",
         ),
+        dash.Output(ids.marker_size_control_container, "style"),
+        dash.Output(ids.marker_opacity_control_container, "style"),
         dash.Input(
             ids.process_dropdown,
             "value",
@@ -809,24 +811,20 @@ def register_bins_visibility_callback(
     )
     def toggle_bins_control(
         process_name: Any,
-    ) -> dict[str, Any]:
+    ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
         selected_process_name = registry.get_selected_process_name(
             process_name,
         )
 
         if not selected_process_name:
-            return {
-                "display": "none",
-            }
+            return {"display": "none"}, {"display": "none"}, {"display": "none"}
 
         process = registry.get_process_instance(
             process_name=selected_process_name,
         )
 
         if process is None:
-            return {
-                "display": "none",
-            }
+            return {"display": "none"}, {"display": "none"}, {"display": "none"}
 
         graph_type = getattr(
             process,
@@ -835,13 +833,22 @@ def register_bins_visibility_callback(
         )
 
         if graph_type == "1d_histogram":
-            return {
-                "display": "block",
-            }
+            return (
+                {"display": "block"},
+                {"display": "none"},
+                {"display": "none"},
+            )
 
-        return {
-            "display": "none",
-        }
+        if graph_type == "2d_scatter":
+            marker_style = {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "4px",
+                "minWidth": "150px",
+            }
+            return {"display": "none"}, marker_style, dict(marker_style)
+
+        return {"display": "none"}, {"display": "none"}, {"display": "none"}
 
 
 def register_process_settings_visibility_callback(

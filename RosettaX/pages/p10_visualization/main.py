@@ -19,6 +19,7 @@ from RosettaX.workflow.file_selection.services import (
 )
 from RosettaX.workflow.file_selection import UploadedFileBatch
 from RosettaX.workflow.upload import services as upload_services
+from RosettaX.workflow.plotting import layout as plotting_layout
 
 from .ids import Ids
 from . import services
@@ -161,121 +162,57 @@ class VisualizationPage:
                         "flexWrap": "wrap",
                     },
                 ),
-                html.Div(
+                plotting_layout.build_plot_control_panel(
                     [
-                        dbc.Checklist(
-                            id=self.ids.x_log,
+                        plotting_layout.build_plot_axis_checklist(
+                            component_id=self.ids.x_log,
                             options=[{"label": "Log X", "value": "enabled"}],
                             value=default_controls["x_log_values"],
-                            inline=True,
-                            switch=True,
-                            persistence=True,
-                            persistence_type="session",
                         ),
-                        dbc.Checklist(
-                            id=self.ids.y_log,
+                        plotting_layout.build_plot_axis_checklist(
+                            component_id=self.ids.y_log,
                             options=[{"label": "Log Y", "value": "enabled"}],
                             value=default_controls["y_log_values"],
-                            inline=True,
-                            switch=True,
-                            persistence=True,
-                            persistence_type="session",
                         ),
-                        dbc.Checklist(
-                            id=self.ids.colormap_log,
-                            options=[
-                                {"label": "Log colormap", "value": "enabled"}
-                            ],
+                        plotting_layout.build_plot_axis_checklist(
+                            component_id=self.ids.colormap_log,
+                            options=[{"label": "Log colormap", "value": "enabled"}],
                             value=default_controls["colormap_log_values"],
-                            inline=True,
-                            switch=True,
-                            persistence=True,
-                            persistence_type="session",
+                        ),
+                        plotting_layout.build_plot_number_control(
+                            container_id=None,
+                            input_id=self.ids.max_events,
+                            label="Maximum events",
+                            value=default_controls["max_events"],
+                            input_mode="numeric",
+                            width="160px",
+                        ),
+                        plotting_layout.build_plot_number_control(
+                            container_id=self.ids.marker_size_container,
+                            input_id=self.ids.marker_size,
+                            label="Marker size",
+                            value=default_controls["marker_size"],
+                            width="160px",
+                            visible=False,
+                        ),
+                        plotting_layout.build_plot_number_control(
+                            container_id=self.ids.marker_opacity_container,
+                            input_id=self.ids.marker_opacity,
+                            label="Marker opacity",
+                            value=default_controls["marker_opacity"],
+                            width="160px",
+                            visible=False,
+                        ),
+                        plotting_layout.build_plot_number_control(
+                            container_id=self.ids.histogram_smoothing_container,
+                            input_id=self.ids.histogram_smoothing_sigma,
+                            label="Smoothing strength (sigma points)",
+                            value=2.0,
+                            width="180px",
+                            visible=False,
                         ),
                     ],
-                    id=self.ids.axis_toggle_container,
-                    style={
-                        "display": "flex",
-                        "alignItems": "center",
-                        "gap": styling.get_spacing_token("lg"),
-                        "flexWrap": "wrap",
-                    },
-                ),
-                html.Div(
-                    [
-                        html.Div(
-                            [
-                                html.Label("Max events", style=field_label_style),
-                                dcc.Input(
-                                    id=self.ids.max_events,
-                                    type="number",
-                                    value=default_controls["max_events"],
-                                    min=0,
-                                    step=1000,
-                                    style={"width": "160px", "color": "inherit"},
-                                ),
-                            ],
-                            style={"minWidth": "180px"},
-                        ),
-                        html.Div(
-                            [
-                                html.Label("Marker size", style=field_label_style),
-                                dcc.Input(
-                                    id=self.ids.marker_size,
-                                    type="number",
-                                    value=default_controls["marker_size"],
-                                    min=1,
-                                    max=24,
-                                    step=1,
-                                    style={"width": "160px"},
-                                ),
-                            ],
-                            id=self.ids.marker_size_container,
-                            style={"minWidth": "180px"},
-                        ),
-                        html.Div(
-                            [
-                                html.Label("Marker opacity", style=field_label_style),
-                                dcc.Input(
-                                    id=self.ids.marker_opacity,
-                                    type="number",
-                                    value=default_controls["marker_opacity"],
-                                    min=0.05,
-                                    max=1.0,
-                                    step=0.05,
-                                    style={"width": "160px"},
-                                ),
-                            ],
-                            id=self.ids.marker_opacity_container,
-                            style={"minWidth": "180px"},
-                        ),
-                        html.Div(
-                            [
-                                html.Label(
-                                    "Smoothing strength (sigma points)",
-                                    style=field_label_style,
-                                ),
-                                dcc.Input(
-                                    id=self.ids.histogram_smoothing_sigma,
-                                    type="number",
-                                    min=0,
-                                    max=100,
-                                    step=0.5,
-                                    value=2.0,
-                                    style={"width": "180px", "color": "inherit"},
-                                ),
-                            ],
-                            id=self.ids.histogram_smoothing_container,
-                            style={"minWidth": "220px", "display": "none"},
-                        ),
-                    ],
-                    id=self.ids.scatter_controls_container,
-                    style={
-                        "display": "flex",
-                        "alignItems": "flex-start",
-                        "gap": styling.get_spacing_token("md"),
-                        "flexWrap": "wrap",
-                    },
+                    component_id=self.ids.scatter_controls_container,
                 ),
                 html.Div(
                     id=self.ids.plot_status,
@@ -472,21 +409,25 @@ class VisualizationPage:
             y_channel_style = {
                 "minWidth": "260px",
                 "flex": "1",
-                "display": "none" if is_histogram else "block",
+                "display": "none" if is_histogram else "flex",
             }
             marker_field_style = {
-                "minWidth": "180px",
                 "display": "none" if is_histogram else "block",
+                "flexDirection": "column",
+                "gap": "4px",
+                "minWidth": "160px",
             }
             colormap_toggle_style = {
                 "display": "none" if is_histogram else "block",
                 "width": "fit-content",
             }
             smoothing_style = {
-                "minWidth": "220px",
-                "display": "block"
+                "display": "flex"
                 if plot_type_string == services.PLOT_TYPE_SMOOTHED_HISTOGRAM
                 else "none",
+                "flexDirection": "column",
+                "gap": "4px",
+                "minWidth": "180px",
             }
             return (
                 y_channel_style,
@@ -630,6 +571,7 @@ class VisualizationPage:
                 plot_type=plot_type_string,
                 x_channel=x_channel_string,
                 y_channel=y_channel_string,
+                max_events=services.clamp_max_events(max_events),
                 log_x="enabled" in (x_log_values or []),
                 log_y="enabled" in (y_log_values or []),
                 colormap_log_scale="enabled" in (colormap_log_values or []),

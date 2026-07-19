@@ -13,6 +13,7 @@ from .models import PeakConfig
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
 from RosettaX.workflow.plotting.scatter2d import Scatter2DGraphIds
+from RosettaX.workflow.plotting import layout as plotting_layout
 
 
 logger = logging.getLogger(__name__)
@@ -861,6 +862,27 @@ class PeakLayout:
         """
         Build the graph container with shared 2D scatter controls.
         """
+        bottom_controls = [
+            self._build_graph_controls(
+                container_id=self.ids.histogram_controls_container,
+                nbins_control_container_id=self.ids.nbins_control_container,
+                nbins_input_id=self.ids.nbins_input,
+                number_of_bins=self._get_default_number_of_bins(),
+            ),
+        ]
+        if self.config.max_events_input_id is not None:
+            bottom_controls.append(
+                self._build_max_events_control(
+                    input_id=self.config.max_events_input_id,
+                ),
+            )
+        bottom_controls.extend(
+            [
+                self._build_marker_size_control(),
+                self._build_marker_opacity_control(),
+            ]
+        )
+
         return html.Div(
             id=container_id,
             children=[
@@ -881,14 +903,7 @@ class PeakLayout:
                             "height": self._get_default_graph_height(),
                             "width": "100%",
                         },
-                        bottom_controls=[
-                            self._build_graph_controls(
-                                container_id=self.ids.histogram_controls_container,
-                                nbins_control_container_id=self.ids.nbins_control_container,
-                                nbins_input_id=self.ids.nbins_input,
-                                number_of_bins=self._get_default_number_of_bins(),
-                            ),
-                        ],
+                        bottom_controls=bottom_controls,
                     ),
                     type="circle",
                     color="#0d6efd",
@@ -901,6 +916,55 @@ class PeakLayout:
                 "overflow": "visible",
                 "marginBottom": "16px",
             },
+        )
+
+    def _build_max_events_control(self, *, input_id: Any) -> html.Div:
+        """Build the shared event limit control beside plot options."""
+        runtime_config = self._get_default_runtime_config()
+        max_events = runtime_config.get_int(
+            "calibration.max_events_for_analysis",
+            default=50_000,
+        )
+
+        return plotting_layout.build_plot_number_control(
+            container_id=None,
+            input_id=input_id,
+            label="Maximum events",
+            value=max_events,
+            input_mode="numeric",
+            width="150px",
+        )
+
+    def _build_marker_size_control(self) -> html.Div:
+        """Build the 2D marker-size control using the active profile default."""
+        runtime_config = self._get_default_runtime_config()
+        value = runtime_config.get_float(
+            "visualization.default_marker_size",
+            default=7.0,
+        )
+        return plotting_layout.build_plot_number_control(
+            container_id=self.ids.marker_size_control_container,
+            input_id=self.ids.marker_size_input,
+            label="Marker size",
+            value=value,
+            input_mode="decimal",
+            visible=False,
+        )
+
+    def _build_marker_opacity_control(self) -> html.Div:
+        """Build the 2D marker-opacity control using the active profile default."""
+        runtime_config = self._get_default_runtime_config()
+        value = runtime_config.get_float(
+            "visualization.default_marker_opacity",
+            default=0.72,
+        )
+        return plotting_layout.build_plot_number_control(
+            container_id=self.ids.marker_opacity_control_container,
+            input_id=self.ids.marker_opacity_input,
+            label="Marker opacity",
+            value=value,
+            input_mode="decimal",
+            visible=False,
         )
 
     def _get_default_graph_height(self) -> str:

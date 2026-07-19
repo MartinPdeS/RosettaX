@@ -21,6 +21,17 @@ from RosettaX.workflow.file_selection.services import (
     resolve_selected_file,
 )
 from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
+from RosettaX.workflow.plotting.models import (
+    AxisOptions,
+    HistogramOptions,
+    PlotStyleOptions,
+    ScatterOptions,
+    SmoothedHistogramOptions,
+    SmoothingOptions,
+)
+from RosettaX.workflow.plotting.transforms import (
+    smooth_histogram_counts as _smooth_histogram_counts,
+)
 from RosettaX.workflow.upload import services as upload_services
 
 
@@ -378,26 +389,11 @@ def smooth_histogram_counts(
     *,
     sigma_points: Any,
 ) -> np.ndarray:
-    """Apply Gaussian smoothing in histogram-bin space."""
-    counts = np.asarray(histogram_counts, dtype=float).reshape(-1)
-    if counts.size < 3:
-        return counts
-
-    try:
-        resolved_sigma = max(float(sigma_points), 0.0)
-    except (TypeError, ValueError):
-        resolved_sigma = 2.0
-
-    if resolved_sigma <= 0.0:
-        return counts
-
-    radius = max(1, int(np.ceil(3.0 * resolved_sigma)))
-    offsets = np.arange(-radius, radius + 1, dtype=float)
-    kernel = np.exp(-0.5 * np.square(offsets / resolved_sigma))
-    kernel /= np.sum(kernel)
-
-    padded_counts = np.pad(counts, radius, mode="edge")
-    return np.convolve(padded_counts, kernel, mode="valid")
+    """Apply the shared Gaussian smoothing transform."""
+    return _smooth_histogram_counts(
+        histogram_counts,
+        sigma_points=sigma_points,
+    )
 
 
 def build_visualization_figure(
@@ -409,6 +405,7 @@ def build_visualization_figure(
     y_channel: Optional[str],
     log_x: bool,
     log_y: bool,
+    max_events: Optional[int] = None,
     colormap_log_scale: bool = False,
     marker_size: float = 5.0,
     marker_opacity: float = 0.72,
@@ -423,6 +420,53 @@ def build_visualization_figure(
     visualization_defaults = resolve_visualization_control_defaults(
         runtime_config_data,
     )
+    resolved_max_events = (
+        clamp_max_events(max_events)
+        if max_events is not None
+        else None
+    )
+    shared_style = PlotStyleOptions(
+        marker_size=float(visualization_defaults["marker_size"]),
+        marker_opacity=float(visualization_defaults["marker_opacity"]),
+        line_width=float(visualization_defaults["default_line_width"]),
+        font_size=float(visualization_defaults["default_font_size"]),
+        tick_size=float(visualization_defaults["default_tick_size"]),
+        show_grid=bool(visualization_defaults["show_grid"]),
+        height_px=int(visualization_defaults["figure_height_px"]),
+    )
+    histogram_options = HistogramOptions(
+        bin_count=VISUALIZATION_HISTOGRAM_BIN_COUNT,
+        max_events=resolved_max_events,
+        axes=AxisOptions(x_log=bool(log_x), y_log=bool(log_y)),
+        style=shared_style,
+    )
+    smoothed_histogram_options = SmoothedHistogramOptions(
+        bin_count=histogram_options.bin_count,
+        max_events=histogram_options.max_events,
+        axes=histogram_options.axes,
+        style=shared_style,
+        smoothing=SmoothingOptions(sigma_points=smoothing_sigma_points),
+    )
+    scatter_options = ScatterOptions(
+        max_events=resolved_max_events,
+        marker_size=clamp_marker_size(marker_size),
+        marker_opacity=clamp_marker_opacity(marker_opacity),
+        density_bin_count=VISUALIZATION_SCATTER_DENSITY_BIN_COUNT,
+        axes=AxisOptions(
+            x_log=bool(log_x),
+            y_log=bool(log_y),
+            color_log=bool(colormap_log_scale),
+        ),
+        style=shared_style,
+    )
+    log_x = histogram_options.axes.x_log
+    log_y = histogram_options.axes.y_log
+    colormap_log_scale = scatter_options.axes.color_log
+    marker_size = scatter_options.marker_size
+    marker_opacity = scatter_options.marker_opacity
+    smoothing_sigma_points = smoothed_histogram_options.smoothing.sigma_points
+    if resolved_max_events is not None and len(dataframe) > resolved_max_events:
+        dataframe = dataframe.iloc[:resolved_max_events].copy()
     visualization_uirevision = build_visualization_uirevision(
         uploaded_fcs_path=uploaded_fcs_path,
         plot_type=plot_type,
@@ -471,13 +515,13 @@ def build_visualization_figure(
             bin_edges = np.logspace(
                 np.log10(histogram_min),
                 np.log10(histogram_max),
-                VISUALIZATION_HISTOGRAM_BIN_COUNT + 1,
+                histogram_options.bin_count + 1,
             )
         else:
             bin_edges = np.linspace(
                 histogram_min,
                 histogram_max,
-                VISUALIZATION_HISTOGRAM_BIN_COUNT + 1,
+                histogram_options.bin_count + 1,
             )
 
         histogram_counts, _ = np.histogram(
@@ -490,7 +534,7 @@ def build_visualization_figure(
         if plot_type == PLOT_TYPE_FILLED_HISTOGRAM:
             smoothed_counts = smooth_histogram_counts(
                 histogram_counts,
-                sigma_points=smoothing_sigma_points,
+                sigma_points=smoothed_histogram_options.smoothing.sigma_points,
             )
             figure.add_trace(
                 go.Scatter(
@@ -546,7 +590,7 @@ def build_visualization_figure(
             x_log_scale=log_x,
             y_log_scale=log_y,
             colormap_log_scale=colormap_log_scale,
-            number_of_bins=VISUALIZATION_SCATTER_DENSITY_BIN_COUNT,
+            number_of_bins=scatter_options.density_bin_count,
         )
 
         figure.add_trace(

@@ -71,6 +71,8 @@ class PeakWorkflowCallbacks:
             adapter=self.adapter,
             page_state_store_id=self.page_state_store_id,
             max_events_input_id=self.max_events_input_id,
+            marker_size_input_id=getattr(self.ids, "marker_size_input", None),
+            marker_opacity_input_id=getattr(self.ids, "marker_opacity_input", None),
             runtime_config_store_id=self.runtime_config_store_id,
         )
 
@@ -116,7 +118,11 @@ class PeakWorkflowCallbacks:
             dash.Output(ids.graph_toggle_switch, "value"),
             dash.Output(ids.data_filter_switch, "value"),
             dash.Output(ids.axis_scale_toggle, "value"),
+            dash.Output(ids.marker_size_input, "value"),
+            dash.Output(ids.marker_opacity_input, "value"),
         ]
+        if self.max_events_input_id is not None:
+            outputs.append(dash.Output(self.max_events_input_id, "value"))
 
         states: list[Any] = []
 
@@ -182,7 +188,22 @@ class PeakWorkflowCallbacks:
                     default=True,
                 ) else [],
                 axis_scale_toggle_values,
+                runtime_config.get_float(
+                    "visualization.default_marker_size",
+                    default=7.0,
+                ),
+                runtime_config.get_float(
+                    "visualization.default_marker_opacity",
+                    default=0.72,
+                ),
             )
+            if self.max_events_input_id is not None:
+                base_values += (
+                    runtime_config.get_int(
+                        "calibration.max_events_for_analysis",
+                        default=50_000,
+                    ),
+                )
 
             if process_dropdown_id is not None and isinstance(default_process_runtime_config_path, str) and default_process_runtime_config_path:
                 configured_process = runtime_config.get_str(

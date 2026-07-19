@@ -134,6 +134,26 @@ class PeakIds:
         return f"{self.prefix}-nbins-input"
 
     @property
+    def max_events_input(self) -> str:
+        return f"{self.prefix}-max-events-input"
+
+    @property
+    def marker_size_control_container(self) -> str:
+        return f"{self.prefix}-marker-size-control-container"
+
+    @property
+    def marker_size_input(self) -> str:
+        return f"{self.prefix}-marker-size-input"
+
+    @property
+    def marker_opacity_control_container(self) -> str:
+        return f"{self.prefix}-marker-opacity-control-container"
+
+    @property
+    def marker_opacity_input(self) -> str:
+        return f"{self.prefix}-marker-opacity-input"
+
+    @property
     def graph_hist(self) -> str:
         return f"{self.prefix}-histogram-graph"
 

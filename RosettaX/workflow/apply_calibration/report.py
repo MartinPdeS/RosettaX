@@ -27,10 +27,13 @@ COLOR_INK = (0.11, 0.14, 0.18)
 COLOR_MUTED = (0.39, 0.44, 0.51)
 COLOR_LINE = (0.81, 0.85, 0.89)
 COLOR_SURFACE = (0.98, 0.99, 1.00)
+COLOR_SURFACE_ALT = (0.95, 0.97, 0.98)
 COLOR_ACCENT = (0.05, 0.43, 0.61)
 COLOR_ACCENT_SOFT = (0.87, 0.94, 0.98)
 COLOR_ACCENT_ALT = (0.88, 0.93, 0.90)
 COLOR_WARNING = (0.72, 0.41, 0.12)
+COLOR_WARNING_SOFT = (1.00, 0.96, 0.88)
+COLOR_SUCCESS = (0.16, 0.48, 0.32)
 COLOR_POINT = (0.89, 0.34, 0.19)
 COLOR_LINE_SERIES = (0.07, 0.47, 0.73)
 
@@ -389,23 +392,6 @@ def _sanitize_payload_tree(value: Any) -> Any:
 
     return _sanitize_payload_value(value)
 
-def _sanitize_payload_tree(value: Any) -> Any:
-    if isinstance(value, dict):
-        return {
-            str(key): _sanitize_payload_tree(item)
-            for key, item in value.items()
-            if _is_supported_payload_tree_value(item)
-        }
-
-    if isinstance(value, list):
-        return [
-            _sanitize_payload_tree(item)
-            for item in value
-            if _is_supported_payload_tree_value(item)
-        ]
-
-    return _sanitize_payload_value(value)
-
 
 def _is_supported_payload_value(value: Any) -> bool:
     return isinstance(value, (dict, str, bool, int, float, list)) or value is None
@@ -446,6 +432,7 @@ class _PdfReportComposer:
         self.pages.append(self.current_page)
         self.cursor_y = PAGE_HEIGHT - 154.0
         self._draw_cover_header()
+        self._draw_status_banner()
 
     def build_pdf_bytes(self) -> bytes:
         self._compose_document()
@@ -599,14 +586,14 @@ class _PdfReportComposer:
 
         self._fill_rect(
             x=0.0,
-            y=PAGE_HEIGHT - 106.0,
+            y=PAGE_HEIGHT - 126.0,
             width=PAGE_WIDTH,
-            height=106.0,
+            height=126.0,
             fill_color=COLOR_ACCENT,
         )
         self._fill_rect(
             x=0.0,
-            y=PAGE_HEIGHT - 106.0,
+            y=PAGE_HEIGHT - 126.0,
             width=PAGE_WIDTH,
             height=1.0,
             fill_color=(0.89, 0.94, 0.98),
@@ -631,12 +618,72 @@ class _PdfReportComposer:
         )
         self._draw_text(
             x=PAGE_MARGIN,
-            y=PAGE_HEIGHT - 86.0,
+            y=PAGE_HEIGHT - 101.0,
+            text="RosettaX  •  Calibration application summary",
+            font="F1",
+            size=8.5,
+            color=(0.92, 0.96, 0.99),
+        )
+        self._draw_text(
+            x=PAGE_MARGIN,
+            y=PAGE_HEIGHT - 116.0,
             text=f"Generated {self.report_payload.get('generated_at', '')}",
             font="F1",
             size=9.0,
             color=(0.92, 0.96, 0.99),
         )
+
+    def _draw_status_banner(self) -> None:
+        """Draw a prominent completion state below the report cover."""
+        result_payload = self.report_payload.get("result", {})
+        if not isinstance(result_payload, dict):
+            result_payload = {}
+
+        warnings = _normalize_string_list(result_payload.get("warnings"))
+        status = str(result_payload.get("status") or "Run completed.")
+        has_warnings = bool(warnings)
+        label = "COMPLETED WITH WARNINGS" if has_warnings else "COMPLETED"
+        accent = COLOR_WARNING if has_warnings else COLOR_SUCCESS
+        fill = COLOR_WARNING_SOFT if has_warnings else COLOR_ACCENT_ALT
+
+        height = 42.0
+        self._ensure_space(height + 12.0)
+        y = self.cursor_y - height
+        self._fill_rect(
+            x=PAGE_MARGIN,
+            y=y,
+            width=CONTENT_WIDTH,
+            height=height,
+            fill_color=fill,
+            stroke_color=accent,
+        )
+        self._fill_rect(
+            x=PAGE_MARGIN,
+            y=y,
+            width=5.0,
+            height=height,
+            fill_color=accent,
+        )
+        self._draw_text(
+            x=PAGE_MARGIN + 16.0,
+            y=y + height - 16.0,
+            text=label,
+            font="F2",
+            size=9.0,
+            color=accent,
+        )
+        self._draw_text_block(
+            x=PAGE_MARGIN + 16.0,
+            y=y + height - 30.0,
+            width=CONTENT_WIDTH - 28.0,
+            text=status,
+            font="F1",
+            size=8.5,
+            color=COLOR_INK,
+            leading=10.0,
+            max_lines=1,
+        )
+        self.cursor_y = y - 16.0
 
     def _draw_running_header(self) -> None:
         self._fill_rect(
@@ -888,7 +935,7 @@ class _PdfReportComposer:
                 y=y,
                 width=column_width,
                 height=height,
-                fill_color=COLOR_ACCENT_SOFT,
+                fill_color=COLOR_ACCENT,
                 stroke_color=COLOR_LINE,
             )
             self._draw_text_block(
@@ -898,7 +945,7 @@ class _PdfReportComposer:
                 text=header,
                 font="F2",
                 size=9.0,
-                color=COLOR_INK,
+                color=(1.0, 1.0, 1.0),
                 leading=10.0,
                 max_lines=2,
             )
@@ -919,7 +966,7 @@ class _PdfReportComposer:
     ) -> None:
         x_cursor = PAGE_MARGIN
         y = self.cursor_y - row_height
-        row_fill = COLOR_SURFACE if row_number % 2 == 0 else (1.0, 1.0, 1.0)
+        row_fill = (1.0, 1.0, 1.0) if row_number % 2 == 0 else COLOR_SURFACE_ALT
 
         for cell_lines, column_width in zip(cell_lines_by_column, column_widths, strict=False):
             self._fill_rect(
@@ -974,6 +1021,38 @@ class _PdfReportComposer:
             text=str(chart_spec.get("subtitle") or ""),
             font="F1",
             size=8.5,
+            color=COLOR_MUTED,
+        )
+        legend_y = plot_y + plot_height - 18.0
+        legend_x = plot_x + plot_width - 150.0
+        self._draw_line(
+            x1=legend_x,
+            y1=legend_y + 2.0,
+            x2=legend_x + 14.0,
+            y2=legend_y + 2.0,
+            color=COLOR_LINE_SERIES,
+            line_width=1.8,
+        )
+        self._draw_text(
+            x=legend_x + 19.0,
+            y=legend_y - 1.0,
+            text="Fit",
+            font="F1",
+            size=7.5,
+            color=COLOR_MUTED,
+        )
+        self._fill_circle(
+            cx=legend_x + 65.0,
+            cy=legend_y + 2.0,
+            radius=2.6,
+            fill_color=COLOR_POINT,
+        )
+        self._draw_text(
+            x=legend_x + 72.0,
+            y=legend_y - 1.0,
+            text="Observed",
+            font="F1",
+            size=7.5,
             color=COLOR_MUTED,
         )
 
@@ -1041,9 +1120,9 @@ class _PdfReportComposer:
             self._draw_polyline(points=polyline_points, color=COLOR_LINE_SERIES, line_width=1.8)
 
         for point_x, point_y in transformed_points:
-            marker_x = _project_value(point_x, x_min, x_max, inner_x, inner_width) - 2.2
-            marker_y = _project_value(point_y, y_min, y_max, inner_y, inner_height) - 2.2
-            self._fill_rect(x=marker_x, y=marker_y, width=4.4, height=4.4, fill_color=COLOR_POINT)
+            marker_x = _project_value(point_x, x_min, x_max, inner_x, inner_width)
+            marker_y = _project_value(point_y, y_min, y_max, inner_y, inner_height)
+            self._fill_circle(cx=marker_x, cy=marker_y, radius=2.6, fill_color=COLOR_POINT)
 
         log_x = bool(chart_spec.get("log_x", False))
         log_y = bool(chart_spec.get("log_y", False))
@@ -1138,7 +1217,7 @@ class _PdfReportComposer:
                 y=y,
                 width=CONTENT_WIDTH,
                 height=box_height,
-                fill_color=COLOR_SURFACE,
+                fill_color=COLOR_WARNING_SOFT if title.lower() == "warnings" else COLOR_SURFACE,
                 stroke_color=COLOR_LINE,
             )
 

@@ -10,6 +10,11 @@ import plotly.graph_objs as go
 from RosettaX.utils.io import load_signal
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.utils import styling
+from RosettaX.workflow.plotting.models import AxisOptions, HistogramOptions
+from RosettaX.workflow.plotting.transforms import (
+    build_histogram_arrays,
+    finite_plot_values,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +65,7 @@ def build_histogram(
     n_bins_for_plots: int,
     max_events_for_analysis: Optional[int] = None,
     use_log_x_bins: bool = False,
+    options: Optional[HistogramOptions] = None,
 ) -> HistogramResult:
     """
     Build a 1D histogram from a detector signal in an FCS file.
@@ -89,6 +95,14 @@ def build_histogram(
         If no finite signal values are available after loading.
     """
     resolved_detector_column = str(detector_column).strip()
+    resolved_options = options or HistogramOptions(
+        bin_count=int(n_bins_for_plots),
+        max_events=max_events_for_analysis,
+        axes=AxisOptions(x_log=bool(use_log_x_bins)),
+    )
+    n_bins_for_plots = resolved_options.bin_count
+    max_events_for_analysis = resolved_options.max_events
+    use_log_x_bins = resolved_options.axes.x_log
 
     logger.debug(
         "build_histogram called with detector_column=%r n_bins_for_plots=%r max_events_for_analysis=%r use_log_x_bins=%r",
@@ -108,36 +122,15 @@ def build_histogram(
     if values.size == 0:
         raise ValueError("No signal values available to build histogram.")
 
-    values_for_histogram = np.asarray(values, dtype=float)
-
-    if use_log_x_bins:
-        values_for_histogram = values_for_histogram[
-            values_for_histogram > 0.0
-        ]
-
-        if values_for_histogram.size == 0:
-            raise ValueError("No positive signal values available for logarithmic histogram bins.")
-
-        lower_edge = float(np.min(values_for_histogram))
-        upper_edge = float(np.max(values_for_histogram))
-
-        if not np.isfinite(lower_edge) or not np.isfinite(upper_edge):
-            raise ValueError("No finite signal values available to build histogram.")
-
-        if lower_edge == upper_edge:
-            upper_edge = lower_edge * 1.01
-
-        edges = np.geomspace(
-            lower_edge,
-            upper_edge,
-            num=int(n_bins_for_plots) + 1,
-        )
-        counts, edges = np.histogram(values_for_histogram, bins=edges)
-        centers = np.sqrt(edges[:-1] * edges[1:])
-
-    else:
-        counts, edges = np.histogram(values_for_histogram, bins=int(n_bins_for_plots))
-        centers = 0.5 * (edges[:-1] + edges[1:])
+    values_for_histogram = finite_plot_values(
+        values,
+        positive_only=resolved_options.axes.x_log,
+    )
+    counts, edges, centers = build_histogram_arrays(
+        values_for_histogram,
+        bin_count=resolved_options.bin_count,
+        log_x=resolved_options.axes.x_log,
+    )
 
     histogram_result = HistogramResult(
         values=np.asarray(values_for_histogram, dtype=float),

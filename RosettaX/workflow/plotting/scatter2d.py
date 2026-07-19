@@ -4,12 +4,16 @@ from dataclasses import dataclass
 from typing import Any, Optional
 
 import dash
-import dash_bootstrap_components as dbc
 import numpy as np
 import plotly.graph_objs as go
 
 from RosettaX.utils import styling
 from RosettaX.utils import plottings
+from RosettaX.workflow.plotting.models import ScatterOptions
+from RosettaX.workflow.plotting.layout import (
+    build_plot_axis_checklist,
+    build_plot_control_panel,
+)
 
 
 @dataclass(frozen=True)
@@ -34,7 +38,7 @@ class Scatter2DTrace:
     text_values: Optional[Any] = None
     customdata: Optional[Any] = None
     marker_size: Optional[float] = None
-    marker_opacity: float = 0.75
+    marker_opacity: Optional[float] = None
     mode: str = "markers"
     color: Optional[str] = None
     line_width: Optional[float] = None
@@ -67,7 +71,7 @@ class Scatter2DGraph:
     colormap_log_value = "colormap_log"
 
     default_height = "52vh"
-    default_marker_size = 5.0
+    default_marker_size = ScatterOptions().marker_size
     default_font_size = 14
     default_tick_size = 12
 
@@ -143,7 +147,7 @@ class Scatter2DGraph:
         value: Optional[list[str]] = None,
         colormap_log_toggle_enabled: bool = False,
         bottom_controls: Optional[list[Any]] = None,
-    ) -> dbc.Card:
+    ) -> dash.html.Div:
         """
         Build the compact x log and y log toggle box below the graph.
         """
@@ -167,14 +171,10 @@ class Scatter2DGraph:
             )
 
         controls: list[Any] = [
-            dbc.Checklist(
-                id=component_id,
+            build_plot_axis_checklist(
+                component_id=component_id,
                 options=options,
-                value=value if isinstance(value, list) else [],
-                inline=True,
-                switch=True,
-                persistence=True,
-                persistence_type="session",
+                value=value,
             ),
         ]
 
@@ -187,24 +187,7 @@ class Scatter2DGraph:
                 ]
             )
 
-        return dbc.Card(
-            dbc.CardBody(
-                controls,
-                style={
-                    "padding": "8px 10px",
-                    "display": "flex",
-                    "alignItems": "center",
-                    "gap": "16px",
-                    "flexWrap": "wrap",
-                },
-            ),
-            style={
-                "display": "inline-block",
-                "marginTop": "8px",
-                "borderRadius": "8px",
-                "opacity": 0.95,
-            },
-        )
+        return build_plot_control_panel(controls)
 
     @classmethod
     def axis_scale_from_toggle_values(
@@ -239,6 +222,7 @@ class Scatter2DGraph:
         x_axis_title: str,
         y_axis_title: str,
         axis_scale_toggle_values: Any = None,
+        options: Optional[ScatterOptions] = None,
         show_grid: bool = True,
         hovermode: str = "closest",
         uirevision: str = "shared_scatter_2d",
@@ -248,9 +232,14 @@ class Scatter2DGraph:
 
         The title argument is intentionally ignored to keep graph canvases title free.
         """
-        x_axis_type, y_axis_type = cls.axis_scale_from_toggle_values(
-            axis_scale_toggle_values,
-        )
+        plot_options = options or ScatterOptions()
+        if axis_scale_toggle_values is None:
+            x_axis_type = "log" if plot_options.axes.x_log else "linear"
+            y_axis_type = "log" if plot_options.axes.y_log else "linear"
+        else:
+            x_axis_type, y_axis_type = cls.axis_scale_from_toggle_values(
+                axis_scale_toggle_values,
+            )
 
         figure = go.Figure()
 
@@ -284,6 +273,15 @@ class Scatter2DGraph:
             x_values = x_values[finite_mask]
             y_values = y_values[finite_mask]
 
+            event_limit = (
+                int(plot_options.max_events)
+                if plot_options.max_events is not None
+                else None
+            )
+            if event_limit is not None:
+                x_values = x_values[:event_limit]
+                y_values = y_values[:event_limit]
+
             text_values = None
 
             if trace.text_values is not None:
@@ -294,6 +292,8 @@ class Scatter2DGraph:
 
                 if text_values_array.size == finite_mask.size:
                     text_values = text_values_array[finite_mask]
+                    if event_limit is not None:
+                        text_values = text_values[:event_limit]
 
             customdata = None
 
@@ -305,15 +305,19 @@ class Scatter2DGraph:
 
                 if customdata_array.shape[0] == finite_mask.size:
                     customdata = customdata_array[finite_mask]
+                    if event_limit is not None:
+                        customdata = customdata[:event_limit]
 
             marker = {
                 "size": (
-                    cls.default_marker_size
+                    plot_options.marker_size
                     if trace.marker_size is None
                     else float(trace.marker_size)
                 ),
                 "opacity": float(
-                    trace.marker_opacity,
+                    plot_options.marker_opacity
+                    if trace.marker_opacity is None
+                    else trace.marker_opacity,
                 ),
             }
 

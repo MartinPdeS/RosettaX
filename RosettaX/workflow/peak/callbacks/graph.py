@@ -23,6 +23,8 @@ def register_graph_callbacks(
     page_state_store_id: str,
     max_events_input_id: Any,
     runtime_config_store_id: str,
+    marker_size_input_id: Any = None,
+    marker_opacity_input_id: Any = None,
 ) -> None:
     """
     Register the main peak workflow graph callback.
@@ -66,14 +68,13 @@ def register_graph_callbacks(
         ),
     ]
 
+    option_inputs: list[Any] = []
     if max_events_input_id is not None:
-        state_components.append(
-            dash.State(
-                max_events_input_id,
-                "value",
-                allow_optional=True,
-            )
-        )
+        option_inputs.append(dash.Input(max_events_input_id, "value"))
+    if marker_size_input_id is not None:
+        option_inputs.append(dash.Input(marker_size_input_id, "value"))
+    if marker_opacity_input_id is not None:
+        option_inputs.append(dash.Input(marker_opacity_input_id, "value"))
 
     state_components.append(
         dash.State(
@@ -111,6 +112,7 @@ def register_graph_callbacks(
             ids.nbins_input,
             "value",
         ),
+        *option_inputs,
         dash.Input(
             ids.process_detector_dropdown_pattern(),
             "value",
@@ -133,6 +135,9 @@ def register_graph_callbacks(
         axis_scale_toggle_values: Any,
         page_state_payload: Any,
         nbins: Any,
+        max_events_for_plots: Any,
+        marker_size: Any,
+        marker_opacity: Any,
         detector_dropdown_values: list[Any],
         process_name: Any,
         process_setting_values: list[Any],
@@ -148,8 +153,7 @@ def register_graph_callbacks(
         payloads in the peak line payload.
         """
         if max_events_input_id is not None:
-            max_events_for_plots = state_values[0]
-            runtime_config_data = state_values[1] if len(state_values) > 1 else None
+            runtime_config_data = state_values[0] if state_values else None
 
         else:
             max_events_for_plots = None
@@ -198,6 +202,8 @@ def register_graph_callbacks(
                 nbins=nbins,
                 peak_lines_payload=peak_lines_payload,
                 max_events_for_plots=max_events_for_plots,
+                marker_size=marker_size,
+                marker_opacity=marker_opacity,
                 runtime_config_data=runtime_config_data,
             )
 
