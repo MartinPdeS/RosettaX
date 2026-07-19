@@ -785,39 +785,14 @@ class PeakLayout:
         step: int = 1,
         label: str = "Bins",
     ) -> html.Div:
-        """
-        Build the histogram bin count control.
-        """
-        return html.Div(
-            id=container_id,
-            children=[
-                dbc.Label(
-                    label,
-                    html_for=input_id,
-                    style={
-                        "marginBottom": "0px",
-                        "fontSize": "0.85rem",
-                    },
-                ),
-                dbc.Input(
-                    id=input_id,
-                    type="text",
-                    inputMode="numeric",
-                    value=str(value),
-                    debounce=True,
-                    size="sm",
-                    style={
-                        "width": "110px",
-                    },
-                    persistence=True,
-                    persistence_type="session",
-                ),
-            ],
-            style={
-                "display": "flex",
-                "alignItems": "center",
-                "gap": "8px",
-            },
+        """Build the shared histogram bin-count control."""
+        return plotting_layout.build_plot_number_control(
+            container_id=container_id,
+            input_id=input_id,
+            label=label,
+            value=value,
+            input_mode="numeric",
+            width="110px",
         )
 
     def _build_graph_controls(

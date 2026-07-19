@@ -20,7 +20,6 @@ class Ids:
     y_channel_container = f"{page_prefix}-y-channel-container"
     x_log = f"{page_prefix}-x-log"
     y_log = f"{page_prefix}-y-log"
-    axis_toggle_container = f"{page_prefix}-axis-toggle-container"
     scatter_controls_container = f"{page_prefix}-scatter-controls-container"
     colormap_log = f"{page_prefix}-colormap-log"
     marker_size_container = f"{page_prefix}-marker-size-container"
