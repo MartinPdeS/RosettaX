@@ -410,6 +410,8 @@ class VisualizationPage:
                 "minWidth": "260px",
                 "flex": "1",
                 "display": "none" if is_histogram else "flex",
+                "flexDirection": "column",
+                "gap": styling.get_spacing_token("xs"),
             }
             marker_field_style = {
                 "display": "none" if is_histogram else "block",
