@@ -257,10 +257,7 @@ def build_graph_helper_panel(
         process_name,
     )
 
-    if (
-        is_rosetta_process_name(selected_process_name)
-        and not graph_toggle_is_enabled(advanced_mode_value)
-    ):
+    if not graph_toggle_is_enabled(advanced_mode_value):
         return [], {**base_style, "display": "none"}
 
     title = "Workflow guide"
@@ -348,11 +345,6 @@ def build_graph_helper_panel(
     children.append(
         dash.html.Div("4. Review the peak table after each run and adjust settings if the detected peaks look off.")
     )
-
-    if not graph_toggle_is_enabled(advanced_mode_value):
-        children.append(
-            dash.html.Div("Tip: Advanced mode reveals process-specific diagnostics and extra settings when you need to troubleshoot.")
-        )
 
     if (
         is_rosetta_process_name(selected_process_name)

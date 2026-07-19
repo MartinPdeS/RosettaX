@@ -146,11 +146,15 @@ class Test_PeakProcessSelectionVisibility:
             advanced_mode_value=[],
         )
 
-        rendered_text = " ".join(
-            str(getattr(child, "children", ""))
-            for child in children
-        )
+        assert children == []
+        assert style["display"] == "none"
 
+        children, style = visibility.build_graph_helper_panel(
+            process_name="",
+            graph_toggle_value=[],
+            advanced_mode_value=["enabled"],
+        )
+        rendered_text = " ".join(str(getattr(child, "children", "")) for child in children)
         assert style["display"] == "block"
         assert "Select a peak process" in rendered_text
         assert "Choose the required detector channels" in rendered_text
@@ -160,6 +164,14 @@ class Test_PeakProcessSelectionVisibility:
             process_name="Manual 2D",
             graph_toggle_value=["enabled"],
             advanced_mode_value=[],
+        )
+
+        assert children == []
+
+        children, _ = visibility.build_graph_helper_panel(
+            process_name="Manual 2D",
+            graph_toggle_value=["enabled"],
+            advanced_mode_value=["enabled"],
         )
 
         rendered_text = " ".join(
