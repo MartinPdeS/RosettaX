@@ -27,11 +27,11 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
-    <link rel="stylesheet" type="text/css" href="/opt/hostedtoolcache/Python/3.13.14/x64/lib/python3.13/site-packages/docs/source/_static/default.css" />
+    <link rel="stylesheet" type="text/css" href="/opt/hostedtoolcache/Python/3.13.15/x64/lib/python3.13/site-packages/docs/source/_static/default.css" />
     <link rel="stylesheet" type="text/css" href="_static/sg_gallery.css?v=fd6457a4" />
     <link rel="stylesheet" type="text/css" href="_static/sg_gallery-binder.css?v=f4aeca0c" />
     <link rel="stylesheet" type="text/css" href="_static/sg_gallery-dataframe.css?v=2082cf3c" />
@@ -39,10 +39,10 @@
     <link rel="stylesheet" type="text/css" href="_static/default.css?v=22616357" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
@@ -50,7 +50,7 @@
     <script src="_static/sg-tags.js?v=d80f6fa4"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'references';</script>
     <script>
-        DOCUMENTATION_OPTIONS.theme_version = '0.20.0';
+        DOCUMENTATION_OPTIONS.theme_version = '0.21.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/MartinPdeS/RosettaX/documentation_page/version_switcher.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'v0.6.1';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
@@ -550,12 +550,12 @@ JSON download is produced.</p>
 <h2>Outer wrapper<a class="headerlink" href="#outer-wrapper" title="Link to this heading">#</a></h2>
 <p>Every saved calibration starts with the same top-level keys:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>{
-        &quot;schema&quot;: &quot;rosettax_calibration_v1&quot;,
-        &quot;kind&quot;: &quot;fluorescence&quot;,
-        &quot;created_at&quot;: &quot;2025-...&quot;,
-        &quot;name&quot;: &quot;Example calibration&quot;,
-        &quot;payload&quot;: {
-                &quot;...&quot;: &quot;workflow-specific content&quot;
+        "schema": "rosettax_calibration_v1",
+        "kind": "fluorescence",
+        "created_at": "2025-...",
+        "name": "Example calibration",
+        "payload": {
+                "...": "workflow-specific content"
         }
 }
 </pre></div>
@@ -569,24 +569,24 @@ points, and metadata are stored.</p>
 <p>The fluorescence payload currently uses schema version <code class="docutils literal notranslate"><span class="pre">1.0</span></code> and contains the
 fields that are needed to reconstruct the empirical fit:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>{
-        &quot;schema_version&quot;: &quot;1.0&quot;,
-        &quot;calibration_type&quot;: &quot;fluorescence&quot;,
-        &quot;source_file&quot;: &quot;beads.fcs&quot;,
-        &quot;source_channel&quot;: &quot;FITC-A&quot;,
-        &quot;gating_channel&quot;: &quot;SSC-A&quot;,
-        &quot;gating_threshold&quot;: 1200.0,
-        &quot;fit_model&quot;: &quot;log10(y)=slope*log10(x)+intercept; y=(10**intercept) * x**slope&quot;,
-        &quot;fit_metrics&quot;: {
-                &quot;r_squared&quot;: 0.998,
-                &quot;point_count&quot;: 6
+        "schema_version": "1.0",
+        "calibration_type": "fluorescence",
+        "source_file": "beads.fcs",
+        "source_channel": "FITC-A",
+        "gating_channel": "SSC-A",
+        "gating_threshold": 1200.0,
+        "fit_model": "log10(y)=slope*log10(x)+intercept; y=(10**intercept) * x**slope",
+        "fit_metrics": {
+                "r_squared": 0.998,
+                "point_count": 6
         },
-        &quot;parameters&quot;: {
-                &quot;slope&quot;: 1.02,
-                &quot;intercept&quot;: -0.13,
-                &quot;prefactor&quot;: 0.74
+        "parameters": {
+                "slope": 1.02,
+                "intercept": -0.13,
+                "prefactor": 0.74
         },
-        &quot;reference_points&quot;: [...],
-        &quot;payload&quot;: {...}
+        "reference_points": [...],
+        "payload": {...}
 }
 </pre></div>
 </div>
@@ -598,14 +598,14 @@ the same fit in a compact apply-oriented form.</p>
 <p>The scattering payload stores both the fitted instrument response and the
 modeled calibration-standard relation used to produce it:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>{
-        &quot;calibration_type&quot;: &quot;scattering&quot;,
-        &quot;version&quot;: 2,
-        &quot;source_channel&quot;: &quot;SSC-A&quot;,
-        &quot;output_quantity&quot;: &quot;estimated_coupling&quot;,
-        &quot;instrument_response&quot;: {...},
-        &quot;calibration_standard_mie_relation&quot;: {...},
-        &quot;reference_table&quot;: [...],
-        &quot;metadata&quot;: {...}
+        "calibration_type": "scattering",
+        "version": 2,
+        "source_channel": "SSC-A",
+        "output_quantity": "estimated_coupling",
+        "instrument_response": {...},
+        "calibration_standard_mie_relation": {...},
+        "reference_table": [...],
+        "metadata": {...}
 }
 </pre></div>
 </div>
@@ -677,8 +677,8 @@ was built.</p>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
-<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -712,7 +712,7 @@ was built.</p>
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
 </p></div>
       
     </div>
