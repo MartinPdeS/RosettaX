@@ -4,6 +4,7 @@ ROOT_DIR := $(CURDIR)
 PYBIND11_DIR := $(shell $(PYTHON) -m pybind11 --cmakedir)
 DIST_DIR ?= dist
 BUNDLE_DIR ?= $(DIST_DIR)/rosettax
+RELEASE_KIND := $(filter major minor patch,$(MAKECMDGOALS))
 
 UNAME_S := $(shell uname -s 2>/dev/null || echo Unknown)
 
@@ -19,7 +20,7 @@ endif
 
 .PHONY: configure build install quick rebuild editable bundle \
 	mac-bundle windows-bundle linux-bundle bundle-zip \
-	mac-release windows-release linux-release clean
+	mac-release windows-release linux-release release tag major minor patch clean
 
 configure:
 	cmake -S . -B $(BUILD_DIR) \
@@ -80,6 +81,16 @@ mac-release: mac-bundle bundle-zip
 windows-release: windows-bundle bundle-zip
 
 linux-release: linux-bundle bundle-zip
+
+tag:
+	$(PYTHON) tools/release_tag.py "$(VERSION)"
+
+release:
+	@test "$(words $(RELEASE_KIND))" -eq 1 || { echo "usage: make release [patch|minor|major]" >&2; exit 2; }
+	@set -eu; tag="$$($(PYTHON) tools/next_release_version.py $(RELEASE_KIND))"; $(PYTHON) tools/release_tag.py "$$tag"; git push origin HEAD "refs/tags/$$tag"
+
+major minor patch:
+	@:
 
 clean:
 	rm -rf $(BUILD_DIR)

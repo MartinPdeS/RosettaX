@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   ManyLinux_x86_64:
-    uses: MartinPdeS/MPSActions/.github/workflows/publish_documentation.yml@master
+    uses: MartinPdeS/MPSActions/.github/workflows/publish_documentation.yml@v5
     with:
       python-version: "3.13"
       package-name: "RosettaX"
