@@ -21,6 +21,17 @@ from RosettaX.workflow import calibration_cards
 logger = logging.getLogger(__name__)
 
 
+def resolve_active_profile_runtime_config(
+    browser_profiles_payload: Any,
+    selected_profile_name: Any,
+) -> dict[str, Any] | None:
+    """Return the browser profile that determines initial workflow card state."""
+    browser_profiles = BrowserProfileLibrary.from_dict(browser_profiles_payload)
+    return browser_profiles.get_profile_payload(
+        str(selected_profile_name) if selected_profile_name else None
+    )
+
+
 def resolve_client_ip_address() -> str:
     """
     Resolve the client IP address for the in-flight request.
@@ -84,7 +95,8 @@ def register_application_callbacks(app: Dash) -> None:
             {"type": calibration_cards.TOGGLE_ID_TYPE, "page": MATCH, "section": MATCH},
             "n_clicks",
         ),
-        Input("runtime-config-store", "data"),
+        Input(BROWSER_PROFILES_STORE_ID, "data"),
+        Input(SidebarIds.selected_profile_store, "data"),
         State(
             {"type": calibration_cards.COLLAPSE_ID_TYPE, "page": MATCH, "section": MATCH},
             "is_open",
@@ -93,13 +105,18 @@ def register_application_callbacks(app: Dash) -> None:
     )
     def toggle_calibration_card(
         _n_clicks: Any,
-        runtime_config_data: Any,
+        browser_profiles_payload: Any,
+        selected_profile_name: Any,
         is_open: Any,
     ) -> tuple[bool, str]:
+        active_profile_config = resolve_active_profile_runtime_config(
+            browser_profiles_payload,
+            selected_profile_name,
+        )
         return calibration_cards.resolve_card_toggle(
             triggered_id=dash.ctx.triggered_id,
             is_open=is_open,
-            runtime_config_data=runtime_config_data,
+            runtime_config_data=active_profile_config,
             toggle_clicks=_n_clicks,
         )
 

@@ -24,9 +24,6 @@ def get_layout(section) -> dbc.Card:
             _build_header(section),
             _build_collapse(section),
         ],
-        style=ui_forms.build_workflow_section_card_style(
-            color_name=section.card_color,
-        ),
     )
 
 
@@ -44,10 +41,6 @@ def _build_header(section) -> dbc.CardHeader:
                     "This section creates the fluorescence calibration from the "
                     "measured bead peak positions and the known MESF values in the "
                     "reference table."
-                ),
-                subtitle=(
-                    "Fit the fluorescence response from reference MESF values and "
-                    "measured bead peaks."
                 ),
             ),
         ],

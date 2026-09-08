@@ -108,7 +108,7 @@ class Test_CalibrationCards:
             lambda _runtime_config_data: True,
         )
 
-        result = calibration_cards.build_profile_aware_workflow_section_card(
+        result = calibration_cards.build_calibration_workflow_section_card(
             page_name="test-page",
             section_number=2,
             title="Test section",

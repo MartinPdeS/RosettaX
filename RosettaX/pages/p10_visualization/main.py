@@ -12,8 +12,8 @@ from RosettaX.ui import (
 )
 from RosettaX.utils import styling, ui_forms
 from RosettaX.workflow.calibration_cards import (
+    build_calibration_workflow_section_card,
     build_fcs_tool_card_stack,
-    build_profile_aware_workflow_section_card,
 )
 from RosettaX.workflow.file_selection.services import (
     build_file_options,
@@ -253,7 +253,7 @@ class VisualizationPage:
         body_children: list[Any],
     ) -> dbc.Card:
         section_key = title.lower().replace(" ", "-")
-        return build_profile_aware_workflow_section_card(
+        return build_calibration_workflow_section_card(
             page_name=self.ids.page_prefix,
             section_number=section_number,
             title=title,

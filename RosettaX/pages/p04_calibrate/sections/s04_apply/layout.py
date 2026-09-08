@@ -76,9 +76,6 @@ class ApplyLayout:
                 self._build_header(),
                 self._build_body(),
             ],
-            style=ui_forms.build_workflow_section_card_style(
-                color_name=self.card_color,
-            ),
         )
 
     def _build_header(self) -> dbc.CardHeader:
@@ -93,10 +90,6 @@ class ApplyLayout:
                 "Apply the selected calibration to the uploaded FCS files, "
                 "choose optional extra channels to preserve, and export the "
                 "calibrated output files."
-            ),
-            subtitle=(
-                "Generate calibrated FCS outputs from the selected calibration "
-                "and input files."
             ),
             color_name=self.card_color,
         )

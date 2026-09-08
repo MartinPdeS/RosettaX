@@ -218,9 +218,6 @@ class Calibration:
                 self._build_header(),
                 self._build_body(),
             ],
-            style=ui_forms.build_workflow_section_card_style(
-                color_name=self.card_color,
-            ),
         )
 
     def _build_header(self) -> dbc.CardHeader:
@@ -238,7 +235,6 @@ class Calibration:
                         "peak positions and the modeled coupling values in watts from "
                         "the calibration standard table."
                     ),
-                    subtitle="Estimate the instrument response from the calibration standard.",
                 ),
             ],
             style=ui_forms.build_workflow_section_header_style(

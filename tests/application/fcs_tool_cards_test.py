@@ -42,6 +42,16 @@ def _find_component_by_id(component: Any, component_id: Any) -> Any | None:
     return None
 
 
+def _collect_text(component: Any) -> list[str]:
+    if isinstance(component, str):
+        return [component]
+
+    children = getattr(component, "children", None)
+    if isinstance(children, (list, tuple)):
+        return [text for child in children for text in _collect_text(child)]
+    return _collect_text(children) if children is not None else []
+
+
 def _callback_input_id_types(callback: dict[str, Any]) -> set[str]:
     component_id_types = set()
     for callback_input in callback["inputs"]:
@@ -60,6 +70,7 @@ def _callback_input_id_types(callback: dict[str, Any]) -> set[str]:
         "page_name",
         "section_keys",
         "step_section_keys",
+        "subtitles",
     ),
     [
         (
@@ -68,6 +79,7 @@ def _callback_input_id_types(callback: dict[str, Any]) -> set[str]:
             "visualization",
             ("1",),
             (),
+            ("Load compatible FCS files, then choose which file to inspect.",),
         ),
         (
             "RosettaX.pages.p21_fcs_slicer.main",
@@ -75,6 +87,11 @@ def _callback_input_id_types(callback: dict[str, Any]) -> set[str]:
             "fcs-slicer",
             ("1", "2", "3"),
             ("1", "2", "3"),
+            (
+                "Files must have the same channels, FCS version, and detector voltages.",
+                "The selected channel order follows the original FCS files.",
+                "RosettaX packages the sliced FCS copies in one ZIP download.",
+            ),
         ),
         (
             "RosettaX.pages.p23_fcs_inspector.main",
@@ -82,6 +99,10 @@ def _callback_input_id_types(callback: dict[str, Any]) -> set[str]:
             "fcs-inspector",
             ("1", "2"),
             ("1", "2"),
+            (
+                "The inspector reads metadata only; event measurements remain unloaded.",
+                "Upload an FCS file to view its metadata.",
+            ),
         ),
         (
             "RosettaX.pages.p24_fcs_merge.main",
@@ -89,6 +110,10 @@ def _callback_input_id_types(callback: dict[str, Any]) -> set[str]:
             "fcs-merge",
             ("1", "2"),
             ("1", "2"),
+            (
+                "Select at least two files with matching channels, FCS version, and detector voltages.",
+                "The merged file preserves the first file's metadata and all input events.",
+            ),
         ),
     ],
 )
@@ -99,6 +124,7 @@ def test_fcs_tool_layouts_include_collapsible_cards_with_uniform_gaps(
     page_name: str,
     section_keys: tuple[str, ...],
     step_section_keys: tuple[str, ...],
+    subtitles: tuple[str, ...],
 ) -> None:
     monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
     page_module = importlib.import_module(module_name)
@@ -115,7 +141,7 @@ def test_fcs_tool_layouts_include_collapsible_cards_with_uniform_gaps(
         "flexDirection": "column",
         "gap": calibration_cards.FCS_TOOL_CARD_GAP,
     }
-    for section_key in section_keys:
+    for section_key, subtitle in zip(section_keys, subtitles, strict=True):
         assert {
             "type": calibration_cards.TOGGLE_ID_TYPE,
             "page": page_name,
@@ -135,6 +161,8 @@ def test_fcs_tool_layouts_include_collapsible_cards_with_uniform_gaps(
         )
         assert section_card is not None
         assert "marginBottom" not in section_card.style
+        assert section_card.children[1].kwargs["is_open"] is False
+        assert subtitle in _collect_text(section_card.children[0])
 
     direct_cards = [
         child for child in card_stack.children if isinstance(child, dbc.Card)
@@ -164,3 +192,22 @@ def test_card_toggle_callback_has_no_required_workflow_step_matcher() -> None:
     assert {
         calibration_cards.WORKFLOW_STEP_CARD_ID_TYPE,
     } in callback_input_types
+
+
+def test_card_toggle_callback_reads_browser_profile_preference() -> None:
+    app = dash.Dash(__name__, suppress_callback_exceptions=True)
+    register_application_callbacks(app)
+
+    card_callback = next(
+        callback
+        for callback in app._callback_list
+        if any(
+            calibration_cards.TOGGLE_ID_TYPE in str(callback_input["id"])
+            for callback_input in callback["inputs"]
+        )
+    )
+
+    input_ids = {str(callback_input["id"]) for callback_input in card_callback["inputs"]}
+    assert "browser-profiles-store" in input_ids
+    assert "sidebar-selected-profile-store" in input_ids
+    assert "runtime-config-store" not in input_ids

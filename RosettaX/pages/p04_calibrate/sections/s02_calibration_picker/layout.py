@@ -67,9 +67,6 @@ class CalibrationPickerLayout:
                 self._build_header(),
                 self._build_body(),
             ],
-            style=ui_forms.build_workflow_section_card_style(
-                color_name=self.card_color,
-            ),
         )
 
     def _build_header(self) -> dbc.CardHeader:
@@ -86,7 +83,6 @@ class CalibrationPickerLayout:
                 "uploaded FCS file(s). Scattering calibrations also require a target "
                 "particle model for diameter conversion."
             ),
-            subtitle="Choose the calibration.json file(s) that will be applied to the matching channels in the uploaded FCS data.",
             color_name=self.card_color,
         )
 

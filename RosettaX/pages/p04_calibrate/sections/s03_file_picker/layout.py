@@ -56,9 +56,6 @@ class FilePickerLayout:
                 self._build_header(),
                 self._build_body(),
             ],
-            style=ui_forms.build_workflow_section_card_style(
-                color_name=self.card_color,
-            ),
         )
 
     def _build_header(self) -> dbc.CardHeader:
@@ -74,7 +71,6 @@ class FilePickerLayout:
                 "When multiple files are uploaded, RosettaX checks whether "
                 "their channel structure is consistent before continuing."
             ),
-            subtitle="Select the input cytometry files that will be calibrated.",
             color_name=self.card_color,
         )
 

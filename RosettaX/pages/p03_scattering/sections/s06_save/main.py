@@ -63,12 +63,7 @@ class Save:
         """
         Create the scattering save section layout.
         """
-        return ui_forms.apply_workflow_section_card_style(
-            card=self.layout_builder.get_layout(),
-            color_name=self.card_color,
-            header_font_weight="750",
-            header_font_size="1.02rem",
-        )
+        return self.layout_builder.get_layout()
 
     def register_callbacks(self) -> None:
         """

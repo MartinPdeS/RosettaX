@@ -292,6 +292,15 @@ def build_card_header_with_info(
             title_style_overrides=title_style_overrides,
         )
     ]
+    if subtitle:
+        children.append(
+            html.Div(
+                subtitle,
+                style=build_workflow_section_subtitle_style(
+                    style_overrides=subtitle_style_overrides,
+                ),
+            )
+        )
 
     return dbc.CardHeader(
         children,

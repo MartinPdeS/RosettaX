@@ -7,7 +7,10 @@ import dash
 import dash_bootstrap_components as dbc
 import pytest
 
-from RosettaX.application.callbacks import register_application_callbacks
+from RosettaX.application.callbacks import (
+    register_application_callbacks,
+    resolve_active_profile_runtime_config,
+)
 from RosettaX.workflow import calibration_cards
 
 
@@ -137,3 +140,26 @@ def test_calibration_card_callback_does_not_hydrate_card_state() -> None:
     )
 
     assert card_callback["prevent_initial_call"] is True
+
+
+def test_active_browser_profile_keeps_workflow_cards_collapsed() -> None:
+    active_profile_config = resolve_active_profile_runtime_config(
+        {
+            "profiles": {
+                "collapsed.json": {
+                    "ui": {"collapse_calibration_cards": True},
+                }
+            },
+            "selected_profile": "collapsed.json",
+        },
+        selected_profile_name="collapsed.json",
+    )
+
+    is_open, label = calibration_cards.resolve_card_toggle(
+        triggered_id="browser-profiles-store",
+        is_open=True,
+        runtime_config_data=active_profile_config,
+    )
+
+    assert is_open is False
+    assert label == "Show"

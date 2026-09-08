@@ -12,8 +12,8 @@ from RosettaX.ui import (
 )
 from RosettaX.utils import styling, ui_forms
 from RosettaX.workflow.calibration_cards import (
+    build_calibration_workflow_section_card,
     build_fcs_tool_card_stack,
-    build_profile_aware_workflow_section_card,
 )
 from RosettaX.workflow.file_selection import UploadedFile, UploadedFileBatch
 from RosettaX.workflow.upload import services as upload_services
@@ -133,7 +133,7 @@ class FCSMergePage:
         subtitle: str,
         children: list[Any],
     ) -> dbc.Card:
-        return build_profile_aware_workflow_section_card(
+        return build_calibration_workflow_section_card(
             page_name=self.ids.page_prefix,
             section_number=number,
             title=title,

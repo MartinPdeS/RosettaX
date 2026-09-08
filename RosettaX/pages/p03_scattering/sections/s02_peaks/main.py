@@ -75,12 +75,7 @@ class Peaks:
         """
         Build the scattering peak section layout.
         """
-        return ui_forms.apply_workflow_section_card_style(
-            card=self.layout_builder.get_layout(),
-            color_name=self.card_color,
-            header_font_weight="750",
-            header_font_size="1.02rem",
-        )
+        return self.layout_builder.get_layout()
 
     def _build_section_title(self) -> dash.html.Div:
         """

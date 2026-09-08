@@ -100,9 +100,6 @@ class Model:
                 self._build_header(),
                 self._build_collapse(),
             ],
-            style=ui_forms.build_workflow_section_card_style(
-                color_name=self.card_color,
-            ),
         )
 
     def _build_header(self) -> dbc.CardHeader:
@@ -117,10 +114,6 @@ class Model:
                 "These controls define the illumination, detector geometry, and "
                 "angular sampling used to compute the calibration standard coupling "
                 "values."
-            ),
-            subtitle=(
-                "Configure the illumination, detector geometry, and angular sampling "
-                "used for scattering calibration."
             ),
             color_name=self.card_color,
             title_style_overrides=SECTION_TITLE_STYLE_OVERRIDES,

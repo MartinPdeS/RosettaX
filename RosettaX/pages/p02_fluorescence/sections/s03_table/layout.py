@@ -24,12 +24,7 @@ def get_layout(section) -> dbc.Card:
         *list(body.children),
     ]
 
-    return ui_forms.apply_workflow_section_card_style(
-        card=card,
-        color_name=section.card_color,
-        header_font_weight="750",
-        header_font_size="1.02rem",
-    )
+    return card
 
 
 def build_card_title(section) -> dash.html.Div:

@@ -163,6 +163,7 @@ def build_collapsible_section_layout(section: Any, *, page_name: str) -> Any:
         subtitle=CALIBRATION_WORKFLOW_SUBTITLES.get(page_name, {}).get(
             str(section_number)
         ),
+        color_name=getattr(section, "card_color", None),
     )
 
 
@@ -198,6 +199,13 @@ def build_calibration_workflow_section_card(
             style_overrides=style_overrides,
         )
     else:
+        resolved_color_name = color_name or styling.get_workflow_section_color(
+            section_number
+        )
+        ui_forms.apply_workflow_section_card_style(
+            card,
+            color_name=resolved_color_name,
+        )
         _append_card_subtitle(card, subtitle)
 
     return make_profile_aware_collapsible_card(
@@ -238,34 +246,6 @@ def make_profile_aware_collapsible_card(
         page_name=page_name,
         section_key=section_key,
         initially_collapsed=True,
-    )
-
-
-def build_profile_aware_workflow_section_card(
-    *,
-    page_name: str,
-    section_number: int,
-    title: str,
-    subtitle: str | None,
-    body_children: list[Any],
-    tooltip_text: str | None = None,
-    tooltip_target_id: Any | None = None,
-    tooltip_id: Any | None = None,
-    color_name: str | None = None,
-    style_overrides: dict[str, Any] | None = None,
-) -> dbc.Card:
-    """Build a standard workflow section card with profile-aware collapsing."""
-    return build_calibration_workflow_section_card(
-        page_name=page_name,
-        section_number=section_number,
-        title=title,
-        subtitle=subtitle,
-        body_children=body_children,
-        tooltip_text=tooltip_text,
-        tooltip_target_id=tooltip_target_id,
-        tooltip_id=tooltip_id,
-        color_name=color_name,
-        style_overrides=style_overrides,
     )
 
 
