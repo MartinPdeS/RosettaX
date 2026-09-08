@@ -60,6 +60,7 @@ class Sidebar:
     tools_paths = {
         "/visualization",
         "/fcs-slicer",
+        "/fcs-inspector",
     }
     manage_paths = {"/settings", "/sample-files"}
     learn_paths = {"/documentation", "/help"}
@@ -487,6 +488,11 @@ class Sidebar:
                                     html.Div(
                                         dbc.Nav(
                                             [
+                                                self._nav_link(
+                                                    "FCS Inspector",
+                                                    "/fcs-inspector",
+                                                    tier="child",
+                                                ),
                                                 self._nav_link(
                                                     "Fluorescence",
                                                     "/fluorescence",

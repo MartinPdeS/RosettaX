@@ -30,6 +30,7 @@ PAGE_MODULES: list[str] = [
     "RosettaX.pages.p20_citation.main",
     "RosettaX.pages.p21_fcs_slicer.main",
     "RosettaX.pages.p22_admin.main",
+    "RosettaX.pages.p23_fcs_inspector.main",
 ]
 
 
