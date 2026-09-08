@@ -12,6 +12,7 @@ from RosettaX.ui import (
 )
 from RosettaX.utils import styling, ui_forms
 from RosettaX.workflow.calibration_cards import (
+    build_fcs_tool_card_stack,
     build_profile_aware_workflow_section_card,
 )
 from RosettaX.workflow.file_selection import UploadedFile, UploadedFileBatch
@@ -29,12 +30,16 @@ class FCSSlicerPage:
     def layout(self) -> dbc.Container:
         return dbc.Container(
             [
-                dcc.Store(id=self.ids.file_store, data=None, storage_type="session"),
-                dcc.Download(id=self.ids.download),
-                self._build_header_card(),
-                self._build_upload_card(),
-                self._build_selection_card(),
-                self._build_export_card(),
+                build_fcs_tool_card_stack(
+                    [
+                        dcc.Store(id=self.ids.file_store, data=None, storage_type="session"),
+                        dcc.Download(id=self.ids.download),
+                        self._build_header_card(),
+                        self._build_upload_card(),
+                        self._build_selection_card(),
+                        self._build_export_card(),
+                    ]
+                ),
             ],
             fluid=True,
             style={
@@ -53,6 +58,8 @@ class FCSSlicerPage:
                 "and download sliced FCS copies with every event preserved."
             ),
             steps=self._build_header_steps(),
+            step_target_page_name=self.ids.page_prefix,
+            style_overrides={"marginBottom": "0px"},
         )
 
     def _build_header_steps(self) -> list[WorkflowStep]:
@@ -165,7 +172,6 @@ class FCSSlicerPage:
             title=title,
             subtitle=subtitle,
             body_children=children,
-            style_overrides={"marginBottom": "16px"},
         )
 
     def register_callbacks(self) -> "FCSSlicerPage":

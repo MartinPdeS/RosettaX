@@ -84,14 +84,6 @@ def register_application_callbacks(app: Dash) -> None:
             {"type": calibration_cards.TOGGLE_ID_TYPE, "page": MATCH, "section": MATCH},
             "n_clicks",
         ),
-        Input(
-            {
-                "type": calibration_cards.WORKFLOW_STEP_CARD_ID_TYPE,
-                "page": MATCH,
-                "section": MATCH,
-            },
-            "n_clicks",
-        ),
         Input("runtime-config-store", "data"),
         State(
             {"type": calibration_cards.COLLAPSE_ID_TYPE, "page": MATCH, "section": MATCH},
@@ -101,7 +93,6 @@ def register_application_callbacks(app: Dash) -> None:
     )
     def toggle_calibration_card(
         _n_clicks: Any,
-        _workflow_step_clicks: Any,
         runtime_config_data: Any,
         is_open: Any,
     ) -> tuple[bool, str]:
@@ -109,7 +100,42 @@ def register_application_callbacks(app: Dash) -> None:
             triggered_id=dash.ctx.triggered_id,
             is_open=is_open,
             runtime_config_data=runtime_config_data,
-            workflow_step_clicks=_workflow_step_clicks,
+        )
+
+    @app.callback(
+        Output(
+            {"type": calibration_cards.COLLAPSE_ID_TYPE, "page": MATCH, "section": MATCH},
+            "is_open",
+            allow_duplicate=True,
+        ),
+        Output(
+            {"type": calibration_cards.TOGGLE_LABEL_ID_TYPE, "page": MATCH, "section": MATCH},
+            "children",
+            allow_duplicate=True,
+        ),
+        Input(
+            {
+                "type": calibration_cards.WORKFLOW_STEP_CARD_ID_TYPE,
+                "page": MATCH,
+                "section": MATCH,
+            },
+            "n_clicks",
+        ),
+        State(
+            {"type": calibration_cards.COLLAPSE_ID_TYPE, "page": MATCH, "section": MATCH},
+            "is_open",
+        ),
+        prevent_initial_call=True,
+    )
+    def open_calibration_card_from_workflow_step(
+        workflow_step_clicks: Any,
+        is_open: Any,
+    ) -> tuple[bool, str]:
+        return calibration_cards.resolve_card_toggle(
+            triggered_id=dash.ctx.triggered_id,
+            is_open=is_open,
+            runtime_config_data=None,
+            workflow_step_clicks=workflow_step_clicks,
         )
 
     @app.callback(

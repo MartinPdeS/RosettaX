@@ -73,7 +73,10 @@ def build_workflow_page_header(
             dbc.Row(
                 [
                     dbc.Col(
-                        _build_step_card(step),
+                        _build_step_card(
+                            step,
+                            page_name=step_target_page_name,
+                        ),
                         **resolved_column_kwargs,
                     )
                     for step in steps

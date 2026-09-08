@@ -12,6 +12,7 @@ from RosettaX.ui import (
 )
 from RosettaX.utils import styling, ui_forms
 from RosettaX.workflow.calibration_cards import (
+    build_fcs_tool_card_stack,
     build_profile_aware_workflow_section_card,
 )
 from RosettaX.workflow.file_selection.services import (
@@ -37,7 +38,7 @@ class VisualizationPage:
     def layout(self) -> html.Div:
         default_controls = services.resolve_visualization_control_defaults()
 
-        return html.Div(
+        return build_fcs_tool_card_stack(
             [
                 dcc.Store(
                     id=self.ids.file_store,
@@ -73,12 +74,7 @@ class VisualizationPage:
                 self._build_plot_workspace(
                     default_controls=default_controls,
                 ),
-            ],
-            style={
-                "display": "flex",
-                "flexDirection": "column",
-                "gap": styling.get_spacing_token("lg"),
-            },
+            ]
         )
 
     def _build_plot_workspace(self, *, default_controls: dict[str, Any]) -> html.Div:
@@ -244,6 +240,7 @@ class VisualizationPage:
                 "Upload compatible FCS files, choose one to inspect, and view it with a 1D histogram or a 2D scatter colored by local event density."
             ),
             steps=self._build_steps(),
+            style_overrides={"marginBottom": "0px"},
         )
 
     def _build_section_card(

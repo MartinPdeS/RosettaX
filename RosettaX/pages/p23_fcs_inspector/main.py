@@ -11,6 +11,7 @@ from RosettaX.ui import WorkflowStep, build_workflow_page_header
 from RosettaX.utils import styling, ui_forms
 from RosettaX.utils.reader import FCSFile
 from RosettaX.workflow.calibration_cards import (
+    build_fcs_tool_card_stack,
     build_profile_aware_workflow_section_card,
 )
 from RosettaX.workflow.upload import services as upload_services
@@ -24,38 +25,44 @@ class FCSInspectorPage:
     def layout(self) -> dbc.Container:
         return dbc.Container(
             [
-                build_workflow_page_header(
-                    title="FCS Inspector",
-                    description="Review file metadata, acquisition details, and channel definitions before downstream work.",
-                    steps=[
-                        WorkflowStep("1", "Upload FCS file", "Select one FCS file to inspect.", "yellow"),
-                        WorkflowStep("2", "Review metadata", "Check file details and channel definitions.", "blue"),
-                    ],
-                ),
-                build_profile_aware_workflow_section_card(
-                    page_name=self.prefix,
-                    section_number=1,
-                    title="Upload FCS file",
-                    subtitle="The inspector reads metadata only; event measurements remain unloaded.",
-                    body_children=[
-                        ui_forms.build_upload_widget(
-                            upload_id=f"{self.prefix}-upload",
-                            prompt_text="Select an FCS file",
-                            accepted_file_extensions=".fcs",
-                            multiple=False,
+                build_fcs_tool_card_stack(
+                    [
+                        build_workflow_page_header(
+                            title="FCS Inspector",
+                            description="Review file metadata, acquisition details, and channel definitions before downstream work.",
+                            steps=[
+                                WorkflowStep("1", "Upload FCS file", "Select one FCS file to inspect.", "yellow"),
+                                WorkflowStep("2", "Review metadata", "Check file details and channel definitions.", "blue"),
+                            ],
+                            step_target_page_name=self.prefix,
+                            style_overrides={"marginBottom": "0px"},
                         ),
-                        ui_forms.build_upload_status(
-                            status_id=f"{self.prefix}-status",
-                            initial_text="No file loaded.",
+                        build_profile_aware_workflow_section_card(
+                            page_name=self.prefix,
+                            section_number=1,
+                            title="Upload FCS file",
+                            subtitle="The inspector reads metadata only; event measurements remain unloaded.",
+                            body_children=[
+                                ui_forms.build_upload_widget(
+                                    upload_id=f"{self.prefix}-upload",
+                                    prompt_text="Select an FCS file",
+                                    accepted_file_extensions=".fcs",
+                                    multiple=False,
+                                ),
+                                ui_forms.build_upload_status(
+                                    status_id=f"{self.prefix}-status",
+                                    initial_text="No file loaded.",
+                                ),
+                            ],
+                        ),
+                        build_profile_aware_workflow_section_card(
+                            page_name=self.prefix,
+                            section_number=2,
+                            title="File details",
+                            subtitle="Upload an FCS file to view its metadata.",
+                            body_children=[html.Div(id=f"{self.prefix}-report")],
                         ),
                     ],
-                ),
-                build_profile_aware_workflow_section_card(
-                    page_name=self.prefix,
-                    section_number=2,
-                    title="File details",
-                    subtitle="Upload an FCS file to view its metadata.",
-                    body_children=[html.Div(id=f"{self.prefix}-report")],
                 ),
             ],
             fluid=True,

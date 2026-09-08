@@ -5,7 +5,7 @@ from typing import Any
 import dash
 import dash_bootstrap_components as dbc
 
-from RosettaX.utils import ui_forms
+from RosettaX.utils import styling, ui_forms
 from RosettaX.utils.runtime_config import RuntimeConfig
 
 
@@ -13,6 +13,7 @@ TOGGLE_ID_TYPE = "calibration-card-toggle"
 COLLAPSE_ID_TYPE = "calibration-card-collapse"
 TOGGLE_LABEL_ID_TYPE = "calibration-card-toggle-label"
 WORKFLOW_STEP_CARD_ID_TYPE = "workflow-step-card"
+FCS_TOOL_CARD_GAP = styling.get_spacing_token("lg")
 
 
 def _component_id(*, id_type: str, page_name: str, section_key: str) -> dict[str, str]:
@@ -39,6 +40,18 @@ def profile_collapses_calibration_cards(runtime_config_data: Any = None) -> bool
 def collapse_label(*, is_open: bool) -> str:
     """Build the compact action label shown in a workflow card header."""
     return "Hide" if is_open else "Show"
+
+
+def build_fcs_tool_card_stack(children: list[Any]) -> dash.html.Div:
+    """Stack FCS tool cards with one consistent vertical gap."""
+    return dash.html.Div(
+        children,
+        style={
+            "display": "flex",
+            "flexDirection": "column",
+            "gap": FCS_TOOL_CARD_GAP,
+        },
+    )
 
 
 def make_collapsible_section_card(

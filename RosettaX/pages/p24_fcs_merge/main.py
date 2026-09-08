@@ -12,6 +12,7 @@ from RosettaX.ui import (
 )
 from RosettaX.utils import styling, ui_forms
 from RosettaX.workflow.calibration_cards import (
+    build_fcs_tool_card_stack,
     build_profile_aware_workflow_section_card,
 )
 from RosettaX.workflow.file_selection import UploadedFile, UploadedFileBatch
@@ -30,11 +31,15 @@ class FCSMergePage:
     def layout(self) -> dbc.Container:
         return dbc.Container(
             [
-                dcc.Store(id=self.ids.file_store, data=None, storage_type="session"),
-                dcc.Download(id=self.ids.download),
-                self._build_header_card(),
-                self._build_upload_card(),
-                self._build_export_card(),
+                build_fcs_tool_card_stack(
+                    [
+                        dcc.Store(id=self.ids.file_store, data=None, storage_type="session"),
+                        dcc.Download(id=self.ids.download),
+                        self._build_header_card(),
+                        self._build_upload_card(),
+                        self._build_export_card(),
+                    ]
+                ),
             ],
             fluid=True,
             style={
@@ -72,6 +77,8 @@ class FCSMergePage:
                     color_name=styling.get_workflow_section_color(2),
                 ),
             ],
+            step_target_page_name=self.ids.page_prefix,
+            style_overrides={"marginBottom": "0px"},
         )
 
     def _build_upload_card(self) -> dbc.Card:
@@ -132,7 +139,6 @@ class FCSMergePage:
             title=title,
             subtitle=subtitle,
             body_children=children,
-            style_overrides={"marginBottom": "16px"},
         )
 
     def register_callbacks(self) -> "FCSMergePage":
