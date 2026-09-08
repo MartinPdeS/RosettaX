@@ -307,9 +307,12 @@ class Model:
                         "overflow": "visible",
                     },
                 ),
-                dash.html.Div(
+                dbc.Accordion(
                     [
-                        self._build_numeric_input_row(
+                        dbc.AccordionItem(
+                            dash.html.Div(
+                                [
+                                    self._build_numeric_input_row(
                             label="Wavelength (nm):",
                             component_id=self.ids.wavelength_nm,
                             placeholder="Wavelength (nm)",
@@ -439,11 +442,18 @@ class Model:
                                 "fontSize": "0.9rem",
                             },
                         ),
+                                ],
+                                id=self.ids.detector_configuration_custom_values_container,
+                                style=self._build_detector_configuration_custom_values_style(
+                                    is_visible=False,
+                                ),
+                            ),
+                            title="Advanced optical and detector settings",
+                        ),
                     ],
-                    id=self.ids.detector_configuration_custom_values_container,
-                    style=self._build_detector_configuration_custom_values_style(
-                        is_visible=False,
-                    ),
+                    start_collapsed=True,
+                    always_open=True,
+                    style={"marginTop": "8px"},
                 ),
                 dbc.Alert(
                     "",

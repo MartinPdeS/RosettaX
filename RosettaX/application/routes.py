@@ -20,6 +20,8 @@ from RosettaX.utils.streamed_uploads import (
 from RosettaX.utils.upload_limits import format_upload_size
 
 logger = logging.getLogger(__name__)
+UPLOAD_STORAGE_ERROR_MESSAGE = "Upload could not be stored. Check the application logs."
+CALIBRATION_OPEN_ERROR_MESSAGE = "The requested calibration file could not be opened."
 
 
 def resolve_calibration_file_path(folder: str, file_name: str) -> Path:
@@ -97,7 +99,7 @@ def build_calibration_json_error_document() -> str:
 </head>
 <body>
     <h2>Could not open calibration</h2>
-    <pre>The requested calibration file could not be opened.</pre>
+    <pre>{CALIBRATION_OPEN_ERROR_MESSAGE}</pre>
 </body>
 </html>
 """
@@ -145,13 +147,12 @@ def register_server_routes(app: Dash) -> None:
                 }
             ), 413
         except ValueError as exception:
+            status_code = 413 if str(exception).startswith("Upload exceeds") else 400
             logger.warning("Rejected streamed upload: %s", exception)
-            return jsonify({"error": str(exception)}), 400
-        except Exception as exception:
-            logger.exception("Failed to receive streamed upload")
-            return jsonify(
-                {"error": f"Upload failed: {type(exception).__name__}: {exception}"}
-            ), 500
+            return jsonify({"error": str(exception)}), status_code
+        except OSError:
+            logger.exception("Failed to store streamed upload")
+            return jsonify({"error": UPLOAD_STORAGE_ERROR_MESSAGE}), 500
 
     @app.server.route("/calibration-json/<folder>/<path:file_name>")
     def serve_calibration_json(folder: str, file_name: str):
@@ -181,13 +182,29 @@ def register_server_routes(app: Dash) -> None:
 
             return Response(html_document, mimetype="text/html")
 
-        except Exception as exception:
+        except (
+            FileNotFoundError,
+            IsADirectoryError,
+            json.JSONDecodeError,
+            UnicodeDecodeError,
+            ValueError,
+        ) as exception:
+            logger.warning(
+                "Could not open calibration JSON for folder=%r file_name=%r: %s",
+                folder,
+                file_name,
+                exception,
+            )
+            error_document = build_calibration_json_error_document()
+
+            return Response(error_document, mimetype="text/html", status=400)
+        except OSError:
             logger.exception(
-                "Failed to serve calibration JSON for folder=%r file_name=%r",
+                "Failed to read calibration JSON for folder=%r file_name=%r",
                 folder,
                 file_name,
             )
 
             error_document = build_calibration_json_error_document()
 
-            return Response(error_document, mimetype="text/html", status=400)
+            return Response(error_document, mimetype="text/html", status=500)

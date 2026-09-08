@@ -24,7 +24,8 @@ Recommended order of work
 #. Inspect the selected detector and the visible peaks before fitting.
 #. Review the calibration table carefully.
 #. Create the calibration and inspect the fit.
-#. Save the calibration JSON.
+#. Review the save checklist, confirm the calibration context and fit, then save
+   the calibration JSON.
 #. Reuse the calibration in the apply workflow and keep the generated PDF report.
 
 
@@ -56,6 +57,11 @@ Before saving a calibration, confirm all of the following:
 * the calibration table pairs the right measured values with the right references
 * the fitted relation is scientifically plausible, not just numerically tidy
 * the metadata is specific enough that another person could interpret the JSON later
+* the save checklist reports that the calibration, name, and output channel are ready
+
+RosettaX keeps the workflow progress visible at the top of the calibration page.
+It marks completed steps, identifies the current step, and shows later steps as
+blocked until their prerequisites are complete.
 
 
 What to inspect before applying

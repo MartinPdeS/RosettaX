@@ -41,6 +41,15 @@ jobs:
       - name: Build bundle
         run: pyinstaller rosettax.spec --clean
 
+      - name: Smoke test bundled application (Unix)
+        if: runner.os != 'Windows'
+        run: ./dist/rosettax/rosettax --help
+
+      - name: Smoke test bundled application (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: '& dist/rosettax/rosettax.exe --help'
+
       - name: Archive bundle (Unix)
         if: runner.os != 'Windows'
         run: |

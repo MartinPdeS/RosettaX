@@ -647,12 +647,15 @@ class Test_SidebarNavigation:
         text_nodes = _collect_text(navigation)
         component_ids = _collect_component_ids(navigation)
 
-        assert "Calibration" in text_nodes
-        assert "Tools" in text_nodes
+        assert "Calibrate" in text_nodes
+        assert "Analyze files" in text_nodes
+        assert "Manage" in text_nodes
+        assert "Learn" in text_nodes
+        assert "Apply calibration" in text_nodes
         assert ">" in text_nodes
         assert "Fluorescence" in text_nodes
         assert "Scattering" in text_nodes
-        assert "Apply" in text_nodes
+        assert "Apply calibration" in text_nodes
         assert SidebarIds.calibration_toggle_button in component_ids
         assert SidebarIds.calibration_collapse in component_ids
         assert SidebarIds.tools_toggle_button in component_ids
@@ -671,8 +674,10 @@ class Test_SidebarNavigation:
         assert tools_collapse is not None
         assert "/fcs-slicer" in _collect_component_hrefs(tools_collapse)
         assert "/sample-files" not in _collect_component_hrefs(tools_collapse)
-        assert text_nodes.index("Documentation") < text_nodes.index("Sample files")
-        assert text_nodes.index("Sample files") < text_nodes.index("Help")
+        assert text_nodes.index("Manage") < text_nodes.index("Sample files")
+        assert text_nodes.index("Sample files") < text_nodes.index("Learn")
+        assert text_nodes.index("Learn") < text_nodes.index("Documentation")
+        assert text_nodes.index("Documentation") < text_nodes.index("Help")
 
     def test_logo_links_to_home_page(self) -> None:
         sidebar = Sidebar()

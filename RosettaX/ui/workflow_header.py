@@ -141,8 +141,38 @@ def build_workflow_progress_content(
                 animated=bounded_completed_count < step_count,
                 style={"height": "12px", "borderRadius": "8px"},
             ),
+            html.Div(
+                [
+                    dbc.Badge(
+                        (
+                            f"{step.number}. {step.title}: "
+                            f"{'Complete' if index < bounded_completed_count else 'Current' if index == active_index else 'Blocked'}"
+                        ),
+                        color=(
+                            "success"
+                            if index < bounded_completed_count
+                            else "primary"
+                            if index == active_index
+                            else "secondary"
+                        ),
+                        pill=True,
+                        class_name="me-1 mb-1",
+                    )
+                    for index, step in enumerate(step_list)
+                ],
+                style={"marginTop": "8px"},
+            ),
         ],
-        style={"marginBottom": "14px"},
+        style={
+            "marginBottom": "14px",
+            "position": "sticky",
+            "top": "8px",
+            "zIndex": 10,
+            "padding": "10px 12px",
+            "borderRadius": "8px",
+            "background": "rgba(255, 255, 255, 0.96)",
+            "boxShadow": "0 2px 8px rgba(0, 0, 0, 0.08)",
+        },
     )
 
 

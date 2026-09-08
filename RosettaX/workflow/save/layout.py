@@ -73,6 +73,8 @@ class SaveLayout:
                         "marginBottom": "8px",
                     },
                 ),
+                dash.html.Div(id=self.ids.review_summary),
+                self._build_review_acknowledgment(),
                 self._build_save_row(),
                 dash.html.Hr(),
                 self._build_status_output(),
@@ -80,6 +82,20 @@ class SaveLayout:
                     id=self.ids.download,
                 ),
             ]
+        )
+
+    def _build_review_acknowledgment(self) -> dbc.Checklist:
+        """Build the explicit review acknowledgment required before download."""
+        return dbc.Checklist(
+            id=self.ids.review_acknowledgment,
+            options=[
+                {
+                    "label": "I have reviewed the calibration context and fit.",
+                    "value": "reviewed",
+                }
+            ],
+            value=[],
+            style={"marginBottom": "12px"},
         )
 
     def _build_save_row(self) -> dash.html.Div:

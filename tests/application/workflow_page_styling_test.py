@@ -7,6 +7,7 @@ from RosettaX.pages.p02_fluorescence.sections.s00_header import (
 )
 from RosettaX.pages.p03_scattering.sections.s00_header import Header as ScatteringHeader
 from RosettaX.utils import styling
+from RosettaX.ui import WorkflowStep, build_workflow_progress_content
 
 
 class Test_WorkflowPageStyling:
@@ -74,3 +75,18 @@ class Test_WorkflowPageStyling:
             "purple",
             0.12,
         )
+
+    def test_workflow_progress_identifies_complete_current_and_blocked_steps(self) -> None:
+        progress = build_workflow_progress_content(
+            steps=[
+                WorkflowStep("1", "Upload", "", "yellow"),
+                WorkflowStep("2", "Review", "", "blue"),
+                WorkflowStep("3", "Save", "", "gray"),
+            ],
+            completed_count=1,
+        )
+
+        status_badges = progress.children[2].children
+        assert status_badges[0].children == "1. Upload: Complete"
+        assert status_badges[1].children == "2. Review: Current"
+        assert status_badges[2].children == "3. Save: Blocked"

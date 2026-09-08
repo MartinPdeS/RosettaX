@@ -46,6 +46,23 @@ Treat this as a review pipeline rather than a sequence of buttons. If a graph,
 table, or parameter block looks wrong, stop there and correct it before moving
 forward.
 
+Scattering model controls
+-------------------------
+
+Start scattering calibration by selecting a detector preset or using
+**Auto-detect**. Manual optical geometry, detector sampling, angular settings,
+and angular weighting are grouped under **Advanced optical and detector
+settings**. Those controls are only needed when a preset does not describe the
+instrument or when an expert adjustment is required.
+
+Navigation
+----------
+
+The sidebar is organized by task: use **Calibrate** to create fluorescence,
+scattering, or cross calibrations; **Apply calibration** to reuse one; and
+**Analyze files** for visualization and FCS slicing. **Manage** contains
+settings and sample files, while **Learn** contains documentation and help.
+
 
 Saved outputs
 -------------

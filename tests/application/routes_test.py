@@ -26,7 +26,12 @@ sys.modules.setdefault(
     _DashBootstrapComponentsStub("dash_bootstrap_components"),
 )
 
-from RosettaX.application.routes import register_server_routes
+from RosettaX.application import routes
+from RosettaX.application.routes import (
+    CALIBRATION_OPEN_ERROR_MESSAGE,
+    UPLOAD_STORAGE_ERROR_MESSAGE,
+    register_server_routes,
+)
 from RosettaX.utils.streamed_uploads import resolve_streamed_upload
 
 
@@ -82,6 +87,30 @@ class Test_ApplicationRoutes:
 
         assert response.status_code == 413
         assert "maximum file size" in response.get_json()["error"]
+
+    def test_streamed_upload_route_returns_stable_error_for_storage_failure(
+        self,
+        tmp_path,
+        monkeypatch,
+    ) -> None:
+        app = dash.Dash(__name__)
+        app.layout = html.Div()
+        app.server.config["ROSETTAX_STREAMED_UPLOAD_DIRECTORY"] = str(tmp_path)
+        register_server_routes(app)
+        monkeypatch.setattr(
+            routes,
+            "stage_streamed_upload",
+            lambda **_kwargs: (_ for _ in ()).throw(OSError("disk full")),
+        )
+
+        response = app.server.test_client().post(
+            "/api/uploads/stream",
+            data=b"streamed FCS data",
+            headers={"X-RosettaX-Filename": "sample.fcs"},
+        )
+
+        assert response.status_code == 500
+        assert response.get_json() == {"error": UPLOAD_STORAGE_ERROR_MESSAGE}
 
     def test_calibration_json_route_rejects_path_traversal(
         self,
@@ -139,3 +168,23 @@ class Test_ApplicationRoutes:
         assert response.status_code == 400
         assert "Could not open calibration" in response.get_data(as_text=True)
         assert "could not be opened" in response.get_data(as_text=True)
+
+    def test_calibration_json_route_returns_stable_error_for_storage_failure(
+        self,
+        monkeypatch,
+    ) -> None:
+        app = dash.Dash(__name__)
+        app.layout = html.Div()
+        register_server_routes(app)
+        monkeypatch.setattr(
+            routes,
+            "resolve_calibration_file_path",
+            lambda *_args: (_ for _ in ()).throw(OSError("permission denied")),
+        )
+
+        response = app.server.test_client().get(
+            "/calibration-json/fluorescence/example.json"
+        )
+
+        assert response.status_code == 500
+        assert CALIBRATION_OPEN_ERROR_MESSAGE in response.get_data(as_text=True)

@@ -55,7 +55,6 @@ class Sidebar:
         "/fluorescence",
         "/scattering",
         "/cross-calibration",
-        "/calibrate",
     }
     tools_paths = {
         "/visualization",
@@ -270,7 +269,7 @@ class Sidebar:
 
             if pathname in self.calibration_paths:
                 return True, self._nav_toggle_button_children(
-                    label="Calibration",
+                    label="Calibrate",
                     is_open=True,
                 )
 
@@ -279,12 +278,12 @@ class Sidebar:
             if triggered_id == SidebarIds.calibration_toggle_button:
                 next_is_open = not bool(is_open)
                 return next_is_open, self._nav_toggle_button_children(
-                    label="Calibration",
+                    label="Calibrate",
                     is_open=next_is_open,
                 )
 
             return False, self._nav_toggle_button_children(
-                label="Calibration",
+                label="Calibrate",
                 is_open=False,
             )
 
@@ -310,7 +309,7 @@ class Sidebar:
 
             if pathname in self.tools_paths:
                 return True, self._nav_toggle_button_children(
-                    label="Tools",
+                    label="Analyze files",
                     is_open=True,
                 )
 
@@ -319,12 +318,12 @@ class Sidebar:
             if triggered_id == SidebarIds.tools_toggle_button:
                 next_is_open = not bool(is_open)
                 return next_is_open, self._nav_toggle_button_children(
-                    label="Tools",
+                    label="Analyze files",
                     is_open=next_is_open,
                 )
 
             return False, self._nav_toggle_button_children(
-                label="Tools",
+                label="Analyze files",
                 is_open=False,
             )
 
@@ -423,7 +422,7 @@ class Sidebar:
                             [
                                 self._nav_toggle_button(
                                     self._nav_toggle_button_children(
-                                        label="Calibration",
+                                        label="Calibrate",
                                         is_open=False,
                                     ),
                                 ),
@@ -446,11 +445,6 @@ class Sidebar:
                                                     "/cross-calibration",
                                                     tier="child",
                                                 ),
-                                                self._nav_link(
-                                                    "Apply",
-                                                    "/calibrate",
-                                                    tier="child",
-                                                ),
                                             ],
                                             vertical=True,
                                             pills=True,
@@ -470,7 +464,7 @@ class Sidebar:
                             [
                                 self._nav_toggle_button(
                                     self._nav_toggle_button_children(
-                                        label="Tools",
+                                        label="Analyze files",
                                         is_open=False,
                                     ),
                                     button_id=SidebarIds.tools_toggle_button,
@@ -504,10 +498,13 @@ class Sidebar:
                                 ),
                             ]
                         ),
-                        self._nav_link("Settings", "/settings", tier="top"),
-                        self._nav_link("Documentation", "/documentation", tier="top"),
-                        self._nav_link("Sample files", "/sample-files", tier="top"),
-                        self._nav_link("Help", "/help", tier="top"),
+                        self._nav_link("Apply calibration", "/calibrate", tier="top"),
+                        self._nav_group_label("Manage"),
+                        self._nav_link("Settings", "/settings", tier="child"),
+                        self._nav_link("Sample files", "/sample-files", tier="child"),
+                        self._nav_group_label("Learn"),
+                        self._nav_link("Documentation", "/documentation", tier="child"),
+                        self._nav_link("Help", "/help", tier="child"),
                     ],
                     vertical=True,
                     pills=True,
@@ -516,6 +513,21 @@ class Sidebar:
                     },
                 ),
             ]
+        )
+
+    @staticmethod
+    def _nav_group_label(label: str) -> html.Div:
+        """Build a non-interactive label for related task-oriented links."""
+        return html.Div(
+            label,
+            style={
+                "fontSize": "0.78rem",
+                "fontWeight": "700",
+                "letterSpacing": "0.08em",
+                "opacity": 0.62,
+                "padding": "0.9rem 1rem 0.18rem",
+                "textTransform": "uppercase",
+            },
         )
 
     def _nav_toggle_button_children(
