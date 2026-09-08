@@ -671,6 +671,7 @@ class Test_SidebarNavigation:
         assert "/visualization" in _collect_component_hrefs(navigation)
         assert "/sample-files" in _collect_component_hrefs(navigation)
         assert "/fcs-slicer" in _collect_component_hrefs(navigation)
+        assert "/fcs-merge" in _collect_component_hrefs(navigation)
         assert "Visualize data" in text_nodes
         assert "Slice FCS files" in text_nodes
 
@@ -680,9 +681,11 @@ class Test_SidebarNavigation:
         )
         assert tools_collapse is not None
         assert "/fcs-slicer" in _collect_component_hrefs(tools_collapse)
+        assert "/fcs-merge" in _collect_component_hrefs(tools_collapse)
         assert "/fcs-inspector" in _collect_component_hrefs(tools_collapse)
         assert "/sample-files" not in _collect_component_hrefs(tools_collapse)
         assert "Slice FCS files" in _collect_text(tools_collapse)
+        assert "Merge FCS files" in _collect_text(tools_collapse)
         assert "Visualize data" in _collect_text(tools_collapse)
 
         calibration_collapse = _find_component_by_id(

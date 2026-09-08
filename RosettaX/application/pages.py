@@ -31,6 +31,7 @@ PAGE_MODULES: list[str] = [
     "RosettaX.pages.p21_fcs_slicer.main",
     "RosettaX.pages.p22_admin.main",
     "RosettaX.pages.p23_fcs_inspector.main",
+    "RosettaX.pages.p24_fcs_merge.main",
 ]
 
 

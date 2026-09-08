@@ -61,6 +61,7 @@ class Sidebar:
         "/visualization",
         "/fcs-slicer",
         "/fcs-inspector",
+        "/fcs-merge",
     }
     manage_paths = {"/settings", "/sample-files"}
     learn_paths = {"/documentation", "/help"}
@@ -549,6 +550,11 @@ class Sidebar:
                                                 self._nav_link(
                                                     "Slice FCS files",
                                                     "/fcs-slicer",
+                                                    tier="child",
+                                                ),
+                                                self._nav_link(
+                                                    "Merge FCS files",
+                                                    "/fcs-merge",
                                                     tier="child",
                                                 ),
                                             ],
