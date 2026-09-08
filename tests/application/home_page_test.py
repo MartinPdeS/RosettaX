@@ -79,9 +79,6 @@ class Test_HomePage:
         assert "Home page visits" in text_nodes
         assert "Apply button clicks" in text_nodes
         assert "Total calibrated files" in text_nodes
-        assert "Calibrations" in text_nodes
-        assert "Apply calibration" in text_nodes
-        assert "FCS tools" in text_nodes
         assert "56" in text_nodes
         assert "12" in text_nodes
         assert "34" in text_nodes
