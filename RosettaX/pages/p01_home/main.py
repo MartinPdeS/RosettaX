@@ -338,19 +338,23 @@ class HomePage:
         )
 
     def _tools_overview_card(self) -> dbc.Card:
-        """Summarize RosettaX's primary task areas without duplicating navigation."""
+        """Explain the task-oriented groups available in the sidebar."""
         tool_descriptions = [
             (
                 "Calibrations",
-                "Create fluorescence and scattering calibrations or compare calibration results.",
-            ),
-            (
-                "Apply calibration",
-                "Use saved calibrations with experimental FCS files and export results.",
+                "Create fluorescence, scattering, or cross-calibrations, or apply a saved calibration.",
             ),
             (
                 "FCS tools",
-                "Visualize data and slice FCS files for focused downstream work.",
+                "Visualize FCS data or create file slices for focused downstream work.",
+            ),
+            (
+                "Manage",
+                "Choose a profile and access sample files.",
+            ),
+            (
+                "Learn",
+                "Read the documentation or get help with RosettaX.",
             ),
         ]
         card = dbc.Card(
@@ -378,7 +382,8 @@ class HomePage:
                                         style={"fontSize": "0.92rem", "opacity": 0.82},
                                     ),
                                 ],
-                                md=4,
+                                md=6,
+                                lg=3,
                             )
                             for title, description in tool_descriptions
                         ],
