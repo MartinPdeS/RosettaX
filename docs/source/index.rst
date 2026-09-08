@@ -53,6 +53,15 @@ Choose your path
         - :doc:`reports`
         - :doc:`code`
 
+    .. container:: rx-card
+
+        **Worked examples**
+
+        Run small, inspectable examples that use the same fitting functions as
+        the application. They are a good companion to a first calibration run.
+
+        - :doc:`gallery/index`
+
 
 Recommended reading order
 -------------------------
@@ -87,7 +96,7 @@ Full documentation map
 
 .. toctree::
     :maxdepth: 2
-    :caption: API and examples
+    :caption: API and worked examples
 
     code
     gallery/index.rst

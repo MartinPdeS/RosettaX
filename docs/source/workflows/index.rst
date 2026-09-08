@@ -6,6 +6,7 @@ modeling question.
 
 * :doc:`fluorescence` explains the log-log fluorescence regression and saved payload.
 * :doc:`scattering` explains the optical assumptions, material handling, and linear instrument-response fit.
+* :doc:`peak_identification` explains the automatic and manual population-selection methods.
 * :doc:`systems` catalogs flow-cytometer detector systems and 3D geometry figures.
 * :doc:`apply` explains how saved calibrations are validated and applied to new FCS files.
 
@@ -14,5 +15,6 @@ modeling question.
 
     fluorescence
     scattering
+    peak_identification
     systems
     apply

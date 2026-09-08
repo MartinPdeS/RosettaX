@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:00.000** total execution time for 0 files **from all galleries**:
+**00:01.054** total execution time for 2 files **from all galleries**:
 
 .. container::
 
@@ -32,6 +32,9 @@ Computation times
    * - Example
      - Time
      - Mem (MB)
-   * - N/A
-     - N/A
-     - N/A
+   * - :ref:`sphx_glr_gallery_fluorescence_calibration.py` (``../examples/fluorescence_calibration.py``)
+     - 00:00.792
+     - 0.0
+   * - :ref:`sphx_glr_gallery_scattering_instrument_response.py` (``../examples/scattering_instrument_response.py``)
+     - 00:00.262
+     - 0.0

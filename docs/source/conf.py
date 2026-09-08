@@ -3,19 +3,21 @@
 
 import sys
 import os
-from sphinx_gallery.sorting import FileNameSortKey
 from pathlib import Path
+
+# Documentation builds are commonly run from ``docs/`` without an editable
+# install. Make the repository package importable before importing its version
+# and resource helpers.
+repository_root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(repository_root))
+
+from sphinx_gallery.sorting import FileNameSortKey
 import RosettaX
 from RosettaX.utils.directories import css
 
 
 package_name = "RosettaX"
 version = RosettaX.__version__
-
-current_dir = Path(".")
-
-sys.path.append(str(current_dir.resolve()))
-
 
 def setup(app):
     app.add_css_file(str(css))
@@ -48,8 +50,10 @@ extensions = [
 napoleon_google_docstring = False
 napoleon_numpy_docstring = True
 
-html_logo = "../../RosettaX/assets/logo_light.svg"
-html_favicon = "../../RosettaX/assets/logo_light.svg"
+html_logo = "../../RosettaX/assets/logo/logo_light.svg"
+# The compact X-and-orbit mark stays legible in a browser tab; the full wordmark
+# does not at favicon sizes.
+html_favicon = "../../RosettaX/assets/logo/favicon.svg"
 
 
 sphinx_gallery_conf = {
@@ -99,7 +103,10 @@ binder_branch = f"v{major}.{minor}.x"
 
 html_theme_options = dict()
 
-html_theme_options["logo"] = dict(text=package_name, image="../../RosettaX/assets/logo_light.svg")
+html_theme_options["logo"] = dict(
+    text=package_name,
+    image="../../RosettaX/assets/logo/logo_light.svg",
+)
 html_theme_options["show_nav_level"] = 0
 
 html_theme_options.update(

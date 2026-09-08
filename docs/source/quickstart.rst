@@ -28,6 +28,24 @@ Recommended order of work
 #. Reuse the calibration in the apply workflow and keep the generated PDF report.
 
 
+Worked examples
+---------------
+
+The application is the normal place to create and save a calibration. The
+examples below are deliberately small, reproducible views of the calculations
+behind the two fits. They use the same fitting functions as the application, so
+their displayed coefficients follow the same rules as RosettaX:
+
+* :doc:`gallery/fluorescence_calibration` shows a log-log fluorescence fit and
+  the equivalent power-law relation.
+* :doc:`gallery/scattering_instrument_response` shows a zero-intercept
+  scattering instrument-response fit against modeled coupling values.
+
+Use the numbers in an example to understand the fit; do not copy them into a
+calibration record. Your saved calibration must be based on your bead file,
+detector channel, and approved reference table.
+
+
 What to inspect before saving
 -----------------------------
 
