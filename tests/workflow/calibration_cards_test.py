@@ -25,10 +25,22 @@ class Test_CalibrationCards:
             triggered_id={"type": calibration_cards.TOGGLE_ID_TYPE},
             is_open=False,
             runtime_config_data={"ui": {"collapse_calibration_cards": True}},
+            toggle_clicks=1,
         )
 
         assert is_open is True
         assert label == "Hide"
+
+    def test_initial_toggle_value_respects_profile_state(self) -> None:
+        is_open, label = calibration_cards.resolve_card_toggle(
+            triggered_id={"type": calibration_cards.TOGGLE_ID_TYPE},
+            is_open=True,
+            runtime_config_data={"ui": {"collapse_calibration_cards": True}},
+            toggle_clicks=0,
+        )
+
+        assert is_open is False
+        assert label == "Show"
 
     def test_workflow_step_click_opens_target_card(self) -> None:
         is_open, label = calibration_cards.resolve_card_toggle(

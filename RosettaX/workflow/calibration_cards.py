@@ -196,6 +196,7 @@ def resolve_card_toggle(
     triggered_id: Any,
     is_open: Any,
     runtime_config_data: Any,
+    toggle_clicks: Any = None,
     workflow_step_clicks: Any = None,
 ) -> tuple[bool, str]:
     """Resolve a click toggle or reset the card from a newly loaded profile."""
@@ -205,7 +206,11 @@ def resolve_card_toggle(
         and bool(workflow_step_clicks)
     ):
         next_is_open = True
-    elif isinstance(triggered_id, dict) and triggered_id.get("type") == TOGGLE_ID_TYPE:
+    elif (
+        isinstance(triggered_id, dict)
+        and triggered_id.get("type") == TOGGLE_ID_TYPE
+        and bool(toggle_clicks)
+    ):
         next_is_open = not bool(is_open)
     else:
         next_is_open = not profile_collapses_calibration_cards(runtime_config_data)

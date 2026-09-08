@@ -100,6 +100,7 @@ def register_application_callbacks(app: Dash) -> None:
             triggered_id=dash.ctx.triggered_id,
             is_open=is_open,
             runtime_config_data=runtime_config_data,
+            toggle_clicks=_n_clicks,
         )
 
     @app.callback(
