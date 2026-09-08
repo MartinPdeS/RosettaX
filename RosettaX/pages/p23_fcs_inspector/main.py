@@ -116,6 +116,8 @@ class FCSInspectorPage:
                     html.Div("No readable FCS metadata is available.", style={"opacity": 0.76}),
                 )
 
+        return self
+
 
 _page = FCSInspectorPage().register_callbacks()
 layout = _page.layout
