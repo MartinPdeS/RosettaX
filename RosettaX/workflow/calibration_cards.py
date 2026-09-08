@@ -15,6 +15,29 @@ TOGGLE_LABEL_ID_TYPE = "calibration-card-toggle-label"
 WORKFLOW_STEP_CARD_ID_TYPE = "workflow-step-card"
 FCS_TOOL_CARD_GAP = styling.get_spacing_token("lg")
 
+CALIBRATION_WORKFLOW_SUBTITLES = {
+    "fluorescent_calibration": {
+        "1": "Load the bead measurement used to establish the fluorescence response.",
+        "2": "Identify the fluorescence bead populations and record their measured peaks.",
+        "3": "Pair the measured peaks with the known MESF reference values.",
+        "4": "Fit the fluorescence response from the reference values and bead peaks.",
+        "5": "Download the completed fluorescence calibration for later use.",
+    },
+    "scattering_calibration": {
+        "1": "Load the bead measurement used to establish the scattering response.",
+        "2": "Identify the scattering bead populations and record their measured peaks.",
+        "3": "Configure the optical and detector model used for the calibration.",
+        "4": "Define the calibration standard and calculate its modeled coupling.",
+        "5": "Fit the instrument response from the measured and modeled bead values.",
+        "6": "Download the completed scattering calibration for later use.",
+    },
+    "apply_calibration": {
+        "1": "Choose the saved calibration files to apply to matching FCS channels.",
+        "2": "Load the input FCS files that will receive the selected calibrations.",
+        "3": "Generate and download calibrated FCS output files.",
+    },
+}
+
 
 def _component_id(*, id_type: str, page_name: str, section_key: str) -> dict[str, str]:
     return {
@@ -127,17 +150,80 @@ def make_collapsible_section_card(
 
 
 def build_collapsible_section_layout(section: Any, *, page_name: str) -> Any:
-    """Build a section and collapse numbered workflow cards."""
+    """Build a numbered calibration section through the shared card helper."""
     layout = section.get_layout()
     section_number = getattr(section, "section_number", None)
     if section_number is None or not isinstance(layout, dbc.Card):
         return layout
 
+    return build_calibration_workflow_section_card(
+        card=layout,
+        page_name=page_name,
+        section_number=section_number,
+        subtitle=CALIBRATION_WORKFLOW_SUBTITLES.get(page_name, {}).get(
+            str(section_number)
+        ),
+    )
+
+
+def build_calibration_workflow_section_card(
+    *,
+    page_name: str,
+    section_number: int,
+    subtitle: str | None,
+    card: dbc.Card | None = None,
+    title: str | None = None,
+    body_children: list[Any] | None = None,
+    tooltip_text: str | None = None,
+    tooltip_target_id: Any | None = None,
+    tooltip_id: Any | None = None,
+    color_name: str | None = None,
+    style_overrides: dict[str, Any] | None = None,
+) -> dbc.Card:
+    """Build one collapsed, descriptive calibration workflow section card."""
+    if card is None:
+        if title is None or body_children is None:
+            raise ValueError("title and body_children are required when card is omitted")
+        from RosettaX.ui.workflow_cards import build_workflow_section_card
+
+        card = build_workflow_section_card(
+            section_number=section_number,
+            title=title,
+            subtitle=subtitle,
+            body_children=body_children,
+            tooltip_text=tooltip_text,
+            tooltip_target_id=tooltip_target_id,
+            tooltip_id=tooltip_id,
+            color_name=color_name,
+            style_overrides=style_overrides,
+        )
+    else:
+        _append_card_subtitle(card, subtitle)
+
     return make_profile_aware_collapsible_card(
-        layout,
+        card,
         page_name=page_name,
         section_key=str(section_number),
     )
+
+
+def _append_card_subtitle(card: dbc.Card, subtitle: str | None) -> None:
+    """Add the shared visible subtitle to a legacy workflow card header."""
+    if not subtitle:
+        return
+
+    card_children = ui_forms.normalize_children(card.children)
+    if not card_children or not isinstance(card_children[0], dbc.CardHeader):
+        return
+
+    header = card_children[0]
+    header.children = [
+        *ui_forms.normalize_children(header.children),
+        dash.html.Div(
+            subtitle,
+            style=ui_forms.build_workflow_section_subtitle_style(),
+        ),
+    ]
 
 
 def make_profile_aware_collapsible_card(
@@ -169,9 +255,8 @@ def build_profile_aware_workflow_section_card(
     style_overrides: dict[str, Any] | None = None,
 ) -> dbc.Card:
     """Build a standard workflow section card with profile-aware collapsing."""
-    from RosettaX.ui.workflow_cards import build_workflow_section_card
-
-    card = build_workflow_section_card(
+    return build_calibration_workflow_section_card(
+        page_name=page_name,
         section_number=section_number,
         title=title,
         subtitle=subtitle,
@@ -181,11 +266,6 @@ def build_profile_aware_workflow_section_card(
         tooltip_id=tooltip_id,
         color_name=color_name,
         style_overrides=style_overrides,
-    )
-    return make_profile_aware_collapsible_card(
-        card,
-        page_name=page_name,
-        section_key=str(section_number),
     )
 
 

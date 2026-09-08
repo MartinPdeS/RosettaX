@@ -7,9 +7,9 @@ import dash
 import dash_bootstrap_components as dbc
 from dash import dash_table, dcc, html
 
-from RosettaX.ui import WorkflowStep, build_workflow_page_header, build_workflow_section_card, build_workflow_step_cards
+from RosettaX.ui import WorkflowStep, build_workflow_page_header, build_workflow_step_cards
 from RosettaX.utils import styling, ui_forms
-from RosettaX.workflow.calibration_cards import make_profile_aware_collapsible_card
+from RosettaX.workflow.calibration_cards import build_calibration_workflow_section_card
 from RosettaX.workflow.cross_calibration import services
 
 from .ids import Ids
@@ -48,21 +48,9 @@ class CrossCalibrationPage:
                 html.Div(
                     [
                         self._build_header_card(),
-                        make_profile_aware_collapsible_card(
-                            self._build_upload_card(),
-                            page_name=self.ids.page_prefix,
-                            section_key="1",
-                        ),
-                        make_profile_aware_collapsible_card(
-                            self._build_result_card(),
-                            page_name=self.ids.page_prefix,
-                            section_key="2",
-                        ),
-                        make_profile_aware_collapsible_card(
-                            self._build_export_card(),
-                            page_name=self.ids.page_prefix,
-                            section_key="3",
-                        ),
+                        self._build_upload_card(),
+                        self._build_result_card(),
+                        self._build_export_card(),
                     ],
                     style={
                         "display": "flex",
@@ -126,35 +114,35 @@ class CrossCalibrationPage:
     def _build_upload_card(self) -> dbc.Card:
         body_children = [
             dbc.Row(
-                            [
-                                dbc.Col(
-                                    self._build_upload_panel(
-                                        title="Primary reference calibration",
-                                        upload_id=self.ids.primary_upload,
-                                        feedback_id=self.ids.primary_feedback,
-                                        summary_id=self.ids.primary_summary,
-                                        button_text=services.build_upload_prompt_text(
-                                            "primary reference",
-                                        ),
-                                        empty_summary_text="No primary calibration loaded.",
-                                    ),
-                                    xs=12,
-                                    lg=6,
-                                ),
-                                dbc.Col(
-                                    self._build_upload_panel(
-                                        title="Secondary routine-bead calibration",
-                                        upload_id=self.ids.secondary_upload,
-                                        feedback_id=self.ids.secondary_feedback,
-                                        summary_id=self.ids.secondary_summary,
-                                        button_text=services.build_upload_prompt_text(
-                                            "secondary routine-bead",
-                                        ),
-                                        empty_summary_text="No secondary calibration loaded.",
-                                    ),
-                                    xs=12,
-                                    lg=6,
-                                ),
+                [
+                    dbc.Col(
+                        self._build_upload_panel(
+                            title="Primary reference calibration",
+                            upload_id=self.ids.primary_upload,
+                            feedback_id=self.ids.primary_feedback,
+                            summary_id=self.ids.primary_summary,
+                            button_text=services.build_upload_prompt_text(
+                                "primary reference",
+                            ),
+                            empty_summary_text="No primary calibration loaded.",
+                        ),
+                        xs=12,
+                        lg=6,
+                    ),
+                    dbc.Col(
+                        self._build_upload_panel(
+                            title="Secondary routine-bead calibration",
+                            upload_id=self.ids.secondary_upload,
+                            feedback_id=self.ids.secondary_feedback,
+                            summary_id=self.ids.secondary_summary,
+                            button_text=services.build_upload_prompt_text(
+                                "secondary routine-bead",
+                            ),
+                            empty_summary_text="No secondary calibration loaded.",
+                        ),
+                        xs=12,
+                        lg=6,
+                    ),
                 ],
                 className="g-3",
             ),
@@ -177,10 +165,11 @@ class CrossCalibrationPage:
                 },
             ),
         ]
-        return build_workflow_section_card(
+        return build_calibration_workflow_section_card(
+            page_name=self.ids.page_prefix,
             section_number=1,
             title="Load primary and secondary calibrations",
-            subtitle=None,
+            subtitle="Load the reference and routine-bead calibrations used to build the transfer relation.",
             body_children=body_children,
             color_name=styling.get_workflow_section_color(1),
         )
@@ -281,10 +270,11 @@ class CrossCalibrationPage:
         return children
 
     def _build_result_card(self) -> dbc.Card:
-        return build_workflow_section_card(
+        return build_calibration_workflow_section_card(
+            page_name=self.ids.page_prefix,
             section_number=2,
             title="Review transfer relation",
-            subtitle=None,
+            subtitle="Inspect the fitted relation before exporting it for routine-bead calibration.",
             body_children=[
                         dcc.Graph(
                             id=self.ids.graph,
@@ -313,10 +303,11 @@ class CrossCalibrationPage:
         )
 
     def _build_export_card(self) -> dbc.Card:
-        return build_workflow_section_card(
+        return build_calibration_workflow_section_card(
+            page_name=self.ids.page_prefix,
             section_number=3,
             title="Export transfer relation",
-            subtitle=None,
+            subtitle="Download the transfer calibration for later use with the routine bead set.",
             body_children=[
                         html.Div(
                             "Provide a file name to export the generated transfer calibration JSON.",

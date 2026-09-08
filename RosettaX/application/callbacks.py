@@ -89,7 +89,7 @@ def register_application_callbacks(app: Dash) -> None:
             {"type": calibration_cards.COLLAPSE_ID_TYPE, "page": MATCH, "section": MATCH},
             "is_open",
         ),
-        prevent_initial_call=False,
+        prevent_initial_call=True,
     )
     def toggle_calibration_card(
         _n_clicks: Any,
