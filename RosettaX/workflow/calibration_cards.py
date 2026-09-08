@@ -146,14 +146,12 @@ def make_profile_aware_collapsible_card(
     page_name: str,
     section_key: str,
 ) -> dbc.Card:
-    """Apply the bundled default profile's initial state to a workflow card."""
+    """Build a collapsed card until the browser's active profile is available."""
     return make_collapsible_section_card(
         card,
         page_name=page_name,
         section_key=section_key,
-        initially_collapsed=profile_collapses_calibration_cards(
-            RuntimeConfig.from_default_profile().to_dict()
-        ),
+        initially_collapsed=True,
     )
 
 
