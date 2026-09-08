@@ -5,6 +5,7 @@ from typing import Any, Optional
 
 import dash
 from dash import MATCH, Dash, Input, Output, State
+from dash.exceptions import PreventUpdate
 from flask import request as flask_request
 
 from RosettaX.application.layout import THEME_DARK, THEME_LIGHT
@@ -95,6 +96,14 @@ def register_application_callbacks(app: Dash) -> None:
             {"type": calibration_cards.TOGGLE_ID_TYPE, "page": MATCH, "section": MATCH},
             "n_clicks",
         ),
+        Input(
+            {
+                "type": calibration_cards.WORKFLOW_STEP_CARD_ID_TYPE,
+                "page": MATCH,
+                "section": MATCH,
+            },
+            "n_clicks",
+        ),
         Input(BROWSER_PROFILES_STORE_ID, "data"),
         Input(SidebarIds.selected_profile_store, "data"),
         State(
@@ -104,57 +113,34 @@ def register_application_callbacks(app: Dash) -> None:
         prevent_initial_call=True,
     )
     def toggle_calibration_card(
-        _n_clicks: Any,
+        toggle_clicks: Any,
+        workflow_step_clicks: Any,
         browser_profiles_payload: Any,
         selected_profile_name: Any,
         is_open: Any,
     ) -> tuple[bool, str]:
-        active_profile_config = resolve_active_profile_runtime_config(
-            browser_profiles_payload,
-            selected_profile_name,
-        )
-        return calibration_cards.resolve_card_toggle(
-            triggered_id=dash.ctx.triggered_id,
+        triggered_id = dash.ctx.triggered_id
+        active_profile_config = None
+
+        if not isinstance(triggered_id, dict):
+            active_profile_config = resolve_active_profile_runtime_config(
+                browser_profiles_payload,
+                selected_profile_name,
+            )
+            if active_profile_config is None:
+                raise PreventUpdate
+
+        result = calibration_cards.resolve_card_toggle(
+            triggered_id=triggered_id,
             is_open=is_open,
             runtime_config_data=active_profile_config,
-            toggle_clicks=_n_clicks,
-        )
-
-    @app.callback(
-        Output(
-            {"type": calibration_cards.COLLAPSE_ID_TYPE, "page": MATCH, "section": MATCH},
-            "is_open",
-            allow_duplicate=True,
-        ),
-        Output(
-            {"type": calibration_cards.TOGGLE_LABEL_ID_TYPE, "page": MATCH, "section": MATCH},
-            "children",
-            allow_duplicate=True,
-        ),
-        Input(
-            {
-                "type": calibration_cards.WORKFLOW_STEP_CARD_ID_TYPE,
-                "page": MATCH,
-                "section": MATCH,
-            },
-            "n_clicks",
-        ),
-        State(
-            {"type": calibration_cards.COLLAPSE_ID_TYPE, "page": MATCH, "section": MATCH},
-            "is_open",
-        ),
-        prevent_initial_call=True,
-    )
-    def open_calibration_card_from_workflow_step(
-        workflow_step_clicks: Any,
-        is_open: Any,
-    ) -> tuple[bool, str]:
-        return calibration_cards.resolve_card_toggle(
-            triggered_id=dash.ctx.triggered_id,
-            is_open=is_open,
-            runtime_config_data=None,
+            toggle_clicks=toggle_clicks,
             workflow_step_clicks=workflow_step_clicks,
         )
+        if result is None:
+            raise PreventUpdate
+
+        return result
 
     @app.callback(
         Output("visit-tracking-store", "data"),

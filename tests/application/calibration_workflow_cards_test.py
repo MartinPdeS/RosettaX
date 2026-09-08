@@ -130,16 +130,32 @@ def test_calibration_card_callback_does_not_hydrate_card_state() -> None:
     app = dash.Dash(__name__, suppress_callback_exceptions=True)
     register_application_callbacks(app)
 
+    card_callbacks = [
+        callback
+        for callback in app._callback_list
+        if calibration_cards.COLLAPSE_ID_TYPE in str(callback["output"])
+    ]
+
+    assert len(card_callbacks) == 1
+    assert card_callbacks[0]["prevent_initial_call"] is True
+
+
+def test_card_callback_owns_header_and_workflow_step_actions() -> None:
+    app = dash.Dash(__name__, suppress_callback_exceptions=True)
+    register_application_callbacks(app)
+
     card_callback = next(
         callback
         for callback in app._callback_list
-        if any(
-            calibration_cards.TOGGLE_ID_TYPE in str(callback_input["id"])
-            for callback_input in callback["inputs"]
-        )
+        if calibration_cards.COLLAPSE_ID_TYPE in str(callback["output"])
     )
+    input_ids = {str(input_spec["id"]) for input_spec in card_callback["inputs"]}
 
-    assert card_callback["prevent_initial_call"] is True
+    assert any(calibration_cards.TOGGLE_ID_TYPE in input_id for input_id in input_ids)
+    assert any(
+        calibration_cards.WORKFLOW_STEP_CARD_ID_TYPE in input_id
+        for input_id in input_ids
+    )
 
 
 def test_active_browser_profile_keeps_workflow_cards_collapsed() -> None:

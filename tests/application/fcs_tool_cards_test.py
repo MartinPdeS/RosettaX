@@ -177,21 +177,22 @@ def test_fcs_tool_layouts_include_collapsible_cards_with_uniform_gaps(
         } in pattern_ids
 
 
-def test_card_toggle_callback_has_no_required_workflow_step_matcher() -> None:
+def test_card_toggle_callback_uses_one_writer_for_workflow_step_actions() -> None:
     app = dash.Dash(__name__, suppress_callback_exceptions=True)
     register_application_callbacks(app)
 
-    callback_input_types = [
-        _callback_input_id_types(callback)
-        for callback in app.callback_map.values()
+    card_callbacks = [
+        callback
+        for callback in app._callback_list
+        if calibration_cards.COLLAPSE_ID_TYPE in str(callback["output"])
     ]
+    callback_input_types = _callback_input_id_types(card_callbacks[0])
 
-    assert {
+    assert len(card_callbacks) == 1
+    assert callback_input_types == {
         calibration_cards.TOGGLE_ID_TYPE,
-    } in callback_input_types
-    assert {
         calibration_cards.WORKFLOW_STEP_CARD_ID_TYPE,
-    } in callback_input_types
+    }
 
 
 def test_card_toggle_callback_reads_browser_profile_preference() -> None:

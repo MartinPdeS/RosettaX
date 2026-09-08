@@ -31,16 +31,15 @@ class Test_CalibrationCards:
         assert is_open is True
         assert label == "Hide"
 
-    def test_initial_toggle_value_respects_profile_state(self) -> None:
-        is_open, label = calibration_cards.resolve_card_toggle(
+    def test_rebuilt_section_header_does_not_mutate_card_state(self) -> None:
+        result = calibration_cards.resolve_card_toggle(
             triggered_id={"type": calibration_cards.TOGGLE_ID_TYPE},
             is_open=True,
             runtime_config_data={"ui": {"collapse_calibration_cards": True}},
             toggle_clicks=0,
         )
 
-        assert is_open is False
-        assert label == "Show"
+        assert result is None
 
     def test_workflow_step_click_opens_target_card(self) -> None:
         is_open, label = calibration_cards.resolve_card_toggle(
@@ -53,16 +52,15 @@ class Test_CalibrationCards:
         assert is_open is True
         assert label == "Hide"
 
-    def test_initial_workflow_step_value_respects_profile_state(self) -> None:
-        is_open, label = calibration_cards.resolve_card_toggle(
+    def test_rebuilt_workflow_step_does_not_expand_collapsed_card(self) -> None:
+        result = calibration_cards.resolve_card_toggle(
             triggered_id={"type": calibration_cards.WORKFLOW_STEP_CARD_ID_TYPE},
-            is_open=True,
+            is_open=False,
             runtime_config_data={"ui": {"collapse_calibration_cards": True}},
             workflow_step_clicks=0,
         )
 
-        assert is_open is False
-        assert label == "Show"
+        assert result is None
 
     def test_profile_load_resets_card_state(self) -> None:
         is_open, label = calibration_cards.resolve_card_toggle(
@@ -73,6 +71,16 @@ class Test_CalibrationCards:
 
         assert is_open is False
         assert label == "Show"
+
+    def test_active_profile_without_collapse_preference_expands_card(self) -> None:
+        is_open, label = calibration_cards.resolve_card_toggle(
+            triggered_id="browser-profiles-store",
+            is_open=False,
+            runtime_config_data={"ui": {"collapse_calibration_cards": False}},
+        )
+
+        assert is_open is True
+        assert label == "Hide"
 
     def test_card_body_is_wrapped_in_profile_aware_collapse(self) -> None:
         card = dbc.Card([dbc.CardHeader("Section"), dbc.CardBody("Body")])

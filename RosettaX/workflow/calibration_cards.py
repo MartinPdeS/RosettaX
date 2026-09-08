@@ -256,20 +256,26 @@ def resolve_card_toggle(
     runtime_config_data: Any,
     toggle_clicks: Any = None,
     workflow_step_clicks: Any = None,
-) -> tuple[bool, str]:
-    """Resolve a click toggle or reset the card from a newly loaded profile."""
-    if (
-        isinstance(triggered_id, dict)
-        and triggered_id.get("type") == WORKFLOW_STEP_CARD_ID_TYPE
-        and bool(workflow_step_clicks)
-    ):
-        next_is_open = True
-    elif (
-        isinstance(triggered_id, dict)
-        and triggered_id.get("type") == TOGGLE_ID_TYPE
-        and bool(toggle_clicks)
-    ):
-        next_is_open = not bool(is_open)
+) -> tuple[bool, str] | None:
+    """Resolve an explicit card action or an active-profile state update.
+
+    Header workflow cards are rebuilt by progress callbacks. Their replacement
+    ``n_clicks=0`` values must not be treated as an action, because the target
+    section card remains mounted while the header card is recreated.
+    """
+    if isinstance(triggered_id, dict):
+        trigger_type = triggered_id.get("type")
+
+        if trigger_type == WORKFLOW_STEP_CARD_ID_TYPE:
+            if not bool(workflow_step_clicks):
+                return None
+            next_is_open = True
+        elif trigger_type == TOGGLE_ID_TYPE:
+            if not bool(toggle_clicks):
+                return None
+            next_is_open = not bool(is_open)
+        else:
+            return None
     else:
         next_is_open = not profile_collapses_calibration_cards(runtime_config_data)
     return next_is_open, collapse_label(is_open=next_is_open)
