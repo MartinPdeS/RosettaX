@@ -296,11 +296,6 @@ def _build_step_card(
         },
         n_clicks=0,
         type="button",
-        data_target_section=workflow_section_dom_id(
-            page_name=page_name,
-            section_key=section_key,
-        ),
-        aria_label=f"Open step {step.number}: {step.title}",
         style={
             "border": "0",
             "background": "transparent",
@@ -309,5 +304,12 @@ def _build_step_card(
             "height": "100%",
             "textAlign": "left",
             "cursor": "pointer",
+        },
+        **{
+            "data-target-section": workflow_section_dom_id(
+                page_name=page_name,
+                section_key=section_key,
+            ),
+            "aria-label": f"Open step {step.number}: {step.title}",
         },
     )
