@@ -269,12 +269,6 @@ class Sidebar:
                 is_open,
             )
 
-            if pathname in self.calibration_paths:
-                return True, self._nav_toggle_button_children(
-                    label="Calibrate",
-                    is_open=True,
-                )
-
             triggered_id = dash.callback_context.triggered_id
 
             if triggered_id == SidebarIds.calibration_toggle_button:
@@ -282,6 +276,12 @@ class Sidebar:
                 return next_is_open, self._nav_toggle_button_children(
                     label="Calibrate",
                     is_open=next_is_open,
+                )
+
+            if pathname in self.calibration_paths:
+                return True, self._nav_toggle_button_children(
+                    label="Calibrate",
+                    is_open=True,
                 )
 
             return False, self._nav_toggle_button_children(
@@ -309,12 +309,6 @@ class Sidebar:
                 is_open,
             )
 
-            if pathname in self.tools_paths:
-                return True, self._nav_toggle_button_children(
-                    label="Analyze files",
-                    is_open=True,
-                )
-
             triggered_id = dash.callback_context.triggered_id
 
             if triggered_id == SidebarIds.tools_toggle_button:
@@ -322,6 +316,12 @@ class Sidebar:
                 return next_is_open, self._nav_toggle_button_children(
                     label="Analyze files",
                     is_open=next_is_open,
+                )
+
+            if pathname in self.tools_paths:
+                return True, self._nav_toggle_button_children(
+                    label="Analyze files",
+                    is_open=True,
                 )
 
             return False, self._nav_toggle_button_children(
@@ -364,17 +364,17 @@ class Sidebar:
             pathname: Optional[str],
             is_open: Optional[bool],
         ):
-            if pathname in paths:
-                return True, self._nav_toggle_button_children(
-                    label=label,
-                    is_open=True,
-                )
-
             if dash.callback_context.triggered_id == button_id:
                 next_is_open = not bool(is_open)
                 return next_is_open, self._nav_toggle_button_children(
                     label=label,
                     is_open=next_is_open,
+                )
+
+            if pathname in paths:
+                return True, self._nav_toggle_button_children(
+                    label=label,
+                    is_open=True,
                 )
 
             return False, self._nav_toggle_button_children(
@@ -559,7 +559,7 @@ class Sidebar:
                             button_id=SidebarIds.manage_toggle_button,
                             collapse_id=SidebarIds.manage_collapse,
                             links=[
-                                self._nav_link("Settings", "/settings", tier="child"),
+                                self._nav_link("Profile", "/settings", tier="child"),
                                 self._nav_link("Sample files", "/sample-files", tier="child"),
                             ],
                         ),
