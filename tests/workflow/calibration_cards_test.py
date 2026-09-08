@@ -2,6 +2,7 @@
 
 import dash_bootstrap_components as dbc
 
+from RosettaX.utils import styling, ui_forms
 from RosettaX.workflow import calibration_cards
 
 
@@ -84,3 +85,37 @@ class Test_CalibrationCards:
             "section": "1",
         }
         assert result.children[0].children.style["cursor"] == "pointer"
+
+    def test_shared_workflow_section_builder_applies_standard_style_and_wrapper(
+        self,
+        monkeypatch,
+    ) -> None:
+        monkeypatch.setattr(
+            calibration_cards,
+            "profile_collapses_calibration_cards",
+            lambda _runtime_config_data: True,
+        )
+
+        result = calibration_cards.build_profile_aware_workflow_section_card(
+            page_name="test-page",
+            section_number=2,
+            title="Test section",
+            subtitle="A shared card.",
+            body_children=["Body"],
+        )
+
+        assert result.id == "test-page-workflow-section-2"
+        assert result.style == ui_forms.build_workflow_section_card_style(
+            color_name=styling.get_workflow_section_color(2),
+        )
+        assert result.children[0].children.id == {
+            "type": calibration_cards.TOGGLE_ID_TYPE,
+            "page": "test-page",
+            "section": "2",
+        }
+        assert result.children[1].id == {
+            "type": calibration_cards.COLLAPSE_ID_TYPE,
+            "page": "test-page",
+            "section": "2",
+        }
+        assert result.children[1].kwargs["is_open"] is False

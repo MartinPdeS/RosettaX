@@ -144,6 +144,40 @@ def make_profile_aware_collapsible_card(
     )
 
 
+def build_profile_aware_workflow_section_card(
+    *,
+    page_name: str,
+    section_number: int,
+    title: str,
+    subtitle: str | None,
+    body_children: list[Any],
+    tooltip_text: str | None = None,
+    tooltip_target_id: Any | None = None,
+    tooltip_id: Any | None = None,
+    color_name: str | None = None,
+    style_overrides: dict[str, Any] | None = None,
+) -> dbc.Card:
+    """Build a standard workflow section card with profile-aware collapsing."""
+    from RosettaX.ui.workflow_cards import build_workflow_section_card
+
+    card = build_workflow_section_card(
+        section_number=section_number,
+        title=title,
+        subtitle=subtitle,
+        body_children=body_children,
+        tooltip_text=tooltip_text,
+        tooltip_target_id=tooltip_target_id,
+        tooltip_id=tooltip_id,
+        color_name=color_name,
+        style_overrides=style_overrides,
+    )
+    return make_profile_aware_collapsible_card(
+        card,
+        page_name=page_name,
+        section_key=str(section_number),
+    )
+
+
 def resolve_card_toggle(
     *,
     triggered_id: Any,

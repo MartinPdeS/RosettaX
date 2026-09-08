@@ -9,10 +9,11 @@ from dash import dcc, html
 from RosettaX.ui import (
     WorkflowStep,
     build_workflow_page_header,
-    build_workflow_section_card,
 )
 from RosettaX.utils import styling, ui_forms
-from RosettaX.workflow.calibration_cards import make_profile_aware_collapsible_card
+from RosettaX.workflow.calibration_cards import (
+    build_profile_aware_workflow_section_card,
+)
 from RosettaX.workflow.file_selection.services import (
     build_file_options,
     resolve_selected_file,
@@ -255,7 +256,8 @@ class VisualizationPage:
         body_children: list[Any],
     ) -> dbc.Card:
         section_key = title.lower().replace(" ", "-")
-        card = build_workflow_section_card(
+        return build_profile_aware_workflow_section_card(
+            page_name=self.ids.page_prefix,
             section_number=section_number,
             title=title,
             subtitle=subtitle,
@@ -263,11 +265,6 @@ class VisualizationPage:
             tooltip_text=tooltip_text,
             tooltip_target_id=f"{self.ids.page_prefix}-{section_key}-info-target",
             tooltip_id=f"{self.ids.page_prefix}-{section_key}-info-tooltip",
-        )
-        return make_profile_aware_collapsible_card(
-            card,
-            page_name=self.ids.page_prefix,
-            section_key=str(section_number),
         )
 
     def _build_steps(self) -> list[WorkflowStep]:

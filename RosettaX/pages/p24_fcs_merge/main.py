@@ -9,10 +9,11 @@ from dash import dcc, html
 from RosettaX.ui import (
     WorkflowStep,
     build_workflow_page_header,
-    build_workflow_section_card,
 )
 from RosettaX.utils import styling, ui_forms
-from RosettaX.workflow.calibration_cards import make_collapsible_section_card
+from RosettaX.workflow.calibration_cards import (
+    build_profile_aware_workflow_section_card,
+)
 from RosettaX.workflow.file_selection import UploadedFile, UploadedFileBatch
 from RosettaX.workflow.upload import services as upload_services
 
@@ -125,18 +126,13 @@ class FCSMergePage:
         subtitle: str,
         children: list[Any],
     ) -> dbc.Card:
-        card = build_workflow_section_card(
+        return build_profile_aware_workflow_section_card(
+            page_name=self.ids.page_prefix,
             section_number=number,
             title=title,
             subtitle=subtitle,
             body_children=children,
             style_overrides={"marginBottom": "16px"},
-        )
-        return make_collapsible_section_card(
-            card,
-            page_name=self.ids.page_prefix,
-            section_key=str(number),
-            initially_collapsed=True,
         )
 
     def register_callbacks(self) -> "FCSMergePage":

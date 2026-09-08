@@ -5,11 +5,14 @@ from typing import Any
 import dash
 import dash_bootstrap_components as dbc
 import pandas as pd
-from dash import dcc, html
+from dash import html
 
-from RosettaX.ui import WorkflowStep, build_workflow_page_header, build_workflow_section_card
+from RosettaX.ui import WorkflowStep, build_workflow_page_header
 from RosettaX.utils import styling, ui_forms
 from RosettaX.utils.reader import FCSFile
+from RosettaX.workflow.calibration_cards import (
+    build_profile_aware_workflow_section_card,
+)
 from RosettaX.workflow.upload import services as upload_services
 
 
@@ -29,7 +32,8 @@ class FCSInspectorPage:
                         WorkflowStep("2", "Review metadata", "Check file details and channel definitions.", "blue"),
                     ],
                 ),
-                build_workflow_section_card(
+                build_profile_aware_workflow_section_card(
+                    page_name=self.prefix,
                     section_number=1,
                     title="Upload FCS file",
                     subtitle="The inspector reads metadata only; event measurements remain unloaded.",
@@ -46,11 +50,12 @@ class FCSInspectorPage:
                         ),
                     ],
                 ),
-                build_workflow_section_card(
+                build_profile_aware_workflow_section_card(
+                    page_name=self.prefix,
                     section_number=2,
                     title="File details",
                     subtitle="Upload an FCS file to view its metadata.",
-                    body_children=html.Div(id=f"{self.prefix}-report"),
+                    body_children=[html.Div(id=f"{self.prefix}-report")],
                 ),
             ],
             fluid=True,
