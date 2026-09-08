@@ -155,6 +155,12 @@ class HomePage:
                         "height": "18px",
                     },
                 ),
+                self._tools_overview_card(),
+                html.Div(
+                    style={
+                        "height": "18px",
+                    },
+                ),
                 self._citation_card(),
                 html.Div(
                     style={
@@ -325,6 +331,63 @@ class HomePage:
             ]
         )
 
+        return ui_forms.apply_workflow_section_card_style(
+            card=card,
+            header_font_weight="750",
+            header_font_size="1.02rem",
+        )
+
+    def _tools_overview_card(self) -> dbc.Card:
+        """Summarize RosettaX's primary task areas without duplicating navigation."""
+        tool_descriptions = [
+            (
+                "Calibrations",
+                "Create fluorescence and scattering calibrations or compare calibration results.",
+            ),
+            (
+                "Apply calibration",
+                "Use saved calibrations with experimental FCS files and export results.",
+            ),
+            (
+                "FCS tools",
+                "Visualize data and slice FCS files for focused downstream work.",
+            ),
+        ]
+        card = dbc.Card(
+            [
+                dbc.CardHeader(
+                    html.Div(
+                        "What you can do",
+                        style={"fontWeight": "750", "fontSize": "1.02rem"},
+                    )
+                ),
+                dbc.CardBody(
+                    dbc.Row(
+                        [
+                            dbc.Col(
+                                [
+                                    html.Div(
+                                        title,
+                                        style={
+                                            "fontWeight": "700",
+                                            "marginBottom": "5px",
+                                        },
+                                    ),
+                                    html.Div(
+                                        description,
+                                        style={"fontSize": "0.92rem", "opacity": 0.82},
+                                    ),
+                                ],
+                                md=4,
+                            )
+                            for title, description in tool_descriptions
+                        ],
+                        className="g-3",
+                    ),
+                    style={"padding": "16px"},
+                ),
+            ]
+        )
         return ui_forms.apply_workflow_section_card_style(
             card=card,
             header_font_weight="750",

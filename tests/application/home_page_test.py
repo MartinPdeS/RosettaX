@@ -75,6 +75,10 @@ class Test_HomePage:
         assert expected_version in text_nodes
         assert "Support Developer" in text_nodes
         assert "Project resources" not in text_nodes
+        assert "What you can do" in text_nodes
+        assert "Calibrations" in text_nodes
+        assert "Apply calibration" in text_nodes
+        assert "FCS tools" in text_nodes
         assert "RosettaX usage metrics." in text_nodes
         assert "Home page visits" in text_nodes
         assert "Apply button clicks" in text_nodes
