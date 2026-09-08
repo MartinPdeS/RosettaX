@@ -5,9 +5,11 @@ from typing import Any, Optional
 
 import dash
 from dash import MATCH, Dash, Input, Output, State
+from flask import request as flask_request
 
 from RosettaX.application.layout import THEME_DARK, THEME_LIGHT
 from RosettaX.pages.p00_sidebar.main import SidebarIds, sidebar_html
+from RosettaX.utils import usage_metrics
 from RosettaX.utils.browser_profiles import (
     BROWSER_PROFILES_STORE_ID,
     BrowserProfileLibrary,
@@ -17,6 +19,46 @@ from RosettaX.workflow import calibration_cards
 
 
 logger = logging.getLogger(__name__)
+
+
+def resolve_client_ip_address() -> str:
+    """
+    Resolve the client IP address for the in-flight request.
+
+    Prefers the first entry of the X-Forwarded-For header so deployments
+    behind a reverse proxy still record the originating address.
+    """
+    forwarded_for = str(flask_request.headers.get("X-Forwarded-For", "")).strip()
+
+    if forwarded_for:
+        return forwarded_for.split(",")[0].strip()
+
+    return str(flask_request.remote_addr or "").strip()
+
+
+def record_request_page_visit(pathname: Any) -> None:
+    """
+    Record one page visit for the in-flight request.
+
+    Safe to call outside a request context: client metadata is left empty.
+    """
+    ip_address = ""
+    user_agent = ""
+
+    try:
+        ip_address = resolve_client_ip_address()
+        user_agent = str(flask_request.headers.get("User-Agent", ""))
+    except RuntimeError:
+        logger.debug("Recording page visit without request context metadata.")
+
+    try:
+        usage_metrics.record_page_visit(
+            ip_address=ip_address,
+            path=str(pathname or "/"),
+            user_agent=user_agent,
+        )
+    except Exception:
+        logger.exception("Failed to record page visit for pathname=%r", pathname)
 
 
 LOGO_LIGHT = "/assets/logo/logo_light.svg"
@@ -59,6 +101,16 @@ def register_application_callbacks(app: Dash) -> None:
             is_open=is_open,
             runtime_config_data=runtime_config_data,
         )
+
+    @app.callback(
+        Output("visit-tracking-store", "data"),
+        Input("url", "pathname"),
+        prevent_initial_call=False,
+    )
+    def track_page_visit(pathname: Any):
+        record_request_page_visit(pathname)
+
+        return dash.no_update
 
     @app.callback(
         Output("theme-link", "href"),

@@ -137,6 +137,10 @@ def build_stores() -> list[Any]:
             storage_type="session",
             data=runtime_config_payload,
         ),
+        dcc.Store(
+            id="visit-tracking-store",
+            storage_type="memory",
+        ),
     ]
 
 

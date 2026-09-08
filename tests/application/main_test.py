@@ -72,3 +72,6 @@ class Test_ApplicationMain:
 
     def test_page_module_registry_includes_citation_page(self) -> None:
         assert "RosettaX.pages.p20_citation.main" in application_pages.PAGE_MODULES
+
+    def test_page_module_registry_includes_admin_page(self) -> None:
+        assert "RosettaX.pages.p22_admin.main" in application_pages.PAGE_MODULES
