@@ -660,6 +660,10 @@ class Test_SidebarNavigation:
         assert SidebarIds.calibration_collapse in component_ids
         assert SidebarIds.tools_toggle_button in component_ids
         assert SidebarIds.tools_collapse in component_ids
+        assert SidebarIds.manage_toggle_button in component_ids
+        assert SidebarIds.manage_collapse in component_ids
+        assert SidebarIds.learn_toggle_button in component_ids
+        assert SidebarIds.learn_collapse in component_ids
         assert "/documentation" in _collect_component_hrefs(navigation)
         assert "/cross-calibration" in _collect_component_hrefs(navigation)
         assert "/visualization" in _collect_component_hrefs(navigation)
@@ -674,10 +678,12 @@ class Test_SidebarNavigation:
         assert tools_collapse is not None
         assert "/fcs-slicer" in _collect_component_hrefs(tools_collapse)
         assert "/sample-files" not in _collect_component_hrefs(tools_collapse)
-        assert text_nodes.index("Manage") < text_nodes.index("Sample files")
-        assert text_nodes.index("Sample files") < text_nodes.index("Learn")
+        assert text_nodes.index("Manage") < text_nodes.index("Settings")
+        assert text_nodes.index("Settings") < text_nodes.index("Learn")
         assert text_nodes.index("Learn") < text_nodes.index("Documentation")
         assert text_nodes.index("Documentation") < text_nodes.index("Help")
+        assert navigation.children[0].style["--bs-nav-link-color"] == "#111827"
+        assert navigation.children[0].style["--bs-nav-pills-link-active-color"] == "#111827"
 
     def test_logo_links_to_home_page(self) -> None:
         sidebar = Sidebar()

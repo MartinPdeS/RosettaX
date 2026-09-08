@@ -60,6 +60,8 @@ class Sidebar:
         "/visualization",
         "/fcs-slicer",
     }
+    manage_paths = {"/settings", "/sample-files"}
+    learn_paths = {"/documentation", "/help"}
 
     def _get_default_profile_name(
         self,
@@ -327,6 +329,59 @@ class Sidebar:
                 is_open=False,
             )
 
+        self._register_navigation_toggle(
+            button_id=SidebarIds.manage_toggle_button,
+            collapse_id=SidebarIds.manage_collapse,
+            label="Manage",
+            paths=self.manage_paths,
+        )
+        self._register_navigation_toggle(
+            button_id=SidebarIds.learn_toggle_button,
+            collapse_id=SidebarIds.learn_collapse,
+            label="Learn",
+            paths=self.learn_paths,
+        )
+
+    def _register_navigation_toggle(
+        self,
+        *,
+        button_id: str,
+        collapse_id: str,
+        label: str,
+        paths: set[str],
+    ) -> None:
+        """Register route-aware behavior for one collapsible navigation tab."""
+        @dash.callback(
+            dash.Output(collapse_id, "is_open"),
+            dash.Output(button_id, "children"),
+            dash.Input(button_id, "n_clicks"),
+            dash.Input("url", "pathname"),
+            dash.State(collapse_id, "is_open"),
+            prevent_initial_call=False,
+        )
+        def toggle_navigation_group(
+            _n_clicks: Optional[int],
+            pathname: Optional[str],
+            is_open: Optional[bool],
+        ):
+            if pathname in paths:
+                return True, self._nav_toggle_button_children(
+                    label=label,
+                    is_open=True,
+                )
+
+            if dash.callback_context.triggered_id == button_id:
+                next_is_open = not bool(is_open)
+                return next_is_open, self._nav_toggle_button_children(
+                    label=label,
+                    is_open=next_is_open,
+                )
+
+            return False, self._nav_toggle_button_children(
+                label=label,
+                is_open=False,
+            )
+
     def layout(
         self,
         sidebar: Optional[dict[str, list[str]]] = None,
@@ -499,35 +554,65 @@ class Sidebar:
                             ]
                         ),
                         self._nav_link("Apply calibration", "/calibrate", tier="top"),
-                        self._nav_group_label("Manage"),
-                        self._nav_link("Settings", "/settings", tier="child"),
-                        self._nav_link("Sample files", "/sample-files", tier="child"),
-                        self._nav_group_label("Learn"),
-                        self._nav_link("Documentation", "/documentation", tier="child"),
-                        self._nav_link("Help", "/help", tier="child"),
+                        self._build_navigation_tab(
+                            label="Manage",
+                            button_id=SidebarIds.manage_toggle_button,
+                            collapse_id=SidebarIds.manage_collapse,
+                            links=[
+                                self._nav_link("Settings", "/settings", tier="child"),
+                                self._nav_link("Sample files", "/sample-files", tier="child"),
+                            ],
+                        ),
+                        self._build_navigation_tab(
+                            label="Learn",
+                            button_id=SidebarIds.learn_toggle_button,
+                            collapse_id=SidebarIds.learn_collapse,
+                            links=[
+                                self._nav_link("Documentation", "/documentation", tier="child"),
+                                self._nav_link("Help", "/help", tier="child"),
+                            ],
+                        ),
                     ],
                     vertical=True,
                     pills=True,
                     style={
                         "gap": "0.2rem",
+                        "--bs-nav-link-color": "#111827",
+                        "--bs-nav-pills-link-active-color": "#111827",
+                        "--bs-nav-pills-link-active-bg": "#e2e8f0",
                     },
                 ),
             ]
         )
 
-    @staticmethod
-    def _nav_group_label(label: str) -> html.Div:
-        """Build a non-interactive label for related task-oriented links."""
+    def _build_navigation_tab(
+        self,
+        *,
+        label: str,
+        button_id: str,
+        collapse_id: str,
+        links: list[dbc.NavLink],
+    ) -> html.Div:
+        """Build one task-oriented collapsible navigation tab."""
         return html.Div(
-            label,
-            style={
-                "fontSize": "0.78rem",
-                "fontWeight": "700",
-                "letterSpacing": "0.08em",
-                "opacity": 0.62,
-                "padding": "0.9rem 1rem 0.18rem",
-                "textTransform": "uppercase",
-            },
+            [
+                self._nav_toggle_button(
+                    self._nav_toggle_button_children(label=label, is_open=False),
+                    button_id=button_id,
+                ),
+                dbc.Collapse(
+                    html.Div(
+                        dbc.Nav(links, vertical=True, pills=True),
+                        style={
+                            "marginLeft": "1.45rem",
+                            "paddingLeft": "0.6rem",
+                            "marginTop": "0.1rem",
+                        },
+                    ),
+                    id=collapse_id,
+                    is_open=False,
+                ),
+            ],
         )
 
     def _nav_toggle_button_children(
@@ -574,7 +659,7 @@ class Sidebar:
                 "fontSize": "1.08rem",
                 "lineHeight": "1.2",
                 "padding": "0.78rem 1rem",
-                "color": "inherit",
+                "color": "#111827",
                 "border": "0",
                 "boxShadow": "none",
                 "borderRadius": "0.9rem",
@@ -600,6 +685,7 @@ class Sidebar:
                 "fontSize": "0.96rem",
                 "lineHeight": "1.25",
                 "borderRadius": "0.65rem",
+                "color": "#111827",
             }
         else:
             link_style = {
@@ -608,6 +694,7 @@ class Sidebar:
                 "fontSize": "1.08rem",
                 "lineHeight": "1.2",
                 "borderRadius": "0.9rem",
+                "color": "#111827",
             }
 
         return dbc.NavLink(
