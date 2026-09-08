@@ -234,9 +234,7 @@ class HomePage:
                         ),
                         html.Div(
                             (
-                                "Convert raw single-particle flow cytometry data into calibrated measurements. "
-                                "Perform fluorescence and light-scattering calibrations, save calibration records, "
-                                "and apply them to FCS files."
+                                "Build and apply flow-cytometry calibrations, then inspect and prepare FCS data."
                             ),
                             style={
                                 "fontSize": "1.08rem",
@@ -436,87 +434,59 @@ class HomePage:
             [
                 dbc.Col(
                     self._workflow_card(
-                        title="Fluorescence calibration",
+                        title="Calibrations",
                         subtitle="",
                         description=(
-                            "Convert arbitrary units of fluorescence intensity into standard units (ABC, ERF, or MESF)."
+                            "Create fluorescence or scattering calibrations, or compare calibrations."
                         ),
                         steps=[
-                            "Upload bead FCS file",
-                            "Detect fluorescence peaks",
-                            "Add standard units to calibration table",
-                            "Create calibration",
-                            "Save calibration",
+                            "Fluorescence calibration",
+                            "Scattering calibration",
+                            "Cross-calibration",
                         ],
-                        button_text="Open fluorescence workflow",
+                        button_text="Open calibration workflows",
                         button_href="/fluorescence",
                         button_color="primary",
                         button_id=self._id("fluorescence-link"),
                     ),
-                    lg=3,
-                ),
-                dbc.Col(
-                    self._workflow_card(
-                        title="Scattering calibration",
-                        subtitle="",
-                        description=(
-                            "Convert arbitrary units of scattering intensity into standard units of scattering cross section (nm2) and particle diameter (nm)."
-                        ),
-                        steps=[
-                            "Upload bead FCS file",
-                            "Detect scattering peaks",
-                            "Set optical configuration",
-                            "Add standard units to calibration table",
-                            "Fit response",
-                            "Save calibration",
-                        ],
-                        button_text="Open scattering workflow",
-                        button_href="/scattering",
-                        button_color="primary",
-                        button_id=self._id("scattering-link"),
-                    ),
-                    lg=3,
-                ),
-                dbc.Col(
-                    self._workflow_card(
-                        title="Cross calibration",
-                        subtitle="",
-                        description=(
-                            "Build an experimental transfer calibration that links a less frequent primary reference bead calibration "
-                            "to a cheaper routine-bead calibration on the same detector."
-                        ),
-                        steps=[
-                            "Upload primary calibration",
-                            "Upload secondary routine-bead calibration",
-                            "Fit transfer relation",
-                            "Export transfer calibration",
-                        ],
-                        button_text="Open cross-calibration workflow",
-                        button_href="/cross-calibration",
-                        button_color="warning",
-                        button_id=self._id("cross-calibration-link"),
-                    ),
-                    lg=3,
+                    lg=4,
                 ),
                 dbc.Col(
                     self._workflow_card(
                         title="Apply calibration",
                         subtitle="",
                         description=(
-                            "Use saved fluorescence and/or scattering calibrations to add calibrated parameters to FCS files."
+                            "Use a saved calibration with experimental FCS files."
                         ),
                         steps=[
-                            "Upload calibration file",
-                            "Upload uncalibrated FCS file(s)",
-                            "Select parameters to export",
-                            "Apply and export calibrated FCS file(s)",
+                            "Select a saved calibration",
+                            "Upload experimental FCS files",
+                            "Export calibrated files",
                         ],
                         button_text="Open apply workflow",
                         button_href="/calibrate",
                         button_color="success",
                         button_id=self._id("apply-link"),
                     ),
-                    lg=3,
+                    lg=4,
+                ),
+                dbc.Col(
+                    self._workflow_card(
+                        title="FCS tools",
+                        subtitle="",
+                        description=(
+                            "Visualize data or slice FCS files for focused work."
+                        ),
+                        steps=[
+                            "Visualize data",
+                            "Slice FCS files",
+                        ],
+                        button_text="Open FCS tools",
+                        button_href="/visualization",
+                        button_color="secondary",
+                        button_id=self._id("fcs-tools-link"),
+                    ),
+                    lg=4,
                 ),
             ],
             className="g-3",
