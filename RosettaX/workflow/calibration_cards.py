@@ -149,11 +149,13 @@ def resolve_card_toggle(
     triggered_id: Any,
     is_open: Any,
     runtime_config_data: Any,
+    workflow_step_clicks: Any = None,
 ) -> tuple[bool, str]:
     """Resolve a click toggle or reset the card from a newly loaded profile."""
     if (
         isinstance(triggered_id, dict)
         and triggered_id.get("type") == WORKFLOW_STEP_CARD_ID_TYPE
+        and bool(workflow_step_clicks)
     ):
         next_is_open = True
     elif isinstance(triggered_id, dict) and triggered_id.get("type") == TOGGLE_ID_TYPE:

@@ -34,10 +34,22 @@ class Test_CalibrationCards:
             triggered_id={"type": calibration_cards.WORKFLOW_STEP_CARD_ID_TYPE},
             is_open=False,
             runtime_config_data={"ui": {"collapse_calibration_cards": True}},
+            workflow_step_clicks=1,
         )
 
         assert is_open is True
         assert label == "Hide"
+
+    def test_initial_workflow_step_value_respects_profile_state(self) -> None:
+        is_open, label = calibration_cards.resolve_card_toggle(
+            triggered_id={"type": calibration_cards.WORKFLOW_STEP_CARD_ID_TYPE},
+            is_open=True,
+            runtime_config_data={"ui": {"collapse_calibration_cards": True}},
+            workflow_step_clicks=0,
+        )
+
+        assert is_open is False
+        assert label == "Show"
 
     def test_profile_load_resets_card_state(self) -> None:
         is_open, label = calibration_cards.resolve_card_toggle(
