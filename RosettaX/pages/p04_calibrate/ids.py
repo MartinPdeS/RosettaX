@@ -4,6 +4,8 @@ page_name = "apply_calibration"
 
 
 class Ids:
+    page_name = page_name
+
     class Page:
         location = f"{page_name}-location"
 
@@ -17,6 +19,7 @@ class Ids:
 
     class Header:
         container = f"{page_name}-header-container"
+        workflow_progress = f"{page_name}-workflow-progress"
 
     class CalibrationPicker:
         upload = f"{page_name}-calibration-upload"

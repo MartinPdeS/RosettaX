@@ -7,7 +7,7 @@ import dash
 import dash_bootstrap_components as dbc
 from dash import dash_table, dcc, html
 
-from RosettaX.ui import WorkflowStep, build_workflow_page_header, build_workflow_section_card
+from RosettaX.ui import WorkflowStep, build_workflow_page_header, build_workflow_section_card, build_workflow_step_cards
 from RosettaX.utils import styling, ui_forms
 from RosettaX.workflow.calibration_cards import make_profile_aware_collapsible_card
 from RosettaX.workflow.cross_calibration import services
@@ -92,6 +92,8 @@ class CrossCalibrationPage:
                 className="mb-3",
             ),
             steps=self._build_header_steps(),
+            progress_id=f"{self.ids.page_prefix}-workflow-progress",
+            step_target_page_name=self.ids.page_prefix,
             column_kwargs={"xl": True},
         )
 
@@ -348,6 +350,24 @@ class CrossCalibrationPage:
         )
 
     def register_callbacks(self) -> "CrossCalibrationPage":
+        @dash.callback(
+            dash.Output(f"{self.ids.page_prefix}-workflow-progress", "children"),
+            dash.Input(self.ids.primary_summary_store, "data"),
+            dash.Input(self.ids.secondary_summary_store, "data"),
+            dash.Input(self.ids.result_store, "data"),
+            prevent_initial_call=False,
+        )
+        def update_workflow_progress(primary: Any, secondary: Any, result: Any):
+            completed = 0
+            if isinstance(primary, dict) and isinstance(secondary, dict):
+                completed = 2
+            if completed == 2 and isinstance(result, dict):
+                completed = 3
+            return build_workflow_step_cards(
+                steps=self._build_header_steps(), completed_count=completed,
+                page_name=self.ids.page_prefix, column_kwargs={"xl": True},
+            )
+
         @dash.callback(
             dash.Output(self.ids.primary_summary_store, "data"),
             dash.Output(self.ids.primary_feedback, "children"),
