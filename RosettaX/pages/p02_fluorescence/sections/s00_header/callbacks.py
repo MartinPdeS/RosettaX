@@ -2,7 +2,7 @@
 
 import dash
 
-from RosettaX.ui import build_workflow_progress_content
+from RosettaX.ui.workflow_header import build_workflow_step_cards
 from .layout import _build_steps
 
 
@@ -37,9 +37,11 @@ def register_callbacks(section) -> None:
         if completed_count == 4 and state.get("calibration_saved"):
             completed_count = 5
 
-        return build_workflow_progress_content(
+        return build_workflow_step_cards(
             steps=_build_steps(),
             completed_count=completed_count,
+            page_name=section.page.ids.page_name,
+            column_kwargs={"xl": True},
         )
 
 

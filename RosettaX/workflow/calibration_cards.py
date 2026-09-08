@@ -12,6 +12,7 @@ from RosettaX.utils.runtime_config import RuntimeConfig
 TOGGLE_ID_TYPE = "calibration-card-toggle"
 COLLAPSE_ID_TYPE = "calibration-card-collapse"
 TOGGLE_LABEL_ID_TYPE = "calibration-card-toggle-label"
+WORKFLOW_STEP_CARD_ID_TYPE = "workflow-step-card"
 
 
 def _component_id(*, id_type: str, page_name: str, section_key: str) -> dict[str, str]:
@@ -20,6 +21,11 @@ def _component_id(*, id_type: str, page_name: str, section_key: str) -> dict[str
         "page": page_name,
         "section": section_key,
     }
+
+
+def workflow_section_dom_id(*, page_name: str, section_key: str) -> str:
+    """Return the DOM id used to navigate to a numbered workflow section."""
+    return f"{page_name}-workflow-section-{section_key}"
 
 
 def profile_collapses_calibration_cards(runtime_config_data: Any = None) -> bool:
@@ -48,6 +54,10 @@ def make_collapsible_section_card(
         return card
 
     header = card_children[0]
+    card.id = workflow_section_dom_id(
+        page_name=page_name,
+        section_key=section_key,
+    )
     is_open = not initially_collapsed
     header_children = ui_forms.normalize_children(header.children)
     header.children = dash.html.Div(
@@ -141,7 +151,12 @@ def resolve_card_toggle(
     runtime_config_data: Any,
 ) -> tuple[bool, str]:
     """Resolve a click toggle or reset the card from a newly loaded profile."""
-    if isinstance(triggered_id, dict) and triggered_id.get("type") == TOGGLE_ID_TYPE:
+    if (
+        isinstance(triggered_id, dict)
+        and triggered_id.get("type") == WORKFLOW_STEP_CARD_ID_TYPE
+    ):
+        next_is_open = True
+    elif isinstance(triggered_id, dict) and triggered_id.get("type") == TOGGLE_ID_TYPE:
         next_is_open = not bool(is_open)
     else:
         next_is_open = not profile_collapses_calibration_cards(runtime_config_data)

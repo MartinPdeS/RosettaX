@@ -17,6 +17,7 @@ def get_layout(section) -> dbc.Card:
         ),
         steps=_build_steps(),
         progress_id=getattr(state_ids, "workflow_progress", None),
+        step_target_page_name=getattr(page_ids, "page_name", None),
         card_color=section.card_color,
         column_kwargs={"xl": True},
     )

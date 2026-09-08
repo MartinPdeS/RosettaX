@@ -84,6 +84,14 @@ def register_application_callbacks(app: Dash) -> None:
             {"type": calibration_cards.TOGGLE_ID_TYPE, "page": MATCH, "section": MATCH},
             "n_clicks",
         ),
+        Input(
+            {
+                "type": calibration_cards.WORKFLOW_STEP_CARD_ID_TYPE,
+                "page": MATCH,
+                "section": MATCH,
+            },
+            "n_clicks",
+        ),
         Input("runtime-config-store", "data"),
         State(
             {"type": calibration_cards.COLLAPSE_ID_TYPE, "page": MATCH, "section": MATCH},
@@ -93,6 +101,7 @@ def register_application_callbacks(app: Dash) -> None:
     )
     def toggle_calibration_card(
         _n_clicks: Any,
+        _workflow_step_clicks: Any,
         runtime_config_data: Any,
         is_open: Any,
     ) -> tuple[bool, str]:

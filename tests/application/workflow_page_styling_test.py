@@ -38,8 +38,8 @@ class Test_WorkflowPageStyling:
         first_step_card = step_row.children[0].children
         second_step_card = step_row.children[1].children
 
-        first_step_badge_style = first_step_card.children.children[0].style
-        second_step_badge_style = second_step_card.children.children[0].style
+        first_step_badge_style = first_step_card.children.children[0].children[0].style
+        second_step_badge_style = second_step_card.children.children[0].children[0].style
 
         assert first_step_badge_style["backgroundColor"] == styling.build_rgba(
             "yellow",
@@ -64,8 +64,8 @@ class Test_WorkflowPageStyling:
         first_step_card = step_row.children[0].children
         fifth_step_card = step_row.children[4].children
 
-        first_step_badge_style = first_step_card.children.children[0].style
-        fifth_step_badge_style = fifth_step_card.children.children[0].style
+        first_step_badge_style = first_step_card.children.children[0].children[0].style
+        fifth_step_badge_style = fifth_step_card.children.children[0].children[0].style
 
         assert first_step_badge_style["backgroundColor"] == styling.build_rgba(
             "yellow",

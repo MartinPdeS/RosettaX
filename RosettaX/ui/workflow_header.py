@@ -6,6 +6,10 @@ from typing import Any, Sequence
 import dash_bootstrap_components as dbc
 from dash import html
 
+from RosettaX.workflow.calibration_cards import (
+    WORKFLOW_STEP_CARD_ID_TYPE,
+    workflow_section_dom_id,
+)
 from RosettaX.utils import styling, ui_forms
 
 
@@ -30,6 +34,7 @@ def build_workflow_page_header(
     component_id: Any | None = None,
     style_overrides: dict[str, Any] | None = None,
     progress_id: Any | None = None,
+    step_target_page_name: str | None = None,
 ) -> dbc.Card:
     """Build the standard explanatory header for a workflow page."""
     resolved_column_kwargs = {
@@ -54,26 +59,28 @@ def build_workflow_page_header(
     if progress_id is not None:
         children.append(
             html.Div(
-                build_workflow_progress_content(
+                build_workflow_step_cards(
                     steps=steps,
                     completed_count=0,
+                    page_name=step_target_page_name,
+                    column_kwargs=resolved_column_kwargs,
                 ),
                 id=progress_id,
             )
         )
-
-    children.append(
-        dbc.Row(
-            [
-                dbc.Col(
-                    _build_step_card(step),
-                    **resolved_column_kwargs,
-                )
-                for step in steps
-            ],
-            className="g-2",
+    else:
+        children.append(
+            dbc.Row(
+                [
+                    dbc.Col(
+                        _build_step_card(step),
+                        **resolved_column_kwargs,
+                    )
+                    for step in steps
+                ],
+                className="g-2",
+            )
         )
-    )
 
     card_kwargs: dict[str, Any] = {
         "style": styling.merge_style(
@@ -176,23 +183,82 @@ def build_workflow_progress_content(
     )
 
 
-def _build_step_card(step: WorkflowStep) -> dbc.Card:
-    return dbc.Card(
+def build_workflow_step_cards(
+    *,
+    steps: Sequence[WorkflowStep],
+    completed_count: int,
+    page_name: str | None,
+    column_kwargs: dict[str, Any],
+) -> dbc.Row:
+    """Build state-aware workflow cards that navigate to their sections."""
+    step_list = list(steps)
+    bounded_completed_count = max(0, min(int(completed_count), len(step_list)))
+    active_index = min(bounded_completed_count, max(len(step_list) - 1, 0))
+    return dbc.Row(
+        [
+            dbc.Col(
+                _build_step_card(
+                    step,
+                    state=(
+                        "complete"
+                        if index < bounded_completed_count
+                        else "current"
+                        if index == active_index
+                        else "blocked"
+                    ),
+                    page_name=page_name,
+                ),
+                **column_kwargs,
+            )
+            for index, step in enumerate(step_list)
+        ],
+        className="g-2",
+    )
+
+
+def _build_step_card(
+    step: WorkflowStep,
+    *,
+    state: str | None = None,
+    page_name: str | None = None,
+) -> dbc.Card | html.Button:
+    state_labels = {
+        "complete": ("Complete", "success"),
+        "current": ("Current", "primary"),
+        "blocked": ("Not ready", "secondary"),
+    }
+    state_label, state_color = state_labels.get(state, ("", "secondary"))
+    card = dbc.Card(
         dbc.CardBody(
             [
                 html.Div(
-                    step.number,
+                    [
+                        html.Div(
+                            step.number,
+                            style={
+                                "width": "28px",
+                                "height": "28px",
+                                "borderRadius": "50%",
+                                "display": "flex",
+                                "alignItems": "center",
+                                "justifyContent": "center",
+                                "fontWeight": "700",
+                                "fontSize": "0.9rem",
+                                "backgroundColor": styling.build_rgba(step.color_name, 0.12),
+                                "border": f"1px solid {styling.build_rgba(step.color_name, 0.35)}",
+                            },
+                        ),
+                        dbc.Badge(
+                            state_label,
+                            color=state_color,
+                            pill=True,
+                            style={"visibility": "visible" if state else "hidden"},
+                        ),
+                    ],
                     style={
-                        "width": "28px",
-                        "height": "28px",
-                        "borderRadius": "50%",
                         "display": "flex",
                         "alignItems": "center",
-                        "justifyContent": "center",
-                        "fontWeight": "700",
-                        "fontSize": "0.9rem",
-                        "backgroundColor": styling.build_rgba(step.color_name, 0.12),
-                        "border": f"1px solid {styling.build_rgba(step.color_name, 0.35)}",
+                        "justifyContent": "space-between",
                         "marginBottom": "10px",
                     },
                 ),
@@ -210,6 +276,38 @@ def _build_step_card(step: WorkflowStep) -> dbc.Card:
         ),
         style=ui_forms.build_workflow_subpanel_card_style(
             color_name=step.color_name,
-            style_overrides={"height": "100%"},
+            style_overrides={
+                "height": "100%",
+                "opacity": 0.5 if state == "blocked" else 1,
+                "filter": "grayscale(0.85)" if state == "blocked" else "none",
+            },
         ),
+    )
+    if page_name is None:
+        return card
+
+    section_key = str(step.number)
+    return html.Button(
+        card,
+        id={
+            "type": WORKFLOW_STEP_CARD_ID_TYPE,
+            "page": page_name,
+            "section": section_key,
+        },
+        n_clicks=0,
+        type="button",
+        data_target_section=workflow_section_dom_id(
+            page_name=page_name,
+            section_key=section_key,
+        ),
+        aria_label=f"Open step {step.number}: {step.title}",
+        style={
+            "border": "0",
+            "background": "transparent",
+            "padding": "0",
+            "width": "100%",
+            "height": "100%",
+            "textAlign": "left",
+            "cursor": "pointer",
+        },
     )

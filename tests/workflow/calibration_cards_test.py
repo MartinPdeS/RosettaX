@@ -29,6 +29,16 @@ class Test_CalibrationCards:
         assert is_open is True
         assert label == "Hide"
 
+    def test_workflow_step_click_opens_target_card(self) -> None:
+        is_open, label = calibration_cards.resolve_card_toggle(
+            triggered_id={"type": calibration_cards.WORKFLOW_STEP_CARD_ID_TYPE},
+            is_open=False,
+            runtime_config_data={"ui": {"collapse_calibration_cards": True}},
+        )
+
+        assert is_open is True
+        assert label == "Hide"
+
     def test_profile_load_resets_card_state(self) -> None:
         is_open, label = calibration_cards.resolve_card_toggle(
             triggered_id="runtime-config-store",

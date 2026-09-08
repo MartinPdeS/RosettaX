@@ -9,7 +9,7 @@ import dash_bootstrap_components as dbc
 from RosettaX.ui import (
     WorkflowStep,
     build_workflow_page_header,
-    build_workflow_progress_content,
+    build_workflow_step_cards,
 )
 from RosettaX.utils import styling
 
@@ -56,6 +56,7 @@ class Header:
             ),
             steps=self._build_steps(),
             progress_id=getattr(state_ids, "workflow_progress", None),
+            step_target_page_name=getattr(page_ids, "page_name", None),
             card_color=self.card_color,
             column_kwargs={"xs": 12, "md": 6, "lg": 4, "xl": 2},
         )
@@ -149,9 +150,11 @@ class Header:
         if completed_count == 5 and state.get("calibration_saved"):
             completed_count = 6
 
-        return build_workflow_progress_content(
+        return build_workflow_step_cards(
             steps=self._build_steps(),
             completed_count=completed_count,
+            page_name=self.page.ids.page_name,
+            column_kwargs={"xs": 12, "md": 6, "lg": 4, "xl": 2},
         )
 
     @staticmethod
