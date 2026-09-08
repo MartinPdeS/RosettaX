@@ -63,17 +63,16 @@ class Test_HomePage:
                 home_page_visit_count=56,
             ),
         )
-        monkeypatch.setattr(
-            home_main,
-            "resolve_latest_github_tag_label",
-            lambda: "v9.9.9",
-        )
-
         layout = home_main.HomePage().layout()
         text_nodes = _collect_text(layout)
 
         assert "Version:" in text_nodes
-        assert "v9.9.9" in text_nodes
+        expected_version = (
+            home_main.__version__
+            if home_main.__version__.startswith("v")
+            else f"v{home_main.__version__}"
+        )
+        assert expected_version in text_nodes
         assert "Support Developer" in text_nodes
         assert "Project resources" not in text_nodes
         assert "RosettaX usage metrics." in text_nodes

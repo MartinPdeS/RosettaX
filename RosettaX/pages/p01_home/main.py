@@ -11,6 +11,7 @@ import dash
 import dash_bootstrap_components as dbc
 from dash import html
 
+from RosettaX._version import __version__
 from RosettaX.utils import ui_forms
 from RosettaX.utils import usage_metrics
 
@@ -181,7 +182,9 @@ class HomePage:
         )
 
     def _github_tag_widget(self) -> html.Div:
-        github_tag_label = resolve_latest_github_tag_label()
+        local_version_label = (
+            __version__ if __version__.startswith("v") else f"v{__version__}"
+        )
 
         return html.Div(
             [
@@ -196,7 +199,7 @@ class HomePage:
                     },
                 ),
                 html.Span(
-                    github_tag_label,
+                    local_version_label,
                     style={
                         "fontSize": "0.92rem",
                         "fontWeight": "700",
