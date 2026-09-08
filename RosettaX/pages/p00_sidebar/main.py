@@ -55,6 +55,7 @@ class Sidebar:
         "/fluorescence",
         "/scattering",
         "/cross-calibration",
+        "/calibrate",
     }
     tools_paths = {
         "/visualization",
@@ -274,18 +275,18 @@ class Sidebar:
             if triggered_id == SidebarIds.calibration_toggle_button:
                 next_is_open = not bool(is_open)
                 return next_is_open, self._nav_toggle_button_children(
-                    label="Calibrate",
+                    label="Calibrations",
                     is_open=next_is_open,
                 )
 
             if pathname in self.calibration_paths:
                 return True, self._nav_toggle_button_children(
-                    label="Calibrate",
+                    label="Calibrations",
                     is_open=True,
                 )
 
             return False, self._nav_toggle_button_children(
-                label="Calibrate",
+                label="Calibrations",
                 is_open=False,
             )
 
@@ -314,18 +315,18 @@ class Sidebar:
             if triggered_id == SidebarIds.tools_toggle_button:
                 next_is_open = not bool(is_open)
                 return next_is_open, self._nav_toggle_button_children(
-                    label="Analyze files",
+                    label="FCS tools",
                     is_open=next_is_open,
                 )
 
             if pathname in self.tools_paths:
                 return True, self._nav_toggle_button_children(
-                    label="Analyze files",
+                    label="FCS tools",
                     is_open=True,
                 )
 
             return False, self._nav_toggle_button_children(
-                label="Analyze files",
+                label="FCS tools",
                 is_open=False,
             )
 
@@ -477,9 +478,10 @@ class Sidebar:
                             [
                                 self._nav_toggle_button(
                                     self._nav_toggle_button_children(
-                                        label="Calibrate",
+                                        label="Calibrations",
                                         is_open=False,
                                     ),
+                                    button_id=SidebarIds.calibration_toggle_button,
                                 ),
                                 dbc.Collapse(
                                     html.Div(
@@ -496,8 +498,13 @@ class Sidebar:
                                                     tier="child",
                                                 ),
                                                 self._nav_link(
-                                                    "Cross",
+                                                    "Cross-calibration",
                                                     "/cross-calibration",
+                                                    tier="child",
+                                                ),
+                                                self._nav_link(
+                                                    "Apply calibration",
+                                                    "/calibrate",
                                                     tier="child",
                                                 ),
                                             ],
@@ -519,7 +526,7 @@ class Sidebar:
                             [
                                 self._nav_toggle_button(
                                     self._nav_toggle_button_children(
-                                        label="Analyze files",
+                                        label="FCS tools",
                                         is_open=False,
                                     ),
                                     button_id=SidebarIds.tools_toggle_button,
@@ -529,12 +536,12 @@ class Sidebar:
                                         dbc.Nav(
                                             [
                                                 self._nav_link(
-                                                    "Visualization",
+                                                    "Visualize data",
                                                     "/visualization",
                                                     tier="child",
                                                 ),
                                                 self._nav_link(
-                                                    "Slicing",
+                                                    "Slice FCS files",
                                                     "/fcs-slicer",
                                                     tier="child",
                                                 ),
@@ -553,7 +560,6 @@ class Sidebar:
                                 ),
                             ]
                         ),
-                        self._nav_link("Apply calibration", "/calibrate", tier="top"),
                         self._build_navigation_tab(
                             label="Manage",
                             button_id=SidebarIds.manage_toggle_button,

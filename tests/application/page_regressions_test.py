@@ -647,8 +647,8 @@ class Test_SidebarNavigation:
         text_nodes = _collect_text(navigation)
         component_ids = _collect_component_ids(navigation)
 
-        assert "Calibrate" in text_nodes
-        assert "Analyze files" in text_nodes
+        assert "Calibrations" in text_nodes
+        assert "FCS tools" in text_nodes
         assert "Manage" in text_nodes
         assert "Learn" in text_nodes
         assert "Apply calibration" in text_nodes
@@ -671,7 +671,8 @@ class Test_SidebarNavigation:
         assert "/visualization" in _collect_component_hrefs(navigation)
         assert "/sample-files" in _collect_component_hrefs(navigation)
         assert "/fcs-slicer" in _collect_component_hrefs(navigation)
-        assert "Slicing" in text_nodes
+        assert "Visualize data" in text_nodes
+        assert "Slice FCS files" in text_nodes
 
         tools_collapse = _find_component_by_id(
             navigation,
@@ -680,6 +681,16 @@ class Test_SidebarNavigation:
         assert tools_collapse is not None
         assert "/fcs-slicer" in _collect_component_hrefs(tools_collapse)
         assert "/sample-files" not in _collect_component_hrefs(tools_collapse)
+        assert "Slice FCS files" in _collect_text(tools_collapse)
+        assert "Visualize data" in _collect_text(tools_collapse)
+
+        calibration_collapse = _find_component_by_id(
+            navigation,
+            SidebarIds.calibration_collapse,
+        )
+        assert calibration_collapse is not None
+        assert "/cross-calibration" in _collect_component_hrefs(calibration_collapse)
+        assert "/calibrate" in _collect_component_hrefs(calibration_collapse)
         manage_collapse = _find_component_by_id(
             navigation,
             SidebarIds.manage_collapse,

@@ -17,10 +17,19 @@ Fluorescence
 Scattering
     Build scattering calibrations from measured peaks and optical-model assumptions.
 
+Cross-calibration
+    Compare or combine calibration information across compatible workflows.
+
 Apply calibration
     Apply a saved calibration to one or more FCS files and export calibrated artifacts.
 
-Settings
+Visualize data
+    Inspect FCS data visually before or alongside calibration workflows.
+
+Slice FCS files
+    Extract FCS-file subsets for focused downstream work.
+
+Profile
     Manage runtime profile behavior and defaults.
 
 Documentation
@@ -58,10 +67,10 @@ instrument or when an expert adjustment is required.
 Navigation
 ----------
 
-The sidebar is organized by task: use **Calibrate** to create fluorescence,
-scattering, or cross calibrations; **Apply calibration** to reuse one; and
-**Analyze files** for visualization and FCS slicing. **Manage** contains
-settings and sample files, while **Learn** contains documentation and help.
+The sidebar is organized by task. **Calibrations** contains fluorescence,
+scattering, cross-calibration, and apply-calibration workflows. **FCS tools**
+contains data visualization and FCS-file slicing. **Manage** contains the
+profile and sample files, while **Learn** contains documentation and help.
 
 
 Saved outputs
