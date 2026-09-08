@@ -489,11 +489,6 @@ class Sidebar:
                                         dbc.Nav(
                                             [
                                                 self._nav_link(
-                                                    "FCS Inspector",
-                                                    "/fcs-inspector",
-                                                    tier="child",
-                                                ),
-                                                self._nav_link(
                                                     "Fluorescence",
                                                     "/fluorescence",
                                                     tier="child",
@@ -541,6 +536,11 @@ class Sidebar:
                                     html.Div(
                                         dbc.Nav(
                                             [
+                                                self._nav_link(
+                                                    "FCS Inspector",
+                                                    "/fcs-inspector",
+                                                    tier="child",
+                                                ),
                                                 self._nav_link(
                                                     "Visualize data",
                                                     "/visualization",
