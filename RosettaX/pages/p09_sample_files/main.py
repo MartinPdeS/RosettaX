@@ -5,6 +5,11 @@ from dash import html
 
 from RosettaX.utils import styling, ui_forms
 
+SAMPLE_FILES_BASE_URL = (
+    "https://raw.githubusercontent.com/MartinPdeS/RosettaX/master/"
+    "RosettaX/assets/sample-files"
+)
+
 
 class SampleFilesPage:
     """
@@ -67,25 +72,25 @@ class SampleFilesPage:
                             {
                                 "title": "Rainbow beads",
                                 "description": "Multi-color calibration standard for detector validation and linearity checks.",
-                                "href": "/assets/sample-files/apogee_rainbow_beads.fcs",
+                                "href": f"{SAMPLE_FILES_BASE_URL}/apogee_rainbow_beads.fcs",
                                 "download": "apogee_rainbow_beads.fcs",
                             },
                             {
                                 "title": "Mixed reference beads",
                                 "description": "Apogee mix sample with multiple bead populations for scatter and fluorescence exercises.",
-                                "href": "/assets/sample-files/apogee_mixed_reference_beads.fcs",
+                                "href": f"{SAMPLE_FILES_BASE_URL}/apogee_mixed_reference_beads.fcs",
                                 "download": "apogee_mixed_reference_beads.fcs",
                             },
                             {
                                 "title": "Mystery beads",
                                 "description": "Unknown bead mixture intended for identification and comparison exercises.",
-                                "href": "/assets/sample-files/apogee_mystery_beads.fcs",
+                                "href": f"{SAMPLE_FILES_BASE_URL}/apogee_mystery_beads.fcs",
                                 "download": "apogee_mystery_beads.fcs",
                             },
                             {
                                 "title": "Rosetta beads (1 min)",
                                 "description": "Rosetta bead acquisition with a one-minute run, useful for Rosetta Script testing.",
-                                "href": "/assets/sample-files/apogee_rosetta_beads_1min.fcs",
+                                "href": f"{SAMPLE_FILES_BASE_URL}/apogee_rosetta_beads_1min.fcs",
                                 "download": "apogee_rosetta_beads_1min.fcs",
                             },
                         ],
@@ -104,25 +109,25 @@ class SampleFilesPage:
                             {
                                 "title": "Rainbow beads",
                                 "description": "Multi-color calibration standard acquired on the Northern Lights platform.",
-                                "href": "/assets/sample-files/northern_lights_rainbow_beads.fcs",
+                                "href": f"{SAMPLE_FILES_BASE_URL}/northern_lights_rainbow_beads.fcs",
                                 "download": "northern_lights_rainbow_beads.fcs",
                             },
                             {
                                 "title": "Mixed reference beads",
                                 "description": "Compressed Northern Lights acquisition of the Apogee mix reference sample.",
-                                "href": "/assets/sample-files/northern_lights_mixed_reference_beads.fcs",
+                                "href": f"{SAMPLE_FILES_BASE_URL}/northern_lights_mixed_reference_beads.fcs",
                                 "download": "northern_lights_mixed_reference_beads.fcs",
                             },
                             {
                                 "title": "Mystery beads",
                                 "description": "Compressed Northern Lights acquisition of the unknown bead mixture.",
-                                "href": "/assets/sample-files/northern_lights_mystery_beads.fcs",
+                                "href": f"{SAMPLE_FILES_BASE_URL}/northern_lights_mystery_beads.fcs",
                                 "download": "northern_lights_mystery_beads.fcs",
                             },
                             {
                                 "title": "Rosetta beads (2 min)",
                                 "description": "Compressed Rosetta bead acquisition with a two-minute run for Rosetta workflow practice.",
-                                "href": "/assets/sample-files/northern_lights_rosetta_beads_2min.fcs",
+                                "href": f"{SAMPLE_FILES_BASE_URL}/northern_lights_rosetta_beads_2min.fcs",
                                 "download": "northern_lights_rosetta_beads_2min.fcs",
                             },
                         ],

@@ -46,14 +46,28 @@ Homepage = "https://github.com/MartinPdeS/RosettaX"
 Documentation = "https://martinpdes.github.io/RosettaX/"
 Repository = "https://github.com/MartinPdeS/RosettaX.git"
 
+[tool.setuptools]
+include-package-data = false
+
 [tool.setuptools.package-data]
 RosettaX = [
-    "assets/*",
-    "assets/**/*",
+    "assets/*.css",
+    "assets/*.js",
+    "assets/*.json",
+    "assets/*.png",
+    "assets/*.svg",
+    "assets/**/*.css",
+    "assets/**/*.js",
+    "assets/**/*.json",
+    "assets/**/*.png",
+    "assets/**/*.svg",
     "presets/**/*.json",
     "calibrations/**/*.json",
     "data/**/*",
 ]
+
+[tool.setuptools.exclude-package-data]
+RosettaX = ["assets/sample-files/*.fcs"]
 
 [tool.setuptools_scm]
 write_to = "RosettaX/_version.py"
