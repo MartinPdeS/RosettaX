@@ -16,7 +16,13 @@ from RosettaX.utils.streamed_uploads import (
     resolve_streamed_upload,
 )
 
-from RosettaX.workflow.upload.models import UploadConfig, UploadState
+from RosettaX.workflow.file_selection.models import UploadedFile, UploadedFileBatch
+from RosettaX.workflow.page_session import FeedbackState
+from RosettaX.workflow.upload.models import (
+    FCSBatchOperationResult,
+    UploadConfig,
+    UploadState,
+)
 
 DEFAULT_UPLOAD_DIRECTORY = Path.home() / ".rosettax" / "uploads"
 DEFAULT_ALLOWED_UPLOAD_EXTENSIONS = frozenset({".fcs"})
@@ -296,6 +302,7 @@ def save_uploaded_batch(
     contents: Any,
     filenames: Any,
     upload_directory: Path = DEFAULT_UPLOAD_DIRECTORY,
+    max_upload_bytes: Optional[int] = None,
 ) -> tuple[list[Path], list[str]]:
     """Save one Dash multi-file upload in an isolated batch directory."""
     contents_list = normalize_multiple_upload_values(contents)
@@ -331,11 +338,49 @@ def save_uploaded_batch(
                 filename=storage_filename,
                 upload_directory=batch_directory,
                 allowed_extensions=DEFAULT_ALLOWED_UPLOAD_EXTENSIONS,
+                max_upload_bytes=max_upload_bytes,
             )
         )
         safe_filenames.append(safe_filename)
 
     return saved_paths, safe_filenames
+
+
+def build_uploaded_fcs_batch(
+    *,
+    file_paths: Iterable[str | Path],
+    filenames: Iterable[str],
+    consistency_report: dict[str, Any],
+) -> UploadedFileBatch:
+    """Build an ordered compatible FCS batch from saved paths and filenames."""
+    normalized_paths = [
+        Path(file_path)
+        for file_path in file_paths
+        if str(file_path).strip()
+    ]
+    normalized_filenames = [str(filename).strip() for filename in filenames]
+    if len(normalized_paths) != len(normalized_filenames):
+        raise ValueError("Saved FCS paths and filenames do not match.")
+
+    reference_column_names = tuple(
+        str(name)
+        for name in consistency_report.get("reference_column_names") or ()
+    )
+    return UploadedFileBatch(
+        files=tuple(
+            UploadedFile(
+                path=str(path),
+                filename=filename or path.name,
+                column_names=reference_column_names,
+            )
+            for path, filename in zip(
+                normalized_paths,
+                normalized_filenames,
+                strict=True,
+            )
+        ),
+        reference_column_names=reference_column_names,
+    )
 
 
 def inspect_compatible_fcs_batch(file_paths: Iterable[str | Path]) -> dict[str, Any]:
@@ -349,14 +394,14 @@ def inspect_compatible_fcs_batch(file_paths: Iterable[str | Path]) -> dict[str, 
     ).check_multifiles_consistency()
 
 
-def build_upload_feedback(
+def build_fcs_batch_feedback(
     *,
     filenames: list[str],
     consistency_report: dict[str, Any],
-) -> tuple[str, str]:
-    """Build the user-visible batch validation message and Bootstrap color."""
+) -> FeedbackState:
+    """Build structured feedback for FCS batch compatibility validation."""
     if not consistency_report.get("are_all_files_consistent", False):
-        return build_consistency_error_text(consistency_report), "danger"
+        return FeedbackState.danger(build_consistency_error_text(consistency_report))
 
     file_count = len(filenames)
     channel_count = len(consistency_report.get("reference_column_names") or [])
@@ -372,7 +417,97 @@ def build_upload_feedback(
     if version:
         summary = f"{summary} ({version})"
 
-    return f"{summary}. Files: {file_text}.", "success"
+    return FeedbackState.success(f"{summary}. Files: {file_text}.")
+
+
+def build_upload_feedback(
+    *,
+    filenames: list[str],
+    consistency_report: dict[str, Any],
+) -> tuple[str, str]:
+    """Build legacy tuple feedback for an FCS batch validation result."""
+    return build_fcs_batch_feedback(
+        filenames=filenames,
+        consistency_report=consistency_report,
+    ).to_display_tuple()
+
+
+def load_fcs_batch(
+    *,
+    contents: Any,
+    filenames: Any,
+    upload_directory: Path = DEFAULT_UPLOAD_DIRECTORY,
+    minimum_file_count: int = 1,
+    max_upload_bytes: Optional[int] = None,
+) -> FCSBatchOperationResult:
+    """Persist, validate, and normalize one uploaded FCS batch.
+
+    Incompatible batches return danger feedback without an ``UploadedFileBatch``.
+    Malformed upload payloads and unreadable FCS metadata retain their existing
+    ``ValueError`` behavior so callers can apply their own callback policy.
+    """
+    if minimum_file_count < 1:
+        raise ValueError("minimum_file_count must be at least 1.")
+
+    saved_paths, safe_filenames = save_uploaded_batch(
+        contents=contents,
+        filenames=filenames,
+        upload_directory=upload_directory,
+        max_upload_bytes=max_upload_bytes,
+    )
+    if len(saved_paths) < minimum_file_count:
+        return FCSBatchOperationResult(
+            batch=None,
+            feedback=FeedbackState.danger(
+                "Select at least "
+                f"{minimum_file_count} FCS file"
+                f"{'s' if minimum_file_count != 1 else ''}."
+            ),
+            consistency_report={},
+        )
+
+    consistency_report = inspect_compatible_fcs_batch(saved_paths)
+    feedback = build_fcs_batch_feedback(
+        filenames=safe_filenames,
+        consistency_report=consistency_report,
+    )
+    if not consistency_report.get("are_all_files_consistent", False):
+        return FCSBatchOperationResult(
+            batch=None,
+            feedback=feedback,
+            consistency_report=consistency_report,
+        )
+
+    return FCSBatchOperationResult(
+        batch=build_uploaded_fcs_batch(
+            file_paths=saved_paths,
+            filenames=safe_filenames,
+            consistency_report=consistency_report,
+        ),
+        feedback=feedback,
+        consistency_report=consistency_report,
+    )
+
+
+def load_compatible_fcs_batch(
+    *,
+    contents: Any,
+    filenames: Any,
+    upload_directory: Path = DEFAULT_UPLOAD_DIRECTORY,
+    minimum_file_count: int = 1,
+    max_upload_bytes: Optional[int] = None,
+) -> UploadedFileBatch:
+    """Persist and return a compatible FCS batch or raise its feedback message."""
+    result = load_fcs_batch(
+        contents=contents,
+        filenames=filenames,
+        upload_directory=upload_directory,
+        minimum_file_count=minimum_file_count,
+        max_upload_bytes=max_upload_bytes,
+    )
+    if result.batch is None:
+        raise ValueError(result.feedback.message)
+    return result.batch
 
 
 def build_consistency_error_text(

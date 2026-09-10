@@ -12,6 +12,7 @@ from typing import Any
 
 __all__ = [
     "FluorescenceUploadAdapter",
+    "FCSBatchOperationResult",
     "ScatteringUploadAdapter",
     "UploadAdapter",
     "UploadCallbackResult",
@@ -24,6 +25,7 @@ __all__ = [
 
 _EXPORTS: dict[str, tuple[str, str]] = {
     "FluorescenceUploadAdapter": (".adapters", "FluorescenceUploadAdapter"),
+    "FCSBatchOperationResult": (".models", "FCSBatchOperationResult"),
     "ScatteringUploadAdapter": (".adapters", "ScatteringUploadAdapter"),
     "UploadAdapter": (".adapters", "UploadAdapter"),
     "UploadCallbackResult": (".models", "UploadCallbackResult"),
