@@ -3,6 +3,9 @@ name: Unit tests
 on:
   push:
     branches: ["master"]
+    paths-ignore:
+      # `make release` commits only the generated package version before tagging.
+      - "RosettaX/_version.py"
   pull_request:
     branches: ["master"]
   workflow_dispatch:
