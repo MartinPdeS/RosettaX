@@ -1,25 +1,19 @@
-# -*- coding: utf-8 -*-
-
-from .services import (
-    CalibrationApplication,
-    ApplyCalibrationRequest,
-    ApplyCalibrationFilesResult,
-    apply_calibration_to_fcs_files
-)
-
-from .scattering import (
-    ScatteringTargetModelParameters,
-    ScatteringApplyResult
-)
 
 from .fluorescence import apply_legacy_calibration_to_series
+from .scattering import ScatteringApplyResult, ScatteringTargetModelParameters
+from .services import (
+    ApplyCalibrationFilesResult,
+    ApplyCalibrationRequest,
+    CalibrationApplication,
+    apply_calibration_to_fcs_files,
+)
 
 __all__ = [
-    "ApplyCalibrationRequest",
     "ApplyCalibrationFilesResult",
+    "ApplyCalibrationRequest",
     "CalibrationApplication",
-    "ScatteringTargetModelParameters",
     "ScatteringApplyResult",
+    "ScatteringTargetModelParameters",
     "apply_calibration_to_fcs_files",
     "apply_legacy_calibration_to_series",
 ]

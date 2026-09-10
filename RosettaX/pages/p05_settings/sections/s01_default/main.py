@@ -1,14 +1,13 @@
-# -*- coding: utf-8 -*-
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import dash
 import dash_bootstrap_components as dbc
 from dash import Input, Output, State, callback, html
 
-from RosettaX.utils.browser_profiles import BROWSER_PROFILES_STORE_ID
 from RosettaX.utils import styling, ui_forms
+from RosettaX.utils.browser_profiles import BROWSER_PROFILES_STORE_ID
 from RosettaX.utils.runtime_config import RuntimeConfig
 
 from ...state import SettingsPageState
@@ -766,8 +765,8 @@ class DefaultProfile:
         )
         def sync_profile_dropdown(
             browser_profiles_payload: Any,
-            current_value: Optional[str],
-        ) -> tuple[list[dict[str, str]], Optional[str]]:
+            current_value: str | None,
+        ) -> tuple[list[dict[str, str]], str | None]:
             profile_options = services.build_profile_options(
                 browser_profiles_payload,
             )
@@ -801,7 +800,7 @@ class DefaultProfile:
             prevent_initial_call=True,
         )
         def load_profile_defaults(
-            dropdown_value: Optional[str],
+            dropdown_value: str | None,
             browser_profiles_payload: Any,
             page_state_payload: Any,
         ):
@@ -852,7 +851,7 @@ class DefaultProfile:
             prevent_initial_call=False,
         )
         def sync_page_state(
-            selected_profile: Optional[str],
+            selected_profile: str | None,
             *callback_values: Any,
         ):
             page_state_payload = callback_values[-1]

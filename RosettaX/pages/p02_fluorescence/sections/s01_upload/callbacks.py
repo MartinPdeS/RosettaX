@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
 
 import logging
 
 from RosettaX.workflow.upload.callbacks import register_upload_callbacks
-
 
 logger = logging.getLogger(__name__)
 

@@ -39,8 +39,8 @@ def test_load_fcs_batch_persists_validates_and_preserves_upload_order(
     assert isinstance(result, FCSBatchOperationResult)
     assert result.is_compatible is True
     assert result.feedback.to_display_tuple() == (
-        "Loaded 2 compatible FCS files with 2 channels (FCS3.1). "
-        "Files: second.fcs, first.fcs.",
+        ("Loaded 2 compatible FCS files with 2 channels (FCS3.1). "
+        "Files: second.fcs, first.fcs."),
         "success",
     )
     assert result.batch is not None

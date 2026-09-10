@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
 
 from typing import Any
-
 
 MIE_MODEL_OPTIONS: list[dict[str, str]] = [
     {"label": "Solid Sphere", "value": "Solid Sphere"},

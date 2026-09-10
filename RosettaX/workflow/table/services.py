@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 
-from typing import Any, Optional
+from typing import Any
 
 
 def get_column_ids(
     *,
-    columns: Optional[list[dict[str, Any]]],
+    columns: list[dict[str, Any]] | None,
 ) -> list[str]:
     """
     Extract column IDs from Dash DataTable column definitions.
@@ -31,7 +30,7 @@ def get_column_ids(
 
 def get_editable_column_ids(
     *,
-    columns: Optional[list[dict[str, Any]]],
+    columns: list[dict[str, Any]] | None,
 ) -> list[str]:
     """
     Extract editable column IDs from Dash DataTable column definitions.
@@ -60,7 +59,7 @@ def get_editable_column_ids(
 
 def copy_table_rows(
     *,
-    rows: Optional[list[dict[str, Any]]],
+    rows: list[dict[str, Any]] | None,
 ) -> list[dict[str, Any]]:
     """
     Build a shallow JSON safe copy of table rows.
@@ -86,7 +85,7 @@ def copy_table_rows(
 
 def normalize_table_rows(
     *,
-    rows: Optional[list[dict[str, Any]]],
+    rows: list[dict[str, Any]] | None,
 ) -> list[dict[str, Any]]:
     """
     Normalize arbitrary table rows into dictionary rows with string keys.
@@ -132,7 +131,7 @@ def row_has_data(
 
 def table_is_effectively_empty(
     *,
-    rows: Optional[list[dict[str, Any]]],
+    rows: list[dict[str, Any]] | None,
     user_data_column_ids: list[str],
 ) -> bool:
     """
@@ -174,7 +173,7 @@ def profile_load_was_requested(
 def should_rebuild_table_from_runtime_config(
     *,
     profile_load_was_requested: bool,
-    current_rows: Optional[list[dict[str, Any]]],
+    current_rows: list[dict[str, Any]] | None,
     user_data_column_ids: list[str],
 ) -> bool:
     """
@@ -228,7 +227,7 @@ def build_empty_rows_from_column_ids(
 
 def append_empty_row(
     *,
-    rows: Optional[list[dict[str, Any]]],
+    rows: list[dict[str, Any]] | None,
     empty_row: dict[str, Any],
 ) -> list[dict[str, Any]]:
     """
@@ -250,8 +249,8 @@ def append_empty_row(
 
 def append_empty_row_from_columns(
     *,
-    rows: Optional[list[dict[str, Any]]],
-    columns: Optional[list[dict[str, Any]]],
+    rows: list[dict[str, Any]] | None,
+    columns: list[dict[str, Any]] | None,
 ) -> list[dict[str, Any]]:
     """
     Return table rows with one extra empty row based on table columns.
@@ -268,7 +267,7 @@ def append_empty_row_from_columns(
 
 def clear_columns(
     *,
-    rows: Optional[list[dict[str, Any]]],
+    rows: list[dict[str, Any]] | None,
     column_ids: list[str],
 ) -> list[dict[str, Any]]:
     """
@@ -293,9 +292,9 @@ def clear_columns(
 
 def clear_rows(
     *,
-    rows: Optional[list[dict[str, Any]]],
-    row_indices: Optional[list[int]],
-    columns: Optional[list[dict[str, Any]]] = None,
+    rows: list[dict[str, Any]] | None,
+    row_indices: list[int] | None,
+    columns: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     """
     Clear selected rows while preserving row count.
@@ -342,8 +341,8 @@ def clear_rows(
 
 def delete_rows(
     *,
-    rows: Optional[list[dict[str, Any]]],
-    row_indices: Optional[list[int]],
+    rows: list[dict[str, Any]] | None,
+    row_indices: list[int] | None,
 ) -> list[dict[str, Any]]:
     """
     Delete selected rows.
@@ -372,7 +371,7 @@ def delete_rows(
 
 def reset_rows_from_columns(
     *,
-    columns: Optional[list[dict[str, Any]]],
+    columns: list[dict[str, Any]] | None,
     row_count: int = 3,
 ) -> list[dict[str, str]]:
     """

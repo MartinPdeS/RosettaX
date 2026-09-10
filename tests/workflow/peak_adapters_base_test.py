@@ -1,13 +1,11 @@
-# -*- coding: utf-8 -*-
 
-import numpy as np
+from unittest.mock import Mock
+
 import pytest
-from unittest.mock import Mock, patch
-from dataclasses import dataclass
 
 from RosettaX.workflow.peak.adapters.base import (
+    BasePeakWorkflowAdapter,
     PeakWorkflowPageState,
-    BasePeakWorkflowAdapter
 )
 
 

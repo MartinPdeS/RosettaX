@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
 
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 import plotly.graph_objs as go
@@ -10,7 +9,7 @@ def compute_stable_axis_range(
     *,
     values: Any,
     log_scale: bool,
-) -> Optional[list[float]]:
+) -> list[float] | None:
     """Compute a robust Plotly axis range from finite event data values."""
     value_array = np.asarray(values, dtype=float)
     value_array = value_array[np.isfinite(value_array)]

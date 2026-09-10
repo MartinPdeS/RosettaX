@@ -1,10 +1,10 @@
-# -*- coding: utf-8 -*-
 
 from dataclasses import dataclass
 
-from RosettaX.workflow.upload.ids import UploadIds as UploadSectionIds
-from RosettaX.workflow.save.ids import SaveIds as SaveSectionIds
 from RosettaX.workflow.peak.ids import PeakIds
+from RosettaX.workflow.save.ids import SaveIds as SaveSectionIds
+from RosettaX.workflow.upload.ids import UploadIds as UploadSectionIds
+
 
 @dataclass(frozen=True)
 class ParameterSectionIds:

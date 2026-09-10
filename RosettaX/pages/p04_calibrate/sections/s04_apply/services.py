@@ -1,10 +1,11 @@
-# -*- coding: utf-8 -*-
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
+from RosettaX.pages.p04_calibrate.sections.s02_calibration_picker import (
+    services as calibration_picker_services,
+)
 from RosettaX.workflow import apply_calibration
-from RosettaX.pages.p04_calibrate.sections.s02_calibration_picker import services as calibration_picker_services
 from RosettaX.workflow.apply_calibration.scattering import (
     CUSTOM_PRESET_NAME,
     parse_optical_geometry_from_calibration_standard_parameters,
@@ -13,7 +14,6 @@ from RosettaX.workflow.apply_calibration.scattering import (
 from RosettaX.workflow.apply_calibration.scattering.mie_relation_builder import (
     get_calibration_standard_parameters,
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -126,7 +126,7 @@ def build_scattering_target_model_parameters_if_required(
     advanced_monotonic_mode_enabled: Any,
     use_monotonic_smoothing_kernel: Any,
     monotonic_smoothing_sigma_points: Any,
-) -> Optional[apply_calibration.ScatteringTargetModelParameters]:
+) -> apply_calibration.ScatteringTargetModelParameters | None:
     """
     Build scattering target model parameters when the selected calibration requires them.
     """

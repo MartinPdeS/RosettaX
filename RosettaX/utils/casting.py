@@ -1,9 +1,10 @@
-from typing import Any, Optional
-import numpy as np
 import re
+from typing import Any
+
+import numpy as np
 
 
-def as_float(value: Any) -> Optional[float]:
+def as_float(value: Any) -> float | None:
     """
     Parse a value into a finite float.
 
@@ -63,10 +64,8 @@ def as_int(value: Any, default: int, min_value: int, max_value: int) -> int:
     except Exception:
         v = default
 
-    if v < min_value:
-        v = min_value
-    if v > max_value:
-        v = max_value
+    v = max(v, min_value)
+    v = min(v, max_value)
 
     return v
 
@@ -183,7 +182,7 @@ def as_required_int(value: Any, field_name: str) -> int:
     except Exception as exc:
         raise ValueError(f"Invalid value for {field_name}: {value!r}") from exc
 
-def as_optional_float(value: Any) -> Optional[float]:
+def as_optional_float(value: Any) -> float | None:
     """
     Parse a value into a float, returning ``None`` when parsing fails.
 
@@ -204,7 +203,7 @@ def as_optional_float(value: Any) -> Optional[float]:
     except Exception:
         return None
 
-def as_optional_int(value: Any) -> Optional[int]:
+def as_optional_int(value: Any) -> int | None:
     """
     Parse a value into an int, returning ``None`` when parsing fails.
 
@@ -246,7 +245,7 @@ def parse_float_list(value: Any) -> list[float]:
     parsed_values = as_float_list(value)
     return [float(item) for item in parsed_values.tolist()]
 
-def coerce_optional_number(value: Any) -> Optional[float]:
+def coerce_optional_number(value: Any) -> float | None:
     """
     Coerce a value to ``float``, returning ``None`` for invalid input.
 
@@ -268,7 +267,7 @@ def coerce_optional_number(value: Any) -> Optional[float]:
         return None
     return float(parsed_value)
 
-def coerce_optional_integer(value: Any) -> Optional[int]:
+def coerce_optional_integer(value: Any) -> int | None:
     """
     Coerce a value to ``int``, returning ``None`` for invalid input.
 
@@ -291,7 +290,7 @@ def coerce_optional_integer(value: Any) -> Optional[int]:
         return None
     return int(parsed_value)
 
-def coerce_optional_string(value: Any) -> Optional[str]:
+def coerce_optional_string(value: Any) -> str | None:
     """
     Coerce a value to a non-empty stripped string, returning ``None`` otherwise.
 

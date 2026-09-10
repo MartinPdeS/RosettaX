@@ -12,6 +12,6 @@ __all__ = [
     "WorkflowStep",
     "build_workflow_page_header",
     "build_workflow_progress_content",
-    "build_workflow_step_cards",
     "build_workflow_section_card",
+    "build_workflow_step_cards",
 ]

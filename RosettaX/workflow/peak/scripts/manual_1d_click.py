@@ -1,11 +1,14 @@
-# -*- coding: utf-8 -*-
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import dash
 import dash_bootstrap_components as dbc
 import numpy as np
+
+from RosettaX.utils.io import column_copy
+from RosettaX.utils.runtime_config import RuntimeConfig
+from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
 
 from .base import (
     BasePeakProcess,
@@ -13,10 +16,6 @@ from .base import (
     filter_edge_artifact_values,
     resolve_edge_artifact_filter_enabled,
 )
-from RosettaX.utils.io import column_copy
-from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
-
 
 logger = logging.getLogger(__name__)
 
@@ -300,11 +299,11 @@ class Manual1DClickProcess(BasePeakProcess):
         selected_data: Any = None,
         existing_peak_lines_payload: Any,
         backend: Any = None,
-        detector_channels: Optional[dict[str, Any]] = None,
-        process_settings: Optional[dict[str, Any]] = None,
+        detector_channels: dict[str, Any] | None = None,
+        process_settings: dict[str, Any] | None = None,
         runtime_config_data: Any = None,
         axis_scale_toggle_values: Any = None,
-    ) -> Optional[PeakProcessResult]:
+    ) -> PeakProcessResult | None:
         """
         Add one clicked peak to the cumulative peak payload.
 
@@ -436,7 +435,7 @@ class Manual1DClickProcess(BasePeakProcess):
     def _snap_to_local_mode_is_enabled(
         self,
         *,
-        process_settings: Optional[dict[str, Any]],
+        process_settings: dict[str, Any] | None,
     ) -> bool:
         """
         Return whether local snap mode is enabled.
@@ -490,13 +489,13 @@ class Manual1DClickProcess(BasePeakProcess):
         self,
         *,
         backend: Any,
-        detector_channels: Optional[dict[str, Any]],
+        detector_channels: dict[str, Any] | None,
         clicked_peak_position: float,
-        selected_x_range: Optional[tuple[float, float]],
-        process_settings: Optional[dict[str, Any]],
+        selected_x_range: tuple[float, float] | None,
+        process_settings: dict[str, Any] | None,
         runtime_config_data: Any,
         axis_scale_toggle_values: Any,
-    ) -> Optional[float]:
+    ) -> float | None:
         """
         Snap one clicked position to the local modal value nearby.
         """
@@ -613,7 +612,7 @@ class Manual1DClickProcess(BasePeakProcess):
         centers: np.ndarray,
         selected_x_range: tuple[float, float],
         fallback_value: float,
-    ) -> Optional[float]:
+    ) -> float | None:
         """
         Return the tallest histogram bin center inside the selected x range.
         """
@@ -712,7 +711,7 @@ class Manual1DClickProcess(BasePeakProcess):
         edges: np.ndarray,
         centers: np.ndarray,
         clicked_value: float,
-    ) -> Optional[float]:
+    ) -> float | None:
         """
         Climb the histogram from the clicked bin to the local summit.
         """
@@ -905,7 +904,7 @@ class Manual1DClickProcess(BasePeakProcess):
     def extract_clicked_x_position(
         self,
         click_data: Any,
-    ) -> Optional[float]:
+    ) -> float | None:
         """
         Extract the x coordinate from Plotly clickData.
 
@@ -954,7 +953,7 @@ class Manual1DClickProcess(BasePeakProcess):
     def extract_selected_x_range(
         self,
         selected_data: Any,
-    ) -> Optional[tuple[float, float]]:
+    ) -> tuple[float, float] | None:
         """
         Extract an x-range from Plotly selectedData.
         """

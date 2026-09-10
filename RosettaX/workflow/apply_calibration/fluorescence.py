@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from typing import Any
 
@@ -106,10 +105,8 @@ def apply_legacy_calibration_to_series(
         return scale * values_array + offset
 
     raise ValueError(
-        (
             "Unsupported calibration payload format. Expected a log model, "
             '"slope"/"intercept", or "scale"/"offset".'
-        )
     )
 
 

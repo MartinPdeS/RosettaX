@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
 
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
-
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +63,7 @@ class FCSMetadata:
         return {}
 
     @property
-    def fcs_version(self) -> Optional[str]:
+    def fcs_version(self) -> str | None:
         version_value = self.header.get("FCS version")
 
         if version_value is None:
@@ -77,19 +75,19 @@ class FCSMetadata:
         return str(version_value)
 
     @property
-    def number_of_events(self) -> Optional[int]:
+    def number_of_events(self) -> int | None:
         return self._coerce_optional_int(
             self.keywords.get("$TOT"),
         )
 
     @property
-    def number_of_parameters(self) -> Optional[int]:
+    def number_of_parameters(self) -> int | None:
         return self._coerce_optional_int(
             self.keywords.get("$PAR"),
         )
 
     @property
-    def datatype(self) -> Optional[str]:
+    def datatype(self) -> str | None:
         datatype_value = self.keywords.get("$DATATYPE")
 
         if datatype_value is None:
@@ -99,7 +97,7 @@ class FCSMetadata:
         return datatype_string or None
 
     @property
-    def mode(self) -> Optional[str]:
+    def mode(self) -> str | None:
         mode_value = self.keywords.get("$MODE")
 
         if mode_value is None:
@@ -122,8 +120,8 @@ class FCSMetadata:
         return column_names
 
     @property
-    def detector_voltages(self) -> dict[str, Optional[float]]:
-        detector_voltages: dict[str, Optional[float]] = {}
+    def detector_voltages(self) -> dict[str, float | None]:
+        detector_voltages: dict[str, float | None] = {}
 
         for parameter_index, column_name in enumerate(self.column_names, start=1):
             detector = self.detectors.get(parameter_index, {})
@@ -192,7 +190,7 @@ class FCSMetadata:
     def _coerce_optional_float(
         value: Any,
         detector_name: str,
-    ) -> Optional[float]:
+    ) -> float | None:
         if value is None:
             return None
 
@@ -215,7 +213,7 @@ class FCSMetadata:
     @staticmethod
     def _coerce_optional_int(
         value: Any,
-    ) -> Optional[int]:
+    ) -> int | None:
         if value is None:
             return None
 

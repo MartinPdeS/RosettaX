@@ -1,10 +1,9 @@
-# -*- coding: utf-8 -*-
 
 import logging
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
-from RosettaX.workflow import scattering, apply_calibration, detector
+from RosettaX.workflow import apply_calibration, detector, scattering
 from RosettaX.workflow.peak import registry as peak_registry
 from RosettaX.workflow.table.fluorescence import (
     CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME,
@@ -24,12 +23,12 @@ class FieldDefinition:
     runtime_path: str
     profile_path: str
     default: Any
-    placeholder: Optional[str] = None
-    min_value: Optional[float] = None
-    max_value: Optional[float] = None
-    step: Optional[float] = None
-    options: Optional[list[dict[str, Any]]] = None
-    group: Optional[str] = None
+    placeholder: str | None = None
+    min_value: float | None = None
+    max_value: float | None = None
+    step: float | None = None
+    options: list[dict[str, Any]] | None = None
+    group: str | None = None
 
 
 def build_peak_process_dropdown_options() -> list[dict[str, Any]]:

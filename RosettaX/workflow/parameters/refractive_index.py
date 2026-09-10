@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*-
 
 import json
 import math
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
-
 
 _SELLMEIER_DIRECTORY_PATH = Path(__file__).resolve().parents[2] / "assets" / "sellmeier"
 

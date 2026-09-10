@@ -1,14 +1,13 @@
-# -*- coding: utf-8 -*-
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import dash
 import dash_bootstrap_components as dbc
 
 from RosettaX.pages.p00_sidebar.ids import SidebarIds
 from RosettaX.pages.p03_scattering.state import ScatteringPageState
-from RosettaX.utils import styling, ui_forms, RuntimeConfig
+from RosettaX.utils import RuntimeConfig, styling, ui_forms
 from RosettaX.workflow import parameters, scattering
 from RosettaX.workflow.table.layout import (
     ReferenceTableActionConfig,
@@ -17,10 +16,9 @@ from RosettaX.workflow.table.layout import (
 )
 
 from ..s03_model.main import Model as ScatteringModelSection
-from ..s05_calibration.main import build_scattering_axis_control_block
 from ..s05_calibration import services as calibration_services
+from ..s05_calibration.main import build_scattering_axis_control_block
 from .services import ScatteringCalibrationStandardTable
-
 
 logger = logging.getLogger(__name__)
 
@@ -316,7 +314,7 @@ class ReferenceTable:
             runtime_config_data: Any,
             profile_load_event_data: Any,
             mie_model: Any,
-            current_rows: Optional[list[dict[str, Any]]],
+            current_rows: list[dict[str, Any]] | None,
         ) -> tuple[Any, Any]:
             runtime_config = RuntimeConfig.from_dict(
                 runtime_config_data if isinstance(runtime_config_data, dict) else None
@@ -402,7 +400,7 @@ class ReferenceTable:
         def sync_table_schema_from_model(
             mie_model: Any,
             scatterer_preset: Any,
-            current_rows: Optional[list[dict[str, Any]]],
+            current_rows: list[dict[str, Any]] | None,
         ) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
             resolved_mie_model = parameters.table.resolve_mie_model(mie_model)
 
@@ -437,7 +435,7 @@ class ReferenceTable:
         def add_row(
             n_clicks: int,
             mie_model: Any,
-            rows: Optional[list[dict[str, Any]]],
+            rows: list[dict[str, Any]] | None,
         ) -> list[dict[str, Any]]:
             logger.debug(
                 "add_row called with n_clicks=%r mie_model=%r row_count=%r",
@@ -477,7 +475,7 @@ class ReferenceTable:
         def normalize_table_after_user_edit(
             data_timestamp: Any,
             mie_model: Any,
-            current_rows: Optional[list[dict[str, Any]]],
+            current_rows: list[dict[str, Any]] | None,
         ) -> list[dict[str, Any]]:
             logger.debug(
                 "normalize_table_after_user_edit called with data_timestamp=%r "
@@ -543,7 +541,7 @@ class ReferenceTable:
         def compute_model(
             n_clicks: int,
             mie_model: Any,
-            current_rows: Optional[list[dict[str, Any]]],
+            current_rows: list[dict[str, Any]] | None,
             medium_refractive_index: Any,
             particle_refractive_index: Any,
             core_refractive_index: Any,

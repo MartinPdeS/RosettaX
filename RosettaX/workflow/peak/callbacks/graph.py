@@ -1,16 +1,15 @@
-# -*- coding: utf-8 -*-
 
-from typing import Any
 import logging
+from typing import Any
 
 import dash
 import numpy as np
 import plotly.graph_objs as go
 
-from ..core import graphing
-from .mutation import build_process_settings
 from RosettaX.utils import RuntimeConfig, plottings, styling
 
+from ..core import graphing
+from .mutation import build_process_settings
 
 logger = logging.getLogger(__name__)
 

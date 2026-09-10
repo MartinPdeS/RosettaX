@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from RosettaX.utils.fcs_metadata import FCSMetadata
 

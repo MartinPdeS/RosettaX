@@ -1,22 +1,22 @@
-# -*- coding: utf-8 -*-
 
 import json
 import logging
-from typing import Any, Optional, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 import dash
 import dash_bootstrap_components as dbc
 import numpy as np
 
-from RosettaX.utils import styling, ui_forms, RuntimeConfig, casting
 from RosettaX.pages.p00_sidebar.ids import SidebarIds
-from RosettaX.workflow.peak.core import detectors as peak_detectors
+from RosettaX.utils import RuntimeConfig, casting, styling, ui_forms
 from RosettaX.workflow import detector, scattering
+from RosettaX.workflow.peak.core import detectors as peak_detectors
 from RosettaX.workflow.scattering.calibration_services import (
     DEFAULT_SOURCE_POLARIZATION_ANGLE_DEGREE,
 )
-from . import optical_preview
 
+from . import optical_preview
 
 logger = logging.getLogger(__name__)
 
@@ -816,9 +816,9 @@ class Model:
         component_id: str,
         placeholder: str,
         value: Any,
-        min_value: Optional[float] = None,
-        max_value: Optional[float] = None,
-        step: Optional[float] = None,
+        min_value: float | None = None,
+        max_value: float | None = None,
+        step: float | None = None,
         input_mode: str = "decimal",
         width_px: int = 220,
     ) -> dash.html.Div:
@@ -1269,7 +1269,7 @@ class Model:
         )
         def toggle_parameter_blocks(
             runtime_config_data: Any,
-            mie_model_value: Optional[str],
+            mie_model_value: str | None,
             scatterer_preset: Any,
         ) -> tuple[dict[str, str], dict[str, str], dict[str, str]]:
             resolved_mie_model = self.model_configuration.resolve_mie_model(

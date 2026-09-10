@@ -1,20 +1,26 @@
-# -*- coding: utf-8 -*-
 
-from dataclasses import dataclass, field
-from datetime import datetime
 import math
-from pathlib import Path
 import re
 import textwrap
-from typing import Any, Optional
+from dataclasses import dataclass, field
+from datetime import datetime
+from pathlib import Path
+from typing import Any
 
-from .services import ApplyCalibrationFilesResult, ApplyCalibrationRequest, resolve_source_channel
 from .report_helpers import (
     build_saved_payload_section_specs as _build_saved_payload_section_specs_from_payload,
+)
+from .report_helpers import (
     format_display_value as _format_display_value,
+)
+from .report_helpers import (
     prettify_label as _prettify_label,
 )
-
+from .services import (
+    ApplyCalibrationFilesResult,
+    ApplyCalibrationRequest,
+    resolve_source_channel,
+)
 
 PAGE_WIDTH = 612.0
 PAGE_HEIGHT = 792.0
@@ -42,7 +48,7 @@ def build_apply_report_payload(
     *,
     request: ApplyCalibrationRequest,
     result: ApplyCalibrationFilesResult,
-    calibration_summary: Optional[Any] = None,
+    calibration_summary: Any | None = None,
 ) -> dict[str, Any]:
     """Build a serializable payload describing one successful apply/export run."""
     calibration_summaries = _normalize_calibration_summaries(
@@ -195,7 +201,7 @@ def build_apply_report_pdf_bytes(
 
 def _build_calibration_summary_payload(
     *,
-    calibration_summary: Optional[dict[str, Any]],
+    calibration_summary: dict[str, Any] | None,
 ) -> dict[str, Any]:
     if not isinstance(calibration_summary, dict):
         return {}
@@ -345,7 +351,7 @@ def _build_scattering_calibration_details(
 def _build_scattering_target_model_payload(
     *,
     request: ApplyCalibrationRequest,
-) -> Optional[dict[str, Any]]:
+) -> dict[str, Any] | None:
     parameters = None
 
     for calibration in request.calibrations:
@@ -401,7 +407,7 @@ def _is_supported_payload_tree_value(value: Any) -> bool:
     return isinstance(value, (dict, list)) or _is_supported_payload_value(value)
 
 
-def _as_float_or_none(value: Any) -> Optional[float]:
+def _as_float_or_none(value: Any) -> float | None:
     try:
         if value in (None, ""):
             return None
@@ -410,7 +416,7 @@ def _as_float_or_none(value: Any) -> Optional[float]:
         return None
 
 
-def _as_int_or_none(value: Any) -> Optional[int]:
+def _as_int_or_none(value: Any) -> int | None:
     try:
         if value in (None, ""):
             return None
@@ -1328,7 +1334,7 @@ class _PdfReportComposer:
         size: float,
         color: tuple[float, float, float],
         leading: float,
-        max_lines: Optional[int] = None,
+        max_lines: int | None = None,
     ) -> None:
         lines = self._wrap_text_to_width(text=text, width=width, font_size=size)
 
@@ -1349,7 +1355,7 @@ class _PdfReportComposer:
         width: float,
         height: float,
         fill_color: tuple[float, float, float],
-        stroke_color: Optional[tuple[float, float, float]] = None,
+        stroke_color: tuple[float, float, float] | None = None,
     ) -> None:
         if stroke_color is None:
             self.current_page.commands.append(
@@ -1681,7 +1687,7 @@ def _build_reference_table_spec(
     *,
     report_payload: dict[str, Any],
     calibration_index: int = 0,
-) -> Optional[dict[str, Any]]:
+) -> dict[str, Any] | None:
     details = _build_calibration_entry(
         report_payload=report_payload,
         calibration_index=calibration_index,
@@ -1757,7 +1763,7 @@ def _build_chart_spec(
     *,
     report_payload: dict[str, Any],
     calibration_index: int = 0,
-) -> Optional[dict[str, Any]]:
+) -> dict[str, Any] | None:
     details = _build_calibration_entry(
         report_payload=report_payload,
         calibration_index=calibration_index,
@@ -2028,8 +2034,7 @@ def _build_calibration_entry(
             "calibration_type": "",
         }
 
-    if calibration_index < 0:
-        calibration_index = 0
+    calibration_index = max(calibration_index, 0)
 
     if calibration_index >= len(entries):
         calibration_index = len(entries) - 1

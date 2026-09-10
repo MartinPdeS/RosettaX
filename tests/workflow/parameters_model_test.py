@@ -1,26 +1,33 @@
-# -*- coding: utf-8 -*-
 
+import logging
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import Mock, patch
 
 import numpy as np
 import pytest
-from types import SimpleNamespace
-from unittest.mock import patch, Mock
-import logging
 
-from RosettaX.pages.p03_scattering.sections.s03_model.optical_preview import build_pymiesim_photodiode_mesh_coordinates
+from RosettaX.pages.p03_scattering.sections.s03_model.optical_preview import (
+    build_pymiesim_photodiode_mesh_coordinates,
+)
 from RosettaX.workflow.detector import (
     DetectorPresetLoader,
     resolve_detector_angular_weights,
     resolve_detector_modeling_geometry_values,
 )
-from RosettaX.workflow.detector.configuration import _build_blocker_bar_numerical_aperture, _build_local_top_bottom_split_metric, _resolve_split_separation_fraction, resolve_detector_configuration_values, resolve_detector_preset_wavelength_nm
-from RosettaX.workflow.scattering.model import ModelConfiguration
-from RosettaX.workflow.parameters.model import (
-    SOLID_SPHERE_MODEL_NAME,
-    CORE_SHELL_SPHERE_MODEL_NAME,
-    compute_model_for_rows
+from RosettaX.workflow.detector.configuration import (
+    _build_blocker_bar_numerical_aperture,
+    _build_local_top_bottom_split_metric,
+    _resolve_split_separation_fraction,
+    resolve_detector_configuration_values,
+    resolve_detector_preset_wavelength_nm,
 )
+from RosettaX.workflow.parameters.model import (
+    CORE_SHELL_SPHERE_MODEL_NAME,
+    SOLID_SPHERE_MODEL_NAME,
+    compute_model_for_rows,
+)
+from RosettaX.workflow.scattering.model import ModelConfiguration
 
 
 class Test_ModelConstants:
@@ -613,15 +620,13 @@ class Test_compute_model_for_rows:
             >= float(apogee_side_preset['blocker_bar_numerical_aperture'])
         )
 
-        keep_count = int(
-            round(
+        keep_count = round(
                 _resolve_split_separation_fraction(
                     preset=apogee_side_preset,
                     angular_weighting=apogee_side_preset['detector_angular_weighting'],
                 )
                 * eligible_indices.size
             )
-        )
         keep_count = max(0, min(keep_count, int(eligible_indices.size)))
 
         ordered_indices = eligible_indices[
@@ -717,24 +722,20 @@ class Test_compute_model_for_rows:
             forward_blocker_bar_numerical_aperture
             >= float(apogee_forward_preset['blocker_bar_numerical_aperture'])
         )
-        side_keep_count = int(
-            round(
+        side_keep_count = round(
                 _resolve_split_separation_fraction(
                     preset=apogee_side_preset,
                     angular_weighting=apogee_side_preset['detector_angular_weighting'],
                 )
                 * side_eligible_indices.size
             )
-        )
-        forward_keep_count = int(
-            round(
+        forward_keep_count = round(
                 _resolve_split_separation_fraction(
                     preset=apogee_forward_preset,
                     angular_weighting=apogee_forward_preset['detector_angular_weighting'],
                 )
                 * forward_eligible_indices.size
             )
-        )
 
         side_ordered_indices = side_eligible_indices[
             np.argsort(

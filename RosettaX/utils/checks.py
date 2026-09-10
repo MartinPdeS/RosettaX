@@ -1,12 +1,10 @@
-# -*- coding: utf-8 -*-
 
 import logging
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from RosettaX.utils.fcs_metadata import FCSMetadata
 from RosettaX.utils.reader import FCSFile
-
 
 logger = logging.getLogger(__name__)
 
@@ -246,8 +244,8 @@ class FCSMultiFileConsistencyChecker:
                 "reference_column_names": [],
                 "invalid_file_paths": [reference_file_path],
                 "mismatch_details": [
-                    f"{Path(reference_file_path).name}: could not read columns "
-                    f"({type(exc).__name__}: {exc})"
+                    (f"{Path(reference_file_path).name}: could not read columns "
+                    f"({type(exc).__name__}: {exc})")
                 ],
             }
 
@@ -346,8 +344,8 @@ class FCSMultiFileConsistencyChecker:
                 "reference_fcs_version": None,
                 "invalid_file_paths": [reference_file_path],
                 "mismatch_details": [
-                    f"{Path(reference_file_path).name}: could not read FCS version "
-                    f"({type(exc).__name__}: {exc})"
+                    (f"{Path(reference_file_path).name}: could not read FCS version "
+                    f"({type(exc).__name__}: {exc})")
                 ],
             }
 
@@ -444,8 +442,8 @@ class FCSMultiFileConsistencyChecker:
                 "reference_detector_voltages": {},
                 "invalid_file_paths": [reference_file_path],
                 "mismatch_details": [
-                    f"{Path(reference_file_path).name}: could not read detector voltages "
-                    f"({type(exc).__name__}: {exc})"
+                    (f"{Path(reference_file_path).name}: could not read detector voltages "
+                    f"({type(exc).__name__}: {exc})")
                 ],
             }
 
@@ -510,8 +508,8 @@ class FCSMultiFileConsistencyChecker:
     def _build_detector_voltage_mismatch_details(
         reference_file_path: str,
         current_file_path: str,
-        reference_detector_voltages: dict[str, Optional[float]],
-        current_detector_voltages: dict[str, Optional[float]],
+        reference_detector_voltages: dict[str, float | None],
+        current_detector_voltages: dict[str, float | None],
     ) -> list[str]:
         """
         Build per-detector voltage mismatch detail strings.

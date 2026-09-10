@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
 
-from typing import Optional
 
 import dash_bootstrap_components as dbc
 from dash import html
@@ -74,7 +72,7 @@ def build_documentation_card(
     title: str,
     subtitle: str,
     body: list,
-    min_height: Optional[str] = "252px",
+    min_height: str | None = "252px",
 ) -> dbc.Card:
     """
     Build one shared documentation content card.

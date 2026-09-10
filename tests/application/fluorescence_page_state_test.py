@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from RosettaX.pages.p02_fluorescence.state import FluorescencePageState
 

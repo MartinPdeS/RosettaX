@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
 
 import importlib.metadata
 import json
 import logging
 import time
-from typing import Optional
 from urllib import error, request
 
 import dash
@@ -12,20 +10,18 @@ import dash_bootstrap_components as dbc
 from dash import html
 
 from RosettaX._version import __version__
-from RosettaX.utils import ui_forms
-from RosettaX.utils import usage_metrics
-
+from RosettaX.utils import ui_forms, usage_metrics
 
 logger = logging.getLogger(__name__)
 LATEST_GITHUB_TAG_API_URL = "https://api.github.com/repos/MartinPdeS/RosettaX/tags?per_page=1"
 GITHUB_TAG_REQUEST_TIMEOUT_SECONDS = 2.0
 GITHUB_TAG_CACHE_TTL_SECONDS = 300.0
 
-_cached_github_tag_label: Optional[str] = None
+_cached_github_tag_label: str | None = None
 _cached_github_tag_expires_at = 0.0
 
 
-def _fetch_latest_github_tag_label() -> Optional[str]:
+def _fetch_latest_github_tag_label() -> str | None:
     request_headers = {
         "Accept": "application/vnd.github+json",
         "User-Agent": "RosettaX",

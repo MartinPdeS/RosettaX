@@ -7,7 +7,6 @@ Dash layout dependencies during test collection.
 from importlib import import_module
 from typing import Any
 
-
 __all__ = [
     "FluorescenceReferenceTable",
     "ReferenceTableConfig",

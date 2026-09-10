@@ -1,15 +1,14 @@
-# -*- coding: utf-8 -*-
 
+import ipaddress
 import json
 import logging
 import os
 import platform
 import threading
-import ipaddress
 from dataclasses import asdict, dataclass, field
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 try:
     import psycopg  # type: ignore[import-not-found]
@@ -288,7 +287,7 @@ def record_page_visit(
     ip_address: Any,
     path: Any,
     user_agent: Any,
-    visited_at: Optional[str] = None,
+    visited_at: str | None = None,
     include_local: bool = False,
 ) -> VisitEvent:
     """
@@ -358,7 +357,7 @@ def summarize_visit_events(
     events: list[VisitEvent],
     *,
     recent_limit: int = DEFAULT_RECENT_VISIT_LIMIT,
-    today: Optional[str] = None,
+    today: str | None = None,
     include_local: bool = False,
 ) -> VisitSummary:
     """
@@ -757,7 +756,7 @@ def _current_utc_timestamp() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
-def _visit_event_date(event: VisitEvent) -> Optional[str]:
+def _visit_event_date(event: VisitEvent) -> str | None:
     try:
         parsed_timestamp = datetime.fromisoformat(event.visited_at)
     except (TypeError, ValueError):

@@ -1,15 +1,14 @@
-# -*- coding: utf-8 -*-
 
 import logging
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 import plotly.graph_objs as go
 
+from RosettaX.utils import styling
 from RosettaX.utils.io import load_signal
 from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.utils import styling
 from RosettaX.workflow.plotting.models import AxisOptions, HistogramOptions
 from RosettaX.workflow.plotting.transforms import (
     build_histogram_arrays,
@@ -63,9 +62,9 @@ def build_histogram(
     fcs_file_path: str,
     detector_column: str,
     n_bins_for_plots: int,
-    max_events_for_analysis: Optional[int] = None,
+    max_events_for_analysis: int | None = None,
     use_log_x_bins: bool = False,
-    options: Optional[HistogramOptions] = None,
+    options: HistogramOptions | None = None,
 ) -> HistogramResult:
     """
     Build a 1D histogram from a detector signal in an FCS file.
@@ -154,7 +153,7 @@ def build_histogram_figure(
     detector_column: str,
     histogram_result: HistogramResult,
     use_log_counts: bool = False,
-    peak_positions: Optional[np.ndarray] = None,
+    peak_positions: np.ndarray | None = None,
 ) -> go.Figure:
     """
     Build a Plotly bar chart figure from a pre-computed histogram.
@@ -238,10 +237,10 @@ def make_histogram_with_lines(
     xaxis_title: str,
     line_positions: list[float],
     line_labels: list[str],
-    overlay_values: Optional[np.ndarray] = None,
+    overlay_values: np.ndarray | None = None,
     base_name: str = "all events",
     overlay_name: str = "gated events",
-    title: Optional[str] = None,
+    title: str | None = None,
     line_width: float = 2.0,
     line_dash: str = "dash",
     font_size: float = 14.0,
@@ -360,7 +359,7 @@ def add_vertical_lines(
     *,
     fig: go.Figure,
     line_positions: list[float],
-    line_labels: Optional[list[str]] = None,
+    line_labels: list[str] | None = None,
     line_width: float = 2.0,
     line_dash: str = "dash",
     annotation_y: float = 1.02,
@@ -469,7 +468,7 @@ def _make_info_figure(
     figure.update_yaxes(visible=False)
     figure.update_layout(
         height=350,
-        margin=dict(l=20, r=20, t=20, b=20),
+        margin={"l": 20, "r": 20, "t": 20, "b": 20},
         separators=".,",
         font={
             "family": styling.CHART_STYLE["font_family"],

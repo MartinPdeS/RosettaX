@@ -1,22 +1,23 @@
-# -*- coding: utf-8 -*-
 
 import math
 
 import numpy as np
 import pytest
 
-from RosettaX.utils.casting import as_float
-from RosettaX.utils.casting import as_float_list
-from RosettaX.utils.casting import as_int
-from RosettaX.utils.casting import as_optional_float
-from RosettaX.utils.casting import as_optional_int
-from RosettaX.utils.casting import as_required_float
-from RosettaX.utils.casting import as_required_int
-from RosettaX.utils.casting import coerce_optional_integer
-from RosettaX.utils.casting import coerce_optional_number
-from RosettaX.utils.casting import coerce_optional_string
-from RosettaX.utils.casting import format_float_list_for_input
-from RosettaX.utils.casting import parse_float_list
+from RosettaX.utils.casting import (
+    as_float,
+    as_float_list,
+    as_int,
+    as_optional_float,
+    as_optional_int,
+    as_required_float,
+    as_required_int,
+    coerce_optional_integer,
+    coerce_optional_number,
+    coerce_optional_string,
+    format_float_list_for_input,
+    parse_float_list,
+)
 
 
 class Test_Casting:

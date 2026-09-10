@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass(slots=True)
@@ -11,4 +10,4 @@ class BackEnd:
     uploaded FCS file path. This class makes that contract explicit.
     """
 
-    fcs_file_path: Optional[str] = None
+    fcs_file_path: str | None = None

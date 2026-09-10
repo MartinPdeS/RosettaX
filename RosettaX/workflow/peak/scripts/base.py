@@ -1,14 +1,12 @@
-# -*- coding: utf-8 -*-
 
-from dataclasses import dataclass
-from typing import Any, ClassVar, Optional
 import logging
+from dataclasses import dataclass
+from typing import Any, ClassVar
 
-import numpy as np
 import dash
+import numpy as np
 
 from RosettaX.utils import styling
-
 
 logger = logging.getLogger(__name__)
 
@@ -60,9 +58,9 @@ class PeakProcessResult:
     peak_positions: list[Any]
     peak_lines_payload: dict[str, Any]
     status: str
-    new_peak_positions: Optional[list[Any]] = None
+    new_peak_positions: list[Any] | None = None
     clear_existing_table_peaks: bool = False
-    table_prefill_rows: Optional[list[dict[str, Any]]] = None
+    table_prefill_rows: list[dict[str, Any]] | None = None
 
 
 def resolve_enabled_toggle_value(
@@ -87,7 +85,7 @@ def resolve_enabled_toggle_value(
 
 def resolve_edge_artifact_filter_enabled(
     *,
-    process_settings: Optional[dict[str, Any]],
+    process_settings: dict[str, Any] | None,
     default: bool = True,
 ) -> bool:
     """
@@ -482,7 +480,7 @@ class BasePeakProcess:
         *,
         click_data: Any,
         existing_peak_lines_payload: Any,
-    ) -> Optional[PeakProcessResult]:
+    ) -> PeakProcessResult | None:
         """
         Handle a graph click.
 
@@ -534,7 +532,7 @@ class BasePeakProcess:
         detector_channels: dict[str, Any],
         peak_count: Any,
         max_events_for_analysis: int,
-    ) -> Optional[PeakProcessResult]:
+    ) -> PeakProcessResult | None:
         """
         Run an automatic process action.
 

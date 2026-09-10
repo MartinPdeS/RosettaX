@@ -1,21 +1,20 @@
-# -*- coding: utf-8 -*-
 
-from typing import Any, Optional
 import logging
+from typing import Any
 
 import numpy as np
 
 from RosettaX.pages.p03_scattering.backend import BackEnd
-from RosettaX.workflow.scattering.calibration_services import (
-    DEFAULT_SOURCE_POLARIZATION_ANGLE_DEGREE,
-)
+from RosettaX.utils.casting import as_optional_float, as_required_float, as_required_int
 from RosettaX.workflow.detector import (
     resolve_detector_angular_weights,
     resolve_detector_modeling_geometry_values,
 )
-from RosettaX.utils.casting import as_optional_float, as_required_float, as_required_int
-from . import table
+from RosettaX.workflow.scattering.calibration_services import (
+    DEFAULT_SOURCE_POLARIZATION_ANGLE_DEGREE,
+)
 
+from . import table
 
 SOLID_SPHERE_MODEL_NAME = "Solid Sphere"
 CORE_SHELL_SPHERE_MODEL_NAME = "Core/Shell Sphere"
@@ -24,7 +23,7 @@ CORE_SHELL_SPHERE_MODEL_NAME = "Core/Shell Sphere"
 def compute_model_for_rows(
     *,
     mie_model: str,
-    current_rows: Optional[list[dict[str, Any]]],
+    current_rows: list[dict[str, Any]] | None,
     medium_refractive_index: Any,
     particle_refractive_index: Any,
     core_refractive_index: Any,

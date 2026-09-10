@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import logging
 import mmap
@@ -7,13 +6,13 @@ import re
 import weakref
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple, List
+from typing import Any, Optional
 
 import numpy as np
 import pandas as pd
+from typing_extensions import Self
 
 from RosettaX.utils.fcs_metadata import FCSMetadata
-
 
 logger = logging.getLogger(__name__)
 
@@ -46,14 +45,14 @@ class FCSFile:
     file_path: str | Path
     writable: bool = False
 
-    header: Dict[str, Any] = field(init=False)
-    text: Dict[str, Any] = field(init=False)
+    header: dict[str, Any] = field(init=False)
+    text: dict[str, Any] = field(init=False)
     delimiter: str = field(init=False)
     metadata: FCSMetadata = field(init=False)
 
     _file_handle: Any = field(init=False, default=None, repr=False)
-    _mmap: Optional[mmap.mmap] = field(init=False, default=None, repr=False)
-    _records: Optional[np.ndarray] = field(init=False, default=None, repr=False)
+    _mmap: mmap.mmap | None = field(init=False, default=None, repr=False)
+    _records: np.ndarray | None = field(init=False, default=None, repr=False)
     _finalizer: Any = field(init=False, default=None, repr=False)
 
     def __post_init__(self) -> None:
@@ -90,7 +89,7 @@ class FCSFile:
             self,
         )
 
-    def __enter__(self) -> "FCSFile":
+    def __enter__(self) -> Self:
         logger.debug("Entering FCSFile context for file_path=%r", self.file_path)
 
         return self
@@ -117,7 +116,7 @@ class FCSFile:
     def get_metadata(self) -> FCSMetadata:
         return self.metadata
 
-    def get_detector_voltages(self) -> dict[str, Optional[float]]:
+    def get_detector_voltages(self) -> dict[str, float | None]:
         return self.metadata.detector_voltages
 
     def column_copy(
@@ -343,7 +342,7 @@ class FCSFile:
             file_size,
         )
 
-    def _read_header(self) -> Dict[str, Any]:
+    def _read_header(self) -> dict[str, Any]:
         logger.debug("Reading FCS HEADER for file_path=%r", self.file_path)
 
         with open(self.file_path, "rb") as handle:
@@ -390,9 +389,9 @@ class FCSFile:
         return header
 
     @staticmethod
-    def _split_text_payload(payload: str, delimiter: str) -> List[str]:
-        tokens: List[str] = []
-        token_chars: List[str] = []
+    def _split_text_payload(payload: str, delimiter: str) -> list[str]:
+        tokens: list[str] = []
+        token_chars: list[str] = []
 
         index = 0
 
@@ -418,7 +417,7 @@ class FCSFile:
 
         return tokens
 
-    def _read_text(self) -> Tuple[Dict[str, Any], str]:
+    def _read_text(self) -> tuple[dict[str, Any], str]:
         logger.debug("Reading FCS TEXT for file_path=%r", self.file_path)
 
         text_start = int(self.header["Text start"])
@@ -470,7 +469,7 @@ class FCSFile:
                     self.file_path,
                 )
 
-        keywords: Dict[str, Any] = {}
+        keywords: dict[str, Any] = {}
 
         for index in range(0, len(items), 2):
             key = items[index].strip()
@@ -481,7 +480,7 @@ class FCSFile:
             else:
                 keywords[key] = value
 
-        parsed: Dict[str, Any] = {
+        parsed: dict[str, Any] = {
             "Keywords": keywords,
             "Detectors": {},
         }
@@ -498,11 +497,11 @@ class FCSFile:
 
         return parsed, delimiter
 
-    def _group_detectors(self, parsed_text: Dict[str, Any]) -> None:
+    def _group_detectors(self, parsed_text: dict[str, Any]) -> None:
         logger.debug("Grouping FCS detector keywords for file_path=%r", self.file_path)
 
         keywords = parsed_text["Keywords"]
-        detectors: Dict[int, Dict[str, Any]] = {}
+        detectors: dict[int, dict[str, Any]] = {}
 
         if "$PAR" not in keywords:
             self._raise_file_error(
@@ -512,7 +511,7 @@ class FCSFile:
         number_of_parameters = int(keywords["$PAR"])
         parameter_pattern = re.compile(r"^\$P(\d+)([A-Z]+)$")
 
-        keys_to_remove: List[str] = []
+        keys_to_remove: list[str] = []
 
         for key, value in keywords.items():
             match = parameter_pattern.match(str(key))
@@ -654,7 +653,7 @@ class FCSFile:
         datatype = str(keywords["$DATATYPE"]).strip().upper()
         endian_prefix = self._endian_prefix(str(keywords.get("$BYTEORD", "1,2,3,4")))
 
-        fields: List[Tuple[str, np.dtype]] = []
+        fields: list[tuple[str, np.dtype]] = []
 
         for parameter_index in range(1, number_of_parameters + 1):
             detector = detectors.get(parameter_index, {})
@@ -679,7 +678,7 @@ class FCSFile:
 
         return event_dtype
 
-    def _column_names(self) -> List[str]:
+    def _column_names(self) -> list[str]:
         return self.metadata.column_names
 
     def _column_index_from_name(self, column_name: str) -> int:
@@ -698,7 +697,7 @@ class FCSFile:
 
         return index_zero_based + 1
 
-    def _resolve_data_bounds(self, expected_bytes: int) -> Tuple[int, int]:
+    def _resolve_data_bounds(self, expected_bytes: int) -> tuple[int, int]:
         keywords = self.text["Keywords"]
         file_size = os.path.getsize(self.file_path)
 
@@ -709,7 +708,7 @@ class FCSFile:
             file_size,
         )
 
-        candidates: List[Tuple[int, int, str]] = []
+        candidates: list[tuple[int, int, str]] = []
 
         header_start = int(self.header.get("Data start", 0))
         header_end = int(self.header.get("Data end", 0))
@@ -732,7 +731,7 @@ class FCSFile:
                 )
             )
 
-        def normalize(start: int, end: int) -> Tuple[int, int]:
+        def normalize(start: int, end: int) -> tuple[int, int]:
             start = int(start)
             end = int(end)
 
@@ -933,7 +932,7 @@ class FCSFile:
             )
         )
 
-        rebuilt_detectors: Dict[int, Dict[str, Any]] = {}
+        rebuilt_detectors: dict[int, dict[str, Any]] = {}
 
         for parameter_index, column_name in enumerate(list(dataframe.columns), start=1):
             detector = dict(
@@ -979,7 +978,7 @@ class FCSFile:
     @staticmethod
     def _normalize_detector_metadata_overrides(
         overrides: Any,
-    ) -> Dict[str, Dict[str, Any]]:
+    ) -> dict[str, dict[str, Any]]:
         """
         Normalize DataFrame detector metadata overrides keyed by column name.
         """
@@ -996,8 +995,8 @@ class FCSFile:
 @dataclass
 class FCSBuilder:
     dataframe: pd.DataFrame
-    keywords: Dict[str, Any]
-    detectors: Dict[int, Dict[str, Any]]
+    keywords: dict[str, Any]
+    detectors: dict[int, dict[str, Any]]
     delimiter: str = "|"
     fcs_version: str = "FCS3.1"
 
@@ -1072,13 +1071,13 @@ class FCSBuilder:
         logger.error("Unsupported FCSBuilder $DATATYPE=%r", datatype)
         raise ValueError(f'Unsupported $DATATYPE "{datatype}".')
 
-    def _event_dtype_and_names(self) -> Tuple[np.dtype, List[str]]:
+    def _event_dtype_and_names(self) -> tuple[np.dtype, list[str]]:
         datatype = str(self.keywords.get("$DATATYPE", "F")).strip().upper()
         endian_prefix = self._endian_prefix()
         number_of_parameters = int(self.keywords["$PAR"])
 
-        fields: List[Tuple[str, np.dtype]] = []
-        names: List[str] = []
+        fields: list[tuple[str, np.dtype]] = []
+        names: list[str] = []
 
         for parameter_index in range(1, number_of_parameters + 1):
             detector = self.detectors[parameter_index]
@@ -1120,7 +1119,7 @@ class FCSBuilder:
         )
 
     def _build_text_segment(self) -> bytes:
-        flat: Dict[str, Any] = dict(self.keywords)
+        flat: dict[str, Any] = dict(self.keywords)
         number_of_parameters = int(flat["$PAR"])
 
         for parameter_index in range(1, number_of_parameters + 1):
@@ -1139,7 +1138,7 @@ class FCSBuilder:
             "$ENDDATA",
         ]
 
-        ordered: List[str] = []
+        ordered: list[str] = []
 
         for key in preferred:
             if key in flat and key not in ordered:
@@ -1149,7 +1148,7 @@ class FCSBuilder:
             if key not in ordered:
                 ordered.append(key)
 
-        parts: List[str] = []
+        parts: list[str] = []
 
         for key in ordered:
             parts.append(self._escape_token(key))

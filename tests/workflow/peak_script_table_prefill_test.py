@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
 
 import logging
 
 from RosettaX.workflow.peak.adapters.fluorescence import FluorescencePeakWorkflowAdapter
 from RosettaX.workflow.peak.adapters.scattering import ScatteringPeakWorkflowAdapter
-
 
 logger = logging.getLogger(__name__)
 

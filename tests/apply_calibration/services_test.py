@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 
 import sys
 import types
 from types import SimpleNamespace
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 
 class _PyMieSimStub(types.ModuleType):
@@ -25,8 +24,10 @@ sys.modules.setdefault(
     _PyMieSimUnitsStub("PyMieSim.units"),
 )
 
+from RosettaX.pages.p04_calibrate.sections.s02_calibration_picker import (
+    services as calibration_picker_services,
+)
 from RosettaX.workflow.apply_calibration import services
-from RosettaX.pages.p04_calibrate.sections.s02_calibration_picker import services as calibration_picker_services
 
 
 class Test_ApplyCalibrationServices:

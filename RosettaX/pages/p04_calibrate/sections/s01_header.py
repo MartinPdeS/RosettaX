@@ -1,9 +1,12 @@
-# -*- coding: utf-8 -*-
 
-import dash_bootstrap_components as dbc
 import dash
+import dash_bootstrap_components as dbc
 
-from RosettaX.ui import WorkflowStep, build_workflow_page_header, build_workflow_step_cards
+from RosettaX.ui import (
+    WorkflowStep,
+    build_workflow_page_header,
+    build_workflow_step_cards,
+)
 from RosettaX.utils import styling
 
 

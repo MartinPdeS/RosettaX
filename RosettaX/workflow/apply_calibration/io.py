@@ -1,10 +1,10 @@
-# -*- coding: utf-8 -*-
 
 import io
 import json
 import zipfile
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import Any
 
 from RosettaX.utils.paths import resolve_selected_calibration_file_path
 from RosettaX.utils.reader import FCSFile
@@ -13,7 +13,7 @@ from RosettaX.workflow.file_selection import UploadedFileBatch
 
 def resolve_first_uploaded_fcs_path(
     uploaded_fcs_path: Any,
-) -> Optional[str]:
+) -> str | None:
     """
     Resolve the first uploaded FCS path.
     """
@@ -241,33 +241,32 @@ def append_files_to_zip_bytes(
     output_buffer = io.BytesIO()
     existing_names: set[str] = set()
 
-    with zipfile.ZipFile(source_buffer, mode="r") as source_zip:
-        with zipfile.ZipFile(
-            output_buffer,
-            mode="w",
-            compression=zipfile.ZIP_DEFLATED,
-        ) as output_zip:
-            for zip_info in source_zip.infolist():
-                existing_names.add(
-                    zip_info.filename,
-                )
-                output_zip.writestr(
-                    zip_info,
-                    source_zip.read(zip_info.filename),
-                )
+    with zipfile.ZipFile(source_buffer, mode="r") as source_zip, zipfile.ZipFile(
+        output_buffer,
+        mode="w",
+        compression=zipfile.ZIP_DEFLATED,
+    ) as output_zip:
+        for zip_info in source_zip.infolist():
+            existing_names.add(
+                zip_info.filename,
+            )
+            output_zip.writestr(
+                zip_info,
+                source_zip.read(zip_info.filename),
+            )
 
-            for member_name, member_bytes in extra_files.items():
-                resolved_member_name = _resolve_extra_zip_member_name(
-                    member_name=str(member_name),
-                    existing_names=existing_names,
-                )
-                output_zip.writestr(
-                    resolved_member_name,
-                    member_bytes,
-                )
-                existing_names.add(
-                    resolved_member_name,
-                )
+        for member_name, member_bytes in extra_files.items():
+            resolved_member_name = _resolve_extra_zip_member_name(
+                member_name=str(member_name),
+                existing_names=existing_names,
+            )
+            output_zip.writestr(
+                resolved_member_name,
+                member_bytes,
+            )
+            existing_names.add(
+                resolved_member_name,
+            )
 
     output_buffer.seek(
         0,

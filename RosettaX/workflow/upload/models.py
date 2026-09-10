@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
 
 from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from RosettaX.workflow.file_selection.models import UploadedFileBatch
 from RosettaX.workflow.page_session import FeedbackState
@@ -21,7 +20,7 @@ class UploadConfig:
     runtime_config_output_path: str
     accepted_file_extensions: str = ".fcs"
     runtime_config_store_id: str = "runtime-config-store"
-    upload_directory: Optional[Path] = None
+    upload_directory: Path | None = None
     body_style_key: str = "body_scroll"
 
 
@@ -31,8 +30,8 @@ class UploadState:
     Result of resolving one upload action.
     """
 
-    uploaded_fcs_path: Optional[str]
-    uploaded_filename: Optional[str]
+    uploaded_fcs_path: str | None
+    uploaded_filename: str | None
     runtime_config_data: dict[str, Any]
 
 

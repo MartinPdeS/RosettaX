@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import logging
 from pathlib import Path
@@ -9,7 +8,6 @@ import dash_bootstrap_components as dbc
 from . import services
 from .callbacks import FilePickerCallbacks
 from .layout import FilePickerLayout
-
 
 logger = logging.getLogger(__name__)
 

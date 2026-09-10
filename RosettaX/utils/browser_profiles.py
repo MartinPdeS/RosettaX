@@ -1,13 +1,11 @@
-# -*- coding: utf-8 -*-
 
 import logging
 from dataclasses import asdict, dataclass, field
-from typing import Any, Optional
+from typing import Any
 
 from RosettaX.utils import directories
 from RosettaX.utils.paths import normalize_profile_filename
 from RosettaX.utils.runtime_config import RuntimeConfig
-
 
 logger = logging.getLogger(__name__)
 
@@ -23,8 +21,7 @@ def _build_default_profile_label(profile_name: str) -> str:
     """
     normalized_profile_name = normalize_profile_filename(profile_name)
 
-    if normalized_profile_name.endswith(".json"):
-        normalized_profile_name = normalized_profile_name[:-5]
+    normalized_profile_name = normalized_profile_name.removesuffix(".json")
 
     if normalized_profile_name == "default_profile":
         return "Automatic"
@@ -32,7 +29,7 @@ def _build_default_profile_label(profile_name: str) -> str:
     return normalized_profile_name.replace("_", " ").replace("-", " ")
 
 
-def resolve_profile_display_name(profile_payload: Any) -> Optional[str]:
+def resolve_profile_display_name(profile_payload: Any) -> str | None:
     """
     Return the explicit display name stored in a profile payload, if any.
     """
@@ -49,7 +46,7 @@ def resolve_profile_display_name(profile_payload: Any) -> Optional[str]:
 
 def build_profile_label(
     profile_name: str,
-    profile_payload: Optional[dict[str, Any]] = None,
+    profile_payload: dict[str, Any] | None = None,
 ) -> str:
     """
     Build the human readable label for one profile option.
@@ -64,7 +61,7 @@ def build_profile_label(
 
 def _sort_profile_names(
     profile_names: list[str],
-    profile_payloads: Optional[dict[str, dict[str, Any]]] = None,
+    profile_payloads: dict[str, dict[str, Any]] | None = None,
 ) -> list[str]:
     """
     Sort profile names with the default profile first.
@@ -90,7 +87,7 @@ class BrowserProfileLibrary:
     """
 
     profiles: dict[str, dict[str, Any]] = field(default_factory=dict)
-    selected_profile: Optional[str] = None
+    selected_profile: str | None = None
 
     @classmethod
     def from_seed_data(cls) -> "BrowserProfileLibrary":
@@ -212,7 +209,7 @@ class BrowserProfileLibrary:
         *,
         selected_profile: Any,
         profile_names: Any,
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Resolve the active profile name against the available profiles.
         """
@@ -254,7 +251,7 @@ class BrowserProfileLibrary:
         *,
         profile_name: str,
         profile_payload: dict[str, Any],
-        profile_display_name: Optional[str] = None,
+        profile_display_name: str | None = None,
     ) -> dict[str, Any]:
         """
         Normalize one stored profile payload and ensure it carries a display name.
@@ -274,8 +271,8 @@ class BrowserProfileLibrary:
 
     def get_profile_label(
         self,
-        profile_name: Optional[str] = None,
-    ) -> Optional[str]:
+        profile_name: str | None = None,
+    ) -> str | None:
         """
         Return the visible label for one stored profile.
         """
@@ -303,8 +300,8 @@ class BrowserProfileLibrary:
 
     def get_profile_payload(
         self,
-        profile_name: Optional[str] = None,
-    ) -> Optional[dict[str, Any]]:
+        profile_name: str | None = None,
+    ) -> dict[str, Any] | None:
         """
         Return one stored profile payload.
         """
@@ -323,7 +320,7 @@ class BrowserProfileLibrary:
 
     def with_selected_profile(
         self,
-        profile_name: Optional[str],
+        profile_name: str | None,
     ) -> "BrowserProfileLibrary":
         """
         Return a copy with the selected profile updated.
@@ -342,7 +339,7 @@ class BrowserProfileLibrary:
         profile_name: str,
         profile_payload: dict[str, Any],
         select_profile: bool,
-        profile_display_name: Optional[str] = None,
+        profile_display_name: str | None = None,
     ) -> "BrowserProfileLibrary":
         """
         Return a copy with one profile saved into browser storage.
@@ -370,7 +367,7 @@ class BrowserProfileLibrary:
         self,
         *,
         profile_name: str,
-        source_profile_name: Optional[str] = None,
+        source_profile_name: str | None = None,
         select_profile: bool,
     ) -> "BrowserProfileLibrary":
         """

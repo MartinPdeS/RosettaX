@@ -1,15 +1,12 @@
-# -*- coding: utf-8 -*-
 
+import logging
 from pathlib import Path
 from typing import Any
-import logging
 
 import dash
 
 from RosettaX.utils import service
-from RosettaX.workflow.save.models import SaveConfig
-from RosettaX.workflow.save.models import SaveInputs
-from RosettaX.workflow.save.models import SaveResult
+from RosettaX.workflow.save.models import SaveConfig, SaveInputs, SaveResult
 
 
 def build_json_download_filename(name: Any, *, default: str = "calibration") -> str:

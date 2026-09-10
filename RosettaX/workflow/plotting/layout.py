@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
 
-from typing import Any, Optional
+from typing import Any
 
 import dash_bootstrap_components as dbc
 from dash import html
-
 
 PLOT_CONTROL_LABEL_STYLE = {
     "marginBottom": "4px",
@@ -26,7 +24,7 @@ PLOT_CONTROL_PANEL_STYLE = {
 
 def build_plot_number_control(
     *,
-    container_id: Optional[str],
+    container_id: str | None,
     input_id: str,
     label: str,
     value: Any,
@@ -78,7 +76,7 @@ def build_plot_control_panel_style(*, visible: bool = True) -> dict[str, Any]:
 def build_plot_control_panel(
     children: list[Any],
     *,
-    component_id: Optional[str] = None,
+    component_id: str | None = None,
 ) -> html.Div:
     """Build the shared grey panel that contains plot options."""
     kwargs: dict[str, Any] = {}
@@ -95,7 +93,7 @@ def build_plot_axis_checklist(
     *,
     component_id: str,
     options: list[dict[str, str]],
-    value: Optional[list[str]] = None,
+    value: list[str] | None = None,
 ) -> dbc.Checklist:
     """Build a consistent inline log-axis checklist."""
     return dbc.Checklist(

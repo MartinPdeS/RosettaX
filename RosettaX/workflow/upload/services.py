@@ -1,21 +1,20 @@
-# -*- coding: utf-8 -*-
 
 import base64
 import binascii
 import logging
 import re
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Iterable, Optional
+from typing import Any
 from uuid import uuid4
 
 from RosettaX.utils.checks import FCSMultiFileConsistencyChecker
-from RosettaX.utils.upload_limits import format_upload_size, get_max_upload_bytes
 from RosettaX.utils.streamed_uploads import (
     is_streamed_upload_token,
     raise_for_streamed_upload_error,
     resolve_streamed_upload,
 )
-
+from RosettaX.utils.upload_limits import format_upload_size, get_max_upload_bytes
 from RosettaX.workflow.file_selection.models import UploadedFile, UploadedFileBatch
 from RosettaX.workflow.page_session import FeedbackState
 from RosettaX.workflow.upload.models import (
@@ -30,7 +29,7 @@ DEFAULT_ALLOWED_UPLOAD_EXTENSIONS = frozenset({".fcs"})
 
 def clean_optional_string(
     value: Any,
-) -> Optional[str]:
+) -> str | None:
     """
     Convert a value to a stripped string or None.
     """
@@ -49,7 +48,7 @@ def clean_optional_string(
 
 
 def build_loaded_filename_text(
-    filename: Optional[str],
+    filename: str | None,
 ) -> str:
     """
     Build the displayed uploaded filename text.
@@ -89,7 +88,7 @@ def build_upload_error_text(
 
 
 def sanitize_filename(
-    filename: Optional[str],
+    filename: str | None,
     *,
     fallback_filename: str = "uploaded_file.fcs",
 ) -> str:
@@ -142,7 +141,7 @@ def parse_allowed_upload_extensions(
 
 
 def validate_upload_filename(
-    filename: Optional[str],
+    filename: str | None,
     *,
     allowed_extensions: frozenset[str],
 ) -> str:
@@ -168,7 +167,7 @@ def validate_upload_filename(
 def decode_dash_upload_contents(
     contents: str,
     *,
-    max_upload_bytes: Optional[int] = None,
+    max_upload_bytes: int | None = None,
 ) -> bytes:
     """
     Decode Dash upload contents.
@@ -208,7 +207,7 @@ def decode_dash_upload_contents(
 def read_uploaded_file_bytes(
     contents: str,
     *,
-    max_upload_bytes: Optional[int] = None,
+    max_upload_bytes: int | None = None,
 ) -> bytes:
     """Read a streamed upload token or decode a legacy Dash upload payload."""
     raise_for_streamed_upload_error(contents)
@@ -243,10 +242,10 @@ def resolve_upload_directory(
 def save_uploaded_file(
     *,
     contents: str,
-    filename: Optional[str],
+    filename: str | None,
     upload_directory: Path,
     allowed_extensions: frozenset[str] = DEFAULT_ALLOWED_UPLOAD_EXTENSIONS,
-    max_upload_bytes: Optional[int] = None,
+    max_upload_bytes: int | None = None,
 ) -> Path:
     """
     Save one uploaded file and return its path.
@@ -302,7 +301,7 @@ def save_uploaded_batch(
     contents: Any,
     filenames: Any,
     upload_directory: Path = DEFAULT_UPLOAD_DIRECTORY,
-    max_upload_bytes: Optional[int] = None,
+    max_upload_bytes: int | None = None,
 ) -> tuple[list[Path], list[str]]:
     """Save one Dash multi-file upload in an isolated batch directory."""
     contents_list = normalize_multiple_upload_values(contents)
@@ -438,7 +437,7 @@ def load_fcs_batch(
     filenames: Any,
     upload_directory: Path = DEFAULT_UPLOAD_DIRECTORY,
     minimum_file_count: int = 1,
-    max_upload_bytes: Optional[int] = None,
+    max_upload_bytes: int | None = None,
 ) -> FCSBatchOperationResult:
     """Persist, validate, and normalize one uploaded FCS batch.
 
@@ -495,7 +494,7 @@ def load_compatible_fcs_batch(
     filenames: Any,
     upload_directory: Path = DEFAULT_UPLOAD_DIRECTORY,
     minimum_file_count: int = 1,
-    max_upload_bytes: Optional[int] = None,
+    max_upload_bytes: int | None = None,
 ) -> UploadedFileBatch:
     """Persist and return a compatible FCS batch or raise its feedback message."""
     result = load_fcs_batch(
@@ -591,11 +590,11 @@ def set_nested_dict_value(
 def build_upload_state(
     *,
     config: UploadConfig,
-    contents: Optional[str],
-    filename: Optional[str],
-    stored_fcs_path: Optional[str],
-    stored_filename: Optional[str],
-    runtime_config_data: Optional[dict[str, Any]],
+    contents: str | None,
+    filename: str | None,
+    stored_fcs_path: str | None,
+    stored_filename: str | None,
+    runtime_config_data: dict[str, Any] | None,
     logger: logging.Logger,
 ) -> UploadState:
     """

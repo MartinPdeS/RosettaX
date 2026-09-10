@@ -1,13 +1,10 @@
-# -*- coding: utf-8 -*-
 
-import json
-from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 
+from RosettaX.utils import casting
 from RosettaX.utils.browser_profiles import BrowserProfileLibrary
-from RosettaX.utils import casting, directories
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.table.fluorescence import (
     CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME,
@@ -63,7 +60,7 @@ def build_profile_options(
 
 def resolve_default_profile_value(
     profile_options: list[dict[str, str]],
-) -> Optional[str]:
+) -> str | None:
     """
     Resolve the initially selected profile.
     """
@@ -95,9 +92,9 @@ def normalize_profile_filename(profile_name: str) -> str:
 
 
 def get_saved_profile(
-    profile_name: Optional[str],
+    profile_name: str | None,
     browser_profiles_payload: Any = None,
-) -> Optional[dict[str, Any]]:
+) -> dict[str, Any] | None:
     """
     Load a saved profile as a dictionary.
     """
@@ -256,7 +253,7 @@ def coerce_choice_value(
     if default_value_string in valid_values:
         return default_value_string
 
-    return sorted(valid_values)[0]
+    return min(valid_values)
 
 
 def build_form_store_from_runtime_config(
@@ -421,7 +418,7 @@ def _coerce_field_value_for_save(
 
 def _resolve_fluorescence_mesf_values_for_save(
     flat_runtime_payload: dict[str, Any],
-) -> Optional[list[float]]:
+) -> list[float] | None:
     """
     Resolve the MESF values that should be saved from the preset selector.
     """

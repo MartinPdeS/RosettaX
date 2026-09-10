@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import logging
 from dataclasses import dataclass
@@ -7,13 +6,12 @@ from typing import Any
 import dash
 
 from RosettaX.pages.p04_calibrate.state import ApplyCalibrationPageState
+from RosettaX.utils import usage_metrics
 from RosettaX.workflow import apply_calibration
 from RosettaX.workflow.apply_calibration import io as apply_calibration_io
 from RosettaX.workflow.apply_calibration import report as apply_report
-from RosettaX.utils import usage_metrics
 
 from . import services
-
 
 logger = logging.getLogger(__name__)
 

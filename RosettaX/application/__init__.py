@@ -1,8 +1,5 @@
-# -*- coding: utf-8 -*-
 
-from RosettaX.application.main import RosettaXApplication
-from RosettaX.application.main import main
-
+from RosettaX.application.main import RosettaXApplication, main
 
 __all__ = [
     "RosettaXApplication",

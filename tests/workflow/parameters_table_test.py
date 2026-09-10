@@ -1,23 +1,23 @@
-# -*- coding: utf-8 -*-
+
+from unittest.mock import patch
 
 import pytest
-from unittest.mock import patch, Mock
 
 from RosettaX.workflow.parameters.table import (
-    MIE_MODEL_SOLID_SPHERE,
-    MIE_MODEL_CORE_SHELL_SPHERE,
-    COLUMN_PARTICLE_DIAMETER_NM,
     COLUMN_CORE_DIAMETER_NM,
-    COLUMN_SHELL_THICKNESS_NM,
-    COLUMN_OUTER_DIAMETER_NM,
-    COLUMN_MEASURED_PEAK_POSITION,
     COLUMN_EXPECTED_COUPLING,
     COLUMN_EXPECTED_CROSS_SECTION_NM2,
-    sphere_table_columns,
+    COLUMN_MEASURED_PEAK_POSITION,
+    COLUMN_OUTER_DIAMETER_NM,
+    COLUMN_PARTICLE_DIAMETER_NM,
+    COLUMN_SHELL_THICKNESS_NM,
+    MIE_MODEL_CORE_SHELL_SPHERE,
+    MIE_MODEL_SOLID_SPHERE,
     core_shell_table_columns,
-    resolve_mie_model,
     get_table_columns_for_model,
-    get_user_data_column_ids_for_model
+    get_user_data_column_ids_for_model,
+    resolve_mie_model,
+    sphere_table_columns,
 )
 
 

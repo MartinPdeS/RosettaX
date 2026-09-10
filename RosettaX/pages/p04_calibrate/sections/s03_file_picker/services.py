@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import base64
 import logging
@@ -10,6 +9,9 @@ from typing import Any
 import numpy as np
 import plotly.graph_objects as go
 
+from RosettaX.pages.p04_calibrate.sections.s02_calibration_picker import (
+    services as calibration_picker_services,
+)
 from RosettaX.utils import checks, plottings
 from RosettaX.utils.reader import FCSFile
 from RosettaX.utils.runtime_config import RuntimeConfig
@@ -19,11 +21,11 @@ from RosettaX.utils.streamed_uploads import (
     resolve_streamed_upload,
 )
 from RosettaX.utils.upload_limits import format_upload_size, get_max_upload_bytes
-from RosettaX.workflow.apply_calibration.fluorescence import apply_legacy_calibration_to_series
+from RosettaX.workflow.apply_calibration.fluorescence import (
+    apply_legacy_calibration_to_series,
+)
 from RosettaX.workflow.apply_calibration.io import resolve_uploaded_fcs_paths
 from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
-from RosettaX.pages.p04_calibrate.sections.s02_calibration_picker import services as calibration_picker_services
-
 
 logger = logging.getLogger(__name__)
 
@@ -650,8 +652,12 @@ def build_preview_histogram_payload(
         ).strip() or channel
 
         if bool(calibration_summary.get("requires_target_model")):
-            from RosettaX.pages.p04_calibrate.sections.s04_apply import services as apply_services
-            from RosettaX.workflow.apply_calibration.scattering import apply_scattering_calibration_to_dataframe
+            from RosettaX.pages.p04_calibrate.sections.s04_apply import (
+                services as apply_services,
+            )
+            from RosettaX.workflow.apply_calibration.scattering import (
+                apply_scattering_calibration_to_dataframe,
+            )
 
             target_model_parameters = apply_services.build_scattering_target_model_parameters_if_required(
                 selected_calibration_summary=selected_calibration_summary,

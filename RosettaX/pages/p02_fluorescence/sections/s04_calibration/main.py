@@ -1,12 +1,10 @@
-# -*- coding: utf-8 -*-
 
-from typing import Any
 import logging
+from typing import Any
 
 import dash_bootstrap_components as dbc
 
-from . import layout, callbacks
-
+from . import callbacks, layout
 
 logger = logging.getLogger(__name__)
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 page_name = "apply_calibration"
 

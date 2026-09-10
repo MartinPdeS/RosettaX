@@ -1,20 +1,18 @@
-# -*- coding: utf-8 -*-
 
 import json
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import dash_bootstrap_components as dbc
 from dash import dcc, html
 
+from RosettaX.utils.runtime_config import RuntimeConfig
+from RosettaX.workflow.plotting import layout as plotting_layout
+from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph, Scatter2DGraphIds
+
 from . import registry
 from .callbacks.shared import get_peak_processes
 from .models import PeakConfig
-from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
-from RosettaX.workflow.plotting.scatter2d import Scatter2DGraphIds
-from RosettaX.workflow.plotting import layout as plotting_layout
-
 
 logger = logging.getLogger(__name__)
 
@@ -754,7 +752,7 @@ class PeakLayout:
         *,
         switch_id: str,
         label: str = "Show graph",
-        value: Optional[list[str]] = None,
+        value: list[str] | None = None,
     ) -> dbc.Checklist:
         """
         Build the graph visibility toggle.
@@ -1044,8 +1042,8 @@ class PeakLayout:
         label: str,
         tooltip_text: str = "",
         value: float,
-        minimum: Optional[float] = None,
-        maximum: Optional[float] = None,
+        minimum: float | None = None,
+        maximum: float | None = None,
         step: float = 0.01,
     ) -> html.Div:
         """

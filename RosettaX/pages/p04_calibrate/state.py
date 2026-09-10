@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
 
 from dataclasses import asdict, dataclass
-from typing import Any, Optional
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -13,10 +12,10 @@ class ApplyCalibrationPageState:
     replaces scattered section-specific stores.
     """
 
-    selected_calibration_path: Optional[str] = None
-    uploaded_fcs_path: Optional[str] = None
+    selected_calibration_path: str | None = None
+    uploaded_fcs_path: str | None = None
 
-    apply_result_payload: Optional[dict[str, Any]] = None
+    apply_result_payload: dict[str, Any] | None = None
 
     status_message: str = ""
 
@@ -33,7 +32,7 @@ class ApplyCalibrationPageState:
         return cls()
 
     @classmethod
-    def from_dict(cls, payload: Optional[dict[str, Any]]) -> "ApplyCalibrationPageState":
+    def from_dict(cls, payload: dict[str, Any] | None) -> "ApplyCalibrationPageState":
         """
         Build an apply calibration page state from a serialized dictionary.
 

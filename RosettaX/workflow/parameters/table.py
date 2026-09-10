@@ -1,12 +1,10 @@
-# -*- coding: utf-8 -*-
 
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 from dash.dash_table.Format import Format, Scheme
 
 from RosettaX.workflow.table import services as table_services
-
 
 MIE_MODEL_SOLID_SPHERE = "Solid Sphere"
 MIE_MODEL_CORE_SHELL_SPHERE = "Core/Shell Sphere"
@@ -267,7 +265,7 @@ def compute_outer_diameter_string(
 def remap_table_rows_to_model(
     *,
     mie_model: Any,
-    current_rows: Optional[list[dict[str, Any]]],
+    current_rows: list[dict[str, Any]] | None,
 ) -> list[dict[str, str]]:
     """
     Remap existing table rows to the selected Mie model schema.
@@ -447,7 +445,7 @@ def remap_row_to_solid_sphere_model(
 def normalize_table_rows(
     *,
     mie_model: Any,
-    current_rows: Optional[list[dict[str, Any]]],
+    current_rows: list[dict[str, Any]] | None,
 ) -> list[dict[str, str]]:
     """
     Normalize table rows according to the selected Mie model schema.
@@ -577,7 +575,7 @@ def normalize_solid_sphere_row(
 def table_is_effectively_empty(
     *,
     mie_model: Any,
-    rows: Optional[list[dict[str, Any]]],
+    rows: list[dict[str, Any]] | None,
 ) -> bool:
     """
     Return whether the calibration standard table contains no useful data.

@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import dash
 from dash import MATCH, Dash, Input, Output, State
@@ -17,7 +16,6 @@ from RosettaX.utils.browser_profiles import (
 )
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow import calibration_cards
-
 
 logger = logging.getLogger(__name__)
 
@@ -201,7 +199,7 @@ def register_application_callbacks(app: Dash) -> None:
         prevent_initial_call=False,
     )
     def load_runtime_config_from_sidebar_profile(
-        selected_profile_from_sidebar: Optional[str],
+        selected_profile_from_sidebar: str | None,
         browser_profiles_payload: Any,
     ):
         logger.debug(

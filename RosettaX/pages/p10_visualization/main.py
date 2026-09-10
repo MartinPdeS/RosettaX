@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from typing import Any
 
@@ -15,16 +14,16 @@ from RosettaX.workflow.calibration_cards import (
     build_calibration_workflow_section_card,
     build_fcs_tool_card_stack,
 )
+from RosettaX.workflow.file_selection import UploadedFileBatch
 from RosettaX.workflow.file_selection.services import (
     build_file_options,
     resolve_selected_file,
 )
-from RosettaX.workflow.file_selection import UploadedFileBatch
-from RosettaX.workflow.upload import services as upload_services
 from RosettaX.workflow.plotting import layout as plotting_layout
+from RosettaX.workflow.upload import services as upload_services
 
-from .ids import Ids
 from . import services
+from .ids import Ids
 
 
 class VisualizationPage:

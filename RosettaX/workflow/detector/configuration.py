@@ -1,19 +1,16 @@
-# -*- coding: utf-8 -*-
 
-from pathlib import Path
-from typing import Any, Optional
 import json
 import logging
 import re
+from pathlib import Path
+from typing import Any
 
 import numpy as np
 
 from RosettaX.utils.fcs_metadata import FCSMetadata
 from RosettaX.utils.reader import FCSFile
-from RosettaX.utils.runtime_config import RuntimeConfig
 
 from .loader import get_default_detector_preset_loader
-
 
 logger = logging.getLogger(__name__)
 _DETECTOR_PRESET_LOADER = get_default_detector_preset_loader()
@@ -59,7 +56,7 @@ COMMON_LASER_WAVELENGTHS_NM: tuple[int, ...] = (
 )
 
 _LASER_WAVELENGTH_PATTERN = re.compile(
-    r"(?<!\d)(%s)(?!\d)" % "|".join(str(value) for value in COMMON_LASER_WAVELENGTHS_NM)
+    r"(?<!\d)({})(?!\d)".format("|".join(str(value) for value in COMMON_LASER_WAVELENGTHS_NM))
 )
 
 SSC_FAMILY_ALIASES: tuple[str, ...] = (
@@ -127,8 +124,8 @@ def resolve_runtime_detector_preset(
     *,
     runtime_config_data: Any = None,
     uploaded_fcs_path: Any = None,
-    detector_selection_runtime_config_path: Optional[str] = None,
-) -> Optional[str]:
+    detector_selection_runtime_config_path: str | None = None,
+) -> str | None:
     """
     Resolve one persisted detector preset name to a known preset.
 
@@ -157,7 +154,7 @@ def detect_detector_preset_from_uploaded_fcs(
     *,
     uploaded_fcs_path: Any,
     selected_detector_channel: Any,
-) -> Optional[str]:
+) -> str | None:
     """
     Detect one detector preset from uploaded FCS metadata and the selected peak detector.
 
@@ -231,7 +228,7 @@ def clean_optional_string(value: Any) -> str:
 
 def detect_wavelength_nm_from_detector_channel(
     detector_channel: Any,
-) -> Optional[int]:
+) -> int | None:
     """
     Infer one laser wavelength from a detector/channel name when it is explicit.
 
@@ -297,9 +294,9 @@ def tokenize_lookup_text(value: Any) -> set[str]:
 
 def infer_detector_preset_from_metadata(
     *,
-    metadata: Optional[FCSMetadata],
+    metadata: FCSMetadata | None,
     selected_detector_channel: Any,
-) -> Optional[str]:
+) -> str | None:
     """
     Heuristically infer one detector preset from the instrument name and selected channel.
     """
@@ -313,7 +310,7 @@ def infer_detector_preset_from_metadata(
     if not instrument_name or not selected_detector_channel_string:
         return None
 
-    best_preset_name: Optional[str] = None
+    best_preset_name: str | None = None
     best_score = 0
 
     for preset in _DETECTOR_PRESET_LOADER.load_presets().values():
@@ -577,8 +574,8 @@ def preset_matches_selected_detector_channel(
 
 def resolve_detector_auto_detect_rule(
     *,
-    metadata: Optional[FCSMetadata],
-) -> Optional[dict[str, Any]]:
+    metadata: FCSMetadata | None,
+) -> dict[str, Any] | None:
     """
     Resolve one detector auto-detect rule from FCS instrument metadata.
     """
@@ -614,9 +611,9 @@ def resolve_detector_auto_detect_rule(
 
 def resolve_rule_based_detector_preset(
     *,
-    matched_rule: Optional[dict[str, Any]],
+    matched_rule: dict[str, Any] | None,
     selected_detector_channel: Any,
-) -> Optional[str]:
+) -> str | None:
     """
     Resolve one explicit detector preset from a matched instrument rule.
     """
@@ -704,7 +701,7 @@ def load_detector_auto_detect_rules() -> list[dict[str, Any]]:
 
 def extract_instrument_name_from_metadata(
     *,
-    metadata: Optional[FCSMetadata],
+    metadata: FCSMetadata | None,
 ) -> str:
     """
     Extract one instrument or system name from FCS metadata.
@@ -780,14 +777,6 @@ def resolve_detector_configuration_values(
     detector_cache_numerical_aperture and blocker_bar_numerical_aperture are
     separate physical/configuration parameters and must not be aliased.
     """
-    current_values = (
-        current_detector_numerical_aperture,
-        current_detector_cache_numerical_aperture,
-        current_blocker_bar_numerical_aperture,
-        current_detector_sampling,
-        current_detector_phi_angle_degree,
-        current_detector_gamma_angle_degree,
-    )
 
     if detector_preset_is_empty(preset_name):
         logger.debug(
@@ -1013,7 +1002,7 @@ def resolve_detector_angular_weights(
             ``blocker_bar_numerical_aperture``: radial geometry masks
         - ``detector_angular_weight_profile``: named ad hoc generator
     """
-    def resolve_sampling_size(preset: Optional[dict[str, Any]] = None) -> int | None:
+    def resolve_sampling_size(preset: dict[str, Any] | None = None) -> int | None:
         for candidate_value in (
             detector_sampling,
             None if preset is None else preset.get("detector_sampling"),
@@ -1227,7 +1216,7 @@ def _build_geometry_angular_weights(
         preset=preset,
         sampling_size=sampling_size,
     )
-    local_numerical_aperture = _build_local_numerical_aperture(
+    _build_local_numerical_aperture(
         preset=preset,
         coordinate_array=coordinate_array,
     )
@@ -1584,9 +1573,7 @@ def _resolve_split_fraction_angular_weighting(
     if eligible_indices.size == 0 or keep_fraction <= 0.0:
         return angular_weights
 
-    keep_count = int(
-        round(keep_fraction * eligible_indices.size),
-    )
+    keep_count = round(keep_fraction * eligible_indices.size)
     keep_count = max(
         0,
         min(keep_count, int(eligible_indices.size)),

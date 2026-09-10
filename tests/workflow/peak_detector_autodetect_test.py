@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import json
 import sys
@@ -26,6 +25,8 @@ sys.modules.setdefault(
     "dash_bootstrap_components",
     _DashBootstrapComponentsStub("dash_bootstrap_components"),
 )
+
+from typing_extensions import Self
 
 from RosettaX.workflow.detector import configuration as detector_configuration
 from RosettaX.workflow.peak.core import detectors
@@ -59,7 +60,7 @@ class FakeFCSFile:
     def __init__(self, metadata: FCSMetadata) -> None:
         self.metadata = metadata
 
-    def __enter__(self) -> "FakeFCSFile":
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(self, exc_type, exc, traceback) -> bool:

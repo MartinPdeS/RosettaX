@@ -1,23 +1,23 @@
-# -*- coding: utf-8 -*-
 
 import json
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import dash
 import dash_bootstrap_components as dbc
 import numpy as np
 
-from .base import BasePeakProcess, PeakProcessResult
+from RosettaX.utils.io import column_copy
+
 from .base import (
+    BasePeakProcess,
+    PeakProcessResult,
     filter_edge_artifact_values,
     resolve_edge_artifact_filter_enabled,
     resolve_float_setting,
     resolve_integer_setting,
     resolve_integer_value,
 )
-from RosettaX.utils.io import column_copy
-
 
 logger = logging.getLogger(__name__)
 
@@ -509,12 +509,12 @@ class Automatic1DPeaksProcess(BasePeakProcess):
         *,
         backend: Any,
         detector_channels: dict[str, Any],
-        process_settings: Optional[dict[str, Any]] = None,
+        process_settings: dict[str, Any] | None = None,
         peak_count: Any = None,
         max_events_for_analysis: Any = None,
         max_events_for_plots: Any = None,
         **_kwargs: Any,
-    ) -> Optional[PeakProcessResult]:
+    ) -> PeakProcessResult | None:
         """
         Run automatic 1D peak detection.
 
@@ -1027,7 +1027,7 @@ class Automatic1DPeaksProcess(BasePeakProcess):
 
         half_window_size = max(
             2,
-            int(round(counts.size * float(window_fraction))),
+            round(counts.size * float(window_fraction)),
         )
 
         kernel_x = np.arange(
@@ -1138,7 +1138,7 @@ class Automatic1DPeaksProcess(BasePeakProcess):
 
         minimum_distance = max(
             1,
-            int(round(counts.size * float(minimum_distance_fraction))),
+            round(counts.size * float(minimum_distance_fraction)),
         )
 
         debug_info["minimum_distance_bins"] = int(minimum_distance)
@@ -1288,7 +1288,7 @@ class Automatic1DPeaksProcess(BasePeakProcess):
         *,
         counts: np.ndarray,
         peak_index: int,
-    ) -> Optional[float]:
+    ) -> float | None:
         """
         Find the minimum count between a peak and the previous higher boundary.
 
@@ -1331,7 +1331,7 @@ class Automatic1DPeaksProcess(BasePeakProcess):
         *,
         counts: np.ndarray,
         peak_index: int,
-    ) -> Optional[float]:
+    ) -> float | None:
         """
         Find the minimum count between a peak and the next higher boundary.
 
@@ -1435,7 +1435,7 @@ class Automatic1DPeaksProcess(BasePeakProcess):
         self,
         *,
         peak_positions: list[float],
-        debug_info: Optional[dict[str, Any]] = None,
+        debug_info: dict[str, Any] | None = None,
     ) -> dict[str, list[Any]]:
         """
         Build the graph annotation payload for detected 1D peaks.
@@ -1486,7 +1486,7 @@ class Automatic1DPeaksProcess(BasePeakProcess):
     def resolve_settings(
         self,
         *,
-        process_settings: Optional[dict[str, Any]],
+        process_settings: dict[str, Any] | None,
         peak_count: Any,
     ) -> "Automatic1DRunSettings":
         """

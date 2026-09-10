@@ -1,15 +1,14 @@
-# -*- coding: utf-8 -*-
 
 import logging
 from typing import Any
 
 import dash_bootstrap_components as dbc
+
 from RosettaX.workflow.upload.adapters import FluorescenceUploadAdapter
 from RosettaX.workflow.upload.layout import UploadLayout
 from RosettaX.workflow.upload.models import UploadConfig
 
-from . import layout, callbacks
-
+from . import callbacks, layout
 
 logger = logging.getLogger(__name__)
 

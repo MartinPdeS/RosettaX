@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
-
-from typing import Any
 
 import logging
+from typing import Any
 
 import dash
 import dash_bootstrap_components as dbc
@@ -10,8 +8,8 @@ import plotly.graph_objs as go
 
 from RosettaX.pages.p03_scattering.state import ScatteringPageState
 from RosettaX.utils import RuntimeConfig, plottings, styling, ui_forms
-from . import services
 
+from . import services
 
 logger = logging.getLogger(__name__)
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import logging
 from typing import Any
@@ -6,9 +5,7 @@ from typing import Any
 import dash
 import dash_bootstrap_components as dbc
 
-from RosettaX.utils import styling
-from RosettaX.utils import ui_forms
-
+from RosettaX.utils import styling, ui_forms
 
 logger = logging.getLogger(__name__)
 

@@ -1,15 +1,14 @@
-# -*- coding: utf-8 -*-
 
-from typing import Any
 import logging
+from typing import Any
 
 import dash_bootstrap_components as dbc
+
 from RosettaX.workflow.peak.adapters.fluorescence import FluorescencePeakWorkflowAdapter
 from RosettaX.workflow.peak.layout import PeakLayout
 from RosettaX.workflow.peak.models import PeakConfig
 
-from . import layout, callbacks
-
+from . import callbacks, layout
 
 logger = logging.getLogger(__name__)
 

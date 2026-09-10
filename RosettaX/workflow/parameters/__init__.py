@@ -1,18 +1,16 @@
 from typing import Any
 
 from . import particle_presets, table
+from .model import compute_model_for_rows
 from .table import (
-    sphere_table_columns,
     core_shell_table_columns,
-    resolve_mie_model,
     get_table_columns_for_model,
+    normalize_table_rows,
     populate_table_from_runtime_defaults,
     remap_table_rows_to_model,
-    normalize_table_rows
+    resolve_mie_model,
+    sphere_table_columns,
 )
-
-from .model import compute_model_for_rows
-
 
 
 def build_optical_configuration_preview_figure(*args: Any, **kwargs: Any):
@@ -32,15 +30,15 @@ def build_optical_configuration_preview_figure(*args: Any, **kwargs: Any):
     )
 
 __all__ = [
-    "sphere_table_columns",
-    "core_shell_table_columns",
-    "resolve_mie_model",
-    "get_table_columns_for_model",
-    "populate_table_from_runtime_defaults",
-    "remap_table_rows_to_model",
-    "normalize_table_rows",
     "build_optical_configuration_preview_figure",
     "compute_model_for_rows",
-    "table",
+    "core_shell_table_columns",
+    "get_table_columns_for_model",
+    "normalize_table_rows",
     "particle_presets",
+    "populate_table_from_runtime_defaults",
+    "remap_table_rows_to_model",
+    "resolve_mie_model",
+    "sphere_table_columns",
+    "table",
 ]

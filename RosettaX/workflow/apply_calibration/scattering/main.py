@@ -1,22 +1,24 @@
-# -*- coding: utf-8 -*-
 
-from typing import Any, Optional
 import logging
+from typing import Any
 
 import numpy as np
 
-from RosettaX.workflow.calibration.mie_relation import MieRelation
-from RosettaX.workflow.calibration.mie_relation import build_mie_relation_from_arrays
-from RosettaX.workflow.calibration.mie_relation import relation_is_strictly_monotonic
 from RosettaX.scattering.calibration import ScatteringCalibration
+from RosettaX.workflow.calibration.mie_relation import (
+    MieRelation,
+    build_mie_relation_from_arrays,
+    relation_is_strictly_monotonic,
+)
 
 from .mie_relation_builder import build_target_mie_relation
-from .models import MonotonicDiameterInterval
-from .models import MonotonicRelationResolution
-from .models import ScatteringApplyResult
-from .models import ScatteringOutputColumns
-from .models import ScatteringTargetModelParameters
-
+from .models import (
+    MonotonicDiameterInterval,
+    MonotonicRelationResolution,
+    ScatteringApplyResult,
+    ScatteringOutputColumns,
+    ScatteringTargetModelParameters,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +95,7 @@ def apply_scattering_calibration_to_dataframe(
     output_channel_names: list[str] | None = None,
     calibration_payload: dict[str, Any],
     target_model_parameters: ScatteringTargetModelParameters,
-    metadata: Optional[dict[str, Any]] = None,
+    metadata: dict[str, Any] | None = None,
 ) -> ScatteringApplyResult:
     """
     Apply a scattering calibration to a dataframe.
@@ -339,11 +341,9 @@ def resolve_monotonic_target_mie_relation(
 
     if not monotonic_intervals:
         raise ValueError(
-            (
                 "Target Mie relation is not strictly monotonic and no valid "
                 "monotonic branch was detected. Try increasing the diameter point "
                 "count or reducing the target diameter range."
-            )
         )
 
     selected_interval = select_largest_monotonic_interval(
@@ -390,14 +390,11 @@ def select_largest_monotonic_interval(
     if not monotonic_intervals:
         raise ValueError("No monotonic intervals were provided.")
 
-    selected_interval = sorted(
-        monotonic_intervals,
-        key=lambda interval: (
+    selected_interval = min(monotonic_intervals, key=lambda interval: (
             interval.start_index,
             -interval.diameter_width_nm,
             -interval.point_count,
-        ),
-    )[0]
+        ))
 
     logger.debug(
         "select_largest_monotonic_interval selected left-most interval=%r from interval_count=%r",
@@ -657,7 +654,6 @@ def validate_target_mie_relation_for_diameter_inversion(
     )
 
     raise ValueError(
-        (
             "Target Mie relation is not strictly monotonic over the selected "
             f"diameter range [{target_model_parameters.diameter_min_nm:.6g}, "
             f"{target_model_parameters.diameter_max_nm:.6g}] nm. "
@@ -665,7 +661,6 @@ def validate_target_mie_relation_for_diameter_inversion(
             "can produce the same coupling. Reduce the target diameter range "
             "to one monotonic interval. "
             f"{interval_message}"
-        )
     )
 
 

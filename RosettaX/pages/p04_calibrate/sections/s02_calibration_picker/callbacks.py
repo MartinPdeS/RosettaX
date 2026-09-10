@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import dash
 
@@ -15,7 +14,6 @@ from RosettaX.workflow.apply_calibration.scattering import (
 )
 
 from . import services
-
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +66,7 @@ class CalibrationPickerCallbacks:
         )
         def sync_target_model_preset_from_runtime_config(
             runtime_config_data: Any,
-        ) -> Optional[str]:
+        ) -> str | None:
             runtime_config = RuntimeConfig.from_dict(
                 runtime_config_data if isinstance(runtime_config_data, dict) else None
             )
@@ -480,7 +478,7 @@ class CalibrationPickerCallbacks:
         def sync_uploaded_calibration_summary(
             uploaded_contents: Any,
             uploaded_filename: Any,
-        ) -> tuple[Optional[list[dict[str, Any]]], str, str]:
+        ) -> tuple[list[dict[str, Any]] | None, str, str]:
             logger.debug(
                 "sync_uploaded_calibration_summary called with uploaded_filename=%r",
                 uploaded_filename,
@@ -941,10 +939,10 @@ class CalibrationPickerCallbacks:
                             "Expected a selected monotonic interval for non-monotonic target Mie relation."
                         )
 
-                    selected_diameter_values_nm = full_diameter_values_nm[
+                    full_diameter_values_nm[
                         selected_interval.start_index : selected_interval.end_index + 1
                     ]
-                    selected_coupling_values = full_coupling_values[
+                    full_coupling_values[
                         selected_interval.start_index : selected_interval.end_index + 1
                     ]
 

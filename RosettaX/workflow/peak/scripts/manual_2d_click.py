@@ -1,11 +1,14 @@
-# -*- coding: utf-8 -*-
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import dash
 import dash_bootstrap_components as dbc
 import numpy as np
+
+from RosettaX.utils.io import column_copy
+from RosettaX.utils.runtime_config import RuntimeConfig
+from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
 
 from .base import (
     BasePeakProcess,
@@ -13,10 +16,6 @@ from .base import (
     filter_edge_artifact_pairs,
     resolve_edge_artifact_filter_enabled,
 )
-from RosettaX.utils.io import column_copy
-from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
-
 
 logger = logging.getLogger(__name__)
 
@@ -362,11 +361,11 @@ class Manual2DClickProcess(BasePeakProcess):
         selected_data: Any = None,
         existing_peak_lines_payload: Any,
         backend: Any = None,
-        detector_channels: Optional[dict[str, Any]] = None,
-        process_settings: Optional[dict[str, Any]] = None,
+        detector_channels: dict[str, Any] | None = None,
+        process_settings: dict[str, Any] | None = None,
         runtime_config_data: Any = None,
         axis_scale_toggle_values: Any = None,
-    ) -> Optional[PeakProcessResult]:
+    ) -> PeakProcessResult | None:
         """
         Add one clicked 2D point to the cumulative peak payload.
 
@@ -538,7 +537,7 @@ class Manual2DClickProcess(BasePeakProcess):
     def _snap_to_local_mode_is_enabled(
         self,
         *,
-        process_settings: Optional[dict[str, Any]],
+        process_settings: dict[str, Any] | None,
     ) -> bool:
         """
         Return whether local snap mode is enabled.
@@ -566,13 +565,13 @@ class Manual2DClickProcess(BasePeakProcess):
         self,
         *,
         backend: Any,
-        detector_channels: Optional[dict[str, Any]],
+        detector_channels: dict[str, Any] | None,
         clicked_peak_position: dict[str, float],
-        selected_xy_range: Optional[dict[str, tuple[float, float]]],
-        process_settings: Optional[dict[str, Any]],
+        selected_xy_range: dict[str, tuple[float, float]] | None,
+        process_settings: dict[str, Any] | None,
         runtime_config_data: Any,
         axis_scale_toggle_values: Any,
-    ) -> Optional[dict[str, float]]:
+    ) -> dict[str, float] | None:
         """
         Snap one clicked 2D position to the local modal density nearby.
         """
@@ -806,7 +805,7 @@ class Manual2DClickProcess(BasePeakProcess):
     def _x_axis_is_log(
         self,
         *,
-        process_settings: Optional[dict[str, Any]],
+        process_settings: dict[str, Any] | None,
         axis_scale_toggle_values: Any,
         axis: str,
         clicked_value: float,
@@ -859,7 +858,7 @@ class Manual2DClickProcess(BasePeakProcess):
         y_values: np.ndarray,
         clicked_x: float,
         clicked_y: float,
-    ) -> Optional[dict[str, float]]:
+    ) -> dict[str, float] | None:
         """
         Estimate a local 2D mode near the clicked position.
         """
@@ -1002,7 +1001,7 @@ class Manual2DClickProcess(BasePeakProcess):
         y_centers: np.ndarray,
         selected_xy_range: dict[str, tuple[float, float]],
         fallback_point: dict[str, float],
-    ) -> Optional[dict[str, float]]:
+    ) -> dict[str, float] | None:
         """
         Return the densest histogram bin center inside the selected 2D ROI.
         """
@@ -1285,7 +1284,7 @@ class Manual2DClickProcess(BasePeakProcess):
     def extract_clicked_xy_position(
         self,
         click_data: Any,
-    ) -> Optional[dict[str, float]]:
+    ) -> dict[str, float] | None:
         """
         Extract x and y coordinates from Plotly clickData.
 
@@ -1338,7 +1337,7 @@ class Manual2DClickProcess(BasePeakProcess):
     def extract_selected_xy_range(
         self,
         selected_data: Any,
-    ) -> Optional[dict[str, tuple[float, float]]]:
+    ) -> dict[str, tuple[float, float]] | None:
         """
         Extract x and y selection ranges from Plotly selectedData.
         """

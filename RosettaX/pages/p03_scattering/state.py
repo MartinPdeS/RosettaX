@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
 
 from dataclasses import asdict, dataclass
-from typing import Any, Optional
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -13,17 +12,17 @@ class ScatteringPageState:
     replaces scattered section specific stores.
     """
 
-    uploaded_fcs_path: Optional[str] = None
-    uploaded_filename: Optional[str] = None
+    uploaded_fcs_path: str | None = None
+    uploaded_filename: str | None = None
 
-    peak_lines_payload: Optional[dict[str, Any]] = None
-    scattering_peak_lines_payload: Optional[dict[str, Any]] = None
+    peak_lines_payload: dict[str, Any] | None = None
+    scattering_peak_lines_payload: dict[str, Any] | None = None
 
-    scattering_parameters_payload: Optional[dict[str, Any]] = None
+    scattering_parameters_payload: dict[str, Any] | None = None
 
-    calibration_graph_payload: Optional[dict[str, Any]] = None
-    calibration_model_graph_payload: Optional[dict[str, Any]] = None
-    calibration_payload: Optional[dict[str, Any]] = None
+    calibration_graph_payload: dict[str, Any] | None = None
+    calibration_model_graph_payload: dict[str, Any] | None = None
+    calibration_payload: dict[str, Any] | None = None
     calibration_saved: bool = False
 
     status_message: str = ""
@@ -51,7 +50,7 @@ class ScatteringPageState:
         )
 
     @classmethod
-    def from_dict(cls, payload: Optional[dict[str, Any]]) -> "ScatteringPageState":
+    def from_dict(cls, payload: dict[str, Any] | None) -> "ScatteringPageState":
         """
         Build a scattering page state from a serialized dictionary.
 

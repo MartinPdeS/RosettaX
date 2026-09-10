@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
 
-from typing import Iterable, Protocol
+from collections.abc import Iterable
+from typing import Protocol
 
 
 class _Section(Protocol):

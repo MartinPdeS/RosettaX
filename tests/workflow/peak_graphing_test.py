@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 
-import numpy as np
-import pytest
-from unittest.mock import patch, MagicMock
-import plotly.graph_objs as go
 import sys
 import types
+
+import numpy as np
+import plotly.graph_objs as go
+import pytest
 
 
 class _DashBootstrapComponentsSentinel:
@@ -37,7 +36,7 @@ from RosettaX.workflow.peak.core.graphing import (
     axis_scale_selection_is_log,
     build_peak_workflow_uirevision,
     is_enabled,
-    scale_selection_is_log
+    scale_selection_is_log,
 )
 from RosettaX.workflow.peak.scripts.base import (
     filter_edge_artifact_pairs,

@@ -1,15 +1,14 @@
-# -*- coding: utf-8 -*-
 
-from typing import Any, Optional
 import logging
+from typing import Any
 
 import dash
 import plotly.graph_objs as go
 
 from RosettaX.pages.p02_fluorescence.state import FluorescencePageState
 from RosettaX.utils import RuntimeConfig, plottings, styling
-from . import services
 
+from . import services
 
 logger = logging.getLogger(__name__)
 
@@ -152,7 +151,7 @@ def _resolve_active_fluorescence_channel(
     selected_process_name: Any,
     detector_dropdown_ids: list[dict[str, Any]],
     detector_dropdown_values: list[Any],
-) -> Optional[str]:
+) -> str | None:
     """
     Resolve the active fluorescence detector channel.
 

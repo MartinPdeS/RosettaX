@@ -1,17 +1,17 @@
-# -*- coding: utf-8 -*-
 
 from typing import Any
+
 import dash
 
+from RosettaX.pages.p00_sidebar.ids import SidebarIds
+from RosettaX.utils.runtime_config import RuntimeConfig
+from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
+
+from .. import registry
 from .detector_dropdowns import register_detector_dropdown_callbacks
 from .graph import register_graph_callbacks
 from .mutation import register_mutation_callbacks
 from .visibility import register_visibility_callbacks
-from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.pages.p00_sidebar.ids import SidebarIds
-from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
-
-from .. import registry
 
 
 class PeakWorkflowCallbacks:

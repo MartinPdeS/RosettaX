@@ -1,10 +1,11 @@
-# -*- coding: utf-8 -*-
 
 import io
 import zipfile
 
-from RosettaX.workflow.apply_calibration.io import append_files_to_zip_bytes
-from RosettaX.workflow.apply_calibration.io import build_export_filename
+from RosettaX.workflow.apply_calibration.io import (
+    append_files_to_zip_bytes,
+    build_export_filename,
+)
 
 
 class Test_ApplyCalibrationIO:

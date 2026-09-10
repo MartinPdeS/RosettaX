@@ -1,10 +1,10 @@
-# -*- coding: utf-8 -*-
 
 import logging
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import Any, Callable, Optional
+from typing import Any
 
 import numpy as np
 from PyMieSim import experiment as PyMieSim
@@ -126,23 +126,23 @@ class BackEnd:
     def compute_modeled_coupling(
         *,
         mie_model: str,
-        particle_diameters_nm: Optional[np.ndarray] = None,
-        core_diameters_nm: Optional[np.ndarray] = None,
-        shell_thicknesses_nm: Optional[np.ndarray] = None,
+        particle_diameters_nm: np.ndarray | None = None,
+        core_diameters_nm: np.ndarray | None = None,
+        shell_thicknesses_nm: np.ndarray | None = None,
         wavelength_nm: float,
         source_numerical_aperture: float,
         optical_power_watt: float,
         detector_numerical_aperture: float,
         medium_refractive_index: float,
-        particle_refractive_index: Optional[float] = None,
-        core_refractive_index: Optional[float] = None,
-        shell_refractive_index: Optional[float] = None,
-        detector_cache_numerical_aperture: Optional[float] = None,
+        particle_refractive_index: float | None = None,
+        core_refractive_index: float | None = None,
+        shell_refractive_index: float | None = None,
+        detector_cache_numerical_aperture: float | None = None,
         detector_phi_offset_degree: float = 0.0,
         detector_gamma_offset_degree: float = 0.0,
         polarization_angle_degree: float = 0.0,
         detector_sampling: int = 600,
-        detector_angular_weights: Optional[np.ndarray] = None,
+        detector_angular_weights: np.ndarray | None = None,
     ) -> ModeledCouplingResult:
         """
         Compute modeled coupling values for the selected Mie scatterer model.
@@ -274,12 +274,12 @@ class BackEnd:
         detector_numerical_aperture: float,
         medium_refractive_index: float,
         particle_refractive_index: float,
-        detector_cache_numerical_aperture: Optional[float] = None,
+        detector_cache_numerical_aperture: float | None = None,
         detector_phi_offset_degree: float = 0.0,
         detector_gamma_offset_degree: float = 0.0,
         polarization_angle_degree: float = 0.0,
         detector_sampling: int = 600,
-        detector_angular_weights: Optional[np.ndarray] = None,
+        detector_angular_weights: np.ndarray | None = None,
     ) -> ModeledCouplingResult:
         """
         Compute modeled coupling values for solid sphere particle diameters.
@@ -546,12 +546,12 @@ class BackEnd:
         medium_refractive_index: float,
         core_refractive_index: float,
         shell_refractive_index: float,
-        detector_cache_numerical_aperture: Optional[float] = None,
+        detector_cache_numerical_aperture: float | None = None,
         detector_phi_offset_degree: float = 0.0,
         detector_gamma_offset_degree: float = 0.0,
         polarization_angle_degree: float = 0.0,
         detector_sampling: int = 600,
-        detector_angular_weights: Optional[np.ndarray] = None,
+        detector_angular_weights: np.ndarray | None = None,
     ) -> ModeledCouplingResult:
         """
         Compute modeled coupling values for paired core shell sphere rows.
@@ -1255,7 +1255,7 @@ class BackEnd:
     def _resolve_detector_cache_numerical_aperture(
         *,
         detector_numerical_aperture: float,
-        detector_cache_numerical_aperture: Optional[float],
+        detector_cache_numerical_aperture: float | None,
     ) -> float:
         """
         Resolve detector cache numerical aperture.

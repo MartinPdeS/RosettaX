@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
 
-from dataclasses import dataclass
-from typing import Any, Optional
 import logging
 import re
+from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 import plotly.graph_objs as go
@@ -11,7 +10,6 @@ import plotly.graph_objs as go
 from RosettaX.pages.p03_scattering.backend import BackEnd
 from RosettaX.utils import plottings
 from RosettaX.workflow import scattering
-
 
 logger = logging.getLogger(__name__)
 
@@ -79,10 +77,10 @@ class CalibrationResult:
     dash.no_update when needed.
     """
 
-    figure_store: Optional[dict[str, Any]] = None
-    model_figure_store: Optional[dict[str, Any]] = None
-    calibration_store: Optional[dict[str, Any]] = None
-    bead_table_data: Optional[list[dict[str, Any]]] = None
+    figure_store: dict[str, Any] | None = None
+    model_figure_store: dict[str, Any] | None = None
+    calibration_store: dict[str, Any] | None = None
+    bead_table_data: list[dict[str, Any]] | None = None
     slope_out: str = ""
     intercept_out: str = ""
     r_squared_out: str = ""
@@ -397,7 +395,7 @@ def build_calibration_standard_mie_relation_figure(
 def build_calibration_standard_mie_relation_figure_store(
     *,
     mie_model: Any,
-    current_table_rows: Optional[list[dict[str, Any]]],
+    current_table_rows: list[dict[str, Any]] | None,
     medium_refractive_index: Any,
     particle_refractive_index: Any,
     core_refractive_index: Any,
@@ -761,7 +759,7 @@ def run_scattering_calibration(
     uploaded_fcs_path: Any,
     detector_column: Any,
     mie_model: Any,
-    bead_table_data: Optional[list[dict[str, Any]]],
+    bead_table_data: list[dict[str, Any]] | None,
     medium_refractive_index: Any,
     particle_refractive_index: Any,
     core_refractive_index: Any,

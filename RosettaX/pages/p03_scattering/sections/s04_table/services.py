@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from RosettaX.utils import RuntimeConfig
 from RosettaX.workflow import parameters, scattering
@@ -100,7 +99,7 @@ class ScatteringCalibrationStandardTable:
         *,
         mie_model: Any,
         scatterer_preset: Any,
-        current_rows: Optional[list[dict[str, Any]]],
+        current_rows: list[dict[str, Any]] | None,
     ) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
         """
         Build the table state for a Mie model change.
@@ -174,7 +173,7 @@ class ScatteringCalibrationStandardTable:
         cls,
         *,
         mie_model: Any,
-        rows: Optional[list[dict[str, Any]]],
+        rows: list[dict[str, Any]] | None,
     ) -> list[dict[str, Any]]:
         """
         Normalize scattering table rows for a Mie model.
@@ -191,7 +190,7 @@ class ScatteringCalibrationStandardTable:
         cls,
         *,
         mie_model: Any,
-        rows: Optional[list[dict[str, Any]]],
+        rows: list[dict[str, Any]] | None,
     ) -> bool:
         """
         Return whether the scattering calibration standard table has no useful data.
@@ -216,7 +215,7 @@ class ScatteringCalibrationStandardTable:
         *,
         mie_model: Any,
         profile_load_event_data: Any,
-        current_rows: Optional[list[dict[str, Any]]],
+        current_rows: list[dict[str, Any]] | None,
     ) -> bool:
         """
         Decide whether a runtime configuration update should overwrite the table.
@@ -243,7 +242,7 @@ class ScatteringCalibrationStandardTable:
         cls,
         *,
         mie_model: Any,
-        current_rows: Optional[list[dict[str, Any]]],
+        current_rows: list[dict[str, Any]] | None,
     ) -> list[dict[str, str]]:
         """
         Remap current table rows to a Mie model schema.
@@ -260,7 +259,7 @@ class ScatteringCalibrationStandardTable:
         cls,
         *,
         mie_model: Any,
-        rows: Optional[list[dict[str, Any]]],
+        rows: list[dict[str, Any]] | None,
     ) -> list[dict[str, Any]]:
         """
         Add one empty scattering calibration standard row.
@@ -297,7 +296,7 @@ class ScatteringCalibrationStandardTable:
     def clear_measured_peak_positions(
         cls,
         *,
-        rows: Optional[list[dict[str, Any]]],
+        rows: list[dict[str, Any]] | None,
     ) -> list[dict[str, Any]]:
         """
         Clear measured peak positions.
@@ -313,7 +312,7 @@ class ScatteringCalibrationStandardTable:
     def clear_expected_coupling(
         cls,
         *,
-        rows: Optional[list[dict[str, Any]]],
+        rows: list[dict[str, Any]] | None,
     ) -> list[dict[str, Any]]:
         """
         Clear expected coupling values.
@@ -370,7 +369,7 @@ class ScatteringCalibrationStandardTable:
         cls,
         *,
         mie_model: Any,
-        current_rows: Optional[list[dict[str, Any]]],
+        current_rows: list[dict[str, Any]] | None,
         medium_refractive_index: Any,
         particle_refractive_index: Any,
         core_refractive_index: Any,
@@ -450,7 +449,7 @@ def should_rebuild_table_from_runtime_config(
     *,
     mie_model: Any,
     profile_load_event_data: Any,
-    current_rows: Optional[list[dict[str, Any]]],
+    current_rows: list[dict[str, Any]] | None,
 ) -> bool:
     """
     Compatibility wrapper.
@@ -465,7 +464,7 @@ def should_rebuild_table_from_runtime_config(
 def table_is_effectively_empty(
     *,
     mie_model: Any,
-    rows: Optional[list[dict[str, Any]]],
+    rows: list[dict[str, Any]] | None,
 ) -> bool:
     """
     Compatibility wrapper.
@@ -479,7 +478,7 @@ def table_is_effectively_empty(
 def add_empty_row_for_model(
     *,
     mie_model: Any,
-    rows: Optional[list[dict[str, Any]]],
+    rows: list[dict[str, Any]] | None,
 ) -> list[dict[str, Any]]:
     """
     Compatibility wrapper.
@@ -493,7 +492,7 @@ def add_empty_row_for_model(
 def compute_model_for_rows(
     *,
     mie_model: Any,
-    current_rows: Optional[list[dict[str, Any]]],
+    current_rows: list[dict[str, Any]] | None,
     medium_refractive_index: Any,
     particle_refractive_index: Any,
     core_refractive_index: Any,

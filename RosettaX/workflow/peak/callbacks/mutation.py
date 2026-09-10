@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 
 import inspect
 import logging
 import time
 import uuid
 from types import SimpleNamespace
-from typing import Any, Optional
+from typing import Any
 
 import dash
 import dash_bootstrap_components as dbc
@@ -289,7 +288,7 @@ def trigger_is_detector_dropdown_change(
     return triggered_id.get("type") == pattern.get("type")
 
 
-def resolve_triggered_graph_property_name() -> Optional[str]:
+def resolve_triggered_graph_property_name() -> str | None:
     """
     Return the triggering property name for the active graph callback.
     """
@@ -341,7 +340,7 @@ def clear_peak_context(
     page_state: Any,
     process_name: Any,
     clear_table: bool = False,
-    table_data: Optional[list[dict[str, Any]]] = None,
+    table_data: list[dict[str, Any]] | None = None,
     mie_model: Any = None,
     runtime_config_data: Any = None,
     status_component_ids: list[dict[str, Any]],
@@ -403,7 +402,7 @@ def handle_manual_graph_click(
     *,
     ids: Any,
     adapter: Any,
-    triggered_graph_property: Optional[str],
+    triggered_graph_property: str | None,
     click_data: Any,
     selected_data: Any,
     process_name: Any,
@@ -414,7 +413,7 @@ def handle_manual_graph_click(
     process_setting_values: list[Any],
     data_filter_value: Any,
     axis_scale_toggle_values: Any,
-    table_data: Optional[list[dict[str, Any]]],
+    table_data: list[dict[str, Any]] | None,
     mie_model: Any,
     runtime_config_data: Any,
     status_component_ids: list[dict[str, Any]],
@@ -575,7 +574,7 @@ def handle_process_action(
     data_filter_value: Any = None,
     axis_scale_toggle_values: Any = None,
     max_events_for_plots: Any,
-    table_data: Optional[list[dict[str, Any]]],
+    table_data: list[dict[str, Any]] | None,
     mie_model: Any,
     runtime_config_data: Any,
     status_component_ids: list[dict[str, Any]],
@@ -659,7 +658,7 @@ def handle_clear_action(
     process: Any,
     target_process_name: str,
     page_state: Any,
-    table_data: Optional[list[dict[str, Any]]],
+    table_data: list[dict[str, Any]] | None,
     mie_model: Any,
     runtime_config_data: Any,
     status_component_ids: list[dict[str, Any]],
@@ -727,7 +726,7 @@ def handle_run_action(
     data_filter_value: Any = None,
     axis_scale_toggle_values: Any = None,
     max_events_for_plots: Any,
-    table_data: Optional[list[dict[str, Any]]],
+    table_data: list[dict[str, Any]] | None,
     mie_model: Any,
     runtime_config_data: Any,
     status_component_ids: list[dict[str, Any]],
@@ -1024,7 +1023,7 @@ def call_add_clicked_peak_with_supported_arguments(
 def manual_graph_event_has_actionable_payload(
     *,
     process: Any,
-    triggered_graph_property: Optional[str],
+    triggered_graph_property: str | None,
     click_data: Any,
     selected_data: Any,
 ) -> bool:
@@ -1082,7 +1081,7 @@ def touch_peak_graph_revision(
     page_state: Any,
     reason: str,
     process_name: Any,
-    process_settings: Optional[dict[str, Any]] = None,
+    process_settings: dict[str, Any] | None = None,
 ) -> Any:
     """
     Force downstream graph callbacks to rebuild after a peak workflow mutation.

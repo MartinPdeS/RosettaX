@@ -1,11 +1,8 @@
-# -*- coding: utf-8 -*-
 
 import json
 import logging
 from pathlib import Path
-from typing import Any, Optional
-
-import numpy as np
+from typing import Any
 
 from RosettaX.workflow import plotting
 from RosettaX.workflow.upload.services import read_uploaded_file_bytes
@@ -70,7 +67,7 @@ def build_calibration_summary(
     *,
     selected_calibration: str,
     calibration_payload: dict[str, Any],
-    calibration_file_path: Optional[Path] = None,
+    calibration_file_path: Path | None = None,
 ) -> dict[str, Any]:
     """
     Build a lightweight calibration summary for UI decisions.
@@ -171,7 +168,7 @@ def normalize_calibration_summaries(
 
 def get_primary_calibration_summary(
     calibration_summaries: Any,
-) -> Optional[dict[str, Any]]:
+) -> dict[str, Any] | None:
     """
     Return the first loaded calibration summary, if any.
     """
@@ -187,7 +184,7 @@ def get_primary_calibration_summary(
 
 def get_primary_scattering_calibration_summary(
     calibration_summaries: Any,
-) -> Optional[dict[str, Any]]:
+) -> dict[str, Any] | None:
     """
     Return the first scattering calibration summary that requires a target model.
     """
@@ -401,7 +398,7 @@ def build_preview_items(
 
     Returns a list of HTML divs showing key calibration metadata.
     """
-    import dash.html as html
+    from dash import html
 
     cal_type = str(calibration_summary.get("calibration_type", "")).strip().upper() or "n/a"
     source_ch = str(calibration_summary.get("source_channel", "")).strip() or "n/a"
@@ -452,7 +449,7 @@ def _build_preview_info_block(
     """
     Build a single preview info block.
     """
-    import dash.html as html
+    from dash import html
 
     value_style = {
         "fontSize": "0.83rem",

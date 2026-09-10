@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
 
 from dataclasses import asdict, dataclass
-from typing import Any, Optional
+from typing import Any
 
 
 def build_empty_peak_lines_payload() -> dict[str, list[Any]]:
@@ -42,21 +41,21 @@ class FluorescencePageState:
     - peak_lines_payload
     """
 
-    uploaded_fcs_path: Optional[str] = None
+    uploaded_fcs_path: str | None = None
     uploaded_filename: str = ""
 
-    calibration_payload: Optional[dict[str, Any]] = None
+    calibration_payload: dict[str, Any] | None = None
     calibration_saved: bool = False
 
-    scattering_threshold: Optional[float] = None
+    scattering_threshold: float | None = None
 
-    fluorescence_histogram_payload: Optional[dict[str, Any]] = None
-    fluorescence_source_channel: Optional[str] = None
+    fluorescence_histogram_payload: dict[str, Any] | None = None
+    fluorescence_source_channel: str | None = None
 
-    peak_lines_payload: Optional[dict[str, Any]] = None
-    fluorescence_peak_lines: Optional[list[float]] = None
-    reference_table_rows: Optional[list[dict[str, Any]]] = None
-    last_detector_channels: Optional[list[str]] = None
+    peak_lines_payload: dict[str, Any] | None = None
+    fluorescence_peak_lines: list[float] | None = None
+    reference_table_rows: list[dict[str, Any]] | None = None
+    last_detector_channels: list[str] | None = None
 
     status_message: str = ""
 
@@ -86,7 +85,7 @@ class FluorescencePageState:
         )
 
     @classmethod
-    def from_dict(cls, payload: Optional[dict[str, Any]]) -> "FluorescencePageState":
+    def from_dict(cls, payload: dict[str, Any] | None) -> "FluorescencePageState":
         """
         Build a fluorescence page state from a serialized dictionary.
 

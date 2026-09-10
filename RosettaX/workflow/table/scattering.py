@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from RosettaX.pages.p03_scattering.sections.s04_table.services import (
     ScatteringCalibrationStandardTable,

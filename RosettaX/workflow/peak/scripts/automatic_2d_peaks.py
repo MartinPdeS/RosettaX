@@ -1,9 +1,11 @@
-# -*- coding: utf-8 -*-
 
-from typing import Any
 import logging
+from typing import Any
 
 import numpy as np
+
+from RosettaX.utils.io import column_copy
+from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
 
 from .base import (
     BasePeakProcess,
@@ -13,9 +15,6 @@ from .base import (
     resolve_integer_setting,
     resolve_integer_value,
 )
-from RosettaX.utils.io import column_copy
-from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
-
 
 logger = logging.getLogger(__name__)
 
@@ -624,7 +623,7 @@ def find_2d_histogram_peak_positions(
             )
         ]
 
-    debug_info["candidate_count"] = int(len(candidate_indices))
+    debug_info["candidate_count"] = len(candidate_indices)
 
     candidate_indices = sorted(
         candidate_indices,
@@ -670,7 +669,7 @@ def find_2d_histogram_peak_positions(
         [int(x_index), int(y_index)]
         for x_index, y_index in selected_indices
     ]
-    debug_info["selected_count"] = int(len(selected_indices))
+    debug_info["selected_count"] = len(selected_indices)
 
     if include_debug_grid:
         debug_info["debug_grid"] = {

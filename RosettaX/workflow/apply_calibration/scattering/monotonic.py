@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
 
-from typing import Any, Optional
 import logging
+from typing import Any
 
 import numpy as np
 
@@ -13,14 +12,13 @@ from .models import (
     ScatteringTargetModelParameters,
 )
 
-
 logger = logging.getLogger(__name__)
 
 
 def resolve_monotonic_target_mie_relation(
     *,
     target_mie_relation: scattering.MieRelation,
-    target_model_parameters: Optional[ScatteringTargetModelParameters] = None,
+    target_model_parameters: ScatteringTargetModelParameters | None = None,
 ) -> MonotonicRelationResolution:
     """
     Resolve the monotonic target relation used for diameter inversion.
@@ -65,11 +63,9 @@ def resolve_monotonic_target_mie_relation(
 
     if not monotonic_intervals:
         raise ValueError(
-            (
                 "Target Mie relation is not strictly monotonic and no valid "
                 "monotonic branch was detected. Try increasing the diameter point "
                 "count or reducing the target diameter range."
-            )
         )
 
     selected_interval = select_largest_monotonic_interval(
@@ -131,14 +127,11 @@ def select_largest_monotonic_interval(
     if not monotonic_intervals:
         raise ValueError("No monotonic intervals were provided.")
 
-    selected_interval = sorted(
-        monotonic_intervals,
-        key=lambda interval: (
+    selected_interval = min(monotonic_intervals, key=lambda interval: (
             interval.start_index,
             -interval.diameter_width_nm,
             -interval.point_count,
-        ),
-    )[0]
+        ))
 
     logger.debug(
         "select_largest_monotonic_interval selected left-most interval=%r from interval_count=%r",
@@ -215,7 +208,7 @@ def build_monotonic_approximation_mie_relation(
     *,
     target_mie_relation: scattering.MieRelation,
     selected_interval: MonotonicDiameterInterval,
-    target_model_parameters: Optional[ScatteringTargetModelParameters] = None,
+    target_model_parameters: ScatteringTargetModelParameters | None = None,
 ) -> scattering.MieRelation:
     """
     Build a monotone approximation of the full Mie relation.
@@ -276,7 +269,7 @@ def build_monotonic_coupling_approximation(
     *,
     theoretical_coupling_values: np.ndarray,
     selected_interval: MonotonicDiameterInterval,
-    target_model_parameters: Optional[ScatteringTargetModelParameters] = None,
+    target_model_parameters: ScatteringTargetModelParameters | None = None,
 ) -> np.ndarray:
     """
     Build a monotone coupling envelope anchored on the selected branch.
@@ -834,7 +827,6 @@ def validate_target_mie_relation_for_diameter_inversion(
     )
 
     raise ValueError(
-        (
             "Target Mie relation is not strictly monotonic over the selected "
             f"diameter range [{target_model_parameters.diameter_min_nm:.6g}, "
             f"{target_model_parameters.diameter_max_nm:.6g}] nm. "
@@ -842,7 +834,6 @@ def validate_target_mie_relation_for_diameter_inversion(
             "can produce the same coupling. Reduce the target diameter range "
             "to one monotonic interval. "
             f"{interval_message}"
-        )
     )
 
 

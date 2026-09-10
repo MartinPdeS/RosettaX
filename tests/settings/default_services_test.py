@@ -1,17 +1,15 @@
-# -*- coding: utf-8 -*-
 
-from RosettaX.pages.p05_settings.sections.s01_default import services
-from RosettaX.pages.p05_settings.sections.s01_default import schema
+from RosettaX.pages.p05_settings.sections.s01_default import schema, services
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.apply_calibration.scattering import (
     EXTRACELLULAR_VESICLES_PRESET_NAME,
 )
+from RosettaX.workflow.scattering.model import ROSETTA_MIX_PRESET_NAME
 from RosettaX.workflow.table.fluorescence import (
     CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME,
     GENERIC_FLUORESCENCE_REFERENCE_PRESET_NAME,
     ROSETTA_MIX_FLUORESCENCE_REFERENCE_PRESET_NAME,
 )
-from RosettaX.workflow.scattering.model import ROSETTA_MIX_PRESET_NAME
 
 
 class Test_SettingsDefaultServicesPresetPreferences:

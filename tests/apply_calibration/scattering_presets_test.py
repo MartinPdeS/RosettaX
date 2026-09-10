@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from RosettaX.workflow.apply_calibration.scattering.presets import (
     CUSTOM_PRESET_NAME,

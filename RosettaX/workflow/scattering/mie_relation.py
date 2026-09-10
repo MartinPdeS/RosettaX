@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
 
+from collections.abc import Callable
 from dataclasses import asdict, dataclass
-from typing import Any, Callable, Optional
+from typing import Any
 
 import numpy as np
 
@@ -24,10 +24,10 @@ class MieRelation:
     parameters: dict[str, Any]
     is_monotonic: bool
     relation_role: str
-    valid_min_diameter_nm: Optional[float] = None
-    valid_max_diameter_nm: Optional[float] = None
-    valid_min_coupling: Optional[float] = None
-    valid_max_coupling: Optional[float] = None
+    valid_min_diameter_nm: float | None = None
+    valid_max_diameter_nm: float | None = None
+    valid_min_coupling: float | None = None
+    valid_max_coupling: float | None = None
     inversion_method: str = "linear_interpolation"
 
     def coupling_to_diameter(
@@ -261,7 +261,7 @@ class MieRelation:
 
 def optional_float(
     value: Any,
-) -> Optional[float]:
+) -> float | None:
     """
     Convert a value to float unless it is None.
     """
@@ -496,7 +496,7 @@ def build_mie_relation_from_arrays(
     diameter_nm: Any,
     theoretical_coupling: Any,
     mie_model: str,
-    parameters: Optional[dict[str, Any]] = None,
+    parameters: dict[str, Any] | None = None,
     relation_role: str,
     inversion_method: str = "linear_interpolation",
 ) -> MieRelation:
@@ -563,7 +563,7 @@ def build_mie_relation_from_callable(
     diameter_nm: Any,
     coupling_function: Callable[[np.ndarray], np.ndarray],
     mie_model: str,
-    parameters: Optional[dict[str, Any]] = None,
+    parameters: dict[str, Any] | None = None,
     relation_role: str,
     inversion_method: str = "linear_interpolation",
 ) -> MieRelation:
@@ -601,7 +601,7 @@ def build_mie_relation_from_callable(
 def build_empty_mie_relation(
     *,
     mie_model: str = "",
-    parameters: Optional[dict[str, Any]] = None,
+    parameters: dict[str, Any] | None = None,
     relation_role: str = "",
 ) -> MieRelation:
     """

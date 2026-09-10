@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import sys
 import types
@@ -41,7 +40,6 @@ sys.modules.setdefault(
     _PyMieSimUnitsStub("PyMieSim.units"),
 )
 
-from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.pages.p03_scattering.sections.s03_model.optical_preview import (
     _rotate_preview_display_coordinate_array,
     build_pymiesim_photodiode_mesh_coordinates,
@@ -49,8 +47,11 @@ from RosettaX.pages.p03_scattering.sections.s03_model.optical_preview import (
 from RosettaX.pages.p03_scattering.sections.s04_table.services import (
     ScatteringCalibrationStandardTable,
 )
-
-from RosettaX.workflow.scattering import CUSTOM_SCATTERER_PRESET_NAME, ModelConfiguration
+from RosettaX.utils.runtime_config import RuntimeConfig
+from RosettaX.workflow.scattering import (
+    CUSTOM_SCATTERER_PRESET_NAME,
+    ModelConfiguration,
+)
 from RosettaX.workflow.scattering.model import (
     BROAD_PARTICLE_STANDARD_PRESET_NAME,
     ROSETTA_MIX_PRESET_NAME,

@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 import pytest
+from typing_extensions import Self
 
 from RosettaX.utils import service
 
@@ -19,7 +20,7 @@ class _FakeFCSFile:
             "Keywords": {"$PAR": "3"},
         }
 
-    def __enter__(self) -> "_FakeFCSFile":
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(self, exc_type, exc, tb) -> None:

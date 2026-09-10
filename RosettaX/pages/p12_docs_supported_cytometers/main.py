@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import dash
 import dash_bootstrap_components as dbc
@@ -11,7 +10,6 @@ from RosettaX.pages.p07_documentation.components import (
     build_documentation_link_chip,
 )
 from RosettaX.workflow.detector.loader import load_detector_configuration_preset_catalog
-
 
 PAGE_NAME = "documentation-supported-cytometers"
 

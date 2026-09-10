@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
 
-from typing import Any, Optional
 import logging
+from typing import Any
 
 import dash
 
@@ -10,7 +9,6 @@ from RosettaX.pages.p02_fluorescence.state import FluorescencePageState
 from RosettaX.utils import RuntimeConfig
 from RosettaX.workflow.table.fluorescence import FluorescenceReferenceTable
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -18,7 +16,7 @@ def resolve_detector_change_reset(
     *,
     detector_dropdown_values: list[Any],
     page_state_payload: Any,
-    current_table_rows: Optional[list[dict[str, Any]]],
+    current_table_rows: list[dict[str, Any]] | None,
 ) -> tuple[Any, Any]:
     """
     Resolve whether a fluorescence detector change should reset the table.
@@ -106,7 +104,7 @@ def _register_runtime_table_sync_callback(section) -> None:
     def sync_bead_table_from_runtime_store(
         runtime_config_data: Any,
         profile_load_event_data: Any,
-        current_rows: Optional[list[dict[str, Any]]],
+        current_rows: list[dict[str, Any]] | None,
     ) -> Any:
         if not isinstance(runtime_config_data, dict):
             logger.debug(
@@ -181,7 +179,7 @@ def _register_preset_apply_callback(section) -> None:
     )
     def apply_reference_preset(
         preset_name: Any,
-        current_rows: Optional[list[dict[str, Any]]],
+        current_rows: list[dict[str, Any]] | None,
     ) -> Any:
         if dash.ctx.triggered_id != section.ids.bead_table_preset_dropdown:
             return dash.no_update
@@ -213,7 +211,7 @@ def _register_preset_sync_callback(section) -> None:
         prevent_initial_call=True,
     )
     def sync_reference_preset_from_rows(
-        rows: Optional[list[dict[str, Any]]],
+        rows: list[dict[str, Any]] | None,
         current_preset_name: Any,
     ) -> Any:
         resolved_preset_name = FluorescenceReferenceTable.resolve_matching_preset_name(
@@ -243,7 +241,7 @@ def _register_add_row_callback(section) -> None:
     )
     def add_row(
         n_clicks: int,
-        rows: Optional[list[dict[str, Any]]],
+        rows: list[dict[str, Any]] | None,
     ) -> list[dict[str, Any]]:
         logger.debug(
             "add_row called with n_clicks=%r existing_row_count=%r",
@@ -296,7 +294,7 @@ def _register_detector_change_reset_callback(section) -> None:
     def reset_reference_table_on_detector_change(
         detector_dropdown_values: list[Any],
         page_state_payload: Any,
-        current_table_rows: Optional[list[dict[str, Any]]],
+        current_table_rows: list[dict[str, Any]] | None,
     ) -> Any:
         return resolve_detector_change_reset(
             detector_dropdown_values=detector_dropdown_values,
@@ -321,7 +319,7 @@ def _register_page_state_table_persistence_callback(section) -> None:
         prevent_initial_call=True,
     )
     def persist_reference_table_rows_to_page_state(
-        table_rows: Optional[list[dict[str, Any]]],
+        table_rows: list[dict[str, Any]] | None,
         page_state_payload: Any,
     ) -> Any:
         page_state = FluorescencePageState.from_dict(
@@ -361,7 +359,7 @@ def _register_table_hydration_from_page_state_callback(section) -> None:
     )
     def hydrate_reference_table_from_page_state(
         page_state_payload: Any,
-        current_table_rows: Optional[list[dict[str, Any]]],
+        current_table_rows: list[dict[str, Any]] | None,
     ) -> Any:
         page_state = FluorescencePageState.from_dict(
             page_state_payload if isinstance(page_state_payload, dict) else None

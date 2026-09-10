@@ -1,15 +1,13 @@
-# -*- coding: utf-8 -*-
 
 import json
 from dataclasses import asdict, dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from RosettaX.workflow.parameters.refractive_index import (
     resolve_refractive_index_source_value,
 )
-
 
 CUSTOM_PRESET_NAME = "Custom"
 EXTRACELLULAR_VESICLES_PRESET_NAME = "Extracellular Vesicles"
@@ -42,10 +40,10 @@ class ScatteringTargetModelPreset:
     core_diameter_max_nm: float
     core_diameter_count: int
 
-    medium_refractive_index_source: Optional[str] = None
-    particle_refractive_index_source: Optional[str] = None
-    core_refractive_index_source: Optional[str] = None
-    shell_refractive_index_source: Optional[str] = None
+    medium_refractive_index_source: str | None = None
+    particle_refractive_index_source: str | None = None
+    core_refractive_index_source: str | None = None
+    shell_refractive_index_source: str | None = None
     description: str = ""
 
     def to_dict(self) -> dict[str, Any]:

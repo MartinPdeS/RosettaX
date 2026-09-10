@@ -1,27 +1,30 @@
-# -*- coding: utf-8 -*-
 
-from pathlib import Path
 from functools import lru_cache
-from typing import Any, Optional
+from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
-from RosettaX.utils import plottings, styling
+from RosettaX.utils import plottings
 from RosettaX.utils.reader import FCSFile
 from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.workflow.peak.core.graphing import apply_stable_2d_axis_ranges
-from RosettaX.workflow.file_selection import UploadedFile, UploadedFileBatch
+from RosettaX.workflow.file_selection import (
+    UploadedFile,
+    UploadedFileBatch,
+    resolve_selected_channel,
+)
 from RosettaX.workflow.file_selection import (
     build_channel_options as build_shared_channel_options,
-    resolve_selected_channel,
 )
 from RosettaX.workflow.file_selection.services import (
     build_file_options as build_uploaded_file_options,
+)
+from RosettaX.workflow.file_selection.services import (
     resolve_selected_file,
 )
-from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
+from RosettaX.workflow.peak.core.graphing import apply_stable_2d_axis_ranges
 from RosettaX.workflow.plotting.models import (
     AxisOptions,
     HistogramOptions,
@@ -30,11 +33,11 @@ from RosettaX.workflow.plotting.models import (
     SmoothedHistogramOptions,
     SmoothingOptions,
 )
+from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
 from RosettaX.workflow.plotting.transforms import (
     smooth_histogram_counts as _smooth_histogram_counts,
 )
 from RosettaX.workflow.upload import services as upload_services
-
 
 VISUALIZATION_UPLOAD_DIRECTORY = (
     upload_services.DEFAULT_UPLOAD_DIRECTORY / "visualization"
@@ -107,7 +110,7 @@ def build_visualization_uirevision(
     uploaded_fcs_path: Any,
     plot_type: str,
     x_channel: str,
-    y_channel: Optional[str],
+    y_channel: str | None,
     log_x: bool,
     log_y: bool,
     smoothing_sigma_points: float = 0.0,
@@ -214,7 +217,7 @@ def resolve_default_channel(
     *,
     current_value: Any = None,
     fallback_index: int = 0,
-) -> Optional[str]:
+) -> str | None:
     """
     Resolve a stable channel selection from the available columns.
     """
@@ -233,7 +236,7 @@ def build_upload_summary(
     """
     Build one serializable uploaded-file summary for the visualization page.
     """
-    with FCSFile(file_path) as fcs_file:
+    with FCSFile(uploaded_fcs_path) as fcs_file:
         metadata = fcs_file.get_metadata()
 
         return {
@@ -281,7 +284,7 @@ def resolve_default_file(
     file_store: dict[str, Any],
     *,
     current_value: Any = None,
-) -> Optional[str]:
+) -> str | None:
     """Compatibility facade for callers using the visualization service module."""
     selected_file = resolve_selected_file(file_store, current_path=current_value)
     return selected_file.path if selected_file is not None else None
@@ -328,7 +331,7 @@ def load_plot_dataframe(
     *,
     uploaded_fcs_path: str,
     x_channel: str,
-    y_channel: Optional[str],
+    y_channel: str | None,
     max_events: int,
 ) -> pd.DataFrame:
     """
@@ -367,7 +370,7 @@ def _load_plot_dataframe_cached(
     max_events: int,
 ) -> pd.DataFrame:
     """Read and cache one bounded FCS dataframe for plotting."""
-    with FCSFile(uploaded_fcs_path) as fcs_file:
+    with FCSFile(file_path) as fcs_file:
         return fcs_file.dataframe_copy(
             columns=list(selected_columns),
             dtype=float,
@@ -379,7 +382,7 @@ def filter_dataframe_for_plot(
     dataframe: pd.DataFrame,
     *,
     x_channel: str,
-    y_channel: Optional[str],
+    y_channel: str | None,
     log_x: bool,
     log_y: bool,
 ) -> tuple[pd.DataFrame, int]:
@@ -427,10 +430,10 @@ def build_visualization_figure(
     uploaded_fcs_path: str = "",
     plot_type: str,
     x_channel: str,
-    y_channel: Optional[str],
+    y_channel: str | None,
     log_x: bool,
     log_y: bool,
-    max_events: Optional[int] = None,
+    max_events: int | None = None,
     colormap_log_scale: bool = False,
     marker_size: float = 5.0,
     marker_opacity: float = 0.72,

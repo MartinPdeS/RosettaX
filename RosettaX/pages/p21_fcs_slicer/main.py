@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from typing import Any
 
@@ -17,8 +16,8 @@ from RosettaX.workflow.calibration_cards import (
 )
 from RosettaX.workflow.file_selection import UploadedFile, UploadedFileBatch
 
-from .ids import Ids
 from . import services
+from .ids import Ids
 
 
 class FCSSlicerPage:

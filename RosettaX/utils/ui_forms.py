@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
 
-from typing import Any, Optional
+from typing import Any
 
 import dash_bootstrap_components as dbc
 from dash import dcc, html
@@ -14,8 +13,7 @@ def _token_px_to_int(token_value: str, fallback: int) -> int:
     Convert a px token value into an integer fallback-safe value.
     """
     value = str(token_value).strip()
-    if value.endswith("px"):
-        value = value[:-2]
+    value = value.removesuffix("px")
     try:
         return int(float(value))
     except (TypeError, ValueError):
@@ -42,8 +40,8 @@ def normalize_children(
 
 def resolve_color_name(
     *,
-    color_name: Optional[str] = None,
-    accent_rgba: Optional[str] = None,
+    color_name: str | None = None,
+    accent_rgba: str | None = None,
 ) -> str:
     """
     Resolve the color name used by the shared styling helpers.
@@ -62,8 +60,8 @@ def resolve_color_name(
 
 def build_rgba_from_color_name(
     *,
-    color_name: Optional[str] = None,
-    accent_rgba: Optional[str] = None,
+    color_name: str | None = None,
+    accent_rgba: str | None = None,
     opacity: float,
 ) -> str:
     """
@@ -132,7 +130,7 @@ def build_upload_widget(
     prompt_text: str,
     accepted_file_extensions: str,
     multiple: bool,
-    max_size_bytes: Optional[int] = None,
+    max_size_bytes: int | None = None,
 ) -> dcc.Upload:
     """Build the standard RosettaX file upload control and information text."""
     resolved_max_size = (
@@ -204,7 +202,7 @@ def build_info_badge(
     *,
     tooltip_target_id: str,
     text: str = "i",
-    style_overrides: Optional[dict[str, Any]] = None,
+    style_overrides: dict[str, Any] | None = None,
 ) -> html.Span:
     """
     Build a compact reusable hover help badge.
@@ -222,7 +220,7 @@ def build_info_badge(
     )
 
 
-def _merge_tooltip_text(*parts: Optional[str]) -> str:
+def _merge_tooltip_text(*parts: str | None) -> str:
     """
     Combine related help text into one compact tooltip string.
     """
@@ -235,10 +233,10 @@ def build_title_with_info(
     tooltip_target_id: str,
     tooltip_id: str,
     tooltip_text: str,
-    subtitle: Optional[str] = None,
+    subtitle: str | None = None,
     placement: str = "right",
-    title_style_overrides: Optional[dict[str, Any]] = None,
-    badge_style_overrides: Optional[dict[str, Any]] = None,
+    title_style_overrides: dict[str, Any] | None = None,
+    badge_style_overrides: dict[str, Any] | None = None,
 ) -> html.Div:
     """
     Build a compact title with a hover help tooltip.
@@ -271,12 +269,12 @@ def build_card_header_with_info(
     tooltip_target_id: str,
     tooltip_id: str,
     tooltip_text: str,
-    subtitle: Optional[str] = None,
+    subtitle: str | None = None,
     placement: str = "right",
     color_name: str = "blue",
-    header_style_overrides: Optional[dict[str, Any]] = None,
-    title_style_overrides: Optional[dict[str, Any]] = None,
-    subtitle_style_overrides: Optional[dict[str, Any]] = None,
+    header_style_overrides: dict[str, Any] | None = None,
+    title_style_overrides: dict[str, Any] | None = None,
+    subtitle_style_overrides: dict[str, Any] | None = None,
 ) -> dbc.CardHeader:
     """
     Build a workflow card header with title, tooltip, and optional subtitle.
@@ -314,9 +312,9 @@ def build_card_header_with_info(
 def build_workflow_section_card_style(
     *,
     color_name: str = "blue",
-    accent_rgba: Optional[str] = None,
+    accent_rgba: str | None = None,
     border_radius_px: int = _token_px_to_int(styling.get_radius_token("lg"), 15),
-    style_overrides: Optional[dict[str, Any]] = None,
+    style_overrides: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """
     Build the standard outer workflow section card style.
@@ -338,9 +336,9 @@ def build_workflow_section_card_style(
 def build_workflow_section_header_style(
     *,
     color_name: str = "blue",
-    accent_rgba: Optional[str] = None,
+    accent_rgba: str | None = None,
     border_radius_px: int = _token_px_to_int(styling.get_radius_token("lg"), 15),
-    style_overrides: Optional[dict[str, Any]] = None,
+    style_overrides: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """
     Build the standard outer workflow section header style.
@@ -368,7 +366,7 @@ def build_workflow_section_header_style(
 
 def build_workflow_section_body_style(
     *,
-    style_overrides: Optional[dict[str, Any]] = None,
+    style_overrides: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """
     Build the standard outer workflow section body style.
@@ -387,7 +385,7 @@ def build_workflow_section_subtitle_style(
     font_size: str = styling.get_typography_token("subtitle_size", "0.86rem"),
     opacity: float = 0.76,
     margin_top_px: int = _token_px_to_int(styling.get_spacing_token("xs"), 8),
-    style_overrides: Optional[dict[str, Any]] = None,
+    style_overrides: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """
     Build the standard subtitle style used under workflow section headers.
@@ -406,10 +404,10 @@ def build_workflow_section_subtitle_style(
 def build_workflow_panel_style(
     *,
     color_name: str = "blue",
-    accent_rgba: Optional[str] = None,
-    background: Optional[str] = None,
+    accent_rgba: str | None = None,
+    background: str | None = None,
     border_radius_px: int = _token_px_to_int(styling.get_radius_token("md"), 12),
-    style_overrides: Optional[dict[str, Any]] = None,
+    style_overrides: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """
     Build a standard inner workflow panel card style.
@@ -435,7 +433,7 @@ def build_workflow_panel_style(
 def build_workflow_panel_body_style(
     *,
     padding: str = styling.get_spacing_token("md", "16px"),
-    style_overrides: Optional[dict[str, Any]] = None,
+    style_overrides: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """
     Build a standard inner workflow panel body style.
@@ -452,9 +450,9 @@ def build_workflow_panel_body_style(
 def build_workflow_subpanel_card_style(
     *,
     color_name: str = "blue",
-    accent_rgba: Optional[str] = None,
+    accent_rgba: str | None = None,
     border_radius_px: int = _token_px_to_int(styling.get_radius_token("md"), 12),
-    style_overrides: Optional[dict[str, Any]] = None,
+    style_overrides: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """
     Build a nested graph or form panel card style.
@@ -470,9 +468,9 @@ def build_workflow_subpanel_card_style(
 def build_workflow_subpanel_header_style(
     *,
     color_name: str = "blue",
-    accent_rgba: Optional[str] = None,
+    accent_rgba: str | None = None,
     border_radius_px: int = _token_px_to_int(styling.get_radius_token("md"), 12),
-    style_overrides: Optional[dict[str, Any]] = None,
+    style_overrides: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """
     Build a nested graph or form panel header style.
@@ -499,7 +497,7 @@ def build_workflow_subpanel_header_style(
 
 def build_compact_control_panel_style(
     *,
-    style_overrides: Optional[dict[str, Any]] = None,
+    style_overrides: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """
     Build a compact control strip style for toggles or graph controls.
@@ -515,7 +513,7 @@ def build_compact_control_panel_style(
 
 def build_metric_box_style(
     *,
-    style_overrides: Optional[dict[str, Any]] = None,
+    style_overrides: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """
     Build a compact metric display box style.
@@ -536,10 +534,10 @@ def apply_workflow_section_card_style(
     card: Any,
     *,
     color_name: str = "blue",
-    accent_rgba: Optional[str] = None,
-    header_background: Optional[str] = None,
-    header_border: Optional[str] = None,
-    left_border: Optional[str] = None,
+    accent_rgba: str | None = None,
+    header_background: str | None = None,
+    header_border: str | None = None,
+    left_border: str | None = None,
     border_radius_px: int = _token_px_to_int(styling.get_radius_token("lg"), 15),
     header_font_weight: str = styling.get_typography_token("section_title_weight", "750"),
     header_font_size: str = styling.get_typography_token("section_title_size", "1.02rem"),
@@ -606,11 +604,11 @@ def build_labeled_row(
     label_font_weight: str = styling.get_typography_token("label_weight", "500"),
     label_margin_bottom: str = "0",
     component_flex: str = "1",
-    component_display: Optional[str] = None,
-    component_align_items: Optional[str] = None,
-    row_style_overrides: Optional[dict[str, Any]] = None,
-    label_style_overrides: Optional[dict[str, Any]] = None,
-    component_style_overrides: Optional[dict[str, Any]] = None,
+    component_display: str | None = None,
+    component_align_items: str | None = None,
+    row_style_overrides: dict[str, Any] | None = None,
+    label_style_overrides: dict[str, Any] | None = None,
+    component_style_overrides: dict[str, Any] | None = None,
 ) -> html.Div:
     """
     Build a standard two column form row with a fixed width label area.
@@ -672,9 +670,9 @@ def build_inline_row(
     row_width: str = "100%",
     align_items: str = "center",
     label_font_weight: int | str = 500,
-    label_style_overrides: Optional[dict[str, Any]] = None,
-    control_wrapper_style_overrides: Optional[dict[str, Any]] = None,
-    row_style_overrides: Optional[dict[str, Any]] = None,
+    label_style_overrides: dict[str, Any] | None = None,
+    control_wrapper_style_overrides: dict[str, Any] | None = None,
+    row_style_overrides: dict[str, Any] | None = None,
 ) -> html.Div:
     """
     Build a common inline row used in parameter panels.
@@ -726,13 +724,13 @@ def build_inline_row(
 def build_section_intro(
     *,
     title: str,
-    description: Optional[str] = None,
+    description: str | None = None,
     title_component: str = "H5",
-    title_style_overrides: Optional[dict[str, Any]] = None,
+    title_style_overrides: dict[str, Any] | None = None,
     description_opacity: float = 0.85,
     description_margin_bottom_px: int = _token_px_to_int(styling.get_spacing_token("sm"), 12),
-    description_style_overrides: Optional[dict[str, Any]] = None,
-    container_style: Optional[dict[str, Any]] = None,
+    description_style_overrides: dict[str, Any] | None = None,
+    container_style: dict[str, Any] | None = None,
 ) -> html.Div:
     """
     Build a small section intro block with a title and optional description.

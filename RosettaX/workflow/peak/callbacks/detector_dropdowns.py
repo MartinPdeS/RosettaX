@@ -1,12 +1,10 @@
-# -*- coding: utf-8 -*-
 
-from typing import Any
 import logging
+from typing import Any
 
 import dash
 
 from ..core import detectors
-
 
 logger = logging.getLogger(__name__)
 

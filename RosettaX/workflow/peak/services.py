@@ -1,12 +1,13 @@
-# -*- coding: utf-8 -*-
 
-from typing import Any
 import logging
+from typing import Any
 
 import dash
 
 from RosettaX.utils import service
+
 from .models import SaveConfig, SaveInputs, SaveResult
+
 
 def validate_save_inputs(
     *,

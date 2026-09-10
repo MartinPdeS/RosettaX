@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 """Save workflow package.
 
@@ -8,7 +7,6 @@ modules during logic-only test collection.
 
 from importlib import import_module
 from typing import Any
-
 
 __all__ = [
     "CalibrationStoreSaveAdapter",

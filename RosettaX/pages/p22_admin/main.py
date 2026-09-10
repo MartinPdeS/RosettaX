@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import dash
 import dash_bootstrap_components as dbc
@@ -32,7 +31,7 @@ class AdminPage:
 
     def layout(
         self,
-        token: Optional[str] = None,
+        token: str | None = None,
         **_kwargs,
     ) -> dbc.Container:
         if not services.is_admin_access_granted(token):

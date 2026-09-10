@@ -1,9 +1,10 @@
-# -*- coding: utf-8 -*-
 
-from typing import Any, Optional
 import logging
+from typing import Any
 
 import numpy as np
+
+from RosettaX.utils.io import column_copy
 
 from .base import (
     BasePeakProcess,
@@ -16,8 +17,6 @@ from .base import (
     resolve_integer_value,
     resolve_yes_no_setting,
 )
-from RosettaX.utils.io import column_copy
-
 
 logger = logging.getLogger(__name__)
 
@@ -289,7 +288,7 @@ class SmoothedDensityProminence2DPeakProcess(BasePeakProcess):
         max_events_for_analysis: Any = None,
         max_events_for_plots: Any = None,
         **_kwargs: Any,
-    ) -> Optional[PeakProcessResult]:
+    ) -> PeakProcessResult | None:
         """
         Run smoothed 2D density prominence peak detection.
         """

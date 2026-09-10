@@ -1,16 +1,14 @@
-# -*- coding: utf-8 -*-
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import dash
 import dash_bootstrap_components as dbc
 
-from RosettaX.utils import styling, ui_forms, RuntimeConfig
-from RosettaX.workflow import scattering, plotting, apply_calibration
+from RosettaX.utils import RuntimeConfig, ui_forms
+from RosettaX.workflow import apply_calibration, plotting, scattering
 
 from . import services
-
 
 logger = logging.getLogger(__name__)
 
@@ -609,9 +607,9 @@ class CalibrationPickerLayout:
         component_id: str,
         value: Any,
         input_type: str = "text",
-        min_value: Optional[float] = None,
-        max_value: Optional[float] = None,
-        step: Optional[float] = None,
+        min_value: float | None = None,
+        max_value: float | None = None,
+        step: float | None = None,
     ) -> dash.html.Div:
         """
         Build one labeled numeric input row.

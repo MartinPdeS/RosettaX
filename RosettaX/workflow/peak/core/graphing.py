@@ -1,33 +1,31 @@
-# -*- coding: utf-8 -*-
 
-from typing import Any, Optional
 import inspect
 import logging
+from typing import Any
 
 import numpy as np
 import plotly.graph_objs as go
 
-from . import detectors
-from .rosetta_annotations import (
-    add_rosetta_scatter_guide_annotations,
-    extract_rosetta_scatter_guide_annotations,
-)
-from .. import registry
 from RosettaX.utils import casting, plottings
-from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.utils.io import column_copy
-from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
+from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.plotting.axis_ranges import (
     apply_stable_2d_axis_ranges,
     compute_stable_axis_range,
 )
+from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
 
+from .. import registry
 from ..scripts.base import (
     filter_edge_artifact_pairs,
     filter_edge_artifact_values,
     resolve_edge_artifact_filter_enabled,
 )
-
+from . import detectors
+from .rosetta_annotations import (
+    add_rosetta_scatter_guide_annotations,
+    extract_rosetta_scatter_guide_annotations,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -394,7 +392,7 @@ class PeakWorkflowGraphBuilder:
 
         self.detector_channels: dict[str, Any] = {}
         self.process_settings: dict[str, Any] = {}
-        self._stable_histogram_count_values: Optional[np.ndarray] = None
+        self._stable_histogram_count_values: np.ndarray | None = None
 
     def build(self) -> go.Figure:
         """
@@ -438,7 +436,7 @@ class PeakWorkflowGraphBuilder:
 
         return figure
 
-    def _validate_context(self) -> Optional[go.Figure]:
+    def _validate_context(self) -> go.Figure | None:
         """
         Validate the graph context.
 
@@ -555,7 +553,7 @@ class PeakWorkflowGraphBuilder:
             "No graph implementation is available for this peak process.",
         )
 
-    def _try_build_custom_process_figure(self) -> Optional[go.Figure]:
+    def _try_build_custom_process_figure(self) -> go.Figure | None:
         """
         Let a process provide its own figure implementation when available.
         """
@@ -1011,7 +1009,7 @@ class PeakWorkflowGraphBuilder:
 
     def _extract_plot_values_from_peak_lines_payload(
         self,
-    ) -> Optional[tuple[np.ndarray, np.ndarray]]:
+    ) -> tuple[np.ndarray, np.ndarray] | None:
         """
         Extract plot event coordinates from the peak payload when provided.
 
@@ -1582,12 +1580,10 @@ class PeakWorkflowGraphBuilder:
             )
         )
 
-        figure.data = tuple(
-            [
+        figure.data = (
                 figure.data[-1],
                 *figure.data[:-1],
-            ]
-        )
+            )
 
         return figure
 
@@ -1595,8 +1591,8 @@ class PeakWorkflowGraphBuilder:
         self,
         *,
         figure: go.Figure,
-        lower_gate: Optional[float],
-        upper_gate: Optional[float],
+        lower_gate: float | None,
+        upper_gate: float | None,
     ) -> None:
         """
         Shade x regions outside the accepted interval.
@@ -1679,8 +1675,8 @@ class PeakWorkflowGraphBuilder:
         self,
         *,
         figure: go.Figure,
-        lower_gate: Optional[float],
-        upper_gate: Optional[float],
+        lower_gate: float | None,
+        upper_gate: float | None,
     ) -> None:
         """
         Shade y regions outside the accepted interval.
@@ -1733,8 +1729,8 @@ class PeakWorkflowGraphBuilder:
         self,
         *,
         figure: go.Figure,
-        y_lower_gate: Optional[float],
-        y_upper_gate: Optional[float],
+        y_lower_gate: float | None,
+        y_upper_gate: float | None,
     ) -> None:
         """
         Add explicit Rosetta helper bands for the accepted scatter gate and the
@@ -1807,7 +1803,7 @@ class PeakWorkflowGraphBuilder:
         x: float,
         line_width: float,
         line_dash: str,
-        line_color: Optional[str] = None,
+        line_color: str | None = None,
     ) -> None:
         """
         Add a vertical line as a shape, not as an annotation.
@@ -1852,7 +1848,7 @@ class PeakWorkflowGraphBuilder:
         y: float,
         line_width: float,
         line_dash: str,
-        line_color: Optional[str] = None,
+        line_color: str | None = None,
     ) -> None:
         """
         Add a horizontal line as a shape, not as an annotation.
@@ -1895,7 +1891,7 @@ class PeakWorkflowGraphBuilder:
         *,
         figure: go.Figure,
         axis_name: str,
-    ) -> Optional[tuple[float, float]]:
+    ) -> tuple[float, float] | None:
         """
         Return the visible axis range in data coordinates.
 
@@ -1957,7 +1953,7 @@ class PeakWorkflowGraphBuilder:
             ),
         )
 
-    def _extract_x_axis_lower_gate_from_peak_lines_payload(self) -> Optional[float]:
+    def _extract_x_axis_lower_gate_from_peak_lines_payload(self) -> float | None:
         """
         Extract the x axis lower gate threshold from the peak line payload.
         """
@@ -1977,7 +1973,7 @@ class PeakWorkflowGraphBuilder:
             )
         )
 
-    def _extract_x_axis_upper_gate_from_peak_lines_payload(self) -> Optional[float]:
+    def _extract_x_axis_upper_gate_from_peak_lines_payload(self) -> float | None:
         """
         Extract the x axis upper gate threshold from the peak line payload.
         """
@@ -1989,7 +1985,7 @@ class PeakWorkflowGraphBuilder:
             )
         )
 
-    def _extract_y_axis_lower_gate_from_peak_lines_payload(self) -> Optional[float]:
+    def _extract_y_axis_lower_gate_from_peak_lines_payload(self) -> float | None:
         """
         Extract the y axis lower gate threshold from the peak line payload.
         """
@@ -2007,7 +2003,7 @@ class PeakWorkflowGraphBuilder:
             )
         )
 
-    def _extract_y_axis_upper_gate_from_peak_lines_payload(self) -> Optional[float]:
+    def _extract_y_axis_upper_gate_from_peak_lines_payload(self) -> float | None:
         """
         Extract the y axis upper gate threshold from the peak line payload.
         """
@@ -2023,7 +2019,7 @@ class PeakWorkflowGraphBuilder:
         self,
         *,
         keys: tuple[str, ...],
-    ) -> Optional[float]:
+    ) -> float | None:
         """
         Extract the first finite float value matching one of the provided keys.
         """
@@ -2339,13 +2335,11 @@ class PeakWorkflowGraphBuilder:
             if hasattr(trace, "line"):
                 trace.line.width = default_line_width
 
-        if trace_type == "bar":
-            if hasattr(trace, "marker"):
-                trace.marker.line.width = default_line_width
+        if trace_type == "bar" and hasattr(trace, "marker"):
+            trace.marker.line.width = default_line_width
 
-        if trace_type == "histogram":
-            if hasattr(trace, "marker"):
-                trace.marker.line.width = default_line_width
+        if trace_type == "histogram" and hasattr(trace, "marker"):
+            trace.marker.line.width = default_line_width
 
     def _resolve_number_of_bins(self) -> int:
         """

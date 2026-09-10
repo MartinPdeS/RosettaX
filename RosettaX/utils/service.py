@@ -1,14 +1,13 @@
-from dataclasses import dataclass
-from datetime import datetime
 import hashlib
-from pathlib import Path
-from typing import Any, Optional
 import json
 import logging
 import re
+from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
+from typing import Any
 
 from RosettaX.utils.reader import FCSFile
-
 
 logger = logging.getLogger(__name__)
 
@@ -107,8 +106,8 @@ class ChannelOptions:
 
     scatter_options: list[dict[str, str]]
     secondary_options: list[dict[str, str]]
-    scatter_value: Optional[str]
-    secondary_value: Optional[str]
+    scatter_value: str | None
+    secondary_value: str | None
 
 
 @dataclass(frozen=True)
@@ -270,8 +269,8 @@ def is_invalid_detector_channel(column_name: str) -> bool:
 def resolve_default_dropdown_value(
     *,
     options: list[dict[str, str]],
-    preferred_value: Optional[str],
-) -> Optional[str]:
+    preferred_value: str | None,
+) -> str | None:
     """
     Resolve the default dropdown value from a preferred value and an option list.
 
@@ -384,7 +383,7 @@ def list_saved_calibrations_from_directory(
 
     return files
 
-def resolve_first_fcs_path(uploaded_fcs_path_data: Any) -> Optional[str]:
+def resolve_first_fcs_path(uploaded_fcs_path_data: Any) -> str | None:
     """
     Extract the first non-empty FCS file path from an uploaded path payload.
 

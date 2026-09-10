@@ -1,18 +1,16 @@
-# -*- coding: utf-8 -*-
 
+import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
-import logging
+from typing import Any
 
 import dash
 import numpy as np
 import plotly.graph_objs as go
 
 from RosettaX.utils import casting
-from RosettaX.utils.reader import FCSFile
 from RosettaX.utils.plottings import _make_info_figure
-
+from RosettaX.utils.reader import FCSFile
 
 
 @dataclass
@@ -459,7 +457,7 @@ def build_reference_points(
 
 def resolve_gating_threshold_value(
     scattering_threshold: Any,
-) -> Optional[float]:
+) -> float | None:
     """
     Extract a numeric gating threshold from a threshold store value.
 
@@ -488,9 +486,9 @@ def resolve_gating_threshold_value(
 
 def build_calibration_payload(
     *,
-    bead_file_path: Optional[str],
-    detector_column: Optional[str],
-    scattering_detector_column: Optional[str],
+    bead_file_path: str | None,
+    detector_column: str | None,
+    scattering_detector_column: str | None,
     scattering_threshold: Any,
     reference_points: list[dict[str, float]],
     fit_result: FluorescenceFitResult,
@@ -534,7 +532,7 @@ def build_calibration_payload(
         "fit_model": "log10(y)=slope*log10(x)+intercept; y=(10**intercept) * x**slope",
         "fit_metrics": {
             "r_squared": float(fit_result.r_squared),
-            "point_count": int(len(reference_points)),
+            "point_count": len(reference_points),
         },
         "parameters": {
             "slope": float(fit_result.slope),
@@ -557,8 +555,8 @@ def build_calibration_payload(
 
 def build_apply_status(
     *,
-    detector_column: Optional[str],
-    valid_event_count: Optional[int],
+    detector_column: str | None,
+    valid_event_count: int | None,
 ) -> str:
     """
     Build a human-readable status string for the calibration apply action.
@@ -728,10 +726,10 @@ def compute_valid_event_count_for_preview(
 
 def run_calibration_workflow(
     *,
-    bead_file_path: Optional[str],
+    bead_file_path: str | None,
     table_data: list[dict[str, Any]] | None,
-    detector_column: Optional[str],
-    scattering_detector_column: Optional[str],
+    detector_column: str | None,
+    scattering_detector_column: str | None,
     scattering_threshold: Any,
     logger: logging.Logger,
 ) -> CalibrationResult:
@@ -839,7 +837,7 @@ def run_calibration_workflow(
         intercept=fit_result.intercept,
     )
 
-    valid_event_count: Optional[int] = None
+    valid_event_count: int | None = None
     preview_figure_store: Any = dash.no_update
 
     if detector_column:

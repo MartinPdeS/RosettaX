@@ -1,16 +1,14 @@
-# -*- coding: utf-8 -*-
 
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import dash
 
 from RosettaX.workflow.file_selection import UploadedFile, UploadedFileBatch
 
 from . import services
-
 
 logger = logging.getLogger(__name__)
 
@@ -98,8 +96,8 @@ class FilePickerCallbacks:
             prevent_initial_call=True,
         )
         def handle_upload(
-            contents_list: Optional[list[str]],
-            filenames: Optional[list[str]],
+            contents_list: list[str] | None,
+            filenames: list[str] | None,
         ) -> tuple:
             logger.debug(
                 "handle_upload called with contents_count=%r filenames=%r",
@@ -209,7 +207,7 @@ class FilePickerCallbacks:
             uploaded_fcs_paths: Any,
             selected_calibration_summary: Any,
             current_file: Any,
-        ) -> tuple[list[dict[str, str]], Optional[str]]:
+        ) -> tuple[list[dict[str, str]], str | None]:
             return services.build_preview_file_selection(
                 uploaded_fcs_paths,
                 current_value=current_file,
@@ -229,7 +227,7 @@ class FilePickerCallbacks:
             uploaded_fcs_paths: Any,
             selected_calibration_summary: Any,
             current_channel: Any,
-        ) -> tuple[list[dict[str, str]], Optional[str]]:
+        ) -> tuple[list[dict[str, str]], str | None]:
             return services.build_preview_channel_selection(
                 selected_file=selected_file,
                 uploaded_fcs_paths=uploaded_fcs_paths,

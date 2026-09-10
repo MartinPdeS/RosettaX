@@ -1,11 +1,10 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
-from pathlib import Path
 import logging
 import os
 import platform
 import subprocess
+from pathlib import Path
 
 import RosettaX
 

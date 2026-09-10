@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 """
 Generate detector geometry preview images for documentation pages.
@@ -15,8 +14,8 @@ python -m RosettaX.utils.generate_detector_geometry_figures --skip-docs-static
 
 import argparse
 import math
-from pathlib import Path
 import re
+from pathlib import Path
 from typing import Any
 
 import matplotlib
@@ -29,7 +28,6 @@ from RosettaX.workflow.detector.loader import (
     CUSTOM_DETECTOR_PRESET_NAME,
     load_detector_configuration_presets,
 )
-
 
 matplotlib.use("Agg")
 

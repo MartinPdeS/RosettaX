@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import logging
 from typing import Any
@@ -7,7 +6,6 @@ import dash_bootstrap_components as dbc
 
 from .callbacks import CalibrationPickerCallbacks
 from .layout import CalibrationPickerLayout
-
 
 logger = logging.getLogger(__name__)
 

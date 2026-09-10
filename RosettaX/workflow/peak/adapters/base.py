@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
 
 import logging
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 import dash
 import numpy as np
@@ -52,8 +51,8 @@ class BasePeakWorkflowAdapter:
     )
 
     default_peak_lines_payload_key: str = "peak_lines_payload"
-    peak_table_sort_order_runtime_config_path: Optional[str] = None
-    detector_selection_runtime_config_path: Optional[str] = None
+    peak_table_sort_order_runtime_config_path: str | None = None
+    detector_selection_runtime_config_path: str | None = None
 
     delta_peak_value_names: tuple[str, ...] = (
         "new_peak_positions",
@@ -224,7 +223,7 @@ class BasePeakWorkflowAdapter:
     def apply_peak_process_result_to_table(
         self,
         *,
-        table_data: Optional[list[dict[str, Any]]],
+        table_data: list[dict[str, Any]] | None,
         result: Any,
         context: dict[str, Any],
         logger: logging.Logger,
@@ -444,10 +443,7 @@ class BasePeakWorkflowAdapter:
         if getattr(result, "table_data", None) is not None:
             return True
 
-        if isinstance(result, dict) and result.get("table_data") is not None:
-            return True
-
-        return False
+        return bool(isinstance(result, dict) and result.get("table_data") is not None)
 
     def get_result_table_data(
         self,
@@ -459,7 +455,7 @@ class BasePeakWorkflowAdapter:
         """
         if getattr(result, "table_data", None) is not None:
             return self.normalize_table_data(
-                table_data=getattr(result, "table_data"),
+                table_data=result.table_data,
             )
 
         if isinstance(result, dict):
@@ -472,7 +468,7 @@ class BasePeakWorkflowAdapter:
     def apply_values_to_first_matching_column(
         self,
         *,
-        table_data: Optional[list[dict[str, Any]]],
+        table_data: list[dict[str, Any]] | None,
         values: list[Any],
         candidate_column_names: tuple[str, ...],
     ) -> Any:
@@ -515,7 +511,7 @@ class BasePeakWorkflowAdapter:
         *,
         table_data: list[dict[str, Any]],
         candidate_column_names: tuple[str, ...],
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Find the first candidate column name present in the current table rows.
         """
@@ -755,7 +751,7 @@ class BasePeakWorkflowAdapter:
     def resolve_peak_table_sort_order(
         self,
         *,
-        context: Optional[dict[str, Any]],
+        context: dict[str, Any] | None,
         default: str = "ascending",
     ) -> str:
         """
@@ -818,7 +814,7 @@ class BasePeakWorkflowAdapter:
         self,
         *,
         value: Any,
-    ) -> Optional[tuple[int, Any]]:
+    ) -> tuple[int, Any] | None:
         """
         Build a stable sort key for one peak table value.
         """

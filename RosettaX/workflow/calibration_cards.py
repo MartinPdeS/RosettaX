@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from typing import Any
 
@@ -7,7 +6,6 @@ import dash_bootstrap_components as dbc
 
 from RosettaX.utils import styling, ui_forms
 from RosettaX.utils.runtime_config import RuntimeConfig
-
 
 TOGGLE_ID_TYPE = "calibration-card-toggle"
 COLLAPSE_ID_TYPE = "calibration-card-collapse"

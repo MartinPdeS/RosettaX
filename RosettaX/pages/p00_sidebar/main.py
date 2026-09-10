@@ -1,23 +1,22 @@
-# -*- coding: utf-8 -*-
 
 import logging
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Any
 
 import dash
 import dash_bootstrap_components as dbc
 from dash import dcc, html
 
-from .ids import SidebarIds
-from RosettaX.workflow.sidebar import services
+from RosettaX.utils import styling
 from RosettaX.utils.browser_profiles import (
     BROWSER_PROFILES_STORE_ID,
-    BrowserProfileLibrary,
     DEFAULT_PROFILE_FILENAME,
+    BrowserProfileLibrary,
     build_profile_label,
 )
-from RosettaX.utils import styling
+from RosettaX.workflow.sidebar import services
 
+from .ids import SidebarIds
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +68,7 @@ class Sidebar:
     def _get_default_profile_name(
         self,
         profile_options: list[dict[str, Any]],
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Resolve the startup profile name shown in the sidebar.
 
@@ -105,8 +104,8 @@ class Sidebar:
         )
         def initialize_or_sync_selected_profile(
             browser_profiles_payload: Any,
-            dropdown_value: Optional[str],
-            selected_profile_store_data: Optional[str],
+            dropdown_value: str | None,
+            selected_profile_store_data: str | None,
         ):
             profile_options = services.build_saved_profile_options(
                 browser_profiles_payload,
@@ -174,8 +173,8 @@ class Sidebar:
             prevent_initial_call=True,
         )
         def load_selected_profile(
-            n_clicks: Optional[int],
-            selected_profile: Optional[str],
+            n_clicks: int | None,
+            selected_profile: str | None,
             browser_profiles_payload: Any,
         ):
             logger.debug(
@@ -261,9 +260,9 @@ class Sidebar:
             prevent_initial_call=False,
         )
         def toggle_calibration_navigation(
-            n_clicks: Optional[int],
-            pathname: Optional[str],
-            is_open: Optional[bool],
+            n_clicks: int | None,
+            pathname: str | None,
+            is_open: bool | None,
         ):
             logger.debug(
                 "toggle_calibration_navigation called with n_clicks=%r pathname=%r is_open=%r",
@@ -301,9 +300,9 @@ class Sidebar:
             prevent_initial_call=False,
         )
         def toggle_tools_navigation(
-            n_clicks: Optional[int],
-            pathname: Optional[str],
-            is_open: Optional[bool],
+            n_clicks: int | None,
+            pathname: str | None,
+            is_open: bool | None,
         ):
             logger.debug(
                 "toggle_tools_navigation called with n_clicks=%r pathname=%r is_open=%r",
@@ -363,9 +362,9 @@ class Sidebar:
             prevent_initial_call=False,
         )
         def toggle_navigation_group(
-            _n_clicks: Optional[int],
-            pathname: Optional[str],
-            is_open: Optional[bool],
+            _n_clicks: int | None,
+            pathname: str | None,
+            is_open: bool | None,
         ):
             if dash.callback_context.triggered_id == button_id:
                 next_is_open = not bool(is_open)
@@ -387,7 +386,7 @@ class Sidebar:
 
     def layout(
         self,
-        sidebar: Optional[dict[str, list[str]]] = None,
+        sidebar: dict[str, list[str]] | None = None,
     ) -> html.Div:
         """
         Build the complete sidebar layout.
@@ -726,7 +725,7 @@ class Sidebar:
         self,
         *,
         profile_options: list[dict[str, Any]],
-        selected_profile: Optional[str],
+        selected_profile: str | None,
     ) -> dbc.Card:
         """
         Build the saved profiles card.
@@ -992,7 +991,7 @@ def register_sidebar_callbacks() -> None:
 
 
 def sidebar_html(
-    sidebar: Optional[dict[str, list[str]]],
+    sidebar: dict[str, list[str]] | None,
 ) -> html.Div:
     """
     Build sidebar HTML for the singleton sidebar instance.

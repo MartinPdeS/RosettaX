@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 from dataclasses import dataclass
 
-PAGE_NAME = "fluorescent_calibration"
-
-from RosettaX.workflow.upload.ids import UploadIds as UploadSectionIds
-from RosettaX.workflow.save.ids import SaveIds as SaveSectionIds
 from RosettaX.workflow.peak.ids import PeakIds
+from RosettaX.workflow.save.ids import SaveIds as SaveSectionIds
+from RosettaX.workflow.upload.ids import UploadIds as UploadSectionIds
+
+PAGE_NAME = "fluorescent_calibration"
 
 
 @dataclass(frozen=True)

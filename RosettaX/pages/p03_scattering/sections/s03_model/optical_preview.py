@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
 
-from functools import lru_cache
-from typing import Any, Optional
 import logging
+from functools import lru_cache
+from typing import Any
 
 import numpy as np
 import plotly.graph_objects as go
@@ -10,7 +9,6 @@ import plotly.graph_objects as go
 from RosettaX.workflow.scattering.calibration_services import (
     DEFAULT_SOURCE_POLARIZATION_ANGLE_DEGREE,
 )
-
 
 logger = logging.getLogger(__name__)
 OPTICAL_PREVIEW_UIREVISION = "optical-configuration-preview-v2"
@@ -25,9 +23,9 @@ def build_optical_configuration_preview_figure(
     detector_gamma_angle_degree: Any,
     polarization_angle_degree: Any = DEFAULT_SOURCE_POLARIZATION_ANGLE_DEGREE,
     scatter_coordinates: Any = None,
-    camera: Optional[dict[str, Any]] = None,
+    camera: dict[str, Any] | None = None,
     detector_sampling: Any = 200,
-    detector_angular_weights: Optional[np.ndarray] = None,
+    detector_angular_weights: np.ndarray | None = None,
     include_geometry: bool = True,
 ) -> go.Figure:
     """
@@ -104,7 +102,7 @@ def build_optical_configuration_preview_figure(
     figure.add_trace(_build_center_sphere_trace())
 
     if include_geometry:
-        detector_visible_mask: Optional[tuple[bool, ...]] = None
+        detector_visible_mask: tuple[bool, ...] | None = None
 
         if detector_angular_weights is not None:
             detector_visible_mask = tuple(
@@ -180,7 +178,7 @@ def resolve_scatter_coordinates(
     detector_phi_angle_degree: float,
     detector_gamma_angle_degree: float,
     detector_sampling: int,
-    detector_visible_mask: Optional[tuple[bool, ...]],
+    detector_visible_mask: tuple[bool, ...] | None,
 ) -> np.ndarray:
     """
     Resolve scatter coordinates for the optical preview.
@@ -250,7 +248,7 @@ def build_detector_mesh_coordinates(
     detector_phi_angle_degree: float,
     detector_gamma_angle_degree: float,
     detector_sampling: int = 200,
-    detector_visible_mask: Optional[tuple[bool, ...]] = None,
+    detector_visible_mask: tuple[bool, ...] | None = None,
 ) -> np.ndarray:
     """
     Build detector scatter coordinates from PyMieSim's Photodiode mesh.
@@ -780,7 +778,7 @@ def build_default_optical_preview_camera() -> dict[str, Any]:
 
 def resolve_locked_camera(
     *,
-    camera: Optional[dict[str, Any]],
+    camera: dict[str, Any] | None,
 ) -> dict[str, Any]:
     """
     Preserve camera rotation while forcing the camera center to remain fixed.

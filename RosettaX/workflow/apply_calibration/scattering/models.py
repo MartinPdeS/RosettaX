@@ -1,12 +1,10 @@
-# -*- coding: utf-8 -*-
 
 from dataclasses import dataclass
-from typing import Any, Optional, Union
+from typing import Any
 
 import numpy as np
 
 from RosettaX.workflow.scattering import MieRelation
-
 
 SOLID_SPHERE_MODEL_NAME = "Solid Sphere"
 CORE_SHELL_SPHERE_MODEL_NAME = "Core/Shell Sphere"
@@ -159,10 +157,7 @@ class CoreShellSphereTargetModel:
         }
 
 
-ScatteringTargetModel = Union[
-    SolidSphereTargetModel,
-    CoreShellSphereTargetModel,
-]
+ScatteringTargetModel = SolidSphereTargetModel | CoreShellSphereTargetModel
 
 
 @dataclass(frozen=True)
@@ -223,7 +218,7 @@ class ScatteringTargetModelParameters:
         return self.target_model.diameter_axis
 
     @property
-    def particle_refractive_index(self) -> Optional[float]:
+    def particle_refractive_index(self) -> float | None:
         """
         Return the solid sphere particle refractive index, if available.
         """
@@ -236,7 +231,7 @@ class ScatteringTargetModelParameters:
         return None
 
     @property
-    def core_refractive_index(self) -> Optional[float]:
+    def core_refractive_index(self) -> float | None:
         """
         Return the core refractive index, if available.
         """
@@ -249,7 +244,7 @@ class ScatteringTargetModelParameters:
         return None
 
     @property
-    def shell_refractive_index(self) -> Optional[float]:
+    def shell_refractive_index(self) -> float | None:
         """
         Return the shell refractive index, if available.
         """
@@ -262,7 +257,7 @@ class ScatteringTargetModelParameters:
         return None
 
     @property
-    def shell_thickness_nm(self) -> Optional[float]:
+    def shell_thickness_nm(self) -> float | None:
         """
         Return the constant shell thickness, if available.
         """
@@ -469,7 +464,7 @@ class MonotonicRelationResolution:
     """
 
     target_mie_relation: MieRelation
-    selected_interval: Optional[MonotonicDiameterInterval]
+    selected_interval: MonotonicDiameterInterval | None
     used_auto_largest_branch: bool
     warnings: list[str]
 

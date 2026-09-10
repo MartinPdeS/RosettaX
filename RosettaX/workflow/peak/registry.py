@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import importlib
 import inspect
@@ -6,7 +5,6 @@ import logging
 import pkgutil
 from functools import lru_cache
 from typing import Any
-
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +76,7 @@ def load_peak_scripts() -> tuple[Any, ...]:
             PEAK_SCRIPT_PACKAGE_NAME,
         )
 
-        return tuple()
+        return ()
 
     scripts: list[Any] = []
 

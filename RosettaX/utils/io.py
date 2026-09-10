@@ -1,9 +1,9 @@
-from typing import Optional, Any
+import logging
+from typing import Any
 
 import numpy as np
-from RosettaX.utils.reader import FCSFile
-import logging
 
+from RosettaX.utils.reader import FCSFile
 
 logger = logging.getLogger(__name__)
 
@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 def load_signal(
     fcs_file_path: str,
     detector_column: str,
-    max_events_for_analysis: Optional[int] = None,
+    max_events_for_analysis: int | None = None,
     require_positive_values: bool = False,
 ) -> np.ndarray:
     """
@@ -82,7 +82,7 @@ def column_copy(
     detector_column: str,
     *,
     dtype: Any = float,
-    n: Optional[int] = None,
+    n: int | None = None,
 ) -> np.ndarray:
     """
     Return an owned copy of a detector column from an FCS file.

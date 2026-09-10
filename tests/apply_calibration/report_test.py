@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import sys
 import types
@@ -44,13 +43,13 @@ from RosettaX.workflow.apply_calibration.report import (
     build_apply_report_payload,
     build_apply_report_pdf_bytes,
 )
+from RosettaX.workflow.apply_calibration.scattering.models import (
+    ScatteringTargetModelParameters,
+)
 from RosettaX.workflow.apply_calibration.services import (
     ApplyCalibrationFilesResult,
     ApplyCalibrationRequest,
     CalibrationApplication,
-)
-from RosettaX.workflow.apply_calibration.scattering.models import (
-    ScatteringTargetModelParameters,
 )
 
 

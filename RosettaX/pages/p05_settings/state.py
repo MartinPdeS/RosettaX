@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
 
 from dataclasses import asdict, dataclass
-from typing import Any, Optional
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -13,8 +12,8 @@ class SettingsPageState:
     and the latest status message.
     """
 
-    selected_profile: Optional[str] = None
-    form_data: Optional[dict[str, Any]] = None
+    selected_profile: str | None = None
+    form_data: dict[str, Any] | None = None
     status_message: str = ""
 
     @classmethod
@@ -30,7 +29,7 @@ class SettingsPageState:
         return cls()
 
     @classmethod
-    def from_dict(cls, payload: Optional[dict[str, Any]]) -> "SettingsPageState":
+    def from_dict(cls, payload: dict[str, Any] | None) -> "SettingsPageState":
         """
         Build settings page state from a serialized dictionary.
 

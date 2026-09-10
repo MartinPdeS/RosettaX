@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import sys
 import types
@@ -40,11 +39,11 @@ sys.modules.setdefault(
     _PyMieSimUnitsStub("PyMieSim.units"),
 )
 
-from RosettaX.workflow.apply_calibration.scattering.monotonic import (
-    resolve_monotonic_target_mie_relation,
-)
 from RosettaX.workflow.apply_calibration.scattering.models import (
     ScatteringTargetModelParameters,
+)
+from RosettaX.workflow.apply_calibration.scattering.monotonic import (
+    resolve_monotonic_target_mie_relation,
 )
 from RosettaX.workflow.scattering.mie_relation import build_mie_relation_from_arrays
 

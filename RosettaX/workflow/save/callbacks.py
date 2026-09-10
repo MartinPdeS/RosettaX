@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
 
-from typing import Any
 import logging
+from typing import Any
 
 import dash
 import dash_bootstrap_components as dbc

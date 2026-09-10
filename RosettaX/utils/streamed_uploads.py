@@ -1,14 +1,12 @@
-# -*- coding: utf-8 -*-
 
 import re
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, BinaryIO, Optional
+from typing import Any, BinaryIO
 from uuid import UUID, uuid4
 
 from RosettaX.utils.upload_limits import format_upload_size, get_max_upload_bytes
-
 
 STREAMED_UPLOAD_TOKEN_PREFIX = "rosettax-upload://"
 STREAMED_UPLOAD_ERROR_PREFIX = "rosettax-upload-error://"
@@ -68,9 +66,9 @@ def stage_streamed_upload(
     *,
     stream: BinaryIO,
     filename: Any,
-    content_length: Optional[int] = None,
+    content_length: int | None = None,
     staging_directory: Path = DEFAULT_STREAMED_UPLOAD_DIRECTORY,
-    max_upload_bytes: Optional[int] = None,
+    max_upload_bytes: int | None = None,
 ) -> StreamedUpload:
     """Stream one request body to disk without materializing it in memory."""
     resolved_max_upload_bytes = (
@@ -125,7 +123,7 @@ def resolve_streamed_upload(
     token: Any,
     *,
     staging_directory: Path = DEFAULT_STREAMED_UPLOAD_DIRECTORY,
-    max_upload_bytes: Optional[int] = None,
+    max_upload_bytes: int | None = None,
 ) -> StreamedUpload:
     """Resolve and validate an opaque upload token from a Dash callback."""
     raise_for_streamed_upload_error(token)

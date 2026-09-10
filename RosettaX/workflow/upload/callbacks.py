@@ -1,13 +1,9 @@
-# -*- coding: utf-8 -*-
+
+import logging
+from typing import Any
 
 import dash
-from typing import Any
-import logging
-
-from dash import Input
-from dash import Output
-from dash import State
-from dash import callback
+from dash import Input, Output, State, callback
 
 from RosettaX.workflow.upload import services
 from RosettaX.workflow.upload.adapters import UploadAdapter

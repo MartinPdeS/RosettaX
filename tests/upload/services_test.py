@@ -1,22 +1,21 @@
-# -*- coding: utf-8 -*-
 
 import base64
-import binascii
-import pytest
 from pathlib import Path
-from unittest.mock import patch, Mock
+from unittest.mock import Mock
 
+import pytest
+
+from RosettaX.workflow.upload.models import UploadConfig
 from RosettaX.workflow.upload.services import (
     DEFAULT_UPLOAD_DIRECTORY,
-    clean_optional_string,
-    build_loaded_filename_text,
     build_consistency_error_text,
+    build_loaded_filename_text,
     build_upload_feedback,
-    sanitize_filename,
+    clean_optional_string,
     decode_dash_upload_contents,
-    resolve_upload_directory
+    resolve_upload_directory,
+    sanitize_filename,
 )
-from RosettaX.workflow.upload.models import UploadConfig
 
 
 def test_build_upload_feedback_includes_file_summary_and_fcs_version() -> None:

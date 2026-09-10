@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from RosettaX.workflow.peak import registry
 from RosettaX.workflow.peak.callbacks import visibility

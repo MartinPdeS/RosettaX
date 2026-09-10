@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
+
+from dataclasses import FrozenInstanceError
+from unittest.mock import patch
 
 import numpy as np
 import pytest
-from dataclasses import FrozenInstanceError
-from unittest.mock import patch
 
 from RosettaX.workflow.scattering.calibration_services import (
     DEFAULT_SOURCE_POLARIZATION_ANGLE_DEGREE,

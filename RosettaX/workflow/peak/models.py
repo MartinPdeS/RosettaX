@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
 
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -67,8 +66,8 @@ class PeakConfig:
     runtime_config_store_id: str = "runtime-config-store"
     mie_model_input_id: Any = None
 
-    default_process_runtime_config_path: Optional[str] = None
-    allowed_process_names: Optional[list[str]] = None
+    default_process_runtime_config_path: str | None = None
+    allowed_process_names: list[str] | None = None
 
     number_of_bins_runtime_config_path: str = "visualization.n_bins"
     xscale_runtime_config_path: str = "calibration.histogram_xscale"

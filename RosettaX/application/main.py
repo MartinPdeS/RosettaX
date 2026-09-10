@@ -1,22 +1,20 @@
-# -*- coding: utf-8 -*-
 
 import logging
 import sys
 import webbrowser
 from pathlib import Path
 from threading import Timer
-from typing import Optional
 
 import dash
 
 from RosettaX.pages.p00_sidebar.main import register_sidebar_callbacks
 from RosettaX.utils.parser import _parse_args
+from RosettaX.utils.streamed_uploads import DEFAULT_STREAMED_UPLOAD_DIRECTORY
 from RosettaX.utils.upload_limits import (
     configure_max_upload_bytes,
     format_upload_size,
     get_max_upload_bytes,
 )
-from RosettaX.utils.streamed_uploads import DEFAULT_STREAMED_UPLOAD_DIRECTORY
 
 from .callbacks import register_application_callbacks
 from .layout import build_application_layout
@@ -174,7 +172,7 @@ class RosettaXApplication:
         webbrowser.open_new(application_url)
 
 
-def main(argv: Optional[list[str]] = None) -> None:
+def main(argv: list[str] | None = None) -> None:
     """
     Parse command line arguments and start the RosettaX application.
     """

@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*-
 
 import logging
 
 import numpy as np
-import pytest
-
 import plotly.graph_objs as go
+import pytest
 
 from RosettaX.pages.p02_fluorescence.sections.s04_calibration import services
 

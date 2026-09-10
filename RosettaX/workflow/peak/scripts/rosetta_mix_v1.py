@@ -1,14 +1,12 @@
-# -*- coding: utf-8 -*-
 
-from dataclasses import replace
 import logging
-from typing import Any, Optional
+from dataclasses import replace
+from typing import Any
 
 import numpy as np
 
 from .base import PeakProcessResult
 from .rosetta_mix import FluorescenceGuidedScatterPeakProcess
-
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +69,7 @@ class FluorescenceGuidedScatterPeakProcessV1(FluorescenceGuidedScatterPeakProces
         peak_count: Any,
         max_events_for_analysis: Any,
         process_settings: dict[str, Any],
-    ) -> Optional[PeakProcessResult]:
+    ) -> PeakProcessResult | None:
         """
         Run Rosetta detection, then infer Rosetta Mix diameter assignments.
         """
@@ -118,7 +116,7 @@ class FluorescenceGuidedScatterPeakProcessV1(FluorescenceGuidedScatterPeakProces
 
 def _advanced_mode_enabled(
     *,
-    process_settings: Optional[dict[str, Any]],
+    process_settings: dict[str, Any] | None,
 ) -> bool:
     """
     Return whether the peak workflow advanced mode toggle is enabled.
@@ -538,8 +536,8 @@ def assign_monotonic_candidate_diameters(
         if estimated_size_nm <= 0.0:
             continue
 
-        best_index: Optional[int] = None
-        best_error: Optional[float] = None
+        best_index: int | None = None
+        best_error: float | None = None
 
         for candidate_index in range(
             minimum_candidate_index,
@@ -713,7 +711,7 @@ def match_table_points_to_peak_metadata(
             resolved_metadata.append({})
             continue
 
-        matched_index: Optional[int] = None
+        matched_index: int | None = None
 
         for metadata_index, metadata in enumerate(remaining_metadata):
             metadata_x = _as_positive_float(
@@ -762,7 +760,7 @@ def match_table_points_to_peak_metadata(
 def resolve_marker_row_diameter(
     *,
     metadata: dict[str, Any],
-) -> Optional[float]:
+) -> float | None:
     """
     Resolve the marker diameter for one table row if it is a marker row.
     """
@@ -799,14 +797,14 @@ def format_size_annotation_label(value: Any) -> str:
         rtol=0.0,
         atol=1e-9,
     ):
-        return f"{int(round(rounded_value))} nm"
+        return f"{round(rounded_value)} nm"
 
     return f"{rounded_value:g} nm"
 
 
 def _as_positive_float(
     value: Any,
-) -> Optional[float]:
+) -> float | None:
     """
     Convert one value to a positive finite float.
     """

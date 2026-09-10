@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.table.fluorescence import (

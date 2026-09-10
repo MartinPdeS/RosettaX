@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
 
 import argparse
 import re
 from typing import Any
-
 
 DEFAULT_MAX_UPLOAD_BYTES = 2 * 1024**3
 

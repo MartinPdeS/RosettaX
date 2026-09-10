@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 
 DESIGN_TOKENS = {
@@ -132,19 +131,19 @@ CONTENT = {
 }
 
 
-DATATABLE = dict(
-    editable=True,
-    row_deletable=True,
-    cell_selectable=True,
-    persistence=True,
-    persistence_type="session",
-    persisted_props=[
+DATATABLE = {
+    "editable": True,
+    "row_deletable": True,
+    "cell_selectable": True,
+    "persistence": True,
+    "persistence_type": "session",
+    "persisted_props": [
         "data",
     ],
-    style_table={
+    "style_table": {
         "overflowX": "auto",
     },
-    style_cell={
+    "style_cell": {
         "textAlign": "left",
         "backgroundColor": "white",
         "color": "black",
@@ -154,17 +153,17 @@ DATATABLE = dict(
         "whiteSpace": "normal",
         "border": "1px solid #d9d9d9",
     },
-    style_header={
+    "style_header": {
         "backgroundColor": "#f8f9fa",
         "color": "black",
         "fontWeight": "600",
         "border": "1px solid #bdbdbd",
     },
-    style_data={
+    "style_data": {
         "backgroundColor": "white",
         "color": "black",
     },
-    style_data_conditional=[
+    "style_data_conditional": [
         {
             "if": {
                 "state": "active",
@@ -182,7 +181,7 @@ DATATABLE = dict(
             "color": "black",
         },
     ],
-    css=[
+    "css": [
         {
             "selector": ".dash-cell div",
             "rule": "text-align: left !important;",
@@ -204,7 +203,7 @@ DATATABLE = dict(
             ),
         },
     ],
-)
+}
 
 PLOTLY_GRAPH_CONFIG = {
     "displayModeBar": True,

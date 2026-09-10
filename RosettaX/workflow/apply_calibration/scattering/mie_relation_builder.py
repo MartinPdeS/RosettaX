@@ -1,20 +1,17 @@
-# -*- coding: utf-8 -*-
 
-from typing import Any
 import logging
+from typing import Any
 
 import numpy as np
 
 from RosettaX.pages.p03_scattering.backend import BackEnd
 from RosettaX.workflow import detector, scattering
-
 from RosettaX.workflow.apply_calibration.scattering.models import (
     CORE_SHELL_SPHERE_MODEL_NAME,
     CoreShellSphereTargetModel,
     ScatteringTargetModelParameters,
     SolidSphereTargetModel,
 )
-
 
 logger = logging.getLogger(__name__)
 

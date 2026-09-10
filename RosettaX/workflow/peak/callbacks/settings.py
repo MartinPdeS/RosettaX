@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
 
 from decimal import Decimal, InvalidOperation
-from typing import Any, Optional
+from typing import Any
 
 import dash
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from typing import Self
 
@@ -8,6 +7,7 @@ from .ids import Ids
 from .sections import callbacks as section_callbacks
 from .sections import layout as section_layout
 from .sections import services as section_services
+
 
 class FluorescencePage:
     """

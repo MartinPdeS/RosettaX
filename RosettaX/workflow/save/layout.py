@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import logging
 from typing import Any
@@ -7,7 +6,6 @@ import dash
 import dash_bootstrap_components as dbc
 
 from RosettaX.workflow.save.models import SaveConfig
-
 
 logger = logging.getLogger(__name__)
 

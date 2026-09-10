@@ -1,15 +1,16 @@
-# -*- coding: utf-8 -*-
 
-from dataclasses import asdict, dataclass
-from typing import Any, Optional
 import logging
+from dataclasses import asdict, dataclass
+from typing import Any
 
 import numpy as np
 
 from RosettaX.utils import casting
-from RosettaX.workflow import scattering, detector
-from .validation import validate_optical_parameters
+from RosettaX.workflow import detector
+
 from . import mie_relation
+from .mie_relation import MieRelation
+from .validation import validate_optical_parameters
 
 logger = logging.getLogger(__name__)
 
@@ -27,9 +28,9 @@ class OpticalParameters:
     """
 
     medium_refractive_index: float
-    particle_refractive_index: Optional[float]
-    core_refractive_index: Optional[float]
-    shell_refractive_index: Optional[float]
+    particle_refractive_index: float | None
+    core_refractive_index: float | None
+    shell_refractive_index: float | None
     wavelength_nm: float
     detector_numerical_aperture: float
     detector_cache_numerical_aperture: float
@@ -41,9 +42,9 @@ class OpticalParameters:
     source_numerical_aperture: float = 0.1
     polarization_angle_degree: float = DEFAULT_SOURCE_POLARIZATION_ANGLE_DEGREE
     detector_configuration_preset_name: str = ""
-    detector_angular_weights: Optional[np.ndarray] = None
-    effective_detector_cache_numerical_aperture: Optional[float] = None
-    effective_blocker_bar_numerical_aperture: Optional[float] = None
+    detector_angular_weights: np.ndarray | None = None
+    effective_detector_cache_numerical_aperture: float | None = None
+    effective_blocker_bar_numerical_aperture: float | None = None
 
     @property
     def modeling_detector_cache_numerical_aperture(self) -> float:
@@ -63,10 +64,10 @@ class OpticalParameters:
         self,
         *,
         mie_model: str,
-        particle_diameter_nm: Optional[list[float]] = None,
-        core_diameter_nm: Optional[list[float]] = None,
-        shell_thickness_nm: Optional[list[float]] = None,
-        outer_diameter_nm: Optional[list[float]] = None,
+        particle_diameter_nm: list[float] | None = None,
+        core_diameter_nm: list[float] | None = None,
+        shell_thickness_nm: list[float] | None = None,
+        outer_diameter_nm: list[float] | None = None,
     ) -> dict[str, Any]:
         """
         Convert the optical parameters into a serializable Mie parameter payload.
@@ -305,7 +306,7 @@ class ScatteringCalibration:
     """
 
     instrument_response: ScatteringInstrumentResponse
-    calibration_standard_mie_relation: scattering.MieRelation
+    calibration_standard_mie_relation: MieRelation
     reference_table: list[dict[str, Any]]
     metadata: dict[str, Any]
     calibration_type: str = "scattering"
@@ -340,7 +341,7 @@ class ScatteringCalibration:
         self,
         *,
         measured_values: np.ndarray,
-        target_mie_relation: scattering.MieRelation,
+        target_mie_relation: MieRelation,
     ) -> np.ndarray:
         """
         Convert measured values into target model equivalent diameter.
@@ -362,7 +363,7 @@ class ScatteringCalibration:
         self,
         *,
         measured_values: np.ndarray,
-        target_mie_relation: scattering.MieRelation,
+        target_mie_relation: MieRelation,
     ) -> dict[str, np.ndarray]:
         """
         Apply the scattering calibration to measured values.
@@ -543,7 +544,7 @@ class ScatteringCalibration:
 
         return cls(
             instrument_response=instrument_response,
-            calibration_standard_mie_relation=scattering.MieRelation.from_dict(
+            calibration_standard_mie_relation=MieRelation.from_dict(
                 payload.get(
                     "calibration_standard_mie_relation",
                     {},
@@ -564,7 +565,7 @@ class ScatteringCalibrationBuildResult:
 
     calibration: ScatteringCalibration
     instrument_response: ScatteringInstrumentResponse
-    calibration_standard_mie_relation: scattering.MieRelation
+    calibration_standard_mie_relation: MieRelation
     updated_table_rows: list[dict[str, str]]
     measured_peak_positions: np.ndarray
     standard_diameters_nm: np.ndarray
@@ -579,7 +580,7 @@ class ScatteringApplicationResult:
 
     estimated_coupling: list[float]
     mie_equivalent_diameter_nm: list[float]
-    target_mie_relation: scattering.MieRelation
+    target_mie_relation: MieRelation
     warnings: list[str]
     metadata: dict[str, Any]
 
@@ -779,7 +780,7 @@ def parse_optical_parameters(
 
 def parse_sphere_rows_for_fit(
     *,
-    rows: Optional[list[dict[str, Any]]],
+    rows: list[dict[str, Any]] | None,
 ) -> ParsedSphereStandardRows:
     """
     Extract valid solid sphere calibration standard rows.
@@ -911,7 +912,7 @@ def parse_sphere_rows_for_fit(
 
 def parse_core_shell_rows_for_fit(
     *,
-    rows: Optional[list[dict[str, Any]]],
+    rows: list[dict[str, Any]] | None,
 ) -> ParsedCoreShellStandardRows:
     """
     Extract valid core shell calibration standard rows.
@@ -1226,9 +1227,9 @@ def build_calibration_standard_mie_relation(
     fallback_expected_coupling_values: np.ndarray,
     mie_model: str,
     optical_parameters: OpticalParameters,
-    fallback_core_diameters_nm: Optional[np.ndarray] = None,
-    fallback_shell_thicknesses_nm: Optional[np.ndarray] = None,
-) -> scattering.MieRelation:
+    fallback_core_diameters_nm: np.ndarray | None = None,
+    fallback_shell_thicknesses_nm: np.ndarray | None = None,
+) -> MieRelation:
     """
     Build the calibration standard Mie relation stored in the calibration payload.
 
@@ -1287,8 +1288,8 @@ def build_calibration_standard_mie_relation(
         second_name="mie_relation_coupling_values",
     )
 
-    core_diameter_nm: Optional[list[float]] = None
-    shell_thickness_nm: Optional[list[float]] = None
+    core_diameter_nm: list[float] | None = None
+    shell_thickness_nm: list[float] | None = None
 
     if fallback_core_diameters_nm is not None:
         fallback_core_diameters_nm = _as_flat_float_array(
@@ -1573,9 +1574,9 @@ def build_scattering_calibration(
     measured_peak_values: np.ndarray,
     theoretical_coupling_values: np.ndarray,
     measured_channel: str,
-    calibration_standard_mie_relation: scattering.MieRelation,
+    calibration_standard_mie_relation: MieRelation,
     reference_table: list[dict[str, Any]],
-    metadata: Optional[dict[str, Any]] = None,
+    metadata: dict[str, Any] | None = None,
     force_zero_intercept: bool = True,
 ) -> ScatteringCalibration:
     """
@@ -1627,7 +1628,7 @@ def build_solid_sphere_scattering_calibration_from_standard_data(
     dense_particle_diameters_nm: np.ndarray,
     dense_expected_coupling_values: np.ndarray,
     optical_parameters: OpticalParameters,
-    metadata: Optional[dict[str, Any]] = None,
+    metadata: dict[str, Any] | None = None,
     force_zero_intercept: bool = True,
 ) -> ScatteringCalibrationBuildResult:
     """
@@ -1788,7 +1789,7 @@ def build_core_shell_scattering_calibration_from_standard_data(
     dense_outer_diameters_nm: np.ndarray,
     dense_expected_coupling_values: np.ndarray,
     optical_parameters: OpticalParameters,
-    metadata: Optional[dict[str, Any]] = None,
+    metadata: dict[str, Any] | None = None,
     force_zero_intercept: bool = True,
 ) -> ScatteringCalibrationBuildResult:
     """
@@ -1991,8 +1992,8 @@ def apply_scattering_calibration(
     *,
     calibration: ScatteringCalibration,
     measured_values: np.ndarray,
-    target_mie_relation: scattering.MieRelation,
-    metadata: Optional[dict[str, Any]] = None,
+    target_mie_relation: MieRelation,
+    metadata: dict[str, Any] | None = None,
 ) -> ScatteringApplicationResult:
     """
     Apply a scattering calibration using a target particle Mie relation.

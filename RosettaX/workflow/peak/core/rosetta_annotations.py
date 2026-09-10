@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
 
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 import plotly.graph_objs as go
-
 
 ROSETTA_SCATTER_LABEL_AXIS_POSITION = 0.90
 
@@ -75,7 +73,7 @@ def resolve_annotation_x_value(
     *,
     x_value: float,
     x_axis_is_log_scale: bool,
-) -> Optional[float]:
+) -> float | None:
     """
     Resolve one annotation x value for the current x-axis scale.
     """

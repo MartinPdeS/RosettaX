@@ -1,15 +1,14 @@
-# -*- coding: utf-8 -*-
 
-from typing import Any, Optional
-from pathlib import Path
 import json
 import logging
+from pathlib import Path
+from typing import Any
 
-from .. import registry
 from RosettaX.utils.fcs_metadata import FCSMetadata
 from RosettaX.utils.reader import FCSFile
 from RosettaX.utils.runtime_config import RuntimeConfig
 
+from .. import registry
 
 logger = logging.getLogger(__name__)
 DETECTOR_AUTO_DETECT_RULES_PATH = Path(__file__).parents[2] / "detector" / (
@@ -67,7 +66,7 @@ def populate_peak_script_detector_dropdowns(
     detector_dropdown_ids: list[dict[str, Any]],
     current_detector_values: list[Any],
     runtime_config_data: Any = None,
-    detector_selection_runtime_config_path: Optional[str] = None,
+    detector_selection_runtime_config_path: str | None = None,
     logger: logging.Logger,
 ) -> tuple[list[list[dict[str, Any]]], list[Any]]:
     """
@@ -212,11 +211,11 @@ def populate_peak_script_detector_dropdowns(
 def infer_default_detector_channel(
     *,
     column_names: list[str],
-    metadata: Optional[FCSMetadata] = None,
+    metadata: FCSMetadata | None = None,
     detector_role: Any = None,
     selection_mode: str = "name-heuristic",
-    matched_rule: Optional[dict[str, Any]] = None,
-) -> Optional[str]:
+    matched_rule: dict[str, Any] | None = None,
+) -> str | None:
     """
     Infer a reasonable default detector channel.
 
@@ -250,7 +249,7 @@ def infer_detector_channel_from_column_names(
     *,
     column_names: list[str],
     detector_role: Any = None,
-) -> Optional[str]:
+) -> str | None:
     """
     Infer a reasonable default detector channel from the available column names.
     """
@@ -296,7 +295,7 @@ def infer_detector_channel_from_column_names(
 def find_fluorescence_channel_from_column_names(
     *,
     column_names: list[str],
-) -> Optional[str]:
+) -> str | None:
     """
     Find a likely fluorescence detector channel from the available column names.
     """
@@ -331,7 +330,7 @@ def find_scattering_channel_from_column_names(
     *,
     column_names: list[str],
     detector_role: str,
-) -> Optional[str]:
+) -> str | None:
     """
     Find a likely scattering detector channel from the available column names.
     """
@@ -371,7 +370,7 @@ def find_scattering_channel_from_column_names(
 def resolve_detector_selection_mode(
     *,
     runtime_config_data: Any,
-    detector_selection_runtime_config_path: Optional[str],
+    detector_selection_runtime_config_path: str | None,
 ) -> str:
     """
     Resolve the detector dropdown defaulting mode for the current page.
@@ -394,8 +393,8 @@ def resolve_detector_selection_mode(
 
 def resolve_detector_auto_detect_rule(
     *,
-    metadata: Optional[FCSMetadata],
-) -> Optional[dict[str, Any]]:
+    metadata: FCSMetadata | None,
+) -> dict[str, Any] | None:
     """
     Resolve one detector auto-detect rule from FCS instrument metadata.
     """
@@ -443,8 +442,8 @@ def resolve_rule_based_detector_channel(
     *,
     column_names: list[str],
     detector_role: Any,
-    matched_rule: Optional[dict[str, Any]],
-) -> Optional[str]:
+    matched_rule: dict[str, Any] | None,
+) -> str | None:
     """
     Resolve one detector channel from a matched instrument rule.
     """
@@ -557,7 +556,7 @@ def load_detector_auto_detect_rules() -> list[dict[str, Any]]:
 
 def extract_instrument_name_from_metadata(
     *,
-    metadata: Optional[FCSMetadata],
+    metadata: FCSMetadata | None,
 ) -> str:
     """
     Extract one instrument or system name from FCS metadata.
@@ -608,7 +607,7 @@ def find_matching_column_name(
     *,
     column_names: list[str],
     candidate_name: Any,
-) -> Optional[str]:
+) -> str | None:
     """
     Find one FCS column name matching a rule candidate.
     """

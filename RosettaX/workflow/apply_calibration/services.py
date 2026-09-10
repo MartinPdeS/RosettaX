@@ -1,20 +1,18 @@
-# -*- coding: utf-8 -*-
 
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 
 from . import io
-
 from .fluorescence import apply_legacy_calibration_to_series
-
 from .scattering import (
     ScatteringTargetModelParameters,
     apply_scattering_calibration_to_dataframe,
     build_scattering_output_columns,
-    calibration_is_scattering_v2
+    calibration_is_scattering_v2,
 )
+
 
 @dataclass(frozen=True)
 class CalibrationApplication:
@@ -24,7 +22,7 @@ class CalibrationApplication:
 
     selected_calibration: str
     calibration_payload: dict[str, Any]
-    scattering_target_model_parameters: Optional[ScatteringTargetModelParameters] = None
+    scattering_target_model_parameters: ScatteringTargetModelParameters | None = None
 
 
 @dataclass(frozen=True)

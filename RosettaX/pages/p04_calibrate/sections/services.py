@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from .s01_header import Header
 from .s02_calibration_picker.main import CalibrationPicker

@@ -1,16 +1,14 @@
-# -*- coding: utf-8 -*-
 
 import json
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from RosettaX.utils import casting
 from RosettaX.utils.runtime_config import RuntimeConfig
 
 from . import services as table_services
-
 
 CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME = "Custom"
 GENERIC_FLUORESCENCE_REFERENCE_PRESET_NAME = "Generic"
@@ -110,7 +108,7 @@ def build_fluorescence_reference_preset_options() -> list[dict[str, str]]:
 
 def get_fluorescence_reference_preset(
     preset_name: Any,
-) -> Optional[FluorescenceReferencePreset]:
+) -> FluorescenceReferencePreset | None:
     """
     Resolve one built-in fluorescence reference preset by name.
     """
@@ -184,7 +182,7 @@ class FluorescenceReferenceTable:
         cls,
         *,
         preset_name: Any,
-        current_rows: Optional[list[dict[str, Any]]] = None,
+        current_rows: list[dict[str, Any]] | None = None,
     ) -> list[dict[str, Any]]:
         """
         Build fluorescence calibration rows from a selected preset.
@@ -324,7 +322,7 @@ class FluorescenceReferenceTable:
     def normalize_rows(
         cls,
         *,
-        rows: Optional[list[dict[str, Any]]],
+        rows: list[dict[str, Any]] | None,
     ) -> list[dict[str, Any]]:
         """
         Normalize fluorescence table rows.
@@ -337,7 +335,7 @@ class FluorescenceReferenceTable:
     def resolve_matching_preset_name(
         cls,
         *,
-        rows: Optional[list[dict[str, Any]]],
+        rows: list[dict[str, Any]] | None,
     ) -> str:
         """
         Resolve the selected preset name from the table calibrated-intensity column.
@@ -386,7 +384,7 @@ class FluorescenceReferenceTable:
     def table_is_effectively_empty(
         cls,
         *,
-        rows: Optional[list[dict[str, Any]]],
+        rows: list[dict[str, Any]] | None,
     ) -> bool:
         """
         Return whether the fluorescence table has no useful data.
@@ -401,7 +399,7 @@ class FluorescenceReferenceTable:
         cls,
         *,
         profile_load_event_data: Any,
-        current_rows: Optional[list[dict[str, Any]]],
+        current_rows: list[dict[str, Any]] | None,
     ) -> bool:
         """
         Decide whether runtime configuration should overwrite the table.
@@ -420,7 +418,7 @@ class FluorescenceReferenceTable:
     def add_empty_row(
         cls,
         *,
-        rows: Optional[list[dict[str, Any]]],
+        rows: list[dict[str, Any]] | None,
     ) -> list[dict[str, Any]]:
         """
         Add one empty fluorescence table row.
@@ -437,7 +435,7 @@ class FluorescenceReferenceTable:
     def clear_measured_intensity(
         cls,
         *,
-        rows: Optional[list[dict[str, Any]]],
+        rows: list[dict[str, Any]] | None,
     ) -> list[dict[str, Any]]:
         """
         Clear the measured intensity column.
@@ -453,7 +451,7 @@ class FluorescenceReferenceTable:
     def clear_calibrated_intensity(
         cls,
         *,
-        rows: Optional[list[dict[str, Any]]],
+        rows: list[dict[str, Any]] | None,
     ) -> list[dict[str, Any]]:
         """
         Clear the calibrated intensity column.

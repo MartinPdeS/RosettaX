@@ -1,17 +1,19 @@
-# -*- coding: utf-8 -*-
 
-from pathlib import Path
-from typing import Any, Optional
 import logging
+from pathlib import Path
+from typing import Any
 
 import numpy as np
 
-from .base import BasePeakProcess
-from .base import PeakProcessResult
-from .base import build_edge_pileup_mask as shared_build_edge_pileup_mask
-from .base import resolve_edge_artifact_filter_enabled
 from RosettaX.utils.io import column_copy
 from RosettaX.utils.reader import FCSFile
+
+from .base import (
+    BasePeakProcess,
+    PeakProcessResult,
+    resolve_edge_artifact_filter_enabled,
+)
+from .base import build_edge_pileup_mask as shared_build_edge_pileup_mask
 
 logger = logging.getLogger(__name__)
 
@@ -191,7 +193,7 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
         peak_count: Any,
         max_events_for_analysis: Any,
         process_settings: dict[str, Any],
-    ) -> Optional[PeakProcessResult]:
+    ) -> PeakProcessResult | None:
         """
         Run the Rosetta peak identification workflow.
         """
@@ -624,8 +626,8 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
                 (
                     f" (scatter saturation used={float(scattering_saturation_value):.6g}, "
                     f"guard fraction={float(saturation_guard_fraction):.6g}, "
-                    f"channel={str(scattering_column)}, "
-                    f"saturation source={str(scattering_saturation_source or 'unknown')})."
+                    f"channel={scattering_column!s}, "
+                    f"saturation source={scattering_saturation_source or 'unknown'!s})."
                 )
                 if scattering_saturation_value is not None
                 else
@@ -671,12 +673,12 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
         self,
         *,
         status: str,
-        fluorescence_analysis: Optional[dict[str, Any]] = None,
-        baseline_lower_gate: Optional[float] = None,
-        baseline_upper_gate: Optional[float] = None,
-        marker_points: Optional[list[dict[str, float]]] = None,
-        plot_scattering_values: Optional[np.ndarray] = None,
-        plot_fluorescence_values: Optional[np.ndarray] = None,
+        fluorescence_analysis: dict[str, Any] | None = None,
+        baseline_lower_gate: float | None = None,
+        baseline_upper_gate: float | None = None,
+        marker_points: list[dict[str, float]] | None = None,
+        plot_scattering_values: np.ndarray | None = None,
+        plot_fluorescence_values: np.ndarray | None = None,
     ) -> PeakProcessResult:
         """
         Build a stop result with optional diagnostic payload.
@@ -684,9 +686,7 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
         payload = self.build_empty_peak_lines_payload()
 
         if fluorescence_analysis is not None:
-            payload["fluorescence_peak_count"] = int(
-                len(fluorescence_analysis.get("validated_peaks", []))
-            )
+            payload["fluorescence_peak_count"] = len(fluorescence_analysis.get("validated_peaks", []))
 
         if baseline_lower_gate is not None and np.isfinite(baseline_lower_gate):
             payload["y_lower_gate"] = float(baseline_lower_gate)
@@ -1114,7 +1114,7 @@ def build_edge_pileup_mask(
 
 def build_peak_analysis_diagnostic_text(
     *,
-    analysis: Optional[dict[str, Any]],
+    analysis: dict[str, Any] | None,
     label: str,
 ) -> str:
     """
@@ -1409,7 +1409,7 @@ def fit_gaussian_from_values(
     values: np.ndarray,
     minimum_events: int,
     use_log_space: bool = False,
-) -> Optional[dict[str, float]]:
+) -> dict[str, float] | None:
     """
     Fit a Gaussian to ROI values using histogram moments.
 
@@ -1586,7 +1586,7 @@ def select_primary_validated_peak(
     minimum_events_per_peak: int,
     fit_r2_threshold: float,
     fit_cv_threshold: float,
-) -> Optional[dict[str, float]]:
+) -> dict[str, float] | None:
     """
     Return the strongest validated peak from one 1D dataset.
     """
@@ -1821,7 +1821,7 @@ def find_left_valley_minimum(
     *,
     counts: np.ndarray,
     peak_index: int,
-) -> Optional[float]:
+) -> float | None:
     """
     Find the left-side valley minimum for one histogram peak.
     """
@@ -1845,7 +1845,7 @@ def find_right_valley_minimum(
     *,
     counts: np.ndarray,
     peak_index: int,
-) -> Optional[float]:
+) -> float | None:
     """
     Find the right-side valley minimum for one histogram peak.
     """

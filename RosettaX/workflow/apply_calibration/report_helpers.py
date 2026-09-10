@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
 
-from typing import Any, Optional
+from typing import Any
 
 
 def build_saved_payload_section_specs(
@@ -147,7 +146,7 @@ def _collect_scalar_payload_items(
     *,
     payload: dict[str, Any],
     parent_path: str = "",
-    excluded_paths: Optional[set[str]] = None,
+    excluded_paths: set[str] | None = None,
 ) -> list[tuple[str, str]]:
     items: list[tuple[str, str]] = []
     active_excluded_paths = excluded_paths or set()

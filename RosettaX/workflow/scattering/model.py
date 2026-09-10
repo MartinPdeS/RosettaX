@@ -1,10 +1,10 @@
-# -*- coding: utf-8 -*-
 
 import json
+from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Optional, Sequence
+from typing import Any
 
 import plotly.graph_objs as go
 
@@ -16,7 +16,6 @@ from RosettaX.workflow.parameters.refractive_index import (
     resolve_refractive_index_value,
 )
 from RosettaX.workflow.table import services as table_services
-
 
 CUSTOM_SCATTERER_PRESET_NAME = "Custom"
 NO_SCATTERER_PRESET_NAME = ""
@@ -37,10 +36,10 @@ class ScatteringCalibrationScattererPreset:
     particle_refractive_index: float
     core_refractive_index: float
     shell_refractive_index: float
-    medium_refractive_index_source: Optional[str] = None
-    particle_refractive_index_source: Optional[str] = None
-    core_refractive_index_source: Optional[str] = None
-    shell_refractive_index_source: Optional[str] = None
+    medium_refractive_index_source: str | None = None
+    particle_refractive_index_source: str | None = None
+    core_refractive_index_source: str | None = None
+    shell_refractive_index_source: str | None = None
     particle_diameters_nm: tuple[float, ...] = ()
     core_diameters_nm: tuple[float, ...] = ()
     shell_thicknesses_nm: tuple[float, ...] = ()
@@ -442,8 +441,8 @@ class ModelConfiguration:
         *,
         runtime_config_data: Any = None,
         uploaded_fcs_path: Any = None,
-        detector_selection_runtime_config_path: Optional[str] = None,
-    ) -> Optional[str]:
+        detector_selection_runtime_config_path: str | None = None,
+    ) -> str | None:
         """
         Resolve a persisted detector preset name to a known preset.
         """
@@ -459,7 +458,7 @@ class ModelConfiguration:
         *,
         uploaded_fcs_path: Any,
         selected_detector_channel: Any,
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Detect one scattering detector preset from uploaded FCS metadata and the
         selected peak detector channel.
@@ -472,7 +471,7 @@ class ModelConfiguration:
     @staticmethod
     def detect_wavelength_nm_from_detector_channel(
         selected_detector_channel: Any,
-    ) -> Optional[int]:
+    ) -> int | None:
         """
         Infer one laser wavelength from the selected peak detector channel.
         """
@@ -566,9 +565,9 @@ class ModelConfiguration:
     def build_table_state_from_scatterer_preset(
         *,
         preset_name: Any,
-        current_rows: Optional[list[dict[str, Any]]] = None,
+        current_rows: list[dict[str, Any]] | None = None,
         wavelength_nm: Any = None,
-    ) -> Optional[tuple[list[dict[str, Any]], list[dict[str, str]]]]:
+    ) -> tuple[list[dict[str, Any]], list[dict[str, str]]] | None:
         """
         Build calibration table columns and rows from a scatterer preset.
 
@@ -660,8 +659,8 @@ class ModelConfiguration:
     def _merge_preset_geometry_with_current_table_rows(
         *,
         mie_model: Any,
-        preset_rows: Optional[list[dict[str, Any]]],
-        current_rows: Optional[list[dict[str, Any]]],
+        preset_rows: list[dict[str, Any]] | None,
+        current_rows: list[dict[str, Any]] | None,
     ) -> list[dict[str, str]]:
         """
         Merge preset geometry rows with user-entered table values.
@@ -837,7 +836,7 @@ class ModelConfiguration:
             current_medium_refractive_index=medium_refractive_index,
             current_detector_angular_weighting=detector_angular_weighting_json,
         )
-        effective_detector_cache_numerical_aperture, effective_blocker_bar_numerical_aperture = detector.resolve_detector_modeling_geometry_values(
+        _effective_detector_cache_numerical_aperture, effective_blocker_bar_numerical_aperture = detector.resolve_detector_modeling_geometry_values(
             preset_name=detector_configuration_preset,
             current_detector_cache_numerical_aperture=resolved_detector_cache_numerical_aperture,
             current_blocker_bar_numerical_aperture=resolved_blocker_bar_numerical_aperture,

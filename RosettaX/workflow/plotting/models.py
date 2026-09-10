@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 
 @dataclass(frozen=True)
@@ -23,7 +21,7 @@ class PlotStyleOptions:
     font_size: float = 14.0
     tick_size: float = 12.0
     show_grid: bool = True
-    height_px: Optional[int] = None
+    height_px: int | None = None
 
     def __post_init__(self) -> None:
         if float(self.marker_size) <= 0.0:
@@ -43,7 +41,7 @@ class HistogramOptions:
     """Validated options for a 1D histogram plot."""
 
     bin_count: int = 180
-    max_events: Optional[int] = None
+    max_events: int | None = None
     axes: AxisOptions = field(default_factory=AxisOptions)
     style: PlotStyleOptions = field(default_factory=PlotStyleOptions)
 
@@ -76,7 +74,7 @@ class SmoothedHistogramOptions(HistogramOptions):
 class ScatterOptions:
     """Shared visual options for a 2D scatter plot."""
 
-    max_events: Optional[int] = None
+    max_events: int | None = None
     marker_size: float = 5.0
     marker_opacity: float = 0.72
     density_bin_count: int = 120

@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
 
 import logging
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import dash_bootstrap_components as dbc
 from dash import dcc
@@ -11,7 +10,6 @@ from RosettaX.utils import styling, ui_forms
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.upload import services
 from RosettaX.workflow.upload.models import UploadConfig
-
 
 logger = logging.getLogger(__name__)
 
@@ -107,7 +105,7 @@ class UploadLayout:
 
         return {}
 
-    def _get_initial_fcs_file_path(self) -> Optional[str]:
+    def _get_initial_fcs_file_path(self) -> str | None:
         """
         Resolve the initial FCS file path from the default runtime config.
         """

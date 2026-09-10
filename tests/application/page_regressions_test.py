@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import importlib
 import logging
@@ -14,9 +13,15 @@ from RosettaX.pages.p00_sidebar.main import Sidebar
 from RosettaX.pages.p02_fluorescence.ids import Ids as FluorescenceIds
 from RosettaX.pages.p02_fluorescence.sections.s04_calibration.main import Calibration
 from RosettaX.pages.p03_scattering.ids import Ids as ScatteringIds
-from RosettaX.pages.p03_scattering.sections.s03_model.main import Model as ScatteringModel
-from RosettaX.pages.p03_scattering.sections.s05_calibration.main import Calibration as ScatteringCalibration
-from RosettaX.pages.p03_scattering.sections.s05_calibration import services as scattering_services
+from RosettaX.pages.p03_scattering.sections.s03_model.main import (
+    Model as ScatteringModel,
+)
+from RosettaX.pages.p03_scattering.sections.s05_calibration import (
+    services as scattering_services,
+)
+from RosettaX.pages.p03_scattering.sections.s05_calibration.main import (
+    Calibration as ScatteringCalibration,
+)
 from RosettaX.pages.p04_calibrate.sections.s04_apply import services as apply_services
 from RosettaX.utils.upload_limits import get_max_upload_bytes
 from RosettaX.workflow.parameters.refractive_index import (

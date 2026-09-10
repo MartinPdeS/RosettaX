@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 from pathlib import Path
 
@@ -270,9 +269,8 @@ def test_fcs_reader_raises_for_missing_file() -> None:
     """
     missing_file_path = directories.fcs_data / "this_file_does_not_exist.fcs"
 
-    with pytest.raises(FileNotFoundError):
-        with FCSFile(missing_file_path):
-            pass
+    with pytest.raises(FileNotFoundError), FCSFile(missing_file_path):
+        pass
 
 
 if __name__ == "__main__":

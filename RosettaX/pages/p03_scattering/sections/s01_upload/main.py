@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import logging
 from typing import Any
@@ -6,13 +5,13 @@ from typing import Any
 import dash
 import dash_bootstrap_components as dbc
 
-from ...state import ScatteringPageState
-from RosettaX.utils import styling, ui_forms
+from RosettaX.utils import ui_forms
 from RosettaX.workflow.upload.adapters import ScatteringUploadAdapter
 from RosettaX.workflow.upload.callbacks import register_upload_callbacks
 from RosettaX.workflow.upload.layout import UploadLayout
 from RosettaX.workflow.upload.models import UploadConfig
 
+from ...state import ScatteringPageState
 
 logger = logging.getLogger(__name__)
 

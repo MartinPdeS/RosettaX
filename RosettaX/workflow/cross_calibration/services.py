@@ -1,20 +1,18 @@
-# -*- coding: utf-8 -*-
 
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 import plotly.graph_objects as go
 
-from RosettaX.utils import plottings
-from RosettaX.utils import service
+from RosettaX.utils import plottings, service
 from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.workflow.upload.services import read_uploaded_file_bytes
 from RosettaX.workflow.save.services import build_json_download_filename
-from .models import CrossCalibrationPoint, CrossCalibrationResult
+from RosettaX.workflow.upload.services import read_uploaded_file_bytes
 
+from .models import CrossCalibrationPoint, CrossCalibrationResult
 
 SUPPORTED_SCHEMA = "rosettax_calibration_v1"
 EXPORT_SCHEMA = "rosettax_cross_calibration_v1"
@@ -67,7 +65,7 @@ def _resolve_figure_height_px(
 
 
 def build_cross_calibration_uirevision(
-    result: Optional[dict[str, Any]],
+    result: dict[str, Any] | None,
 ) -> str:
     """
     Build a stable Plotly UI revision token for the cross-calibration graph.
@@ -104,7 +102,7 @@ def parse_uploaded_calibration(
     *,
     contents: Any,
     filename: Any,
-    expected_calibration_type: Optional[str] = None,
+    expected_calibration_type: str | None = None,
 ) -> tuple[str, dict[str, Any]]:
     """
     Parse one uploaded RosettaX calibration JSON and optionally validate its type.
@@ -190,7 +188,7 @@ def build_calibration_summary(
 
 
 def build_calibration_summary_children(
-    summary: Optional[dict[str, Any]],
+    summary: dict[str, Any] | None,
     *,
     empty_message: str,
 ) -> list[Any]:
@@ -284,7 +282,7 @@ def _resolve_output_quantity_label(
 
 def _as_positive_float(
     value: Any,
-) -> Optional[float]:
+) -> float | None:
     try:
         resolved_value = float(value)
     except Exception:
@@ -541,7 +539,7 @@ def build_cross_calibration_result(
 
 
 def build_result_figure(
-    result: Optional[dict[str, Any]],
+    result: dict[str, Any] | None,
     runtime_config_data: Any = None,
 ) -> go.Figure:
     """
@@ -663,7 +661,7 @@ def build_result_figure(
 
 
 def build_result_table_data(
-    result: Optional[dict[str, Any]],
+    result: dict[str, Any] | None,
 ) -> list[dict[str, Any]]:
     """
     Build table rows for the paired bead points.
@@ -690,7 +688,7 @@ def build_result_table_data(
 
 
 def build_result_status_text(
-    result: Optional[dict[str, Any]],
+    result: dict[str, Any] | None,
 ) -> str:
     """
     Build one concise status summary.

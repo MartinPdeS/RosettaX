@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import dash
 import numpy as np
@@ -115,7 +114,7 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
     def apply_peak_process_result_to_table(
         self,
         *,
-        table_data: Optional[list[dict[str, Any]]],
+        table_data: list[dict[str, Any]] | None,
         result: Any,
         context: dict[str, Any],
         logger: logging.Logger,
@@ -521,7 +520,7 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
     def append_x_values_to_scattering_table(
         self,
         *,
-        table_data: Optional[list[dict[str, Any]]],
+        table_data: list[dict[str, Any]] | None,
         x_values: list[Any],
         mie_model: str,
         descending: bool,
@@ -678,7 +677,7 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
     def clear_scattering_peak_column(
         self,
         *,
-        table_data: Optional[list[dict[str, Any]]],
+        table_data: list[dict[str, Any]] | None,
         mie_model: str,
     ) -> list[dict[str, Any]]:
         """
@@ -744,7 +743,7 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
         *,
         rows: list[dict[str, Any]],
         column_name: str,
-    ) -> Optional[int]:
+    ) -> int | None:
         """
         Return the first row where the target column is empty.
         """
@@ -773,7 +772,7 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
     def apply_table_prefill_rows(
         self,
         *,
-        table_data: Optional[list[dict[str, Any]]],
+        table_data: list[dict[str, Any]] | None,
         table_prefill_rows: list[dict[str, Any]],
         mie_model: str,
     ) -> list[dict[str, Any]]:

@@ -1,14 +1,12 @@
-# -*- coding: utf-8 -*-
 
 import logging
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 import dash
 import dash_bootstrap_components as dbc
 
 from RosettaX.utils import styling
-
 
 logger = logging.getLogger(__name__)
 
@@ -20,8 +18,8 @@ class ReferenceTableConfig:
     """
 
     card_title: Any
-    description: Optional[Any]
-    table_title: Optional[str] = None
+    description: Any | None
+    table_title: str | None = None
     add_row_button_label: str = "Add row"
     add_row_button_color: str = "secondary"
     add_row_button_outline: bool = True
@@ -37,9 +35,9 @@ class ReferenceTableActionConfig:
 
     button_id: Any
     button_label: str
-    description: Optional[Any]
+    description: Any | None
     button_color: str = "primary"
-    button_style: Optional[dict[str, Any]] = None
+    button_style: dict[str, Any] | None = None
 
 
 class ReferenceTableLayout:
@@ -63,7 +61,7 @@ class ReferenceTableLayout:
         config: ReferenceTableConfig,
         table_columns: list[dict[str, Any]],
         table_data: list[dict[str, Any]],
-        action_config: Optional[ReferenceTableActionConfig] = None,
+        action_config: ReferenceTableActionConfig | None = None,
     ) -> None:
         self.ids = ids
         self.config = config

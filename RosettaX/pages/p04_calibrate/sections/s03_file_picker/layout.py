@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import logging
 from typing import Any
@@ -6,13 +5,10 @@ from typing import Any
 import dash
 import dash_bootstrap_components as dbc
 
-from RosettaX.utils import styling
 from RosettaX.utils import ui_forms
-from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
-from RosettaX.workflow.plotting.scatter2d import Scatter2DGraphIds
+from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph, Scatter2DGraphIds
 
 from . import services
-
 
 logger = logging.getLogger(__name__)
 

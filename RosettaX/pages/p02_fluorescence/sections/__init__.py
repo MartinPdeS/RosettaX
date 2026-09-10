@@ -6,10 +6,10 @@ from .s04_calibration import Calibration
 from .s05_save import Save
 
 __all__ = [
+    "Calibration",
     "Header",
-    "Upload",
     "Peaks",
     "ReferenceTable",
-    "Calibration",
     "Save",
+    "Upload",
 ]

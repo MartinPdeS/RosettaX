@@ -1,8 +1,10 @@
-# -*- coding: utf-8 -*-
 
 from typing import Any, Protocol
 
-from RosettaX.pages.p02_fluorescence.state import FluorescencePageState, build_empty_peak_lines_payload
+from RosettaX.pages.p02_fluorescence.state import (
+    FluorescencePageState,
+    build_empty_peak_lines_payload,
+)
 
 
 class UploadAdapter(Protocol):

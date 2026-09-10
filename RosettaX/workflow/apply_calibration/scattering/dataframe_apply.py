@@ -1,19 +1,21 @@
-# -*- coding: utf-8 -*-
 
-from typing import Any, Optional
 import logging
+from typing import Any
 
 import numpy as np
 
 from RosettaX.workflow import scattering
 
 from .mie_relation_builder import build_target_mie_relation
-from .models import ScatteringApplyResult
-from .models import ScatteringOutputColumns
-from .models import ScatteringTargetModelParameters
-from .monotonic import coupling_to_diameter_with_linear_extrapolation
-from .monotonic import resolve_monotonic_target_mie_relation
-
+from .models import (
+    ScatteringApplyResult,
+    ScatteringOutputColumns,
+    ScatteringTargetModelParameters,
+)
+from .monotonic import (
+    coupling_to_diameter_with_linear_extrapolation,
+    resolve_monotonic_target_mie_relation,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -90,7 +92,7 @@ def apply_scattering_calibration_to_dataframe(
     output_channel_names: list[str] | None = None,
     calibration_payload: dict[str, Any],
     target_model_parameters: ScatteringTargetModelParameters,
-    metadata: Optional[dict[str, Any]] = None,
+    metadata: dict[str, Any] | None = None,
 ) -> ScatteringApplyResult:
     """
     Apply a scattering calibration to a dataframe.

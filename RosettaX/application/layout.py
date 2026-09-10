@@ -1,20 +1,17 @@
-# -*- coding: utf-8 -*-
 
 import logging
 from typing import Any
 
 import dash
 import dash_bootstrap_components as dbc
-from dash import dcc
-from dash import html
+from dash import dcc, html
 
+from RosettaX.utils import styling
 from RosettaX.utils.browser_profiles import (
     BROWSER_PROFILES_STORE_ID,
     BrowserProfileLibrary,
 )
-from RosettaX.utils import styling
 from RosettaX.utils.runtime_config import RuntimeConfig
-
 
 logger = logging.getLogger(__name__)
 

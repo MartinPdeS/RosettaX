@@ -1,10 +1,9 @@
-# -*- coding: utf-8 -*-
 import copy
 import json
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar
 
 import numpy as np
 
@@ -500,7 +499,7 @@ class RuntimeConfig:
         logger.debug("Initialized RuntimeConfig with keys=%r", list(self.data.keys()))
 
     @classmethod
-    def from_dict(cls, data: Optional[dict[str, Any]]) -> "RuntimeConfig":
+    def from_dict(cls, data: dict[str, Any] | None) -> "RuntimeConfig":
         """
         Build a RuntimeConfig from an in-memory dictionary payload.
         """
@@ -855,9 +854,8 @@ class RuntimeConfig:
             if normalized_value in {"false", "no", "0", "off", "disabled"}:
                 return False
 
-        if isinstance(value, (int, np.integer)):
-            if int(value) in {0, 1}:
-                return bool(value)
+        if isinstance(value, (int, np.integer)) and int(value) in {0, 1}:
+            return bool(value)
 
         raise RuntimeConfigValidationError(
             f"RuntimeConfig path {path!r} expected a boolean-compatible value, got {value!r}."
@@ -1085,7 +1083,7 @@ class RuntimeConfig:
             )
             return default
 
-    def get_float(self, path: str, default: Optional[float] = None) -> Optional[float]:
+    def get_float(self, path: str, default: float | None = None) -> float | None:
         """
         Retrieve a configuration value as a float.
 
@@ -1118,7 +1116,7 @@ class RuntimeConfig:
             )
             return default
 
-    def get_int(self, path: str, default: Optional[int] = None) -> Optional[int]:
+    def get_int(self, path: str, default: int | None = None) -> int | None:
         """
         Retrieve a configuration value as an integer.
 

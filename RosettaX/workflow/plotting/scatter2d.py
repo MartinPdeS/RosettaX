@@ -1,19 +1,17 @@
-# -*- coding: utf-8 -*-
 
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 import dash
 import numpy as np
 import plotly.graph_objs as go
 
-from RosettaX.utils import styling
-from RosettaX.utils import plottings
-from RosettaX.workflow.plotting.models import ScatterOptions
+from RosettaX.utils import plottings, styling
 from RosettaX.workflow.plotting.layout import (
     build_plot_axis_checklist,
     build_plot_control_panel,
 )
+from RosettaX.workflow.plotting.models import ScatterOptions
 
 
 @dataclass(frozen=True)
@@ -35,14 +33,14 @@ class Scatter2DTrace:
     x_values: Any
     y_values: Any
     name: str = ""
-    text_values: Optional[Any] = None
-    customdata: Optional[Any] = None
-    marker_size: Optional[float] = None
-    marker_opacity: Optional[float] = None
+    text_values: Any | None = None
+    customdata: Any | None = None
+    marker_size: float | None = None
+    marker_opacity: float | None = None
     mode: str = "markers"
-    color: Optional[str] = None
-    line_width: Optional[float] = None
-    line_dash: Optional[str] = None
+    color: str | None = None
+    line_width: float | None = None
+    line_dash: str | None = None
 
 
 class Scatter2DGraph:
@@ -80,13 +78,13 @@ class Scatter2DGraph:
         cls,
         *,
         component_ids: Scatter2DGraphIds,
-        figure: Optional[go.Figure] = None,
+        figure: go.Figure | None = None,
         x_log_enabled: bool = False,
         y_log_enabled: bool = False,
         colormap_log_toggle_enabled: bool = False,
         colormap_log_enabled: bool = False,
-        graph_style: Optional[dict[str, Any]] = None,
-        bottom_controls: Optional[list[Any]] = None,
+        graph_style: dict[str, Any] | None = None,
+        bottom_controls: list[Any] | None = None,
     ) -> dash.html.Div:
         """
         Build a reusable graph block with axis scale controls below it.
@@ -144,9 +142,9 @@ class Scatter2DGraph:
         cls,
         *,
         component_id: str,
-        value: Optional[list[str]] = None,
+        value: list[str] | None = None,
         colormap_log_toggle_enabled: bool = False,
-        bottom_controls: Optional[list[Any]] = None,
+        bottom_controls: list[Any] | None = None,
     ) -> dash.html.Div:
         """
         Build the compact x log and y log toggle box below the graph.
@@ -222,7 +220,7 @@ class Scatter2DGraph:
         x_axis_title: str,
         y_axis_title: str,
         axis_scale_toggle_values: Any = None,
-        options: Optional[ScatterOptions] = None,
+        options: ScatterOptions | None = None,
         show_grid: bool = True,
         hovermode: str = "closest",
         uirevision: str = "shared_scatter_2d",

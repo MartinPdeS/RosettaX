@@ -1,10 +1,9 @@
-# -*- coding: utf-8 -*-
 
-from typing import Any
 import logging
+from typing import Any
 
-from .shared import PeakWorkflowCallbacks
 from ..models import PeakConfig
+from .shared import PeakWorkflowCallbacks
 
 
 def register_peak_callbacks(

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 """Upload workflow package.
 
@@ -9,10 +8,9 @@ modules during logic-only test collection.
 from importlib import import_module
 from typing import Any
 
-
 __all__ = [
-    "FluorescenceUploadAdapter",
     "FCSBatchOperationResult",
+    "FluorescenceUploadAdapter",
     "ScatteringUploadAdapter",
     "UploadAdapter",
     "UploadCallbackResult",
