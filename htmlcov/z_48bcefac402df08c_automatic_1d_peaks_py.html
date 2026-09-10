@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for RosettaX/workflow/peak/scripts/automatic_1d_peaks.py: 33.15%</title>
+    <title>Coverage for RosettaX/workflow/peak/scripts/automatic_1d_peaks.py: 32.96%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_c827f16f.png">
     <link rel="stylesheet" href="style_cb_4667309f.css" type="text/css">
     <script src="coverage_html_cb_dd2e7eb5.js" defer></script>
@@ -12,7 +12,7 @@
     <div class="content">
         <h1>
             <span class="text">Coverage for </span><b>RosettaX<span class="sep">/</span>workflow<span class="sep">/</span>peak<span class="sep">/</span>scripts<span class="sep">/</span>automatic_1d_peaks.py</b>:
-            <span class="pc_cov">33.15%</span>
+            <span class="pc_cov">32.96%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -55,8 +55,8 @@
             </div>
         </aside>
         <h2>
-            <span class="text">278 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">99<span class="text"> run</span></button>
+            <span class="text">277 statements &nbsp;</span>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">98<span class="text"> run</span></button>
             <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">179<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
             <button type="button" class="par run show_par button_toggle_par" value="par" data-shortcut="p" title="Toggle lines partially run">9<span class="text"> partial</span></button>
@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_48bcefac402df08c_automatic_2d_peaks_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.4">coverage.py v7.15.4</a>,
-            created at 2026-09-10 10:39 +0000
+            created at 2026-09-10 11:08 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -82,26 +82,26 @@
     </div>
 </header>
 <main id="source">
-    <p class="pln"><span class="n"><a id="t1" href="#t1">1</a></span><span class="t"><span class="com"># -*- coding: utf-8 -*-</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t2" href="#t2">2</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t3" href="#t3">3</a></span><span class="t"><span class="key">import</span> <span class="nam">json</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t4" href="#t4">4</a></span><span class="t"><span class="key">import</span> <span class="nam">logging</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t5" href="#t5">5</a></span><span class="t"><span class="key">from</span> <span class="nam">typing</span> <span class="key">import</span> <span class="nam">Any</span><span class="op">,</span> <span class="nam">Optional</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t6" href="#t6">6</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t7" href="#t7">7</a></span><span class="t"><span class="key">import</span> <span class="nam">dash</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t8" href="#t8">8</a></span><span class="t"><span class="key">import</span> <span class="nam">dash_bootstrap_components</span> <span class="key">as</span> <span class="nam">dbc</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t9" href="#t9">9</a></span><span class="t"><span class="key">import</span> <span class="nam">numpy</span> <span class="key">as</span> <span class="nam">np</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t10" href="#t10">10</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t11" href="#t11">11</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">base</span> <span class="key">import</span> <span class="nam">BasePeakProcess</span><span class="op">,</span> <span class="nam">PeakProcessResult</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t1" href="#t1">1</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t2" href="#t2">2</a></span><span class="t"><span class="key">import</span> <span class="nam">json</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t3" href="#t3">3</a></span><span class="t"><span class="key">import</span> <span class="nam">logging</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t4" href="#t4">4</a></span><span class="t"><span class="key">from</span> <span class="nam">typing</span> <span class="key">import</span> <span class="nam">Any</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t5" href="#t5">5</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t6" href="#t6">6</a></span><span class="t"><span class="key">import</span> <span class="nam">dash</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t7" href="#t7">7</a></span><span class="t"><span class="key">import</span> <span class="nam">dash_bootstrap_components</span> <span class="key">as</span> <span class="nam">dbc</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t8" href="#t8">8</a></span><span class="t"><span class="key">import</span> <span class="nam">numpy</span> <span class="key">as</span> <span class="nam">np</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t9" href="#t9">9</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t10" href="#t10">10</a></span><span class="t"><span class="key">from</span> <span class="nam">RosettaX</span><span class="op">.</span><span class="nam">utils</span><span class="op">.</span><span class="nam">io</span> <span class="key">import</span> <span class="nam">column_copy</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t11" href="#t11">11</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t12" href="#t12">12</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">base</span> <span class="key">import</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t13" href="#t13">13</a></span><span class="t">    <span class="nam">filter_edge_artifact_values</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t14" href="#t14">14</a></span><span class="t">    <span class="nam">resolve_edge_artifact_filter_enabled</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t15" href="#t15">15</a></span><span class="t">    <span class="nam">resolve_float_setting</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t16" href="#t16">16</a></span><span class="t">    <span class="nam">resolve_integer_setting</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t">    <span class="nam">resolve_integer_value</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t"><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t19" href="#t19">19</a></span><span class="t"><span class="key">from</span> <span class="nam">RosettaX</span><span class="op">.</span><span class="nam">utils</span><span class="op">.</span><span class="nam">io</span> <span class="key">import</span> <span class="nam">column_copy</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t13" href="#t13">13</a></span><span class="t">    <span class="nam">BasePeakProcess</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t14" href="#t14">14</a></span><span class="t">    <span class="nam">PeakProcessResult</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t15" href="#t15">15</a></span><span class="t">    <span class="nam">filter_edge_artifact_values</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t16" href="#t16">16</a></span><span class="t">    <span class="nam">resolve_edge_artifact_filter_enabled</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t">    <span class="nam">resolve_float_setting</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t">    <span class="nam">resolve_integer_setting</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t19" href="#t19">19</a></span><span class="t">    <span class="nam">resolve_integer_value</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t"><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t21" href="#t21">21</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t22" href="#t22">22</a></span><span class="t"><span class="nam">logger</span> <span class="op">=</span> <span class="nam">logging</span><span class="op">.</span><span class="nam">getLogger</span><span class="op">(</span><span class="nam">__name__</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t23" href="#t23">23</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -593,12 +593,12 @@
     <p class="run run2"><span class="n"><a id="t509" href="#t509">509</a></span><span class="t">        <span class="op">*</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t510" href="#t510">510</a></span><span class="t">        <span class="nam">backend</span><span class="op">:</span> <span class="nam">Any</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t511" href="#t511">511</a></span><span class="t">        <span class="nam">detector_channels</span><span class="op">:</span> <span class="nam">dict</span><span class="op">[</span><span class="nam">str</span><span class="op">,</span> <span class="nam">Any</span><span class="op">]</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t512" href="#t512">512</a></span><span class="t">        <span class="nam">process_settings</span><span class="op">:</span> <span class="nam">Optional</span><span class="op">[</span><span class="nam">dict</span><span class="op">[</span><span class="nam">str</span><span class="op">,</span> <span class="nam">Any</span><span class="op">]</span><span class="op">]</span> <span class="op">=</span> <span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t512" href="#t512">512</a></span><span class="t">        <span class="nam">process_settings</span><span class="op">:</span> <span class="nam">dict</span><span class="op">[</span><span class="nam">str</span><span class="op">,</span> <span class="nam">Any</span><span class="op">]</span> <span class="op">|</span> <span class="key">None</span> <span class="op">=</span> <span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t513" href="#t513">513</a></span><span class="t">        <span class="nam">peak_count</span><span class="op">:</span> <span class="nam">Any</span> <span class="op">=</span> <span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t514" href="#t514">514</a></span><span class="t">        <span class="nam">max_events_for_analysis</span><span class="op">:</span> <span class="nam">Any</span> <span class="op">=</span> <span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t515" href="#t515">515</a></span><span class="t">        <span class="nam">max_events_for_plots</span><span class="op">:</span> <span class="nam">Any</span> <span class="op">=</span> <span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t516" href="#t516">516</a></span><span class="t">        <span class="op">**</span><span class="nam">_kwargs</span><span class="op">:</span> <span class="nam">Any</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t517" href="#t517">517</a></span><span class="t">    <span class="op">)</span> <span class="op">-&gt;</span> <span class="nam">Optional</span><span class="op">[</span><span class="nam">PeakProcessResult</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t517" href="#t517">517</a></span><span class="t">    <span class="op">)</span> <span class="op">-&gt;</span> <span class="nam">PeakProcessResult</span> <span class="op">|</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t518" href="#t518">518</a></span><span class="t">        <span class="str">&quot;&quot;&quot;</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t519" href="#t519">519</a></span><span class="t"><span class="str">        Run automatic 1D peak detection.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t520" href="#t520">520</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -1111,7 +1111,7 @@
     <p class="pln"><span class="n"><a id="t1027" href="#t1027">1027</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t1028" href="#t1028">1028</a></span><span class="t">        <span class="nam">half_window_size</span> <span class="op">=</span> <span class="nam">max</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t1029" href="#t1029">1029</a></span><span class="t">            <span class="num">2</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t1030" href="#t1030">1030</a></span><span class="t">            <span class="nam">int</span><span class="op">(</span><span class="nam">round</span><span class="op">(</span><span class="nam">counts</span><span class="op">.</span><span class="nam">size</span> <span class="op">*</span> <span class="nam">float</span><span class="op">(</span><span class="nam">window_fraction</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t1030" href="#t1030">1030</a></span><span class="t">            <span class="nam">round</span><span class="op">(</span><span class="nam">counts</span><span class="op">.</span><span class="nam">size</span> <span class="op">*</span> <span class="nam">float</span><span class="op">(</span><span class="nam">window_fraction</span><span class="op">)</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t1031" href="#t1031">1031</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1032" href="#t1032">1032</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t1033" href="#t1033">1033</a></span><span class="t">        <span class="nam">kernel_x</span> <span class="op">=</span> <span class="nam">np</span><span class="op">.</span><span class="nam">arange</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
@@ -1222,7 +1222,7 @@
     <p class="pln"><span class="n"><a id="t1138" href="#t1138">1138</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t1139" href="#t1139">1139</a></span><span class="t">        <span class="nam">minimum_distance</span> <span class="op">=</span> <span class="nam">max</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t1140" href="#t1140">1140</a></span><span class="t">            <span class="num">1</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t1141" href="#t1141">1141</a></span><span class="t">            <span class="nam">int</span><span class="op">(</span><span class="nam">round</span><span class="op">(</span><span class="nam">counts</span><span class="op">.</span><span class="nam">size</span> <span class="op">*</span> <span class="nam">float</span><span class="op">(</span><span class="nam">minimum_distance_fraction</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t1141" href="#t1141">1141</a></span><span class="t">            <span class="nam">round</span><span class="op">(</span><span class="nam">counts</span><span class="op">.</span><span class="nam">size</span> <span class="op">*</span> <span class="nam">float</span><span class="op">(</span><span class="nam">minimum_distance_fraction</span><span class="op">)</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t1142" href="#t1142">1142</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1143" href="#t1143">1143</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t1144" href="#t1144">1144</a></span><span class="t">        <span class="nam">debug_info</span><span class="op">[</span><span class="str">&quot;minimum_distance_bins&quot;</span><span class="op">]</span> <span class="op">=</span> <span class="nam">int</span><span class="op">(</span><span class="nam">minimum_distance</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -1372,7 +1372,7 @@
     <p class="run run2"><span class="n"><a id="t1288" href="#t1288">1288</a></span><span class="t">        <span class="op">*</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t1289" href="#t1289">1289</a></span><span class="t">        <span class="nam">counts</span><span class="op">:</span> <span class="nam">np</span><span class="op">.</span><span class="nam">ndarray</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t1290" href="#t1290">1290</a></span><span class="t">        <span class="nam">peak_index</span><span class="op">:</span> <span class="nam">int</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t1291" href="#t1291">1291</a></span><span class="t">    <span class="op">)</span> <span class="op">-&gt;</span> <span class="nam">Optional</span><span class="op">[</span><span class="nam">float</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t1291" href="#t1291">1291</a></span><span class="t">    <span class="op">)</span> <span class="op">-&gt;</span> <span class="nam">float</span> <span class="op">|</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1292" href="#t1292">1292</a></span><span class="t">        <span class="str">&quot;&quot;&quot;</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1293" href="#t1293">1293</a></span><span class="t"><span class="str">        Find the minimum count between a peak and the previous higher boundary.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1294" href="#t1294">1294</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -1415,7 +1415,7 @@
     <p class="run run2"><span class="n"><a id="t1331" href="#t1331">1331</a></span><span class="t">        <span class="op">*</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t1332" href="#t1332">1332</a></span><span class="t">        <span class="nam">counts</span><span class="op">:</span> <span class="nam">np</span><span class="op">.</span><span class="nam">ndarray</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t1333" href="#t1333">1333</a></span><span class="t">        <span class="nam">peak_index</span><span class="op">:</span> <span class="nam">int</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t1334" href="#t1334">1334</a></span><span class="t">    <span class="op">)</span> <span class="op">-&gt;</span> <span class="nam">Optional</span><span class="op">[</span><span class="nam">float</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t1334" href="#t1334">1334</a></span><span class="t">    <span class="op">)</span> <span class="op">-&gt;</span> <span class="nam">float</span> <span class="op">|</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1335" href="#t1335">1335</a></span><span class="t">        <span class="str">&quot;&quot;&quot;</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1336" href="#t1336">1336</a></span><span class="t"><span class="str">        Find the minimum count between a peak and the next higher boundary.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1337" href="#t1337">1337</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -1519,7 +1519,7 @@
     <p class="run run2"><span class="n"><a id="t1435" href="#t1435">1435</a></span><span class="t">        <span class="nam">self</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t1436" href="#t1436">1436</a></span><span class="t">        <span class="op">*</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t1437" href="#t1437">1437</a></span><span class="t">        <span class="nam">peak_positions</span><span class="op">:</span> <span class="nam">list</span><span class="op">[</span><span class="nam">float</span><span class="op">]</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t1438" href="#t1438">1438</a></span><span class="t">        <span class="nam">debug_info</span><span class="op">:</span> <span class="nam">Optional</span><span class="op">[</span><span class="nam">dict</span><span class="op">[</span><span class="nam">str</span><span class="op">,</span> <span class="nam">Any</span><span class="op">]</span><span class="op">]</span> <span class="op">=</span> <span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t1438" href="#t1438">1438</a></span><span class="t">        <span class="nam">debug_info</span><span class="op">:</span> <span class="nam">dict</span><span class="op">[</span><span class="nam">str</span><span class="op">,</span> <span class="nam">Any</span><span class="op">]</span> <span class="op">|</span> <span class="key">None</span> <span class="op">=</span> <span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t1439" href="#t1439">1439</a></span><span class="t">    <span class="op">)</span> <span class="op">-&gt;</span> <span class="nam">dict</span><span class="op">[</span><span class="nam">str</span><span class="op">,</span> <span class="nam">list</span><span class="op">[</span><span class="nam">Any</span><span class="op">]</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1440" href="#t1440">1440</a></span><span class="t">        <span class="str">&quot;&quot;&quot;</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1441" href="#t1441">1441</a></span><span class="t"><span class="str">        Build the graph annotation payload for detected 1D peaks.</span>&nbsp;</span><span class="r"></span></p>
@@ -1570,7 +1570,7 @@
     <p class="run"><span class="n"><a id="t1486" href="#t1486">1486</a></span><span class="t">    <span class="key">def</span> <span class="nam">resolve_settings</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t1487" href="#t1487">1487</a></span><span class="t">        <span class="nam">self</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t1488" href="#t1488">1488</a></span><span class="t">        <span class="op">*</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t1489" href="#t1489">1489</a></span><span class="t">        <span class="nam">process_settings</span><span class="op">:</span> <span class="nam">Optional</span><span class="op">[</span><span class="nam">dict</span><span class="op">[</span><span class="nam">str</span><span class="op">,</span> <span class="nam">Any</span><span class="op">]</span><span class="op">]</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t1489" href="#t1489">1489</a></span><span class="t">        <span class="nam">process_settings</span><span class="op">:</span> <span class="nam">dict</span><span class="op">[</span><span class="nam">str</span><span class="op">,</span> <span class="nam">Any</span><span class="op">]</span> <span class="op">|</span> <span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t1490" href="#t1490">1490</a></span><span class="t">        <span class="nam">peak_count</span><span class="op">:</span> <span class="nam">Any</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t1491" href="#t1491">1491</a></span><span class="t">    <span class="op">)</span> <span class="op">-&gt;</span> <span class="str">&quot;Automatic1DRunSettings&quot;</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t1492" href="#t1492">1492</a></span><span class="t">        <span class="str">&quot;&quot;&quot;</span>&nbsp;</span><span class="r"></span></p>
@@ -1693,7 +1693,7 @@
             <a class="nav" href="z_48bcefac402df08c_automatic_2d_peaks_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.4">coverage.py v7.15.4</a>,
-            created at 2026-09-10 10:39 +0000
+            created at 2026-09-10 11:08 +0000
         </p>
     </div>
 </footer>
