@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: "If you use RosettaX in your research, please cite this software."
+title: "RosettaX"
+type: software
+authors:
+  - family-names: "Poinsinet de Sivry-Houle"
+    given-names: "Martin"
+    affiliation: "Amsterdam Medical Center"
+abstract: >
+  RosettaX is a local application for fluorescence and scattering calibration
+  workflows using flow-cytometry FCS data.
+license: "AGPL-3.0-or-later"
+repository-code: "https://github.com/MartinPdeS/RosettaX"
+doi: "10.5281/zenodo.19846629"

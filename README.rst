@@ -5,25 +5,31 @@ RosettaX
    :alt: RosettaX logo
 
 .. list-table::
-   :widths: 10 25 25 25
-   :header-rows: 0
+   :widths: 35 65
+   :header-rows: 1
 
-   * - Meta
+   * - Badge
+     - Status
+   * - Python versions
      - |python|
+   * - Documentation
      - |docs|
-     - |zenodo|
-   * - Testing
+   * - Continuous integration
      - |ci/cd|
+   * - Test coverage
      - |coverage|
-     -
-   * - PyPI
+   * - PyPI package
      - |PyPi|
+   * - PyPI downloads
      - |PyPi_download|
-     -
-   * - Anaconda
+   * - Anaconda package
      - |anaconda|
+   * - Anaconda downloads
      - |anaconda_download|
-     -
+   * - Latest Anaconda release
+     - |anaconda_date|
+   * - Citation
+     - |zenodo|
 
 
 RosettaX is an interactive calibration application for flow cytometry.
@@ -302,22 +308,23 @@ direction can be discussed before implementation.
 Citation
 ********
 
-If you use RosettaX in scientific work, please cite the versioned Zenodo
-release used for your work. For RosettaX v0.5.0, use:
+If you use RosettaX in scientific work, please cite its Zenodo concept DOI:
+``10.5281/zenodo.19846629``. It always resolves to the latest published Zenodo
+release.
 
 .. code-block:: bibtex
 
-   @software{poinsinet_de_sivry_houle_2026_21309433,
+   @software{rosettax,
      author = {Poinsinet de Sivry-Houle, Martin},
-     title = {MartinPdeS/RosettaX: v0.5.0},
+     title = {RosettaX},
      year = {2026},
      publisher = {Zenodo},
-     version = {v0.5.0},
-     doi = {10.5281/zenodo.21309433},
-     url = {https://doi.org/10.5281/zenodo.21309433}
+     doi = {10.5281/zenodo.19846629},
+     url = {https://doi.org/10.5281/zenodo.19846629}
    }
 
-The archived record is available at https://zenodo.org/records/21309433.
+The current citation and all archived versions are available at
+https://zenodo.org/records/19846629.
 
 
 Contact
@@ -342,8 +349,9 @@ Commercial licensing, support, validation, or custom deployment agreements may
 be discussed with the author.
 
 
-.. |zenodo| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.21309433.svg
-   :target: https://zenodo.org/records/21309433
+.. |zenodo| image:: https://zenodo.org/badge/19846629.svg
+   :alt: Cite RosettaX on Zenodo
+   :target: https://doi.org/10.5281/zenodo.19846629
 
 
 .. |python| image:: https://img.shields.io/pypi/pyversions/rosettax.svg
@@ -372,6 +380,10 @@ be discussed with the author.
 
 .. |anaconda| image:: https://anaconda.org/martinpdes/rosettax/badges/version.svg
    :alt: Anaconda version
+   :target: https://anaconda.org/martinpdes/rosettax
+
+.. |anaconda_date| image:: https://anaconda.org/martinpdes/rosettax/badges/latest_release_relative_date.svg
+   :alt: Latest Anaconda release date
    :target: https://anaconda.org/martinpdes/rosettax
 
 .. |coverage| image:: https://raw.githubusercontent.com/MartinPdeS/RosettaX/python-coverage-comment-action-data/badge.svg
