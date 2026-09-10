@@ -65,6 +65,7 @@
 | RosettaX/workflow/detector/loader.py                                        |      241 |       58 |       80 |       17 |     74.14% |43-47, 60-64, 72-89, 116-133, 169, 220, 252, 275, 288-295, 331, 349, 356, 380, 413-447, 457, 461, 524, 549-557, 577-584, 610, 626, 633, 656, 669, 681, 692, 705 |
 | RosettaX/workflow/file\_selection/models.py                                 |       38 |        3 |       10 |        3 |     87.50% |51, 72, 83 |
 | RosettaX/workflow/file\_selection/services.py                               |       28 |        3 |       12 |        4 |     82.50% |11, 35-\>39, 61, 63 |
+| RosettaX/workflow/page\_session/models.py                                   |       69 |        5 |       20 |        5 |     88.76% |43, 83, 94, 96, 118 |
 | RosettaX/workflow/parameters/model.py                                       |      134 |       25 |       32 |        6 |     81.33% |144-148, 292-296, 315-317, 320-322, 337-338, 375-379, 489-493, 608, 632, 636-637, 640 |
 | RosettaX/workflow/parameters/refractive\_index.py                           |       71 |       13 |       30 |       11 |     76.24% |22, 29, 58, 63, 69, 77, 90, 106, 109, 112, 117, 144-145 |
 | RosettaX/workflow/parameters/table.py                                       |      139 |       37 |       38 |        7 |     70.62% |175, 205-212, 256-264, 428, 431, 455-471, 486-498, 543, 585-594, 609, 618, 637-638, 640-\>629, 665, 683-735 |
@@ -110,9 +111,9 @@
 | RosettaX/workflow/table/scattering.py                                       |        2 |        2 |        0 |        0 |      0.00% |      3-16 |
 | RosettaX/workflow/table/services.py                                         |      115 |       79 |       62 |        2 |     25.99% |13-29, 39-58, 75, 105-111, 122-130, 141-158, 168, 186-189, 237-248, 259, 288-\>287, 306-340, 351-366, 381 |
 | RosettaX/workflow/upload/adapters.py                                        |       34 |       14 |        0 |        0 |     58.82% |61, 72, 81, 93, 129, 140, 149, 161-190 |
-| RosettaX/workflow/upload/models.py                                          |       15 |        1 |        0 |        0 |     93.33% |        63 |
-| RosettaX/workflow/upload/services.py                                        |      194 |       55 |       74 |       11 |     68.66% |67-82, 123, 133, 288, 291, 305, 307, 345, 359, 366, 372-\>375, 401-402, 409-412, 428-453, 472-539 |
-| **TOTAL**                                                                   | **16017** | **6015** | **5576** | **1082** | **58.14%** |           |
+| RosettaX/workflow/upload/models.py                                          |       25 |        2 |        0 |        0 |     92.00% |    67, 88 |
+| RosettaX/workflow/upload/services.py                                        |      221 |       57 |       84 |       13 |     71.15% |73-88, 129, 139, 294, 297, 312, 314, 363, 390, 411, 417-\>420, 450, 510, 536-537, 544-547, 563-588, 607-674 |
+| **TOTAL**                                                                   | **16123** | **6023** | **5606** | **1089** | **58.33%** |           |
 
 8 files skipped due to complete coverage.
 
