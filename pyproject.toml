@@ -81,6 +81,9 @@ write_to = "RosettaX/_version.py"
 version_scheme = "only-version"
 local_scheme = "no-local-version"
 
+[tool.setuptools.packages.find]
+include = ["RosettaX", "RosettaX.*"]
+
 [tool.ruff]
 target-version = "py310"
 
