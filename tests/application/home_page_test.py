@@ -45,7 +45,7 @@ def _collect_components(component) -> list[object]:
 
 
 class Test_HomePage:
-    def test_layout_includes_usage_metrics_card(
+    def test_layout_shows_only_calibrated_file_total_in_welcome_card(
         self,
         monkeypatch,
     ) -> None:
@@ -76,13 +76,17 @@ class Test_HomePage:
         assert "FCS tools" in text_nodes
         assert "Manage" in text_nodes
         assert "Learn" in text_nodes
-        assert "RosettaX usage metrics." in text_nodes
-        assert "Home page visits" in text_nodes
-        assert "Apply button clicks" in text_nodes
+        assert "RosettaX usage metrics." not in text_nodes
+        assert "Home page visits" not in text_nodes
+        assert "Apply button clicks" not in text_nodes
         assert "Total calibrated files" in text_nodes
-        assert "56" in text_nodes
-        assert "12" in text_nodes
+        assert "56" not in text_nodes
+        assert "12" not in text_nodes
         assert "34" in text_nodes
+        welcome_card_text = _collect_text(layout.children[2])
+        assert "RosettaX" in welcome_card_text
+        assert "Total calibrated files" in welcome_card_text
+        assert "34" in welcome_card_text
 
         citation_buttons = [
             component

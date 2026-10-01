@@ -163,7 +163,7 @@ class HomePage:
                         "height": "12px",
                     },
                 ),
-                self._hero_section(),
+                self._hero_section(metrics=metrics),
                 html.Div(
                     style={
                         "height": "18px",
@@ -176,12 +176,6 @@ class HomePage:
                     },
                 ),
                 self._citation_card(),
-                html.Div(
-                    style={
-                        "height": "18px",
-                    },
-                ),
-                self._usage_metrics_card(metrics=metrics),
                 html.Div(
                     style={
                         "height": "18px",
@@ -230,7 +224,7 @@ class HomePage:
             },
         )
 
-    def _hero_section(self) -> dbc.Card:
+    def _hero_section(self, *, metrics: usage_metrics.UsageMetrics) -> dbc.Card:
         card = dbc.Card(
             [
                 dbc.CardBody(
@@ -241,7 +235,7 @@ class HomePage:
                                 "fontWeight": "800",
                                 "fontSize": "2.55rem",
                                 "lineHeight": "1.05",
-                                "marginBottom": "8px",
+                                "order": 0,
                             },
                         ),
                         html.Div(
@@ -253,11 +247,47 @@ class HomePage:
                                 "opacity": 0.86,
                                 "maxWidth": "980px",
                                 "marginBottom": "0px",
+                                "flexBasis": "100%",
+                                "order": 2,
+                            },
+                        ),
+                        html.Div(
+                            [
+                                html.Span("Total calibrated files", style={"opacity": 0.76}),
+                                html.Strong(
+                                    f"{metrics.total_calibrated_files:,}",
+                                    style={
+                                        "display": "inline-flex",
+                                        "alignItems": "center",
+                                        "justifyContent": "center",
+                                        "minWidth": "44px",
+                                        "padding": "5px 10px",
+                                        "borderRadius": "8px",
+                                        "border": "1px solid var(--bs-border-color)",
+                                        "background": "var(--bs-body-bg)",
+                                        "color": "var(--bs-body-color)",
+                                        "fontVariantNumeric": "tabular-nums",
+                                    },
+                                ),
+                            ],
+                            style={
+                                "display": "flex",
+                                "alignItems": "center",
+                                "flexWrap": "wrap",
+                                "gap": "8px",
+                                "marginLeft": "auto",
+                                "fontSize": "0.92rem",
+                                "order": 1,
                             },
                         ),
                     ],
                     style={
                         "padding": "26px",
+                        "display": "flex",
+                        "alignItems": "flex-start",
+                        "flexWrap": "wrap",
+                        "columnGap": "20px",
+                        "rowGap": "12px",
                     },
                 ),
             ]
@@ -409,98 +439,6 @@ class HomePage:
             card=card,
             header_font_weight="750",
             header_font_size="1.02rem",
-        )
-
-    def _usage_metrics_card(
-        self,
-        *,
-        metrics: usage_metrics.UsageMetrics,
-    ) -> dbc.Card:
-        card = dbc.Card(
-            [
-                dbc.CardHeader(
-                    [
-                        html.Div(
-                            "RosettaX usage metrics.",
-                            style={
-                                "fontWeight": "750",
-                                "fontSize": "1.02rem",
-                            },
-                        ),
-                    ]
-                ),
-                dbc.CardBody(
-                    dbc.Row(
-                        [
-                            dbc.Col(
-                                self._usage_metric_tile(
-                                    value=str(metrics.home_page_visit_count),
-                                    label="Home page visits",
-                                ),
-                                md=4,
-                            ),
-                            dbc.Col(
-                                self._usage_metric_tile(
-                                    value=str(metrics.apply_button_click_count),
-                                    label="Apply button clicks",
-                                ),
-                                md=4,
-                            ),
-                            dbc.Col(
-                                self._usage_metric_tile(
-                                    value=str(metrics.total_calibrated_files),
-                                    label="Total calibrated files",
-                                ),
-                                md=4,
-                            ),
-                        ],
-                        className="g-3",
-                    ),
-                    style={
-                        "padding": "16px",
-                    },
-                ),
-            ]
-        )
-
-        return ui_forms.apply_workflow_section_card_style(
-            card=card,
-            header_font_weight="750",
-            header_font_size="1.02rem",
-        )
-
-    def _usage_metric_tile(
-        self,
-        *,
-        value: str,
-        label: str,
-    ) -> html.Div:
-        return html.Div(
-            [
-                html.Div(
-                    value,
-                    style={
-                        "fontSize": "2rem",
-                        "fontWeight": "800",
-                        "lineHeight": "1.0",
-                    },
-                ),
-                html.Div(
-                    label,
-                    style={
-                        "fontSize": "0.92rem",
-                        "opacity": 0.76,
-                        "marginTop": "6px",
-                    },
-                ),
-            ],
-            style={
-                "padding": "18px",
-                "borderRadius": "12px",
-                "border": "1px solid rgba(13, 110, 253, 0.16)",
-                "background": "rgba(13, 110, 253, 0.04)",
-                "height": "100%",
-            },
         )
 
     def _secondary_actions_card(self) -> dbc.Card:
