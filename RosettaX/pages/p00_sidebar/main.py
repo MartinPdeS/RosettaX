@@ -425,8 +425,8 @@ class Sidebar:
                 ),
             ],
             style={
-                "width": f"{self.sidebar_width_px}px",
-                "height": "100vh",
+                "width": "100%",
+                "height": "var(--rosettax-sidebar-height, calc(100dvh - 32px))",
                 "display": "flex",
                 "flexDirection": "column",
                 "gap": "16px",

@@ -92,11 +92,8 @@ CARD = {
 }
 
 SIDEBAR = {
-    "position": "sticky",
-    "top": 0,
-    "width": "352px",
-    "minWidth": "352px",
-    "flexShrink": 0,
+    "width": "100%",
+    "minWidth": 0,
     "padding": get_spacing_token("md"),
     "zIndex": 1000,
     "boxSizing": "border-box",
@@ -142,43 +139,48 @@ DATATABLE = {
     ],
     "style_table": {
         "overflowX": "auto",
+        "overflowY": "auto",
+        "maxHeight": "min(55vh, 480px)",
     },
+    "fixed_rows": {"headers": True},
     "style_cell": {
         "textAlign": "left",
-        "backgroundColor": "white",
-        "color": "black",
+        "backgroundColor": "var(--rosettax-surface-background)",
+        "color": "var(--rosettax-text-color)",
+        "verticalAlign": "middle",
+        "padding": "10px 12px",
         "minWidth": "120px",
         "width": "160px",
         "maxWidth": "260px",
         "whiteSpace": "normal",
-        "border": "1px solid #d9d9d9",
+        "border": "1px solid var(--rosettax-border-color)",
     },
     "style_header": {
-        "backgroundColor": "#f8f9fa",
-        "color": "black",
+        "backgroundColor": "var(--rosettax-control-background)",
+        "color": "var(--rosettax-text-color)",
         "fontWeight": "600",
-        "border": "1px solid #bdbdbd",
+        "border": "1px solid var(--rosettax-border-color)",
     },
     "style_data": {
-        "backgroundColor": "white",
-        "color": "black",
+        "backgroundColor": "var(--rosettax-surface-background)",
+        "color": "var(--rosettax-text-color)",
     },
     "style_data_conditional": [
         {
             "if": {
                 "state": "active",
             },
-            "backgroundColor": "white",
-            "border": "1px solid #d9d9d9",
-            "color": "black",
+            "backgroundColor": "var(--rosettax-surface-background)",
+            "border": "1px solid var(--bs-primary)",
+            "color": "var(--rosettax-text-color)",
         },
         {
             "if": {
                 "state": "selected",
             },
-            "backgroundColor": "#eef4ff",
-            "border": "1px solid #b8cff8",
-            "color": "black",
+            "backgroundColor": "var(--rosettax-control-background)",
+            "border": "1px solid var(--bs-primary)",
+            "color": "var(--rosettax-text-color)",
         },
     ],
     "css": [
@@ -198,8 +200,8 @@ DATATABLE = {
             "selector": ".dash-cell input",
             "rule": (
                 "text-align: left !important; "
-                "background-color: white !important; "
-                "color: black !important;"
+                "background-color: var(--rosettax-surface-background) !important; "
+                "color: var(--rosettax-text-color) !important;"
             ),
         },
     ],

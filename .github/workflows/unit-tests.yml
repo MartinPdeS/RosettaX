@@ -25,6 +25,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
@@ -61,6 +63,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
@@ -96,19 +100,71 @@ jobs:
             htmlcov/
           if-no-files-found: error
 
-  package-smoke:
-    name: Package smoke test
-    needs: tests
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+  integration:
+    name: Real dependencies / Python ${{ matrix.python-version }} / ${{ matrix.os }}
+    needs: collect
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python-version: "3.11"
+          - os: ubuntu-latest
+            python-version: "3.13"
+          - os: macos-latest
+            python-version: "3.13"
+          - os: windows-latest
+            python-version: "3.13"
     steps:
       - name: Check out repository
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
         with:
-          python-version: "3.13"
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install real scientific and UI dependencies
+        run: python -m pip install -e ".[testing]"
+
+      - name: Run isolated integration suite
+        env:
+          MPLBACKEND: Agg
+          PYTHONHASHSEED: "0"
+        run: python -m pytest integration_tests -o addopts='' -v --junitxml=integration-results.xml
+
+      - name: Upload integration results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-${{ matrix.os }}-${{ matrix.python-version }}
+          path: integration-results.xml
+          if-no-files-found: warn
+
+  package-smoke:
+    name: Package smoke test / Python ${{ matrix.python-version }}
+    needs: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.13"]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: ${{ matrix.python-version }}
           cache: pip
           cache-dependency-path: pyproject.toml
 
@@ -121,3 +177,12 @@ jobs:
         run: |
           python -c "import RosettaX; import RosettaX.application; import RosettaX.workflow"
           python -m RosettaX --help
+          python - <<'PY'
+          from RosettaX.application.main import RosettaXApplication
+
+          application = RosettaXApplication(
+              host="127.0.0.1", port=8050, open_browser=False, debug=False,
+          )
+          response = application.app.server.test_client().get("/")
+          assert response.status_code == 200, response.status_code
+          PY

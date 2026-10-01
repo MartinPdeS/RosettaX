@@ -1,5 +1,42 @@
 
+import math
 from typing import Any
+
+
+def build_fit_evidence_items(*, details: dict[str, Any]) -> list[tuple[str, str]]:
+    """Summarize saved fit evidence without inferring scientific acceptance."""
+    calibration_type = details.get("calibration_type")
+    if calibration_type == "fluorescence":
+        rows = details.get("reference_points", [])
+        measured_key = "measured_value"
+        metrics = details.get("fit_metrics", {})
+    elif calibration_type == "scattering":
+        rows = details.get("reference_table", [])
+        measured_key = "measured_peak_position"
+        metrics = details.get("instrument_response", {})
+    else:
+        return []
+
+    measured_values = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        try:
+            value = float(row.get(measured_key))
+        except (TypeError, ValueError):
+            continue
+        if math.isfinite(value) and value > 0:
+            measured_values.append(value)
+
+    measured_range = "Not recorded"
+    if measured_values:
+        measured_range = f"{format_display_value(min(measured_values))} to {format_display_value(max(measured_values))} a.u."
+    return [
+        ("Recorded reference peaks", str(len(measured_values))),
+        ("Measured reference range", measured_range),
+        ("Saved R-squared", format_display_value(metrics.get("r_squared"))),
+        ("Interpretation", "R-squared describes the saved fit; it does not establish calibration validity or output uncertainty."),
+    ]
 
 
 def build_saved_payload_section_specs(
@@ -67,7 +104,7 @@ def build_saved_payload_section_specs(
 
 
 def is_scalar_sequence(value: Any) -> bool:
-    return isinstance(value, list) and all(not isinstance(item, (dict, list)) for item in value)
+    return isinstance(value, list) and all(not isinstance(item, dict | list) for item in value)
 
 
 def is_empty_payload_value(value: Any) -> bool:

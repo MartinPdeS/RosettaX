@@ -40,7 +40,7 @@ def resolve_graph_style(
     """
     runtime_config = resolve_runtime_config(runtime_config_data)
     return {
-        "height": runtime_config.get_graph_height(default="850px"),
+        "height": runtime_config.get_graph_height(),
         "width": "100%",
     }
 

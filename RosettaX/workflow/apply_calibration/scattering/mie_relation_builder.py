@@ -4,7 +4,6 @@ from typing import Any
 
 import numpy as np
 
-from RosettaX.pages.p03_scattering.backend import BackEnd
 from RosettaX.workflow import detector, scattering
 from RosettaX.workflow.apply_calibration.scattering.models import (
     CORE_SHELL_SPHERE_MODEL_NAME,
@@ -12,6 +11,7 @@ from RosettaX.workflow.apply_calibration.scattering.models import (
     ScatteringTargetModelParameters,
     SolidSphereTargetModel,
 )
+from RosettaX.workflow.scattering.backend import BackEnd
 
 logger = logging.getLogger(__name__)
 

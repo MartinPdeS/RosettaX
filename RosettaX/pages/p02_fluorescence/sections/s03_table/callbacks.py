@@ -8,6 +8,7 @@ from RosettaX.pages.p00_sidebar.ids import SidebarIds
 from RosettaX.pages.p02_fluorescence.state import FluorescencePageState
 from RosettaX.utils import RuntimeConfig
 from RosettaX.workflow.table.fluorescence import FluorescenceReferenceTable
+from RosettaX.workflow.table.validation import register_reference_table_validation
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +71,7 @@ def register_callbacks(section) -> None:
     Register reference table callbacks.
     """
     logger.debug("Registering fluorescence reference table callbacks.")
+    register_reference_table_validation(section.ids)
 
     _register_runtime_table_sync_callback(section)
     _register_preset_apply_callback(section)

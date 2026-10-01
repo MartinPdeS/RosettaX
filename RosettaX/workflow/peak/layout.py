@@ -946,17 +946,7 @@ class PeakLayout:
         """
         runtime_config = self._get_default_runtime_config()
 
-        graph_height = runtime_config.get_str(
-            "visualization.graph_height",
-            default="850px",
-        )
-
-        graph_height = str(graph_height or "").strip()
-
-        if not graph_height:
-            return "850px"
-
-        return graph_height
+        return runtime_config.get_graph_height()
 
     def _build_detector_dropdown_control(
         self,

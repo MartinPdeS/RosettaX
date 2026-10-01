@@ -2,6 +2,7 @@
 import importlib
 
 import dash
+import pytest
 
 from RosettaX.utils.usage_metrics import UsageMetrics
 
@@ -66,11 +67,7 @@ class Test_HomePage:
         text_nodes = _collect_text(layout)
 
         assert "Version:" in text_nodes
-        expected_version = (
-            home_main.__version__
-            if home_main.__version__.startswith("v")
-            else f"v{home_main.__version__}"
-        )
+        expected_version = home_main.resolve_software_version_label()
         assert expected_version in text_nodes
         assert "Support Developer" in text_nodes
         assert "Project resources" not in text_nodes
@@ -94,6 +91,36 @@ class Test_HomePage:
         ]
         assert len(citation_buttons) == 1
         assert citation_buttons[0].href == "/citation"
+
+
+@pytest.mark.parametrize(
+    "installed_version, generated_version, expected",
+    [
+        ("1.2.3", "0.0", "v1.2.3"),
+        ("1.2.3", "0.9.0", "v1.2.3"),
+        ("0.0", "0.9.0", "v0.9.0"),
+        (None, "0.9.0", "v0.9.0"),
+        ("v0.9.0", "0.0", "v0.9.0"),
+        ("0.0.1", "0.0", "v0.0.1"),
+        ("0.0.dev2", "0.9.0", "v0.9.0"),
+        (None, "0.0.0", "Unavailable"),
+    ],
+)
+def test_home_version_resolves_installed_metadata_and_source_fallback(
+    monkeypatch, installed_version, generated_version, expected,
+):
+    monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
+    home_main = importlib.import_module("RosettaX.pages.p01_home.main")
+
+    def read_installed_version(_name):
+        if installed_version is None:
+            raise home_main.importlib.metadata.PackageNotFoundError("RosettaX")
+        return installed_version
+
+    monkeypatch.setattr(home_main.importlib.metadata, "version", read_installed_version)
+    monkeypatch.setattr(home_main, "__version__", generated_version)
+    assert home_main.resolve_software_version_label() == expected
+    assert expected in _collect_text(home_main.HomePage()._github_tag_widget())
 
 
 class Test_GitHubTagResolution:

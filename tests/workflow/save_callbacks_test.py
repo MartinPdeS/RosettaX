@@ -25,7 +25,6 @@ class Test_SaveButtonVisibility:
                 "FITC (MESF)",
                 require_output_channel_name=True,
                 calibration_payload={"fit": {"slope": 1.2}},
-                review_acknowledgment=["reviewed"],
             )
             is False
         )
@@ -45,7 +44,6 @@ class Test_SaveButtonVisibility:
                 "FITC (MESF)",
                 require_output_channel_name=True,
                 calibration_payload={"fit": {"slope": 1.2}},
-                review_acknowledgment=["reviewed"],
             )
             is False
         )
@@ -93,7 +91,7 @@ class Test_SaveWorkflowContract:
         assert result.save_out == "Create a calibration before saving."
         assert result.download_data is dash.no_update
 
-    def test_save_button_requires_calibration_and_review_acknowledgment(self) -> None:
+    def test_save_button_does_not_require_review_acknowledgment(self) -> None:
         assert (
             save_button_should_be_disabled(
                 "example",
@@ -102,7 +100,7 @@ class Test_SaveWorkflowContract:
                 calibration_payload={"fit": {"slope": 1.2}},
                 review_acknowledgment=[],
             )
-            is True
+            is False
         )
         assert (
             save_button_should_be_disabled(

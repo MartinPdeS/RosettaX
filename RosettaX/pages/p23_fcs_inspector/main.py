@@ -65,7 +65,12 @@ class FCSInspectorPage:
                 ),
             ],
             fluid=True,
-            style={**styling.PAGE, "paddingBottom": "48px"},
+            style={
+                **styling.PAGE,
+                "paddingLeft": "0px",
+                "paddingRight": "0px",
+                "paddingBottom": "48px",
+            },
         )
 
     def register_callbacks(self) -> "FCSInspectorPage":

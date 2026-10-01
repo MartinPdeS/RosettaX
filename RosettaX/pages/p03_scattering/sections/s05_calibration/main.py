@@ -112,6 +112,7 @@ def build_scattering_graph_panel_card(
                 ),
                 dash.dcc.Loading(
                     dash.dcc.Graph(
+                        responsive=True,
                         id=graph_id,
                         style=graph_style,
                         config=styling.PLOTLY_GRAPH_CONFIG,
@@ -411,7 +412,7 @@ class Calibration:
             runtime_config_data if isinstance(runtime_config_data, dict) else None
         )
 
-        return runtime_config.get_graph_height(default="850px")
+        return runtime_config.get_graph_height()
 
     def _build_graph_style(
         self,

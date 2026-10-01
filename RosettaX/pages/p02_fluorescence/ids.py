@@ -32,6 +32,10 @@ class CalibrationSectionIds:
         return f"{self.prefix}-calibration-bead-table"
 
     @property
+    def bead_table_validation(self) -> str:
+        return f"{self.prefix}-calibration-bead-table-validation"
+
+    @property
     def bead_table_preset_dropdown(self) -> str:
         return f"{self.prefix}-calibration-bead-table-preset-dropdown"
 

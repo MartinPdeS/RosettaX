@@ -76,9 +76,13 @@ def _callback_input_id_types(callback: dict[str, Any]) -> set[str]:
             "RosettaX.pages.p10_visualization.main",
             "VisualizationPage",
             "visualization",
-            ("1",),
-            (),
-            ("Load compatible FCS files, then choose which file to inspect.",),
+            ("1", "2", "3"),
+            ("1", "2", "3"),
+            (
+                "Load compatible FCS files, then choose which file to inspect.",
+                "Choose the file, plotted channels, scales, and event limit.",
+                "Inspect the plotted events and channel distributions.",
+            ),
         ),
         (
             "RosettaX.pages.p21_fcs_slicer.main",
@@ -161,7 +165,7 @@ def test_fcs_tool_layouts_include_collapsible_cards_with_uniform_gaps(
         assert section_card is not None
         assert "marginBottom" not in section_card.style
         assert section_card.children[1].kwargs["is_open"] is False
-        assert subtitle in _collect_text(section_card.children[0])
+        assert subtitle not in _collect_text(section_card.children[0])
 
     direct_cards = [
         child for child in card_stack.children if isinstance(child, dbc.Card)

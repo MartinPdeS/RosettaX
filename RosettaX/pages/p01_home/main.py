@@ -2,6 +2,7 @@
 import importlib.metadata
 import json
 import logging
+import re
 import time
 from urllib import error, request
 
@@ -9,7 +10,7 @@ import dash
 import dash_bootstrap_components as dbc
 from dash import html
 
-from RosettaX._version import __version__
+from RosettaX import __version__
 from RosettaX.utils import ui_forms, usage_metrics
 
 logger = logging.getLogger(__name__)
@@ -19,6 +20,23 @@ GITHUB_TAG_CACHE_TTL_SECONDS = 300.0
 
 _cached_github_tag_label: str | None = None
 _cached_github_tag_expires_at = 0.0
+
+
+def resolve_software_version_label() -> str:
+    """Show the installed version, with a fallback for source and bundled runs."""
+    try:
+        installed_version = importlib.metadata.version("RosettaX")
+    except importlib.metadata.PackageNotFoundError:
+        installed_version = None
+
+    for version in (installed_version, __version__):
+        if not isinstance(version, str):
+            continue
+        version = version.strip().removeprefix("v")
+        release = re.match(r"^(\d+(?:\.\d+)*)", version)
+        if release and any(int(part) for part in release.group(1).split(".")):
+            return f"v{version}"
+    return "Unavailable"
 
 
 def _fetch_latest_github_tag_label() -> str | None:
@@ -178,9 +196,7 @@ class HomePage:
         )
 
     def _github_tag_widget(self) -> html.Div:
-        local_version_label = (
-            __version__ if __version__.startswith("v") else f"v{__version__}"
-        )
+        local_version_label = resolve_software_version_label()
 
         return html.Div(
             [

@@ -123,6 +123,7 @@ class Scatter2DGraph:
         return dash.html.Div(
             [
                 dash.dcc.Graph(
+                    responsive=True,
                     id=component_ids.graph,
                     figure=figure if figure is not None else cls.build_empty_figure(),
                     style=resolved_graph_style,

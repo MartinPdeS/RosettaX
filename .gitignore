@@ -12,6 +12,7 @@
 !development
 !docs
 !tests
+!integration_tests
 !tools
 !tools/*.py
 !.flake8
@@ -29,6 +30,9 @@
 !makefile
 !rosettax.spec
 !CONTRIBUTING.md
+!Dockerfile
+!compose.yaml
+!.dockerignore
 
 # But ignore docs/build inside docs and code
 docs/build/

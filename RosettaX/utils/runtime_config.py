@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 _MISSING = object()
+DEFAULT_GRAPH_HEIGHT = "clamp(320px, 65vh, 760px)"
 
 
 @dataclass(frozen=True, slots=True)
@@ -418,7 +419,7 @@ class RuntimeConfig:
         # ---------------------------------------------------------------------
         "visualization.graph_height": RuntimeConfigField(
             expected_type=str,
-            default="850px",
+            default=DEFAULT_GRAPH_HEIGHT,
             description="Default graph height CSS value.",
         ),
         "visualization.default_marker_opacity": RuntimeConfigField(
@@ -1162,7 +1163,7 @@ class RuntimeConfig:
         """
         return self.get_bool("ui.show_graphs", default=default)
 
-    def get_graph_height(self, default: str = "850px") -> str:
+    def get_graph_height(self, default: str = DEFAULT_GRAPH_HEIGHT) -> str:
         """
         Convenience accessor for graph height CSS value.
         """

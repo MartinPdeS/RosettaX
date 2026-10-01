@@ -58,7 +58,7 @@
     "instrument_name": ""
   },
   "visualization": {
-    "graph_height": "450px",
+    "graph_height": "clamp(320px, 65vh, 760px)",
     "default_marker_opacity": 1.0,
     "default_marker_size": 7.0,
     "default_line_width": 3.0,

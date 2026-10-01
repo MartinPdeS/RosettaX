@@ -101,6 +101,7 @@ def register_application_callbacks(app: Dash) -> None:
                 "section": MATCH,
             },
             "n_clicks",
+            allow_optional=True,
         ),
         Input(BROWSER_PROFILES_STORE_ID, "data"),
         Input(SidebarIds.selected_profile_store, "data"),

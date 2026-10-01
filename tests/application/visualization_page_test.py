@@ -97,7 +97,7 @@ class Test_VisualizationPage:
         assert graph_component is not None
         assert getattr(graph_component, "style", {}) == services.resolve_visualization_control_defaults()["graph_style"]
 
-    def test_layout_keeps_only_header_and_upload_as_cards(
+    def test_layout_groups_controls_and_plot_into_workflow_sections(
         self,
         monkeypatch,
     ) -> None:
@@ -114,6 +114,8 @@ class Test_VisualizationPage:
         assert "Upload FCS file" in text_nodes
         assert "Choose plot settings" in text_nodes
         assert "Inspect the data" in text_nodes
+        assert "2. Plot settings" in text_nodes
+        assert "3. Data plot" in text_nodes
         assert "Configure plot" not in text_nodes
         assert "Inspect metadata and plot" not in text_nodes
         assert "File summary" not in text_nodes

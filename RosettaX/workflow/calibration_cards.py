@@ -179,7 +179,10 @@ def build_calibration_workflow_section_card(
     color_name: str | None = None,
     style_overrides: dict[str, Any] | None = None,
 ) -> dbc.Card:
-    """Build one collapsed, descriptive calibration workflow section card."""
+    """Build a workflow section with a compact, title-only collapse header.
+
+    The subtitle argument remains accepted for existing page builders.
+    """
     if card is None:
         if title is None or body_children is None:
             raise ValueError("title and body_children are required when card is omitted")
@@ -188,7 +191,7 @@ def build_calibration_workflow_section_card(
         card = build_workflow_section_card(
             section_number=section_number,
             title=title,
-            subtitle=subtitle,
+            subtitle=None,
             body_children=body_children,
             tooltip_text=tooltip_text,
             tooltip_target_id=tooltip_target_id,
@@ -204,32 +207,12 @@ def build_calibration_workflow_section_card(
             card,
             color_name=resolved_color_name,
         )
-        _append_card_subtitle(card, subtitle)
 
     return make_profile_aware_collapsible_card(
         card,
         page_name=page_name,
         section_key=str(section_number),
     )
-
-
-def _append_card_subtitle(card: dbc.Card, subtitle: str | None) -> None:
-    """Add the shared visible subtitle to a legacy workflow card header."""
-    if not subtitle:
-        return
-
-    card_children = ui_forms.normalize_children(card.children)
-    if not card_children or not isinstance(card_children[0], dbc.CardHeader):
-        return
-
-    header = card_children[0]
-    header.children = [
-        *ui_forms.normalize_children(header.children),
-        dash.html.Div(
-            subtitle,
-            style=ui_forms.build_workflow_section_subtitle_style(),
-        ),
-    ]
 
 
 def make_profile_aware_collapsible_card(
@@ -267,7 +250,7 @@ def resolve_card_toggle(
         if trigger_type == WORKFLOW_STEP_CARD_ID_TYPE:
             if not bool(workflow_step_clicks):
                 return None
-            next_is_open = True
+            next_is_open = not bool(is_open)
         elif trigger_type == TOGGLE_ID_TYPE:
             if not bool(toggle_clicks):
                 return None

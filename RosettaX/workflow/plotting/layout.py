@@ -16,8 +16,9 @@ PLOT_CONTROL_PANEL_STYLE = {
     "alignItems": "center",
     "gap": "16px",
     "flexWrap": "wrap",
-    "backgroundColor": "#f4f5f7",
-    "border": "1px solid #d9dde3",
+    "backgroundColor": "var(--rosettax-control-background)",
+    "color": "var(--rosettax-text-color)",
+    "border": "1px solid var(--rosettax-border-color)",
     "borderRadius": "8px",
 }
 
@@ -78,7 +79,7 @@ def build_plot_control_panel(
     *,
     component_id: str | None = None,
 ) -> html.Div:
-    """Build the shared grey panel that contains plot options."""
+    """Build the themed panel that contains plot options."""
     kwargs: dict[str, Any] = {}
     if component_id is not None:
         kwargs["id"] = component_id

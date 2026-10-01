@@ -305,6 +305,13 @@ class Test_RuntimeConfig:
 
         assert runtime_config.get_graph_height(default="850px") == "70vh"
 
+    def test_graph_height_defaults_to_viewport_sizing_and_preserves_custom_height(self) -> None:
+        from RosettaX.utils.runtime_config import DEFAULT_GRAPH_HEIGHT
+
+        assert RuntimeConfig.from_dict({}).get_graph_height() == DEFAULT_GRAPH_HEIGHT
+        assert RuntimeConfig.from_default_profile().get_graph_height() == DEFAULT_GRAPH_HEIGHT
+        assert RuntimeConfig.from_dict({"visualization": {"graph_height": "350px"}}).get_graph_height() == "350px"
+
     def test_get_bool_reads_ui_show_preset_configuration_path(self) -> None:
         runtime_config = RuntimeConfig.from_dict(
             {

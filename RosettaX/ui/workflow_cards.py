@@ -52,7 +52,7 @@ def build_workflow_section_card(
             )
         header = dbc.CardHeader(
             header_children,
-            style=ui_forms.build_workflow_subpanel_header_style(
+            style=ui_forms.build_workflow_section_header_style(
                 color_name=resolved_color,
             ),
         )

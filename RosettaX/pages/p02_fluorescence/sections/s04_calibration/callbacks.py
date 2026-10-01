@@ -43,7 +43,7 @@ def _register_graph_style_callback(section) -> None:
 
         return {
             **styling.PLOTLY_GRAPH_STYLE,
-            "height": runtime_config.get_graph_height(default="850px"),
+            "height": runtime_config.get_graph_height(),
             "width": "100%",
             "display": "block",
         }

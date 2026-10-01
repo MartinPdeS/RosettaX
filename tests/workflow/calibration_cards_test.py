@@ -40,16 +40,17 @@ class Test_CalibrationCards:
 
         assert result is None
 
-    def test_workflow_step_click_opens_target_card(self) -> None:
-        is_open, label = calibration_cards.resolve_card_toggle(
-            triggered_id={"type": calibration_cards.WORKFLOW_STEP_CARD_ID_TYPE},
-            is_open=False,
-            runtime_config_data={"ui": {"collapse_calibration_cards": True}},
-            workflow_step_clicks=1,
-        )
-
-        assert is_open is True
-        assert label == "Hide"
+    def test_repeated_workflow_step_clicks_toggle_target_card(self) -> None:
+        is_open = False
+        for click_count, expected_state, expected_label in [(1, True, "Hide"), (2, False, "Show")]:
+            is_open, label = calibration_cards.resolve_card_toggle(
+                triggered_id={"type": calibration_cards.WORKFLOW_STEP_CARD_ID_TYPE},
+                is_open=is_open,
+                runtime_config_data={"ui": {"collapse_calibration_cards": True}},
+                workflow_step_clicks=click_count,
+            )
+            assert is_open is expected_state
+            assert label == expected_label
 
     def test_rebuilt_workflow_step_does_not_expand_collapsed_card(self) -> None:
         result = calibration_cards.resolve_card_toggle(

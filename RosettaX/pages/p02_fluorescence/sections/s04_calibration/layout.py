@@ -150,6 +150,7 @@ def _build_graph_block(section) -> dash.html.Div:
         [
             dash.dcc.Loading(
                 dash.dcc.Graph(
+                    responsive=True,
                     id=section.ids.graph_calibration,
                     style=_build_graph_style(section),
                     config=styling.PLOTLY_GRAPH_CONFIG,
@@ -191,17 +192,7 @@ def _get_default_graph_height() -> str:
     """
     runtime_config = RuntimeConfig.from_default_profile()
 
-    graph_height = runtime_config.get_str(
-        "visualization.graph_height",
-        default="850px",
-    )
-
-    graph_height = str(graph_height or "").strip()
-
-    if not graph_height:
-        return "850px"
-
-    return graph_height
+    return runtime_config.get_graph_height()
 
 
 def _build_calibration_footer(section) -> dash.html.Div:

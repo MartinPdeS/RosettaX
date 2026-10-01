@@ -14,6 +14,7 @@ from RosettaX.workflow.table.layout import (
     ReferenceTableConfig,
     ReferenceTableLayout,
 )
+from RosettaX.workflow.table.validation import register_reference_table_validation
 
 from ..s03_model.main import Model as ScatteringModelSection
 from ..s05_calibration import services as calibration_services
@@ -238,6 +239,7 @@ class ReferenceTable:
         """
         logger.debug("Registering scattering calibration standard table callbacks.")
 
+        register_reference_table_validation(self.ids)
         self._register_table_default_population_callback()
         self._register_table_callbacks()
         self._register_scatterer_preset_table_callback()

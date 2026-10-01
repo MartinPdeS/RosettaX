@@ -282,8 +282,9 @@ def _build_step_card(
             color_name=step.color_name,
             style_overrides={
                 "height": "100%",
-                "opacity": 0.5 if state == "blocked" else 1,
-                "filter": "grayscale(0.85)" if state == "blocked" else "none",
+                "background": ui_forms.build_workflow_section_header_style(
+                    color_name=step.color_name,
+                )["background"],
             },
         ),
     )
@@ -314,6 +315,6 @@ def _build_step_card(
                 page_name=page_name,
                 section_key=section_key,
             ),
-            "aria-label": f"Open step {step.number}: {step.title}",
+            "aria-label": f"Toggle step {step.number}: {step.title}",
         },
     )

@@ -132,6 +132,12 @@ A typical RosettaX session follows these steps:
 The exact procedure depends on the selected workflow, but the application is
 organized so that each step remains visible and traceable.
 
+On smaller screens, open ``Menu`` to access navigation and saved profiles.
+Graphs use a viewport-aware default height; an explicit graph height in your
+profile remains in effect. Calibration reference tables keep headers visible
+while scrolling and show cell-specific feedback for invalid numeric entries.
+Blank cells remain available for completing a table in stages.
+
 
 Scientific Scope
 ****************
@@ -186,6 +192,9 @@ Current development priorities include:
 Installation
 ************
 
+RosettaX requires Python 3.11 or later. CI checks Python 3.11, 3.12, and 3.13;
+the pinned PyMieSim release provides wheels for these versions.
+
 PyPI
 ====
 
@@ -210,6 +219,57 @@ From Source
    git clone https://github.com/MartinPdeS/RosettaX.git
    cd RosettaX
    pip install -e .
+
+
+Docker
+======
+
+With Docker and Docker Compose installed, run from the repository checkout:
+
+.. code-block:: bash
+
+   docker compose up --build
+
+Open http://localhost:8050 in your browser. The container uses Python 3.13 and
+Gunicorn, runs as a non-root user, and publishes the application on the local
+machine only. Compose targets ``linux/amd64`` because PyMieSim 5.1.2 provides
+x86-64 Linux wheels; Docker uses emulation on Apple Silicon.
+
+Uploads, server-side calibration files, and usage records are stored in the
+``rosettax-data`` named volume and survive container recreation. User-created
+profiles remain in browser storage; downloaded FCS files, calibration JSON,
+and PDF reports are saved by your browser.
+
+To use a different port or maximum upload size:
+
+.. code-block:: bash
+
+   ROSETTAX_PORT=8051 ROSETTAX_MAX_UPLOAD_SIZE=512MB docker compose up --build
+
+Stop the application with Ctrl+C, or run ``docker compose down`` after starting
+it with ``docker compose up --build --detach``. ``docker compose down`` retains
+the data volume; adding ``--volumes`` deletes the stored application data.
+
+For a native deployment, ``ROSETTAX_CALIBRATION_DIRECTORY`` can select a writable
+directory for server-side calibration files. Without that setting, RosettaX
+keeps its existing calibration directory beside the package.
+
+
+Render
+======
+
+For a native Python web service on Render, set the Build Command to:
+
+.. code-block:: bash
+
+   bash tools/render_build.sh
+
+The script fetches release tags and complete Git history before installing the
+package, so its version is preserved in shallow deployment checkouts. It prints
+the installed version in the build log and rejects placeholder ``0.0`` versions.
+Keep your existing Start Command and redeploy after changing the Build Command.
+The home page displays the installed software version, with a generated-version
+fallback for source checkouts and standalone bundles.
 
 
 Usage
@@ -269,7 +329,7 @@ This creates a standalone bundle under ``dist/rosettax`` for the current
 operating system. Cross platform bundles must still be built natively on each
 target operating system.
 
-Run the test suite with:
+Run the unit test suite with:
 
 .. code-block:: bash
 
@@ -280,6 +340,21 @@ Run tests with coverage using:
 .. code-block:: bash
 
    pytest --cov=RosettaX
+
+Run the integration suite in a separate process with real PyMieSim and Dash
+Bootstrap dependencies:
+
+.. code-block:: bash
+
+   python -m pytest integration_tests -o addopts='' -v
+
+The unit suite substitutes scientific and Bootstrap dependencies with stubs.
+The integration suite lives outside ``tests/`` so it does not load those stubs;
+do not collect both suites in one pytest invocation. It checks native sphere
+and core-shell calculations, power scaling, Mie relation inversion, every
+registered page layout, and Dash HTTP endpoints. Missing dependencies or stub
+contamination fail the run instead of skipping checks. CI runs these checks
+on Python 3.11 and 3.13 on Linux, and Python 3.13 on macOS and Windows.
 
 The repository includes configuration for testing, coverage, documentation, and
 continuous integration. These tools are intended to support reproducible

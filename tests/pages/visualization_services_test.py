@@ -2,6 +2,7 @@
 import pandas as pd
 
 from RosettaX.pages.p10_visualization import services
+from RosettaX.utils.runtime_config import DEFAULT_GRAPH_HEIGHT
 
 
 class Test_VisualizationServices:
@@ -260,5 +261,5 @@ class Test_VisualizationServices:
         assert defaults["colormap_log_values"] == ["enabled"]
         assert defaults["marker_size"] == 7.0
         assert defaults["marker_opacity"] == 1.0
-        assert defaults["graph_style"] == {"height": "450px"}
-        assert defaults["figure_height_px"] == 450
+        assert defaults["graph_style"] == {"height": DEFAULT_GRAPH_HEIGHT}
+        assert defaults["figure_height_px"] == services.VISUALIZATION_FIGURE_HEIGHT_PX

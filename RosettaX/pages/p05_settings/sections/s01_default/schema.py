@@ -3,6 +3,7 @@ import logging
 from dataclasses import dataclass
 from typing import Any
 
+from RosettaX.utils.runtime_config import DEFAULT_GRAPH_HEIGHT
 from RosettaX.workflow import apply_calibration, detector, scattering
 from RosettaX.workflow.peak import registry as peak_registry
 from RosettaX.workflow.table.fluorescence import (
@@ -567,8 +568,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         value_kind="string",
         runtime_path="visualization.graph_height",
         profile_path="apply_calibration.visualization.graph_height",
-        default="850px",
-        placeholder="850px, 70vh, calc(100vh - 260px)",
+        default=DEFAULT_GRAPH_HEIGHT,
+        placeholder="clamp(320px, 65vh, 760px), 450px, 70vh",
     ),
     FieldDefinition(
         name="default_marker_opacity",

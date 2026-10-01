@@ -20,6 +20,8 @@ def save_button_should_be_disabled(
 ) -> bool:
     """
     Return whether the save button should be disabled.
+
+    The legacy review_acknowledgment argument is accepted for compatibility.
     """
     if not bool(str(file_name or "").strip()):
         return True
@@ -30,7 +32,6 @@ def save_button_should_be_disabled(
     return (
         not isinstance(calibration_payload, dict)
         or not calibration_payload
-        or "reviewed" not in (review_acknowledgment or [])
     )
 
 
@@ -102,14 +103,12 @@ def _register_save_button_enabled_state_callback(
         dash.Output(ids.save_calibration_btn, "disabled"),
         dash.Input(ids.file_name, "value"),
         dash.Input(ids.output_channel_name, "value"),
-        dash.Input(ids.review_acknowledgment, "value"),
         *store_inputs,
         prevent_initial_call=False,
     )
     def set_save_button_enabled_state(
         file_name: Any,
         output_channel_name: Any,
-        review_acknowledgment: Any,
         *store_payloads: Any,
     ) -> bool:
         calibration_payload = _get_calibration_payload(
@@ -124,7 +123,6 @@ def _register_save_button_enabled_state_callback(
             output_channel_name=output_channel_name,
             require_output_channel_name=config.require_output_channel_name,
             calibration_payload=calibration_payload,
-            review_acknowledgment=review_acknowledgment,
         )
 
 

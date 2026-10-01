@@ -1,3 +1,7 @@
+import json
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -6,6 +10,28 @@ from RosettaX.utils import directories
 
 
 class Test_Directories:
+    @pytest.mark.parametrize("use_override", [False, True])
+    def test_calibration_storage_directory_is_configurable(
+        self, tmp_path: Path, use_override: bool,
+    ) -> None:
+        environment = dict(os.environ)
+        environment.pop("ROSETTAX_CALIBRATION_DIRECTORY", None)
+        configured_directory = tmp_path / "persistent calibrations"
+        if use_override:
+            environment["ROSETTAX_CALIBRATION_DIRECTORY"] = str(configured_directory)
+        result = subprocess.run(
+            [
+                sys.executable, "-c",
+                "import json; from RosettaX.utils import directories; "
+                "print(json.dumps([str(directories.calibrations), "
+                "str(directories.fluorescence_calibration), str(directories.scattering_calibration)]))",
+            ],
+            check=True, capture_output=True, text=True, env=environment,
+        )
+        paths = [Path(value) for value in json.loads(result.stdout)]
+        expected_directory = configured_directory if use_override else directories.project / "calibrations"
+        assert paths == [expected_directory, expected_directory / "fluorescence", expected_directory / "scattering"]
+
     def test_list_profiles_returns_json_stems_only(
         self,
         tmp_path: Path,

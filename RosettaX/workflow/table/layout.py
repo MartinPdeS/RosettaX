@@ -7,6 +7,7 @@ import dash
 import dash_bootstrap_components as dbc
 
 from RosettaX.utils import styling
+from RosettaX.workflow.table.validation import build_reference_table_feedback
 
 logger = logging.getLogger(__name__)
 
@@ -125,6 +126,9 @@ class ReferenceTableLayout:
         Build the table block.
         """
         children: list[Any] = []
+        cell_styles, cell_tooltips, validation_messages = build_reference_table_feedback(
+            self.table_data, self.table_columns,
+        )
 
         if self.config.show_table_title and self.config.table_title:
             children.append(
@@ -150,7 +154,19 @@ class ReferenceTableLayout:
                     id=self.ids.bead_table,
                     columns=self.table_columns,
                     data=self.table_data,
-                    **self._build_table_options(),
+                    **{
+                        **self._build_table_options(),
+                        "style_data_conditional": cell_styles,
+                        "tooltip_data": cell_tooltips,
+                        "tooltip_delay": 0,
+                        "tooltip_duration": None,
+                    },
+                ),
+                dash.html.Div(
+                    validation_messages,
+                    id=self.ids.bead_table_validation,
+                    className="rosettax-table-validation",
+                    **{"aria-live": "polite"},
                 ),
                 self._build_add_row_button_row(),
             ]
@@ -158,6 +174,7 @@ class ReferenceTableLayout:
 
         return dash.html.Div(
             children,
+            className="rosettax-reference-table",
         )
 
     def _build_add_row_button_row(self) -> dash.html.Div:

@@ -280,6 +280,7 @@ class CrossCalibrationPage:
             subtitle="Inspect the fitted relation before exporting it for routine-bead calibration.",
             body_children=[
                         dcc.Graph(
+                            responsive=True,
                             id=self.ids.graph,
                             figure=services.build_empty_result_figure(
                                 message="Upload a primary and a secondary calibration to build a transfer relation.",
@@ -297,9 +298,11 @@ class CrossCalibrationPage:
                             ],
                             data=[],
                             page_size=8,
-                            style_table={"overflowX": "auto"},
-                            style_cell={"textAlign": "left", "padding": "8px"},
-                            style_header={"fontWeight": "700"},
+                            fixed_rows=styling.DATATABLE["fixed_rows"],
+                            style_table=styling.DATATABLE["style_table"],
+                            style_cell=styling.DATATABLE["style_cell"],
+                            style_header=styling.DATATABLE["style_header"],
+                            style_data=styling.DATATABLE["style_data"],
                         ),
             ],
             color_name=styling.get_workflow_section_color(2),

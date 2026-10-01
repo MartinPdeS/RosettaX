@@ -105,7 +105,7 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
         ``uploaded_fcs_path`` is accepted only for interface compatibility with
         ``BasePeakWorkflowAdapter``. It is intentionally not used here.
         """
-        from RosettaX.pages.p03_scattering.backend import BackEnd
+        from RosettaX.workflow.scattering.backend import BackEnd
 
         backend = BackEnd()
         backend.fcs_file_path = uploaded_fcs_path

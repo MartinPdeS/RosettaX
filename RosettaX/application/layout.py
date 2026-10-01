@@ -13,6 +13,8 @@ from RosettaX.utils.browser_profiles import (
 )
 from RosettaX.utils.runtime_config import RuntimeConfig
 
+from .ids import SIDEBAR_NAVIGATION_ID
+
 logger = logging.getLogger(__name__)
 
 
@@ -183,7 +185,15 @@ def build_application_layout() -> html.Div:
             theme_link,
             html.Div(
                 [
-                    sidebar_content,
+                    html.Details(
+                        [
+                            html.Summary("Menu", className="rosettax-navigation-toggle"),
+                            sidebar_content,
+                        ],
+                        id=SIDEBAR_NAVIGATION_ID,
+                        className="rosettax-navigation",
+                        open=True,
+                    ),
                     main_content,
                 ],
                 style={
@@ -191,6 +201,7 @@ def build_application_layout() -> html.Div:
                     "alignItems": "flex-start",
                     "minHeight": "100vh",
                 },
+                className="rosettax-application-shell",
             ),
         ],
         className="app-typography-hierarchy",

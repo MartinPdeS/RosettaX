@@ -7,9 +7,9 @@ from typing import Any
 import numpy as np
 import plotly.graph_objs as go
 
-from RosettaX.pages.p03_scattering.backend import BackEnd
 from RosettaX.utils import plottings
 from RosettaX.workflow import scattering
+from RosettaX.workflow.scattering.backend import BackEnd
 
 logger = logging.getLogger(__name__)
 

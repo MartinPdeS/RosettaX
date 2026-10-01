@@ -4,12 +4,12 @@ from typing import Any
 
 import numpy as np
 
-from RosettaX.pages.p03_scattering.backend import BackEnd
 from RosettaX.utils.casting import as_optional_float, as_required_float, as_required_int
 from RosettaX.workflow.detector import (
     resolve_detector_angular_weights,
     resolve_detector_modeling_geometry_values,
 )
+from RosettaX.workflow.scattering.backend import BackEnd
 from RosettaX.workflow.scattering.calibration_services import (
     DEFAULT_SOURCE_POLARIZATION_ANGLE_DEGREE,
 )

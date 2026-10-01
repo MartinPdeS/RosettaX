@@ -230,6 +230,10 @@ class CalibrationSectionIds:
         return f"{self.prefix}-calibration-standard-table"
 
     @property
+    def bead_table_validation(self) -> str:
+        return f"{self.prefix}-calibration-standard-table-validation"
+
+    @property
     def add_row_btn(self) -> str:
         return f"{self.prefix}-calibration-standard-table-add-row-button"
 

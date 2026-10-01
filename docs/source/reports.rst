@@ -26,11 +26,36 @@ The apply report can include:
 * uploaded source file names
 * output channels and extra exported columns
 * warnings emitted during apply
+* a calibration evidence summary with recorded peak counts, measured reference
+  ranges, and saved R-squared values
 * selected metadata copied from the saved calibration payload
 * tables that summarize calibration context and apply choices
 * plots or thumbnails from the calibration/apply result when available
 
 This makes the PDF a provenance surface, not just a screenshot replacement.
+
+Warnings appear before the run details. A completed export does not establish
+scientific acceptance: the evidence summary describes the saved fit without
+inferring validity or output uncertainty. Scattering charts show the fitted
+instrument response when expected coupling values are recorded; otherwise they
+show standard observations without a fitted line.
+
+Changing saved calibration contents or an individual target model invalidates
+the previous report in the apply workflow.
+
+
+Generate an example
+-------------------
+
+From an installed repository checkout, generate a synthetic fluorescence report:
+
+.. code-block:: console
+
+   python tools/generate_example_report.py --output example_report.pdf
+
+The example uses the production PDF composer and is explicitly labelled as
+synthetic. It includes a fitted calibration chart, reference table, evidence
+summary, and export context; no experimental FCS files are processed.
 
 
 How ZIP exports are handled

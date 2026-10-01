@@ -82,7 +82,7 @@ class VisualizationPage:
             "marginBottom": styling.get_spacing_token("xs"),
         }
 
-        return html.Div(
+        workspace = html.Div(
             [
                 html.Div(
                     [
@@ -215,6 +215,7 @@ class VisualizationPage:
                     style={"opacity": 0.8},
                 ),
                 dcc.Graph(
+                    responsive=True,
                     id=self.ids.graph,
                     figure=services.build_empty_figure(
                         message="Upload an FCS file to start visualizing events.",
@@ -231,6 +232,24 @@ class VisualizationPage:
                 "minWidth": 0,
             },
         )
+        return build_fcs_tool_card_stack(
+            [
+                self._build_section_card(
+                    section_number=2,
+                    title="Plot settings",
+                    subtitle="Choose the file, plotted channels, scales, and event limit.",
+                    tooltip_text="Choose a file and plot type, then adjust the channels and display options.",
+                    body_children=[html.Div(workspace.children[:2], style=workspace.style)],
+                ),
+                self._build_section_card(
+                    section_number=3,
+                    title="Data plot",
+                    subtitle="Inspect the plotted events and channel distributions.",
+                    tooltip_text="Explore the selected data using the Plotly zoom, pan, and export controls.",
+                    body_children=[html.Div(workspace.children[2:], style=workspace.style)],
+                ),
+            ],
+        )
 
     def _build_header_card(self) -> dbc.Card:
         return build_workflow_page_header(
@@ -239,6 +258,7 @@ class VisualizationPage:
                 "Upload compatible FCS files, choose one to inspect, and view it with a 1D histogram or a 2D scatter colored by local event density."
             ),
             steps=self._build_steps(),
+            step_target_page_name=self.ids.page_prefix,
             style_overrides={"marginBottom": "0px"},
         )
 

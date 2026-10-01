@@ -1,0 +1,16 @@
+services:
+  rosettax:
+    build: .
+    # PyMieSim 5.1.2 provides x86-64 Linux wheels.
+    platform: linux/amd64
+    ports:
+      - "127.0.0.1:${ROSETTAX_PORT:-8050}:8050"
+    environment:
+      ROSETTAX_MAX_UPLOAD_SIZE: "${ROSETTAX_MAX_UPLOAD_SIZE:-2GB}"
+    volumes:
+      - rosettax-data:/home/rosettax/.rosettax
+    init: true
+    stop_grace_period: 30s
+
+volumes:
+  rosettax-data:

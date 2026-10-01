@@ -31,7 +31,9 @@ default_profile = profiles / "default_profile.json"
 
 detectors = asset_directory / "detector_definitions"
 
-calibrations = project / "calibrations"
+calibrations = Path(
+    os.getenv("ROSETTAX_CALIBRATION_DIRECTORY") or project / "calibrations"
+).expanduser().resolve()
 
 fluorescence_calibration = calibrations / "fluorescence"
 

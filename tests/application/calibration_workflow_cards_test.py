@@ -87,7 +87,7 @@ def _collect_text(component: Any) -> list[str]:
         ),
     ],
 )
-def test_calibration_workflow_cards_start_collapsed_with_subtitles(
+def test_calibration_workflow_cards_start_collapsed_without_header_descriptions(
     monkeypatch,
     module_name: str,
     page_class_name: str,
@@ -122,7 +122,7 @@ def test_calibration_workflow_cards_start_collapsed_with_subtitles(
         assert calibration_cards.collapse_label(is_open=False) in _collect_text(
             card.children[0]
         )
-        assert subtitle in _collect_text(card.children[0])
+        assert subtitle not in _collect_text(card.children[0])
 
 
 def test_calibration_card_callback_does_not_hydrate_card_state() -> None:
@@ -155,6 +155,11 @@ def test_card_callback_owns_header_and_workflow_step_actions() -> None:
         calibration_cards.WORKFLOW_STEP_CARD_ID_TYPE in input_id
         for input_id in input_ids
     )
+    workflow_step_input = next(
+        input_spec for input_spec in card_callback["inputs"]
+        if calibration_cards.WORKFLOW_STEP_CARD_ID_TYPE in str(input_spec["id"])
+    )
+    assert workflow_step_input["allow_optional"] is True
 
 
 def test_active_browser_profile_keeps_workflow_cards_collapsed() -> None:

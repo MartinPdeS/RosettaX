@@ -7,6 +7,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from RosettaX.utils.service import build_reproducibility_metadata
+
+from .report_helpers import (
+    build_fit_evidence_items,
+)
 from .report_helpers import (
     build_saved_payload_section_specs as _build_saved_payload_section_specs_from_payload,
 )
@@ -42,6 +47,16 @@ COLOR_WARNING_SOFT = (1.00, 0.96, 0.88)
 COLOR_SUCCESS = (0.16, 0.48, 0.32)
 COLOR_POINT = (0.89, 0.34, 0.19)
 COLOR_LINE_SERIES = (0.07, 0.47, 0.73)
+
+# Standard PDF Helvetica glyph advances for printable ASCII, in 1/1000 em.
+HELVETICA_WIDTHS = (
+    278, 278, 355, 556, 556, 889, 667, 222, 333, 333, 389, 584, 278, 333, 278, 278,
+    556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 278, 278, 584, 584, 584, 556,
+    1015, 667, 667, 722, 722, 667, 611, 778, 722, 278, 500, 667, 556, 833, 722, 778,
+    667, 778, 722, 667, 611, 722, 667, 944, 667, 667, 611, 278, 278, 278, 469, 556,
+    222, 556, 556, 500, 556, 556, 278, 556, 556, 222, 222, 500, 222, 833, 556, 556,
+    556, 556, 333, 500, 278, 556, 500, 722, 500, 500, 500, 334, 260, 334, 584,
+)
 
 
 def build_apply_report_payload(
@@ -128,6 +143,15 @@ def build_apply_report_request_signature(
                 "selected_calibration": str(calibration.selected_calibration),
                 "source_channel": resolve_source_channel(
                     calibration.calibration_payload,
+                ),
+                "calibration_fingerprint": build_reproducibility_metadata(
+                    calibration_kind=str(calibration.calibration_payload.get("calibration_type", "")),
+                    payload=calibration.calibration_payload,
+                )["fingerprint"],
+                "target_model": (
+                    calibration.scattering_target_model_parameters.to_parameter_payload()
+                    if calibration.scattering_target_model_parameters is not None
+                    else None
                 ),
             }
             for calibration in request.calibrations
@@ -366,7 +390,7 @@ def _build_scattering_target_model_payload(
 
 
 def _sanitize_payload_value(value: Any) -> Any:
-    if isinstance(value, (str, bool, int)) or value is None:
+    if isinstance(value, str | bool | int) or value is None:
         return value
 
     if isinstance(value, float):
@@ -400,11 +424,11 @@ def _sanitize_payload_tree(value: Any) -> Any:
 
 
 def _is_supported_payload_value(value: Any) -> bool:
-    return isinstance(value, (dict, str, bool, int, float, list)) or value is None
+    return isinstance(value, dict | str | bool | int | float | list) or value is None
 
 
 def _is_supported_payload_tree_value(value: Any) -> bool:
-    return isinstance(value, (dict, list)) or _is_supported_payload_value(value)
+    return isinstance(value, dict | list) or _is_supported_payload_value(value)
 
 
 def _as_float_or_none(value: Any) -> float | None:
@@ -454,6 +478,8 @@ class _PdfReportComposer:
 
     def _compose_document(self) -> None:
         self._draw_summary_cards(items=_build_cover_summary_items(report_payload=self.report_payload))
+        warning_items = _normalize_string_list(self.report_payload.get("result", {}).get("warnings"))
+        self._draw_bullet_box(title="Warnings", items=warning_items or ["None"])
         self._draw_key_value_table(
             title="Run summary",
             items=_build_apply_overview_items(report_payload=self.report_payload),
@@ -500,6 +526,12 @@ class _PdfReportComposer:
                 report_payload=self.report_payload,
                 calibration_index=calibration_index,
             )
+            evidence_items = build_fit_evidence_items(details=calibration_entry.get("details", {}))
+            if evidence_items:
+                self._draw_key_value_table(
+                    title=f"Calibration evidence{calibration_title_suffix}",
+                    items=evidence_items,
+                )
             if chart_spec is not None:
                 if len(calibration_entries) > 1:
                     chart_spec = dict(chart_spec)
@@ -577,8 +609,6 @@ class _PdfReportComposer:
                 items=target_model_items,
             )
 
-        warning_items = _normalize_string_list(self.report_payload.get("result", {}).get("warnings"))
-        self._draw_bullet_box(title="Warnings", items=warning_items or ["None"])
 
     def _draw_cover_header(self) -> None:
         summary = self.report_payload.get("calibration_summary", {})
@@ -625,7 +655,7 @@ class _PdfReportComposer:
         self._draw_text(
             x=PAGE_MARGIN,
             y=PAGE_HEIGHT - 101.0,
-            text="RosettaX  •  Calibration application summary",
+            text="RosettaX  |  Calibration application summary",
             font="F1",
             size=8.5,
             color=(0.92, 0.96, 0.99),
@@ -813,7 +843,11 @@ class _PdfReportComposer:
 
         weights_total = sum(column_weights) or float(len(headers))
         column_widths = [CONTENT_WIDTH * (weight / weights_total) for weight in column_weights]
-        header_height = 22.0
+        header_line_count = max(
+            len(self._wrap_text_to_width(text=header, width=width - 12.0, font_size=9.0))
+            for header, width in zip(headers, column_widths, strict=False)
+        )
+        header_height = max(22.0, header_line_count * 10.0 + 12.0)
         font_size = 9.0
         line_height = 11.0
         row_padding = 7.0
@@ -874,7 +908,6 @@ class _PdfReportComposer:
                     row_height=row_height,
                     line_height=line_height,
                     font_size=font_size,
-                    padding=row_padding,
                 )
                 row_index += 1
 
@@ -944,17 +977,14 @@ class _PdfReportComposer:
                 fill_color=COLOR_ACCENT,
                 stroke_color=COLOR_LINE,
             )
-            self._draw_text_block(
-                x=x_cursor + 6.0,
-                y=y + height - 8.0,
-                width=column_width - 12.0,
-                text=header,
-                font="F2",
-                size=9.0,
-                color=(1.0, 1.0, 1.0),
-                leading=10.0,
-                max_lines=2,
-            )
+            lines = self._wrap_text_to_width(text=header, width=column_width - 12.0, font_size=9.0)
+            text_y = y + height / 2.0 + (len(lines) - 1) * 5.0 - 2.7
+            for line in lines:
+                self._draw_text(
+                    x=x_cursor + 6.0, y=text_y, text=line,
+                    font="F2", size=9.0, color=(1.0, 1.0, 1.0),
+                )
+                text_y -= 10.0
             x_cursor += column_width
 
         self.cursor_y = y
@@ -968,7 +998,6 @@ class _PdfReportComposer:
         row_height: float,
         line_height: float,
         font_size: float,
-        padding: float,
     ) -> None:
         x_cursor = PAGE_MARGIN
         y = self.cursor_y - row_height
@@ -984,7 +1013,7 @@ class _PdfReportComposer:
                 stroke_color=COLOR_LINE,
             )
 
-            text_y = y + row_height - padding - font_size
+            text_y = y + row_height / 2.0 + (len(cell_lines) - 1) * line_height / 2.0 - font_size * 0.3
             for line in cell_lines:
                 self._draw_text(
                     x=x_cursor + 6.0,
@@ -1001,17 +1030,17 @@ class _PdfReportComposer:
         self.cursor_y = y
 
     def _draw_chart(self, *, chart_spec: dict[str, Any]) -> None:
+        plot_height = 248.0
+        self._ensure_space(plot_height + 52.0)
         self._draw_section_title(title=str(chart_spec.get("title") or "Calibration plot"))
-        plot_height = 214.0
-        self._ensure_space(plot_height + 18.0)
 
         plot_x = PAGE_MARGIN
         plot_y = self.cursor_y - plot_height
         plot_width = CONTENT_WIDTH
-        inner_x = plot_x + 44.0
-        inner_y = plot_y + 34.0
-        inner_width = plot_width - 58.0
-        inner_height = plot_height - 58.0
+        inner_x = plot_x + 78.0
+        inner_y = plot_y + 48.0
+        inner_width = plot_width - 94.0
+        inner_height = plot_height - 88.0
 
         self._fill_rect(
             x=plot_x,
@@ -1031,22 +1060,23 @@ class _PdfReportComposer:
         )
         legend_y = plot_y + plot_height - 18.0
         legend_x = plot_x + plot_width - 150.0
-        self._draw_line(
-            x1=legend_x,
-            y1=legend_y + 2.0,
-            x2=legend_x + 14.0,
-            y2=legend_y + 2.0,
-            color=COLOR_LINE_SERIES,
-            line_width=1.8,
-        )
-        self._draw_text(
-            x=legend_x + 19.0,
-            y=legend_y - 1.0,
-            text="Fit",
-            font="F1",
-            size=7.5,
-            color=COLOR_MUTED,
-        )
+        if chart_spec.get("line_x_values"):
+            self._draw_line(
+                x1=legend_x,
+                y1=legend_y + 2.0,
+                x2=legend_x + 14.0,
+                y2=legend_y + 2.0,
+                color=COLOR_LINE_SERIES,
+                line_width=1.8,
+            )
+            self._draw_text(
+                x=legend_x + 19.0,
+                y=legend_y - 1.0,
+                text="Fit",
+                font="F1",
+                size=7.5,
+                color=COLOR_MUTED,
+            )
         self._fill_circle(
             cx=legend_x + 65.0,
             cy=legend_y + 2.0,
@@ -1132,21 +1162,16 @@ class _PdfReportComposer:
 
         log_x = bool(chart_spec.get("log_x", False))
         log_y = bool(chart_spec.get("log_y", False))
-        self._draw_text(
-            x=inner_x,
-            y=plot_y + 10.0,
+        self._draw_axis_label(
+            center_x=inner_x + inner_width / 2.0,
+            center_y=plot_y + 15.0,
             text=str(chart_spec.get("x_label") or ""),
-            font="F1",
-            size=8.0,
-            color=COLOR_MUTED,
         )
-        self._draw_text(
-            x=plot_x + 12.0,
-            y=plot_y + plot_height - 31.0,
-            text=f"Y: {chart_spec.get('y_label') or ''}",
-            font="F1",
-            size=8.0,
-            color=COLOR_MUTED,
+        self._draw_axis_label(
+            center_x=plot_x + 16.0,
+            center_y=inner_y + inner_height / 2.0,
+            text=str(chart_spec.get("y_label") or ""),
+            vertical=True,
         )
         self._draw_text(
             x=inner_x,
@@ -1156,32 +1181,54 @@ class _PdfReportComposer:
             size=7.5,
             color=COLOR_MUTED,
         )
+        x_max_label = _format_display_value(_inverse_transform_value(x_max, log_x))
         self._draw_text(
-            x=inner_x + inner_width - 30.0,
+            x=inner_x + inner_width - _measure_helvetica_text(x_max_label, size=7.5),
             y=inner_y - 14.0,
-            text=_format_display_value(_inverse_transform_value(x_max, log_x)),
+            text=x_max_label,
             font="F1",
             size=7.5,
             color=COLOR_MUTED,
         )
+        y_min_label = _format_display_value(_inverse_transform_value(y_min, log_y))
         self._draw_text(
-            x=plot_x + 4.0,
+            x=inner_x - 10.0 - _measure_helvetica_text(y_min_label, size=7.5),
             y=inner_y - 2.0,
-            text=_format_display_value(_inverse_transform_value(y_min, log_y)),
+            text=y_min_label,
             font="F1",
             size=7.5,
             color=COLOR_MUTED,
         )
+        y_max_label = _format_display_value(_inverse_transform_value(y_max, log_y))
         self._draw_text(
-            x=plot_x + 4.0,
+            x=inner_x - 10.0 - _measure_helvetica_text(y_max_label, size=7.5),
             y=inner_y + inner_height - 2.0,
-            text=_format_display_value(_inverse_transform_value(y_max, log_y)),
+            text=y_max_label,
             font="F1",
             size=7.5,
             color=COLOR_MUTED,
         )
 
         self.cursor_y = plot_y - 16.0
+
+    def _draw_axis_label(
+        self, *, center_x: float, center_y: float, text: str, vertical: bool = False,
+    ) -> None:
+        size = 8.5
+        text_width = _measure_helvetica_text(text, size=size)
+        if vertical:
+            x = center_x + size * 0.3
+            y = center_y - text_width / 2.0
+            matrix = "0 1 -1 0"
+        else:
+            x = center_x - text_width / 2.0
+            y = center_y - size * 0.3
+            matrix = "1 0 0 1"
+        self.current_page.commands.append(
+            f"BT /F1 {size:.2f} Tf {_rgb(COLOR_MUTED)} rg "
+            f"{matrix} {x:.2f} {y:.2f} Tm "
+            f"({_escape_pdf_text(_sanitize_text(text))}) Tj ET"
+        )
 
     def _draw_bullet_box(self, *, title: str, items: list[str]) -> None:
         self._draw_section_title(title=title)
@@ -1813,8 +1860,8 @@ def _build_chart_spec(
         return {
             "title": "Fluorescence calibration fit",
             "subtitle": "Measured peak positions against saved reference values.",
-            "x_label": "Measured peak position",
-            "y_label": "Reference value",
+            "x_label": "Measured peak position [a.u.] (log scale)",
+            "y_label": f"{details.get('axis_definitions', {}).get('y_definition') or 'Reference value'} (log scale)",
             "x_values": x_values,
             "y_values": y_values,
             "line_x_values": line_x_values,
@@ -1829,7 +1876,7 @@ def _build_chart_spec(
             return None
 
         y_key = None
-        for candidate in ("particle_diameter_nm", "outer_diameter_nm", "core_diameter_nm"):
+        for candidate in ("expected_coupling", "particle_diameter_nm", "outer_diameter_nm", "core_diameter_nm"):
             if any(isinstance(row, dict) and row.get(candidate) not in (None, "") for row in reference_table):
                 y_key = candidate
                 break
@@ -1850,16 +1897,24 @@ def _build_chart_spec(
             return None
 
         paired_points = sorted(zip(x_values, y_values, strict=False), key=lambda point: point[0])
+        line_x_values = []
+        line_y_values = []
+        response = details.get("instrument_response", {})
+        slope = _as_float_or_none(response.get("slope"))
+        intercept = _as_float_or_none(response.get("intercept"))
+        if y_key == "expected_coupling" and slope is not None and intercept is not None:
+            line_x_values = [paired_points[0][0], paired_points[-1][0]]
+            line_y_values = [slope * value + intercept for value in line_x_values]
 
         return {
-            "title": "Scattering calibration standards",
+            "title": "Scattering instrument response" if y_key == "expected_coupling" else "Scattering calibration standards",
             "subtitle": "Saved standard peaks used to fit the scattering calibration.",
             "x_label": "Measured peak position",
             "y_label": _prettify_label(y_key or "reference_value"),
             "x_values": [point[0] for point in paired_points],
             "y_values": [point[1] for point in paired_points],
-            "line_x_values": [point[0] for point in paired_points],
-            "line_y_values": [point[1] for point in paired_points],
+            "line_x_values": line_x_values,
+            "line_y_values": line_y_values,
             "log_x": False,
             "log_y": False,
         }
@@ -2113,6 +2168,14 @@ def _format_pdf_object(object_id: int, body: bytes) -> bytes:
 
 def _rgb(color: tuple[float, float, float]) -> str:
     return " ".join(f"{channel:.3f}" for channel in color)
+
+
+def _measure_helvetica_text(text: str, *, size: float) -> float:
+    """Measure axis text using the PDF's standard Helvetica font advances."""
+    return size * sum(
+        HELVETICA_WIDTHS[ord(character) - 32] if 32 <= ord(character) <= 126 else 556
+        for character in _sanitize_text(text)
+    ) / 1000.0
 
 
 def _sanitize_text(value: str) -> str:
