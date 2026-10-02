@@ -23,21 +23,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Check out repository
-        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
-        with:
-          fetch-depth: 0
-
-      - name: Set up Python
-        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+      - name: Set up Python and CI dependencies
+        uses: MartinPdeS/MPSActions/actions/setup-python@0f5927acf88b25b5d253421e508387897096a2cc
         with:
           python-version: "3.13"
-          cache: pip
-          cache-dependency-path: pyproject.toml
-
-      - name: Install test dependencies
-        run: python -m pip install -e ".[testing]"
-
+          cache: "pip"
+          cache-dependency-path: "pyproject.toml"
+          install-command: >-
+            python -m pip install -e ".[testing]"
+          fetch-depth: "0"
       - name: Collect test suite
         env:
           PYTHONHASHSEED: "0"
@@ -61,21 +55,15 @@ jobs:
           - "3.13"
 
     steps:
-      - name: Check out repository
-        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+      - name: Set up Python and CI dependencies
+        uses: MartinPdeS/MPSActions/actions/setup-python@0f5927acf88b25b5d253421e508387897096a2cc
         with:
-          fetch-depth: 0
-
-      - name: Set up Python
-        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: pip
-          cache-dependency-path: pyproject.toml
-
-      - name: Install test dependencies
-        run: python -m pip install -e ".[testing]"
-
+          python-version: "${{ matrix.python-version }}"
+          cache: "pip"
+          cache-dependency-path: "pyproject.toml"
+          install-command: >-
+            python -m pip install -e ".[testing]"
+          fetch-depth: "0"
       - name: Run unit tests
         env:
           PYTHONHASHSEED: "0"
@@ -118,21 +106,15 @@ jobs:
           - os: windows-latest
             python-version: "3.13"
     steps:
-      - name: Check out repository
-        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+      - name: Set up Python and CI dependencies
+        uses: MartinPdeS/MPSActions/actions/setup-python@0f5927acf88b25b5d253421e508387897096a2cc
         with:
-          fetch-depth: 0
-
-      - name: Set up Python
-        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: pip
-          cache-dependency-path: pyproject.toml
-
-      - name: Install real scientific and UI dependencies
-        run: python -m pip install -e ".[testing]"
-
+          python-version: "${{ matrix.python-version }}"
+          cache: "pip"
+          cache-dependency-path: "pyproject.toml"
+          install-command: >-
+            python -m pip install -e ".[testing]"
+          fetch-depth: "0"
       - name: Run isolated integration suite
         env:
           MPLBACKEND: Agg
@@ -156,21 +138,15 @@ jobs:
       matrix:
         python-version: ["3.11", "3.13"]
     steps:
-      - name: Check out repository
-        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+      - name: Set up Python and CI dependencies
+        uses: MartinPdeS/MPSActions/actions/setup-python@0f5927acf88b25b5d253421e508387897096a2cc
         with:
-          fetch-depth: 0
-
-      - name: Set up Python
-        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: pip
-          cache-dependency-path: pyproject.toml
-
-      - name: Install package
-        run: python -m pip install -e ".[testing]"
-
+          python-version: "${{ matrix.python-version }}"
+          cache: "pip"
+          cache-dependency-path: "pyproject.toml"
+          install-command: >-
+            python -m pip install -e ".[testing]"
+          fetch-depth: "0"
       - name: Verify package entry point and imports
         env:
           PYTHONHASHSEED: "0"
