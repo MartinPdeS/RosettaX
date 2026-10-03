@@ -253,32 +253,37 @@ class HomePage:
                         ),
                         html.Div(
                             [
-                                html.Span("Total calibrated files", style={"opacity": 0.76}),
-                                html.Strong(
-                                    f"{metrics.total_calibrated_files:,}",
+                                html.Div(
+                                    [
+                                        html.Span("Total calibrated files", style={"opacity": 0.76}),
+                                        html.Strong(
+                                            f"{metrics.total_calibrated_files:,}",
+                                            style={
+                                                "display": "inline-flex",
+                                                "alignItems": "center",
+                                                "justifyContent": "center",
+                                                "minWidth": "44px",
+                                                "padding": "5px 10px",
+                                                "borderRadius": "8px",
+                                                "border": "1px solid var(--bs-border-color)",
+                                                "background": "var(--bs-body-bg)",
+                                                "color": "var(--bs-body-color)",
+                                                "fontVariantNumeric": "tabular-nums",
+                                            },
+                                        ),
+                                    ],
                                     style={
-                                        "display": "inline-flex",
+                                        "display": "flex",
                                         "alignItems": "center",
-                                        "justifyContent": "center",
-                                        "minWidth": "44px",
-                                        "padding": "5px 10px",
-                                        "borderRadius": "8px",
-                                        "border": "1px solid var(--bs-border-color)",
-                                        "background": "var(--bs-body-bg)",
-                                        "color": "var(--bs-body-color)",
-                                        "fontVariantNumeric": "tabular-nums",
+                                        "flexWrap": "wrap",
+                                        "gap": "8px",
+                                        "fontSize": "0.92rem",
                                     },
                                 ),
+                                self._support_actions(),
                             ],
-                            style={
-                                "display": "flex",
-                                "alignItems": "center",
-                                "flexWrap": "wrap",
-                                "gap": "8px",
-                                "marginLeft": "auto",
-                                "fontSize": "0.92rem",
-                                "order": 1,
-                            },
+                            className="home-hero-actions",
+                            style={"order": 1},
                         ),
                     ],
                     style={
@@ -299,12 +304,41 @@ class HomePage:
             header_font_size="1.02rem",
         )
 
+    def _support_actions(self) -> html.Div:
+        return html.Div(
+            [
+                html.A(
+                    [
+                        html.Span("♥", className="home-support-icon", **{"aria-hidden": "true"}),
+                        "Support Developer",
+                    ],
+                    id=self._id("support-developer"),
+                    href=self.support_url,
+                    target="_blank",
+                    rel="noopener noreferrer",
+                    className="home-support-button",
+                ),
+                html.A(
+                    [
+                        html.Span("★", className="home-support-icon", **{"aria-hidden": "true"}),
+                        "Star RosettaX on GitHub",
+                    ],
+                    id=self._id("star-repository"),
+                    href=self.github_url,
+                    target="_blank",
+                    rel="noopener noreferrer",
+                    className="home-support-button",
+                ),
+            ],
+            className="home-support-actions",
+        )
+
     def _citation_card(self) -> dbc.Card:
         card = dbc.Card(
             [
                 dbc.CardHeader(
                     html.Div(
-                        "Support, citation, and lab",
+                        "Citation and lab",
                         style={
                             "fontWeight": "750",
                             "fontSize": "1.02rem",
@@ -315,7 +349,7 @@ class HomePage:
                     [
                         html.Div(
                             (
-                                "Support ongoing RosettaX development, cite the work in publications, "
+                                "Cite RosettaX in publications "
                                 "and find the lab affiliation below."
                             ),
                             style={
@@ -326,16 +360,6 @@ class HomePage:
                         ),
                         html.Div(
                             [
-                                dbc.Button(
-                                    "Support Developer",
-                                    href=self.support_url,
-                                    color="warning",
-                                    target="_blank",
-                                    rel="noopener noreferrer",
-                                    style={
-                                        "fontWeight": "700",
-                                    },
-                                ),
                                 dbc.Button(
                                     "Citing this work",
                                     href=self.citation_url,
