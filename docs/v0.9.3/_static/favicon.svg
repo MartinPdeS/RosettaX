@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="RosettaX favicon X mark">
+  <defs>
+    <linearGradient id="xBlue" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2d6df6"/>
+      <stop offset="1" stop-color="#3865ff"/>
+    </linearGradient>
+    <linearGradient id="xCyan" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#16c9dc"/>
+      <stop offset="1" stop-color="#0acfd9"/>
+    </linearGradient>
+    <radialGradient id="orb" cx="50%" cy="50%" r="55%">
+      <stop offset="0" stop-color="#5f8cff"/>
+      <stop offset="1" stop-color="#18d3dc"/>
+    </radialGradient>
+  </defs>
+
+  <path d="M10 13h9l13 18-13 20h-9l13-20z" fill="url(#xBlue)"/>
+  <path d="M45 13h9L41 31l13 20h-9L32 31z" fill="url(#xCyan)"/>
+  <circle cx="32" cy="31" r="4.5" fill="url(#orb)"/>
+  <circle cx="24" cy="20" r="1.8" fill="#16c9dc"/>
+  <circle cx="40" cy="20" r="1.8" fill="#2d6df6"/>
+  <circle cx="24" cy="43" r="1.8" fill="#16c9dc"/>
+  <circle cx="40" cy="43" r="1.8" fill="#2d6df6"/>
+</svg>
