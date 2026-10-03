@@ -226,76 +226,37 @@ class HomePage:
 
     def _hero_section(self, *, metrics: usage_metrics.UsageMetrics) -> dbc.Card:
         card = dbc.Card(
-            [
-                dbc.CardBody(
-                    [
-                        html.Div(
-                            "RosettaX",
-                            style={
-                                "fontWeight": "800",
-                                "fontSize": "2.55rem",
-                                "lineHeight": "1.05",
-                                "order": 0,
-                            },
-                        ),
-                        html.Div(
-                            (
-                                "Build and apply flow-cytometry calibrations, then inspect and prepare FCS data."
+            dbc.CardBody(
+                [
+                    html.Div(
+                        [
+                            html.Div("RosettaX", className="home-hero-title"),
+                            html.Div(
+                                "Build and apply flow-cytometry calibrations, then inspect and prepare FCS data.",
+                                className="home-hero-description",
                             ),
-                            style={
-                                "fontSize": "1.08rem",
-                                "opacity": 0.86,
-                                "maxWidth": "980px",
-                                "marginBottom": "0px",
-                                "flexBasis": "100%",
-                                "order": 2,
-                            },
-                        ),
-                        html.Div(
-                            [
-                                html.Div(
-                                    [
-                                        html.Span("Total calibrated files", style={"opacity": 0.76}),
-                                        html.Strong(
-                                            f"{metrics.total_calibrated_files:,}",
-                                            style={
-                                                "display": "inline-flex",
-                                                "alignItems": "center",
-                                                "justifyContent": "center",
-                                                "minWidth": "44px",
-                                                "padding": "5px 10px",
-                                                "borderRadius": "8px",
-                                                "border": "1px solid var(--bs-border-color)",
-                                                "background": "var(--bs-body-bg)",
-                                                "color": "var(--bs-body-color)",
-                                                "fontVariantNumeric": "tabular-nums",
-                                            },
-                                        ),
-                                    ],
-                                    style={
-                                        "display": "flex",
-                                        "alignItems": "center",
-                                        "flexWrap": "wrap",
-                                        "gap": "8px",
-                                        "fontSize": "0.92rem",
-                                    },
-                                ),
-                                self._support_actions(),
-                            ],
-                            className="home-hero-actions",
-                            style={"order": 1},
-                        ),
-                    ],
-                    style={
-                        "padding": "26px",
-                        "display": "flex",
-                        "alignItems": "flex-start",
-                        "flexWrap": "wrap",
-                        "columnGap": "20px",
-                        "rowGap": "12px",
-                    },
-                ),
-            ]
+                        ],
+                        className="home-hero-copy",
+                    ),
+                    html.Div(
+                        [
+                            html.Div(
+                                [
+                                    html.Strong(
+                                        f"{metrics.total_calibrated_files:,}",
+                                        className="home-calibration-count",
+                                    ),
+                                    html.Span("Total calibrated files", className="home-calibration-label"),
+                                ],
+                                className="home-calibration-metric",
+                            ),
+                            self._support_actions(),
+                        ],
+                        className="home-hero-actions",
+                    ),
+                ],
+                className="home-hero-body",
+            )
         )
 
         return ui_forms.apply_workflow_section_card_style(
@@ -310,7 +271,8 @@ class HomePage:
                 html.A(
                     [
                         html.Span("♥", className="home-support-icon", **{"aria-hidden": "true"}),
-                        "Support Developer",
+                        html.Span("Support Developer", className="home-support-label"),
+                        html.Span("↗", className="home-support-arrow", **{"aria-hidden": "true"}),
                     ],
                     id=self._id("support-developer"),
                     href=self.support_url,
@@ -320,14 +282,15 @@ class HomePage:
                 ),
                 html.A(
                     [
-                        html.Span("★", className="home-support-icon", **{"aria-hidden": "true"}),
-                        "Star RosettaX on GitHub",
+                        html.Span("☆", className="home-support-icon", **{"aria-hidden": "true"}),
+                        html.Span("Star RosettaX on GitHub", className="home-support-label"),
+                        html.Span("↗", className="home-support-arrow", **{"aria-hidden": "true"}),
                     ],
                     id=self._id("star-repository"),
                     href=self.github_url,
                     target="_blank",
                     rel="noopener noreferrer",
-                    className="home-support-button",
+                    className="home-support-button home-star-button",
                 ),
             ],
             className="home-support-actions",
