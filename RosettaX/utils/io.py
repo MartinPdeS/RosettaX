@@ -1,4 +1,7 @@
 import logging
+from collections import OrderedDict
+from pathlib import Path
+from threading import RLock
 from typing import Any
 
 import numpy as np
@@ -6,6 +9,32 @@ import numpy as np
 from RosettaX.utils.reader import FCSFile
 
 logger = logging.getLogger(__name__)
+
+# Store owned arrays only; readers and their memory mappings always close.
+_SIGNAL_CACHE_MAX_BYTES = 32 * 1024 * 1024
+_SIGNAL_CACHE_MAX_ENTRIES = 16
+_signal_cache: OrderedDict[tuple[Any, ...], np.ndarray] = OrderedDict()
+_signal_cache_lock = RLock()
+
+
+def _signal_cache_key(
+    file_path: Path,
+    detector_column: str,
+    max_events_for_analysis: int | None,
+    require_positive_values: bool,
+) -> tuple[Any, ...]:
+    file_stat = file_path.stat()
+    return (
+        str(file_path),
+        file_stat.st_dev,
+        file_stat.st_ino,
+        file_stat.st_size,
+        file_stat.st_mtime_ns,
+        file_stat.st_ctime_ns,
+        detector_column,
+        max_events_for_analysis,
+        require_positive_values,
+    )
 
 
 def load_signal(
@@ -55,7 +84,20 @@ def load_signal(
         require_positive_values,
     )
 
-    with FCSFile(fcs_file_path, writable=False) as fcs_file:
+    file_path = Path(fcs_file_path).resolve()
+    cache_key = _signal_cache_key(
+        file_path,
+        resolved_detector_column,
+        None if max_events_for_analysis is None else int(max_events_for_analysis),
+        require_positive_values,
+    )
+    with _signal_cache_lock:
+        cached_signal = _signal_cache.get(cache_key)
+        if cached_signal is not None:
+            _signal_cache.move_to_end(cache_key)
+            return cached_signal.copy()
+
+    with FCSFile(file_path, writable=False) as fcs_file:
         signal = fcs_file.column_copy(resolved_detector_column, dtype=float)
 
     signal = np.asarray(signal, dtype=float).reshape(-1)
@@ -66,6 +108,29 @@ def load_signal(
 
     if max_events_for_analysis is not None:
         signal = signal[: int(max_events_for_analysis)]
+
+    # A replacement during reading must never be cached under the old identity.
+    try:
+        unchanged = cache_key == _signal_cache_key(
+            file_path,
+            resolved_detector_column,
+            None if max_events_for_analysis is None else int(max_events_for_analysis),
+            require_positive_values,
+        )
+    except OSError:
+        unchanged = False
+    if unchanged and signal.nbytes <= _SIGNAL_CACHE_MAX_BYTES:
+        cached_signal = signal.copy()
+        cached_signal.setflags(write=False)
+        with _signal_cache_lock:
+            _signal_cache[cache_key] = cached_signal
+            _signal_cache.move_to_end(cache_key)
+            while (
+                len(_signal_cache) > _SIGNAL_CACHE_MAX_ENTRIES
+                or sum(value.nbytes for value in _signal_cache.values())
+                > _SIGNAL_CACHE_MAX_BYTES
+            ):
+                _signal_cache.popitem(last=False)
 
     logger.debug(
         "load_signal returning detector_column=%r n_values=%r min=%r max=%r",

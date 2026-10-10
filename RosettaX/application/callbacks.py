@@ -4,7 +4,6 @@ from typing import Any
 
 import dash
 from dash import MATCH, Dash, Input, Output, State
-from dash.exceptions import PreventUpdate
 from flask import request as flask_request
 
 from RosettaX.application.layout import THEME_DARK, THEME_LIGHT
@@ -81,7 +80,8 @@ def register_application_callbacks(app: Dash) -> None:
     """
     logger.debug("Registering app-level callbacks")
 
-    @app.callback(
+    app.clientside_callback(
+        dash.ClientsideFunction(namespace="rosettax", function_name="toggleCalibrationCard"),
         Output(
             {"type": calibration_cards.COLLAPSE_ID_TYPE, "page": MATCH, "section": MATCH},
             "is_open",
@@ -111,35 +111,6 @@ def register_application_callbacks(app: Dash) -> None:
         ),
         prevent_initial_call=True,
     )
-    def toggle_calibration_card(
-        toggle_clicks: Any,
-        workflow_step_clicks: Any,
-        browser_profiles_payload: Any,
-        selected_profile_name: Any,
-        is_open: Any,
-    ) -> tuple[bool, str]:
-        triggered_id = dash.ctx.triggered_id
-        active_profile_config = None
-
-        if not isinstance(triggered_id, dict):
-            active_profile_config = resolve_active_profile_runtime_config(
-                browser_profiles_payload,
-                selected_profile_name,
-            )
-            if active_profile_config is None:
-                raise PreventUpdate
-
-        result = calibration_cards.resolve_card_toggle(
-            triggered_id=triggered_id,
-            is_open=is_open,
-            runtime_config_data=active_profile_config,
-            toggle_clicks=toggle_clicks,
-            workflow_step_clicks=workflow_step_clicks,
-        )
-        if result is None:
-            raise PreventUpdate
-
-        return result
 
     @app.callback(
         Output("visit-tracking-store", "data"),

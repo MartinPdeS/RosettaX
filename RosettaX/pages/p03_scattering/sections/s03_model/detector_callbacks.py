@@ -423,9 +423,22 @@ def register_detector_configuration_callbacks(section: Model) -> None:
             ),
         )
 
-        return (
-            resolved_wavelength_nm,
-            *resolved_values.to_callback_values(),
+        current_values = (
+            current_wavelength_nm,
+            current_detector_numerical_aperture,
+            current_detector_cache_numerical_aperture,
+            current_blocker_bar_numerical_aperture,
+            current_detector_sampling,
+            current_detector_phi_angle_degree,
+            current_detector_gamma_angle_degree,
+        )
+        return tuple(
+            dash.no_update if resolved == current else resolved
+            for resolved, current in zip(
+                (resolved_wavelength_nm, *resolved_values.to_callback_values()),
+                current_values,
+                strict=True,
+            )
         )
 
     @dash.callback(

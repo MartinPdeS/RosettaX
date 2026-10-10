@@ -87,96 +87,56 @@ def register_visibility_callbacks(section: Model) -> None:
 
 
 def register_refractive_index_callbacks(section: Model) -> None:
-    """
-    Register refractive index preset callbacks.
-    """
+    """Resolve material inputs together and avoid emitting unchanged values."""
 
     @dash.callback(
         dash.Output(
-            section.ids.medium_refractive_index_custom,
-            "value",
-            allow_duplicate=True,
+            section.ids.medium_refractive_index_custom, "value", allow_duplicate=True
+        ),
+        dash.Output(
+            section.ids.particle_refractive_index_custom, "value", allow_duplicate=True
+        ),
+        dash.Output(
+            section.ids.core_refractive_index_custom, "value", allow_duplicate=True
+        ),
+        dash.Output(
+            section.ids.shell_refractive_index_custom, "value", allow_duplicate=True
         ),
         dash.Input(section.ids.medium_refractive_index_source, "value"),
-        dash.Input(section.ids.wavelength_nm, "value"),
-        dash.State(section.ids.medium_refractive_index_custom, "value"),
-        prevent_initial_call=True,
-    )
-    def apply_medium_preset(
-        preset_value: Any,
-        wavelength_nm: Any,
-        current_value: Any,
-    ) -> Any:
-        return section.model_configuration.apply_refractive_index_preset(
-            preset_value=preset_value,
-            wavelength_nm=wavelength_nm,
-            current_value=current_value,
-        )
-
-    @dash.callback(
-        dash.Output(
-            section.ids.particle_refractive_index_custom,
-            "value",
-            allow_duplicate=True,
-        ),
         dash.Input(section.ids.particle_refractive_index_source, "value"),
-        dash.Input(section.ids.wavelength_nm, "value"),
-        dash.State(section.ids.particle_refractive_index_custom, "value"),
-        prevent_initial_call=True,
-    )
-    def apply_particle_preset(
-        preset_value: Any,
-        wavelength_nm: Any,
-        current_value: Any,
-    ) -> Any:
-        return section.model_configuration.apply_refractive_index_preset(
-            preset_value=preset_value,
-            wavelength_nm=wavelength_nm,
-            current_value=current_value,
-        )
-
-    @dash.callback(
-        dash.Output(
-            section.ids.core_refractive_index_custom,
-            "value",
-            allow_duplicate=True,
-        ),
         dash.Input(section.ids.core_refractive_index_source, "value"),
-        dash.Input(section.ids.wavelength_nm, "value"),
-        dash.State(section.ids.core_refractive_index_custom, "value"),
-        prevent_initial_call=True,
-    )
-    def apply_core_preset(
-        preset_value: Any,
-        wavelength_nm: Any,
-        current_value: Any,
-    ) -> Any:
-        return section.model_configuration.apply_refractive_index_preset(
-            preset_value=preset_value,
-            wavelength_nm=wavelength_nm,
-            current_value=current_value,
-        )
-
-    @dash.callback(
-        dash.Output(
-            section.ids.shell_refractive_index_custom,
-            "value",
-            allow_duplicate=True,
-        ),
         dash.Input(section.ids.shell_refractive_index_source, "value"),
         dash.Input(section.ids.wavelength_nm, "value"),
+        dash.State(section.ids.medium_refractive_index_custom, "value"),
+        dash.State(section.ids.particle_refractive_index_custom, "value"),
+        dash.State(section.ids.core_refractive_index_custom, "value"),
         dash.State(section.ids.shell_refractive_index_custom, "value"),
         prevent_initial_call=True,
     )
-    def apply_shell_preset(
-        preset_value: Any,
+    def apply_refractive_index_presets(
+        medium_source: Any,
+        particle_source: Any,
+        core_source: Any,
+        shell_source: Any,
         wavelength_nm: Any,
-        current_value: Any,
-    ) -> Any:
-        return section.model_configuration.apply_refractive_index_preset(
-            preset_value=preset_value,
-            wavelength_nm=wavelength_nm,
-            current_value=current_value,
+        current_medium: Any,
+        current_particle: Any,
+        current_core: Any,
+        current_shell: Any,
+    ) -> tuple[Any, ...]:
+        sources = (medium_source, particle_source, core_source, shell_source)
+        current_values = (current_medium, current_particle, current_core, current_shell)
+        resolved_values = (
+            section.model_configuration.apply_refractive_index_preset(
+                preset_value=source,
+                wavelength_nm=wavelength_nm,
+                current_value=current,
+            )
+            for source, current in zip(sources, current_values, strict=True)
+        )
+        return tuple(
+            dash.no_update if resolved == current else resolved
+            for resolved, current in zip(resolved_values, current_values, strict=True)
         )
 
 

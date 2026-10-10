@@ -136,6 +136,10 @@ def test_calibration_card_callback_does_not_hydrate_card_state() -> None:
     ]
 
     assert len(card_callbacks) == 1
+    assert card_callbacks[0]["clientside_function"] == {
+        "namespace": "rosettax",
+        "function_name": "toggleCalibrationCard",
+    }
     assert card_callbacks[0]["prevent_initial_call"] is True
 
 

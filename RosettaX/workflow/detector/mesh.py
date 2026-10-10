@@ -107,6 +107,31 @@ def build_pymiesim_photodiode_mesh_coordinates(
     detector_gamma_angle_degree: float,
     detector_sampling: int = 200,
 ) -> np.ndarray:
+    """Return owned mesh coordinates, reusing bounded geometry calculations."""
+    sampling = int(detector_sampling)
+    builder = (
+        _build_cached_photodiode_mesh_coordinates
+        if sampling <= 20_000
+        else _build_cached_photodiode_mesh_coordinates.__wrapped__
+    )
+    return builder(
+        detector_numerical_aperture=float(detector_numerical_aperture),
+        medium_refractive_index=float(medium_refractive_index),
+        detector_phi_angle_degree=float(detector_phi_angle_degree),
+        detector_gamma_angle_degree=float(detector_gamma_angle_degree),
+        detector_sampling=sampling,
+    ).copy()
+
+
+@lru_cache(maxsize=32)
+def _build_cached_photodiode_mesh_coordinates(
+    *,
+    detector_numerical_aperture: float,
+    medium_refractive_index: float,
+    detector_phi_angle_degree: float,
+    detector_gamma_angle_degree: float,
+    detector_sampling: int = 200,
+) -> np.ndarray:
     """
     Build detector coordinates from a PyMieSim-equivalent Fibonacci mesh.
 
@@ -183,6 +208,7 @@ def build_pymiesim_photodiode_mesh_coordinates(
         coordinate_array=coordinate_array,
     )
 
+    coordinate_array.setflags(write=False)
     return coordinate_array
 
 
