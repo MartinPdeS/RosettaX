@@ -21,13 +21,16 @@ endif
 
 .PHONY: configure build install quick rebuild editable bundle \
 	mac-bundle windows-bundle linux-bundle bundle-zip \
-	mac-release windows-release linux-release release tag major minor patch clean lint test browser-smoke
+	mac-release windows-release linux-release release tag major minor patch clean lint test test-scattering-fcs browser-smoke
 
 lint:
 	$(PYTHON) -m ruff check RosettaX tests
 
 test:
 	$(PYTHON) -m pytest
+
+test-scattering-fcs:
+	$(PYTHON) -m pytest integration_tests/scattering_fcs_test.py -o addopts='' -v
 
 browser-smoke:
 	$(PYTHON) tools/browser_smoke.py $(BROWSER_ARGS)
