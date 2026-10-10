@@ -7,9 +7,6 @@ from unittest.mock import Mock, patch
 import numpy as np
 import pytest
 
-from RosettaX.pages.p03_scattering.sections.s03_model.optical_preview import (
-    build_pymiesim_photodiode_mesh_coordinates,
-)
 from RosettaX.workflow.detector import (
     DetectorPresetLoader,
     resolve_detector_angular_weights,
@@ -21,6 +18,9 @@ from RosettaX.workflow.detector.configuration import (
     _resolve_split_separation_fraction,
     resolve_detector_configuration_values,
     resolve_detector_preset_wavelength_nm,
+)
+from RosettaX.workflow.detector.mesh import (
+    build_pymiesim_photodiode_mesh_coordinates,
 )
 from RosettaX.workflow.parameters.model import (
     CORE_SHELL_SPHERE_MODEL_NAME,

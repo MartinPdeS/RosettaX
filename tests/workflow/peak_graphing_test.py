@@ -1,10 +1,11 @@
-
 import sys
 import types
 
 import numpy as np
 import plotly.graph_objs as go
 import pytest
+
+from RosettaX.workflow.peak.core import graph_histogram, graph_overlays, graph_scatter
 
 
 class _DashBootstrapComponentsSentinel:
@@ -158,24 +159,36 @@ class Test_scale_selection_is_log:
 
 class Test_axis_scale_selection_is_log:
     def test_axis_scale_selection_is_log_supports_axis_specific_toggles(self):
-        assert axis_scale_selection_is_log(
-            scale_selection=["x_log"],
-            axis="x",
-        ) is True
-        assert axis_scale_selection_is_log(
-            scale_selection=["y_log"],
-            axis="y",
-        ) is True
+        assert (
+            axis_scale_selection_is_log(
+                scale_selection=["x_log"],
+                axis="x",
+            )
+            is True
+        )
+        assert (
+            axis_scale_selection_is_log(
+                scale_selection=["y_log"],
+                axis="y",
+            )
+            is True
+        )
 
     def test_axis_scale_selection_is_log_keeps_axes_independent(self):
-        assert axis_scale_selection_is_log(
-            scale_selection=["x_log"],
-            axis="y",
-        ) is False
-        assert axis_scale_selection_is_log(
-            scale_selection=["y_log"],
-            axis="x",
-        ) is False
+        assert (
+            axis_scale_selection_is_log(
+                scale_selection=["x_log"],
+                axis="y",
+            )
+            is False
+        )
+        assert (
+            axis_scale_selection_is_log(
+                scale_selection=["y_log"],
+                axis="x",
+            )
+            is False
+        )
 
 
 # Additional test classes for other functions in the graphing module
@@ -187,9 +200,9 @@ class Test_GraphingUtilities:
     def sample_data(self):
         """Fixture providing sample data for graphing tests."""
         return {
-            'x_values': np.array([1, 2, 3, 4, 5]),
-            'y_values': np.array([10, 20, 30, 40, 50]),
-            'labels': ['A', 'B', 'C', 'D', 'E']
+            "x_values": np.array([1, 2, 3, 4, 5]),
+            "y_values": np.array([10, 20, 30, 40, 50]),
+            "labels": ["A", "B", "C", "D", "E"],
         }
 
     def test_is_enabled_with_dash_callback_context(self):
@@ -209,36 +222,42 @@ class Test_GraphingUtilities:
         assert scale_selection_is_log("") is False
         assert scale_selection_is_log(None) is False
 
-    @pytest.mark.parametrize("graph_toggle,expected", [
-        ("enabled", True),
-        ("disabled", False),
-        (["enabled"], True),
-        (["disabled"], False),
-        (["enabled", "other"], True),
-        (["other"], False),
-        (True, True),
-        (False, False),
-        (None, False),
-        ([], False),
-        (1, False),
-        ("", False)
-    ])
+    @pytest.mark.parametrize(
+        "graph_toggle,expected",
+        [
+            ("enabled", True),
+            ("disabled", False),
+            (["enabled"], True),
+            (["disabled"], False),
+            (["enabled", "other"], True),
+            (["other"], False),
+            (True, True),
+            (False, False),
+            (None, False),
+            ([], False),
+            (1, False),
+            ("", False),
+        ],
+    )
     def test_is_enabled_parametrized(self, graph_toggle, expected):
         """Parametrized test for is_enabled function with various inputs."""
         assert is_enabled(graph_toggle) == expected
 
-    @pytest.mark.parametrize("scale_value,expected", [
-        ("log", True),
-        ("linear", False),
-        ("logarithmic", False),
-        ("LOG", False),
-        ("Log", False),
-        ("", False),
-        (None, False),
-        (True, False),
-        (["log"], True),
-        (1, False)
-    ])
+    @pytest.mark.parametrize(
+        "scale_value,expected",
+        [
+            ("log", True),
+            ("linear", False),
+            ("logarithmic", False),
+            ("LOG", False),
+            ("Log", False),
+            ("", False),
+            (None, False),
+            (True, False),
+            (["log"], True),
+            (1, False),
+        ],
+    )
     def test_scale_selection_is_log_parametrized(self, scale_value, expected):
         """Parametrized test for scale_selection_is_log function."""
         assert scale_selection_is_log(scale_value) == expected
@@ -285,9 +304,9 @@ class Test_GraphingFunctionIntegration:
         # Test with unusual but potentially valid inputs
         weird_inputs = [
             {"enabled": True},  # Dictionary
-            123,               # Number
-            [1, 2, 3],        # List of numbers
-            object(),         # Arbitrary object
+            123,  # Number
+            [1, 2, 3],  # List of numbers
+            object(),  # Arbitrary object
         ]
 
         for weird_input in weird_inputs:
@@ -358,9 +377,12 @@ class Test_PeakWorkflowGraphBuilder2DFiltering:
         builder.xscale_selection = "linear"
         builder.yscale_selection = "linear"
 
-        filtered_x_values, filtered_y_values = builder._filter_2d_values_for_axis_scale(
-            x_values=np.array([0.0, 1.0, 2.0, np.nan]),
-            y_values=np.array([5.0, 0.0, 3.0, 4.0]),
+        filtered_x_values, filtered_y_values = (
+            graph_scatter.filter_2d_values_for_axis_scale(
+                builder,
+                x_values=np.array([0.0, 1.0, 2.0, np.nan]),
+                y_values=np.array([5.0, 0.0, 3.0, 4.0]),
+            )
         )
 
         assert filtered_x_values.tolist() == [2.0]
@@ -379,7 +401,9 @@ class Test_PeakWorkflowGraphBuilder2DFiltering:
             "plot_y_values": [100.0, 200.0, 300.0, 400.0],
         }
 
-        payload_values = builder._extract_plot_values_from_peak_lines_payload()
+        payload_values = graph_scatter.extract_plot_values_from_peak_lines_payload(
+            builder
+        )
 
         assert payload_values is not None
         payload_x_values, payload_y_values = payload_values
@@ -406,7 +430,9 @@ class Test_EdgeArtifactFiltering:
         assert float(np.min(filtered_values)) > 1.0
         assert float(np.max(filtered_values)) < 1.0e6
 
-    def test_filter_edge_artifact_pairs_removes_scatter_floor_ceiling_and_fluorescence_floor(self):
+    def test_filter_edge_artifact_pairs_removes_scatter_floor_ceiling_and_fluorescence_floor(
+        self,
+    ):
         x_values = np.concatenate(
             [
                 np.ones(30, dtype=float),
@@ -436,17 +462,23 @@ class Test_EdgeArtifactFiltering:
         assert float(np.min(filtered_y_values)) > 1.0
 
     def test_resolve_edge_artifact_filter_enabled_defaults_to_true(self):
-        assert resolve_edge_artifact_filter_enabled(
-            process_settings={},
-            default=True,
-        ) is True
+        assert (
+            resolve_edge_artifact_filter_enabled(
+                process_settings={},
+                default=True,
+            )
+            is True
+        )
 
-        assert resolve_edge_artifact_filter_enabled(
-            process_settings={
-                "filter_edge_artifacts": [],
-            },
-            default=True,
-        ) is False
+        assert (
+            resolve_edge_artifact_filter_enabled(
+                process_settings={
+                    "filter_edge_artifacts": [],
+                },
+                default=True,
+            )
+            is False
+        )
 
 
 class Test_PeakWorkflowGraphBuilder1DHistogramRange:
@@ -467,7 +499,8 @@ class Test_PeakWorkflowGraphBuilder1DHistogramRange:
             )
         )
 
-        builder._apply_stable_1d_histogram_y_range(
+        graph_histogram.apply_stable_1d_histogram_y_range(
+            builder,
             figure=figure,
         )
 
@@ -541,7 +574,8 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
         figure = go.Figure()
         figure.update_yaxes(type="log", range=[0.0, 4.0])
 
-        figure = builder._add_y_axis_gate_overlay(
+        figure = graph_overlays.add_y_axis_gate_overlay(
+            builder,
             figure=figure,
         )
 
@@ -569,7 +603,8 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
             ],
         }
 
-        figure = builder._add_selected_peak_markers(
+        figure = graph_overlays.add_selected_peak_markers(
+            builder,
             figure=go.Figure(),
         )
 
@@ -595,7 +630,9 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
         assert len(figure.data) == 1
         assert not list(figure.layout.annotations or [])
 
-    def test_rosetta_selected_peak_markers_hide_horizontal_guides_without_advanced_mode(self):
+    def test_rosetta_selected_peak_markers_hide_horizontal_guides_without_advanced_mode(
+        self,
+    ):
         builder = PeakWorkflowGraphBuilder.__new__(PeakWorkflowGraphBuilder)
         builder.resolved_process_name = "Rosetta Script"
         builder.advanced_mode_value = []
@@ -608,7 +645,8 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
             "fluorescence_guide_positions": [200.0, 400.0],
         }
 
-        figure = builder._add_selected_peak_markers(
+        figure = graph_overlays.add_selected_peak_markers(
+            builder,
             figure=go.Figure(),
         )
 
@@ -646,7 +684,8 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
             ],
         }
 
-        figure = builder._add_selected_peak_markers(
+        figure = graph_overlays.add_selected_peak_markers(
+            builder,
             figure=go.Figure(
                 layout={
                     "yaxis": {
@@ -672,9 +711,7 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
         assert len(horizontal_shapes) == 2
         assert len(figure.data) == 1
         text_traces = [
-            trace
-            for trace in figure.data
-            if getattr(trace, "mode", None) == "text"
+            trace for trace in figure.data if getattr(trace, "mode", None) == "text"
         ]
         assert text_traces == []
         assert not list(figure.layout.annotations or [])

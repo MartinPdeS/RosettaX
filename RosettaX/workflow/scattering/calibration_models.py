@@ -6,13 +6,15 @@ from typing import Any
 
 import numpy as np
 
+from RosettaX.workflow.constants import (
+    DEFAULT_SOURCE_POLARIZATION_ANGLE_DEGREE as DEFAULT_SOURCE_POLARIZATION_ANGLE_DEGREE,
+)
+
 from . import mie_relation
 from .mie_relation import MieRelation
 from .numerical_arrays import _log_array_summary
 
 logger = logging.getLogger(__name__)
-
-DEFAULT_SOURCE_POLARIZATION_ANGLE_DEGREE = 0.0
 
 
 @dataclass(frozen=True)

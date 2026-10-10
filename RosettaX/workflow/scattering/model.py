@@ -808,6 +808,41 @@ class ModelConfiguration:
         """
         Build the optical configuration preview figure.
         """
+        preview_parameters = (
+            ModelConfiguration.resolve_optical_configuration_preview_parameters(
+                detector_numerical_aperture=detector_numerical_aperture,
+                detector_cache_numerical_aperture=detector_cache_numerical_aperture,
+                blocker_bar_numerical_aperture=blocker_bar_numerical_aperture,
+                medium_refractive_index=medium_refractive_index,
+                detector_phi_angle_degree=detector_phi_angle_degree,
+                detector_gamma_angle_degree=detector_gamma_angle_degree,
+                polarization_angle_degree=polarization_angle_degree,
+                detector_sampling=detector_sampling,
+                detector_configuration_preset=detector_configuration_preset,
+                detector_angular_weighting_json=detector_angular_weighting_json,
+                camera=camera,
+            )
+        )
+        return parameters.build_optical_configuration_preview_figure(
+            **preview_parameters
+        )
+
+    @staticmethod
+    def resolve_optical_configuration_preview_parameters(
+        *,
+        detector_numerical_aperture: Any,
+        detector_cache_numerical_aperture: Any,
+        blocker_bar_numerical_aperture: Any,
+        medium_refractive_index: Any,
+        detector_phi_angle_degree: Any,
+        detector_gamma_angle_degree: Any,
+        polarization_angle_degree: Any = 0.0,
+        detector_sampling: Any,
+        detector_configuration_preset: Any,
+        detector_angular_weighting_json: Any = None,
+        camera: Any = None,
+    ) -> dict[str, Any]:
+        """Resolve preset geometry and angular weights before preview generation."""
         (
             resolved_detector_numerical_aperture,
             resolved_detector_cache_numerical_aperture,
@@ -836,7 +871,10 @@ class ModelConfiguration:
             current_medium_refractive_index=medium_refractive_index,
             current_detector_angular_weighting=detector_angular_weighting_json,
         )
-        _effective_detector_cache_numerical_aperture, effective_blocker_bar_numerical_aperture = detector.resolve_detector_modeling_geometry_values(
+        (
+            _effective_detector_cache_numerical_aperture,
+            effective_blocker_bar_numerical_aperture,
+        ) = detector.resolve_detector_modeling_geometry_values(
             preset_name=detector_configuration_preset,
             current_detector_cache_numerical_aperture=resolved_detector_cache_numerical_aperture,
             current_blocker_bar_numerical_aperture=resolved_blocker_bar_numerical_aperture,
@@ -846,18 +884,18 @@ class ModelConfiguration:
             detector_configuration_preset,
         )
 
-        return parameters.build_optical_configuration_preview_figure(
-            detector_numerical_aperture=resolved_detector_numerical_aperture,
-            blocker_bar_numerical_aperture=effective_blocker_bar_numerical_aperture,
-            medium_refractive_index=medium_refractive_index,
-            detector_phi_angle_degree=resolved_detector_phi_angle_degree,
-            detector_gamma_angle_degree=resolved_detector_gamma_angle_degree,
-            polarization_angle_degree=polarization_angle_degree,
-            detector_sampling=resolved_detector_sampling,
-            detector_angular_weights=detector_angular_weights,
-            camera=camera,
-            include_geometry=include_geometry,
-        )
+        return {
+            "detector_numerical_aperture": resolved_detector_numerical_aperture,
+            "blocker_bar_numerical_aperture": effective_blocker_bar_numerical_aperture,
+            "medium_refractive_index": medium_refractive_index,
+            "detector_phi_angle_degree": resolved_detector_phi_angle_degree,
+            "detector_gamma_angle_degree": resolved_detector_gamma_angle_degree,
+            "polarization_angle_degree": polarization_angle_degree,
+            "detector_sampling": resolved_detector_sampling,
+            "detector_angular_weights": detector_angular_weights,
+            "camera": camera,
+            "include_geometry": include_geometry,
+        }
 
     @staticmethod
     def build_visibility_styles_for_mie_model(

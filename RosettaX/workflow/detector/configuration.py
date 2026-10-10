@@ -1751,7 +1751,7 @@ def _build_profile_coordinate_array(
     preset: dict[str, Any],
     sampling_size: int,
 ) -> np.ndarray:
-    from ...pages.p03_scattering.sections.s03_model.optical_preview import (
+    from RosettaX.workflow.detector.mesh import (
         build_pymiesim_photodiode_mesh_coordinates,
     )
 

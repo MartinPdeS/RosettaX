@@ -1,4 +1,3 @@
-
 import importlib
 import logging
 from types import SimpleNamespace
@@ -133,34 +132,39 @@ class Test_ScatteringCalibrationPreviewGraph:
             ),
         )
 
-        figure_store = scattering_services.build_calibration_standard_mie_relation_figure_store(
-            mie_model="Solid Sphere",
-            current_table_rows=[
-                {
-                    "particle_diameter_nm": "100",
-                    "expected_coupling": "1.0",
-                },
-                {
-                    "particle_diameter_nm": "200",
-                    "expected_coupling": "2.0",
-                },
-            ],
-            medium_refractive_index=1.33,
-            particle_refractive_index=1.59,
-            core_refractive_index=None,
-            shell_refractive_index=None,
-            wavelength_nm=488.0,
-            detector_numerical_aperture=0.4,
-            detector_cache_numerical_aperture=0.0,
-            blocker_bar_numerical_aperture=0.0,
-            detector_sampling=600,
-            detector_phi_angle_degree=0.0,
-            detector_gamma_angle_degree=0.0,
-            simulated_curve_point_count=200,
-            logger=logging.getLogger(__name__),
+        figure_store = (
+            scattering_services.build_calibration_standard_mie_relation_figure_store(
+                mie_model="Solid Sphere",
+                current_table_rows=[
+                    {
+                        "particle_diameter_nm": "100",
+                        "expected_coupling": "1.0",
+                    },
+                    {
+                        "particle_diameter_nm": "200",
+                        "expected_coupling": "2.0",
+                    },
+                ],
+                medium_refractive_index=1.33,
+                particle_refractive_index=1.59,
+                core_refractive_index=None,
+                shell_refractive_index=None,
+                wavelength_nm=488.0,
+                detector_numerical_aperture=0.4,
+                detector_cache_numerical_aperture=0.0,
+                blocker_bar_numerical_aperture=0.0,
+                detector_sampling=600,
+                detector_phi_angle_degree=0.0,
+                detector_gamma_angle_degree=0.0,
+                simulated_curve_point_count=200,
+                logger=logging.getLogger(__name__),
+            )
         )
 
-        assert figure_store["layout"]["title"]["text"] == "Calibration standard Mie relation"
+        assert (
+            figure_store["layout"]["title"]["text"]
+            == "Calibration standard Mie relation"
+        )
         assert [trace["name"] for trace in figure_store["data"]] == [
             "Mie relation (200 points)",
             "Calibration standards",
@@ -188,7 +192,9 @@ class Test_ScatteringModelLayout:
         )
 
         assert custom_values_container is not None
-        assert section.ids.wavelength_nm in _collect_component_ids(custom_values_container)
+        assert section.ids.wavelength_nm in _collect_component_ids(
+            custom_values_container
+        )
         assert section.ids.detector_angular_weighting_json in _collect_component_ids(
             custom_values_container
         )
@@ -390,13 +396,19 @@ class Test_ApplyCalibrationPage:
         parameters = request.calibrations[0].scattering_target_model_parameters
 
         assert parameters is not None
-        assert parameters.target_model.medium_refractive_index == calculate_sellmeier_refractive_index(
-            "water",
-            wavelength_nm=405.0,
+        assert (
+            parameters.target_model.medium_refractive_index
+            == calculate_sellmeier_refractive_index(
+                "water",
+                wavelength_nm=405.0,
+            )
         )
-        assert parameters.target_model.particle_refractive_index == calculate_sellmeier_refractive_index(
-            "polystyrene",
-            wavelength_nm=405.0,
+        assert (
+            parameters.target_model.particle_refractive_index
+            == calculate_sellmeier_refractive_index(
+                "polystyrene",
+                wavelength_nm=405.0,
+            )
         )
 
 
@@ -447,7 +459,9 @@ class Test_DocumentationPage:
 
 
 class Test_DocumentationDeepDivePages:
-    def test_peak_scripts_page_layout_contains_related_navigation(self, monkeypatch) -> None:
+    def test_peak_scripts_page_layout_contains_related_navigation(
+        self, monkeypatch
+    ) -> None:
         monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
 
         peak_docs_main = importlib.import_module(
@@ -464,7 +478,9 @@ class Test_DocumentationDeepDivePages:
         assert "/documentation" in hrefs
         assert "/documentation/regression-models" in hrefs
 
-    def test_system_model_page_layout_contains_instrument_assumptions(self, monkeypatch) -> None:
+    def test_system_model_page_layout_contains_instrument_assumptions(
+        self, monkeypatch
+    ) -> None:
         monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
 
         system_docs_main = importlib.import_module(
@@ -482,7 +498,9 @@ class Test_DocumentationDeepDivePages:
         assert "/documentation" in hrefs
         assert "/documentation/supported-cytometers" in hrefs
 
-    def test_supported_cytometers_page_layout_contains_catalog_and_contact(self, monkeypatch) -> None:
+    def test_supported_cytometers_page_layout_contains_catalog_and_contact(
+        self, monkeypatch
+    ) -> None:
         monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
 
         cytometer_docs_main = importlib.import_module(
@@ -499,7 +517,9 @@ class Test_DocumentationDeepDivePages:
         assert "Cytek Biosciences" in text_nodes
         assert f"mailto:{page.contact_email}" in hrefs
 
-    def test_regression_models_page_layout_contains_fit_descriptions(self, monkeypatch) -> None:
+    def test_regression_models_page_layout_contains_fit_descriptions(
+        self, monkeypatch
+    ) -> None:
         monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
 
         regression_docs_main = importlib.import_module(
@@ -516,7 +536,9 @@ class Test_DocumentationDeepDivePages:
         assert "Scattering fit model" in text_nodes
         assert "/documentation/peak-scripts" in hrefs
 
-    def test_reports_page_layout_contains_provenance_descriptions(self, monkeypatch) -> None:
+    def test_reports_page_layout_contains_provenance_descriptions(
+        self, monkeypatch
+    ) -> None:
         monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
 
         reports_docs_main = importlib.import_module(
@@ -534,7 +556,9 @@ class Test_DocumentationDeepDivePages:
         assert "/documentation" in hrefs
         assert "/documentation/regression-models" in hrefs
 
-    def test_refractive_index_page_layout_contains_resolution_details(self, monkeypatch) -> None:
+    def test_refractive_index_page_layout_contains_resolution_details(
+        self, monkeypatch
+    ) -> None:
         monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
 
         refractive_docs_main = importlib.import_module(
@@ -551,7 +575,9 @@ class Test_DocumentationDeepDivePages:
         assert "/documentation" in hrefs
         assert "/documentation/system-model" in hrefs
 
-    def test_calibration_payload_page_layout_contains_wrapper_and_payload_sections(self, monkeypatch) -> None:
+    def test_calibration_payload_page_layout_contains_wrapper_and_payload_sections(
+        self, monkeypatch
+    ) -> None:
         monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
 
         payload_docs_main = importlib.import_module(
@@ -569,7 +595,9 @@ class Test_DocumentationDeepDivePages:
         assert "/documentation" in hrefs
         assert "/documentation/apply-checks" in hrefs
 
-    def test_apply_checks_page_layout_contains_validation_rules(self, monkeypatch) -> None:
+    def test_apply_checks_page_layout_contains_validation_rules(
+        self, monkeypatch
+    ) -> None:
         monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
 
         apply_checks_docs_main = importlib.import_module(
@@ -594,7 +622,9 @@ class Test_CrossCalibrationPage:
     ) -> None:
         monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
 
-        cross_main = importlib.import_module("RosettaX.pages.p08_cross_calibration.main")
+        cross_main = importlib.import_module(
+            "RosettaX.pages.p08_cross_calibration.main"
+        )
         page = cross_main.CrossCalibrationPage()
 
         layout = page.layout()
@@ -625,7 +655,9 @@ class Test_ApplicationLayout:
 
 
 class Test_HelpPage:
-    def test_layout_includes_horizontal_project_resources_card(self, monkeypatch) -> None:
+    def test_layout_includes_horizontal_project_resources_card(
+        self, monkeypatch
+    ) -> None:
         monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
 
         help_main = importlib.import_module("RosettaX.pages.p06_help.main")
@@ -722,7 +754,10 @@ class Test_SidebarNavigation:
         assert text_nodes.index("Learn") < text_nodes.index("Documentation")
         assert text_nodes.index("Documentation") < text_nodes.index("Help")
         assert navigation.children[0].style["--bs-nav-link-color"] == "#111827"
-        assert navigation.children[0].style["--bs-nav-pills-link-active-color"] == "#111827"
+        assert (
+            navigation.children[0].style["--bs-nav-pills-link-active-color"]
+            == "#111827"
+        )
 
     def test_logo_links_to_home_page(self) -> None:
         sidebar = Sidebar()

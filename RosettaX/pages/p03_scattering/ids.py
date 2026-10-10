@@ -1,4 +1,3 @@
-
 from dataclasses import dataclass
 
 from RosettaX.workflow.peak.ids import PeakIds
@@ -101,6 +100,10 @@ class ParameterSectionIds:
     @property
     def optical_configuration_preview(self) -> str:
         return f"{self.prefix}-optical-configuration-preview"
+
+    @property
+    def optical_configuration_preview_signature_store(self) -> str:
+        return f"{self.prefix}-optical-configuration-preview-signature-store"
 
     @property
     def medium_refractive_index_source(self) -> str:
@@ -241,6 +244,7 @@ class CalibrationSectionIds:
     def compute_model_btn(self) -> str:
         return f"{self.prefix}-calibration-standard-table-compute-model-button"
 
+
 class PeakSectionIds(PeakIds):
     """
     Scattering peak section IDs.
@@ -258,6 +262,7 @@ class PeakSectionIds(PeakIds):
 
 
 PAGE_NAME = "scattering_calibration"
+
 
 class Ids:
     page_name = PAGE_NAME

@@ -24,7 +24,7 @@ from RosettaX.workflow.file_selection.services import (
 from RosettaX.workflow.file_selection.services import (
     resolve_selected_file,
 )
-from RosettaX.workflow.peak.core.graphing import apply_stable_2d_axis_ranges
+from RosettaX.workflow.plotting.axis_ranges import apply_stable_2d_axis_ranges
 from RosettaX.workflow.plotting.models import (
     AxisOptions,
     HistogramOptions,

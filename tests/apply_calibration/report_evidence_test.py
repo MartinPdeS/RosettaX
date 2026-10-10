@@ -1,10 +1,10 @@
 from RosettaX.workflow.apply_calibration.report import (
-    _build_chart_spec,
     apply_report_matches_request,
     build_apply_report_payload,
     build_apply_report_pdf_bytes,
 )
 from RosettaX.workflow.apply_calibration.report_helpers import build_fit_evidence_items
+from RosettaX.workflow.apply_calibration.report_sections import _build_chart_spec
 from RosettaX.workflow.apply_calibration.services import (
     ApplyCalibrationFilesResult,
     ApplyCalibrationRequest,

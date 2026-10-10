@@ -6,6 +6,7 @@ import dash
 import dash_bootstrap_components as dbc
 
 from RosettaX.pages.p00_sidebar.ids import SidebarIds
+from RosettaX.pages.p03_scattering.sections.s03_model import layout as model_layout
 from RosettaX.pages.p03_scattering.state import ScatteringPageState
 from RosettaX.utils import RuntimeConfig, styling, ui_forms
 from RosettaX.workflow import parameters, scattering
@@ -117,7 +118,7 @@ class ReferenceTable:
         body = card.children[1]
         body.children = [
             dash.html.Div(
-                self.model_section._build_particle_configuration_section(),
+                model_layout.build_particle_configuration_section(self.model_section),
                 style={
                     "marginBottom": "18px",
                 },

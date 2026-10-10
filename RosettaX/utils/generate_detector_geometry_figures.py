@@ -22,12 +22,12 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
-from RosettaX.pages.p03_scattering.sections.s03_model import optical_preview
 from RosettaX.workflow import detector
 from RosettaX.workflow.detector.loader import (
     CUSTOM_DETECTOR_PRESET_NAME,
     load_detector_configuration_presets,
 )
+from RosettaX.workflow.plotting import optical_preview
 
 matplotlib.use("Agg")
 
