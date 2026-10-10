@@ -1,3 +1,11 @@
+"""Regression tests for workflow file selection."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 from RosettaX.workflow.file_selection import UploadedFile, UploadedFileBatch
 from RosettaX.workflow.file_selection.services import (
     build_channel_options,
@@ -8,6 +16,7 @@ from RosettaX.workflow.file_selection.services import (
 
 
 def test_uploaded_file_batch_round_trips_serialized_state() -> None:
+    """Check uploaded file batch round trips serialized state."""
     batch = UploadedFileBatch(
         files=(
             UploadedFile(
@@ -26,6 +35,7 @@ def test_uploaded_file_batch_round_trips_serialized_state() -> None:
 
 
 def test_file_selection_builds_options_and_preserves_valid_selection() -> None:
+    """Check file selection builds options and preserves valid selection."""
     batch = UploadedFileBatch(
         files=(
             UploadedFile(path="/tmp/first.fcs", filename="first.fcs"),
@@ -42,6 +52,7 @@ def test_file_selection_builds_options_and_preserves_valid_selection() -> None:
 
 
 def test_uploaded_file_batch_accepts_legacy_visualization_keys() -> None:
+    """Check uploaded file batch accepts legacy visualization keys."""
     batch = UploadedFileBatch.from_dict(
         {
             "files": [
@@ -60,6 +71,7 @@ def test_uploaded_file_batch_accepts_legacy_visualization_keys() -> None:
 
 
 def test_file_selection_accepts_legacy_path_lists_and_channel_defaults() -> None:
+    """Check file selection accepts legacy path lists and channel defaults."""
     assert build_file_options(["/tmp/one.fcs", "/tmp/two.fcs"]) == [
         {"label": "one.fcs", "value": "/tmp/one.fcs"},
         {"label": "two.fcs", "value": "/tmp/two.fcs"},

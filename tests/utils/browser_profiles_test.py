@@ -1,3 +1,11 @@
+"""Regression tests for utils browser profiles."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 import pytest
 
 from RosettaX.utils import browser_profiles
@@ -8,6 +16,7 @@ from RosettaX.utils.browser_profiles import (
 
 
 def test_from_dict_normalizes_names_and_sorts_default_first():
+    """Check from dict normalizes names and sorts default first."""
     library = BrowserProfileLibrary.from_dict(
         {
             "profiles": {
@@ -43,6 +52,7 @@ def test_from_dict_normalizes_names_and_sorts_default_first():
 
 
 def test_from_dict_falls_back_to_default_for_missing_selection():
+    """Check from dict falls back to default for missing selection."""
     library = BrowserProfileLibrary.from_dict(
         {
             "profiles": {
@@ -56,6 +66,7 @@ def test_from_dict_falls_back_to_default_for_missing_selection():
 
 
 def test_build_options_prefers_profile_name_from_payload():
+    """Check build options prefers profile name from payload."""
     library = BrowserProfileLibrary.from_dict(
         {
             "profiles": {
@@ -82,6 +93,7 @@ def test_build_options_prefers_profile_name_from_payload():
 
 
 def test_from_dict_refreshes_packaged_profile_name_from_disk(monkeypatch):
+    """Check from dict refreshes packaged profile name from disk."""
     monkeypatch.setattr(
         browser_profiles.directories,
         "list_profiles",
@@ -123,6 +135,7 @@ def test_from_dict_refreshes_packaged_profile_name_from_disk(monkeypatch):
 
 
 def test_create_profile_copies_source_and_selects_new_profile():
+    """Check create profile copies source and selects new profile."""
     library = BrowserProfileLibrary.from_dict(
         {
             "profiles": {
@@ -147,6 +160,7 @@ def test_create_profile_copies_source_and_selects_new_profile():
 
 
 def test_delete_profile_rejects_default_and_reselects_default():
+    """Check delete profile rejects default and reselects default."""
     library = BrowserProfileLibrary.from_dict(
         {
             "profiles": {

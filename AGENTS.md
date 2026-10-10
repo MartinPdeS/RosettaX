@@ -32,6 +32,8 @@ These instructions apply to the whole RosettaX repository. Keep changes narrow, 
 - Keep ids centralized in `ids.py` rather than reconstructing string literals across callbacks and layouts.
 
 ## Build And Test
+- Give test modules, classes, fixtures, helpers, and test functions concise docstrings.
+- Give every test module an `if __name__ == "__main__":` entry point that runs pytest for that file. Place it before application imports so pytest loads the suite's `conftest.py` before dependencies, and propagate pytest's exit status.
 - Install development dependencies with `pip install -e .[testing,dev]`.
 - Use `make editable` for editable local installs and `make quick` when compiled/build-system behavior matters.
 - Run the smallest relevant test slice first:

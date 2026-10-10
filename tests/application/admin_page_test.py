@@ -1,3 +1,11 @@
+"""Regression tests for application admin page."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import importlib
 
@@ -9,6 +17,7 @@ from RosettaX.utils import usage_metrics
 
 
 def _collect_component_ids(component) -> set[str]:
+    """Collect component identifiers from the test layout."""
     component_id = getattr(component, "id", None)
     collected_ids = {component_id} if isinstance(component_id, str) else set()
     children = getattr(component, "children", None)
@@ -26,6 +35,7 @@ def _collect_component_ids(component) -> set[str]:
 
 
 def _import_admin_main(monkeypatch: pytest.MonkeyPatch):
+    """Import the admin page with dependencies prepared for testing."""
     monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
 
     admin_main = importlib.import_module("RosettaX.pages.p22_admin.main")
@@ -33,10 +43,13 @@ def _import_admin_main(monkeypatch: pytest.MonkeyPatch):
 
 
 class Test_AdminPage:
+    """Regression checks for admin page."""
+
     def test_admin_page_registers_admin_path(
         self,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Check admin page registers admin path."""
         registered_pages: list[dict] = []
         monkeypatch.setattr(
             dash,
@@ -56,6 +69,7 @@ class Test_AdminPage:
         monkeypatch: pytest.MonkeyPatch,
         tmp_path,
     ) -> None:
+        """Check layout denies access when token is not configured."""
         monkeypatch.delenv(services.ROSETTAX_ADMIN_TOKEN_ENV_VAR, raising=False)
         monkeypatch.setenv(
             usage_metrics.ROSETTAX_VISIT_LOG_PATH_ENV_VAR,
@@ -73,6 +87,7 @@ class Test_AdminPage:
         monkeypatch: pytest.MonkeyPatch,
         tmp_path,
     ) -> None:
+        """Check layout denies access with wrong or missing token."""
         monkeypatch.setenv(services.ROSETTAX_ADMIN_TOKEN_ENV_VAR, "secret-token")
         monkeypatch.setenv(
             usage_metrics.ROSETTAX_VISIT_LOG_PATH_ENV_VAR,
@@ -92,6 +107,7 @@ class Test_AdminPage:
         monkeypatch: pytest.MonkeyPatch,
         tmp_path,
     ) -> None:
+        """Check layout grants access with matching token."""
         monkeypatch.setenv(services.ROSETTAX_ADMIN_TOKEN_ENV_VAR, "secret-token")
         monkeypatch.setenv(
             usage_metrics.ROSETTAX_VISIT_LOG_PATH_ENV_VAR,
@@ -126,10 +142,13 @@ class Test_AdminPage:
 
 
 class Test_AdminServices:
+    """Regression checks for admin services."""
+
     def test_token_gate_requires_configured_token(
         self,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Check token gate requires configured token."""
         monkeypatch.delenv(services.ROSETTAX_ADMIN_TOKEN_ENV_VAR, raising=False)
 
         assert not services.is_admin_access_granted("anything")
@@ -139,6 +158,7 @@ class Test_AdminServices:
         self,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Check token gate requires exact match."""
         monkeypatch.setenv(services.ROSETTAX_ADMIN_TOKEN_ENV_VAR, "secret-token")
 
         assert services.is_admin_access_granted("secret-token")
@@ -151,6 +171,7 @@ class Test_AdminServices:
         monkeypatch: pytest.MonkeyPatch,
         tmp_path,
     ) -> None:
+        """Check collect admin dashboard data aggregates metrics and visits."""
         monkeypatch.setenv(
             usage_metrics.ROSETTAX_VISIT_LOG_PATH_ENV_VAR,
             str(tmp_path / "visit_log.jsonl"),
@@ -176,6 +197,7 @@ class Test_AdminServices:
         assert dashboard_data.generated_at.endswith("UTC")
 
     def test_build_visits_over_time_figure_has_visit_and_unique_traces(self) -> None:
+        """Check build visits over time figure has visit and unique traces."""
         visit_summary = usage_metrics.summarize_visit_events(
             [
                 usage_metrics.VisitEvent(
@@ -204,6 +226,7 @@ class Test_AdminServices:
         assert list(figure.data[1].y) == [1, 1]
 
     def test_build_visits_over_time_figure_handles_empty_summary(self) -> None:
+        """Check build visits over time figure handles empty summary."""
         figure = services.build_visits_over_time_figure(
             visit_summary=usage_metrics.VisitSummary(),
             theme="light",
@@ -213,6 +236,7 @@ class Test_AdminServices:
         assert list(figure.data[0].x) == []
 
     def test_build_page_breakdown_figure_orders_pages_by_visit_count(self) -> None:
+        """Check build page breakdown figure orders pages by visit count."""
         visit_summary = usage_metrics.summarize_visit_events(
             [
                 usage_metrics.VisitEvent(
@@ -246,6 +270,7 @@ class Test_AdminServices:
         assert list(figure.data[0].x) == [1, 2]
 
     def test_build_recent_visit_rows_formats_table_rows(self) -> None:
+        """Check build recent visit rows formats table rows."""
         visit_summary = usage_metrics.summarize_visit_events(
             [
                 usage_metrics.VisitEvent(

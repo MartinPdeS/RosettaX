@@ -1,3 +1,11 @@
+"""Regression tests for workflow Rosetta peak script."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 from types import SimpleNamespace
 
@@ -7,6 +15,7 @@ from RosettaX.workflow.peak.scripts import rosetta_mix
 
 
 def _build_synthetic_dataset_with_two_markers() -> tuple[np.ndarray, np.ndarray]:
+    """Build synthetic scattering and fluorescence data with two markers."""
     rng = np.random.default_rng(123)
 
     baseline_fluorescence = rng.normal(loc=120.0, scale=10.0, size=9000)
@@ -49,6 +58,7 @@ def _build_synthetic_dataset_with_two_markers() -> tuple[np.ndarray, np.ndarray]
 
 
 def _build_dataset_without_markers() -> tuple[np.ndarray, np.ndarray]:
+    """Build synthetic scattering and fluorescence data without markers."""
     rng = np.random.default_rng(44)
 
     fluorescence = rng.normal(loc=120.0, scale=12.0, size=5000)
@@ -65,7 +75,10 @@ def _build_dataset_without_markers() -> tuple[np.ndarray, np.ndarray]:
 
 
 class Test_RosettaPeakScript:
+    """Regression checks for Rosetta peak script."""
+
     def test_settings_keep_only_process_specific_rosetta_toggles(self) -> None:
+        """Check settings keep only process specific Rosetta toggles."""
         process = rosetta_mix.FluorescenceGuidedScatterPeakProcess()
 
         settings = process.get_settings()
@@ -121,10 +134,12 @@ class Test_RosettaPeakScript:
         assert saturation_guard_setting["default_value"] == 0.5
 
     def test_run_automatic_action_uses_configured_fluorescence_cv_threshold(self, monkeypatch) -> None:
+        """Check run automatic action uses configured fluorescence CV threshold."""
         scattering, fluorescence = _build_dataset_without_markers()
         captured_fit_cv_thresholds: list[float] = []
 
         def fake_column_copy(*, fcs_file_path, detector_column, dtype=float, n=None):
+            """Return detector values prepared for this peak-detection test."""
             del fcs_file_path
             del dtype
 
@@ -141,6 +156,7 @@ class Test_RosettaPeakScript:
             return values[: int(n)]
 
         def fake_find_fit_validate_peaks_1d(**kwargs):
+            """Return prepared peak-fit results for the detection scenario."""
             captured_fit_cv_thresholds.append(float(kwargs["fit_cv_threshold"]))
             return {
                 "all_peaks": [],
@@ -174,10 +190,12 @@ class Test_RosettaPeakScript:
         assert captured_fit_cv_thresholds == [0.72]
 
     def test_run_automatic_action_uses_configured_scatter_cv_threshold(self, monkeypatch) -> None:
+        """Check run automatic action uses configured scatter CV threshold."""
         scattering, fluorescence = _build_synthetic_dataset_with_two_markers()
         captured_fit_cv_thresholds: list[float] = []
 
         def fake_column_copy(*, fcs_file_path, detector_column, dtype=float, n=None):
+            """Return detector values prepared for this peak-detection test."""
             del fcs_file_path
             del dtype
 
@@ -194,6 +212,7 @@ class Test_RosettaPeakScript:
             return values[: int(n)]
 
         def fake_find_fit_validate_peaks_1d(**kwargs):
+            """Return prepared peak-fit results for the detection scenario."""
             values = np.asarray(kwargs["values"], dtype=float)
             captured_fit_cv_thresholds.append(float(kwargs["fit_cv_threshold"]))
 
@@ -247,10 +266,12 @@ class Test_RosettaPeakScript:
         assert captured_fit_cv_thresholds[1:] == [1.35, 1.35]
 
     def test_run_automatic_action_uses_configured_scatter_r2_threshold(self, monkeypatch) -> None:
+        """Check run automatic action uses configured scatter R-squared threshold."""
         scattering, fluorescence = _build_synthetic_dataset_with_two_markers()
         captured_fit_r2_thresholds: list[float] = []
 
         def fake_column_copy(*, fcs_file_path, detector_column, dtype=float, n=None):
+            """Return detector values prepared for this peak-detection test."""
             del fcs_file_path
             del dtype
 
@@ -267,6 +288,7 @@ class Test_RosettaPeakScript:
             return values[: int(n)]
 
         def fake_find_fit_validate_peaks_1d(**kwargs):
+            """Return prepared peak-fit results for the detection scenario."""
             values = np.asarray(kwargs["values"], dtype=float)
             captured_fit_r2_thresholds.append(float(kwargs["fit_r2_threshold"]))
 
@@ -323,6 +345,7 @@ class Test_RosettaPeakScript:
         self,
         monkeypatch,
     ) -> None:
+        """Check run automatic action payload uses filtered plot values when saturation removal enabled."""
         scattering = np.concatenate(
             [
                 np.full(40, 3.91e6, dtype=float),
@@ -337,6 +360,7 @@ class Test_RosettaPeakScript:
         )
 
         def fake_column_copy(*, fcs_file_path, detector_column, dtype=float, n=None):
+            """Return detector values prepared for this peak-detection test."""
             del fcs_file_path
             del dtype
 
@@ -384,6 +408,7 @@ class Test_RosettaPeakScript:
         self,
         monkeypatch,
     ) -> None:
+        """Check run automatic action applies metadata saturation guard fraction."""
         scattering = np.concatenate(
             [
                 np.full(35, 1_200_000.0, dtype=float),
@@ -398,6 +423,7 @@ class Test_RosettaPeakScript:
         )
 
         def fake_column_copy(*, fcs_file_path, detector_column, dtype=float, n=None):
+            """Return detector values prepared for this peak-detection test."""
             del fcs_file_path
             del dtype
 
@@ -493,6 +519,7 @@ class Test_RosettaPeakScript:
         self,
         monkeypatch,
     ) -> None:
+        """Check saturation guard falls back to data when metadata is suspicious."""
         monkeypatch.setattr(
             rosetta_mix,
             "resolve_detector_channel_saturation_value_from_metadata",
@@ -514,6 +541,7 @@ class Test_RosettaPeakScript:
         self,
         monkeypatch,
     ) -> None:
+        """Check saturation guard keeps metadata when range is consistent."""
         monkeypatch.setattr(
             rosetta_mix,
             "resolve_detector_channel_saturation_value_from_metadata",
@@ -535,10 +563,12 @@ class Test_RosettaPeakScript:
         self,
         monkeypatch,
     ) -> None:
+        """Check run automatic action skips guard when toggle disabled."""
         scattering = np.asarray([1000.0, 2000.0, 3000.0], dtype=float)
         fluorescence = np.asarray([100.0, 110.0, 120.0], dtype=float)
 
         def fake_column_copy(*, fcs_file_path, detector_column, dtype=float, n=None):
+            """Return detector values prepared for this peak-detection test."""
             del fcs_file_path
             del dtype
 
@@ -629,9 +659,11 @@ class Test_RosettaPeakScript:
         assert "saturation guard excluded" not in str(result.status).lower()
 
     def test_run_automatic_action_detects_non_fluorescent_scatter_peaks(self, monkeypatch) -> None:
+        """Check run automatic action detects non fluorescent scatter peaks."""
         scattering, fluorescence = _build_synthetic_dataset_with_two_markers()
 
         def fake_column_copy(*, fcs_file_path, detector_column, dtype=float, n=None):
+            """Return detector values prepared for this peak-detection test."""
             del fcs_file_path
             del dtype
 
@@ -686,9 +718,11 @@ class Test_RosettaPeakScript:
         self,
         monkeypatch,
     ) -> None:
+        """Check run automatic action can insert marker associated scatter peaks into table."""
         scattering, fluorescence = _build_synthetic_dataset_with_two_markers()
 
         def fake_column_copy(*, fcs_file_path, detector_column, dtype=float, n=None):
+            """Return detector values prepared for this peak-detection test."""
             del fcs_file_path
             del dtype
 
@@ -735,9 +769,11 @@ class Test_RosettaPeakScript:
         assert "both non-fluorescent scatter peaks and marker-associated scatter peaks are inserted into the table" in str(result.status).lower()
 
     def test_run_automatic_action_stops_when_no_marker_peaks_found(self, monkeypatch) -> None:
+        """Check run automatic action stops when no marker peaks found."""
         scattering, fluorescence = _build_dataset_without_markers()
 
         def fake_column_copy(*, fcs_file_path, detector_column, dtype=float, n=None):
+            """Return detector values prepared for this peak-detection test."""
             del fcs_file_path
             del dtype
 
@@ -783,6 +819,7 @@ class Test_RosettaPeakScript:
         assert "validated" in str(result.status).lower()
 
     def test_build_saturated_event_mask_marks_scatter_and_fluorescence_edge_pileups(self) -> None:
+        """Check build saturated event mask marks scatter and fluorescence edge pileups."""
         rng = np.random.default_rng(2027)
 
         scattering = np.concatenate(
@@ -810,9 +847,11 @@ class Test_RosettaPeakScript:
         assert np.any(mask[3040:3090])
 
     def test_baseline_gate_width_changes_payload_y_gate_interval(self, monkeypatch) -> None:
+        """Check baseline gate width changes payload y gate interval."""
         scattering, fluorescence = _build_synthetic_dataset_with_two_markers()
 
         def fake_column_copy(*, fcs_file_path, detector_column, dtype=float, n=None):
+            """Return detector values prepared for this peak-detection test."""
             del fcs_file_path
             del dtype
 
@@ -872,6 +911,7 @@ class Test_RosettaPeakScript:
         assert float(wide_payload["y_upper_gate"]) >= float(narrow_payload["y_upper_gate"])
 
     def test_single_marker_is_always_classified_as_dim(self) -> None:
+        """Check single marker is always classified as dim."""
         classified = rosetta_mix.classify_marker_peaks(
             marker_peaks=[
                 {
@@ -886,6 +926,7 @@ class Test_RosettaPeakScript:
         assert classified[0]["marker_role"] == "Dim marker"
 
     def test_lowest_of_two_markers_is_classified_as_dim(self) -> None:
+        """Check lowest of two markers is classified as dim."""
         classified = rosetta_mix.classify_marker_peaks(
             marker_peaks=[
                 {
@@ -908,6 +949,7 @@ class Test_RosettaPeakScript:
         assert classified[1]["mean"] == 6000.0
 
     def test_find_fit_validate_peaks_1d_returns_validated_peaks_for_clear_mixture(self) -> None:
+        """Check find fit validate peaks 1D returns validated peaks for clear mixture."""
         rng = np.random.default_rng(2026)
         values = np.concatenate(
             [
@@ -934,6 +976,7 @@ class Test_RosettaPeakScript:
         assert all(float(peak["r2"]) >= 0.70 for peak in validated_peaks)
 
     def test_filter_candidate_peak_indices_by_prominence_rejects_weak_shoulder(self) -> None:
+        """Check filter candidate peak indices by prominence rejects weak shoulder."""
         counts = np.asarray(
             [2.0, 9.0, 5.0, 6.0, 5.5, 4.5, 8.0, 2.0],
             dtype=float,
@@ -948,6 +991,7 @@ class Test_RosettaPeakScript:
         assert filtered_indices == [1, 6]
 
     def test_build_peak_analysis_diagnostic_text_includes_rejection_reasons(self) -> None:
+        """Check build peak analysis diagnostic text includes rejection reasons."""
         diagnostic_text = rosetta_mix.build_peak_analysis_diagnostic_text(
             analysis={
                 "all_peaks": [

@@ -1,5 +1,12 @@
 """Optical preview rendering, initialization, and duplicate update behavior."""
 
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
+
 from types import SimpleNamespace
 
 import dash
@@ -21,6 +28,7 @@ from RosettaX.workflow.scattering import ModelConfiguration
 
 
 def _find_component_by_id(component, target_id: str):
+    """Find a component by its identifier in the test layout."""
     component_id = getattr(component, "id", None)
 
     if component_id == target_id:
@@ -44,12 +52,15 @@ def _find_component_by_id(component, target_id: str):
 
 
 class Test_ScatteringOpticalPreviewInitialization:
+    """Regression checks for scattering optical preview initialization."""
+
     @pytest.mark.parametrize("detector_preset", ["", "Generic detector"])
     def test_preview_is_built_only_by_callback_from_active_controls(
         self,
         monkeypatch,
         detector_preset,
     ) -> None:
+        """Check preview is built only by callback from active controls."""
         section = ScatteringModel(
             page=SimpleNamespace(ids=ScatteringIds()),
             section_number=3,
@@ -58,6 +69,7 @@ class Test_ScatteringOpticalPreviewInitialization:
         preview_figure = {"data": [], "layout": {"title": "Active optical preview"}}
 
         def build_preview(**parameters):
+            """Return the optical preview prepared for this test."""
             preview_calls.append(parameters)
             return preview_figure
 
@@ -83,9 +95,11 @@ class Test_ScatteringOpticalPreviewInitialization:
         callback_options = []
 
         def register_callback(*args, **kwargs):
+            """Capture the callback registration requested by the test."""
             callback_options.append(kwargs)
 
             def decorate(callback):
+                """Record the decorated callback and return it unchanged."""
                 callbacks.append(callback)
                 return callback
 
@@ -151,9 +165,12 @@ class Test_ScatteringOpticalPreviewInitialization:
 
 
 class Test_OpticalPreviewRendering:
+    """Regression checks for optical preview rendering."""
+
     def test_optical_preview_uses_resolved_preset_sampling_when_current_sampling_is_missing(
         self,
     ):
+        """Check optical preview uses resolved preset sampling when current sampling is missing."""
         figure = ModelConfiguration.build_optical_configuration_preview_figure(
             detector_numerical_aperture=None,
             detector_cache_numerical_aperture=None,
@@ -168,6 +185,7 @@ class Test_OpticalPreviewRendering:
         assert len(figure.data) >= 3
 
     def test_optical_preview_omits_geometry_when_detector_preset_is_empty(self):
+        """Check optical preview omits geometry when detector preset is empty."""
         figure = ModelConfiguration.build_optical_configuration_preview_figure(
             detector_numerical_aperture=0.2,
             detector_cache_numerical_aperture=0.0,
@@ -194,6 +212,7 @@ class Test_OpticalPreviewRendering:
         assert figure.layout.scene.xaxis.ticks == ""
 
     def test_optical_preview_incident_wave_aligns_with_default_detector_axis(self):
+        """Check optical preview incident wave aligns with default detector axis."""
         figure = ModelConfiguration.build_optical_configuration_preview_figure(
             detector_numerical_aperture=0.45,
             detector_cache_numerical_aperture=0.0,
@@ -241,8 +260,11 @@ class Test_OpticalPreviewRendering:
 
 
 class Test_OpticalPreviewSignature:
+    """Regression checks for optical preview signature."""
+
     @pytest.fixture
     def preview_parameters(self):
+        """Provide optical parameters for preview rendering checks."""
         return ModelConfiguration.resolve_optical_configuration_preview_parameters(
             detector_numerical_aperture=0.45,
             detector_cache_numerical_aperture=0.0,
@@ -258,6 +280,7 @@ class Test_OpticalPreviewSignature:
     def test_numeric_text_and_weight_amplitudes_keep_same_visible_geometry(
         self, preview_parameters
     ):
+        """Check numeric text and weight amplitudes keep same visible geometry."""
         original = build_optical_configuration_preview_signature(preview_parameters)
         changed = {
             **preview_parameters,
@@ -285,6 +308,7 @@ class Test_OpticalPreviewSignature:
     def test_changed_geometry_invalidates_signature(
         self, preview_parameters, field, value
     ):
+        """Check changed geometry invalidates signature."""
         original = build_optical_configuration_preview_signature(preview_parameters)
         changed = {**preview_parameters, field: value}
         assert build_optical_configuration_preview_signature(changed) != original
@@ -292,6 +316,7 @@ class Test_OpticalPreviewSignature:
     def test_empty_preset_ignores_controls_that_are_not_rendered(
         self, preview_parameters
     ):
+        """Check empty preset ignores controls that are not rendered."""
         empty = {**preview_parameters, "include_geometry": False}
         changed = {
             **empty,
@@ -305,6 +330,7 @@ class Test_OpticalPreviewSignature:
         ) == build_optical_configuration_preview_signature(empty)
 
     def test_named_preset_overrides_transient_control_values(self):
+        """Check named preset overrides transient control values."""
         controls = {
             "detector_numerical_aperture": None,
             "detector_cache_numerical_aperture": None,

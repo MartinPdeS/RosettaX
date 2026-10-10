@@ -1,3 +1,11 @@
+"""Regression tests for upload services guardrails."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import base64
 
@@ -11,7 +19,10 @@ from RosettaX.workflow.upload.services import (
 
 
 class Test_UploadServiceGuardrails:
+    """Regression checks for upload service guardrails."""
+
     def test_parse_allowed_upload_extensions_parses_csv_values(self) -> None:
+        """Check parse allowed upload extensions parses csv values."""
         assert parse_allowed_upload_extensions(".fcs, .csv") == frozenset(
             {".fcs", ".csv"}
         )
@@ -20,6 +31,7 @@ class Test_UploadServiceGuardrails:
         self,
         tmp_path,
     ) -> None:
+        """Check save uploaded file rejects unsupported extension."""
         encoded_payload = base64.b64encode(b"hello").decode("ascii")
 
         with pytest.raises(ValueError, match="Unsupported uploaded file type"):
@@ -30,6 +42,7 @@ class Test_UploadServiceGuardrails:
             )
 
     def test_decode_dash_upload_contents_rejects_oversized_payload(self) -> None:
+        """Check decode Dash upload contents rejects oversized payload."""
         encoded_payload = base64.b64encode(b"123456").decode("ascii")
 
         with pytest.raises(ValueError, match="maximum supported size"):

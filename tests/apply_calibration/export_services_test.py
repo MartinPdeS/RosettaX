@@ -1,5 +1,12 @@
 """Exports remain downloadable when report generation or ZIP bundling fails."""
 
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
+
 import io
 import zipfile
 from dataclasses import fields, replace
@@ -15,6 +22,7 @@ from RosettaX.workflow.apply_calibration import ApplyCalibrationFilesResult
 
 @pytest.fixture
 def controls():
+    """Provide configured controls for the service tests."""
     return ApplyCalibrationControls(
         **{field.name: None for field in fields(ApplyCalibrationControls)}
     )
@@ -22,6 +30,7 @@ def controls():
 
 @pytest.fixture
 def calibrated_result():
+    """Provide a calibrated file result for export checks."""
     return ApplyCalibrationFilesResult(
         payload_bytes=b"calibrated events",
         download_filename="calibrated.fcs",
@@ -35,6 +44,7 @@ def calibrated_result():
 
 @pytest.fixture
 def report(monkeypatch):
+    """Provide deterministic report builders for export checks."""
     payload = {"report": "evidence"}
     monkeypatch.setattr(
         services.apply_report, "build_apply_report_payload", lambda **_: payload
@@ -53,6 +63,7 @@ def report(monkeypatch):
 def test_single_file_export_keeps_fcs_bytes_and_separate_report(
     controls, calibrated_result, report
 ):
+    """Check single file export keeps FCS bytes and separate report."""
     prepared = services.prepare_calibration_export(
         controls=controls, request=None, result=calibrated_result
     )
@@ -63,6 +74,7 @@ def test_single_file_export_keeps_fcs_bytes_and_separate_report(
 
 
 def test_multiple_file_export_bundles_report_pdf(controls, calibrated_result, report):
+    """Check multiple file export bundles report PDF."""
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w") as archive:
         archive.writestr("calibrated.fcs", b"calibrated events")
@@ -88,7 +100,9 @@ def test_multiple_file_export_bundles_report_pdf(controls, calibrated_result, re
 def test_report_failure_preserves_calibrated_download(
     controls, calibrated_result, report, monkeypatch, failure_stage
 ):
+    """Check report failure preserves calibrated download."""
     def fail(**_):
+        """Raise the simulated error used by this test."""
         raise ValueError("report unavailable")
 
     monkeypatch.setattr(services.apply_report, failure_stage, fail)
@@ -108,6 +122,7 @@ def test_report_failure_preserves_calibrated_download(
 def test_zip_failure_preserves_original_download_and_report(
     controls, calibrated_result, report
 ):
+    """Check ZIP failure preserves original download and report."""
     result = replace(calibrated_result, download_filename="invalid.zip")
     prepared = services.prepare_calibration_export(
         controls=controls, request=None, result=result
@@ -118,6 +133,7 @@ def test_zip_failure_preserves_original_download_and_report(
 
 
 def test_invalid_request_clears_report_without_creating_download(controls, monkeypatch):
+    """Check invalid request clears report without creating download."""
     monkeypatch.setattr(
         services.usage_metrics, "record_apply_button_click", lambda: None
     )
@@ -133,14 +149,17 @@ def test_invalid_request_clears_report_without_creating_download(controls, monke
 def test_apply_orchestrator_passes_controls_and_prepares_result(
     controls, calibrated_result, report, monkeypatch
 ):
+    """Check apply orchestrator passes controls and prepares result."""
     recorded = []
     request = object()
 
     def build_request(**values):
+        """Check the supplied controls and return the prepared request."""
         assert values["uploaded_fcs_path"] == "input.fcs"
         return request
 
     def apply_request(*, request):
+        """Record the calibration request and return the prepared result."""
         recorded.append(request)
         return calibrated_result
 

@@ -1,3 +1,11 @@
+"""Regression tests for apply calibration fluorescence."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import numpy as np
 
@@ -7,6 +15,7 @@ from RosettaX.workflow.apply_calibration.fluorescence import (
 
 
 def test_apply_legacy_log_calibration_clamps_negative_values_and_warns() -> None:
+    """Check apply legacy log calibration clamps negative values and warns."""
     warnings: list[str] = []
 
     calibrated = apply_legacy_calibration_to_series(

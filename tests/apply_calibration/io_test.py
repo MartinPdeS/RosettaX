@@ -1,3 +1,11 @@
+"""Regression tests for apply calibration io."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import io
 import zipfile
@@ -9,7 +17,10 @@ from RosettaX.workflow.apply_calibration.io import (
 
 
 class Test_ApplyCalibrationIO:
+    """Regression checks for apply calibration io."""
+
     def test_build_export_filename_uses_uploaded_stem_only(self) -> None:
+        """Check build export filename uses uploaded stem only."""
         filename = build_export_filename(
             uploaded_fcs_path="/tmp/apogee_mystery_beads.fcs",
             output_channels=["Diameter [nm]"],
@@ -18,6 +29,7 @@ class Test_ApplyCalibrationIO:
         assert filename == "apogee_mystery_beads_RosettaX.fcs"
 
     def test_build_export_filename_ignores_output_channels(self) -> None:
+        """Check build export filename ignores output channels."""
         filename = build_export_filename(
             uploaded_fcs_path="/tmp/input-a.fcs",
             output_channels=["Diameter [nm]", "Estimated Coupling"],
@@ -26,6 +38,7 @@ class Test_ApplyCalibrationIO:
         assert filename == "input-a_RosettaX.fcs"
 
     def test_append_files_to_zip_bytes_preserves_existing_members_and_adds_report(self) -> None:
+        """Check append files to ZIP bytes preserves existing members and adds report."""
         source_buffer = io.BytesIO()
 
         with zipfile.ZipFile(source_buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as zip_file:

@@ -1,3 +1,11 @@
+"""Regression tests for utils paths."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import pytest
 
@@ -6,11 +14,14 @@ from RosettaX.workflow.apply_calibration.io import resolve_calibration_file_path
 
 
 class Test_Paths:
+    """Regression checks for paths."""
+
     def test_resolve_calibration_file_path_rejects_path_traversal(
         self,
         tmp_path,
         monkeypatch,
     ) -> None:
+        """Check resolve calibration file path rejects path traversal."""
         monkeypatch.setattr(
             "RosettaX.utils.directories.fluorescence_calibration",
             tmp_path / "fluorescence",
@@ -28,6 +39,7 @@ class Test_Paths:
         tmp_path,
         monkeypatch,
     ) -> None:
+        """Check resolve profile file path rejects path traversal."""
         monkeypatch.setattr(
             "RosettaX.utils.directories.profiles",
             tmp_path / "profiles",

@@ -1,3 +1,11 @@
+"""Regression tests for scattering calibration services."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 from dataclasses import FrozenInstanceError
 from unittest.mock import patch
@@ -258,7 +266,10 @@ class Test_ParsedSphereStandardRows:
 
 
 class Test_ScientificValidation:
+    """Regression checks for scientific validation."""
+
     def test_parse_optical_parameters_rejects_nonphysical_wavelength(self) -> None:
+        """Check parse optical parameters rejects nonphysical wavelength."""
         with pytest.raises(ValueError, match="wavelength_nm.*greater than zero"):
             parse_optical_parameters(
                 medium_refractive_index=1.33,
@@ -275,6 +286,7 @@ class Test_ScientificValidation:
             )
 
     def test_parse_optical_parameters_rejects_cache_aperture_above_detector(self) -> None:
+        """Check parse optical parameters rejects cache aperture above detector."""
         with pytest.raises(ValueError, match="detector_cache_numerical_aperture"):
             parse_optical_parameters(
                 medium_refractive_index=1.33,
@@ -291,6 +303,7 @@ class Test_ScientificValidation:
             )
 
     def test_linear_instrument_response_rejects_nonpositive_values(self) -> None:
+        """Check linear instrument response rejects nonpositive values."""
         with pytest.raises(ValueError, match="measured_peak_values"):
             fit_linear_instrument_response(
                 measured_peak_values=np.asarray([0.0, 2.0]),
@@ -300,7 +313,10 @@ class Test_ScientificValidation:
 
 
 class Test_parse_optical_parameters:
+    """Regression checks for parse optical parameters."""
+
     def test_generic_detector_allows_missing_optional_geometry(self):
+        """Check generic detector allows missing optional geometry."""
         optical_parameters = parse_optical_parameters(
             medium_refractive_index=1.33,
             particle_refractive_index=1.59,
@@ -322,6 +338,7 @@ class Test_parse_optical_parameters:
         assert optical_parameters.modeling_blocker_bar_numerical_aperture == 0.0
 
     def test_generic_detector_accepts_custom_detector_angular_weighting_json(self):
+        """Check generic detector accepts custom detector angular weighting JSON."""
         optical_parameters = parse_optical_parameters(
             medium_refractive_index=1.33,
             particle_refractive_index=1.59,

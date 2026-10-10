@@ -1,3 +1,11 @@
+"""Regression tests for workflow automatic 1D peaks."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import numpy as np
 
@@ -7,7 +15,10 @@ from RosettaX.workflow.peak.scripts.automatic_1d_peaks import (
 
 
 class Test_Automatic1DPeaksProcess:
+    """Regression checks for automatic1 dpeaks process."""
+
     def test_estimate_peak_prominences_keeps_right_edge_peak(self) -> None:
+        """Check estimate peak prominences keeps right edge peak."""
         process = Automatic1DPeaksProcess()
 
         counts = np.asarray(

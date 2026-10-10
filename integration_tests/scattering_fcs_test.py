@@ -1,5 +1,12 @@
 """Fixed real-FCS regression cases for peak detection, calibration, and application."""
 
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
+
 import hashlib
 import json
 import logging
@@ -28,6 +35,7 @@ if not CASE_PATHS:
 
 @pytest.fixture(scope="module", params=CASE_PATHS, ids=lambda path: path.stem)
 def scattering_case(request):
+    """Validate a fixed FCS input and detect its configured scattering peaks."""
     case = json.loads(request.param.read_text())
     fcs_path = REPOSITORY / case["fcs_file"]
     assert hashlib.sha256(fcs_path.read_bytes()).hexdigest() == case["sha256"], (
@@ -54,6 +62,7 @@ def scattering_case(request):
 
 
 def test_real_fcs_scattering_peaks_match_recorded_positions(scattering_case):
+    """Check usable peak count, ordering, and positions against the raw baseline."""
     case, _, _, detection = scattering_case
     expected = case["expected"]
     actual_peaks = np.asarray(detection.new_peak_positions, dtype=float)
@@ -73,6 +82,7 @@ def test_real_fcs_scattering_peaks_match_recorded_positions(scattering_case):
 
 @pytest.fixture(scope="module")
 def calibrated_case(scattering_case):
+    """Fit the trial reference assignments and reload the serialized calibration."""
     case, fcs_path, measured_values, detection = scattering_case
     # These are explicit trial assignments, never the algorithm's placeholder sizes.
     reference_rows = [
@@ -99,6 +109,7 @@ def calibrated_case(scattering_case):
 
 
 def test_real_fcs_scattering_calibration_matches_recorded_response(calibrated_case):
+    """Check the saved response channel, fit quality, intercept, and slope."""
     case, _, _, calibration = calibrated_case
     expected = case["expected"]
     assert calibration.source_channel == case["detector_channels"]["scattering"]
@@ -115,6 +126,7 @@ def test_real_fcs_scattering_calibration_matches_recorded_response(calibrated_ca
 
 
 def test_real_fcs_calibrated_peak_positions_match_recorded_baseline(calibrated_case):
+    """Check calibrated peak outputs and histogram modes of real FCS events."""
     case, measured_values, detection, calibration = calibrated_case
     expected = case["expected"]
     relation = calibration.calibration_standard_mie_relation

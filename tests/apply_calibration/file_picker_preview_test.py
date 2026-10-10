@@ -1,3 +1,11 @@
+"""Regression tests for apply calibration file picker preview."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 from types import SimpleNamespace
 
@@ -10,7 +18,10 @@ from RosettaX.utils.plottings import HistogramResult
 
 
 class Test_FilePickerPreview:
+    """Regression checks for file picker preview."""
+
     def test_file_selection_uses_clean_names_and_preserves_selection(self) -> None:
+        """Check file selection uses clean names and preserves selection."""
         first = "/tmp/sample_one_20260712_120000_123456.fcs"
         second = "/tmp/sample_two_20260712_120001_654321.fcs"
 
@@ -26,6 +37,7 @@ class Test_FilePickerPreview:
         assert selected == second
 
     def test_selected_preview_path_must_belong_to_upload_store(self) -> None:
+        """Check selected preview path must belong to upload store."""
         assert services.resolve_selected_preview_path(
             selected_file="/tmp/not-uploaded.fcs",
             uploaded_fcs_paths=["/tmp/uploaded.fcs"],
@@ -35,17 +47,24 @@ class Test_FilePickerPreview:
         self,
         monkeypatch,
     ) -> None:
+        """Check channel selection reads selected FCS file."""
         class FakeFCSFile:
+            """Test double for fake fcsfile."""
+
             def __init__(self, path):
+                """Initialize the state required by this test double."""
                 self.path = path
 
             def __enter__(self):
+                """Return the test reader when entering its context."""
                 return self
 
             def __exit__(self, *_args):
+                """Handle context cleanup for the test reader."""
                 return None
 
             def get_column_names(self):
+                """Return detector channel names exposed by the test reader."""
                 return ["FSC-A", "SSC-A"]
 
         monkeypatch.setattr(services, "FCSFile", FakeFCSFile)
@@ -66,17 +85,24 @@ class Test_FilePickerPreview:
         self,
         monkeypatch,
     ) -> None:
+        """Check channel selection filters to calibration source channels."""
         class FakeFCSFile:
+            """Test double for fake fcsfile."""
+
             def __init__(self, path):
+                """Initialize the state required by this test double."""
                 self.path = path
 
             def __enter__(self):
+                """Return the test reader when entering its context."""
                 return self
 
             def __exit__(self, *_args):
+                """Handle context cleanup for the test reader."""
                 return None
 
             def get_column_names(self):
+                """Return detector channel names exposed by the test reader."""
                 return ["FSC-A", "SSC-A", "FITC-A"]
 
         monkeypatch.setattr(services, "FCSFile", FakeFCSFile)
@@ -101,26 +127,35 @@ class Test_FilePickerPreview:
         self,
         monkeypatch,
     ) -> None:
+        """Check histogram uses calibrated values for the selected source channel."""
         class FakeFCSFile:
+            """Test double for fake fcsfile."""
+
             def __init__(self, path):
+                """Initialize the state required by this test double."""
                 self.path = path
 
             def __enter__(self):
+                """Return the test reader when entering its context."""
                 return self
 
             def __exit__(self, *_args):
+                """Handle context cleanup for the test reader."""
                 return None
 
             def dataframe_copy(self, *, columns):
+                """Return an owned copy of the event data prepared for this test."""
                 return pd.DataFrame({columns[0]: [1.0, 2.0, 3.0]})
 
         captured = SimpleNamespace(calibrated_values=None, detector_column=None)
 
         def fake_apply_legacy_calibration_to_series(*, values, calibration_payload, source_channel, warning_messages=None):
+            """Simulate apply legacy calibration to series for this test."""
             captured.calibrated_values = np.asarray(values, dtype=float) * 10.0
             return captured.calibrated_values
 
         def fake_build_histogram_result_from_values(values, *, n_bins_for_plots, use_log_x_bins):
+            """Simulate build histogram result from values for this test."""
             captured.calibrated_values = np.asarray(values, dtype=float)
             return HistogramResult(
                 values=np.asarray(values, dtype=float),
@@ -130,6 +165,7 @@ class Test_FilePickerPreview:
             )
 
         def fake_build_histogram_figure(detector_column, histogram_result, use_log_counts=False):
+            """Simulate build histogram figure for this test."""
             captured.detector_column = detector_column
             return go.Figure(
                 go.Scatter(
@@ -179,17 +215,24 @@ class Test_FilePickerPreview:
         assert "calibrated preview" in status
 
     def test_histogram_can_hide_preview_graph(self, monkeypatch) -> None:
+        """Check histogram can hide preview graph."""
         class FakeFCSFile:
+            """Test double for fake fcsfile."""
+
             def __init__(self, path):
+                """Initialize the state required by this test double."""
                 self.path = path
 
             def __enter__(self):
+                """Return the test reader when entering its context."""
                 return self
 
             def __exit__(self, *_args):
+                """Handle context cleanup for the test reader."""
                 return None
 
             def dataframe_copy(self, *, columns):
+                """Return an owned copy of the event data prepared for this test."""
                 return pd.DataFrame({columns[0]: [1.0, 2.0]})
 
         monkeypatch.setattr(services, "FCSFile", FakeFCSFile)
@@ -219,12 +262,14 @@ class Test_FilePickerPreview:
         assert style["display"] == "none"
 
     def test_resolve_preview_control_defaults_use_preview_fallback_values(self) -> None:
+        """Check resolve preview control defaults use preview fallback values."""
         defaults = services.resolve_preview_control_defaults({})
 
         assert defaults["x_log_values"] == ["enabled"]
         assert defaults["n_bins_for_plots"] == 200
 
     def test_resolve_preview_control_defaults_uses_profile_values(self) -> None:
+        """Check resolve preview control defaults uses profile values."""
         defaults = services.resolve_preview_control_defaults(
             {
                 "calibration": {

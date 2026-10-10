@@ -1,3 +1,11 @@
+"""Regression tests for pages FCS slicer services."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import base64
 import io
@@ -13,6 +21,7 @@ from RosettaX.utils.reader import FCSFile
 
 @pytest.fixture(scope="module")
 def sample_fcs_file_path() -> Path:
+    """Write a sample FCS file for the file-operation tests."""
     for candidate_directory in (
         directories.fcs_data,
         directories.asset_directory / "sample-files",
@@ -24,6 +33,7 @@ def sample_fcs_file_path() -> Path:
 
 
 def test_validate_selected_channels_preserves_original_fcs_order() -> None:
+    """Check validate selected channels preserves original FCS order."""
     assert services.validate_selected_channels(
         selected_channels=["SSC-A", "FSC-A"],
         available_channels=["Time", "FSC-A", "SSC-A"],
@@ -31,6 +41,7 @@ def test_validate_selected_channels_preserves_original_fcs_order() -> None:
 
 
 def test_validate_selected_channels_requires_at_least_one_channel() -> None:
+    """Check validate selected channels requires at least one channel."""
     with pytest.raises(ValueError, match="at least one"):
         services.validate_selected_channels(
             selected_channels=[],
@@ -41,6 +52,7 @@ def test_validate_selected_channels_requires_at_least_one_channel() -> None:
 def test_save_uploaded_batch_keeps_duplicate_original_names_without_overwriting(
     tmp_path: Path,
 ) -> None:
+    """Check save uploaded batch keeps duplicate original names without overwriting."""
     contents = "data:application/octet-stream;base64," + base64.b64encode(b"FCS").decode()
 
     saved_paths, filenames = services.save_uploaded_batch(
@@ -58,6 +70,7 @@ def test_build_sliced_fcs_bytes_preserves_events_and_selected_metadata(
     sample_fcs_file_path: Path,
     tmp_path: Path,
 ) -> None:
+    """Check build sliced FCS bytes preserves events and selected metadata."""
     with FCSFile(sample_fcs_file_path, writable=False) as source_file:
         source_columns = source_file.get_column_names()
         selected_columns = source_columns[:2]
@@ -88,6 +101,7 @@ def test_build_sliced_fcs_bytes_preserves_events_and_selected_metadata(
 
 
 def test_build_sliced_fcs_zip_exports_each_input(monkeypatch) -> None:
+    """Check build sliced FCS ZIP exports each input."""
     monkeypatch.setattr(
         services,
         "build_sliced_fcs_bytes",

@@ -1,3 +1,11 @@
+"""Regression tests for workflow calibration cards."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import dash_bootstrap_components as dbc
 
@@ -6,20 +14,26 @@ from RosettaX.workflow import calibration_cards
 
 
 class Test_CalibrationCards:
+    """Regression checks for calibration cards."""
+
     def test_missing_profile_preference_keeps_cards_expanded(self) -> None:
+        """Check missing profile preference keeps cards expanded."""
         assert calibration_cards.profile_collapses_calibration_cards({}) is False
 
     def test_profile_can_collapse_cards(self) -> None:
+        """Check profile can collapse cards."""
         assert calibration_cards.profile_collapses_calibration_cards(
             {"ui": {"collapse_calibration_cards": True}}
         ) is True
 
     def test_settings_profile_path_migrates_to_runtime_preference(self) -> None:
+        """Check settings profile path migrates to runtime preference."""
         assert calibration_cards.profile_collapses_calibration_cards(
             {"misc": {"ui": {"collapse_calibration_cards": True}}}
         ) is True
 
     def test_click_toggles_current_card_state(self) -> None:
+        """Check click toggles current card state."""
         is_open, label = calibration_cards.resolve_card_toggle(
             triggered_id={"type": calibration_cards.TOGGLE_ID_TYPE},
             is_open=False,
@@ -31,6 +45,7 @@ class Test_CalibrationCards:
         assert label == "Hide"
 
     def test_rebuilt_section_header_does_not_mutate_card_state(self) -> None:
+        """Check rebuilt section header does not mutate card state."""
         result = calibration_cards.resolve_card_toggle(
             triggered_id={"type": calibration_cards.TOGGLE_ID_TYPE},
             is_open=True,
@@ -41,6 +56,7 @@ class Test_CalibrationCards:
         assert result is None
 
     def test_repeated_workflow_step_clicks_toggle_target_card(self) -> None:
+        """Check repeated workflow step clicks toggle target card."""
         is_open = False
         for click_count, expected_state, expected_label in [(1, True, "Hide"), (2, False, "Show")]:
             is_open, label = calibration_cards.resolve_card_toggle(
@@ -53,6 +69,7 @@ class Test_CalibrationCards:
             assert label == expected_label
 
     def test_rebuilt_workflow_step_does_not_expand_collapsed_card(self) -> None:
+        """Check rebuilt workflow step does not expand collapsed card."""
         result = calibration_cards.resolve_card_toggle(
             triggered_id={"type": calibration_cards.WORKFLOW_STEP_CARD_ID_TYPE},
             is_open=False,
@@ -63,6 +80,7 @@ class Test_CalibrationCards:
         assert result is None
 
     def test_profile_load_resets_card_state(self) -> None:
+        """Check profile load resets card state."""
         is_open, label = calibration_cards.resolve_card_toggle(
             triggered_id="runtime-config-store",
             is_open=True,
@@ -73,6 +91,7 @@ class Test_CalibrationCards:
         assert label == "Show"
 
     def test_active_profile_without_collapse_preference_expands_card(self) -> None:
+        """Check active profile without collapse preference expands card."""
         is_open, label = calibration_cards.resolve_card_toggle(
             triggered_id="browser-profiles-store",
             is_open=False,
@@ -83,6 +102,7 @@ class Test_CalibrationCards:
         assert label == "Hide"
 
     def test_card_body_is_wrapped_in_profile_aware_collapse(self) -> None:
+        """Check card body is wrapped in profile aware collapse."""
         card = dbc.Card([dbc.CardHeader("Section"), dbc.CardBody("Body")])
 
         result = calibration_cards.make_collapsible_section_card(
@@ -110,6 +130,7 @@ class Test_CalibrationCards:
         self,
         monkeypatch,
     ) -> None:
+        """Check shared workflow section builder applies standard style and wrapper."""
         monkeypatch.setattr(
             calibration_cards,
             "profile_collapses_calibration_cards",

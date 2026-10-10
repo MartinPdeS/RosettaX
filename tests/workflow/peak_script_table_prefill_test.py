@@ -1,3 +1,11 @@
+"""Regression tests for workflow peak script table prefill."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import logging
 
@@ -8,7 +16,10 @@ logger = logging.getLogger(__name__)
 
 
 class Test_FluorescencePeakScriptTablePrefill:
+    """Regression checks for fluorescence peak script table prefill."""
+
     def test_apply_peak_process_result_to_table_merges_script_prefill_rows(self):
+        """Check apply peak process result to table merges script prefill rows."""
         adapter = FluorescencePeakWorkflowAdapter()
 
         table_result = adapter.apply_peak_process_result_to_table(
@@ -41,7 +52,10 @@ class Test_FluorescencePeakScriptTablePrefill:
 
 
 class Test_ScatteringPeakScriptTablePrefill:
+    """Regression checks for scattering peak script table prefill."""
+
     def test_measured_peak_positions_are_rounded_to_one_decimal_place(self):
+        """Check measured peak positions are rounded to one decimal place."""
         adapter = ScatteringPeakWorkflowAdapter()
 
         table_result = adapter.apply_peak_process_result_to_table(
@@ -54,6 +68,7 @@ class Test_ScatteringPeakScriptTablePrefill:
         assert table_result[0]["measured_peak_position"] == 111.3
 
     def test_scripts_can_fill_particle_refractive_index_semantically(self):
+        """Check scripts can fill particle refractive index semantically."""
         adapter = ScatteringPeakWorkflowAdapter()
 
         table_result = adapter.apply_peak_process_result_to_table(
@@ -74,6 +89,7 @@ class Test_ScatteringPeakScriptTablePrefill:
         assert table_result[0]["particle_refractive_index"] == 1.59796
 
     def test_all_scattering_scripts_backfill_refractive_index_from_runtime_config(self):
+        """Check all scattering scripts backfill refractive index from runtime config."""
         adapter = ScatteringPeakWorkflowAdapter()
 
         table_result = adapter.apply_peak_process_result_to_table(
@@ -96,6 +112,7 @@ class Test_ScatteringPeakScriptTablePrefill:
         assert table_result[0]["medium_refractive_index"] == "1.333"
 
     def test_scripts_show_sellmeier_material_name_with_medium_index(self):
+        """Check scripts show sellmeier material name with medium index."""
         adapter = ScatteringPeakWorkflowAdapter()
 
         table_result = adapter.apply_peak_process_result_to_table(
@@ -118,6 +135,7 @@ class Test_ScatteringPeakScriptTablePrefill:
         assert table_result[0]["medium_refractive_index"] == "Water(1.33698)"
 
     def test_rosetta_script_forces_polystyrene_in_water(self):
+        """Check Rosetta script forces polystyrene in water."""
         adapter = ScatteringPeakWorkflowAdapter()
 
         table_result = adapter.apply_peak_process_result_to_table(
@@ -138,6 +156,7 @@ class Test_ScatteringPeakScriptTablePrefill:
         assert table_result[0]["medium_refractive_index"] == "Water(1.33698)"
 
     def test_apply_peak_process_result_to_table_merges_script_prefill_rows_for_solid_sphere(self):
+        """Check apply peak process result to table merges script prefill rows for solid sphere."""
         adapter = ScatteringPeakWorkflowAdapter()
 
         table_result = adapter.apply_peak_process_result_to_table(
@@ -201,6 +220,7 @@ class Test_ScatteringPeakScriptTablePrefill:
         ]
 
     def test_apply_peak_process_result_to_table_merges_script_prefill_rows_for_core_shell(self):
+        """Check apply peak process result to table merges script prefill rows for core shell."""
         adapter = ScatteringPeakWorkflowAdapter()
 
         table_result = adapter.apply_peak_process_result_to_table(
@@ -257,6 +277,7 @@ class Test_ScatteringPeakScriptTablePrefill:
         ]
 
     def test_core_shell_scripts_fill_refractive_index_columns(self):
+        """Check core shell scripts fill refractive index columns."""
         adapter = ScatteringPeakWorkflowAdapter()
 
         table_result = adapter.apply_peak_process_result_to_table(

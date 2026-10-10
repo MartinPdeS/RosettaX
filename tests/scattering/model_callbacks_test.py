@@ -1,5 +1,12 @@
 """Control synchronization updates changed values without redundant cascades."""
 
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
+
 from types import SimpleNamespace
 
 import dash
@@ -18,10 +25,13 @@ from RosettaX.workflow.parameters.refractive_index import (
 
 @pytest.fixture
 def registered_callbacks(monkeypatch):
+    """Capture registered callbacks and their specifications for testing."""
     registered = {}
 
     def register(*_args, **_kwargs):
+        """Capture the callback registration requested by the test."""
         def decorate(callback):
+            """Record the decorated callback and return it unchanged."""
             registered[callback.__name__] = callback
             return callback
 
@@ -37,6 +47,7 @@ def registered_callbacks(monkeypatch):
 def test_material_sync_preserves_manual_values_and_skips_equal_presets(
     registered_callbacks,
 ):
+    """Check material sync preserves manual values and skips equal presets."""
     update = registered_callbacks["apply_refractive_index_presets"]
     assert update(None, 1.59, None, None, 488, 1.333, 1.59, 1.5, 1.4) == (
         dash.no_update,
@@ -55,6 +66,7 @@ def test_material_sync_preserves_manual_values_and_skips_equal_presets(
 def test_material_sync_recomputes_dispersion_when_wavelength_changes(
     registered_callbacks,
 ):
+    """Check material sync recomputes dispersion when wavelength changes."""
     update = registered_callbacks["apply_refractive_index_presets"]
     old_water = calculate_sellmeier_refractive_index("water", wavelength_nm=488)
     new_water = calculate_sellmeier_refractive_index("water", wavelength_nm=700)
@@ -65,6 +77,7 @@ def test_material_sync_recomputes_dispersion_when_wavelength_changes(
 def test_detector_sync_skips_equal_controls_but_applies_cache_clamp(
     registered_callbacks,
 ):
+    """Check detector sync skips equal controls but applies cache clamp."""
     update = registered_callbacks["apply_detector_configuration_preset"]
     assert (
         update("Generic detector", 488, 0.4, 0.1, 0.05, 250, 20, 30)

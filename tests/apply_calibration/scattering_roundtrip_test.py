@@ -1,3 +1,11 @@
+"""Regression tests for apply calibration scattering roundtrip."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import logging
 from types import SimpleNamespace
@@ -17,6 +25,7 @@ from RosettaX.workflow.apply_calibration.scattering import (
 
 
 def _fake_modeled_coupling_from_diameters(*args, **kwargs) -> SimpleNamespace:
+    """Simulate modeled coupling from diameters for this test."""
     particle_diameters_nm = np.asarray(
         kwargs["particle_diameters_nm"],
         dtype=float,
@@ -30,6 +39,7 @@ def _fake_modeled_coupling_from_diameters(*args, **kwargs) -> SimpleNamespace:
 
 
 def _fake_modeled_coupling_from_core_shell_dimensions(*args, **kwargs) -> SimpleNamespace:
+    """Simulate modeled coupling from core shell dimensions for this test."""
     core_diameters_nm = np.asarray(
         kwargs["core_diameters_nm"],
         dtype=float,
@@ -48,10 +58,13 @@ def _fake_modeled_coupling_from_core_shell_dimensions(*args, **kwargs) -> Simple
 
 
 class Test_ScatteringRoundTrip:
+    """Regression checks for scattering round trip."""
+
     def test_synthetic_solid_sphere_calibration_roundtrips_reference_peaks(
         self,
         monkeypatch,
     ) -> None:
+        """Check synthetic solid sphere calibration roundtrips reference peaks."""
         monkeypatch.setattr(
             calibration_services.BackEnd,
             "compute_modeled_coupling_from_diameters",
@@ -132,6 +145,7 @@ class Test_ScatteringRoundTrip:
         self,
         monkeypatch,
     ) -> None:
+        """Check synthetic core shell apply outputs outer diameter."""
         monkeypatch.setattr(
             calibration_services.BackEnd,
             "compute_modeled_coupling_from_core_shell_dimensions",

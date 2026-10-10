@@ -1,3 +1,11 @@
+"""Regression tests for workflow parameters model."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import logging
 from pathlib import Path
@@ -43,7 +51,10 @@ class Test_ModelConstants:
 
 
 class Test_DetectorPresetLoaderCatalog:
+    """Regression checks for detector preset loader catalog."""
+
     def test_loader_builds_brand_options_from_preset_metadata(self):
+        """Check loader builds brand options from preset metadata."""
         loader = DetectorPresetLoader()
 
         option_values = {
@@ -62,6 +73,7 @@ class Test_DetectorPresetLoaderCatalog:
         assert "Custom" in option_values
 
     def test_loader_builds_model_options_for_one_brand(self):
+        """Check loader builds model options for one brand."""
         loader = DetectorPresetLoader()
 
         bd_options = loader.load_model_options(
@@ -76,6 +88,7 @@ class Test_DetectorPresetLoaderCatalog:
         ]
 
     def test_loader_builds_type_options_for_one_brand_and_model(self):
+        """Check loader builds type options for one brand and model."""
         loader = DetectorPresetLoader()
 
         bd_type_options = loader.load_type_options(
@@ -95,11 +108,13 @@ class Test_DetectorPresetLoaderCatalog:
         ]
 
     def test_loader_resolves_custom_brand_for_generic_detector(self):
+        """Check loader resolves custom brand for generic detector."""
         loader = DetectorPresetLoader()
 
         assert loader.resolve_preset_brand("Generic detector") == "Custom"
 
     def test_loader_builds_trimmed_model_labels_for_apogee_brand(self):
+        """Check loader builds trimmed model labels for apogee brand."""
         loader = DetectorPresetLoader()
 
         assert loader.load_model_options("Apogee") == [
@@ -124,6 +139,7 @@ class Test_DetectorPresetLoaderCatalog:
         ]
 
     def test_loader_builds_model_options_for_cytek_brand(self):
+        """Check loader builds model options for cytek brand."""
         loader = DetectorPresetLoader()
 
         assert loader.load_model_options("Cytek Biosciences") == [
@@ -148,6 +164,7 @@ class Test_DetectorPresetLoaderCatalog:
         ]
 
     def test_loader_builds_model_options_for_nanofcm_brand(self):
+        """Check loader builds model options for nanofcm brand."""
         loader = DetectorPresetLoader()
 
         assert loader.load_model_options("nanoFCM") == [
@@ -172,6 +189,7 @@ class Test_DetectorPresetLoaderCatalog:
         ]
 
     def test_standard_scatter_presets_use_forward_zero_and_side_ninety_angles(self):
+        """Check standard scatter presets use forward zero and side ninety angles."""
         loader = DetectorPresetLoader()
         standard_presets = {
             name: preset
@@ -186,6 +204,7 @@ class Test_DetectorPresetLoaderCatalog:
             assert preset["detector_gamma_angle_degree"] == expected_gamma, preset_name
 
     def test_loader_normalizes_standard_scatter_angles_from_catalog_data(self, tmp_path):
+        """Check loader normalizes standard scatter angles from catalog data."""
         detector_catalog_path = tmp_path / "detector_definitions.json"
         detector_catalog_path.write_text(
             """
@@ -302,16 +321,21 @@ class Test_DetectorPresetLoaderCatalog:
 
 
 class Test_ScattererPresetDefaults:
+    """Regression checks for scatterer preset defaults."""
+
     def test_scatterer_preset_options_start_with_no_preset(self):
+        """Check scatterer preset options start with no preset."""
         assert ModelConfiguration.build_scatterer_preset_options()[0] == {
             "label": "No preset",
             "value": "",
         }
 
     def test_resolve_runtime_scatterer_preset_keeps_empty_value(self):
+        """Check resolve runtime scatterer preset keeps empty value."""
         assert ModelConfiguration.resolve_runtime_scatterer_preset("") == ""
 
     def test_no_preset_does_not_disable_manual_controls(self):
+        """Check no preset does not disable manual controls."""
         assert (
             ModelConfiguration.scatterer_preset_disables_manual_controls(
                 preset_name="",
@@ -582,6 +606,7 @@ class Test_compute_model_for_rows:
     @patch('RosettaX.workflow.parameters.model.BackEnd.compute_modeled_coupling_from_diameters')
     def test_compute_model_for_rows_weighted_detector_preset_passes_angular_weights(self, mock_compute_coupling, mock_table, valid_optical_parameters,
                                                                                      valid_solid_sphere_rows, mock_logger):
+        """Check compute model for rows weighted detector preset passes angular weights."""
         mock_table.normalize_table_rows.return_value = [dict(row) for row in valid_solid_sphere_rows]
         valid_optical_parameters['detector_sampling'] = 1000
         mock_compute_coupling.return_value = SimpleNamespace(
@@ -658,6 +683,7 @@ class Test_compute_model_for_rows:
         valid_solid_sphere_rows,
         mock_logger,
     ):
+        """Check compute model for rows treats missing generic detector geometry as zero."""
         mock_table.normalize_table_rows.return_value = [dict(row) for row in valid_solid_sphere_rows]
         mock_compute_coupling.return_value = SimpleNamespace(
             expected_coupling_values=np.asarray([1.0, 2.0, 3.0], dtype=float)
@@ -678,6 +704,7 @@ class Test_compute_model_for_rows:
         assert mock_compute_coupling.call_args.kwargs['detector_angular_weights'] is None
 
     def test_resolve_detector_angular_weights_apogee_half_lens_split_presets(self):
+        """Check resolve detector angular weights apogee half lens split presets."""
         apogee_side_preset = DetectorPresetLoader().load_preset('Apogee - Side')
         apogee_forward_preset = DetectorPresetLoader().load_preset('Apogee - Forward')
         side_weights = resolve_detector_angular_weights(
@@ -763,6 +790,7 @@ class Test_compute_model_for_rows:
         assert int(np.count_nonzero(forward_weights)) == int(np.count_nonzero(forward_visible_mask))
 
     def test_detector_preset_loader_normalizes_apogee_split_definition(self):
+        """Check detector preset loader normalizes apogee split definition."""
         loader = DetectorPresetLoader()
 
         apogee_side_preset = loader.load_preset('Apogee - Side')
@@ -782,6 +810,7 @@ class Test_compute_model_for_rows:
 
     @patch('RosettaX.workflow.detector.configuration._DETECTOR_PRESET_LOADER.load_preset')
     def test_resolve_detector_angular_weights_applies_cache_and_blocker_geometry(self, mock_load_preset):
+        """Check resolve detector angular weights applies cache and blocker geometry."""
         mock_load_preset.return_value = {
             'name': 'Masked detector',
             'detector_numerical_aperture': 1.2,
@@ -826,6 +855,7 @@ class Test_compute_model_for_rows:
 
     @patch('RosettaX.workflow.detector.configuration._DETECTOR_PRESET_LOADER.load_preset')
     def test_resolve_detector_modeling_geometry_values_zeroes_scalar_geometry_for_weighted_presets(self, mock_load_preset):
+        """Check resolve detector modeling geometry values zeroes scalar geometry for weighted presets."""
         mock_load_preset.return_value = {
             'name': 'Masked detector',
             'detector_cache_numerical_aperture': 0.3,
@@ -844,6 +874,7 @@ class Test_compute_model_for_rows:
         assert resolved_blocker_bar_numerical_aperture == 0.0
 
     def test_resolve_detector_angular_weights_generic_detector_applies_blocker_bar_geometry(self):
+        """Check resolve detector angular weights generic detector applies blocker bar geometry."""
         detector_angular_weights = resolve_detector_angular_weights(
             preset_name='Generic detector',
             detector_sampling=1000,
@@ -881,6 +912,7 @@ class Test_compute_model_for_rows:
         assert np.allclose(detector_angular_weights[~visible_mask], 0.0)
 
     def test_resolve_detector_angular_weights_generic_detector_accepts_custom_weighting_json(self):
+        """Check resolve detector angular weights generic detector accepts custom weighting JSON."""
         detector_angular_weights = resolve_detector_angular_weights(
             preset_name='Generic detector',
             detector_sampling=4,
@@ -899,6 +931,7 @@ class Test_compute_model_for_rows:
         )
 
     def test_resolve_detector_modeling_geometry_values_zeroes_scalar_geometry_for_generic_detector_blocker_bar(self):
+        """Check resolve detector modeling geometry values zeroes scalar geometry for generic detector blocker bar."""
         resolved_detector_cache_numerical_aperture, resolved_blocker_bar_numerical_aperture = (
             resolve_detector_modeling_geometry_values(
                 preset_name='Generic detector',
@@ -911,6 +944,7 @@ class Test_compute_model_for_rows:
         assert resolved_blocker_bar_numerical_aperture == 0.0
 
     def test_resolve_detector_modeling_geometry_values_allows_missing_generic_detector_geometry(self):
+        """Check resolve detector modeling geometry values allows missing generic detector geometry."""
         resolved_detector_cache_numerical_aperture, resolved_blocker_bar_numerical_aperture = (
             resolve_detector_modeling_geometry_values(
                 preset_name='Generic detector',
@@ -923,6 +957,7 @@ class Test_compute_model_for_rows:
         assert resolved_blocker_bar_numerical_aperture == 0.0
 
     def test_resolve_detector_configuration_values_preserves_generic_detector_cache_geometry(self):
+        """Check resolve detector configuration values preserves generic detector cache geometry."""
         resolved_values = resolve_detector_configuration_values(
             preset_name='Generic detector',
             current_detector_numerical_aperture=1.2,
@@ -936,6 +971,7 @@ class Test_compute_model_for_rows:
         assert resolved_values == (1.2, 0.3, 0.1, 1000, 45.0, 0.0)
 
     def test_resolve_detector_configuration_values_fills_missing_generic_detector_defaults(self):
+        """Check resolve detector configuration values fills missing generic detector defaults."""
         resolved_values = resolve_detector_configuration_values(
             preset_name='Generic detector',
             current_detector_numerical_aperture=None,
@@ -949,18 +985,21 @@ class Test_compute_model_for_rows:
         assert resolved_values == (0.2, 0.0, 0.0, 600, 0.0, 0.0)
 
     def test_resolve_detector_preset_wavelength_uses_preset_value(self):
+        """Check resolve detector preset wavelength uses preset value."""
         assert resolve_detector_preset_wavelength_nm(
             preset_name='BD FACSCanto II SSC',
             current_wavelength_nm=700.0,
         ) == 488.0
 
     def test_resolve_detector_preset_wavelength_keeps_generic_detector_editable(self):
+        """Check resolve detector preset wavelength keeps generic detector editable."""
         assert resolve_detector_preset_wavelength_nm(
             preset_name='Generic detector',
             current_wavelength_nm=561.0,
         ) == 561.0
 
     def test_resolve_detector_preset_wavelength_keeps_backward_compatible_keyword(self):
+        """Check resolve detector preset wavelength keeps backward compatible keyword."""
         assert resolve_detector_preset_wavelength_nm(
             preset_name='Generic detector',
             fallback_wavelength_nm=640.0,
@@ -998,7 +1037,10 @@ class Test_compute_model_for_rows:
 
 
 class Test_build_pymiesim_photodiode_mesh_coordinates:
+    """Regression checks for build PyMieSim photodiode mesh coordinates."""
+
     def test_returns_requested_sampling_on_unit_sphere(self):
+        """Check returns requested sampling on unit sphere."""
         coordinate_array = build_pymiesim_photodiode_mesh_coordinates(
             detector_numerical_aperture=0.45,
             medium_refractive_index=1.334,
@@ -1011,6 +1053,7 @@ class Test_build_pymiesim_photodiode_mesh_coordinates:
         assert np.allclose(np.linalg.norm(coordinate_array, axis=1), 1.0)
 
     def test_uses_rosettax_detector_frame_with_default_axis_on_x(self):
+        """Check uses rosettax detector frame with default axis on x."""
         coordinate_array = build_pymiesim_photodiode_mesh_coordinates(
             detector_numerical_aperture=0.45,
             medium_refractive_index=1.334,
@@ -1027,6 +1070,7 @@ class Test_build_pymiesim_photodiode_mesh_coordinates:
         assert abs(mean_axis[2]) < 5e-4
 
     def test_applies_phi_offset_in_xz_plane(self):
+        """Check applies phi offset in xz plane."""
         coordinate_array = build_pymiesim_photodiode_mesh_coordinates(
             detector_numerical_aperture=0.45,
             medium_refractive_index=1.334,

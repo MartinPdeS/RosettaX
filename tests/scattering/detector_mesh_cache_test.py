@@ -1,5 +1,12 @@
 """Mesh caching respects optical configuration and protects cached coordinates."""
 
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
+
 from unittest.mock import Mock
 
 import numpy as np
@@ -8,6 +15,7 @@ from RosettaX.workflow.detector import mesh
 
 
 def test_mesh_reuses_geometry_and_invalidates_on_each_optical_parameter(monkeypatch):
+    """Check mesh reuses geometry and invalidates on each optical parameter."""
     mesh._build_cached_photodiode_mesh_coordinates.cache_clear()
     builder = Mock(wraps=mesh._build_fibonacci_cap_coordinate_array)
     monkeypatch.setattr(mesh, "_build_fibonacci_cap_coordinate_array", builder)
@@ -38,6 +46,7 @@ def test_mesh_reuses_geometry_and_invalidates_on_each_optical_parameter(monkeypa
 
 
 def test_large_mesh_is_not_retained():
+    """Check large mesh is not retained."""
     mesh._build_cached_photodiode_mesh_coordinates.cache_clear()
     mesh.build_pymiesim_photodiode_mesh_coordinates(
         detector_numerical_aperture=0.4,

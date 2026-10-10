@@ -1,4 +1,12 @@
 #!/usr/bin/env python
+"""Regression tests for FCS reading and writing."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 from pathlib import Path
 
@@ -173,7 +181,10 @@ def test_builder_from_dataframe_matches_template_detectors_by_name_and_scrubs_de
     """
 
     class _TemplateFCSFile:
+        """FCS metadata and detector names used by the builder tests."""
+
         def __init__(self) -> None:
+            """Initialize the state required by this test double."""
             self.text = {
                 "Keywords": {"$PAR": "2", "$MODE": "L", "$BYTEORD": "1,2,3,4", "$DATATYPE": "F"},
                 "Detectors": {
@@ -185,6 +196,7 @@ def test_builder_from_dataframe_matches_template_detectors_by_name_and_scrubs_de
             self.header = {"FCS version": "FCS3.1"}
 
         def get_column_names(self) -> list[str]:
+            """Return detector channel names exposed by the test reader."""
             return ["FSC-A", "SSC-A"]
 
     dataframe = pd.DataFrame(
@@ -224,8 +236,12 @@ def test_builder_from_dataframe_matches_template_detectors_by_name_and_scrubs_de
 
 
 def test_builder_from_dataframe_applies_detector_metadata_overrides_for_derived_column() -> None:
+    """Check builder from dataframe applies detector metadata overrides for derived column."""
     class _TemplateFCSFile:
+        """FCS metadata and detector names used by the builder tests."""
+
         def __init__(self) -> None:
+            """Initialize the state required by this test double."""
             self.text = {
                 "Keywords": {"$PAR": "1", "$MODE": "L", "$BYTEORD": "1,2,3,4", "$DATATYPE": "F"},
                 "Detectors": {
@@ -236,6 +252,7 @@ def test_builder_from_dataframe_applies_detector_metadata_overrides_for_derived_
             self.header = {"FCS version": "FCS3.1"}
 
         def get_column_names(self) -> list[str]:
+            """Return detector channel names exposed by the test reader."""
             return ["FITC-A"]
 
     dataframe = pd.DataFrame(
@@ -271,7 +288,3 @@ def test_fcs_reader_raises_for_missing_file() -> None:
 
     with pytest.raises(FileNotFoundError), FCSFile(missing_file_path):
         pass
-
-
-if __name__ == "__main__":
-    pytest.main(["-W", "error", __file__])

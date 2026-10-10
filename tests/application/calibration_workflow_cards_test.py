@@ -1,3 +1,11 @@
+"""Regression tests for application calibration workflow cards."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import importlib
 from typing import Any
@@ -14,6 +22,7 @@ from RosettaX.workflow import calibration_cards
 
 
 def _find_component_by_id(component: Any, component_id: Any) -> Any | None:
+    """Find a component by its identifier in the test layout."""
     if getattr(component, "id", None) == component_id:
         return component
 
@@ -29,6 +38,7 @@ def _find_component_by_id(component: Any, component_id: Any) -> Any | None:
 
 
 def _collect_text(component: Any) -> list[str]:
+    """Collect text recursively from the test component tree."""
     if isinstance(component, str):
         return [component]
 
@@ -95,6 +105,7 @@ def test_calibration_workflow_cards_start_collapsed_without_header_descriptions(
     section_keys: tuple[str, ...],
     subtitles: tuple[str, ...],
 ) -> None:
+    """Check calibration workflow cards start collapsed without header descriptions."""
     monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
     sections_callback_module_name = module_name.rsplit(".", 1)[0] + ".sections.callbacks"
     if page_name != "cross-calibration":
@@ -126,6 +137,7 @@ def test_calibration_workflow_cards_start_collapsed_without_header_descriptions(
 
 
 def test_calibration_card_callback_does_not_hydrate_card_state() -> None:
+    """Check calibration card callback does not hydrate card state."""
     app = dash.Dash(__name__, suppress_callback_exceptions=True)
     register_application_callbacks(app)
 
@@ -144,6 +156,7 @@ def test_calibration_card_callback_does_not_hydrate_card_state() -> None:
 
 
 def test_card_callback_owns_header_and_workflow_step_actions() -> None:
+    """Check card callback owns header and workflow step actions."""
     app = dash.Dash(__name__, suppress_callback_exceptions=True)
     register_application_callbacks(app)
 
@@ -167,6 +180,7 @@ def test_card_callback_owns_header_and_workflow_step_actions() -> None:
 
 
 def test_active_browser_profile_keeps_workflow_cards_collapsed() -> None:
+    """Check active browser profile keeps workflow cards collapsed."""
     active_profile_config = resolve_active_profile_runtime_config(
         {
             "profiles": {

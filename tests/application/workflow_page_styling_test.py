@@ -1,3 +1,11 @@
+"""Regression tests for application workflow page styling."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 from types import SimpleNamespace
 
@@ -10,7 +18,10 @@ from RosettaX.utils import styling
 
 
 class Test_WorkflowPageStyling:
+    """Regression checks for workflow page styling."""
+
     def test_workflow_page_color_scheme_uses_shared_sequence(self) -> None:
+        """Check workflow page color scheme uses shared sequence."""
         assert styling.get_workflow_page_header_color() == "green"
         assert [
             styling.get_workflow_section_color(section_number)
@@ -25,6 +36,7 @@ class Test_WorkflowPageStyling:
         ]
 
     def test_fluorescence_header_uses_shared_header_card_and_step_colors(self) -> None:
+        """Check fluorescence header uses shared header card and step colors."""
         section = SimpleNamespace(
             card_color=styling.get_workflow_page_header_color(),
         )
@@ -50,6 +62,7 @@ class Test_WorkflowPageStyling:
         )
 
     def test_scattering_header_uses_shared_header_card_and_step_colors(self) -> None:
+        """Check scattering header uses shared header card and step colors."""
         header = ScatteringHeader(
             page=SimpleNamespace(),
             card_color=styling.get_workflow_page_header_color(),
@@ -76,6 +89,7 @@ class Test_WorkflowPageStyling:
         )
 
     def test_workflow_progress_identifies_complete_current_and_blocked_steps(self) -> None:
+        """Check workflow progress identifies complete current and blocked steps."""
         progress = build_workflow_progress_content(
             steps=[
                 WorkflowStep("1", "Upload", "", "yellow"),

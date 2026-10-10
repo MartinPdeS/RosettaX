@@ -1,3 +1,11 @@
+"""Regression tests for utils service."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 import json
 from pathlib import Path
 
@@ -8,7 +16,10 @@ from RosettaX.utils import service
 
 
 class _FakeFCSFile:
+    """Test double for fake fcsfile."""
+
     def __init__(self, file_path: str, writable: bool = False) -> None:
+        """Initialize the state required by this test double."""
         self.file_path = file_path
         self.writable = writable
         self.text = {
@@ -21,13 +32,17 @@ class _FakeFCSFile:
         }
 
     def __enter__(self) -> Self:
+        """Return the test reader when entering its context."""
         return self
 
     def __exit__(self, exc_type, exc, tb) -> None:
+        """Handle context cleanup for the test reader."""
         return None
 
 
 class Test_Service:
+    """Regression checks for service."""
+
     @pytest.mark.parametrize(
         ("raw_name", "expected_name"),
         [
@@ -41,12 +56,14 @@ class Test_Service:
         raw_name: str | None,
         expected_name: str,
     ) -> None:
+        """Check sanitize filename normalizes values."""
         assert service.sanitize_filename(raw_name) == expected_name
 
     def test_get_detector_column_names_from_file_reads_fcs_metadata(
         self,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Check get detector column names from file reads FCS metadata."""
         monkeypatch.setattr(service, "FCSFile", _FakeFCSFile)
 
         assert service.get_detector_column_names_from_file("/tmp/example.fcs") == [
@@ -69,10 +86,12 @@ class Test_Service:
         is_scatter: bool,
         is_invalid: bool,
     ) -> None:
+        """Check detector channel helpers."""
         assert service.is_scatter_channel(column_name) is is_scatter
         assert service.is_invalid_detector_channel(column_name) is is_invalid
 
     def test_resolve_default_dropdown_value_prefers_matching_value(self) -> None:
+        """Check resolve default dropdown value prefers matching value."""
         options = [
             {"label": "FSC-A", "value": "FSC-A"},
             {"label": "FL1-A", "value": "FL1-A"},
@@ -84,6 +103,7 @@ class Test_Service:
         ) == "FL1-A"
 
     def test_resolve_default_dropdown_value_falls_back_to_first_option(self) -> None:
+        """Check resolve default dropdown value falls back to first option."""
         options = [{"label": "FSC-A", "value": "FSC-A"}]
 
         assert service.resolve_default_dropdown_value(
@@ -99,6 +119,7 @@ class Test_Service:
         self,
         tmp_path: Path,
     ) -> None:
+        """Check save calibration to file writes expected JSON record."""
         payload = {"gain": 42, "channels": ["FSC-A"]}
 
         saved_calibration = service.save_calibration_to_file(
@@ -127,6 +148,7 @@ class Test_Service:
         ) is True
 
     def test_reproducibility_fingerprint_is_stable_and_detects_payload_changes(self) -> None:
+        """Check reproducibility fingerprint is stable and detects payload changes."""
         payload = {"gain": 42, "channels": ["FSC-A"]}
 
         first = service.build_reproducibility_metadata(
@@ -154,6 +176,7 @@ class Test_Service:
         self,
         tmp_path: Path,
     ) -> None:
+        """Check list saved calibrations from directory returns sorted JSON files."""
         (tmp_path / "b.json").write_text("{}", encoding="utf-8")
         (tmp_path / "a.json").write_text("{}", encoding="utf-8")
         (tmp_path / "notes.txt").write_text("ignore", encoding="utf-8")
@@ -167,6 +190,7 @@ class Test_Service:
         self,
         tmp_path: Path,
     ) -> None:
+        """Check list saved calibrations from directory returns empty list when empty."""
         assert service.list_saved_calibrations_from_directory(directory=tmp_path) == []
 
     @pytest.mark.parametrize(
@@ -185,4 +209,5 @@ class Test_Service:
         uploaded_fcs_path_data: object,
         expected_path: str | None,
     ) -> None:
+        """Check resolve first FCS path."""
         assert service.resolve_first_fcs_path(uploaded_fcs_path_data) == expected_path

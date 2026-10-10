@@ -1,3 +1,11 @@
+"""Regression tests for application FCS tool cards."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import importlib
 import json
@@ -12,6 +20,7 @@ from RosettaX.workflow import calibration_cards
 
 
 def _collect_pattern_ids(component: Any) -> list[dict[str, str]]:
+    """Collect pattern-matching identifiers from the test layout."""
     component_id = getattr(component, "id", None)
     pattern_ids = [component_id] if isinstance(component_id, dict) else []
     children = getattr(component, "children", None)
@@ -26,6 +35,7 @@ def _collect_pattern_ids(component: Any) -> list[dict[str, str]]:
 
 
 def _find_component_by_id(component: Any, component_id: Any) -> Any | None:
+    """Find a component by its identifier in the test layout."""
     if getattr(component, "id", None) == component_id:
         return component
 
@@ -42,6 +52,7 @@ def _find_component_by_id(component: Any, component_id: Any) -> Any | None:
 
 
 def _collect_text(component: Any) -> list[str]:
+    """Collect text recursively from the test component tree."""
     if isinstance(component, str):
         return [component]
 
@@ -52,6 +63,7 @@ def _collect_text(component: Any) -> list[str]:
 
 
 def _callback_input_id_types(callback: dict[str, Any]) -> set[str]:
+    """Collect pattern identifier types used by callback inputs."""
     component_id_types = set()
     for callback_input in callback["inputs"]:
         component_id = callback_input["id"]
@@ -129,6 +141,7 @@ def test_fcs_tool_layouts_include_collapsible_cards_with_uniform_gaps(
     step_section_keys: tuple[str, ...],
     subtitles: tuple[str, ...],
 ) -> None:
+    """Check FCS tool layouts include collapsible cards with uniform gaps."""
     monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
     page_module = importlib.import_module(module_name)
     layout = getattr(page_module, page_class_name)().layout()
@@ -181,6 +194,7 @@ def test_fcs_tool_layouts_include_collapsible_cards_with_uniform_gaps(
 
 
 def test_card_toggle_callback_uses_one_writer_for_workflow_step_actions() -> None:
+    """Check card toggle callback uses one writer for workflow step actions."""
     app = dash.Dash(__name__, suppress_callback_exceptions=True)
     register_application_callbacks(app)
 
@@ -199,6 +213,7 @@ def test_card_toggle_callback_uses_one_writer_for_workflow_step_actions() -> Non
 
 
 def test_card_toggle_callback_reads_browser_profile_preference() -> None:
+    """Check card toggle callback reads browser profile preference."""
     app = dash.Dash(__name__, suppress_callback_exceptions=True)
     register_application_callbacks(app)
 

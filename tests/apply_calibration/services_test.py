@@ -1,3 +1,11 @@
+"""Regression tests for apply calibration services."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import sys
 import types
@@ -8,10 +16,14 @@ import pandas as pd
 
 
 class _PyMieSimStub(types.ModuleType):
+    """Minimal PyMieSim module used by the unit tests."""
+
     experiment = types.SimpleNamespace()
 
 
 class _PyMieSimUnitsStub(types.ModuleType):
+    """Minimal PyMieSim units module used by the unit tests."""
+
     ureg = types.SimpleNamespace()
 
 
@@ -31,7 +43,10 @@ from RosettaX.workflow.apply_calibration import services
 
 
 class Test_ApplyCalibrationServices:
+    """Regression checks for apply calibration services."""
+
     def test_build_legacy_dataframe_transformer_adds_new_calibrated_output_column(self, monkeypatch) -> None:
+        """Check build legacy dataframe transformer adds new calibrated output column."""
         monkeypatch.setattr(
             services,
             "apply_legacy_calibration_to_series",
@@ -65,6 +80,7 @@ class Test_ApplyCalibrationServices:
         )
 
     def test_build_legacy_dataframe_transformer_clamps_negative_values_with_warning(self) -> None:
+        """Check build legacy dataframe transformer clamps negative values with warning."""
         transformer_factory = services.build_legacy_dataframe_transformer_factory(
             source_channel="FITC-A",
             output_channel_name="FITC (MESF)",
@@ -91,6 +107,7 @@ class Test_ApplyCalibrationServices:
         assert result["FITC (MESF)"].tolist() == [0.0, 0.0, 10.0]
 
     def test_build_success_message_appends_warning_text(self) -> None:
+        """Check build success message appends warning text."""
         message = services.build_success_message(
             selected_calibrations=['fitc.json -> "FITC (MESF)"'],
             source_channels=["FITC-A"],
@@ -104,6 +121,7 @@ class Test_ApplyCalibrationServices:
         assert 'Clamped 3 negative event(s) to 0 before applying log calibration to "FITC-A".' in message
 
     def test_resolve_unique_output_channel_name_appends_suffix_when_name_is_reserved(self) -> None:
+        """Check resolve unique output channel name appends suffix when name is reserved."""
         resolved_name = services.resolve_unique_output_channel_name(
             preferred_name="FITC (MESF)",
             reserved_names={"FITC-A", "FITC (MESF)", "FITC (MESF) 2"},
@@ -112,6 +130,7 @@ class Test_ApplyCalibrationServices:
         assert resolved_name == "FITC (MESF) 3"
 
     def test_apply_calibration_to_fcs_files_uses_saved_scattering_output_channel_name(self, monkeypatch) -> None:
+        """Check apply calibration to FCS files uses saved scattering output channel name."""
         monkeypatch.setattr(
             services.io,
             "build_input_export_columns",
@@ -151,9 +170,11 @@ class Test_ApplyCalibrationServices:
         assert '"Diameter (nm)"' in result.status
 
     def test_build_scattering_dataframe_transformer_factory_passes_resolved_output_channel_names(self, monkeypatch) -> None:
+        """Check build scattering dataframe transformer factory passes resolved output channel names."""
         captured_arguments = {}
 
         def _fake_apply_scattering_calibration_to_dataframe(**kwargs):
+            """Simulate apply scattering calibration to dataframe for this test."""
             captured_arguments.update(kwargs)
             return SimpleNamespace(
                 dataframe=kwargs["dataframe"],
@@ -187,11 +208,16 @@ class Test_ApplyCalibrationServices:
         assert captured_arguments["output_channel_names"] == ["Diameter (nm)"]
 
     def test_build_target_mie_relation_figure_uses_custom_uirevision(self, monkeypatch) -> None:
+        """Check build target Mie relation figure uses custom uirevision."""
         class FakeFigure:
+            """Test double for fake figure."""
+
             def __init__(self, uirevision: str) -> None:
+                """Initialize the state required by this test double."""
                 self.layout = SimpleNamespace(uirevision=uirevision)
 
             def update_layout(self, **kwargs):
+                """Update layout for this test."""
                 return None
 
         monkeypatch.setattr(

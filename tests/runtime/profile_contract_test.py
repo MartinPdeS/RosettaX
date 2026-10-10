@@ -1,3 +1,11 @@
+"""Regression tests for runtime profile contract."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import json
 from pathlib import Path
@@ -9,6 +17,7 @@ from RosettaX.utils.runtime_config import RuntimeConfig, RuntimeConfigValidation
 
 
 def collect_profile_paths() -> list[Path]:
+    """Collect packaged runtime profile paths for parameterized checks."""
     profile_directory = Path(directories.profiles)
 
     if not profile_directory.exists():
@@ -18,7 +27,10 @@ def collect_profile_paths() -> list[Path]:
 
 
 class Test_RuntimeConfigProfileContract:
+    """Regression checks for runtime config profile contract."""
+
     def test_profile_directory_exists(self) -> None:
+        """Check profile directory exists."""
         profile_directory = Path(directories.profiles)
 
         assert (
@@ -29,6 +41,7 @@ class Test_RuntimeConfigProfileContract:
         ), f"Profile path is not a directory: {profile_directory}"
 
     def test_at_least_one_profile_json_file_exists(self) -> None:
+        """Check at least one profile JSON file exists."""
         profile_paths = collect_profile_paths()
 
         assert profile_paths, "No profile JSON files were found."
@@ -37,6 +50,7 @@ class Test_RuntimeConfigProfileContract:
     def test_profile_json_file_contains_dictionary_payload(
         self, profile_path: Path
     ) -> None:
+        """Check profile JSON file contains dictionary payload."""
         with profile_path.open("r", encoding="utf-8") as file_handle:
             payload = json.load(file_handle)
 
@@ -50,6 +64,7 @@ class Test_RuntimeConfigProfileContract:
     def test_profile_json_file_matches_runtime_config_schema(
         self, profile_path: Path
     ) -> None:
+        """Check profile JSON file matches runtime config schema."""
         runtime_config = RuntimeConfig.from_json_path(profile_path)
 
         try:
@@ -66,6 +81,7 @@ class Test_RuntimeConfigProfileContract:
         profile_path: Path,
         tmp_path: Path,
     ) -> None:
+        """Check profile JSON file round trips through runtime config."""
         runtime_config = RuntimeConfig.from_json_path(profile_path)
 
         output_path = tmp_path / profile_path.name
@@ -80,6 +96,7 @@ class Test_RuntimeConfigProfileContract:
         self,
         profile_path: Path,
     ) -> None:
+        """Check profile JSON file materializes expected top level sections."""
         runtime_config = RuntimeConfig.from_json_path(profile_path)
         payload = runtime_config.to_dict()
 
@@ -104,6 +121,7 @@ class Test_RuntimeConfigProfileContract:
 
     @pytest.mark.parametrize("profile_path", collect_profile_paths())
     def test_profile_json_file_has_valid_ui_values(self, profile_path: Path) -> None:
+        """Check profile JSON file has valid UI values."""
         runtime_config = RuntimeConfig.from_json_path(profile_path)
         payload = runtime_config.to_dict()
 
@@ -116,6 +134,7 @@ class Test_RuntimeConfigProfileContract:
     def test_profile_json_file_has_valid_calibration_values(
         self, profile_path: Path
     ) -> None:
+        """Check profile JSON file has valid calibration values."""
         runtime_config = RuntimeConfig.from_json_path(profile_path)
         payload = runtime_config.to_dict()
 
@@ -133,6 +152,7 @@ class Test_RuntimeConfigProfileContract:
     def test_profile_json_file_has_valid_optics_values(
         self, profile_path: Path
     ) -> None:
+        """Check profile JSON file has valid optics values."""
         runtime_config = RuntimeConfig.from_json_path(profile_path)
         payload = runtime_config.to_dict()
 
@@ -149,6 +169,7 @@ class Test_RuntimeConfigProfileContract:
     def test_profile_json_file_has_valid_particle_model_values(
         self, profile_path: Path
     ) -> None:
+        """Check profile JSON file has valid particle model values."""
         runtime_config = RuntimeConfig.from_json_path(profile_path)
         payload = runtime_config.to_dict()
 
@@ -184,6 +205,7 @@ class Test_RuntimeConfigProfileContract:
     def test_profile_json_file_has_valid_visualization_values(
         self, profile_path: Path
     ) -> None:
+        """Check profile JSON file has valid visualization values."""
         runtime_config = RuntimeConfig.from_json_path(profile_path)
         payload = runtime_config.to_dict()
 
@@ -206,6 +228,7 @@ class Test_RuntimeConfigProfileContract:
         }
 
     def test_default_profile_can_be_loaded_and_validated(self) -> None:
+        """Check default profile can be loaded and validated."""
         runtime_config = RuntimeConfig.from_default_profile()
 
         runtime_config.validate()
@@ -218,7 +241,3 @@ class Test_RuntimeConfigProfileContract:
             "Solid Sphere",
             "Core/Shell Sphere",
         }
-
-
-if __name__ == "__main__":
-    pytest.main(["-W error", __file__])

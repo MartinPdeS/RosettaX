@@ -1,3 +1,11 @@
+"""Regression tests for utils directories."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 import json
 import os
 import subprocess
@@ -10,10 +18,13 @@ from RosettaX.utils import directories
 
 
 class Test_Directories:
+    """Regression checks for directories."""
+
     @pytest.mark.parametrize("use_override", [False, True])
     def test_calibration_storage_directory_is_configurable(
         self, tmp_path: Path, use_override: bool,
     ) -> None:
+        """Check calibration storage directory is configurable."""
         environment = dict(os.environ)
         environment.pop("ROSETTAX_CALIBRATION_DIRECTORY", None)
         configured_directory = tmp_path / "persistent calibrations"
@@ -37,6 +48,7 @@ class Test_Directories:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Check list profiles returns JSON stems only."""
         (tmp_path / "default_profile.json").write_text("{}", encoding="utf-8")
         (tmp_path / "notes.txt").write_text("ignore", encoding="utf-8")
         (tmp_path / "nested").mkdir()
@@ -60,6 +72,7 @@ class Test_Directories:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Check list calibrations reads expected directory."""
         calibration_directory = tmp_path / directory_name
         calibration_directory.mkdir()
 
@@ -76,6 +89,7 @@ class Test_Directories:
         assert sorted(directories.list_calibrations(calibration_type)) == expected_files
 
     def test_list_calibrations_rejects_unknown_type(self) -> None:
+        """Check list calibrations rejects unknown type."""
         with pytest.raises(ValueError, match="Invalid calibration type"):
             directories.list_calibrations("unknown")
 
@@ -93,9 +107,11 @@ class Test_Directories:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Check open directory uses subprocess on supported unix platforms."""
         recorded_calls: list[tuple[list[str], bool]] = []
 
         def fake_run(command: list[str], check: bool) -> None:
+            """Simulate the subprocess result used by this test."""
             recorded_calls.append((command, check))
 
         monkeypatch.setattr(directories.platform, "system", lambda: system_name)
@@ -110,6 +126,7 @@ class Test_Directories:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Check open directory uses os startfile on windows."""
         recorded_paths: list[str] = []
 
         monkeypatch.setattr(directories.platform, "system", lambda: "Windows")
@@ -125,6 +142,7 @@ class Test_Directories:
         assert recorded_paths == [str(tmp_path.resolve())]
 
     def test_open_directory_raises_for_missing_path(self, tmp_path: Path) -> None:
+        """Check open directory raises for missing path."""
         missing_directory = tmp_path / "missing"
 
         with pytest.raises(FileNotFoundError, match="Directory does not exist"):
@@ -135,6 +153,7 @@ class Test_Directories:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Check open directory raises for unsupported platform."""
         monkeypatch.setattr(directories.platform, "system", lambda: "Plan9")
 
         with pytest.raises(RuntimeError, match="Unsupported operating system"):

@@ -1,3 +1,11 @@
+"""Regression tests for workflow plotting."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import numpy as np
 import pytest
@@ -18,7 +26,10 @@ from RosettaX.workflow.plotting.transforms import (
 
 
 class TestPlottingModels:
+    """Test double for test plotting models."""
+
     def test_plot_options_validate_shared_controls(self) -> None:
+        """Check plot options validate shared controls."""
         assert HistogramOptions(bin_count=12, axes=AxisOptions(x_log=True)).bin_count == 12
         assert SmoothingOptions(sigma_points=0.0).sigma_points == 0.0
         assert ScatterOptions(marker_size=4.0, marker_opacity=0.5).marker_size == 4.0
@@ -38,12 +49,16 @@ class TestPlottingModels:
         ],
     )
     def test_plot_options_reject_invalid_values(self, factory, value, message) -> None:
+        """Check plot options reject invalid values."""
         with pytest.raises(ValueError, match=message):
             factory(**value)
 
 
 class TestPlottingTransforms:
+    """Test double for test plotting transforms."""
+
     def test_finite_plot_values_filters_nonfinite_and_nonpositive_values(self) -> None:
+        """Check finite plot values filters nonfinite and nonpositive values."""
         values = finite_plot_values([1.0, np.nan, -2.0, np.inf, 3.0])
         positive_values = finite_plot_values(
             [1.0, np.nan, -2.0, np.inf, 3.0],
@@ -54,6 +69,7 @@ class TestPlottingTransforms:
         np.testing.assert_array_equal(positive_values, [1.0, 3.0])
 
     def test_build_histogram_arrays_supports_linear_and_log_bins(self) -> None:
+        """Check build histogram arrays supports linear and log bins."""
         linear_counts, linear_edges, linear_centers = build_histogram_arrays(
             [1.0, 2.0, 3.0, 4.0],
             bin_count=4,
@@ -73,10 +89,12 @@ class TestPlottingTransforms:
         assert np.all(log_centers > 0.0)
 
     def test_build_histogram_arrays_rejects_empty_log_input(self) -> None:
+        """Check build histogram arrays rejects empty log input."""
         with pytest.raises(ValueError, match="positive"):
             build_histogram_arrays([-2.0, 0.0, np.nan], bin_count=4, log_x=True)
 
     def test_smooth_histogram_counts_preserves_shape_and_zero_sigma(self) -> None:
+        """Check smooth histogram counts preserves shape and zero sigma."""
         counts = np.asarray([0.0, 4.0, 0.0, 2.0, 0.0])
 
         unchanged = smooth_histogram_counts(counts, sigma_points=0.0)

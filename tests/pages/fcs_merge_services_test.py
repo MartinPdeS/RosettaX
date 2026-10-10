@@ -1,3 +1,11 @@
+"""Regression tests for pages FCS merge services."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 from pathlib import Path
 
@@ -11,6 +19,7 @@ from RosettaX.utils.reader import FCSFile
 
 @pytest.fixture(scope="module")
 def sample_fcs_file_path() -> Path:
+    """Write a sample FCS file for the file-operation tests."""
     for candidate_directory in (
         directories.fcs_data,
         directories.asset_directory / "sample-files",
@@ -25,6 +34,7 @@ def test_build_merged_fcs_bytes_concatenates_events_in_input_order(
     sample_fcs_file_path: Path,
     tmp_path: Path,
 ) -> None:
+    """Check build merged FCS bytes concatenates events in input order."""
     with FCSFile(sample_fcs_file_path, writable=False) as source_file:
         columns = source_file.get_column_names()
         first_dataframe = source_file.dataframe_copy(columns=columns, dtype=None)
@@ -58,6 +68,7 @@ def test_build_merged_fcs_bytes_concatenates_events_in_input_order(
 
 
 def test_validate_merge_input_paths_reports_incompatible_files(monkeypatch) -> None:
+    """Check validate merge input paths reports incompatible files."""
     monkeypatch.setattr(
         services.upload_services,
         "inspect_compatible_fcs_batch",
@@ -75,4 +86,5 @@ def test_validate_merge_input_paths_reports_incompatible_files(monkeypatch) -> N
 
 
 def test_build_merged_export_filename_uses_first_file_stem() -> None:
+    """Check build merged export filename uses first file stem."""
     assert services.build_merged_export_filename("acquisition.fcs") == "acquisition_merged.fcs"

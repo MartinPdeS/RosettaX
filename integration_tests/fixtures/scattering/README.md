@@ -9,6 +9,12 @@ make test-scattering-fcs
 The command uses Python 3.13 by default. To use the local virtual environment,
 run `make test-scattering-fcs PYTHON=.venv/bin/python`.
 
+The test file can also run directly with its pytest entry point:
+
+```bash
+python integration_tests/scattering_fcs_test.py
+```
+
 `scattering_fcs_test.py` discovers each JSON case in this directory. It loads
 an existing repository FCS file, executes the Rosetta peak process, calls the
 same scattering calibration service used by the page, serializes and reloads

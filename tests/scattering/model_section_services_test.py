@@ -1,5 +1,12 @@
 """Profile state preserves control values and the registered Dash output order."""
 
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
+
 import pytest
 
 from RosettaX.pages.p03_scattering.sections.s03_model.services import (
@@ -8,6 +15,7 @@ from RosettaX.pages.p03_scattering.sections.s03_model.services import (
 
 
 def test_custom_profile_preserves_values_and_clamps_cache_aperture():
+    """Check custom profile preserves values and clamps cache aperture."""
     state = resolve_profile_parameter_state(
         {
             "optics": {

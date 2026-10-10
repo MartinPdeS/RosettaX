@@ -1,3 +1,11 @@
+"""Regression tests for workflow peak table sort order."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import logging
 
@@ -8,7 +16,10 @@ logger = logging.getLogger(__name__)
 
 
 class Test_FluorescencePeakTableSortOrder:
+    """Regression checks for fluorescence peak table sort order."""
+
     def test_apply_peak_process_result_to_table_sorts_values_ascending_by_default(self):
+        """Check apply peak process result to table sorts values ascending by default."""
         adapter = FluorescencePeakWorkflowAdapter()
 
         table_result = adapter.apply_peak_process_result_to_table(
@@ -29,6 +40,7 @@ class Test_FluorescencePeakTableSortOrder:
     def test_apply_peak_process_result_to_table_sorts_values_descending_from_runtime_config(
         self,
     ):
+        """Check apply peak process result to table sorts values descending from runtime config."""
         adapter = FluorescencePeakWorkflowAdapter()
 
         table_result = adapter.apply_peak_process_result_to_table(
@@ -54,7 +66,10 @@ class Test_FluorescencePeakTableSortOrder:
 
 
 class Test_ScatteringPeakTableSortOrder:
+    """Regression checks for scattering peak table sort order."""
+
     def test_apply_peak_process_result_to_table_sorts_values_ascending_by_default(self):
+        """Check apply peak process result to table sorts values ascending by default."""
         adapter = ScatteringPeakWorkflowAdapter()
 
         table_result = adapter.apply_peak_process_result_to_table(
@@ -77,6 +92,7 @@ class Test_ScatteringPeakTableSortOrder:
     def test_apply_peak_process_result_to_table_sorts_values_descending_from_runtime_config(
         self,
     ):
+        """Check apply peak process result to table sorts values descending from runtime config."""
         adapter = ScatteringPeakWorkflowAdapter()
 
         table_result = adapter.apply_peak_process_result_to_table(

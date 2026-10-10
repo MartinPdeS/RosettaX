@@ -1,5 +1,12 @@
 """Reusable detector and preview code must load independently of Dash pages."""
 
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
+
 import subprocess
 import sys
 
@@ -20,6 +27,7 @@ import pytest
     ],
 )
 def test_workflow_import_does_not_load_pages(module_name):
+    """Check workflow import does not load pages."""
     result = subprocess.run(
         [
             sys.executable,

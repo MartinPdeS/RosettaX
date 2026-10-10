@@ -1,3 +1,11 @@
+"""Regression tests for workflow fluorescence reference table."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.table.fluorescence import (
@@ -12,7 +20,10 @@ from RosettaX.workflow.table.fluorescence import (
 
 
 class Test_FluorescenceReferencePresets:
+    """Regression checks for fluorescence reference presets."""
+
     def test_build_rows_from_named_preset_populates_calibrated_intensity_column(self):
+        """Check build rows from named preset populates calibrated intensity column."""
         rows = FluorescenceReferenceTable.build_rows_from_preset_name(
             preset_name=ROSETTA_MIX_FLUORESCENCE_REFERENCE_PRESET_NAME,
         )
@@ -31,6 +42,7 @@ class Test_FluorescenceReferencePresets:
         )
 
     def test_build_rows_from_named_preset_preserves_measured_intensity_column(self):
+        """Check build rows from named preset preserves measured intensity column."""
         rows = FluorescenceReferenceTable.build_rows_from_preset_name(
             preset_name=ROSETTA_MIX_FLUORESCENCE_REFERENCE_PRESET_NAME,
             current_rows=[
@@ -61,6 +73,7 @@ class Test_FluorescenceReferencePresets:
         ]
 
     def test_build_rows_from_shorter_preset_preserves_overflow_measured_intensity_rows(self):
+        """Check build rows from shorter preset preserves overflow measured intensity rows."""
         rows = FluorescenceReferenceTable.build_rows_from_preset_name(
             preset_name=GENERIC_FLUORESCENCE_REFERENCE_PRESET_NAME,
             current_rows=[
@@ -92,6 +105,7 @@ class Test_FluorescenceReferencePresets:
         assert rows[4][FluorescenceReferenceTable.column_measured_intensity] == "321.0"
 
     def test_resolve_matching_preset_name_returns_custom_for_manual_values(self):
+        """Check resolve matching preset name returns custom for manual values."""
         rows = [
             {
                 FluorescenceReferenceTable.column_calibrated_intensity: "123",
@@ -109,6 +123,7 @@ class Test_FluorescenceReferencePresets:
         )
 
     def test_resolve_runtime_preset_name_matches_known_mesf_values(self):
+        """Check resolve runtime preset name matches known MESF values."""
         runtime_config = RuntimeConfig.from_dict(
             {
                 "calibration": {
@@ -125,6 +140,7 @@ class Test_FluorescenceReferencePresets:
         )
 
     def test_build_rows_from_summer_school_apogee_apc_preset_uses_expected_mesf_values(self):
+        """Check build rows from summer school apogee apc preset uses expected MESF values."""
         rows = FluorescenceReferenceTable.build_rows_from_preset_name(
             preset_name=SUMMER_SCHOOL_APOGEE_APC_FLUORESCENCE_REFERENCE_PRESET_NAME,
         )
@@ -141,6 +157,7 @@ class Test_FluorescenceReferencePresets:
         ]
 
     def test_resolve_runtime_preset_name_matches_summer_school_cytek_fitc_values(self):
+        """Check resolve runtime preset name matches summer school cytek fitc values."""
         runtime_config = RuntimeConfig.from_dict(
             {
                 "calibration": {
@@ -157,6 +174,7 @@ class Test_FluorescenceReferencePresets:
         )
 
     def test_preset_options_include_summer_school_entries(self):
+        """Check preset options include summer school entries."""
         option_values = [
             option["value"]
             for option in build_fluorescence_reference_preset_options()

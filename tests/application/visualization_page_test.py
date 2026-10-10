@@ -1,3 +1,11 @@
+"""Regression tests for application visualization page."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import importlib
 
@@ -7,6 +15,7 @@ from RosettaX.pages.p10_visualization import services
 
 
 def _find_component_by_id(component, target_id: str):
+    """Find a component by its identifier in the test layout."""
     component_id = getattr(component, "id", None)
 
     if component_id == target_id:
@@ -30,6 +39,7 @@ def _find_component_by_id(component, target_id: str):
 
 
 def _collect_component_ids(component) -> set[str]:
+    """Collect component identifiers from the test layout."""
     component_id = getattr(component, "id", None)
     collected_ids = {component_id} if isinstance(component_id, str) else set()
     children = getattr(component, "children", None)
@@ -47,6 +57,7 @@ def _collect_component_ids(component) -> set[str]:
 
 
 def _collect_text(component) -> list[str]:
+    """Collect text recursively from the test component tree."""
     if component is None:
         return []
 
@@ -68,10 +79,13 @@ def _collect_text(component) -> list[str]:
 
 
 class Test_VisualizationPage:
+    """Regression checks for visualization page."""
+
     def test_layout_includes_core_visualization_controls(
         self,
         monkeypatch,
     ) -> None:
+        """Check layout includes core visualization controls."""
         monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
 
         visualization_main = importlib.import_module(
@@ -101,6 +115,7 @@ class Test_VisualizationPage:
         self,
         monkeypatch,
     ) -> None:
+        """Check layout groups controls and plot into workflow sections."""
         monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
 
         visualization_main = importlib.import_module(

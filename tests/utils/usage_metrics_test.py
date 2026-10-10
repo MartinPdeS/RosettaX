@@ -1,3 +1,11 @@
+"""Regression tests for utils usage metrics."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import json
 from datetime import datetime, timezone
@@ -9,11 +17,14 @@ from RosettaX.utils import usage_metrics
 
 
 class Test_UsageMetrics:
+    """Regression checks for usage metrics."""
+
     def test_usage_metrics_round_trip_click_and_file_counters(
         self,
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Check usage metrics round trip click and file counters."""
         metrics_file_path = tmp_path / "usage_metrics.json"
 
         monkeypatch.setenv(
@@ -43,6 +54,7 @@ class Test_UsageMetrics:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Check record home page visit increments counter."""
         metrics_file_path = tmp_path / "usage_metrics.json"
 
         monkeypatch.setenv(
@@ -63,6 +75,7 @@ class Test_UsageMetrics:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Check usage metrics ignores invalid payload values."""
         metrics_file_path = tmp_path / "usage_metrics.json"
         metrics_file_path.write_text(
             (
@@ -86,7 +99,10 @@ class Test_UsageMetrics:
 
 
 class Test_VisitLog:
+    """Regression checks for visit log."""
+
     def test_is_local_ip_identifies_local_and_loopback_addresses(self) -> None:
+        """Check is local ip identifies local and loopback addresses."""
         assert usage_metrics.is_local_ip("127.0.0.1")
         assert usage_metrics.is_local_ip("::1")
         assert usage_metrics.is_local_ip("localhost")
@@ -106,6 +122,7 @@ class Test_VisitLog:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Check record page visit skips local ips by default."""
         visit_log_file_path = tmp_path / "visit_log.jsonl"
         monkeypatch.setenv(
             usage_metrics.ROSETTAX_VISIT_LOG_PATH_ENV_VAR,
@@ -125,6 +142,7 @@ class Test_VisitLog:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Check record and load page visits round trip for public ips."""
         visit_log_file_path = tmp_path / "visit_log.jsonl"
 
         monkeypatch.setenv(
@@ -179,6 +197,7 @@ class Test_VisitLog:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Check record page visit generates timestamp when missing."""
         visit_log_file_path = tmp_path / "visit_log.jsonl"
 
         monkeypatch.setenv(
@@ -206,6 +225,7 @@ class Test_VisitLog:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Check load visit events skips malformed lines."""
         visit_log_file_path = tmp_path / "visit_log.jsonl"
         visit_log_file_path.write_text(
             "\n".join(
@@ -247,6 +267,7 @@ class Test_VisitLog:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Check load visit events returns empty when log is missing."""
         monkeypatch.setenv(
             usage_metrics.ROSETTAX_VISIT_LOG_PATH_ENV_VAR,
             str(tmp_path / "missing_visit_log.jsonl"),
@@ -259,6 +280,7 @@ class Test_VisitLog:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Check summarize visit events builds daily series and counts."""
         visit_log_file_path = tmp_path / "visit_log.jsonl"
 
         monkeypatch.setenv(
@@ -305,6 +327,7 @@ class Test_VisitLog:
         ]
 
     def test_summarize_visit_events_filters_local_ips_by_default(self) -> None:
+        """Check summarize visit events filters local ips by default."""
         events = [
             usage_metrics.VisitEvent(
                 visited_at="2026-09-08T10:00:00+00:00",
@@ -331,6 +354,7 @@ class Test_VisitLog:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Check summarize visit events limits recent visits."""
         visit_log_file_path = tmp_path / "visit_log.jsonl"
 
         monkeypatch.setenv(
@@ -357,11 +381,13 @@ class Test_VisitLog:
         ]
 
     def test_summarize_visit_events_handles_empty_history(self) -> None:
+        """Check summarize visit events handles empty history."""
         summary = usage_metrics.summarize_visit_events([], today="2026-09-08")
 
         assert summary == usage_metrics.VisitSummary()
 
     def test_summarize_visit_events_defaults_today_to_current_utc_date(self) -> None:
+        """Check summarize visit events defaults today to current utc date."""
         current_utc_date = datetime.now(timezone.utc).date().isoformat()
 
         summary = usage_metrics.summarize_visit_events(
@@ -379,4 +405,5 @@ class Test_VisitLog:
         assert summary.unique_visitors_today == 1
 
     def test_visit_event_from_dict_ignores_invalid_payload(self) -> None:
+        """Check visit event from dict ignores invalid payload."""
         assert usage_metrics.VisitEvent.from_dict("not-a-dict") == usage_metrics.VisitEvent()

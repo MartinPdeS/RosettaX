@@ -1,3 +1,11 @@
+"""Regression tests for pages fluorescence reference table callbacks."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import dash
 
@@ -5,7 +13,10 @@ from RosettaX.pages.p02_fluorescence.sections.s03_table import callbacks
 
 
 class Test_FluorescenceReferenceTableCallbacks:
+    """Regression checks for fluorescence reference table callbacks."""
+
     def test_first_detector_selection_only_updates_page_state(self) -> None:
+        """Check first detector selection only updates page state."""
         table_result, page_state_result = callbacks.resolve_detector_change_reset(
             detector_dropdown_values=["B1-H"],
             page_state_payload=None,
@@ -19,6 +30,7 @@ class Test_FluorescenceReferenceTableCallbacks:
         assert page_state_result["last_detector_channels"] == ["B1-H"]
 
     def test_detector_change_resets_reference_table_rows(self) -> None:
+        """Check detector change resets reference table rows."""
         table_result, page_state_result = callbacks.resolve_detector_change_reset(
             detector_dropdown_values=["R1-H"],
             page_state_payload={

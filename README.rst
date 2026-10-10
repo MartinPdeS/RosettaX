@@ -344,6 +344,16 @@ Both commands use Python 3.13 by default. Set ``PYTHON`` to use a specific
 interpreter, for example ``make test PYTHON=.venv/bin/python``. Pre-commit uses
 Ruff for linting and formatting.
 
+Run an individual test file directly with its pytest entry point:
+
+.. code-block:: bash
+
+   python tests/runtime/config_test.py
+   python integration_tests/scattering_fcs_test.py
+
+Each entry point runs only that file, without the default coverage options,
+and loads the appropriate unit or integration dependency setup first.
+
 Run tests with coverage using:
 
 .. code-block:: bash

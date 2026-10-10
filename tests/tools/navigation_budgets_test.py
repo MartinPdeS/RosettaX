@@ -1,5 +1,12 @@
 """Traffic budget checks reject regressions and incomplete smoke runs."""
 
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
+
 import importlib.util
 from pathlib import Path
 
@@ -15,6 +22,7 @@ specification.loader.exec_module(profile_navigation)
 
 @pytest.mark.parametrize("metric", ["callback_count", "callback_response_bytes"])
 def test_navigation_limits_apply_to_every_repeated_transition(metric):
+    """Check navigation limits apply to every repeated transition."""
     budgets = {
         "loaded /scattering": {"callback_count": 78, "callback_response_bytes": 500000}
     }
@@ -30,6 +38,7 @@ def test_navigation_limits_apply_to_every_repeated_transition(metric):
 
 
 def test_navigation_limits_require_every_budgeted_transition():
+    """Check navigation limits require every budgeted transition."""
     with pytest.raises(RuntimeError, match="Missing measurement: empty /fluorescence"):
         profile_navigation.check_navigation_budgets(
             [], {"empty /fluorescence": {"callback_count": 52}}

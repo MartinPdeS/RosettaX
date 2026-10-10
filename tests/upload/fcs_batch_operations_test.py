@@ -1,3 +1,11 @@
+"""Regression tests for upload FCS batch operations."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 from pathlib import Path
 
 import pytest
@@ -9,6 +17,7 @@ from RosettaX.workflow.upload.models import FCSBatchOperationResult
 def test_load_fcs_batch_persists_validates_and_preserves_upload_order(
     monkeypatch,
 ) -> None:
+    """Check load FCS batch persists validates and preserves upload order."""
     saved_paths = [Path("saved-second.fcs"), Path("saved-first.fcs")]
     saved_filenames = ["second.fcs", "first.fcs"]
     consistency_report = {
@@ -19,6 +28,7 @@ def test_load_fcs_batch_persists_validates_and_preserves_upload_order(
     save_calls = []
 
     def save_batch(**kwargs):
+        """Write the FCS batch used by this test."""
         save_calls.append(kwargs)
         return saved_paths, saved_filenames
 
@@ -66,6 +76,7 @@ def test_load_fcs_batch_persists_validates_and_preserves_upload_order(
 def test_load_fcs_batch_returns_standard_feedback_for_incompatible_files(
     monkeypatch,
 ) -> None:
+    """Check load FCS batch returns standard feedback for incompatible files."""
     consistency_report = {
         "are_all_files_consistent": False,
         "column_name_consistency": {
@@ -103,6 +114,7 @@ def test_load_fcs_batch_returns_standard_feedback_for_incompatible_files(
 def test_load_fcs_batch_enforces_the_requested_minimum_without_inspection(
     monkeypatch,
 ) -> None:
+    """Check load FCS batch enforces the requested minimum without inspection."""
     monkeypatch.setattr(
         services,
         "save_uploaded_batch",

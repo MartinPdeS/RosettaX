@@ -1,3 +1,11 @@
+"""Regression tests for pages visualization services."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import pandas as pd
 
@@ -6,7 +14,10 @@ from RosettaX.utils.runtime_config import DEFAULT_GRAPH_HEIGHT
 
 
 class Test_VisualizationServices:
+    """Regression checks for visualization services."""
+
     def test_build_file_options_exposes_each_uploaded_file(self) -> None:
+        """Check build file options exposes each uploaded file."""
         file_store = {
             "files": [
                 {
@@ -30,6 +41,7 @@ class Test_VisualizationServices:
         ) == "/tmp/second.fcs"
 
     def test_build_visualization_uirevision_changes_with_graph_identity(self) -> None:
+        """Check build visualization uirevision changes with graph identity."""
         first_revision = services.build_visualization_uirevision(
             uploaded_fcs_path="/tmp/one.fcs",
             plot_type=services.PLOT_TYPE_SCATTER,
@@ -51,6 +63,7 @@ class Test_VisualizationServices:
         assert first_revision != second_revision
 
     def test_build_channel_options_returns_named_dropdown_entries(self) -> None:
+        """Check build channel options returns named dropdown entries."""
         options = services.build_channel_options(["FSC-A", "SSC-A"])
 
         assert options == [
@@ -59,6 +72,7 @@ class Test_VisualizationServices:
         ]
 
     def test_build_upload_batch_summary_keeps_shared_channel_names(self) -> None:
+        """Check build upload batch summary keeps shared channel names."""
         summary = services.build_upload_batch_summary(
             uploaded_fcs_paths=["/tmp/sample.fcs"],
             uploaded_filenames=["sample.fcs"],
@@ -70,6 +84,7 @@ class Test_VisualizationServices:
         assert summary["reference_column_names"] == ["FSC-A", "SSC-A", "FITC-A"]
 
     def test_filter_dataframe_for_plot_filters_non_positive_log_values(self) -> None:
+        """Check filter dataframe for plot filters non positive log values."""
         dataframe = pd.DataFrame(
             {
                 "FSC-A": [10.0, 0.0, 5.0],
@@ -89,6 +104,7 @@ class Test_VisualizationServices:
         assert skipped_events == 2
 
     def test_build_visualization_figure_returns_histogram_for_histogram_mode(self) -> None:
+        """Check build visualization figure returns histogram for histogram mode."""
         dataframe = pd.DataFrame(
             {
                 "FSC-A": [1.0, 2.0, 3.0],
@@ -111,6 +127,7 @@ class Test_VisualizationServices:
         assert isinstance(figure.layout.uirevision, str)
 
     def test_build_visualization_figure_supports_log_histogram_x_axis(self) -> None:
+        """Check build visualization figure supports log histogram x axis."""
         dataframe = pd.DataFrame(
             {
                 "FSC-A": [1.0, 10.0, 100.0, 1000.0],
@@ -132,6 +149,7 @@ class Test_VisualizationServices:
         assert figure.layout.xaxis.type == "log"
 
     def test_build_visualization_figure_returns_filled_histogram(self) -> None:
+        """Check build visualization figure returns filled histogram."""
         dataframe = pd.DataFrame(
             {
                 "FSC-A": [1.0, 2.0, 3.0, 4.0, 5.0],
@@ -155,6 +173,7 @@ class Test_VisualizationServices:
         assert figure.layout.title.text == "example.fcs"
 
     def test_smooth_histogram_counts_uses_sigma_points(self) -> None:
+        """Check smooth histogram counts uses sigma points."""
         smoothed_counts = services.smooth_histogram_counts(
             [0.0, 0.0, 10.0, 0.0, 0.0],
             sigma_points=1.0,
@@ -165,6 +184,7 @@ class Test_VisualizationServices:
         assert smoothed_counts[3] > 0.0
 
     def test_build_visualization_figure_supports_log_histogram_y_axis(self) -> None:
+        """Check build visualization figure supports log histogram y axis."""
         dataframe = pd.DataFrame(
             {
                 "FSC-A": [1.0, 1.0, 1.0, 2.0, 3.0, 4.0],
@@ -185,6 +205,7 @@ class Test_VisualizationServices:
         assert figure.layout.yaxis.title.text == "Count"
 
     def test_build_visualization_figure_returns_density_colored_scatter(self) -> None:
+        """Check build visualization figure returns density colored scatter."""
         dataframe = pd.DataFrame(
             {
                 "FSC-A": [1.0, 2.0, 10.0, 20.0, 100.0],
@@ -219,6 +240,7 @@ class Test_VisualizationServices:
         assert "/tmp/example.fcs" in figure.layout.uirevision
 
     def test_build_visualization_figure_uirevision_ignores_marker_styling(self) -> None:
+        """Check build visualization figure uirevision ignores marker styling."""
         dataframe = pd.DataFrame(
             {
                 "FSC-A": [1.0, 2.0, 10.0, 20.0, 100.0],
@@ -253,6 +275,7 @@ class Test_VisualizationServices:
         assert first_figure.layout.uirevision == second_figure.layout.uirevision
 
     def test_resolve_visualization_control_defaults_uses_default_profile(self) -> None:
+        """Check resolve visualization control defaults uses default profile."""
         defaults = services.resolve_visualization_control_defaults()
 
         assert defaults["max_events"] == 100000

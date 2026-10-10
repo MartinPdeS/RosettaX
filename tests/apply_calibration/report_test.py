@@ -1,26 +1,45 @@
+"""Regression tests for apply calibration report."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import sys
 import types
 
 
 class _DashBootstrapComponentsSentinel:
+    """Callable component sentinel for lightweight Dash Bootstrap test setup."""
+
     def __call__(self, *args, **kwargs):
+        """Provide the callable behavior required by this test double."""
         return None
 
     def __getattr__(self, name):
+        """Handle dynamic attribute lookup for this test double."""
         return self
 
 
 class _DashBootstrapComponentsStub(types.ModuleType):
+    """Minimal Dash Bootstrap components used by the unit tests."""
+
     def __getattr__(self, name):
+        """Handle dynamic attribute lookup for this test double."""
         return _DashBootstrapComponentsSentinel()
 
 
 class _PyMieSimStub(types.ModuleType):
+    """Minimal PyMieSim module used by the unit tests."""
+
     experiment = types.SimpleNamespace()
 
 
 class _PyMieSimUnitsStub(types.ModuleType):
+    """Minimal PyMieSim units module used by the unit tests."""
+
     ureg = types.SimpleNamespace()
 
 
@@ -54,7 +73,10 @@ from RosettaX.workflow.apply_calibration.services import (
 
 
 class Test_ApplyCalibrationReport:
+    """Regression checks for apply calibration report."""
+
     def test_build_apply_report_payload_serializes_request_result_and_summary(self) -> None:
+        """Check build apply report payload serializes request result and summary."""
         request = ApplyCalibrationRequest(
             uploaded_fcs_paths=[
                 "/tmp/input-a.fcs",
@@ -167,6 +189,7 @@ class Test_ApplyCalibrationReport:
         assert payload["saved_calibration_payload"]["instrument_response"]["model_name"] == "Linear"
 
     def test_apply_report_matches_request_detects_request_changes(self) -> None:
+        """Check apply report matches request detects request changes."""
         request = ApplyCalibrationRequest(
             uploaded_fcs_paths=["/tmp/input-a.fcs"],
             export_columns=["Time"],
@@ -222,6 +245,7 @@ class Test_ApplyCalibrationReport:
         ) is False
 
     def test_build_apply_report_pdf_bytes_returns_pdf_with_expected_text(self) -> None:
+        """Check build apply report PDF bytes returns PDF with expected text."""
         request = ApplyCalibrationRequest(
             uploaded_fcs_paths=["/tmp/input-a.fcs"],
             export_columns=[],
@@ -321,6 +345,7 @@ class Test_ApplyCalibrationReport:
         assert pdf_filename.endswith(".pdf")
 
     def test_build_apply_report_pdf_bytes_includes_saved_scattering_metadata(self) -> None:
+        """Check build apply report PDF bytes includes saved scattering metadata."""
         request = ApplyCalibrationRequest(
             uploaded_fcs_paths=["/tmp/input-a.fcs"],
             export_columns=["Time"],
@@ -390,6 +415,7 @@ class Test_ApplyCalibrationReport:
         assert b"Lot 42" in pdf_bytes
 
     def test_build_apply_report_pdf_bytes_handles_multiple_selected_calibrations(self) -> None:
+        """Check build apply report PDF bytes handles multiple selected calibrations."""
         request = ApplyCalibrationRequest(
             uploaded_fcs_paths=["/tmp/input-a.fcs", "/tmp/input-b.fcs"],
             export_columns=["Time"],

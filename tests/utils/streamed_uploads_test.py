@@ -1,3 +1,11 @@
+"""Regression tests for utils streamed uploads."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 from io import BytesIO
 
@@ -11,6 +19,7 @@ from RosettaX.utils.streamed_uploads import (
 
 
 def test_streamed_upload_round_trip_uses_an_opaque_token(tmp_path) -> None:
+    """Check streamed upload round trip uses an opaque token."""
     upload = stage_streamed_upload(
         stream=BytesIO(b"FCS payload"),
         filename="../sample file.fcs",
@@ -36,6 +45,7 @@ def test_streamed_upload_round_trip_uses_an_opaque_token(tmp_path) -> None:
 def test_streamed_upload_rejects_oversized_content_and_removes_partial_file(
     tmp_path,
 ) -> None:
+    """Check streamed upload rejects oversized content and removes partial file."""
     with pytest.raises(ValueError, match="maximum supported size"):
         stage_streamed_upload(
             stream=BytesIO(b"too large"),
@@ -48,6 +58,7 @@ def test_streamed_upload_rejects_oversized_content_and_removes_partial_file(
 
 
 def test_streamed_upload_rejects_unsupported_extensions(tmp_path) -> None:
+    """Check streamed upload rejects unsupported extensions."""
     with pytest.raises(ValueError, match="Unsupported uploaded file type"):
         stage_streamed_upload(
             stream=BytesIO(b"payload"),
@@ -57,6 +68,7 @@ def test_streamed_upload_rejects_unsupported_extensions(tmp_path) -> None:
 
 
 def test_streamed_upload_propagates_browser_bridge_errors(tmp_path) -> None:
+    """Check streamed upload propagates browser bridge errors."""
     with pytest.raises(ValueError, match="connection failed"):
         resolve_streamed_upload(
             build_streamed_upload_error_token("connection failed"),

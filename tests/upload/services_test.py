@@ -1,3 +1,11 @@
+"""Regression tests for upload services."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import base64
 from pathlib import Path
@@ -19,6 +27,7 @@ from RosettaX.workflow.upload.services import (
 
 
 def test_build_upload_feedback_includes_file_summary_and_fcs_version() -> None:
+    """Check build upload feedback includes file summary and FCS version."""
     message, color = build_upload_feedback(
         filenames=["first.fcs", "second.fcs"],
         consistency_report={
@@ -36,6 +45,7 @@ def test_build_upload_feedback_includes_file_summary_and_fcs_version() -> None:
 
 
 def test_build_consistency_error_text_identifies_invalid_categories() -> None:
+    """Check build consistency error text identifies invalid categories."""
     message = build_consistency_error_text(
         {
             "are_all_files_consistent": False,

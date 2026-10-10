@@ -1,3 +1,11 @@
+"""Regression tests for upload streamed integration."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import json
 from io import BytesIO
@@ -16,7 +24,9 @@ from RosettaX.workflow.upload import services as upload_services
 
 
 def _resolve_from_directory(staging_directory):
+    """Resolve a streamed-upload token within the test directory."""
     def resolve(token, *, max_upload_bytes=None):
+        """Resolve for this test."""
         return resolve_streamed_upload(
             token,
             staging_directory=staging_directory,
@@ -30,6 +40,7 @@ def test_shared_fcs_service_uses_staged_path_without_decoding_or_copying(
     tmp_path,
     monkeypatch,
 ) -> None:
+    """Check shared FCS service uses staged path without decoding or copying."""
     staged = stage_streamed_upload(
         stream=BytesIO(b"FCS3.0 payload"),
         filename="sample.fcs",
@@ -56,6 +67,7 @@ def test_calibration_json_parser_reads_streamed_token(
     tmp_path,
     monkeypatch,
 ) -> None:
+    """Check calibration JSON parser reads streamed token."""
     record = {
         "schema": "rosettax_calibration_v1",
         "payload": {
@@ -87,6 +99,7 @@ def test_apply_file_picker_accepts_streamed_fcs_token(
     tmp_path,
     monkeypatch,
 ) -> None:
+    """Check apply file picker accepts streamed FCS token."""
     staged = stage_streamed_upload(
         stream=BytesIO(b"FCS3.0 payload"),
         filename="sample.fcs",

@@ -1,3 +1,11 @@
+"""Regression tests for apply calibration report evidence."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 from RosettaX.workflow.apply_calibration.report import (
     apply_report_matches_request,
     build_apply_report_payload,
@@ -13,6 +21,7 @@ from RosettaX.workflow.apply_calibration.services import (
 
 
 def make_report():
+    """Build a report using the request and result prepared by the test."""
     request = ApplyCalibrationRequest(
         uploaded_fcs_paths=["sample.fcs"],
         export_columns=[],
@@ -38,12 +47,14 @@ def make_report():
 
 
 def test_report_becomes_stale_when_calibration_coefficients_change():
+    """Check report becomes stale when calibration coefficients change."""
     request, report = make_report()
     request.calibrations[0].calibration_payload["instrument_response"]["slope"] = 3.0
     assert not apply_report_matches_request(report_payload=report, request=request)
 
 
 def test_scattering_chart_shows_fitted_coupling_instead_of_connected_diameters():
+    """Check scattering chart shows fitted coupling instead of connected diameters."""
     _, report = make_report()
     chart = _build_chart_spec(report_payload=report)
     assert chart["y_values"] == [20.0, 42.0]
@@ -52,6 +63,7 @@ def test_scattering_chart_shows_fitted_coupling_instead_of_connected_diameters()
 
 
 def test_scattering_chart_without_coupling_does_not_invent_a_fit():
+    """Check scattering chart without coupling does not invent a fit."""
     _, report = make_report()
     for row in report["calibration_details_list"][0]["reference_table"]:
         row.pop("expected_coupling")
@@ -61,6 +73,7 @@ def test_scattering_chart_without_coupling_does_not_invent_a_fit():
 
 
 def test_fit_evidence_ignores_nonfinite_and_missing_measurements():
+    """Check fit evidence ignores nonfinite and missing measurements."""
     items = dict(build_fit_evidence_items(details={
         "calibration_type": "fluorescence",
         "reference_points": [{"measured_value": 10}, {"measured_value": float("nan")}, {}],
@@ -72,6 +85,7 @@ def test_fit_evidence_ignores_nonfinite_and_missing_measurements():
 
 
 def test_report_places_warnings_before_run_details_and_shows_fit_evidence():
+    """Check report places warnings before run details and shows fit evidence."""
     _, report = make_report()
     pdf = build_apply_report_pdf_bytes(report_payload=report)
     assert pdf.index(b"Values outside the target") < pdf.index(b"Run summary")

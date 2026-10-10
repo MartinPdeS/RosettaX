@@ -1,3 +1,11 @@
+"""Regression tests for apply calibration scattering presets."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 from RosettaX.workflow.apply_calibration.scattering.presets import (
     CUSTOM_PRESET_NAME,
@@ -11,9 +19,12 @@ from RosettaX.workflow.parameters.refractive_index import (
 
 
 class Test_ApplyCalibrationScatteringPresets:
+    """Regression checks for apply calibration scattering presets."""
+
     def test_resolve_scattering_target_model_preset_uses_sellmeier_sources_for_polystyrene(
         self,
     ) -> None:
+        """Check resolve scattering target model preset uses sellmeier sources for polystyrene."""
         resolved_preset = resolve_scattering_target_model_preset(
             POLYSTYRENE_BEADS_PRESET_NAME,
             wavelength_nm=405.0,
@@ -39,6 +50,7 @@ class Test_ApplyCalibrationScatteringPresets:
     def test_resolve_scattering_target_model_preset_preserves_fixed_values_without_wavelength(
         self,
     ) -> None:
+        """Check resolve scattering target model preset preserves fixed values without wavelength."""
         fixed_preset = get_scattering_target_model_preset(
             POLYSTYRENE_BEADS_PRESET_NAME,
         )
@@ -51,6 +63,7 @@ class Test_ApplyCalibrationScatteringPresets:
     def test_resolve_scattering_target_model_preset_keeps_custom_preset_manual_defaults(
         self,
     ) -> None:
+        """Check resolve scattering target model preset keeps custom preset manual defaults."""
         resolved_preset = resolve_scattering_target_model_preset(
             CUSTOM_PRESET_NAME,
             wavelength_nm=405.0,

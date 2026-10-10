@@ -1,3 +1,11 @@
+"""Regression tests for runtime configuration."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import json
 from pathlib import Path
@@ -10,15 +18,20 @@ from RosettaX.utils.runtime_config import RuntimeConfig, RuntimeConfigValidation
 
 
 class Test_RuntimeConfig:
+    """Regression checks for runtime config."""
+
     def test_from_dict_rejects_non_dictionary_payload(self) -> None:
+        """Check from dict rejects non dictionary payload."""
         with pytest.raises(TypeError, match="expected a dictionary"):
             RuntimeConfig.from_dict(["not", "a", "dictionary"])
 
     def test_constructor_rejects_non_dictionary_payload(self) -> None:
+        """Check constructor rejects non dictionary payload."""
         with pytest.raises(TypeError, match="must be a dictionary"):
             RuntimeConfig(data=["not", "a", "dictionary"])
 
     def test_from_dict_deep_copies_input_payload(self) -> None:
+        """Check from dict deep copies input payload."""
         original_payload = {
             "ui": {
                 "theme_mode": "dark",
@@ -32,6 +45,7 @@ class Test_RuntimeConfig:
         assert runtime_config.get_path("ui.theme_mode") == "dark"
 
     def test_to_dict_returns_deep_copy(self) -> None:
+        """Check to dict returns deep copy."""
         runtime_config = RuntimeConfig.from_dict(
             {
                 "ui": {
@@ -46,6 +60,7 @@ class Test_RuntimeConfig:
         assert runtime_config.get_path("ui.theme_mode") == "dark"
 
     def test_empty_config_materializes_known_schema_defaults(self) -> None:
+        """Check empty config materializes known schema defaults."""
         runtime_config = RuntimeConfig.from_dict({})
 
         exported_payload = runtime_config.to_dict()
@@ -86,6 +101,7 @@ class Test_RuntimeConfig:
         )
 
     def test_unknown_paths_are_preserved_by_default(self) -> None:
+        """Check unknown paths are preserved by default."""
         runtime_config = RuntimeConfig.from_dict(
             {
                 "custom": {
@@ -98,6 +114,7 @@ class Test_RuntimeConfig:
         assert runtime_config.to_dict()["custom"]["experimental_parameter"] == 42
 
     def test_to_dict_converts_numpy_values_into_json_safe_values(self) -> None:
+        """Check to dict converts numpy values into JSON safe values."""
         runtime_config = RuntimeConfig.from_dict(
             {
                 "array_value": np.asarray([1.0, 2.0, 3.0]),
@@ -121,6 +138,7 @@ class Test_RuntimeConfig:
         json.dumps(exported_payload)
 
     def test_get_path_returns_nested_value(self) -> None:
+        """Check get path returns nested value."""
         runtime_config = RuntimeConfig.from_dict(
             {
                 "optics": {
@@ -132,11 +150,13 @@ class Test_RuntimeConfig:
         assert runtime_config.get_path("optics.wavelength_nm") == pytest.approx(532.0)
 
     def test_get_path_returns_schema_default_for_missing_known_value(self) -> None:
+        """Check get path returns schema default for missing known value."""
         runtime_config = RuntimeConfig.from_dict({})
 
         assert runtime_config.get_path("optics.wavelength_nm") == pytest.approx(488.0)
 
     def test_get_path_returns_explicit_default_for_missing_unknown_value(self) -> None:
+        """Check get path returns explicit default for missing unknown value."""
         runtime_config = RuntimeConfig.from_dict({})
 
         assert runtime_config.get_path("unknown.path", default=532.0) == pytest.approx(
@@ -146,6 +166,7 @@ class Test_RuntimeConfig:
     def test_get_path_returns_default_when_intermediate_value_is_not_dictionary(
         self,
     ) -> None:
+        """Check get path returns default when intermediate value is not dictionary."""
         runtime_config = RuntimeConfig.from_dict(
             {
                 "custom": 488.0,
@@ -157,6 +178,7 @@ class Test_RuntimeConfig:
         ) == pytest.approx(532.0)
 
     def test_set_path_creates_nested_dictionaries_for_unknown_path(self) -> None:
+        """Check set path creates nested dictionaries for unknown path."""
         runtime_config = RuntimeConfig.from_dict({})
 
         runtime_config.set_path("custom.detector.numerical_aperture", 0.75)
@@ -168,6 +190,7 @@ class Test_RuntimeConfig:
     def test_set_path_replaces_non_dictionary_intermediate_value_for_unknown_path(
         self,
     ) -> None:
+        """Check set path replaces non dictionary intermediate value for unknown path."""
         runtime_config = RuntimeConfig.from_dict(
             {
                 "custom": "invalid intermediate value",
@@ -181,6 +204,7 @@ class Test_RuntimeConfig:
         ) == pytest.approx(0.75)
 
     def test_empty_path_raises_value_error(self) -> None:
+        """Check empty path raises value error."""
         runtime_config = RuntimeConfig.from_dict({})
 
         with pytest.raises(ValueError, match="Path cannot be empty"):
@@ -213,6 +237,7 @@ class Test_RuntimeConfig:
         raw_value: object,
         expected_value: bool,
     ) -> None:
+        """Check get bool coerces expected values."""
         runtime_config = RuntimeConfig.from_dict(
             {
                 "ui": {
@@ -224,6 +249,7 @@ class Test_RuntimeConfig:
         assert runtime_config.get_bool("ui.show_graphs") is expected_value
 
     def test_get_bool_returns_default_for_uncoercible_unknown_value(self) -> None:
+        """Check get bool returns default for uncoercible unknown value."""
         runtime_config = RuntimeConfig.from_dict(
             {
                 "custom": {
@@ -235,6 +261,7 @@ class Test_RuntimeConfig:
         assert runtime_config.get_bool("custom.flag", default=True) is True
 
     def test_get_str_strips_whitespace(self) -> None:
+        """Check get str strips whitespace."""
         runtime_config = RuntimeConfig.from_dict(
             {
                 "ui": {
@@ -246,6 +273,7 @@ class Test_RuntimeConfig:
         assert runtime_config.get_str("ui.theme_mode") == "dark"
 
     def test_get_float_coerces_known_string_value(self) -> None:
+        """Check get float coerces known string value."""
         runtime_config = RuntimeConfig.from_dict(
             {
                 "optics": {
@@ -260,6 +288,7 @@ class Test_RuntimeConfig:
         )
 
     def test_get_float_returns_default_for_invalid_unknown_value(self) -> None:
+        """Check get float returns default for invalid unknown value."""
         runtime_config = RuntimeConfig.from_dict(
             {
                 "custom": {
@@ -273,6 +302,7 @@ class Test_RuntimeConfig:
         ) == pytest.approx(488.0)
 
     def test_get_int_returns_default_for_invalid_unknown_value(self) -> None:
+        """Check get int returns default for invalid unknown value."""
         runtime_config = RuntimeConfig.from_dict(
             {
                 "sampling": {
@@ -284,6 +314,7 @@ class Test_RuntimeConfig:
         assert runtime_config.get_int("sampling.event_count", default=1000) == 1000
 
     def test_get_show_graphs_uses_ui_show_graphs_path(self) -> None:
+        """Check get show graphs uses UI show graphs path."""
         runtime_config = RuntimeConfig.from_dict(
             {
                 "ui": {
@@ -295,6 +326,7 @@ class Test_RuntimeConfig:
         assert runtime_config.get_show_graphs(default=True) is False
 
     def test_get_graph_height_uses_visualization_graph_height_path(self) -> None:
+        """Check get graph height uses visualization graph height path."""
         runtime_config = RuntimeConfig.from_dict(
             {
                 "visualization": {
@@ -306,6 +338,7 @@ class Test_RuntimeConfig:
         assert runtime_config.get_graph_height(default="850px") == "70vh"
 
     def test_graph_height_defaults_to_viewport_sizing_and_preserves_custom_height(self) -> None:
+        """Check graph height defaults to viewport sizing and preserves custom height."""
         from RosettaX.utils.runtime_config import DEFAULT_GRAPH_HEIGHT
 
         assert RuntimeConfig.from_dict({}).get_graph_height() == DEFAULT_GRAPH_HEIGHT
@@ -313,6 +346,7 @@ class Test_RuntimeConfig:
         assert RuntimeConfig.from_dict({"visualization": {"graph_height": "350px"}}).get_graph_height() == "350px"
 
     def test_get_bool_reads_ui_show_preset_configuration_path(self) -> None:
+        """Check get bool reads UI show preset configuration path."""
         runtime_config = RuntimeConfig.from_dict(
             {
                 "ui": {
@@ -330,6 +364,7 @@ class Test_RuntimeConfig:
         )
 
     def test_set_path_validates_known_choice(self) -> None:
+        """Check set path validates known choice."""
         runtime_config = RuntimeConfig.from_dict({})
 
         runtime_config.set_path("ui.theme_mode", "light")
@@ -337,12 +372,14 @@ class Test_RuntimeConfig:
         assert runtime_config.get_path("ui.theme_mode") == "light"
 
     def test_set_path_rejects_invalid_theme_choice(self) -> None:
+        """Check set path rejects invalid theme choice."""
         runtime_config = RuntimeConfig.from_dict({})
 
         with pytest.raises(RuntimeConfigValidationError, match="ui.theme_mode"):
             runtime_config.set_path("ui.theme_mode", "pink")
 
     def test_set_path_rejects_invalid_histogram_scale(self) -> None:
+        """Check set path rejects invalid histogram scale."""
         runtime_config = RuntimeConfig.from_dict({})
 
         with pytest.raises(
@@ -351,12 +388,14 @@ class Test_RuntimeConfig:
             runtime_config.set_path("calibration.histogram_scale", "sqrt")
 
     def test_set_path_rejects_negative_wavelength(self) -> None:
+        """Check set path rejects negative wavelength."""
         runtime_config = RuntimeConfig.from_dict({})
 
         with pytest.raises(RuntimeConfigValidationError, match="optics.wavelength_nm"):
             runtime_config.set_path("optics.wavelength_nm", -488.0)
 
     def test_set_path_rejects_invalid_numerical_aperture_above_maximum(self) -> None:
+        """Check set path rejects invalid numerical aperture above maximum."""
         runtime_config = RuntimeConfig.from_dict({})
 
         with pytest.raises(
@@ -365,6 +404,7 @@ class Test_RuntimeConfig:
             runtime_config.set_path("optics.detector_numerical_aperture", 2.0)
 
     def test_set_path_accepts_numpy_array_for_known_list_path(self) -> None:
+        """Check set path accepts numpy array for known list path."""
         runtime_config = RuntimeConfig.from_dict({})
 
         runtime_config.set_path(
@@ -378,6 +418,7 @@ class Test_RuntimeConfig:
         ]
 
     def test_from_dict_falls_back_to_default_for_invalid_known_values(self) -> None:
+        """Check from dict falls back to default for invalid known values."""
         runtime_config = RuntimeConfig.from_dict(
             {
                 "ui": {
@@ -397,6 +438,7 @@ class Test_RuntimeConfig:
     def test_from_dict_migrates_legacy_profile_paths_and_normalizes_values(
         self,
     ) -> None:
+        """Check from dict migrates legacy profile paths and normalizes values."""
         runtime_config = RuntimeConfig.from_dict(
             {
                 "fluorescence_calibration": {
@@ -452,6 +494,7 @@ class Test_RuntimeConfig:
     def test_validate_raises_for_invalid_known_value_after_direct_data_mutation(
         self,
     ) -> None:
+        """Check validate raises for invalid known value after direct data mutation."""
         runtime_config = RuntimeConfig.from_dict({})
 
         runtime_config.data["ui"]["theme_mode"] = "pink"
@@ -460,6 +503,7 @@ class Test_RuntimeConfig:
             runtime_config.validate()
 
     def test_normalized_returns_validated_copy(self) -> None:
+        """Check normalized returns validated copy."""
         runtime_config = RuntimeConfig.from_dict(
             {
                 "ui": {
@@ -478,6 +522,7 @@ class Test_RuntimeConfig:
             "optics.wavelength_nm"
         ) == pytest.approx(640.0)
     def test_update_preserves_backward_compatible_flat_keys(self) -> None:
+        """Check update preserves backward compatible flat keys."""
         runtime_config = RuntimeConfig.from_dict({})
 
         runtime_config.update(theme_mode="dark", show_graphs=True)
@@ -486,6 +531,7 @@ class Test_RuntimeConfig:
         assert runtime_config.get_path("show_graphs") is True
 
     def test_update_paths_updates_and_validates_nested_values(self) -> None:
+        """Check update paths updates and validates nested values."""
         runtime_config = RuntimeConfig.from_dict({})
 
         runtime_config.update_paths(
@@ -501,6 +547,7 @@ class Test_RuntimeConfig:
         assert runtime_config.get_path("optics.wavelength_nm") == pytest.approx(640.0)
 
     def test_update_paths_rejects_invalid_known_value(self) -> None:
+        """Check update paths rejects invalid known value."""
         runtime_config = RuntimeConfig.from_dict({})
 
         with pytest.raises(
@@ -513,6 +560,7 @@ class Test_RuntimeConfig:
             )
 
     def test_with_path_returns_modified_copy_without_mutating_original(self) -> None:
+        """Check with path returns modified copy without mutating original."""
         runtime_config = RuntimeConfig.from_dict(
             {
                 "ui": {
@@ -527,12 +575,14 @@ class Test_RuntimeConfig:
         assert updated_runtime_config.get_path("ui.theme_mode") == "light"
 
     def test_with_path_rejects_invalid_known_value(self) -> None:
+        """Check with path rejects invalid known value."""
         runtime_config = RuntimeConfig.from_dict({})
 
         with pytest.raises(RuntimeConfigValidationError, match="ui.theme_mode"):
             runtime_config.with_path("ui.theme_mode", "pink")
 
     def test_with_updates_returns_modified_copy_without_mutating_original(self) -> None:
+        """Check with updates returns modified copy without mutating original."""
         runtime_config = RuntimeConfig.from_dict(
             {
                 "theme_mode": "dark",
@@ -547,6 +597,7 @@ class Test_RuntimeConfig:
     def test_with_path_updates_returns_modified_copy_without_mutating_original(
         self,
     ) -> None:
+        """Check with path updates returns modified copy without mutating original."""
         runtime_config = RuntimeConfig.from_dict(
             {
                 "ui": {
@@ -568,6 +619,7 @@ class Test_RuntimeConfig:
         assert updated_runtime_config.get_path("ui.show_graphs") is False
 
     def test_json_round_trip_preserves_normalized_payload(self, tmp_path: Path) -> None:
+        """Check JSON round trip preserves normalized payload."""
         json_path = tmp_path / "runtime_config.json"
 
         runtime_config = RuntimeConfig.from_dict(
@@ -588,6 +640,7 @@ class Test_RuntimeConfig:
         assert loaded_runtime_config.to_dict() == runtime_config.to_dict()
 
     def test_to_json_path_validates_before_writing(self, tmp_path: Path) -> None:
+        """Check to JSON path validates before writing."""
         runtime_config = RuntimeConfig.from_dict({})
         runtime_config.data["ui"]["theme_mode"] = "pink"
 
@@ -599,6 +652,7 @@ class Test_RuntimeConfig:
         assert not json_path.exists()
 
     def test_to_json_returns_json_safe_string(self) -> None:
+        """Check to JSON returns JSON safe string."""
         runtime_config = RuntimeConfig.from_dict(
             {
                 "custom": {
@@ -617,6 +671,7 @@ class Test_RuntimeConfig:
         assert loaded_payload["custom"]["integer"] == 4
 
     def test_from_json_path_rejects_non_dictionary_json(self, tmp_path: Path) -> None:
+        """Check from JSON path rejects non dictionary JSON."""
         json_path = tmp_path / "invalid_runtime_config.json"
         json_path.write_text("[1, 2, 3]", encoding="utf-8")
 
@@ -628,6 +683,7 @@ class Test_RuntimeConfig:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Check load JSON mutates only current instance."""
         monkeypatch.setattr(runtime_config_module.directories, "profiles", tmp_path)
 
         profile_path = tmp_path / "test_profile.json"
@@ -660,6 +716,7 @@ class Test_RuntimeConfig:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Check from profile name adds JSON extension."""
         monkeypatch.setattr(runtime_config_module.directories, "profiles", tmp_path)
 
         profile_path = tmp_path / "custom_profile.json"
@@ -679,6 +736,7 @@ class Test_RuntimeConfig:
         assert runtime_config.get_path("ui.theme_mode") == "light"
 
     def test_from_profile_name_rejects_empty_profile_name(self) -> None:
+        """Check from profile name rejects empty profile name."""
         with pytest.raises(ValueError, match="Profile filename cannot be empty"):
             RuntimeConfig.from_profile_name("   ")
 
@@ -687,6 +745,7 @@ class Test_RuntimeConfig:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Check from default profile uses default profile first."""
         default_profile_path = tmp_path / "startup_default.json"
         profiles_directory = tmp_path / "profiles"
         profiles_directory.mkdir()
@@ -730,6 +789,7 @@ class Test_RuntimeConfig:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Check from default profile falls back to profiles default profile."""
         missing_default_profile_path = tmp_path / "missing_startup_default.json"
         profiles_directory = tmp_path / "profiles"
         profiles_directory.mkdir()
@@ -764,6 +824,7 @@ class Test_RuntimeConfig:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Check from default profile returns default schema when no candidate exists."""
         monkeypatch.setattr(
             runtime_config_module.directories,
             "default_profile",
@@ -778,7 +839,3 @@ class Test_RuntimeConfig:
         assert runtime_config.get_path("ui.theme_mode") == "dark"
         assert runtime_config.get_path("ui.show_graphs") is True
         assert runtime_config.get_path("optics.wavelength_nm") == pytest.approx(488.0)
-
-
-if __name__ == "__main__":
-    pytest.main(["-W error", __file__])

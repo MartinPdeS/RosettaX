@@ -1,10 +1,14 @@
+"""Dependency setup for the stubbed unit-test suite."""
+
 
 import sys
 import types
 
 
 class _DashBootstrapComponent:
+    """Component arguments and attributes exposed by the Bootstrap test double."""
     def __init__(self, *args, **kwargs):
+        """Initialize the state required by this test double."""
         self.children = kwargs.pop("children", None)
         if self.children is None and args:
             self.children = args[0] if len(args) == 1 else list(args)
@@ -18,16 +22,19 @@ class _DashBootstrapComponent:
 
 
 class _DashBootstrapComponentsStub(types.ModuleType):
+    """Minimal Dash Bootstrap components used by the unit tests."""
     themes = types.SimpleNamespace(
         FLATLY="FLATLY",
         SLATE="SLATE",
     )
 
     def __init__(self, name):
+        """Initialize the state required by this test double."""
         super().__init__(name)
         self._component_types = {}
 
     def __getattr__(self, name):
+        """Handle dynamic attribute lookup for this test double."""
         component_type = self._component_types.get(name)
         if component_type is None:
             component_type = type(name, (_DashBootstrapComponent,), {})
@@ -36,10 +43,12 @@ class _DashBootstrapComponentsStub(types.ModuleType):
 
 
 class _PyMieSimStub(types.ModuleType):
+    """Minimal PyMieSim module used by the unit tests."""
     experiment = types.SimpleNamespace()
 
 
 class _PyMieSimUnitsStub(types.ModuleType):
+    """Minimal PyMieSim units module used by the unit tests."""
     ureg = types.SimpleNamespace()
 
 

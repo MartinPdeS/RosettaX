@@ -1,3 +1,11 @@
+"""Regression tests for workflow Rosetta peak script v1."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 from types import SimpleNamespace
 
@@ -9,7 +17,10 @@ from .rosetta_peak_script_test import _build_synthetic_dataset_with_two_markers
 
 
 class Test_RosettaPeakScriptV1:
+    """Regression checks for Rosetta peak script v1."""
+
     def test_infer_rosetta_mix_particle_diameters_uses_marker_anchors(self) -> None:
+        """Check infer Rosetta mix particle diameters uses marker anchors."""
         inferred_diameters_nm, used_marker_count = (
             rosetta_mix_v1.infer_rosetta_mix_particle_diameters_nm(
                 measured_peak_positions=[
@@ -46,6 +57,7 @@ class Test_RosettaPeakScriptV1:
         ]
 
     def test_build_table_prefill_blanks_scatter_peaks_beyond_size_range(self) -> None:
+        """Check build table prefill blanks scatter peaks beyond size range."""
         scatter_peak_positions = [700.0, 1000.0, 2030.0, 4000.0, 9940.0, 30000.0]
 
         synthetic_result = rosetta_mix_v1.PeakProcessResult(
@@ -92,6 +104,7 @@ class Test_RosettaPeakScriptV1:
         assert "left blank for manual review" in status_suffix
 
     def test_bright_marker_scatter_anchor_flags_saturation(self) -> None:
+        """Check bright marker scatter anchor flags saturation."""
         peak_metadata = [
             {"x": 1400.0, "y": 200.0, "label": "Dim marker"},
             {"x": 3800.0, "y": 990.0, "label": "Bright marker"},
@@ -119,6 +132,7 @@ class Test_RosettaPeakScriptV1:
     def test_infer_falls_back_to_single_anchor_when_bright_marker_unreliable(
         self,
     ) -> None:
+        """Check infer falls back to single anchor when bright marker unreliable."""
         measured_peak_positions = [700.0, 1000.0, 1470.0, 2960.0, 6000.0, 9940.0]
         marker_positions = {"Dim marker": 1400.0, "Bright marker": 3800.0}
 
@@ -144,6 +158,7 @@ class Test_RosettaPeakScriptV1:
     def test_build_table_prefill_reports_saturated_bright_marker_fallback(
         self,
     ) -> None:
+        """Check build table prefill reports saturated bright marker fallback."""
         scatter_peak_positions = [700.0, 1000.0, 2030.0]
 
         synthetic_result = rosetta_mix_v1.PeakProcessResult(
@@ -191,9 +206,11 @@ class Test_RosettaPeakScriptV1:
         self,
         monkeypatch,
     ) -> None:
+        """Check run automatic action replaces placeholder diameters with Rosetta mix sizes."""
         scattering, fluorescence = _build_synthetic_dataset_with_two_markers()
 
         def fake_column_copy(*, fcs_file_path, detector_column, dtype=float, n=None):
+            """Return detector values prepared for this peak-detection test."""
             del fcs_file_path
             del dtype
 
@@ -266,6 +283,7 @@ class Test_RosettaPeakScriptV1:
         self,
         monkeypatch,
     ) -> None:
+        """Check run automatic action hides status when advanced mode disabled."""
         synthetic_result = rosetta_mix_v1.PeakProcessResult(
             peak_positions=[1000.0],
             new_peak_positions=[1000.0],
@@ -293,6 +311,7 @@ class Test_RosettaPeakScriptV1:
         )
 
         def fake_super_run(self, **kwargs):
+            """Return the prepared result of the parent peak process."""
             del self
             del kwargs
             return synthetic_result
@@ -323,6 +342,7 @@ class Test_RosettaPeakScriptV1:
         self,
         monkeypatch,
     ) -> None:
+        """Check run automatic action adds marker size annotations without table rows."""
         synthetic_result = rosetta_mix_v1.PeakProcessResult(
             peak_positions=[],
             new_peak_positions=[],
@@ -344,6 +364,7 @@ class Test_RosettaPeakScriptV1:
         )
 
         def fake_super_run(self, **kwargs):
+            """Return the prepared result of the parent peak process."""
             del self
             del kwargs
             return synthetic_result

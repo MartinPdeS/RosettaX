@@ -1,3 +1,11 @@
+"""Regression tests for application fluorescence calibration preview."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import logging
 
@@ -9,7 +17,10 @@ from RosettaX.pages.p02_fluorescence.sections.s04_calibration import services
 
 
 class Test_FluorescenceCalibrationPreview:
+    """Regression checks for fluorescence calibration preview."""
+
     def test_log_fit_rejects_degenerate_measured_values(self) -> None:
+        """Check log fit rejects degenerate measured values."""
         with pytest.raises(ValueError, match="distinct"):
             services.fit_log10_calibration(
                 intensity_calibrated_units=np.asarray([100.0, 1000.0]),
@@ -20,6 +31,7 @@ class Test_FluorescenceCalibrationPreview:
         self,
         monkeypatch,
     ) -> None:
+        """Check run calibration workflow returns preview metrics and figure store."""
         preview_figure = go.Figure()
         preview_figure.add_bar(x=[1.0, 2.0], y=[3.0, 4.0], name="signal")
 

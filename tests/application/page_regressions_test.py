@@ -1,3 +1,11 @@
+"""Regression tests for application page regressions."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 import importlib
 import logging
 from types import SimpleNamespace
@@ -29,6 +37,7 @@ from RosettaX.workflow.parameters.refractive_index import (
 
 
 def _collect_component_ids(component) -> set[str]:
+    """Collect component identifiers from the test layout."""
     component_id = getattr(component, "id", None)
     collected_ids = {component_id} if isinstance(component_id, str) else set()
     children = getattr(component, "children", None)
@@ -46,6 +55,7 @@ def _collect_component_ids(component) -> set[str]:
 
 
 def _collect_component_hrefs(component) -> set[str]:
+    """Collect navigation targets from the test layout."""
     href = getattr(component, "href", None)
     collected_hrefs = {href} if isinstance(href, str) else set()
     children = getattr(component, "children", None)
@@ -63,6 +73,7 @@ def _collect_component_hrefs(component) -> set[str]:
 
 
 def _find_component_by_id(component, target_id: str):
+    """Find a component by its identifier in the test layout."""
     component_id = getattr(component, "id", None)
 
     if component_id == target_id:
@@ -86,6 +97,7 @@ def _find_component_by_id(component, target_id: str):
 
 
 def _collect_text(component) -> list[str]:
+    """Collect text recursively from the test component tree."""
     if component is None:
         return []
 
@@ -107,7 +119,10 @@ def _collect_text(component) -> list[str]:
 
 
 class Test_FluorescenceCalibrationLayout:
+    """Regression checks for fluorescence calibration layout."""
+
     def test_layout_includes_calibration_graph_component(self) -> None:
+        """Check layout includes calibration graph component."""
         section = Calibration(
             page=SimpleNamespace(ids=FluorescenceIds()),
             section_number=4,
@@ -119,10 +134,13 @@ class Test_FluorescenceCalibrationLayout:
 
 
 class Test_ScatteringCalibrationPreviewGraph:
+    """Regression checks for scattering calibration preview graph."""
+
     def test_preview_store_is_built_from_computed_solid_sphere_rows(
         self,
         monkeypatch,
     ) -> None:
+        """Check preview store is built from computed solid sphere rows."""
         monkeypatch.setattr(
             scattering_services,
             "build_solid_sphere_dense_simulated_coupling_curve",
@@ -172,7 +190,10 @@ class Test_ScatteringCalibrationPreviewGraph:
 
 
 class Test_ScatteringModelLayout:
+    """Regression checks for scattering model layout."""
+
     def test_layout_includes_detector_brand_model_and_type_controls(self) -> None:
+        """Check layout includes detector brand model and type controls."""
         section = ScatteringModel(
             page=SimpleNamespace(ids=ScatteringIds()),
             section_number=3,
@@ -217,7 +238,10 @@ class Test_ScatteringModelLayout:
 
 
 class Test_ScatteringCalibrationCallbackOutputs:
+    """Regression checks for scattering calibration callback outputs."""
+
     def test_table_refractive_index_accepts_float_and_numeric_text(self) -> None:
+        """Check table refractive index accepts float and numeric text."""
         assert scattering_services.resolve_table_refractive_index(
             [{"particle_refractive_index": 1.51}],
             column_name="particle_refractive_index",
@@ -230,6 +254,7 @@ class Test_ScatteringCalibrationCallbackOutputs:
         ) == pytest.approx(1.345)
 
     def test_table_refractive_index_still_accepts_material_label(self) -> None:
+        """Check table refractive index still accepts material label."""
         assert scattering_services.resolve_table_refractive_index(
             [{"medium_refractive_index": "Water(1.33698)"}],
             column_name="medium_refractive_index",
@@ -237,19 +262,24 @@ class Test_ScatteringCalibrationCallbackOutputs:
         ) == pytest.approx(1.33698)
 
     def test_missing_table_update_keeps_existing_rows(self) -> None:
+        """Check missing table update keeps existing rows."""
         assert ScatteringCalibration._resolve_bead_table_output(None) is dash.no_update
 
     def test_explicit_table_update_is_forwarded(self) -> None:
+        """Check explicit table update is forwarded."""
         rows = [{"particle_diameter_nm": "100"}]
 
         assert ScatteringCalibration._resolve_bead_table_output(rows) == rows
 
 
 class Test_ApplyCalibrationPage:
+    """Regression checks for apply calibration page."""
+
     def test_layout_uses_model_panels_without_target_particle_model_wrapper(
         self,
         monkeypatch,
     ) -> None:
+        """Check layout uses model panels without target particle model wrapper."""
         monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
 
         apply_main = importlib.import_module("RosettaX.pages.p04_calibrate.main")
@@ -266,6 +296,7 @@ class Test_ApplyCalibrationPage:
         self,
         monkeypatch,
     ) -> None:
+        """Check layout starts with custom preset and hidden target model boxes."""
         monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
 
         apply_main = importlib.import_module("RosettaX.pages.p04_calibrate.main")
@@ -301,6 +332,7 @@ class Test_ApplyCalibrationPage:
         self,
         monkeypatch,
     ) -> None:
+        """Check calibration JSON upload uses configured size cap."""
         monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
 
         apply_main = importlib.import_module("RosettaX.pages.p04_calibrate.main")
@@ -327,6 +359,7 @@ class Test_ApplyCalibrationPage:
     def test_build_apply_calibration_request_requires_target_model_selection_for_scattering(
         self,
     ) -> None:
+        """Check build apply calibration request requires target model selection for scattering."""
         with pytest.raises(ValueError, match="Select a target model preset first."):
             apply_services.build_apply_calibration_request(
                 uploaded_fcs_path=["/tmp/input.fcs"],
@@ -359,6 +392,7 @@ class Test_ApplyCalibrationPage:
     def test_build_apply_calibration_request_resolves_polystyrene_preset_from_calibration_wavelength(
         self,
     ) -> None:
+        """Check build apply calibration request resolves polystyrene preset from calibration wavelength."""
         request = apply_services.build_apply_calibration_request(
             uploaded_fcs_path=["/tmp/input.fcs"],
             export_columns=[],
@@ -413,7 +447,10 @@ class Test_ApplyCalibrationPage:
 
 
 class Test_DocumentationPage:
+    """Regression checks for documentation page."""
+
     def test_layout_includes_core_documentation_sections(self, monkeypatch) -> None:
+        """Check layout includes core documentation sections."""
         monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
 
         documentation_main = importlib.import_module(
@@ -438,6 +475,7 @@ class Test_DocumentationPage:
         assert "How detector support works" not in text_nodes
 
     def test_layout_links_to_documentation_deep_dive_pages(self, monkeypatch) -> None:
+        """Check layout links to documentation deep dive pages."""
         monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
 
         documentation_main = importlib.import_module(
@@ -459,9 +497,12 @@ class Test_DocumentationPage:
 
 
 class Test_DocumentationDeepDivePages:
+    """Regression checks for documentation deep dive pages."""
+
     def test_peak_scripts_page_layout_contains_related_navigation(
         self, monkeypatch
     ) -> None:
+        """Check peak scripts page layout contains related navigation."""
         monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
 
         peak_docs_main = importlib.import_module(
@@ -481,6 +522,7 @@ class Test_DocumentationDeepDivePages:
     def test_system_model_page_layout_contains_instrument_assumptions(
         self, monkeypatch
     ) -> None:
+        """Check system model page layout contains instrument assumptions."""
         monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
 
         system_docs_main = importlib.import_module(
@@ -501,6 +543,7 @@ class Test_DocumentationDeepDivePages:
     def test_supported_cytometers_page_layout_contains_catalog_and_contact(
         self, monkeypatch
     ) -> None:
+        """Check supported cytometers page layout contains catalog and contact."""
         monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
 
         cytometer_docs_main = importlib.import_module(
@@ -520,6 +563,7 @@ class Test_DocumentationDeepDivePages:
     def test_regression_models_page_layout_contains_fit_descriptions(
         self, monkeypatch
     ) -> None:
+        """Check regression models page layout contains fit descriptions."""
         monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
 
         regression_docs_main = importlib.import_module(
@@ -539,6 +583,7 @@ class Test_DocumentationDeepDivePages:
     def test_reports_page_layout_contains_provenance_descriptions(
         self, monkeypatch
     ) -> None:
+        """Check reports page layout contains provenance descriptions."""
         monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
 
         reports_docs_main = importlib.import_module(
@@ -559,6 +604,7 @@ class Test_DocumentationDeepDivePages:
     def test_refractive_index_page_layout_contains_resolution_details(
         self, monkeypatch
     ) -> None:
+        """Check refractive index page layout contains resolution details."""
         monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
 
         refractive_docs_main = importlib.import_module(
@@ -578,6 +624,7 @@ class Test_DocumentationDeepDivePages:
     def test_calibration_payload_page_layout_contains_wrapper_and_payload_sections(
         self, monkeypatch
     ) -> None:
+        """Check calibration payload page layout contains wrapper and payload sections."""
         monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
 
         payload_docs_main = importlib.import_module(
@@ -598,6 +645,7 @@ class Test_DocumentationDeepDivePages:
     def test_apply_checks_page_layout_contains_validation_rules(
         self, monkeypatch
     ) -> None:
+        """Check apply checks page layout contains validation rules."""
         monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
 
         apply_checks_docs_main = importlib.import_module(
@@ -616,10 +664,13 @@ class Test_DocumentationDeepDivePages:
 
 
 class Test_CrossCalibrationPage:
+    """Regression checks for cross calibration page."""
+
     def test_layout_includes_upload_build_review_and_export_controls(
         self,
         monkeypatch,
     ) -> None:
+        """Check layout includes upload build review and export controls."""
         monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
 
         cross_main = importlib.import_module(
@@ -643,7 +694,10 @@ class Test_CrossCalibrationPage:
 
 
 class Test_ApplicationLayout:
+    """Regression checks for application layout."""
+
     def test_layout_includes_global_maintainer_footer(self) -> None:
+        """Check layout includes global maintainer footer."""
         layout = application_layout.build_application_layout()
 
         text_nodes = _collect_text(layout)
@@ -655,9 +709,12 @@ class Test_ApplicationLayout:
 
 
 class Test_HelpPage:
+    """Regression checks for help page."""
+
     def test_layout_includes_horizontal_project_resources_card(
         self, monkeypatch
     ) -> None:
+        """Check layout includes horizontal project resources card."""
         monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
 
         help_main = importlib.import_module("RosettaX.pages.p06_help.main")
@@ -677,7 +734,10 @@ class Test_HelpPage:
 
 
 class Test_SidebarNavigation:
+    """Regression checks for sidebar navigation."""
+
     def test_navigation_includes_documentation_link(self) -> None:
+        """Check navigation includes documentation link."""
         sidebar = Sidebar()
 
         navigation = sidebar._build_navigation_section()
@@ -760,6 +820,7 @@ class Test_SidebarNavigation:
         )
 
     def test_logo_links_to_home_page(self) -> None:
+        """Check logo links to home page."""
         sidebar = Sidebar()
 
         logo_section = sidebar._build_logo_section()

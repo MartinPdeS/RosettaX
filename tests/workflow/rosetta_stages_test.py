@@ -1,5 +1,12 @@
 """Rosetta settings and detection stages can be verified without Dash callbacks."""
 
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
+
 from dataclasses import FrozenInstanceError
 
 import numpy as np
@@ -9,6 +16,7 @@ from RosettaX.workflow.peak.scripts import rosetta_mix
 
 
 def test_run_settings_validate_numeric_ranges_switches_and_nonfinite_values():
+    """Check run settings validate numeric ranges switches and nonfinite values."""
     settings = rosetta_mix.RosettaRunSettings.from_raw_values(
         peak_count=100,
         max_events_for_analysis="invalid",
@@ -37,6 +45,7 @@ def test_run_settings_validate_numeric_ranges_switches_and_nonfinite_values():
 
 @pytest.mark.parametrize("marker_count", [0, 1, 2, 3, 4])
 def test_marker_acceptance_requires_one_or_two_populations(marker_count):
+    """Check marker acceptance requires one or two populations."""
     status = rosetta_mix.resolve_marker_stop_status(marker_count, "Fit diagnostic.")
     if marker_count in (1, 2):
         assert status is None
@@ -51,6 +60,7 @@ def test_marker_acceptance_requires_one_or_two_populations(marker_count):
 def test_result_assembly_keeps_marker_overlays_separate_from_table_policy(
     table_non_fluorescent_only,
 ):
+    """Check result assembly keeps marker overlays separate from table policy."""
     settings = rosetta_mix.RosettaRunSettings.from_raw_values(
         peak_count=6,
         max_events_for_analysis=100,
@@ -107,6 +117,7 @@ def test_result_assembly_keeps_marker_overlays_separate_from_table_policy(
 def test_missing_or_invalid_baseline_gate_uses_the_ui_default(
     raw_settings, monkeypatch
 ):
+    """Check missing or invalid baseline gate uses the UI default."""
     process = rosetta_mix.FluorescenceGuidedScatterPeakProcess()
     ui_default = next(
         setting["default_value"]
@@ -137,6 +148,7 @@ def test_missing_or_invalid_baseline_gate_uses_the_ui_default(
 
 
 def test_explicit_saved_baseline_gate_remains_authoritative():
+    """Check explicit saved baseline gate remains authoritative."""
     settings = rosetta_mix.RosettaRunSettings.from_raw_values(
         peak_count=6,
         max_events_for_analysis=100,

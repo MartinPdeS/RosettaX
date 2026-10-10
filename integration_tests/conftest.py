@@ -7,6 +7,7 @@ import pytest
 
 
 def pytest_sessionstart(session):
+    """Reject stubbed dependencies before running integration tests."""
     for name in ("PyMieSim", "PyMieSim.units", "dash_bootstrap_components"):
         module = importlib.import_module(name)
         if not getattr(module, "__file__", None) or module.__spec__ is None:
@@ -16,6 +17,7 @@ def pytest_sessionstart(session):
 
 
 def pytest_collection_modifyitems(items):
+    """Reject mixing the stubbed unit suite with integration tests."""
     integration_directory = Path(__file__).resolve().parent
     if any(integration_directory not in Path(item.path).resolve().parents for item in items):
         raise pytest.UsageError(
@@ -25,6 +27,7 @@ def pytest_collection_modifyitems(items):
 
 @pytest.fixture(scope="session")
 def application():
+    """Construct a real Dash application for the integration checks."""
     from RosettaX.application.main import RosettaXApplication
 
     return RosettaXApplication(

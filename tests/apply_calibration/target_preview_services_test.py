@@ -1,5 +1,12 @@
 """Target preview selection, inversion policy, and errors are service behavior."""
 
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
+
 from dataclasses import replace
 
 import pytest
@@ -14,6 +21,7 @@ from RosettaX.workflow.scattering.mie_relation import build_mie_relation_from_ar
 
 @pytest.fixture
 def controls():
+    """Provide configured controls for the service tests."""
     return TargetMiePreviewControls(
         selected_calibration_summary={
             "requires_target_model": True,
@@ -41,6 +49,7 @@ def controls():
 
 
 def test_preview_requires_calibration_and_target_selection(controls):
+    """Check preview requires calibration and target selection."""
     result = services.build_target_mie_relation_preview(
         replace(controls, selected_calibration_summary=None)
     )
@@ -68,9 +77,11 @@ def test_preview_resolves_model_specific_ranges_and_full_monotonic_relation(
     maximum,
     count,
 ):
+    """Check preview resolves model specific ranges and full monotonic relation."""
     captured = []
 
     def build_relation(*, calibration_payload, target_model_parameters):
+        """Record target parameters and return a prepared Mie relation."""
         captured.append(target_model_parameters)
         return build_mie_relation_from_arrays(
             diameter_nm=[100, 200, 300, 400],
@@ -95,6 +106,7 @@ def test_preview_resolves_model_specific_ranges_and_full_monotonic_relation(
 
 
 def test_non_monotonic_preview_reports_selected_branch(controls, monkeypatch):
+    """Check non monotonic preview reports selected branch."""
     monkeypatch.setattr(
         scattering,
         "build_target_mie_relation",
@@ -111,7 +123,9 @@ def test_non_monotonic_preview_reports_selected_branch(controls, monkeypatch):
 
 
 def test_preview_errors_produce_diagnostic_result(controls, monkeypatch):
+    """Check preview errors produce diagnostic result."""
     def fail(**kwargs):
+        """Raise the simulated error used by this test."""
         raise ValueError("Invalid geometry")
 
     monkeypatch.setattr(scattering, "build_target_mie_relation", fail)

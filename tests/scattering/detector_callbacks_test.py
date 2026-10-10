@@ -1,5 +1,12 @@
 """Preset synchronization updates selections without repeating unchanged outputs."""
 
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
+
 from types import SimpleNamespace
 
 import dash
@@ -12,11 +19,14 @@ from RosettaX.pages.p03_scattering.sections.s03_model.main import Model
 
 @pytest.fixture
 def registered_callbacks(monkeypatch):
+    """Capture registered callbacks and their specifications for testing."""
     callbacks = {}
     specifications = {}
 
     def register(*args, **kwargs):
+        """Capture the callback registration requested by the test."""
         def decorate(function):
+            """Record the decorated callback and return it unchanged."""
             callbacks[function.__name__] = function
             specifications[function.__name__] = args
             return function
@@ -32,6 +42,7 @@ def registered_callbacks(monkeypatch):
 def test_preset_changes_with_same_brand_still_update_model_and_type(
     registered_callbacks,
 ):
+    """Check preset changes with same brand still update model and type."""
     callbacks, specifications, section = registered_callbacks
     configuration = section.model_configuration
     configuration.resolve_detector_preset_brand = lambda _: "Brand"
@@ -76,6 +87,7 @@ def test_preset_changes_with_same_brand_still_update_model_and_type(
 
 
 def test_settled_and_empty_selectors_skip_unchanged_values(registered_callbacks):
+    """Check settled and empty selectors skip unchanged values."""
     callbacks, _, section = registered_callbacks
     configuration = section.model_configuration
     options = [{"label": "Only model", "value": "Only model"}]

@@ -1,3 +1,11 @@
+"""Regression tests for workflow peak detector autodetect."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import json
 import sys
@@ -9,15 +17,22 @@ from RosettaX.utils.fcs_metadata import FCSMetadata
 
 
 class _DashBootstrapComponentsSentinel:
+    """Callable component sentinel for lightweight Dash Bootstrap test setup."""
+
     def __call__(self, *args, **kwargs):
+        """Provide the callable behavior required by this test double."""
         return None
 
     def __getattr__(self, name):
+        """Handle dynamic attribute lookup for this test double."""
         return self
 
 
 class _DashBootstrapComponentsStub(types.ModuleType):
+    """Minimal Dash Bootstrap components used by the unit tests."""
+
     def __getattr__(self, name):
+        """Handle dynamic attribute lookup for this test double."""
         return _DashBootstrapComponentsSentinel()
 
 
@@ -37,6 +52,7 @@ def build_metadata(
     instrument_name: str,
     column_names: list[str],
 ) -> FCSMetadata:
+    """Build metadata for this test."""
     detectors_by_index = {
         index: {"N": column_name}
         for index, column_name in enumerate(column_names, start=1)
@@ -57,25 +73,34 @@ def build_metadata(
 
 
 class FakeFCSFile:
+    """Test double for fake fcsfile."""
+
     def __init__(self, metadata: FCSMetadata) -> None:
+        """Initialize the state required by this test double."""
         self.metadata = metadata
 
     def __enter__(self) -> Self:
+        """Return the test reader when entering its context."""
         return self
 
     def __exit__(self, exc_type, exc, traceback) -> bool:
+        """Handle context cleanup for the test reader."""
         return False
 
     def get_metadata(self) -> FCSMetadata:
+        """Return the FCS metadata prepared for this test."""
         return self.metadata
 
 
 class Test_DetectorAutoDetect:
+    """Regression checks for detector auto detect."""
+
     def test_infer_default_detector_channel_uses_instrument_rule_for_role(
         self,
         tmp_path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Check infer default detector channel uses instrument rule for role."""
         rules_path = tmp_path / "detector_auto_detect_rules.json"
         rules_path.write_text(
             json.dumps(
@@ -118,6 +143,7 @@ class Test_DetectorAutoDetect:
         self,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Check detect detector preset from uploaded FCS uses preset alias field."""
         metadata = build_metadata(
             instrument_name="Beckman Coulter CytoFLEX S",
             column_names=["FSC-A", "SSC-A", "FL1-A"],
@@ -139,6 +165,7 @@ class Test_DetectorAutoDetect:
         self,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Check detect detector preset from uploaded FCS supports cytek aurora aliases."""
         metadata = build_metadata(
             instrument_name="Cytek Aurora 5L",
             column_names=["FSC-A", "SSC-A", "FL1-A"],
@@ -159,6 +186,7 @@ class Test_DetectorAutoDetect:
     def test_infer_default_detector_channel_uses_packaged_attune_rule(
         self,
     ) -> None:
+        """Check infer default detector channel uses packaged attune rule."""
         metadata = build_metadata(
             instrument_name="Thermo Fisher Attune NxT",
             column_names=["Time", "FSC-A", "SSC-A", "FL1-A"],
@@ -177,6 +205,7 @@ class Test_DetectorAutoDetect:
         self,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Check detect detector preset from uploaded FCS supports nanofcm aliases."""
         metadata = build_metadata(
             instrument_name="nanoFCM NanoAnalyzer",
             column_names=["405LALS(Area)", "405SALS(Area)", "FL1-A"],
@@ -197,6 +226,7 @@ class Test_DetectorAutoDetect:
     def test_infer_default_detector_channel_uses_packaged_nanofcm_rule(
         self,
     ) -> None:
+        """Check infer default detector channel uses packaged nanofcm rule."""
         metadata = build_metadata(
             instrument_name="nanoFCM NanoAnalyzer",
             column_names=["405LALS(Area)", "405SALS(Area)", "FL1-A"],
@@ -214,6 +244,7 @@ class Test_DetectorAutoDetect:
     def test_infer_default_detector_channel_prefers_fluorescence_for_green_role(
         self,
     ) -> None:
+        """Check infer default detector channel prefers fluorescence for green role."""
         metadata = build_metadata(
             instrument_name="nanoFCM NanoAnalyzer",
             column_names=["405Blu(Area)", "405ALS(Peak)", "FITC-A"],
@@ -233,6 +264,7 @@ class Test_DetectorAutoDetect:
         tmp_path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Check detect detector preset from uploaded FCS name heuristic prefers scatter preset."""
         rules_path = tmp_path / "detector_auto_detect_rules.json"
         rules_path.write_text(
             json.dumps(
@@ -282,6 +314,7 @@ class Test_DetectorAutoDetect:
         channel_name: str,
         expected_family: str,
     ) -> None:
+        """Check classify detector channel family supports common aliases."""
         assert detector_configuration.classify_detector_channel_family(
             channel_name,
         ) == expected_family
@@ -291,6 +324,7 @@ class Test_DetectorAutoDetect:
         tmp_path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Check detect detector preset from uploaded FCS supports sals aliases."""
         rules_path = tmp_path / "detector_auto_detect_rules.json"
         rules_path.write_text(
             json.dumps(
@@ -329,6 +363,7 @@ class Test_DetectorAutoDetect:
         tmp_path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Check detect detector preset from uploaded FCS maps lals aliases to FSC."""
         rules_path = tmp_path / "detector_auto_detect_rules.json"
         rules_path.write_text(
             json.dumps(
@@ -365,6 +400,7 @@ class Test_DetectorAutoDetect:
     def test_classify_detector_preset_family_falls_back_to_name_when_channel_is_generic(
         self,
     ) -> None:
+        """Check classify detector preset family falls back to name when channel is generic."""
         assert detector_configuration.classify_detector_preset_family(
             {
                 "name": "Apogee - Side",
@@ -375,6 +411,7 @@ class Test_DetectorAutoDetect:
     def test_resolve_detector_angular_weights_uses_preset_sampling_when_missing(
         self,
     ) -> None:
+        """Check resolve detector angular weights uses preset sampling when missing."""
         detector_angular_weights = detector_configuration.resolve_detector_angular_weights(
             preset_name="Apogee - Side",
             detector_sampling=None,
@@ -398,6 +435,7 @@ class Test_DetectorAutoDetect:
         channel_name: str,
         expected_wavelength_nm: int | None,
     ) -> None:
+        """Check detect wavelength nm from detector channel uses explicit channel names."""
         assert detector_configuration.detect_wavelength_nm_from_detector_channel(
             channel_name,
         ) == expected_wavelength_nm
@@ -407,6 +445,7 @@ class Test_DetectorAutoDetect:
         tmp_path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Check detect detector preset from uploaded FCS requires selected detector channel."""
         rules_path = tmp_path / "detector_auto_detect_rules.json"
         rules_path.write_text(
             json.dumps(
@@ -445,6 +484,7 @@ class Test_DetectorAutoDetect:
         tmp_path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Check detect detector preset from uploaded FCS returns none when channel family conflicts."""
         rules_path = tmp_path / "detector_auto_detect_rules.json"
         rules_path.write_text(
             json.dumps(
@@ -481,6 +521,7 @@ class Test_DetectorAutoDetect:
     def test_resolve_runtime_detector_preset_preserves_explicit_non_generic_preset(
         self,
     ) -> None:
+        """Check resolve runtime detector preset preserves explicit non generic preset."""
         resolved_preset = detector_configuration.resolve_runtime_detector_preset(
             "BD FACSCanto II FSC",
         )
@@ -488,6 +529,7 @@ class Test_DetectorAutoDetect:
         assert resolved_preset == "BD FACSCanto II FSC"
 
     def test_resolve_runtime_detector_preset_returns_none_for_empty_default(self) -> None:
+        """Check resolve runtime detector preset returns none for empty default."""
         resolved_preset = detector_configuration.resolve_runtime_detector_preset(
             "",
         )
@@ -499,6 +541,7 @@ class Test_DetectorAutoDetect:
         tmp_path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Check infer default detector channel falls back to name heuristic."""
         rules_path = tmp_path / "detector_auto_detect_rules.json"
         rules_path.write_text(
             json.dumps(
@@ -542,6 +585,7 @@ class Test_DetectorAutoDetect:
         tmp_path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        """Check infer default detector channel can skip auto detect rules."""
         rules_path = tmp_path / "detector_auto_detect_rules.json"
         rules_path.write_text(
             json.dumps(

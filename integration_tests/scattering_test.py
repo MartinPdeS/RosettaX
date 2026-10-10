@@ -1,5 +1,12 @@
 """Numerical contracts exercised through the installed native PyMieSim API."""
 
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
+
 import numpy as np
 import pytest
 
@@ -9,6 +16,7 @@ from RosettaX.workflow.scattering.mie_relation import build_mie_relation_from_ar
 
 @pytest.fixture
 def optical_parameters():
+    """Provide optical parameters for native scattering calculations."""
     return {
         "wavelength_nm": 488.0,
         "source_numerical_aperture": 0.1,
@@ -22,6 +30,7 @@ def optical_parameters():
 
 
 def test_solid_sphere_power_scaling_and_cross_section(optical_parameters):
+    """Check solid sphere power scaling and cross section."""
     diameters = np.array([80.0, 120.0, 160.0])
     first = BackEnd.compute_modeled_coupling_from_diameters(
         diameters, particle_refractive_index=1.45, **optical_parameters,
@@ -41,6 +50,7 @@ def test_solid_sphere_power_scaling_and_cross_section(optical_parameters):
 
 
 def test_homogeneous_core_shell_matches_solid_sphere(optical_parameters):
+    """Check homogeneous core shell matches solid sphere."""
     core_diameters = np.array([60.0, 120.0])
     thicknesses = np.array([10.0, 20.0])
     core_shell = BackEnd.compute_modeled_coupling_from_core_shell_dimensions(
@@ -57,6 +67,7 @@ def test_homogeneous_core_shell_matches_solid_sphere(optical_parameters):
 
 
 def test_core_shell_geometry_is_paired_per_row(optical_parameters):
+    """Check core shell geometry is paired per row."""
     cores = np.array([70.0, 130.0])
     shells = np.array([12.0, 24.0])
     parameters = {**optical_parameters, "core_refractive_index": 1.50, "shell_refractive_index": 1.40}
@@ -71,6 +82,7 @@ def test_core_shell_geometry_is_paired_per_row(optical_parameters):
 
 
 def test_real_mie_relation_inverts_modeled_diameters(optical_parameters):
+    """Check real Mie relation inverts modeled diameters."""
     diameters = np.linspace(60.0, 160.0, 11)
     modeled = BackEnd.compute_modeled_coupling_from_diameters(
         diameters, particle_refractive_index=1.45, **optical_parameters,

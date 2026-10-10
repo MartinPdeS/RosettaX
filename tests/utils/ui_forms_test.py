@@ -1,3 +1,11 @@
+"""Regression tests for utils UI forms."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import dash_bootstrap_components as dbc
 from dash import dcc
@@ -7,6 +15,7 @@ from RosettaX.utils.upload_limits import format_upload_size, get_max_upload_byte
 
 
 def _collect_text(component) -> list[str]:
+    """Collect text recursively from the test component tree."""
     if isinstance(component, str):
         return [component]
 
@@ -19,6 +28,7 @@ def _collect_text(component) -> list[str]:
 
 
 def test_upload_widget_shows_the_standard_file_information() -> None:
+    """Check upload widget shows the standard file information."""
     upload = ui_forms.build_upload_widget(
         upload_id="test-upload",
         prompt_text="Select FCS files",
@@ -38,6 +48,7 @@ def test_upload_widget_shows_the_standard_file_information() -> None:
 
 
 def test_upload_status_uses_the_standard_alert_format() -> None:
+    """Check upload status uses the standard alert format."""
     status = ui_forms.build_upload_status(
         status_id="test-status",
         initial_text="No file loaded.",

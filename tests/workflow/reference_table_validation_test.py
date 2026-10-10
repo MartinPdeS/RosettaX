@@ -1,3 +1,11 @@
+"""Regression tests for workflow reference table validation."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 import pytest
 
 from RosettaX.workflow.table.validation import (
@@ -13,6 +21,7 @@ COLUMNS = [
 
 @pytest.mark.parametrize("value", ["bad", "NaN", "inf", True, 0, -1])
 def test_invalid_editable_values_are_reported_without_changing_rows(value):
+    """Check invalid editable values are reported without changing rows."""
     rows = [{"diameter": value, "coupling": "not yet computed"}]
     issues = validate_reference_table_cells(rows, COLUMNS)
     assert len(issues) == 1
@@ -23,10 +32,12 @@ def test_invalid_editable_values_are_reported_without_changing_rows(value):
 
 @pytest.mark.parametrize("value", [None, "", " ", "1,45", "1e3", 100.0])
 def test_partial_rows_and_valid_numeric_formats_remain_unmarked(value):
+    """Check partial rows and valid numeric formats remain unmarked."""
     assert validate_reference_table_cells([{"diameter": value}], COLUMNS) == []
 
 
 def test_feedback_clears_after_correction_and_column_changes():
+    """Check feedback clears after correction and column changes."""
     styles, tooltips, messages = build_reference_table_feedback([{"diameter": -1}], COLUMNS)
     assert tooltips[0]["diameter"]["value"] == "Enter a value greater than zero."
     assert messages[0].children.startswith("Row 1 · Diameter [nm]")
@@ -41,6 +52,7 @@ def test_feedback_clears_after_correction_and_column_changes():
 
 
 def test_selected_invalid_cell_message_remains_visible_in_long_tables():
+    """Check selected invalid cell message remains visible in long tables."""
     rows = [{"diameter": -1} for _ in range(10)]
     _, _, messages = build_reference_table_feedback(rows, COLUMNS, {"row": 9, "column_id": "diameter"})
     assert messages[0].children.startswith("Row 10 ·")

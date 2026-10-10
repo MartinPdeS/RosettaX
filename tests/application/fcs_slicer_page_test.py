@@ -1,3 +1,11 @@
+"""Regression tests for application FCS slicer page."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import importlib
 
@@ -9,6 +17,7 @@ from RosettaX.workflow.calibration_cards import COLLAPSE_ID_TYPE
 
 
 def _find_component_by_id(component, target_id: str):
+    """Find a component by its identifier in the test layout."""
     if getattr(component, "id", None) == target_id:
         return component
 
@@ -25,6 +34,7 @@ def _find_component_by_id(component, target_id: str):
 
 
 def _collect_text(component) -> list[str]:
+    """Collect text recursively from the test component tree."""
     if component is None:
         return []
     if isinstance(component, str):
@@ -39,6 +49,7 @@ def _collect_text(component) -> list[str]:
 
 
 def test_header_includes_three_workflow_overview_cards(monkeypatch) -> None:
+    """Check header includes three workflow overview cards."""
     monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
     slicer_main = importlib.import_module("RosettaX.pages.p21_fcs_slicer.main")
 
@@ -54,6 +65,7 @@ def test_header_includes_three_workflow_overview_cards(monkeypatch) -> None:
 
 
 def test_upload_uses_configured_file_size_limit(monkeypatch) -> None:
+    """Check upload uses configured file size limit."""
     monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
     slicer_main = importlib.import_module("RosettaX.pages.p21_fcs_slicer.main")
     page = slicer_main.FCSSlicerPage()
@@ -67,6 +79,7 @@ def test_upload_uses_configured_file_size_limit(monkeypatch) -> None:
 
 
 def test_workflow_cards_start_collapsed(monkeypatch) -> None:
+    """Check workflow cards start collapsed."""
     monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
     slicer_main = importlib.import_module("RosettaX.pages.p21_fcs_slicer.main")
     page = slicer_main.FCSSlicerPage()

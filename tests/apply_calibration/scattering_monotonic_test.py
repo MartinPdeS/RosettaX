@@ -1,3 +1,11 @@
+"""Regression tests for apply calibration scattering monotonic."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import sys
 import types
@@ -6,23 +14,34 @@ import numpy as np
 
 
 class _DashBootstrapComponentsSentinel:
+    """Callable component sentinel for lightweight Dash Bootstrap test setup."""
+
     def __call__(self, *args, **kwargs):
+        """Provide the callable behavior required by this test double."""
         return None
 
     def __getattr__(self, name):
+        """Handle dynamic attribute lookup for this test double."""
         return self
 
 
 class _DashBootstrapComponentsStub(types.ModuleType):
+    """Minimal Dash Bootstrap components used by the unit tests."""
+
     def __getattr__(self, name):
+        """Handle dynamic attribute lookup for this test double."""
         return _DashBootstrapComponentsSentinel()
 
 
 class _PyMieSimStub(types.ModuleType):
+    """Minimal PyMieSim module used by the unit tests."""
+
     experiment = types.SimpleNamespace()
 
 
 class _PyMieSimUnitsStub(types.ModuleType):
+    """Minimal PyMieSim units module used by the unit tests."""
+
     ureg = types.SimpleNamespace()
 
 
@@ -49,7 +68,10 @@ from RosettaX.workflow.scattering.mie_relation import build_mie_relation_from_ar
 
 
 class Test_ApplyCalibrationScatteringMonotonic:
+    """Regression checks for apply calibration scattering monotonic."""
+
     def test_target_model_parameters_default_smoothing_sigma_is_twenty_points(self) -> None:
+        """Check target model parameters default smoothing sigma is twenty points."""
         target_model_parameters = ScatteringTargetModelParameters.from_raw_values(
             target_mie_model="Solid Sphere",
             target_medium_refractive_index=1.333,
@@ -63,6 +85,7 @@ class Test_ApplyCalibrationScatteringMonotonic:
         assert target_model_parameters.monotonic_smoothing_sigma_points == 20.0
 
     def test_resolve_monotonic_target_mie_relation_builds_increasing_envelope(self) -> None:
+        """Check resolve monotonic target Mie relation builds increasing envelope."""
         target_mie_relation = build_mie_relation_from_arrays(
             diameter_nm=[1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
             theoretical_coupling=[1.0, 2.0, 3.0, 2.5, 3.5, 4.5],
@@ -87,6 +110,7 @@ class Test_ApplyCalibrationScatteringMonotonic:
         )
 
     def test_resolve_monotonic_target_mie_relation_builds_decreasing_envelope(self) -> None:
+        """Check resolve monotonic target Mie relation builds decreasing envelope."""
         target_mie_relation = build_mie_relation_from_arrays(
             diameter_nm=[1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
             theoretical_coupling=[6.0, 5.0, 4.0, 4.5, 3.5, 2.5],
@@ -111,6 +135,7 @@ class Test_ApplyCalibrationScatteringMonotonic:
         )
 
     def test_resolve_monotonic_target_mie_relation_can_smooth_non_monotonic_transition(self) -> None:
+        """Check resolve monotonic target Mie relation can smooth non monotonic transition."""
         target_mie_relation = build_mie_relation_from_arrays(
             diameter_nm=[1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
             theoretical_coupling=[1.0, 2.0, 3.0, 2.5, 3.5, 4.5],

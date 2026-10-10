@@ -1,3 +1,11 @@
+"""Regression tests for utils plottings."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import numpy as np
 
@@ -5,7 +13,10 @@ from RosettaX.utils import plottings
 
 
 class Test_PlottingsHistogram:
+    """Regression checks for plottings histogram."""
+
     def test_build_histogram_uses_log_spaced_edges_when_requested(self, monkeypatch) -> None:
+        """Check build histogram uses log spaced edges when requested."""
         monkeypatch.setattr(
             plottings,
             "load_signal",
@@ -30,6 +41,7 @@ class Test_PlottingsHistogram:
         )
 
     def test_build_histogram_log_bins_drops_non_positive_values(self, monkeypatch) -> None:
+        """Check build histogram log bins drops non positive values."""
         monkeypatch.setattr(
             plottings,
             "load_signal",
@@ -47,6 +59,7 @@ class Test_PlottingsHistogram:
         assert histogram_result.values.tolist() == [1.0, 10.0]
 
     def test_make_histogram_with_lines_uses_zero_bar_gap(self) -> None:
+        """Check make histogram with lines uses zero bar gap."""
         figure = plottings.make_histogram_with_lines(
             values=np.asarray([1.0, 2.0, 3.0, 4.0], dtype=float),
             nbins=4,
@@ -58,6 +71,7 @@ class Test_PlottingsHistogram:
         assert figure.layout.bargap == 0.0
 
     def test_build_histogram_figure_uses_filled_step_trace(self) -> None:
+        """Check build histogram figure uses filled step trace."""
         histogram_result = plottings.HistogramResult(
             values=np.asarray([1.0, 2.0, 4.0, 8.0], dtype=float),
             counts=np.asarray([3.0, 1.0, 2.0], dtype=float),

@@ -1,3 +1,11 @@
+"""Regression tests for workflow save callbacks."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import json
 import logging
@@ -13,12 +21,16 @@ from RosettaX.workflow.save.services import run_save_workflow
 
 
 class Test_SaveButtonVisibility:
+    """Regression checks for save button visibility."""
+
     def test_save_button_should_be_disabled_for_empty_name(self) -> None:
+        """Check save button should be disabled for empty name."""
         assert save_button_should_be_disabled("") is True
         assert save_button_should_be_disabled("   ") is True
         assert save_button_should_be_disabled(None) is True
 
     def test_save_button_should_be_enabled_for_non_empty_name(self) -> None:
+        """Check save button should be enabled for non empty name."""
         assert (
             save_button_should_be_disabled(
                 "my_calibration",
@@ -30,6 +42,7 @@ class Test_SaveButtonVisibility:
         )
 
     def test_save_button_should_require_output_channel_name_when_configured(self) -> None:
+        """Check save button should require output channel name when configured."""
         assert (
             save_button_should_be_disabled(
                 "my_calibration",
@@ -50,7 +63,10 @@ class Test_SaveButtonVisibility:
 
 
 class Test_SaveWorkflowContract:
+    """Regression checks for save workflow contract."""
+
     def test_save_workflow_wraps_payload_without_mutating_source(self) -> None:
+        """Check save workflow wraps payload without mutating source."""
         source_payload = {
             "source_channel": "FITC-A",
             "fit": {"slope": 1.2, "intercept": 0.3},
@@ -80,6 +96,7 @@ class Test_SaveWorkflowContract:
         }
 
     def test_save_workflow_does_not_produce_download_for_invalid_payload(self) -> None:
+        """Check save workflow does not produce download for invalid payload."""
         result = run_save_workflow(
             file_name="example",
             output_channel_name=None,
@@ -92,6 +109,7 @@ class Test_SaveWorkflowContract:
         assert result.download_data is dash.no_update
 
     def test_save_button_does_not_require_review_acknowledgment(self) -> None:
+        """Check save button does not require review acknowledgment."""
         assert (
             save_button_should_be_disabled(
                 "example",
@@ -114,6 +132,7 @@ class Test_SaveWorkflowContract:
         )
 
     def test_save_review_summary_identifies_required_inputs(self) -> None:
+        """Check save review summary identifies required inputs."""
         summary = _build_save_review_summary(
             file_name="",
             output_channel_name="",

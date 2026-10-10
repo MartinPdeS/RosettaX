@@ -1,3 +1,11 @@
+"""Regression tests for workflow peak graphing."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 import sys
 import types
 
@@ -9,15 +17,22 @@ from RosettaX.workflow.peak.core import graph_histogram, graph_overlays, graph_s
 
 
 class _DashBootstrapComponentsSentinel:
+    """Callable component sentinel for lightweight Dash Bootstrap test setup."""
+
     def __call__(self, *args, **kwargs):
+        """Provide the callable behavior required by this test double."""
         return None
 
     def __getattr__(self, name):
+        """Handle dynamic attribute lookup for this test double."""
         return self
 
 
 class _DashBootstrapComponentsStub(types.ModuleType):
+    """Minimal Dash Bootstrap components used by the unit tests."""
+
     def __getattr__(self, name):
+        """Handle dynamic attribute lookup for this test double."""
         return _DashBootstrapComponentsSentinel()
 
 
@@ -158,7 +173,10 @@ class Test_scale_selection_is_log:
 
 
 class Test_axis_scale_selection_is_log:
+    """Regression checks for axis scale selection is log."""
+
     def test_axis_scale_selection_is_log_supports_axis_specific_toggles(self):
+        """Check axis scale selection is log supports axis specific toggles."""
         assert (
             axis_scale_selection_is_log(
                 scale_selection=["x_log"],
@@ -175,6 +193,7 @@ class Test_axis_scale_selection_is_log:
         )
 
     def test_axis_scale_selection_is_log_keeps_axes_independent(self):
+        """Check axis scale selection is log keeps axes independent."""
         assert (
             axis_scale_selection_is_log(
                 scale_selection=["x_log"],
@@ -338,7 +357,10 @@ class Test_GraphingModuleConstants:
 
 
 class Test_Grouped2DScatterTraces:
+    """Regression checks for grouped2 dscatter traces."""
+
     def test_sanitize_group_points_excludes_zero_and_non_finite_values(self):
+        """Check sanitize group points excludes zero and non finite values."""
         x_values, y_values = sanitize_group_points(
             group_points={
                 "x_values": [1.0, 0.0, 2.0, np.nan],
@@ -352,6 +374,7 @@ class Test_Grouped2DScatterTraces:
         assert y_values.tolist() == [3.0]
 
     def test_add_grouped_2d_scatter_traces_uses_black_markers(self):
+        """Check add grouped 2D scatter traces uses black markers."""
         figure = add_grouped_2d_scatter_traces(
             figure=go.Figure(),
             peak_lines_payload={
@@ -372,7 +395,10 @@ class Test_Grouped2DScatterTraces:
 
 
 class Test_PeakWorkflowGraphBuilder2DFiltering:
+    """Regression checks for peak workflow graph builder2 dfiltering."""
+
     def test_filter_2d_values_for_axis_scale_excludes_zero_values(self):
+        """Check filter 2D values for axis scale excludes zero values."""
         builder = PeakWorkflowGraphBuilder.__new__(PeakWorkflowGraphBuilder)
         builder.xscale_selection = "linear"
         builder.yscale_selection = "linear"
@@ -395,6 +421,7 @@ class Test_PeakWorkflowGraphBuilder2DFiltering:
             assert scale_selection_is_log("linear") is False
 
     def test_extract_plot_values_from_peak_lines_payload_uses_payload_override(self):
+        """Check extract plot values from peak lines payload uses payload override."""
         builder = PeakWorkflowGraphBuilder.__new__(PeakWorkflowGraphBuilder)
         builder.peak_lines_payload = {
             "plot_x_values": [10.0, 20.0, "bad", float("nan")],
@@ -412,7 +439,10 @@ class Test_PeakWorkflowGraphBuilder2DFiltering:
 
 
 class Test_EdgeArtifactFiltering:
+    """Regression checks for edge artifact filtering."""
+
     def test_filter_edge_artifact_values_removes_floor_and_ceiling_pileups(self):
+        """Check filter edge artifact values removes floor and ceiling pileups."""
         values = np.concatenate(
             [
                 np.ones(40, dtype=float),
@@ -433,6 +463,7 @@ class Test_EdgeArtifactFiltering:
     def test_filter_edge_artifact_pairs_removes_scatter_floor_ceiling_and_fluorescence_floor(
         self,
     ):
+        """Check filter edge artifact pairs removes scatter floor ceiling and fluorescence floor."""
         x_values = np.concatenate(
             [
                 np.ones(30, dtype=float),
@@ -462,6 +493,7 @@ class Test_EdgeArtifactFiltering:
         assert float(np.min(filtered_y_values)) > 1.0
 
     def test_resolve_edge_artifact_filter_enabled_defaults_to_true(self):
+        """Check resolve edge artifact filter enabled defaults to true."""
         assert (
             resolve_edge_artifact_filter_enabled(
                 process_settings={},
@@ -482,7 +514,10 @@ class Test_EdgeArtifactFiltering:
 
 
 class Test_PeakWorkflowGraphBuilder1DHistogramRange:
+    """Regression checks for peak workflow graph builder1 dhistogram range."""
+
     def test_advanced_overlay_does_not_expand_histogram_y_range(self):
+        """Check advanced overlay does not expand histogram y range."""
         builder = PeakWorkflowGraphBuilder.__new__(PeakWorkflowGraphBuilder)
         builder.yscale_selection = "linear"
         builder._stable_histogram_count_values = np.asarray(
@@ -509,7 +544,10 @@ class Test_PeakWorkflowGraphBuilder1DHistogramRange:
 
 
 class Test_PeakWorkflowInteractionRevision:
+    """Regression checks for peak workflow interaction revision."""
+
     def test_build_peak_workflow_uirevision_stays_stable_for_overlay_changes(self):
+        """Check build peak workflow uirevision stays stable for overlay changes."""
         first_revision = build_peak_workflow_uirevision(
             uploaded_fcs_path="/tmp/example.fcs",
             process_name="Rosetta Script V1",
@@ -529,6 +567,7 @@ class Test_PeakWorkflowInteractionRevision:
         assert first_revision == second_revision
 
     def test_build_peak_workflow_uirevision_changes_when_axis_mode_changes(self):
+        """Check build peak workflow uirevision changes when axis mode changes."""
         log_revision = build_peak_workflow_uirevision(
             uploaded_fcs_path="/tmp/example.fcs",
             process_name="Manual 2D",
@@ -548,6 +587,7 @@ class Test_PeakWorkflowInteractionRevision:
         assert log_revision != linear_revision
 
     def test_apply_peak_workflow_interaction_revision_sets_uirevision(self):
+        """Check apply peak workflow interaction revision sets uirevision."""
         figure = apply_peak_workflow_interaction_revision(
             figure=go.Figure(),
             uploaded_fcs_path="/tmp/example.fcs",
@@ -562,7 +602,10 @@ class Test_PeakWorkflowInteractionRevision:
 
 
 class Test_PeakWorkflowGraphBuilderRosettaOverlays:
+    """Regression checks for peak workflow graph builder Rosetta overlays."""
+
     def test_rosetta_y_gate_overlay_adds_helper_bands_without_in_plot_labels(self):
+        """Check Rosetta y gate overlay adds helper bands without in plot labels."""
         builder = PeakWorkflowGraphBuilder.__new__(PeakWorkflowGraphBuilder)
         builder.resolved_process_name = "Rosetta Script"
         builder.yscale_selection = "log"
@@ -585,6 +628,7 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
         assert not list(figure.layout.annotations or [])
 
     def test_rosetta_selected_peak_markers_add_vertical_and_horizontal_guides(self):
+        """Check Rosetta selected peak markers add vertical and horizontal guides."""
         builder = PeakWorkflowGraphBuilder.__new__(PeakWorkflowGraphBuilder)
         builder.resolved_process_name = "Rosetta Script"
         builder.advanced_mode_value = ["enabled"]
@@ -633,6 +677,7 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
     def test_rosetta_selected_peak_markers_hide_horizontal_guides_without_advanced_mode(
         self,
     ):
+        """Check Rosetta selected peak markers hide horizontal guides without advanced mode."""
         builder = PeakWorkflowGraphBuilder.__new__(PeakWorkflowGraphBuilder)
         builder.resolved_process_name = "Rosetta Script"
         builder.advanced_mode_value = []
@@ -667,6 +712,7 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
         assert horizontal_shapes == []
 
     def test_rosetta_v1_selected_peak_markers_use_rosetta_guides(self):
+        """Check Rosetta v1 selected peak markers use Rosetta guides."""
         builder = PeakWorkflowGraphBuilder.__new__(PeakWorkflowGraphBuilder)
         builder.resolved_process_name = "Rosetta Script V1"
         builder.advanced_mode_value = ["enabled"]
@@ -717,6 +763,7 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
         assert not list(figure.layout.annotations or [])
 
     def test_add_peak_workflow_post_layout_overlays_adds_rosetta_annotations(self):
+        """Check add peak workflow post layout overlays adds Rosetta annotations."""
         figure = add_peak_workflow_post_layout_overlays(
             figure=go.Figure(),
             process_name="Rosetta Script V1",
@@ -736,6 +783,7 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
         assert [annotation.x for annotation in annotations] == [100.0, 300.0]
 
     def test_add_peak_workflow_post_layout_overlays_places_labels_on_log_x_axis(self):
+        """Check add peak workflow post layout overlays places labels on log x axis."""
         figure = go.Figure()
         figure.update_xaxes(
             type="log",

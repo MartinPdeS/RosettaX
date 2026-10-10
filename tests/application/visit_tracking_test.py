@@ -1,3 +1,11 @@
+"""Regression tests for application visit tracking."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 from flask import Flask
 
@@ -6,7 +14,10 @@ from RosettaX.utils import usage_metrics
 
 
 class Test_VisitTracking:
+    """Regression checks for visit tracking."""
+
     def test_resolve_client_ip_address_prefers_forwarded_for(self) -> None:
+        """Check resolve client ip address prefers forwarded for."""
         app = Flask(__name__)
 
         with app.test_request_context(
@@ -16,6 +27,7 @@ class Test_VisitTracking:
             assert application_callbacks.resolve_client_ip_address() == "8.8.8.8"
 
     def test_resolve_client_ip_address_falls_back_to_remote_addr(self) -> None:
+        """Check resolve client ip address falls back to remote addr."""
         app = Flask(__name__)
 
         with app.test_request_context(
@@ -29,6 +41,7 @@ class Test_VisitTracking:
         tmp_path,
         monkeypatch,
     ) -> None:
+        """Check record request page visit persists request metadata."""
         monkeypatch.setenv(
             usage_metrics.ROSETTAX_VISIT_LOG_PATH_ENV_VAR,
             str(tmp_path / "visit_log.jsonl"),
@@ -58,6 +71,7 @@ class Test_VisitTracking:
         tmp_path,
         monkeypatch,
     ) -> None:
+        """Check record request page visit skips local visits when untracked."""
         monkeypatch.setenv(
             usage_metrics.ROSETTAX_VISIT_LOG_PATH_ENV_VAR,
             str(tmp_path / "visit_log.jsonl"),
@@ -78,6 +92,7 @@ class Test_VisitTracking:
         tmp_path,
         monkeypatch,
     ) -> None:
+        """Check record request page visit works without request context when local enabled."""
         monkeypatch.setenv(
             usage_metrics.ROSETTAX_VISIT_LOG_PATH_ENV_VAR,
             str(tmp_path / "visit_log.jsonl"),

@@ -1,3 +1,11 @@
+"""Regression tests for scattering backend cache."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 from unittest.mock import patch
 
@@ -7,7 +15,10 @@ from RosettaX.pages.p03_scattering.backend import BackEnd
 
 
 class Test_ScatteringBackendCache:
+    """Regression checks for scattering backend cache."""
+
     def test_compute_modeled_coupling_from_diameters_reuses_cached_result(self) -> None:
+        """Check compute modeled coupling from diameters reuses cached result."""
         BackEnd._compute_cached_solid_sphere_coupling.cache_clear()
 
         with patch.object(

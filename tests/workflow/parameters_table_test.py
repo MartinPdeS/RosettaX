@@ -1,3 +1,11 @@
+"""Regression tests for workflow parameters table."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 from unittest.mock import patch
 

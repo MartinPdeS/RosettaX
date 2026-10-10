@@ -1,3 +1,11 @@
+"""Regression tests for apply calibration scattering Mie relation builder."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 from types import SimpleNamespace
 
@@ -15,10 +23,13 @@ from RosettaX.workflow.apply_calibration.scattering.models import (
 
 
 class Test_ApplyCalibrationScatteringMieRelationBuilder:
+    """Regression checks for apply calibration scattering Mie relation builder."""
+
     def test_build_target_mie_relation_for_solid_sphere(
         self,
         monkeypatch,
     ) -> None:
+        """Check build target Mie relation for solid sphere."""
         monkeypatch.setattr(
             "RosettaX.workflow.apply_calibration.scattering.mie_relation_builder.BackEnd.compute_modeled_coupling_from_diameters",
             lambda **kwargs: SimpleNamespace(
@@ -57,6 +68,7 @@ class Test_ApplyCalibrationScatteringMieRelationBuilder:
         self,
         monkeypatch,
     ) -> None:
+        """Check build target Mie relation for core shell."""
         monkeypatch.setattr(
             "RosettaX.workflow.apply_calibration.scattering.mie_relation_builder.BackEnd.compute_modeled_coupling_from_core_shell_dimensions",
             lambda **kwargs: SimpleNamespace(
@@ -95,6 +107,7 @@ class Test_ApplyCalibrationScatteringMieRelationBuilder:
         assert relation.theoretical_coupling == [5.0, 6.0, 7.0]
 
     def test_build_target_mie_relation_rejects_unknown_target_model(self) -> None:
+        """Check build target Mie relation rejects unknown target model."""
         with pytest.raises(TypeError, match="Unsupported target model type"):
             build_target_mie_relation(
                 calibration_payload={
@@ -114,9 +127,11 @@ class Test_ApplyCalibrationScatteringMieRelationBuilder:
         self,
         monkeypatch,
     ) -> None:
+        """Check build target Mie relation uses effective detector geometry and angular weights."""
         captured_kwargs = {}
 
         def _fake_compute_modeled_coupling_from_diameters(**kwargs):
+            """Simulate compute modeled coupling from diameters for this test."""
             captured_kwargs.update(kwargs)
             return SimpleNamespace(
                 particle_diameters_nm=np.asarray(kwargs["particle_diameters_nm"], dtype=float),

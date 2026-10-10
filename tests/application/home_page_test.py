@@ -1,3 +1,11 @@
+"""Regression tests for application home page."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import importlib
 
@@ -8,6 +16,7 @@ from RosettaX.utils.usage_metrics import UsageMetrics
 
 
 def _collect_text(component) -> list[str]:
+    """Collect text recursively from the test component tree."""
     if component is None:
         return []
 
@@ -29,6 +38,7 @@ def _collect_text(component) -> list[str]:
 
 
 def _collect_components(component) -> list[object]:
+    """Collect components recursively from the test layout."""
     if component is None or isinstance(component, str):
         return []
 
@@ -45,10 +55,13 @@ def _collect_components(component) -> list[object]:
 
 
 class Test_HomePage:
+    """Regression checks for home page."""
+
     def test_layout_shows_only_calibrated_file_total_in_welcome_card(
         self,
         monkeypatch,
     ) -> None:
+        """Check layout shows only calibrated file total in welcome card."""
         monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
 
         home_main = importlib.import_module("RosettaX.pages.p01_home.main")
@@ -113,10 +126,12 @@ class Test_HomePage:
 def test_home_version_resolves_installed_metadata_and_source_fallback(
     monkeypatch, installed_version, generated_version, expected,
 ):
+    """Check home version resolves installed metadata and source fallback."""
     monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
     home_main = importlib.import_module("RosettaX.pages.p01_home.main")
 
     def read_installed_version(_name):
+        """Read the version expected by the installed-package check."""
         if installed_version is None:
             raise home_main.importlib.metadata.PackageNotFoundError("RosettaX")
         return installed_version
@@ -128,10 +143,13 @@ def test_home_version_resolves_installed_metadata_and_source_fallback(
 
 
 class Test_GitHubTagResolution:
+    """Regression checks for git hub tag resolution."""
+
     def test_resolve_latest_github_tag_label_uses_ttl_cache(
         self,
         monkeypatch,
     ) -> None:
+        """Check resolve latest github tag label uses ttl cache."""
         monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
 
         home_main = importlib.import_module("RosettaX.pages.p01_home.main")
@@ -163,6 +181,7 @@ class Test_GitHubTagResolution:
         self,
         monkeypatch,
     ) -> None:
+        """Check resolve latest github tag label falls back to last known tag."""
         monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
 
         home_main = importlib.import_module("RosettaX.pages.p01_home.main")

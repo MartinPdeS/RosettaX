@@ -1,5 +1,12 @@
 """Repeated signal reads reuse owned data without hiding file or setting changes."""
 
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
+
 import os
 from unittest.mock import Mock
 
@@ -13,6 +20,7 @@ from RosettaX.utils.reader import FCSFile
 
 @pytest.fixture
 def signal_file(tmp_path, monkeypatch):
+    """Create a temporary signal file for cache checks."""
     io._signal_cache.clear()
     path = tmp_path / "signal.fcs"
     FCSFile.builder_from_dataframe(
@@ -30,6 +38,7 @@ def signal_file(tmp_path, monkeypatch):
 
 
 def test_reuses_signal_without_sharing_mutable_results(signal_file):
+    """Check reuses signal without sharing mutable results."""
     path, reader = signal_file
     first = io.load_signal(path, "SSC")
     first[0] = 1000
@@ -40,6 +49,7 @@ def test_reuses_signal_without_sharing_mutable_results(signal_file):
 
 
 def test_settings_and_channel_have_distinct_cache_entries(signal_file):
+    """Check settings and channel have distinct cache entries."""
     path, reader = signal_file
     assert io.load_signal(path, "SSC", 2).tolist() == [-1.0, 0.0]
     assert io.load_signal(path, "SSC", 2, True).tolist() == [2.0, 4.0]
@@ -49,6 +59,7 @@ def test_settings_and_channel_have_distinct_cache_entries(signal_file):
 
 
 def test_replaced_file_invalidates_even_with_same_size_and_mtime(signal_file):
+    """Check replaced file invalidates even with same size and mtime."""
     path, reader = signal_file
     io.load_signal(path, "SSC")
     original_stat = path.stat()
@@ -72,6 +83,7 @@ def test_replaced_file_invalidates_even_with_same_size_and_mtime(signal_file):
 
 
 def test_cache_evicts_by_bytes_and_skips_oversized_signals(signal_file, monkeypatch):
+    """Check cache evicts by bytes and skips oversized signals."""
     path, reader = signal_file
     monkeypatch.setattr(io, "_SIGNAL_CACHE_MAX_BYTES", 40)
     io.load_signal(path, "SSC")  # 32 bytes

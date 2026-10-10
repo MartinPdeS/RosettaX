@@ -1,3 +1,11 @@
+"""Regression tests for settings default services."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 from RosettaX.pages.p05_settings.sections.s01_default import schema, services
 from RosettaX.utils.runtime_config import RuntimeConfig
@@ -13,7 +21,10 @@ from RosettaX.workflow.table.fluorescence import (
 
 
 class Test_SettingsDefaultServicesPresetPreferences:
+    """Regression checks for settings default services preset preferences."""
+
     def test_schema_exposes_manual_selection_options_for_optional_defaults(self):
+        """Check schema exposes manual selection options for optional defaults."""
         assert schema.PEAK_PROCESS_OPTIONS[0] == {
             "label": "Select",
             "value": "",
@@ -28,6 +39,7 @@ class Test_SettingsDefaultServicesPresetPreferences:
         }
 
     def test_build_form_store_reads_saved_preset_preferences(self):
+        """Check build form store reads saved preset preferences."""
         runtime_config = RuntimeConfig.from_dict(
             {
                 "calibration": {
@@ -55,6 +67,7 @@ class Test_SettingsDefaultServicesPresetPreferences:
         )
 
     def test_build_form_store_preserves_manual_selection_defaults(self):
+        """Check build form store preserves manual selection defaults."""
         runtime_config = RuntimeConfig.from_dict(
             {
                 "calibration": {
@@ -76,6 +89,7 @@ class Test_SettingsDefaultServicesPresetPreferences:
         assert form_store["default_apply_target_model_preset"] == ""
 
     def test_build_nested_profile_payload_saves_preset_preferences(self):
+        """Check build nested profile payload saves preset preferences."""
         nested_profile_payload = services.build_nested_profile_payload(
             {
                 "default_fluorescence_reference_preset": GENERIC_FLUORESCENCE_REFERENCE_PRESET_NAME,
@@ -101,6 +115,7 @@ class Test_SettingsDefaultServicesPresetPreferences:
         )
 
     def test_build_nested_profile_payload_keeps_manual_mesf_values_for_custom_preset(self):
+        """Check build nested profile payload keeps manual MESF values for custom preset."""
         nested_profile_payload = services.build_nested_profile_payload(
             {
                 "default_fluorescence_reference_preset": CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME,
@@ -115,7 +130,10 @@ class Test_SettingsDefaultServicesPresetPreferences:
 
 
 class Test_SettingsDefaultServicesPeakTableSortOrder:
+    """Regression checks for settings default services peak table sort order."""
+
     def test_build_form_store_reads_saved_peak_table_sort_order_preferences(self):
+        """Check build form store reads saved peak table sort order preferences."""
         runtime_config = RuntimeConfig.from_dict(
             {
                 "fluorescence_calibration": {
@@ -135,6 +153,7 @@ class Test_SettingsDefaultServicesPeakTableSortOrder:
         assert form_store["scattering_peak_table_sort_order"] == "descending"
 
     def test_build_nested_profile_payload_saves_peak_table_sort_order_preferences(self):
+        """Check build nested profile payload saves peak table sort order preferences."""
         nested_profile_payload = services.build_nested_profile_payload(
             {
                 "fluorescence_peak_table_sort_order": "descending",
@@ -153,9 +172,12 @@ class Test_SettingsDefaultServicesPeakTableSortOrder:
 
 
 class Test_SettingsDefaultServicesCanonicalSharedPaths:
+    """Regression checks for settings default services canonical shared paths."""
+
     def test_build_nested_profile_payload_saves_shared_calibration_fields_to_canonical_paths(
         self,
     ):
+        """Check build nested profile payload saves shared calibration fields to canonical paths."""
         nested_profile_payload = services.build_nested_profile_payload(
             {
                 "mesf_values": "100, 200, 300",
@@ -186,7 +208,10 @@ class Test_SettingsDefaultServicesCanonicalSharedPaths:
 
 
 class Test_SettingsDefaultServicesProfileNamePersistence:
+    """Regression checks for settings default services profile name persistence."""
+
     def test_save_profile_preserves_existing_profile_name_metadata(self):
+        """Check save profile preserves existing profile name metadata."""
         saved_browser_profiles = services.save_profile(
             "custom profile",
             {

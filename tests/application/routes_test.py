@@ -1,3 +1,11 @@
+"""Regression tests for application routes."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import sys
 import types
@@ -8,15 +16,22 @@ from dash import html
 
 
 class _DashBootstrapComponentsSentinel:
+    """Callable component sentinel for lightweight Dash Bootstrap test setup."""
+
     def __call__(self, *args, **kwargs):
+        """Provide the callable behavior required by this test double."""
         return None
 
     def __getattr__(self, name):
+        """Handle dynamic attribute lookup for this test double."""
         return self
 
 
 class _DashBootstrapComponentsStub(types.ModuleType):
+    """Minimal Dash Bootstrap components used by the unit tests."""
+
     def __getattr__(self, name):
+        """Handle dynamic attribute lookup for this test double."""
         return _DashBootstrapComponentsSentinel()
 
 
@@ -35,10 +50,13 @@ from RosettaX.utils.streamed_uploads import resolve_streamed_upload
 
 
 class Test_ApplicationRoutes:
+    """Regression checks for application routes."""
+
     def test_streamed_upload_route_writes_request_body_and_returns_token(
         self,
         tmp_path,
     ) -> None:
+        """Check streamed upload route writes request body and returns token."""
         app = dash.Dash(__name__)
         app.layout = html.Div()
         app.server.config["ROSETTAX_STREAMED_UPLOAD_DIRECTORY"] = str(tmp_path)
@@ -71,6 +89,7 @@ class Test_ApplicationRoutes:
         self,
         tmp_path,
     ) -> None:
+        """Check streamed upload route rejects request above configured limit."""
         app = dash.Dash(__name__)
         app.layout = html.Div()
         app.server.config["ROSETTAX_STREAMED_UPLOAD_DIRECTORY"] = str(tmp_path)
@@ -92,6 +111,7 @@ class Test_ApplicationRoutes:
         tmp_path,
         monkeypatch,
     ) -> None:
+        """Check streamed upload route returns stable error for storage failure."""
         app = dash.Dash(__name__)
         app.layout = html.Div()
         app.server.config["ROSETTAX_STREAMED_UPLOAD_DIRECTORY"] = str(tmp_path)
@@ -116,6 +136,7 @@ class Test_ApplicationRoutes:
         tmp_path,
         monkeypatch,
     ) -> None:
+        """Check calibration JSON route rejects path traversal."""
         monkeypatch.setattr(
             "RosettaX.utils.directories.fluorescence_calibration",
             tmp_path / "fluorescence",
@@ -142,6 +163,7 @@ class Test_ApplicationRoutes:
         tmp_path,
         monkeypatch,
     ) -> None:
+        """Check calibration JSON route returns error document for malformed JSON."""
         fluorescence_directory = tmp_path / "fluorescence"
         fluorescence_directory.mkdir()
         (fluorescence_directory / "broken.json").write_text(
@@ -172,6 +194,7 @@ class Test_ApplicationRoutes:
         self,
         monkeypatch,
     ) -> None:
+        """Check calibration JSON route returns stable error for storage failure."""
         app = dash.Dash(__name__)
         app.layout = html.Div()
         register_server_routes(app)

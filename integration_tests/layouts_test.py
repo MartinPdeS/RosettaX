@@ -1,5 +1,12 @@
 """Construct every page with real Dash and Bootstrap property validation."""
 
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
+
 import json
 
 import dash
@@ -13,6 +20,7 @@ from RosettaX.application.pages import PAGE_MODULES
 
 @pytest.mark.parametrize("module", PAGE_MODULES)
 def test_registered_page_layout_uses_real_components(application, module):
+    """Check registered page layout uses real components."""
     assert issubclass(dbc.Button, Component)
     page = dash.page_registry[module]
     with application.server.test_request_context(page["path"]):
@@ -25,6 +33,7 @@ def test_registered_page_layout_uses_real_components(application, module):
 
 @pytest.mark.parametrize("path", ["/", "/_dash-layout", "/_dash-dependencies"])
 def test_real_dash_application_endpoints(application, path):
+    """Check real Dash application endpoints."""
     response = application.server.test_client().get(path)
     assert response.status_code == 200
     if path != "/":

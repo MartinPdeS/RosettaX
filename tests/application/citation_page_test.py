@@ -1,3 +1,11 @@
+"""Regression tests for application citation page."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import importlib
 
@@ -5,6 +13,7 @@ import dash
 
 
 def _collect_text(component) -> list[str]:
+    """Collect text recursively from the test component tree."""
     if component is None:
         return []
 
@@ -26,10 +35,13 @@ def _collect_text(component) -> list[str]:
 
 
 class Test_CitationPage:
+    """Regression checks for citation page."""
+
     def test_layout_includes_requested_zenodo_record_and_bibtex(
         self,
         monkeypatch,
     ) -> None:
+        """Check layout includes requested zenodo record and bibtex."""
         monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
 
         citation_main = importlib.import_module("RosettaX.pages.p20_citation.main")

@@ -1,3 +1,11 @@
+"""Regression tests for workflow cross calibration services."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import base64
 import json
@@ -8,6 +16,7 @@ from RosettaX.workflow.cross_calibration import services
 
 
 def _build_fluorescence_record() -> dict:
+    """Build fluorescence record for this test."""
     return {
         "schema": "rosettax_calibration_v1",
         "payload": {
@@ -28,6 +37,7 @@ def _build_fluorescence_record() -> dict:
 
 
 def _build_scattering_record() -> dict:
+    """Build scattering record for this test."""
     return {
         "schema": "rosettax_calibration_v1",
         "payload": {
@@ -42,12 +52,16 @@ def _build_scattering_record() -> dict:
 
 
 def _build_dash_upload_contents(payload: dict) -> str:
+    """Build Dash upload contents for this test."""
     raw_bytes = json.dumps(payload).encode("utf-8")
     return "data:application/json;base64," + base64.b64encode(raw_bytes).decode("ascii")
 
 
 class Test_CrossCalibrationServices:
+    """Regression checks for cross calibration services."""
+
     def test_build_cross_calibration_uirevision_changes_with_result_identity(self) -> None:
+        """Check build cross calibration uirevision changes with result identity."""
         first_revision = services.build_cross_calibration_uirevision(
             {
                 "primary_file_name": "primary_a.json",
@@ -71,12 +85,14 @@ class Test_CrossCalibrationServices:
         assert first_revision != second_revision
 
     def test_build_upload_prompt_text_does_not_mention_file_size(self) -> None:
+        """Check build upload prompt text does not mention file size."""
         prompt_text = services.build_upload_prompt_text("primary reference")
 
         assert "Maximum file size" not in prompt_text
         assert prompt_text == "Select primary reference calibration JSON"
 
     def test_parse_uploaded_calibration_rejects_unsupported_schema(self) -> None:
+        """Check parse uploaded calibration rejects unsupported schema."""
         invalid_record = {
             "schema": "unsupported",
             "payload": {
@@ -93,6 +109,7 @@ class Test_CrossCalibrationServices:
     def test_build_cross_calibration_result_builds_primary_to_secondary_transfer_relation(
         self,
     ) -> None:
+        """Check build cross calibration result builds primary to secondary transfer relation."""
         primary_record = _build_fluorescence_record()
         secondary_record = _build_fluorescence_record()
         secondary_record["payload"]["reference_points"] = [
@@ -130,6 +147,7 @@ class Test_CrossCalibrationServices:
         assert result.points[0].secondary_measured_value is not None
 
     def test_build_cross_calibration_result_rejects_mismatched_types(self) -> None:
+        """Check build cross calibration result rejects mismatched types."""
         fluorescence_record = _build_fluorescence_record()
         scattering_record = _build_scattering_record()
 
@@ -149,6 +167,7 @@ class Test_CrossCalibrationServices:
             )
 
     def test_build_export_payload_wraps_result_with_cross_schema(self) -> None:
+        """Check build export payload wraps result with cross schema."""
         result = {
             "point_count": 3,
             "r_squared": 0.998,
@@ -168,6 +187,7 @@ class Test_CrossCalibrationServices:
         assert payload["payload"]["name"] == "apogee_fitc_cross"
 
     def test_build_result_figure_sets_stable_uirevision(self) -> None:
+        """Check build result figure sets stable uirevision."""
         result = {
             "primary_file_name": "primary.json",
             "secondary_file_name": "secondary.json",

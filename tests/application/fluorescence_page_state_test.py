@@ -1,9 +1,20 @@
+"""Regression tests for application fluorescence page state."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 from RosettaX.pages.p02_fluorescence.state import FluorescencePageState
 
 
 class Test_FluorescencePageState:
+    """Regression checks for fluorescence page state."""
+
     def test_reference_table_rows_defaults_to_none_when_missing(self) -> None:
+        """Check reference table rows defaults to none when missing."""
         page_state = FluorescencePageState.from_dict(
             {
                 "uploaded_fcs_path": "/tmp/example.fcs",
@@ -14,6 +25,7 @@ class Test_FluorescencePageState:
         assert page_state.reference_table_rows is None
 
     def test_update_persists_reference_table_rows(self) -> None:
+        """Check update persists reference table rows."""
         page_state = FluorescencePageState.empty().update(
             reference_table_rows=[
                 {
@@ -34,6 +46,7 @@ class Test_FluorescencePageState:
         ]
 
     def test_update_persists_last_detector_channels(self) -> None:
+        """Check update persists last detector channels."""
         page_state = FluorescencePageState.empty().update(
             last_detector_channels=["B1-H", "B2-H"],
         )

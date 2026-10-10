@@ -1,3 +1,11 @@
+"""Regression tests for workflow peak mutation run replace."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
 
 import sys
 import types
@@ -8,20 +16,28 @@ import pytest
 
 
 class _DashBootstrapComponentsSentinel:
+    """Callable component sentinel for lightweight Dash Bootstrap test setup."""
+
     def __init__(self, *args, **kwargs):
+        """Initialize the state required by this test double."""
         self.args = args
         self.kwargs = kwargs
         self.color = kwargs.get("color")
 
     def __call__(self, *args, **kwargs):
+        """Provide the callable behavior required by this test double."""
         return _DashBootstrapComponentsSentinel(*args, **kwargs)
 
     def __getattr__(self, name):
+        """Handle dynamic attribute lookup for this test double."""
         return self
 
 
 class _DashBootstrapComponentsStub(types.ModuleType):
+    """Minimal Dash Bootstrap components used by the unit tests."""
+
     def __getattr__(self, name):
+        """Handle dynamic attribute lookup for this test double."""
         return _DashBootstrapComponentsSentinel
 
 
@@ -34,21 +50,30 @@ from RosettaX.workflow.peak.callbacks import mutation
 
 
 class _StubPageState:
+    """Test double for stub page state."""
+
     def __init__(self, payload=None):
+        """Initialize the state required by this test double."""
         self._payload = dict(payload or {})
 
     def to_dict(self):
+        """Serialize the state carried by this test double."""
         return dict(self._payload)
 
 
 class _StubAdapter:
+    """Test double for stub adapter."""
+
     def __init__(self):
+        """Initialize the state required by this test double."""
         self.calls = []
 
     def get_backend(self, *, uploaded_fcs_path):
+        """Get backend for this test."""
         return SimpleNamespace(uploaded_fcs_path=uploaded_fcs_path)
 
     def apply_peak_process_result_to_table(self, *, table_data, result, context, logger):
+        """Apply peak process result to table for this test."""
         self.calls.append(
             {
                 "table_data": table_data,
@@ -66,25 +91,31 @@ class _StubAdapter:
         return [{"measured_peak_position": 123.0}]
 
     def update_peak_lines_payload(self, *, page_state, peak_lines_payload):
+        """Update peak lines payload for this test."""
         return page_state
 
     def get_page_state_payload(self, *, page_state):
+        """Get page state payload for this test."""
         if hasattr(page_state, "to_dict"):
             return page_state.to_dict()
 
         return dict(page_state or {})
 
     def build_page_state(self, *, payload):
+        """Build page state for this test."""
         return _StubPageState(payload)
 
 
 class _StubProcess:
+    """Test double for stub process."""
+
     supports_automatic_action = True
     process_name = "automatic_1d_peaks"
 
 
 @pytest.mark.parametrize("starting_rows", [[{"measured_peak_position": 9.9}], None])
 def test_handle_run_action_appends_using_cleared_rows(monkeypatch, starting_rows):
+    """Check handle run action appends using cleared rows."""
     adapter = _StubAdapter()
 
     result = SimpleNamespace(
@@ -137,6 +168,7 @@ def test_handle_run_action_appends_using_cleared_rows(monkeypatch, starting_rows
 
 
 def test_handle_run_action_syncs_reference_table_rows_in_page_state(monkeypatch):
+    """Check handle run action syncs reference table rows in page state."""
     adapter = _StubAdapter()
 
     result = SimpleNamespace(
@@ -186,6 +218,7 @@ def test_handle_run_action_syncs_reference_table_rows_in_page_state(monkeypatch)
 
 
 def test_handle_manual_graph_click_ignores_empty_selection_reset(monkeypatch):
+    """Check handle manual graph click ignores empty selection reset."""
     manual_process = SimpleNamespace(
         supports_manual_click=True,
         process_name="manual_2d_click",
@@ -230,6 +263,7 @@ def test_handle_manual_graph_click_ignores_empty_selection_reset(monkeypatch):
 def test_handle_manual_graph_click_ignores_empty_selection_reset_with_stale_click_data(
     monkeypatch,
 ):
+    """Check handle manual graph click ignores empty selection reset with stale click data."""
     manual_process = SimpleNamespace(
         supports_manual_click=True,
         process_name="manual_2d_click",
@@ -281,6 +315,7 @@ def test_handle_manual_graph_click_ignores_empty_selection_reset_with_stale_clic
 def test_handle_manual_graph_click_ignores_empty_selection_payload_dict(
     monkeypatch,
 ):
+    """Check handle manual graph click ignores empty selection payload dict."""
     manual_process = SimpleNamespace(
         supports_manual_click=True,
         process_name="manual_2d_click",
