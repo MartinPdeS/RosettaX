@@ -14,6 +14,7 @@ from RosettaX.workflow.apply_calibration.scattering import (
 )
 
 from . import services
+from .models import TargetMiePreviewControls
 
 logger = logging.getLogger(__name__)
 
@@ -784,253 +785,25 @@ class CalibrationPickerCallbacks:
             monotonic_smoothing_sigma_points: Any,
             axis_scale_toggle_values: Any,
         ) -> tuple[Any, str, str]:
-            logger.debug(
-                "update_target_mie_relation_preview called with "
-                "selected_calibration_summary=%r target_mie_model=%r "
-                "target_medium_refractive_index=%r target_particle_refractive_index=%r "
-                "target_solid_sphere_diameter_min_nm=%r "
-                "target_solid_sphere_diameter_max_nm=%r "
-                "target_solid_sphere_diameter_count=%r "
-                "target_core_refractive_index=%r target_shell_refractive_index=%r "
-                "target_shell_thickness_nm=%r "
-                "target_core_shell_core_diameter_min_nm=%r "
-                "target_core_shell_core_diameter_max_nm=%r "
-                "target_core_shell_core_diameter_count=%r "
-                "target_model_preset=%r "
-                "advanced_monotonic_mode_enabled=%r "
-                "use_monotonic_smoothing_kernel=%r "
-                "monotonic_smoothing_sigma_points=%r "
-                "axis_scale_toggle_values=%r",
-                selected_calibration_summary,
-                target_mie_model,
-                target_medium_refractive_index,
-                target_particle_refractive_index,
-                target_solid_sphere_diameter_min_nm,
-                target_solid_sphere_diameter_max_nm,
-                target_solid_sphere_diameter_count,
-                target_core_refractive_index,
-                target_shell_refractive_index,
-                target_shell_thickness_nm,
-                target_core_shell_core_diameter_min_nm,
-                target_core_shell_core_diameter_max_nm,
-                target_core_shell_core_diameter_count,
-                target_model_preset,
-                advanced_monotonic_mode_enabled,
-                use_monotonic_smoothing_kernel,
-                monotonic_smoothing_sigma_points,
-                axis_scale_toggle_values,
+            controls = TargetMiePreviewControls(
+                selected_calibration_summary=selected_calibration_summary,
+                target_mie_model=target_mie_model,
+                target_medium_refractive_index=target_medium_refractive_index,
+                target_particle_refractive_index=target_particle_refractive_index,
+                target_solid_sphere_diameter_min_nm=target_solid_sphere_diameter_min_nm,
+                target_solid_sphere_diameter_max_nm=target_solid_sphere_diameter_max_nm,
+                target_solid_sphere_diameter_count=target_solid_sphere_diameter_count,
+                target_core_refractive_index=target_core_refractive_index,
+                target_shell_refractive_index=target_shell_refractive_index,
+                target_shell_thickness_nm=target_shell_thickness_nm,
+                target_core_shell_core_diameter_min_nm=target_core_shell_core_diameter_min_nm,
+                target_core_shell_core_diameter_max_nm=target_core_shell_core_diameter_max_nm,
+                target_core_shell_core_diameter_count=target_core_shell_core_diameter_count,
+                target_model_preset=target_model_preset,
+                advanced_monotonic_mode_enabled=advanced_monotonic_mode_enabled,
+                use_monotonic_smoothing_kernel=use_monotonic_smoothing_kernel,
+                monotonic_smoothing_sigma_points=monotonic_smoothing_sigma_points,
+                axis_scale_toggle_values=axis_scale_toggle_values,
             )
-
-            scattering_calibration_summary = (
-                services.get_primary_scattering_calibration_summary(
-                    selected_calibration_summary,
-                )
-            )
-
-            if scattering_calibration_summary is None:
-                return (
-                    services.build_empty_target_mie_relation_figure(),
-                    "Select a scattering calibration to preview the target Mie relation.",
-                    "secondary",
-                )
-
-            if not services.has_selected_target_model_preset(target_model_preset):
-                return (
-                    services.build_empty_target_mie_relation_figure(),
-                    "Select a target model preset to preview the target Mie relation.",
-                    "secondary",
-                )
-
-            try:
-                from RosettaX.workflow.apply_calibration.scattering import (
-                    ScatteringTargetModelParameters,
-                    build_target_mie_relation,
-                    find_strictly_monotonic_diameter_intervals,
-                    format_monotonic_interval_suggestions,
-                    get_finite_positive_mie_relation_arrays,
-                    resolve_monotonic_target_mie_relation,
-                )
-
-                calibration_payload = scattering_calibration_summary.get(
-                    "calibration_payload",
-                )
-
-                if not isinstance(calibration_payload, dict) or not calibration_payload:
-                    raise ValueError("Uploaded calibration payload is missing.")
-
-                resolved_target_mie_model = services.resolve_target_mie_model(
-                    target_mie_model=target_mie_model,
-                )
-
-                is_core_shell_model = resolved_target_mie_model == "Core/Shell Sphere"
-
-                if is_core_shell_model:
-                    resolved_target_diameter_min_nm = target_core_shell_core_diameter_min_nm
-                    resolved_target_diameter_max_nm = target_core_shell_core_diameter_max_nm
-                    resolved_target_diameter_count = target_core_shell_core_diameter_count
-                    x_axis_title = "Target core diameter [nm]"
-
-                else:
-                    resolved_target_diameter_min_nm = target_solid_sphere_diameter_min_nm
-                    resolved_target_diameter_max_nm = target_solid_sphere_diameter_max_nm
-                    resolved_target_diameter_count = target_solid_sphere_diameter_count
-                    x_axis_title = "Target particle diameter [nm]"
-
-                target_model_parameters = ScatteringTargetModelParameters.from_raw_values(
-                    target_mie_model=resolved_target_mie_model,
-                    target_medium_refractive_index=target_medium_refractive_index,
-                    target_particle_refractive_index=target_particle_refractive_index,
-                    target_core_refractive_index=target_core_refractive_index,
-                    target_shell_refractive_index=target_shell_refractive_index,
-                    target_shell_thickness_nm=target_shell_thickness_nm,
-                    target_diameter_min_nm=resolved_target_diameter_min_nm,
-                    target_diameter_max_nm=resolved_target_diameter_max_nm,
-                    target_diameter_count=resolved_target_diameter_count,
-                    advanced_monotonic_mode_enabled=advanced_monotonic_mode_enabled,
-                    use_monotonic_smoothing_kernel=use_monotonic_smoothing_kernel,
-                    monotonic_smoothing_sigma_points=monotonic_smoothing_sigma_points,
-                )
-
-                calibration_file_name = str(
-                    scattering_calibration_summary.get("file_name", "") if isinstance(scattering_calibration_summary, dict) else ""
-                ).strip()
-
-                preview_uirevision = repr(
-                    (
-                        calibration_file_name,
-                        resolved_target_mie_model,
-                        target_medium_refractive_index,
-                        target_particle_refractive_index,
-                        target_core_refractive_index,
-                        target_shell_refractive_index,
-                        target_shell_thickness_nm,
-                        resolved_target_diameter_min_nm,
-                        resolved_target_diameter_max_nm,
-                        resolved_target_diameter_count,
-                        target_model_preset,
-                        bool(advanced_monotonic_mode_enabled),
-                        bool(use_monotonic_smoothing_kernel),
-                        monotonic_smoothing_sigma_points,
-                        axis_scale_toggle_values,
-                    )
-                )
-
-                full_target_mie_relation = build_target_mie_relation(
-                    calibration_payload=calibration_payload,
-                    target_model_parameters=target_model_parameters,
-                )
-
-                full_diameter_values_nm, full_coupling_values = (
-                    get_finite_positive_mie_relation_arrays(
-                        target_mie_relation=full_target_mie_relation,
-                    )
-                )
-
-                relation_resolution = resolve_monotonic_target_mie_relation(
-                    target_mie_relation=full_target_mie_relation,
-                    target_model_parameters=target_model_parameters,
-                )
-
-                if relation_resolution.used_auto_largest_branch:
-                    selected_interval = relation_resolution.selected_interval
-
-                    if selected_interval is None:
-                        raise ValueError(
-                            "Expected a selected monotonic interval for non-monotonic target Mie relation."
-                        )
-
-                    full_diameter_values_nm[
-                        selected_interval.start_index : selected_interval.end_index + 1
-                    ]
-                    full_coupling_values[
-                        selected_interval.start_index : selected_interval.end_index + 1
-                    ]
-
-                    (
-                        approximation_diameter_values_nm,
-                        approximation_coupling_values,
-                    ) = get_finite_positive_mie_relation_arrays(
-                        target_mie_relation=relation_resolution.target_mie_relation,
-                    )
-
-                    all_monotonic_intervals = find_strictly_monotonic_diameter_intervals(
-                        diameter_nm=full_diameter_values_nm,
-                        theoretical_coupling=full_coupling_values,
-                    )
-
-                    logger.info(
-                        "Target Mie relation was not strictly monotonic. "
-                        "Auto left-most branch selected. selected_interval=%r "
-                        "all_interval_suggestions=%s",
-                        relation_resolution.selected_interval,
-                        format_monotonic_interval_suggestions(
-                            monotonic_intervals=all_monotonic_intervals,
-                            max_interval_count=20,
-                        ),
-                    )
-
-                    figure = services.build_target_mie_relation_figure(
-                        full_diameter_values_nm=full_diameter_values_nm,
-                        full_coupling_values=full_coupling_values,
-                        monotone_diameter_values_nm=approximation_diameter_values_nm,
-                        monotone_coupling_values=approximation_coupling_values,
-                        axis_scale_toggle_values=axis_scale_toggle_values,
-                        x_axis_title=x_axis_title,
-                        uirevision=preview_uirevision,
-                    )
-
-                    selected_interval_message = selected_interval.to_message_fragment()
-
-                    return (
-                        figure,
-                        (
-                            "Target Mie relation is not monotonic over the full range. "
-                            "Using auto left-most monotonic branch to build a monotone approximation: "
-                            f"{selected_interval_message}."
-                            + (
-                                " Gaussian smoothing is enabled."
-                                if (
-                                    target_model_parameters.advanced_monotonic_mode_enabled
-                                    and target_model_parameters.use_monotonic_smoothing_kernel
-                                )
-                                else ""
-                            )
-                        ),
-                        "warning",
-                    )
-
-                monotone_diameter_values_nm, monotone_coupling_values = (
-                    get_finite_positive_mie_relation_arrays(
-                        target_mie_relation=relation_resolution.target_mie_relation,
-                    )
-                )
-
-                figure = services.build_target_mie_relation_figure(
-                    full_diameter_values_nm=full_diameter_values_nm,
-                    full_coupling_values=full_coupling_values,
-                    monotone_diameter_values_nm=monotone_diameter_values_nm,
-                    monotone_coupling_values=monotone_coupling_values,
-                    axis_scale_toggle_values=axis_scale_toggle_values,
-                    x_axis_title=x_axis_title,
-                    uirevision=preview_uirevision,
-                )
-
-                return (
-                    figure,
-                    (
-                        "Target Mie relation is strictly monotonic over the selected "
-                        "diameter range. Full range will be used for diameter inversion."
-                    ),
-                    "success",
-                )
-
-            except Exception as exc:
-                logger.exception(
-                    "Failed to update target Mie relation preview."
-                )
-
-                return (
-                    services.build_empty_target_mie_relation_figure(),
-                    f"Failed to compute target Mie relation preview: {type(exc).__name__}: {exc}",
-                    "danger",
-                )
+            result = services.build_target_mie_relation_preview(controls)
+            return result.to_callback_values()

@@ -329,11 +329,16 @@ This creates a standalone bundle under ``dist/rosettax`` for the current
 operating system. Cross platform bundles must still be built natively on each
 target operating system.
 
-Run the unit test suite with:
+Run static checks and the unit test suite with:
 
 .. code-block:: bash
 
-   pytest
+   make lint
+   make test
+
+Both commands use Python 3.13 by default. Set ``PYTHON`` to use a specific
+interpreter, for example ``make test PYTHON=.venv/bin/python``. Pre-commit uses
+Ruff for linting and formatting.
 
 Run tests with coverage using:
 

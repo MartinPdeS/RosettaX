@@ -3,8 +3,8 @@ from typing import Any
 
 import dash
 
-from RosettaX.pages.p00_sidebar.ids import SidebarIds
 from RosettaX.utils.runtime_config import RuntimeConfig
+from RosettaX.workflow.page_session.ids import PROFILE_LOAD_EVENT_STORE_ID
 from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
 
 from .. import registry
@@ -133,7 +133,7 @@ class PeakWorkflowCallbacks:
         @dash.callback(
             outputs,
             dash.Input(runtime_config_store_id, "data"),
-            dash.Input(SidebarIds.profile_load_event_store, "data"),
+            dash.Input(PROFILE_LOAD_EVENT_STORE_ID, "data"),
             *states,
             prevent_initial_call=True,
         )

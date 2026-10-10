@@ -1,5 +1,6 @@
 
 import logging
+from dataclasses import dataclass
 from typing import Any
 
 import dash
@@ -10,28 +11,23 @@ from .base import BasePeakWorkflowAdapter
 logger = logging.getLogger(__name__)
 
 
-class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
+@dataclass(slots=True)
+class BackEnd:
     """
-    Adapter for the fluorescence calibration peak workflow.
+    Minimal fluorescence backend adapter used by the shared peak workflow.
 
-    Responsibilities
-    ----------------
-    - Retrieve the page-owned fluorescence backend.
-    - Convert automatic or manual peak workflow results into scalar x values.
-    - Append scalar x values into the fluorescence calibration table.
-    - Clear the measured fluorescence peak column when requested.
+    The fluorescence page currently only needs a container that exposes the
+    uploaded FCS file path. This class makes that contract explicit.
+    """
 
-    Non responsibilities
-    --------------------
-    - This adapter does not create backends.
-    - This adapter does not store or resolve FCS file paths.
-    - This adapter does not read FCS files directly.
-    - This adapter does not build histograms.
-    - This adapter does not perform peak detection itself.
+    fcs_file_path: str | None = None
 
-    The fluorescence page owns the uploaded file context and the backend lifecycle.
-    The shared peak workflow only consumes a backend-like object already exposed by
-    the page.
+
+class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
+    """Translate peak results into fluorescence table rows and annotations.
+
+    The adapter builds a backend carrying the selected upload path. Numerical
+    peak detection remains in the process implementations.
     """
 
     peak_lines_payload_keys: tuple[str, ...] = (
@@ -92,16 +88,9 @@ class FluorescencePeakWorkflowAdapter(BasePeakWorkflowAdapter):
 
     def get_backend(self, uploaded_fcs_path: Any = None) -> Any:
         """
-        Return the page-owned backend compatible with the shared peak workflow.
-
-        ``uploaded_fcs_path`` is accepted only for interface compatibility with
-        ``BasePeakWorkflowAdapter``. It is intentionally not used here.
+        Return the fluorescence FCS path adapter for the selected upload.
         """
-        from RosettaX.pages.p02_fluorescence.backend import BackEnd
-
-        backend = BackEnd()
-        backend.fcs_file_path = uploaded_fcs_path
-        return backend
+        return BackEnd(fcs_file_path=uploaded_fcs_path)
 
     def apply_peak_process_result_to_table(
         self,

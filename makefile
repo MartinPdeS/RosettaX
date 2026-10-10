@@ -1,7 +1,8 @@
 PYTHON ?= python3.13
 BUILD_DIR ?= build
 ROOT_DIR := $(CURDIR)
-PYBIND11_DIR := $(shell $(PYTHON) -m pybind11 --cmakedir)
+.DEFAULT_GOAL := configure
+PYBIND11_DIR = $(shell $(PYTHON) -m pybind11 --cmakedir)
 DIST_DIR ?= dist
 BUNDLE_DIR ?= $(DIST_DIR)/rosettax
 RELEASE_KIND := $(filter major minor patch,$(MAKECMDGOALS))
@@ -20,7 +21,13 @@ endif
 
 .PHONY: configure build install quick rebuild editable bundle \
 	mac-bundle windows-bundle linux-bundle bundle-zip \
-	mac-release windows-release linux-release release tag major minor patch clean
+	mac-release windows-release linux-release release tag major minor patch clean lint test
+
+lint:
+	$(PYTHON) -m ruff check RosettaX tests
+
+test:
+	$(PYTHON) -m pytest
 
 configure:
 	cmake -S . -B $(BUILD_DIR) \

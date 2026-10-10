@@ -19,4 +19,4 @@ jobs:
           python-version: "3.13"
           install-command: >-
             python -m pip install "ruff>=0.6,<1"
-      - run: python -m ruff check RosettaX tests
+      - run: make lint PYTHON=python

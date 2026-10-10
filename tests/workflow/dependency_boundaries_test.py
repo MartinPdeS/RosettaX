@@ -8,7 +8,16 @@ import pytest
 
 @pytest.mark.parametrize(
     "module_name",
-    ["RosettaX.workflow.detector.mesh", "RosettaX.workflow.parameters"],
+    [
+        "RosettaX.workflow.detector.mesh",
+        "RosettaX.workflow.parameters",
+        "RosettaX.workflow.table.scattering",
+        "RosettaX.workflow.upload.adapters",
+        "RosettaX.workflow.peak.adapters.fluorescence",
+        "RosettaX.workflow.peak.callbacks.shared",
+        "RosettaX.workflow.page_session.fluorescence",
+        "RosettaX.workflow.page_session.scattering",
+    ],
 )
 def test_workflow_import_does_not_load_pages(module_name):
     result = subprocess.run(

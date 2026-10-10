@@ -1,3 +1,6 @@
+from RosettaX.workflow.page_session.ids import PROFILE_LOAD_EVENT_STORE_ID
+
+
 class SidebarIds:
     prefix = "sidebar"
     calibration_toggle_button = f"{prefix}-calibration-toggle-button"
@@ -22,4 +25,4 @@ class SidebarIds:
     saved_profiles_load_status = f"{prefix}-saved-profiles-load-status"
     selected_profile_store = f"{prefix}-selected-profile-store"
     saved_profiles_load_button = f"{prefix}-saved-profiles-load-button"
-    profile_load_event_store: str = "sidebar-profile-load-event-store"
+    profile_load_event_store: str = PROFILE_LOAD_EVENT_STORE_ID

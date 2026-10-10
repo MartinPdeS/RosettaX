@@ -1,7 +1,7 @@
 
 from typing import Any, Protocol
 
-from RosettaX.pages.p02_fluorescence.state import (
+from RosettaX.workflow.page_session.fluorescence import (
     FluorescencePageState,
     build_empty_peak_lines_payload,
 )
