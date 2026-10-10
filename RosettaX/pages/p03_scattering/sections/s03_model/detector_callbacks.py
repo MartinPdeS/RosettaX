@@ -17,6 +17,16 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+def _skip_unchanged_selector_values(
+    resolved_values: tuple[Any, Any, bool],
+    current_values: tuple[Any, Any, Any],
+) -> tuple[Any, Any, Any]:
+    return tuple(
+        dash.no_update if resolved == current else resolved
+        for resolved, current in zip(resolved_values, current_values, strict=True)
+    )
+
+
 def register_detector_configuration_callbacks(section: Model) -> None:
     """
     Register detector configuration callbacks.
@@ -31,30 +41,32 @@ def register_detector_configuration_callbacks(section: Model) -> None:
     def sync_detector_configuration_brand_from_preset(
         preset_name: Any,
         current_brand: Any,
-    ) -> str:
+    ) -> Any:
         resolved_brand = section.model_configuration.resolve_detector_preset_brand(
             preset_name,
         )
 
-        if resolved_brand:
-            return resolved_brand
-
-        return str(current_brand or "").strip()
+        resolved_brand = resolved_brand or str(current_brand or "").strip()
+        return dash.no_update if resolved_brand == current_brand else resolved_brand
 
     @dash.callback(
         dash.Output(section.ids.detector_configuration_model, "options"),
         dash.Output(section.ids.detector_configuration_model, "value"),
         dash.Output(section.ids.detector_configuration_model, "disabled"),
         dash.Input(section.ids.detector_configuration_brand, "value"),
-        dash.State(section.ids.detector_configuration_preset, "value"),
+        dash.Input(section.ids.detector_configuration_preset, "value"),
         dash.State(section.ids.detector_configuration_model, "value"),
+        dash.State(section.ids.detector_configuration_model, "options"),
+        dash.State(section.ids.detector_configuration_model, "disabled"),
         prevent_initial_call=False,
     )
     def sync_detector_configuration_models_for_brand(
         brand_name: Any,
         current_preset_name: Any,
         current_model_name: Any,
-    ) -> tuple[list[dict[str, Any]], Any, bool]:
+        current_options: Any,
+        current_disabled: Any,
+    ) -> tuple[Any, Any, Any]:
         resolved_options = (
             section.model_configuration.build_detector_preset_model_options(
                 brand_name,
@@ -62,7 +74,10 @@ def register_detector_configuration_callbacks(section: Model) -> None:
         )
 
         if not resolved_options:
-            return [], None, True
+            return _skip_unchanged_selector_values(
+                ([], None, True),
+                (current_options, current_model_name, current_disabled),
+            )
 
         option_values = {option["value"] for option in resolved_options}
         resolved_model_from_preset = (
@@ -80,7 +95,10 @@ def register_detector_configuration_callbacks(section: Model) -> None:
         else:
             resolved_value = None
 
-        return resolved_options, resolved_value, False
+        return _skip_unchanged_selector_values(
+            (resolved_options, resolved_value, False),
+            (current_options, current_model_name, current_disabled),
+        )
 
     @dash.callback(
         dash.Output(section.ids.detector_configuration_type, "options"),
@@ -88,8 +106,10 @@ def register_detector_configuration_callbacks(section: Model) -> None:
         dash.Output(section.ids.detector_configuration_type, "disabled"),
         dash.Input(section.ids.detector_configuration_model, "value"),
         dash.State(section.ids.detector_configuration_brand, "value"),
-        dash.State(section.ids.detector_configuration_preset, "value"),
+        dash.Input(section.ids.detector_configuration_preset, "value"),
         dash.State(section.ids.detector_configuration_type, "value"),
+        dash.State(section.ids.detector_configuration_type, "options"),
+        dash.State(section.ids.detector_configuration_type, "disabled"),
         prevent_initial_call=False,
     )
     def sync_detector_configuration_types_for_model(
@@ -97,7 +117,9 @@ def register_detector_configuration_callbacks(section: Model) -> None:
         brand_name: Any,
         current_preset_name: Any,
         current_type_name: Any,
-    ) -> tuple[list[dict[str, Any]], Any, bool]:
+        current_options: Any,
+        current_disabled: Any,
+    ) -> tuple[Any, Any, Any]:
         resolved_options = (
             section.model_configuration.build_detector_preset_type_options(
                 brand=brand_name,
@@ -106,7 +128,9 @@ def register_detector_configuration_callbacks(section: Model) -> None:
         )
 
         if not resolved_options:
-            return [], None, True
+            return _skip_unchanged_selector_values(
+                ([], None, True), (current_options, current_type_name, current_disabled)
+            )
 
         option_values = {option["value"] for option in resolved_options}
 
@@ -119,7 +143,10 @@ def register_detector_configuration_callbacks(section: Model) -> None:
         else:
             resolved_value = None
 
-        return resolved_options, resolved_value, False
+        return _skip_unchanged_selector_values(
+            (resolved_options, resolved_value, False),
+            (current_options, current_type_name, current_disabled),
+        )
 
     @dash.callback(
         dash.Output(
@@ -128,12 +155,19 @@ def register_detector_configuration_callbacks(section: Model) -> None:
             allow_duplicate=True,
         ),
         dash.Input(section.ids.detector_configuration_type, "value"),
+        dash.State(section.ids.detector_configuration_preset, "value"),
         prevent_initial_call=True,
     )
     def sync_detector_configuration_preset_from_model(
         type_value: Any,
+        current_preset_name: Any,
     ) -> Any:
-        return type_value or ""
+        resolved_preset_name = type_value or ""
+        return (
+            dash.no_update
+            if resolved_preset_name == current_preset_name
+            else resolved_preset_name
+        )
 
     @dash.callback(
         dash.Output(

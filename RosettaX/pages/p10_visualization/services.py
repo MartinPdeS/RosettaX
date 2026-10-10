@@ -1,4 +1,3 @@
-
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -443,15 +442,12 @@ def build_visualization_figure(
     """
     Build one visualization figure from an FCS dataframe.
     """
-    figure = go.Figure()
     y_channel_string = str(y_channel or "").strip()
     visualization_defaults = resolve_visualization_control_defaults(
         runtime_config_data,
     )
     resolved_max_events = (
-        clamp_max_events(max_events)
-        if max_events is not None
-        else None
+        clamp_max_events(max_events) if max_events is not None else None
     )
     shared_style = PlotStyleOptions(
         marker_size=float(visualization_defaults["marker_size"]),
@@ -503,235 +499,301 @@ def build_visualization_figure(
         log_x=log_x,
         log_y=log_y,
         smoothing_sigma_points=(
-            smoothing_sigma_points
-            if plot_type == PLOT_TYPE_SMOOTHED_HISTOGRAM
-            else 0.0
+            smoothing_sigma_points if plot_type == PLOT_TYPE_SMOOTHED_HISTOGRAM else 0.0
         ),
     )
 
-    is_histogram = plot_type in {
-        PLOT_TYPE_HISTOGRAM,
-        PLOT_TYPE_FILLED_HISTOGRAM,
-    }
-
-    if is_histogram:
-        histogram_values = dataframe[x_channel].to_numpy(dtype=float, copy=False)
-        histogram_values = histogram_values[np.isfinite(histogram_values)]
-
-        if log_x:
-            histogram_values = histogram_values[histogram_values > 0.0]
-
-        if histogram_values.size == 0:
-            return build_empty_figure(
-                message="No plottable events remain for the selected histogram axis.",
-                runtime_config_data=runtime_config_data,
-                uirevision=visualization_uirevision,
-            )
-
-        histogram_min = float(np.min(histogram_values))
-        histogram_max = float(np.max(histogram_values))
-
-        if np.isclose(histogram_min, histogram_max):
-            if log_x:
-                histogram_min /= 1.1
-                histogram_max *= 1.1
-            else:
-                histogram_min -= 0.5
-                histogram_max += 0.5
-
-        if log_x:
-            bin_edges = np.logspace(
-                np.log10(histogram_min),
-                np.log10(histogram_max),
-                histogram_options.bin_count + 1,
-            )
-        else:
-            bin_edges = np.linspace(
-                histogram_min,
-                histogram_max,
-                histogram_options.bin_count + 1,
-            )
-
-        histogram_counts, _ = np.histogram(
-            histogram_values,
-            bins=bin_edges,
+    if plot_type in {PLOT_TYPE_HISTOGRAM, PLOT_TYPE_FILLED_HISTOGRAM}:
+        return build_visualization_histogram_figure(
+            dataframe=dataframe,
+            uploaded_fcs_path=uploaded_fcs_path,
+            plot_type=plot_type,
+            x_channel=x_channel,
+            histogram_options=histogram_options,
+            smoothed_histogram_options=smoothed_histogram_options,
+            visualization_defaults=visualization_defaults,
+            runtime_config_data=runtime_config_data,
+            visualization_uirevision=visualization_uirevision,
         )
-        bin_widths = np.diff(bin_edges)
-        bin_centers = bin_edges[:-1] + (bin_widths / 2.0)
-
-        if plot_type == PLOT_TYPE_FILLED_HISTOGRAM:
-            smoothed_counts = smooth_histogram_counts(
-                histogram_counts,
-                sigma_points=smoothed_histogram_options.smoothing.sigma_points,
-            )
-            figure.add_trace(
-                go.Scatter(
-                    x=bin_centers,
-                    y=smoothed_counts,
-                    mode="lines",
-                    fill="tozeroy",
-                    line={
-                        "color": "#2f63b8",
-                        "width": 2.4,
-                    },
-                    fillcolor="rgba(70, 115, 185, 0.42)",
-                    name=x_channel,
-                    hovertemplate="%{y} event(s)<extra></extra>",
-                )
-            )
-            figure.update_layout(
-                title={
-                    "text": Path(uploaded_fcs_path).name,
-                    "x": 0.5,
-                    "xanchor": "center",
-                },
-            )
-        else:
-            figure.add_trace(
-                go.Bar(
-                    x=bin_centers,
-                    y=histogram_counts,
-                    width=bin_widths,
-                    name=x_channel,
-                    marker={
-                        "color": "#355070",
-                        "line": {
-                            "color": "#1b263b",
-                            "width": 0.35,
-                        },
-                    },
-                    opacity=0.92,
-                    hovertemplate="%{y} event(s)<extra></extra>",
-                )
-            )
-        figure.update_yaxes(
-            title_text="Count",
-        )
-    elif y_channel_string:
-        x_values = dataframe[x_channel].to_numpy(dtype=float, copy=False)
-        y_values = dataframe[y_channel_string].to_numpy(dtype=float, copy=False)
-        resolved_marker_size = clamp_marker_size(marker_size)
-        resolved_marker_opacity = clamp_marker_opacity(marker_opacity)
-        density_values = compute_2d_density_values(
-            x_values=x_values,
-            y_values=y_values,
-            x_log_scale=log_x,
-            y_log_scale=log_y,
-            colormap_log_scale=colormap_log_scale,
-            number_of_bins=scatter_options.density_bin_count,
-        )
-
-        figure.add_trace(
-            go.Scattergl(
-                x=dataframe[x_channel],
-                y=dataframe[y_channel_string],
-                mode="markers",
-                marker={
-                    "size": resolved_marker_size,
-                    "opacity": resolved_marker_opacity,
-                    "color": density_values,
-                    "colorscale": "Turbo",
-                    "showscale": False,
-                },
-                name="Events",
-                customdata=density_values,
-                hovertemplate=(
-                    f"{x_channel}=%{{x:.6g}}<br>"
-                    f"{y_channel_string}=%{{y:.6g}}<br>"
-                    "density=%{customdata:.6g}"
-                    "<extra></extra>"
-                ),
-            )
-        )
-        Scatter2DGraph.apply_formatting(
-            figure=figure,
-            title="Visualization scatter",
-            x_axis_title=f"{x_channel} [a.u.]",
-            y_axis_title=f"{y_channel_string} [a.u.]",
-            x_axis_type="log" if log_x else "linear",
-            y_axis_type="log" if log_y else "linear",
-            show_grid=bool(visualization_defaults["show_grid"]),
-            hovermode="closest",
-            uirevision=visualization_uirevision,
-        )
-        # The visualization page sits directly above the global footer, so we
-        # reserve extra space for long axis labels and dense log tick labels.
-        figure.update_layout(
-            margin={
-                "l": 90,
-                "r": 20,
-                "t": 20,
-                "b": 115,
-            },
-        )
-        for trace in figure.data:
-            if getattr(trace, "type", "") in ("scatter", "scattergl") and hasattr(trace, "marker"):
-                trace.marker.size = resolved_marker_size
-                trace.marker.opacity = resolved_marker_opacity
-        figure = apply_stable_2d_axis_ranges(
-            figure=figure,
-            x_values=x_values,
-            y_values=y_values,
-            x_log_scale=log_x,
-            y_log_scale=log_y,
-        )
-        figure.update_layout(
-            showlegend=False,
-            height=visualization_defaults["figure_height_px"],
-        )
-    else:
+    if not y_channel_string:
         return build_empty_figure(
             message="Select a Y channel for 2D plots.",
             runtime_config_data=runtime_config_data,
             uirevision=visualization_uirevision,
         )
+    return build_visualization_scatter_figure(
+        dataframe=dataframe,
+        x_channel=x_channel,
+        y_channel_string=y_channel_string,
+        scatter_options=scatter_options,
+        visualization_defaults=visualization_defaults,
+        visualization_uirevision=visualization_uirevision,
+        plot_type=plot_type,
+    )
 
-    if is_histogram:
-        figure.update_layout(
-            template="plotly_white",
+
+def build_visualization_histogram_figure(
+    *,
+    dataframe: pd.DataFrame,
+    uploaded_fcs_path: str,
+    plot_type: str,
+    x_channel: str,
+    histogram_options: HistogramOptions,
+    smoothed_histogram_options: SmoothedHistogramOptions,
+    visualization_defaults: dict[str, Any],
+    runtime_config_data: Any,
+    visualization_uirevision: str,
+) -> go.Figure:
+    """Build histogram traces and axes, preserving empty and logarithmic cases."""
+    figure = go.Figure()
+    log_x = histogram_options.axes.x_log
+    log_y = histogram_options.axes.y_log
+    histogram_values = dataframe[x_channel].to_numpy(dtype=float, copy=False)
+    histogram_values = histogram_values[np.isfinite(histogram_values)]
+
+    if log_x:
+        histogram_values = histogram_values[histogram_values > 0.0]
+
+    if histogram_values.size == 0:
+        return build_empty_figure(
+            message="No plottable events remain for the selected histogram axis.",
+            runtime_config_data=runtime_config_data,
             uirevision=visualization_uirevision,
-            height=visualization_defaults["figure_height_px"],
-            margin={"l": 70, "r": 30, "t": 40, "b": 100},
-            bargap=0.0,
-            legend={
-                "orientation": "h",
-                "yanchor": "bottom",
-                "y": 1.02,
-                "xanchor": "right",
-                "x": 1.0,
-            },
-            paper_bgcolor="white",
-            plot_bgcolor="white",
-        )
-        figure.update_xaxes(
-            title_text=x_channel,
-            type="log" if log_x else "linear",
-            showgrid=bool(visualization_defaults["show_grid"]),
-            zeroline=False,
-        )
-        figure.update_yaxes(
-            title_text="Count",
-            type="log" if log_y else "linear",
-            showgrid=bool(visualization_defaults["show_grid"]),
-            zeroline=False,
         )
 
+    histogram_min = float(np.min(histogram_values))
+    histogram_max = float(np.max(histogram_values))
+
+    if np.isclose(histogram_min, histogram_max):
+        if log_x:
+            histogram_min /= 1.1
+            histogram_max *= 1.1
+        else:
+            histogram_min -= 0.5
+            histogram_max += 0.5
+
+    if log_x:
+        bin_edges = np.logspace(
+            np.log10(histogram_min),
+            np.log10(histogram_max),
+            histogram_options.bin_count + 1,
+        )
+    else:
+        bin_edges = np.linspace(
+            histogram_min,
+            histogram_max,
+            histogram_options.bin_count + 1,
+        )
+
+    histogram_counts, _ = np.histogram(
+        histogram_values,
+        bins=bin_edges,
+    )
+    bin_widths = np.diff(bin_edges)
+    bin_centers = bin_edges[:-1] + (bin_widths / 2.0)
+
+    if plot_type == PLOT_TYPE_FILLED_HISTOGRAM:
+        smoothed_counts = smooth_histogram_counts(
+            histogram_counts,
+            sigma_points=smoothed_histogram_options.smoothing.sigma_points,
+        )
+        figure.add_trace(
+            go.Scatter(
+                x=bin_centers,
+                y=smoothed_counts,
+                mode="lines",
+                fill="tozeroy",
+                line={
+                    "color": "#2f63b8",
+                    "width": 2.4,
+                },
+                fillcolor="rgba(70, 115, 185, 0.42)",
+                name=x_channel,
+                hovertemplate="%{y} event(s)<extra></extra>",
+            )
+        )
+        figure.update_layout(
+            title={
+                "text": Path(uploaded_fcs_path).name,
+                "x": 0.5,
+                "xanchor": "center",
+            },
+        )
+    else:
+        figure.add_trace(
+            go.Bar(
+                x=bin_centers,
+                y=histogram_counts,
+                width=bin_widths,
+                name=x_channel,
+                marker={
+                    "color": "#355070",
+                    "line": {
+                        "color": "#1b263b",
+                        "width": 0.35,
+                    },
+                },
+                opacity=0.92,
+                hovertemplate="%{y} event(s)<extra></extra>",
+            )
+        )
+    figure.update_yaxes(
+        title_text="Count",
+    )
+    figure.update_layout(
+        template="plotly_white",
+        uirevision=visualization_uirevision,
+        height=visualization_defaults["figure_height_px"],
+        margin={"l": 70, "r": 30, "t": 40, "b": 100},
+        bargap=0.0,
+        legend={
+            "orientation": "h",
+            "yanchor": "bottom",
+            "y": 1.02,
+            "xanchor": "right",
+            "x": 1.0,
+        },
+        paper_bgcolor="white",
+        plot_bgcolor="white",
+    )
+    figure.update_xaxes(
+        title_text=x_channel,
+        type="log" if log_x else "linear",
+        showgrid=bool(visualization_defaults["show_grid"]),
+        zeroline=False,
+    )
+    figure.update_yaxes(
+        title_text="Count",
+        type="log" if log_y else "linear",
+        showgrid=bool(visualization_defaults["show_grid"]),
+        zeroline=False,
+    )
+
+    _apply_visualization_style(figure, visualization_defaults)
+    return figure
+
+
+def build_visualization_scatter_figure(
+    *,
+    dataframe: pd.DataFrame,
+    x_channel: str,
+    y_channel_string: str,
+    scatter_options: ScatterOptions,
+    visualization_defaults: dict[str, Any],
+    visualization_uirevision: str,
+    plot_type: str,
+) -> go.Figure:
+    """Build density-colored scatter traces with stable ranges and camera state."""
+    figure = go.Figure()
+    log_x = scatter_options.axes.x_log
+    log_y = scatter_options.axes.y_log
+    colormap_log_scale = scatter_options.axes.color_log
+    marker_size = scatter_options.marker_size
+    marker_opacity = scatter_options.marker_opacity
+    x_values = dataframe[x_channel].to_numpy(dtype=float, copy=False)
+    y_values = dataframe[y_channel_string].to_numpy(dtype=float, copy=False)
+    resolved_marker_size = clamp_marker_size(marker_size)
+    resolved_marker_opacity = clamp_marker_opacity(marker_opacity)
+    density_values = compute_2d_density_values(
+        x_values=x_values,
+        y_values=y_values,
+        x_log_scale=log_x,
+        y_log_scale=log_y,
+        colormap_log_scale=colormap_log_scale,
+        number_of_bins=scatter_options.density_bin_count,
+    )
+
+    figure.add_trace(
+        go.Scattergl(
+            x=dataframe[x_channel],
+            y=dataframe[y_channel_string],
+            mode="markers",
+            marker={
+                "size": resolved_marker_size,
+                "opacity": resolved_marker_opacity,
+                "color": density_values,
+                "colorscale": "Turbo",
+                "showscale": False,
+            },
+            name="Events",
+            customdata=density_values,
+            hovertemplate=(
+                f"{x_channel}=%{{x:.6g}}<br>"
+                f"{y_channel_string}=%{{y:.6g}}<br>"
+                "density=%{customdata:.6g}"
+                "<extra></extra>"
+            ),
+        )
+    )
+    Scatter2DGraph.apply_formatting(
+        figure=figure,
+        title="Visualization scatter",
+        x_axis_title=f"{x_channel} [a.u.]",
+        y_axis_title=f"{y_channel_string} [a.u.]",
+        x_axis_type="log" if log_x else "linear",
+        y_axis_type="log" if log_y else "linear",
+        show_grid=bool(visualization_defaults["show_grid"]),
+        hovermode="closest",
+        uirevision=visualization_uirevision,
+    )
+    # The visualization page sits directly above the global footer, so we
+    # reserve extra space for long axis labels and dense log tick labels.
+    figure.update_layout(
+        margin={
+            "l": 90,
+            "r": 20,
+            "t": 20,
+            "b": 115,
+        },
+    )
+    for trace in figure.data:
+        if getattr(trace, "type", "") in ("scatter", "scattergl") and hasattr(
+            trace, "marker"
+        ):
+            trace.marker.size = resolved_marker_size
+            trace.marker.opacity = resolved_marker_opacity
+    figure = apply_stable_2d_axis_ranges(
+        figure=figure,
+        x_values=x_values,
+        y_values=y_values,
+        x_log_scale=log_x,
+        y_log_scale=log_y,
+    )
+    figure.update_layout(
+        showlegend=False,
+        height=visualization_defaults["figure_height_px"],
+    )
+    _apply_visualization_style(
+        figure,
+        visualization_defaults,
+        marker_size=(resolved_marker_size if plot_type == PLOT_TYPE_SCATTER else None),
+    )
+    if plot_type == PLOT_TYPE_SCATTER:
+        for trace in figure.data:
+            if getattr(trace, "type", "") in ("scatter", "scattergl") and hasattr(
+                trace, "marker"
+            ):
+                trace.marker.size = resolved_marker_size
+                trace.marker.opacity = resolved_marker_opacity
+    return figure
+
+
+def _apply_visualization_style(
+    figure: go.Figure,
+    visualization_defaults: dict[str, Any],
+    *,
+    marker_size: float | None = None,
+) -> None:
     plottings.apply_default_visual_style(
         figure,
-        marker_size=float(resolved_marker_size) if plot_type == PLOT_TYPE_SCATTER and y_channel_string else float(visualization_defaults["marker_size"]),
+        marker_size=float(marker_size)
+        if marker_size is not None
+        else float(visualization_defaults["marker_size"]),
         line_width=float(visualization_defaults["default_line_width"]),
         font_size=float(visualization_defaults["default_font_size"]),
         tick_size=float(visualization_defaults["default_tick_size"]),
         show_grid=bool(visualization_defaults["show_grid"]),
     )
-
-    if plot_type == PLOT_TYPE_SCATTER and y_channel_string:
-        for trace in figure.data:
-            if getattr(trace, "type", "") in ("scatter", "scattergl") and hasattr(trace, "marker"):
-                trace.marker.size = resolved_marker_size
-                trace.marker.opacity = resolved_marker_opacity
-
-    return figure
 
 
 def compute_2d_density_values(

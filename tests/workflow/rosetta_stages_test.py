@@ -99,3 +99,47 @@ def test_result_assembly_keeps_marker_overlays_separate_from_table_policy(
         row["measured_peak_position"] for row in result.table_prefill_rows
     ] == result.new_peak_positions
     assert result.peak_lines_payload["baseline_cutoff"] == 110.0
+
+
+@pytest.mark.parametrize(
+    "raw_settings", [{}, {"baseline_sigma_multiplier": float("nan")}]
+)
+def test_missing_or_invalid_baseline_gate_uses_the_ui_default(
+    raw_settings, monkeypatch
+):
+    process = rosetta_mix.FluorescenceGuidedScatterPeakProcess()
+    ui_default = next(
+        setting["default_value"]
+        for setting in process.get_settings()
+        if setting["name"] == "baseline_sigma_multiplier"
+    )
+    settings = rosetta_mix.RosettaRunSettings.from_raw_values(
+        peak_count=6, max_events_for_analysis=100, process_settings=raw_settings
+    )
+    assert settings.baseline_sigma_multiplier == ui_default == 3.0
+    baseline = {"mean": 100.0, "std": 10.0}
+    monkeypatch.setattr(
+        rosetta_mix,
+        "find_fit_validate_peaks_1d",
+        lambda **_: {
+            "validated_peaks": [baseline, {"mean": 500.0, "std": 20.0}],
+            "diagnostic": "accepted",
+        },
+    )
+    analysis = rosetta_mix.analyze_rosetta_fluorescence(
+        events=rosetta_mix.RosettaEventData(
+            np.array([1.0, 2.0]), np.array([100.0, 500.0]), 0
+        ),
+        settings=settings,
+    )
+    assert analysis.baseline_lower_gate == 70.0
+    assert analysis.baseline_upper_gate == 130.0
+
+
+def test_explicit_saved_baseline_gate_remains_authoritative():
+    settings = rosetta_mix.RosettaRunSettings.from_raw_values(
+        peak_count=6,
+        max_events_for_analysis=100,
+        process_settings={"baseline_sigma_multiplier": 1.0},
+    )
+    assert settings.baseline_sigma_multiplier == 1.0

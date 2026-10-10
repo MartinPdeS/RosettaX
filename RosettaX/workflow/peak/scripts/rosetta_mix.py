@@ -18,6 +18,8 @@ from .base import build_edge_pileup_mask as shared_build_edge_pileup_mask
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_BASELINE_SIGMA_MULTIPLIER = 3.0
+
 
 class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
     """
@@ -99,7 +101,7 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
                     "Events within this many standard deviations of the baseline "
                     "fluorescence peak are treated as non-fluorescent."
                 ),
-                "default_value": 3.0,
+                "default_value": DEFAULT_BASELINE_SIGMA_MULTIPLIER,
                 "min_value": 0.5,
                 "max_value": 5.0,
                 "step": 0.5,
@@ -440,7 +442,7 @@ class RosettaRunSettings:
 
         baseline_sigma_multiplier = resolve_float(
             value=process_settings.get("baseline_sigma_multiplier"),
-            default=1.0,
+            default=DEFAULT_BASELINE_SIGMA_MULTIPLIER,
             minimum=0.5,
             maximum=5.0,
         )

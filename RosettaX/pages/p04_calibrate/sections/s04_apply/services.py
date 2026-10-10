@@ -1,11 +1,14 @@
-
 import logging
+from dataclasses import asdict
 from typing import Any
 
 from RosettaX.pages.p04_calibrate.sections.s02_calibration_picker import (
     services as calibration_picker_services,
 )
+from RosettaX.utils import usage_metrics
 from RosettaX.workflow import apply_calibration
+from RosettaX.workflow.apply_calibration import io as apply_calibration_io
+from RosettaX.workflow.apply_calibration import report as apply_report
 from RosettaX.workflow.apply_calibration.scattering import (
     CUSTOM_PRESET_NAME,
     parse_optical_geometry_from_calibration_standard_parameters,
@@ -14,6 +17,8 @@ from RosettaX.workflow.apply_calibration.scattering import (
 from RosettaX.workflow.apply_calibration.scattering.mie_relation_builder import (
     get_calibration_standard_parameters,
 )
+
+from .models import ApplyCalibrationControls, CalibrationExportResult
 
 logger = logging.getLogger(__name__)
 
@@ -404,3 +409,97 @@ def build_apply_calibration_request(
     )
 
     return request
+
+
+def apply_and_prepare_calibration_export(
+    controls: ApplyCalibrationControls,
+) -> CalibrationExportResult:
+    """Apply calibration and prepare downloads, preserving report failure recovery."""
+    try:
+        usage_metrics.record_apply_button_click()
+    except Exception:
+        logger.exception("Failed to record apply button click usage metric.")
+    try:
+        request = build_apply_calibration_request(**asdict(controls))
+        result = apply_calibration.apply_calibration_to_fcs_files(request=request)
+    except Exception as exc:
+        logger.exception(
+            "Failed to apply and export calibration for uploaded_fcs_path=%r",
+            controls.uploaded_fcs_path,
+        )
+        return CalibrationExportResult(
+            status=f"Failed to apply and export calibration: {type(exc).__name__}: {exc}"
+        )
+    try:
+        usage_metrics.record_calibrated_files(file_count=result.file_count)
+    except Exception:
+        logger.exception(
+            "Failed to record calibrated file usage metric for file_count=%r",
+            result.file_count,
+        )
+    return prepare_calibration_export(controls=controls, request=request, result=result)
+
+
+def prepare_calibration_export(
+    *,
+    controls: ApplyCalibrationControls,
+    request: apply_calibration.ApplyCalibrationRequest,
+    result: apply_calibration.ApplyCalibrationFilesResult,
+) -> CalibrationExportResult:
+    """Build the report and bundle it when exporting multiple files as ZIP."""
+    status_message = result.status
+    download_bytes = result.payload_bytes
+    report_payload = None
+    report_pdf_filename = None
+    report_pdf_bytes = None
+
+    try:
+        report_payload = apply_report.build_apply_report_payload(
+            request=request,
+            result=result,
+            calibration_summary=controls.selected_calibration_summary,
+        )
+        report_pdf_filename = apply_report.build_apply_report_download_filename(
+            report_payload=report_payload,
+        )
+        report_pdf_bytes = apply_report.build_apply_report_pdf_bytes(
+            report_payload=report_payload,
+        )
+    except Exception as exc:
+        logger.exception(
+            "Failed to build apply report for download_filename=%r",
+            result.download_filename,
+        )
+        status_message = (
+            f"{result.status} Report generation failed: {type(exc).__name__}: {exc}"
+        )
+
+    if (
+        report_pdf_filename is not None
+        and report_pdf_bytes is not None
+        and str(result.download_filename).lower().endswith(".zip")
+    ):
+        try:
+            download_bytes = apply_calibration_io.append_files_to_zip_bytes(
+                zip_bytes=result.payload_bytes,
+                extra_files={
+                    report_pdf_filename: report_pdf_bytes,
+                },
+            )
+            status_message = f"{result.status} Bundled report PDF into ZIP export."
+        except Exception as exc:
+            logger.exception(
+                "Failed to bundle report PDF into ZIP download_filename=%r",
+                result.download_filename,
+            )
+            status_message = (
+                f"{result.status} Report PDF is available separately, but ZIP bundling failed: "
+                f"{type(exc).__name__}: {exc}"
+            )
+
+    return CalibrationExportResult(
+        status=status_message,
+        payload_bytes=download_bytes,
+        download_filename=result.download_filename,
+        report_payload=report_payload,
+    )

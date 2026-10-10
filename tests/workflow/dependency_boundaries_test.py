@@ -33,3 +33,33 @@ def test_workflow_import_does_not_load_pages(module_name):
         check=False,
     )
     assert result.returncode == 0, result.stderr
+
+
+def test_all_workflow_sources_keep_page_imports_out():
+    """Check every module, including imports hidden inside functions or TYPE_CHECKING."""
+    import ast
+    from importlib.util import resolve_name
+    from pathlib import Path
+
+    repository = Path(__file__).resolve().parents[2]
+    violations = []
+    for path in (repository / "RosettaX" / "workflow").rglob("*.py"):
+        relative_path = path.relative_to(repository)
+        package = ".".join(relative_path.parent.parts)
+        for node in ast.walk(ast.parse(path.read_text())):
+            imported_names = []
+            if isinstance(node, ast.Import):
+                imported_names = [alias.name for alias in node.names]
+            elif isinstance(node, ast.ImportFrom):
+                name = "." * node.level + (node.module or "")
+                name = resolve_name(name, package) if node.level else name
+                imported_names = [
+                    name,
+                    *(f"{name}.{alias.name}" for alias in node.names),
+                ]
+            if any(
+                name == "RosettaX.pages" or name.startswith("RosettaX.pages.")
+                for name in imported_names
+            ):
+                violations.append(f"{relative_path}:{node.lineno}")
+    assert not violations, "Workflow imports page modules: " + ", ".join(violations)

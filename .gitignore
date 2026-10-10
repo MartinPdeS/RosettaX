@@ -48,3 +48,14 @@ docs/source/gallery/
 # *Makefile*
 
 # Package specifics
+
+# Generated SoftwareX manuscript files
+docs/manuscript/softwareX/*.aux
+docs/manuscript/softwareX/*.bbl
+docs/manuscript/softwareX/*.blg
+docs/manuscript/softwareX/*.fdb_latexmk
+docs/manuscript/softwareX/*.fls
+docs/manuscript/softwareX/*.log
+docs/manuscript/softwareX/*.out
+docs/manuscript/softwareX/*.pdf
+docs/manuscript/softwareX/*.spl

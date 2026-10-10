@@ -1,0 +1,30 @@
+{
+  "initial home": {
+    "callback_count": 15,
+    "callback_response_bytes": 30000
+  },
+  "empty /": {
+    "callback_count": 10,
+    "callback_response_bytes": 15000
+  },
+  "empty /fluorescence": {
+    "callback_count": 52,
+    "callback_response_bytes": 170000
+  },
+  "empty /scattering": {
+    "callback_count": 74,
+    "callback_response_bytes": 460000
+  },
+  "loaded /": {
+    "callback_count": 10,
+    "callback_response_bytes": 15000
+  },
+  "loaded /fluorescence": {
+    "callback_count": 55,
+    "callback_response_bytes": 190000
+  },
+  "loaded /scattering": {
+    "callback_count": 78,
+    "callback_response_bytes": 500000
+  }
+}

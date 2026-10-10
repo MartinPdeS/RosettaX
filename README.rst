@@ -132,6 +132,10 @@ A typical RosettaX session follows these steps:
 The exact procedure depends on the selected workflow, but the application is
 organized so that each step remains visible and traceable.
 
+Rosetta peak detection uses a baseline fluorescence gate of three standard
+deviations when no gate-width setting is provided. Explicit gate widths stored
+in existing profiles retain their selected value.
+
 On smaller screens, open ``Menu`` to access navigation and saved profiles.
 Graphs use a viewport-aware default height; an explicit graph height in your
 profile remains in effect. Calibration reference tables keep headers visible
@@ -360,6 +364,24 @@ and core-shell calculations, power scaling, Mie relation inversion, every
 registered page layout, and Dash HTTP endpoints. Missing dependencies or stub
 contamination fail the run instead of skipping checks. CI runs these checks
 on Python 3.11 and 3.13 on Linux, and Python 3.13 on macOS and Windows.
+
+Run the browser smoke checks with optional Playwright dependencies:
+
+.. code-block:: bash
+
+   pip install "playwright>=1.49,<2"
+   python -m playwright install chromium
+   make browser-smoke
+
+The command starts an isolated local server, navigates between fluorescence,
+scattering, and home, and verifies uploaded-file restoration and detector
+preset synchronization. It fails on browser errors, failed callbacks, or
+callback counts and response sizes above
+``tools/navigation_budgets.json``. Measurements and the server log are written
+to ``build/browser-navigation.json`` and ``build/browser-navigation.server.log``.
+Timing is recorded for diagnosis; it does not determine pass or failure.
+CI runs this check in Chromium on Linux.
+
 
 The repository includes configuration for testing, coverage, documentation, and
 continuous integration. These tools are intended to support reproducible

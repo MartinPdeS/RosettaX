@@ -1,0 +1,218 @@
+% SoftwareX Original Software Publication draft.
+\documentclass[preprint,12pt]{elsarticle}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{lineno}
+\usepackage{tabularx}
+\hypersetup{colorlinks=true,allcolors=blue}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\setlength{\parindent}{0pt}
+
+\journal{SoftwareX}
+
+\begin{document}
+\begin{frontmatter}
+
+\title{RosettaX: reproducible calibration workflows for flow-cytometry FCS data}
+
+\author[amsterdamumc]{Martin Poinsinet de Sivry-Houle\corref{corresponding}}
+\ead{martin.poinsinet.de.sivry@gmail.com}
+\cortext[corresponding]{Corresponding author}
+\affiliation[amsterdamumc]{%
+  organization={Amsterdam UMC},
+  city={Amsterdam},
+  country={the Netherlands}}
+
+\begin{abstract}
+RosettaX is an open-source local application for calibrating exported
+flow-cytometry data in the Flow Cytometry Standard (FCS) format. It guides
+users through histogram and peak review, reference-table approval, fitting,
+and application of saved calibrations. Fluorescence workflows fit an
+empirical power law between detector values and assigned reference values.
+Scattering workflows fit measured peaks against optical coupling calculated
+with a configurable Mie-scattering and detector-geometry model. Each
+calibration is saved as structured JSON containing the fit, source channel,
+reference inputs, and workflow-specific context. Applying a calibration
+exports calibrated FCS data with a PDF report, keeping the result and its
+provenance together for review and reuse.
+\end{abstract}
+
+\begin{keyword}
+flow cytometry \sep calibration \sep fluorescence \sep light scattering \sep
+FCS \sep Mie theory
+\end{keyword}
+\end{frontmatter}
+
+\modulolinenumbers[1]
+\linenumbers
+
+\begin{table}[t]
+\centering
+\footnotesize
+\caption{Code metadata.}
+\label{tab:code-metadata}
+\begin{tabularx}{\textwidth}{@{}p{0.35in}p{2.25in}Y@{}}
+\toprule
+Nr. & Code metadata description & Metadata \\
+\midrule
+C1 & Current code version & 0.9.0 \\
+C2 & Permanent link to code/repository used for this version &
+\url{https://github.com/MartinPdeS/RosettaX/tree/v0.9.0} \\
+C3 & Permanent link to reproducible capsule & Not available; tagged source,
+documentation, and tests are versioned with the repository. \\
+C4 & Legal code license & GNU Affero General Public License v3.0 or later \\
+C5 & Code versioning system used & Git \\
+C6 & Software code languages, tools, and services used & Python, Dash, NumPy,
+Plotly, PyMieSim, and PostgreSQL-compatible persistence \\
+C7 & Compilation requirements, operating environments, and dependencies &
+Python 3.10 or later; dependencies declared in \texttt{pyproject.toml} \\
+C8 & Link to developer documentation/manual &
+\url{https://martinpdes.github.io/RosettaX/} \\
+C9 & Support email for questions &
+\href{mailto:martin.poinsinet.de.sivry@gmail.com}{martin.poinsinet.de.sivry@gmail.com} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[t]
+\centering
+\footnotesize
+\caption{Executable software metadata.}
+\label{tab:software-metadata}
+\begin{tabularx}{\textwidth}{@{}p{0.35in}p{2.25in}Y@{}}
+\toprule
+Nr. & Software metadata description & Metadata \\
+\midrule
+S1 & Current software version & 0.9.0 \\
+S2 & Permanent link to executables of this version &
+\url{https://github.com/MartinPdeS/RosettaX/releases/tag/v0.9.0} \\
+S3 & Permanent link to reproducible capsule & Not available; use the tagged
+source and release artifacts. \\
+S4 & Legal software license & GNU Affero General Public License v3.0 or later \\
+S5 & Computing platforms/operating systems & Linux, macOS, and Microsoft Windows \\
+S6 & Installation requirements and dependencies & Python 3.10 or later for
+source installation; release bundles are supplied for supported platforms. \\
+S7 & Link to user manual & \url{https://martinpdes.github.io/RosettaX/} \\
+S8 & Support email for questions &
+\href{mailto:martin.poinsinet.de.sivry@gmail.com}{martin.poinsinet.de.sivry@gmail.com} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Motivation and significance}
+
+Flow-cytometry instruments export event-level measurements whose detector
+scales depend on the instrument and acquisition context. A reusable
+calibration must therefore retain more than fitted coefficients: the selected
+channel, approved reference values, optical assumptions where applicable, and
+the context in which the transformation was produced. FCS provides a standard
+format for exchange of these event data \cite{Spidlen2010}, but it does not
+itself encode a calibration workflow.
+
+RosettaX provides a local, guided workflow for this post-acquisition step. It
+operates on exported FCS data rather than controlling an instrument. The
+application helps users inspect distributions, identify and review peaks, pair
+them with reference values or modeled standards, save a structured calibration,
+and apply that record to experimental files. Its contribution is to place
+fluorescence and scattering calibration, saved context, and export provenance
+in one workflow without representing processed FCS values as raw optical
+measurements.
+
+\section{Software description}
+
+\subsection{Calibration workflows}
+
+For fluorescence, RosettaX fits approved positive detector-reference pairs in
+logarithmic space:
+\begin{equation}
+  \log_{10}(y) = m\log_{10}(x)+b,\qquad y=10^b x^m.
+\end{equation}
+The saved record contains the slope, intercept, prefactor, $R^2$, point count,
+and the reference pairs that supported the fit. This makes the fitted
+transformation reviewable without reopening the original calibration session.
+
+For scattering, RosettaX calculates the coupling of calibration standards with
+PyMieSim using a Gaussian source and photodiode detector model. The user can
+define wavelength, material refractive indices, and detector geometry,
+including numerical apertures and angular settings. The instrument response
+relates the measured peak to modeled coupling, by default with a
+zero-intercept linear fit. The physical model follows Mie scattering for
+spherical particles \cite{Mie1908} and uses the versioned PyMieSim dependency
+\cite{PyMieSim}; it does not assume that scatter peak is directly proportional
+to particle diameter.
+
+\subsection{Saved records and application safeguards}
+
+Both workflows use a common JSON wrapper identifying the calibration kind and
+creation context. Fluorescence payloads preserve their empirical fit and
+reference points. Scattering payloads additionally preserve the
+instrument-response fit, modeled calibration-standard relation, and optical
+metadata. RosettaX validates the record and source channel before export.
+When a scattering target relation is not strictly monotonic, it selects the
+largest monotonic branch and reports that decision rather than silently treating
+the inverse as single valued.
+
+\section{Illustrative use}
+
+A typical fluorescence calibration begins with a bead FCS file. The user
+selects a detector channel, reviews the visible populations, approves the
+peak-reference table, and examines the power-law fit before saving the JSON
+record. The same record can later be selected with one or more experimental
+FCS files to add a calibrated output column.
+
+For scattering, the analogous workflow combines measured calibration-standard
+peaks with a detector preset or custom collection geometry and material
+settings. RosettaX models the standard relation, fits the instrument response,
+and stores the resulting optical context. On application, the software
+converts measured values to estimated coupling and then evaluates the selected
+target relation. The resulting FCS artifacts may be bundled with a PDF report
+that records selected calibration, input files, output columns, and warnings.
+
+\section{Impact}
+
+RosettaX is intended for laboratories that need to make their calibration
+decisions inspectable and reusable across exported FCS files. Its JSON record
+separates calibration families while retaining the evidence required to
+interpret each one, and its co-exported report captures what occurred during a
+specific application run. The application supports detector presets for
+selected BD Biosciences, Beckman Coulter, Apogee, and generic instrument
+configurations while preserving custom optical settings in the calibration
+record. It is not a replacement for instrument control, a universal optical
+model, or scientific judgment about reference materials and target assumptions.
+
+\section{Conclusions}
+
+RosettaX supplies a documented local route from exported FCS measurements to
+reviewable fluorescence or scattering calibrations and provenance-bearing
+exports. By storing both fitted relations and their interpretation context, it
+helps users reuse calibrations while retaining the information needed to assess
+them. The tagged source, documentation, and software archive are available
+openly \cite{RosettaX}.
+
+\section*{Data availability}
+
+No new experimental data were generated for this software paper. RosettaX
+operates on user-supplied FCS files; users should share data only in accordance
+with their ethical, privacy, and institutional requirements.
+
+\section*{Declaration of competing interest}
+
+The author declaration requires confirmation before submission.
+
+\section*{Acknowledgements}
+
+Funding and acknowledgement statements require confirmation before submission.
+
+\section*{Generative-AI disclosure}
+
+The authors must replace this statement before submission with an accurate
+description of any generative-AI use and their review of the final manuscript.
+
+\bibliographystyle{elsarticle-num}
+\bibliography{references}
+
+\end{document}

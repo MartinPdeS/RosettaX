@@ -1,4 +1,3 @@
-
 import logging
 from dataclasses import dataclass
 from typing import Any
@@ -6,12 +5,10 @@ from typing import Any
 import dash
 
 from RosettaX.pages.p04_calibrate.state import ApplyCalibrationPageState
-from RosettaX.utils import usage_metrics
-from RosettaX.workflow import apply_calibration
-from RosettaX.workflow.apply_calibration import io as apply_calibration_io
 from RosettaX.workflow.apply_calibration import report as apply_report
 
 from . import services
+from .models import ApplyCalibrationControls
 
 logger = logging.getLogger(__name__)
 
@@ -247,178 +244,41 @@ class ApplyCallbacks:
             target_core_shell_core_diameter_max_nm: Any,
             target_core_shell_core_diameter_count: Any,
         ) -> tuple:
-            logger.debug(
-                "apply_and_export_calibration called with n_clicks=%r "
-                "page_state_data=%r "
-                "uploaded_fcs_path=%r export_columns=%r "
-                "selected_calibration_summary=%r target_mie_model=%r "
-                "target_medium_refractive_index=%r target_particle_refractive_index=%r "
-                "target_solid_sphere_diameter_min_nm=%r "
-                "target_solid_sphere_diameter_max_nm=%r "
-                "target_solid_sphere_diameter_count=%r "
-                "target_core_refractive_index=%r target_shell_refractive_index=%r "
-                "target_shell_thickness_nm=%r "
-                "target_core_shell_core_diameter_min_nm=%r "
-                "target_core_shell_core_diameter_max_nm=%r "
-                "target_core_shell_core_diameter_count=%r",
-                n_clicks,
-                page_state_data,
-                uploaded_fcs_path,
-                export_columns,
-                selected_calibration_summary,
-                target_model_preset,
-                target_mie_model,
-                target_medium_refractive_index,
-                target_particle_refractive_index,
-                target_solid_sphere_diameter_min_nm,
-                target_solid_sphere_diameter_max_nm,
-                target_solid_sphere_diameter_count,
-                target_core_refractive_index,
-                target_shell_refractive_index,
-                target_shell_thickness_nm,
-                target_core_shell_core_diameter_min_nm,
-                target_core_shell_core_diameter_max_nm,
-                target_core_shell_core_diameter_count,
-            )
-
             del n_clicks
-
-            try:
-                usage_metrics.record_apply_button_click()
-            except Exception:
-                logger.exception("Failed to record apply button click usage metric.")
-
-            page_state = ApplyCalibrationPageState.from_dict(
-                page_state_data,
+            controls = ApplyCalibrationControls(
+                uploaded_fcs_path=uploaded_fcs_path,
+                export_columns=export_columns,
+                selected_calibration_summary=selected_calibration_summary,
+                target_model_preset=target_model_preset,
+                advanced_monotonic_mode_enabled=advanced_monotonic_mode_enabled,
+                use_monotonic_smoothing_kernel=use_monotonic_smoothing_kernel,
+                monotonic_smoothing_sigma_points=monotonic_smoothing_sigma_points,
+                target_mie_model=target_mie_model,
+                target_medium_refractive_index=target_medium_refractive_index,
+                target_particle_refractive_index=target_particle_refractive_index,
+                target_solid_sphere_diameter_min_nm=target_solid_sphere_diameter_min_nm,
+                target_solid_sphere_diameter_max_nm=target_solid_sphere_diameter_max_nm,
+                target_solid_sphere_diameter_count=target_solid_sphere_diameter_count,
+                target_core_refractive_index=target_core_refractive_index,
+                target_shell_refractive_index=target_shell_refractive_index,
+                target_shell_thickness_nm=target_shell_thickness_nm,
+                target_core_shell_core_diameter_min_nm=target_core_shell_core_diameter_min_nm,
+                target_core_shell_core_diameter_max_nm=target_core_shell_core_diameter_max_nm,
+                target_core_shell_core_diameter_count=target_core_shell_core_diameter_count,
             )
-
-            try:
-                request = services.build_apply_calibration_request(
-                    uploaded_fcs_path=uploaded_fcs_path,
-                    export_columns=export_columns,
-                    selected_calibration_summary=selected_calibration_summary,
-                    target_model_preset=target_model_preset,
-                    advanced_monotonic_mode_enabled=advanced_monotonic_mode_enabled,
-                    use_monotonic_smoothing_kernel=use_monotonic_smoothing_kernel,
-                    monotonic_smoothing_sigma_points=monotonic_smoothing_sigma_points,
-                    target_mie_model=target_mie_model,
-                    target_medium_refractive_index=target_medium_refractive_index,
-                    target_particle_refractive_index=target_particle_refractive_index,
-                    target_solid_sphere_diameter_min_nm=target_solid_sphere_diameter_min_nm,
-                    target_solid_sphere_diameter_max_nm=target_solid_sphere_diameter_max_nm,
-                    target_solid_sphere_diameter_count=target_solid_sphere_diameter_count,
-                    target_core_refractive_index=target_core_refractive_index,
-                    target_shell_refractive_index=target_shell_refractive_index,
-                    target_shell_thickness_nm=target_shell_thickness_nm,
-                    target_core_shell_core_diameter_min_nm=target_core_shell_core_diameter_min_nm,
-                    target_core_shell_core_diameter_max_nm=target_core_shell_core_diameter_max_nm,
-                    target_core_shell_core_diameter_count=target_core_shell_core_diameter_count,
-                )
-
-                result = apply_calibration.apply_calibration_to_fcs_files(
-                    request=request,
-                )
-
-            except Exception as exc:
-                error_message = (
-                    f"Failed to apply and export calibration: {type(exc).__name__}: {exc}"
-                )
-
-                logger.exception(
-                    "Failed to apply and export calibration for uploaded_fcs_path=%r",
-                    uploaded_fcs_path,
-                )
-
-                return (
-                    error_message,
-                    dash.no_update,
-                    page_state.update(
-                        apply_result_payload=None,
-                        status_message=error_message,
-                    ).to_dict(),
-                )
-
-            logger.debug(
-                "Calibration export succeeded with download_filename=%r "
-                "file_count=%r source_channel=%r output_channels=%r warnings=%r",
-                result.download_filename,
-                result.file_count,
-                result.source_channel,
-                result.output_channels,
-                result.warnings,
+            result = services.apply_and_prepare_calibration_export(controls)
+            page_state = ApplyCalibrationPageState.from_dict(page_state_data)
+            download_data = (
+                dash.dcc.send_bytes(result.payload_bytes, result.download_filename)
+                if result.payload_bytes is not None
+                else dash.no_update
             )
-
-            try:
-                usage_metrics.record_calibrated_files(
-                    file_count=result.file_count,
-                )
-            except Exception:
-                logger.exception(
-                    "Failed to record calibrated file usage metric for file_count=%r",
-                    result.file_count,
-                )
-
-            status_message = result.status
-            download_bytes = result.payload_bytes
-            report_payload = None
-            report_pdf_filename = None
-            report_pdf_bytes = None
-
-            try:
-                report_payload = apply_report.build_apply_report_payload(
-                    request=request,
-                    result=result,
-                    calibration_summary=selected_calibration_summary,
-                )
-                report_pdf_filename = apply_report.build_apply_report_download_filename(
-                    report_payload=report_payload,
-                )
-                report_pdf_bytes = apply_report.build_apply_report_pdf_bytes(
-                    report_payload=report_payload,
-                )
-            except Exception as exc:
-                logger.exception(
-                    "Failed to build apply report for download_filename=%r",
-                    result.download_filename,
-                )
-                status_message = (
-                    f"{result.status} Report generation failed: {type(exc).__name__}: {exc}"
-                )
-
-            if (
-                report_pdf_filename is not None
-                and report_pdf_bytes is not None
-                and str(result.download_filename).lower().endswith(".zip")
-            ):
-                try:
-                    download_bytes = apply_calibration_io.append_files_to_zip_bytes(
-                        zip_bytes=result.payload_bytes,
-                        extra_files={
-                            report_pdf_filename: report_pdf_bytes,
-                        },
-                    )
-                    status_message = (
-                        f"{result.status} Bundled report PDF into ZIP export."
-                    )
-                except Exception as exc:
-                    logger.exception(
-                        "Failed to bundle report PDF into ZIP download_filename=%r",
-                        result.download_filename,
-                    )
-                    status_message = (
-                        f"{result.status} Report PDF is available separately, but ZIP bundling failed: "
-                        f"{type(exc).__name__}: {exc}"
-                    )
-
             return (
-                status_message,
-                dash.dcc.send_bytes(
-                    download_bytes,
-                    result.download_filename,
-                ),
+                result.status,
+                download_data,
                 page_state.update(
-                    apply_result_payload=report_payload,
-                    status_message=status_message,
+                    apply_result_payload=result.report_payload,
+                    status_message=result.status,
                 ).to_dict(),
             )
 

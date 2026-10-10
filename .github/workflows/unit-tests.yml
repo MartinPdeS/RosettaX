@@ -162,3 +162,27 @@ jobs:
           response = application.app.server.test_client().get("/")
           assert response.status_code == 200, response.status_code
           PY
+
+  browser-smoke:
+    name: Browser navigation and traffic budgets
+    needs: collect
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Set up Python and browser dependencies
+        uses: MartinPdeS/MPSActions/actions/setup-python@0f5927acf88b25b5d253421e508387897096a2cc
+        with:
+          python-version: "3.13"
+          install-command: >-
+            python -m pip install -e ".[testing]" "playwright>=1.49,<2"
+      - run: python -m playwright install --with-deps chromium
+      - run: make browser-smoke PYTHON=python
+      - name: Upload browser measurements and server log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-navigation
+          path: |
+            build/browser-navigation.json
+            build/browser-navigation.server.log
+          if-no-files-found: warn
