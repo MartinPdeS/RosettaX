@@ -196,7 +196,7 @@ Current development priorities include:
 Installation
 ************
 
-RosettaX requires Python 3.11 or later. CI checks Python 3.11, 3.12, and 3.13;
+RosettaX requires Python 3.11 or later. CI checks Python 3.11, 3.12, 3.13, and 3.14;
 the pinned PyMieSim release provides wheels for these versions.
 
 PyPI
@@ -373,7 +373,7 @@ do not collect both suites in one pytest invocation. It checks native sphere
 and core-shell calculations, power scaling, Mie relation inversion, every
 registered page layout, and Dash HTTP endpoints. Missing dependencies or stub
 contamination fail the run instead of skipping checks. CI runs these checks
-on Python 3.11 and 3.13 on Linux, and Python 3.13 on macOS and Windows.
+on Python 3.11, 3.13, and 3.14 on Linux, and Python 3.13 on macOS and Windows.
 
 Run the browser smoke checks with optional Playwright dependencies:
 

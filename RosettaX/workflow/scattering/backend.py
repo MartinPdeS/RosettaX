@@ -1119,12 +1119,17 @@ class BackEnd:
         )
 
         logger.debug(
-            "Calling experiment.get('coupling', as_numpy=True) with sampling=%r.",
+            "Computing coupling with the installed PyMieSim API and sampling=%r.",
             detector_sampling,
         )
 
         start_time = time.perf_counter()
-        coupling_values = experiment.get("coupling", as_numpy=True)
+        # PyMieSim 5.8 (the Python 3.14 dependency) returns a labeled result.
+        # Older supported interpreters retain the pinned 5.1 NumPy-returning API.
+        if callable(getattr(experiment, "run", None)):
+            coupling_values = experiment.run("coupling").as_numpy()
+        else:
+            coupling_values = experiment.get("coupling", as_numpy=True)
         elapsed_time = time.perf_counter() - start_time
 
         logger.debug(

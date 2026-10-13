@@ -53,6 +53,7 @@ jobs:
           - "3.11"
           - "3.12"
           - "3.13"
+          - "3.14"
 
     steps:
       - name: Set up Python and CI dependencies
@@ -101,6 +102,8 @@ jobs:
             python-version: "3.11"
           - os: ubuntu-latest
             python-version: "3.13"
+          - os: ubuntu-latest
+            python-version: "3.14"
           - os: macos-latest
             python-version: "3.13"
           - os: windows-latest
@@ -136,7 +139,7 @@ jobs:
     timeout-minutes: 10
     strategy:
       matrix:
-        python-version: ["3.11", "3.13"]
+        python-version: ["3.11", "3.13", "3.14"]
     steps:
       - name: Set up Python and CI dependencies
         uses: MartinPdeS/MPSActions/actions/setup-python@0f5927acf88b25b5d253421e508387897096a2cc

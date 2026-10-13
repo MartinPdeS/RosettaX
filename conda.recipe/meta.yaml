@@ -8,7 +8,7 @@ source:
 build:
   number: 0
   script: "{{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation"
-  skip: true  # [py<311 or py>=314]
+  skip: true  # [py<311]
 
 
 requirements:
@@ -30,7 +30,8 @@ requirements:
     - plotly >=6.7.0
     - dash >=4.1.0
     - dash-bootstrap-components >=2.0.4
-    - martinpdes::pymiesim >=5.1.2
+    - martinpdes::pymiesim >=5.1.2  # [py<314]
+    - martinpdes::pymiesim >=5.8.1,<6  # [py>=314]
     - gunicorn >=23.0.0  # [not win]
     - psycopg >=3.2.9
 
