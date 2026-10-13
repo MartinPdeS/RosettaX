@@ -27,18 +27,13 @@ jobs:
             archive-name: RosettaX-macos.zip
 
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - uses: actions/setup-python@v5
+      - name: Set up Python and bundling dependencies
+        uses: MartinPdeS/MPSActions/actions/setup-python@0f5927acf88b25b5d253421e508387897096a2cc
         with:
           python-version: "3.13"
-
-      - name: Install bundling dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -e ".[bundling]"
+          install-command: >-
+            python -m pip install --upgrade pip && python -m pip install -e ".[bundling]"
+          fetch-depth: 0
 
       - name: Build bundle
         run: pyinstaller rosettax.spec --clean
