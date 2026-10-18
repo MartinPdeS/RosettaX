@@ -50,10 +50,10 @@ extensions = [
 napoleon_google_docstring = False
 napoleon_numpy_docstring = True
 
-html_logo = "../../RosettaX/assets/logo/logo_light.svg"
+html_logo = "_static/logo.svg"
 # The compact X-and-orbit mark stays legible in a browser tab; the full wordmark
 # does not at favicon sizes.
-html_favicon = "../../RosettaX/assets/logo/favicon.svg"
+html_favicon = "_static/favicon.svg"
 
 
 sphinx_gallery_conf = {
