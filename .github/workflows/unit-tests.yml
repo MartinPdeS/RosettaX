@@ -24,7 +24,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Set up Python and CI dependencies
-        uses: MartinPdeS/MPSActions/actions/setup-python@0f5927acf88b25b5d253421e508387897096a2cc
+        uses: MartinPdeS/MPSActions/actions/setup-python@a01969bc5af90666281f9d37acffdf6a4629763a
         with:
           python-version: "3.13"
           cache: "pip"
@@ -57,7 +57,7 @@ jobs:
 
     steps:
       - name: Set up Python and CI dependencies
-        uses: MartinPdeS/MPSActions/actions/setup-python@0f5927acf88b25b5d253421e508387897096a2cc
+        uses: MartinPdeS/MPSActions/actions/setup-python@a01969bc5af90666281f9d37acffdf6a4629763a
         with:
           python-version: "${{ matrix.python-version }}"
           cache: "pip"
@@ -110,7 +110,7 @@ jobs:
             python-version: "3.13"
     steps:
       - name: Set up Python and CI dependencies
-        uses: MartinPdeS/MPSActions/actions/setup-python@0f5927acf88b25b5d253421e508387897096a2cc
+        uses: MartinPdeS/MPSActions/actions/setup-python@a01969bc5af90666281f9d37acffdf6a4629763a
         with:
           python-version: "${{ matrix.python-version }}"
           cache: "pip"
@@ -142,7 +142,7 @@ jobs:
         python-version: ["3.11", "3.13", "3.14"]
     steps:
       - name: Set up Python and CI dependencies
-        uses: MartinPdeS/MPSActions/actions/setup-python@0f5927acf88b25b5d253421e508387897096a2cc
+        uses: MartinPdeS/MPSActions/actions/setup-python@a01969bc5af90666281f9d37acffdf6a4629763a
         with:
           python-version: "${{ matrix.python-version }}"
           cache: "pip"
@@ -173,7 +173,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Set up Python and browser dependencies
-        uses: MartinPdeS/MPSActions/actions/setup-python@0f5927acf88b25b5d253421e508387897096a2cc
+        uses: MartinPdeS/MPSActions/actions/setup-python@a01969bc5af90666281f9d37acffdf6a4629763a
         with:
           python-version: "3.13"
           install-command: >-

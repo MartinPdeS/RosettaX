@@ -106,6 +106,7 @@ testing = [
 ]
 
 documentation = [
+    "MartinPdeS-docs>=0.1.4",
     "numpydoc ~=1.8",
     "sphinx >=6",
     "sphinx-gallery ~=0.17",
