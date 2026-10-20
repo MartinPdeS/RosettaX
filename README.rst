@@ -197,7 +197,7 @@ Installation
 ************
 
 RosettaX requires Python 3.11 or later. CI checks Python 3.11, 3.12, 3.13, and 3.14;
-the pinned PyMieSim release provides wheels for these versions.
+the pinned PyMieSim 6.0.4 release provides wheels for these versions.
 
 PyPI
 ====
@@ -236,7 +236,7 @@ With Docker and Docker Compose installed, run from the repository checkout:
 
 Open http://localhost:8050 in your browser. The container uses Python 3.13 and
 Gunicorn, runs as a non-root user, and publishes the application on the local
-machine only. Compose targets ``linux/amd64`` because PyMieSim 5.1.2 provides
+machine only. Compose targets ``linux/amd64`` because PyMieSim 6.0.4 provides
 x86-64 Linux wheels; Docker uses emulation on Apple Silicon.
 
 Uploads, server-side calibration files, and usage records are stored in the

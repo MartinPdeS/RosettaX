@@ -32,9 +32,7 @@ keywords = [
 ]
 
 dependencies = [
-    # Python 3.14 wheels first became available in PyMieSim 5.8.
-    "PyMieSim ==5.1.2; python_version < '3.14'",
-    "PyMieSim ==5.8.1; python_version >= '3.14'",
+    "PyMieSim ==6.0.4",
     "numpy >=2.2.6",
     "pandas >=2.2",
     "typing_extensions >=4.10",
