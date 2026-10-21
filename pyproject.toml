@@ -78,7 +78,6 @@ RosettaX = [
 RosettaX = ["assets/sample-files/*.fcs"]
 
 [tool.setuptools_scm]
-write_to = "RosettaX/_version.py"
 version_scheme = "only-version"
 local_scheme = "no-local-version"
 
