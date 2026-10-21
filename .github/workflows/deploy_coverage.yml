@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   ManyLinux_x86_64:
-    uses: MartinPdeS/MPSActions/.github/workflows/publish_coverage.yml@a01969bc5af90666281f9d37acffdf6a4629763a
+    uses: MartinPdeS/MPSActions/.github/workflows/publish_coverage.yml@v7
     with:
       python-version: "3.13"
       apt-package: xvfb
