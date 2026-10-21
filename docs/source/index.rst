@@ -79,24 +79,10 @@ Full documentation map
 
 .. toctree::
     :maxdepth: 2
-    :caption: Under the hood
+    :hidden:
 
-    theory
-    workflows/index
-    references
-    reports
-
-.. toctree::
-    :maxdepth: 2
-    :caption: Getting started and debugging
-
-    quickstart
-    interface
-    troubleshooting
-
-.. toctree::
-    :maxdepth: 2
-    :caption: API and worked examples
-
-    code
-    gallery/index.rst
+    Start <quickstart>
+    Guide <interface>
+    Theory <theory>
+    API <code>
+    Resources <resources>
