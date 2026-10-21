@@ -1,65 +1,25 @@
-# Simple workflow for deploying static content to GitHub Pages
 name: Documentation
-
-on:
+'on':
   push:
-    branches: [ "master" ]
+    branches:
+    - master
     paths-ignore:
-      # `make release` commits only the generated package version before tagging.
-      - "RosettaX/_version.py"
+    - RosettaX/_version.py
   pull_request:
-    branches: [ "master" ]
-
-
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+    branches:
+    - master
 permissions:
-  contents: write
-  pages: write
-  id-token: write
-
+  contents: read
 jobs:
-  ManyLinux_x86_64:
-    uses: MartinPdeS/MPSActions/.github/workflows/publish_documentation.yml@v11
+  documentation:
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    uses: MartinPdeS/MPSActions/.github/workflows/publish_documentation.yml@v12
     with:
-      python-version: "3.13"
-      package-name: "RosettaX"
+      python-version: '3.13'
+      package-name: RosettaX
       apt-package: xvfb jq
-
-  maintain_documentation:
-    needs: ManyLinux_x86_64
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install documentation landing page
-        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
-        with:
-          ref: documentation_page
-          fetch-depth: 0
-      - run: |
-          set -Eeuo pipefail
-          git show "${GITHUB_SHA}:docs/redirect.html" > index.html
-          test -s docs/latest/index.html
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add index.html
-          if git diff --cached --quiet; then exit 0; fi
-          git commit -m "Update documentation landing page [skip ci]"
-          git push origin HEAD:documentation_page
-
-  publish_pages:
-    needs: maintain_documentation
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
-        with:
-          ref: documentation_page
-      - uses: actions/configure-pages@v6
-      - uses: actions/upload-pages-artifact@v5
-        with:
-          path: .
-      - id: deployment
-        uses: actions/deploy-pages@v5
+      deploy-pages: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+      debug: true
