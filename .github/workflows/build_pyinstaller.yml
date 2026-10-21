@@ -28,7 +28,7 @@ jobs:
 
     steps:
       - name: Set up Python and bundling dependencies
-        uses: MartinPdeS/MPSActions/actions/setup-python@v12
+        uses: MartinPdeS/MPSActions/actions/setup-python@v13
         with:
           python-version: "3.13"
           install-command: >-
