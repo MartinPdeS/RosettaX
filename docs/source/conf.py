@@ -19,12 +19,7 @@ globals().update(
         logo="_static/logo.svg",
         favicon="_static/favicon.svg",
         gallery_options={"abort_on_example_error": True},
-        html_theme_options={
-            "logo": {"text": "", "image": "_static/logo.svg"},
-        },
+        logo_text="",
+        html_css_files=["layout.css"],
     )
 )
-
-html_css_files += ["layout.css"]
-html_context["doc_path"] = "docs/source"
-html_context["default_mode"] = "dark"
