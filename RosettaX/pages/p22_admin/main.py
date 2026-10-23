@@ -325,11 +325,13 @@ class AdminPage:
                         columns=[
                             {"name": "Time (UTC)", "id": "visited_at"},
                             {"name": "IP address", "id": "ip_address"},
+                            {"name": "Location", "id": "location"},
+                            {"name": "Organization", "id": "organization"},
                             {"name": "Page", "id": "path"},
                             {"name": "User agent", "id": "user_agent"},
                         ],
                         data=recent_visit_rows,
-                        page_size=10,
+                        page_size=25,
                         style_table={"overflowX": "auto"},
                         style_header={
                             "fontWeight": "700",
@@ -352,6 +354,10 @@ class AdminPage:
                             {
                                 "if": {"column_id": "user_agent"},
                                 "maxWidth": "420px",
+                            },
+                            {
+                                "if": {"column_id": "location"},
+                                "maxWidth": "240px",
                             },
                         ],
                     ),

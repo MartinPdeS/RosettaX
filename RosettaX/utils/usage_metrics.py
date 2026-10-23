@@ -30,7 +30,7 @@ METRIC_NAME_APPLY_BUTTON_CLICK_COUNT = "apply_button_click_count"
 METRIC_NAME_TOTAL_CALIBRATED_FILES = "total_calibrated_files"
 METRIC_NAME_HOME_PAGE_VISIT_COUNT = "home_page_visit_count"
 
-DEFAULT_RECENT_VISIT_LIMIT = 25
+DEFAULT_RECENT_VISIT_LIMIT = 50
 
 _VISIT_LOG_FILE_NAME = "visit_log.jsonl"
 _MAX_TIMESTAMP_LENGTH = 64
@@ -91,6 +91,8 @@ class VisitEvent:
     ip_address: str = ""
     path: str = ""
     user_agent: str = ""
+    location: str = "N/A"
+    organization: str = "N/A"
 
     @classmethod
     def from_dict(
@@ -120,6 +122,8 @@ class VisitEvent:
                 payload.get("user_agent"),
                 max_length=_MAX_USER_AGENT_LENGTH,
             ),
+            location=_coerce_visit_text(payload.get("location"), max_length=256) or "N/A",
+            organization=_coerce_visit_text(payload.get("organization"), max_length=256) or "N/A",
         )
 
     def to_dict(self) -> dict[str, str]:
@@ -287,6 +291,8 @@ def record_page_visit(
     ip_address: Any,
     path: Any,
     user_agent: Any,
+    location: Any = "N/A",
+    organization: Any = "N/A",
     visited_at: str | None = None,
     include_local: bool = False,
 ) -> VisitEvent:
@@ -315,6 +321,8 @@ def record_page_visit(
             user_agent,
             max_length=_MAX_USER_AGENT_LENGTH,
         ),
+        location=_coerce_visit_text(location, max_length=256) or "N/A",
+        organization=_coerce_visit_text(organization, max_length=256) or "N/A",
     )
 
     if is_local_ip(event.ip_address) and not include_local and not should_track_local_visits():
@@ -813,10 +821,14 @@ def _ensure_postgres_page_visits_table(connection: Any) -> None:
                 visited_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
                 ip_address TEXT NOT NULL DEFAULT '',
                 path TEXT NOT NULL DEFAULT '',
-                user_agent TEXT NOT NULL DEFAULT ''
+                user_agent TEXT NOT NULL DEFAULT '',
+                location TEXT NOT NULL DEFAULT 'N/A',
+                organization TEXT NOT NULL DEFAULT 'N/A'
             )
             """
         )
+        cursor.execute("ALTER TABLE page_visits ADD COLUMN IF NOT EXISTS location TEXT NOT NULL DEFAULT 'N/A'")
+        cursor.execute("ALTER TABLE page_visits ADD COLUMN IF NOT EXISTS organization TEXT NOT NULL DEFAULT 'N/A'")
 
 
 def _record_page_visit_postgres(event: VisitEvent) -> None:
@@ -826,14 +838,16 @@ def _record_page_visit_postgres(event: VisitEvent) -> None:
         with connection.cursor() as cursor:
             cursor.execute(
                 """
-                INSERT INTO page_visits (visited_at, ip_address, path, user_agent)
-                VALUES (%s, %s, %s, %s)
+                INSERT INTO page_visits (visited_at, ip_address, path, user_agent, location, organization)
+                VALUES (%s, %s, %s, %s, %s, %s)
                 """,
                 (
                     _parse_visit_timestamp(event.visited_at),
                     event.ip_address,
                     event.path,
                     event.user_agent,
+                    event.location,
+                    event.organization,
                 ),
             )
 
@@ -847,7 +861,7 @@ def _load_visit_events_from_postgres() -> list[VisitEvent]:
         with connection.cursor() as cursor:
             cursor.execute(
                 """
-                SELECT visited_at, ip_address, path, user_agent
+                SELECT visited_at, ip_address, path, user_agent, location, organization
                 FROM page_visits
                 ORDER BY visited_at, id
                 """
@@ -869,6 +883,8 @@ def _load_visit_events_from_postgres() -> list[VisitEvent]:
                 user_agent,
                 max_length=_MAX_USER_AGENT_LENGTH,
             ),
+            location=_coerce_visit_text(location, max_length=256) or "N/A",
+            organization=_coerce_visit_text(organization, max_length=256) or "N/A",
         )
-        for visited_at, ip_address, path, user_agent in rows
+        for visited_at, ip_address, path, user_agent, location, organization in rows
     ]

@@ -9,6 +9,7 @@ from flask import request as flask_request
 from RosettaX.application.layout import THEME_DARK, THEME_LIGHT
 from RosettaX.pages.p00_sidebar.main import SidebarIds, sidebar_html
 from RosettaX.utils import usage_metrics
+from RosettaX.utils import ipinfo
 from RosettaX.utils.browser_profiles import (
     BROWSER_PROFILES_STORE_ID,
     BrowserProfileLibrary,
@@ -65,6 +66,7 @@ def record_request_page_visit(pathname: Any) -> None:
             ip_address=ip_address,
             path=str(pathname or "/"),
             user_agent=user_agent,
+            **ipinfo.lookup(ip_address),
         )
     except Exception:
         logger.exception("Failed to record page visit for pathname=%r", pathname)

@@ -294,7 +294,10 @@ class Test_AdminServices:
         assert list(figure.data[0].y) == ["/", "/settings"]
         assert list(figure.data[0].x) == [1, 2]
 
-    def test_build_recent_visit_rows_formats_table_rows(self) -> None:
+    def test_build_recent_visit_rows_formats_table_rows(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
         """Check build recent visit rows formats table rows."""
         visit_summary = usage_metrics.summarize_visit_events(
             [
@@ -303,6 +306,8 @@ class Test_AdminServices:
                     ip_address="8.8.8.8",
                     path="/",
                     user_agent="Mozilla/5.0",
+                    location="Mountain View, California, United States",
+                    organization="AS15169 Google LLC",
                 ),
                 usage_metrics.VisitEvent(
                     visited_at="2026-09-08T11:00:00+00:00",
@@ -319,13 +324,17 @@ class Test_AdminServices:
         assert rows == [
             {
                 "visited_at": "2026-09-08 11:00:00 UTC",
-                "ip_address": "unknown",
+                "ip_address": "N/A",
+                "location": "N/A",
+                "organization": "N/A",
                 "path": "/help",
-                "user_agent": "unknown",
+                "user_agent": "N/A",
             },
             {
                 "visited_at": "2026-09-08 10:00:00 UTC",
                 "ip_address": "8.8.8.8",
+                "location": "Mountain View, California, United States",
+                "organization": "AS15169 Google LLC",
                 "path": "/",
                 "user_agent": "Mozilla/5.0",
             },

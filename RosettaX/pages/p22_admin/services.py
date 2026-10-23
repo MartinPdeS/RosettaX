@@ -1,7 +1,11 @@
 
 import hmac
+import json
 import logging
 import os
+import threading
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any
@@ -14,6 +18,10 @@ logger = logging.getLogger(__name__)
 
 
 ROSETTAX_ADMIN_TOKEN_ENV_VAR = "ROSETTAX_ADMIN_TOKEN"
+ROSETTAX_IPINFO_TOKEN_ENV_VAR = "ROSETTAX_IPINFO_TOKEN"
+
+_IPINFO_CACHE: dict[str, dict[str, str]] = {}
+_IPINFO_CACHE_LOCK = threading.Lock()
 
 _VISITS_BAR_COLOR = "#0d6efd"
 _UNIQUE_VISITORS_LINE_COLOR = "#20c997"
@@ -183,9 +191,11 @@ def build_recent_visit_rows(
     return [
         {
             "visited_at": format_visit_timestamp_for_display(event.visited_at),
-            "ip_address": event.ip_address or "unknown",
+            "ip_address": event.ip_address or "N/A",
+            "location": event.location or "N/A",
+            "organization": event.organization or "N/A",
             "path": event.path,
-            "user_agent": event.user_agent or "unknown",
+            "user_agent": event.user_agent or "N/A",
         }
         for event in visit_summary.recent_visits
     ]
