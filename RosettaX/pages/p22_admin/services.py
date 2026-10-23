@@ -1,11 +1,8 @@
 
 import hmac
-import json
 import logging
 import os
 import threading
-from urllib.parse import urlencode
-from urllib.request import Request, urlopen
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any
