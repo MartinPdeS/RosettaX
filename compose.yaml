@@ -7,6 +7,7 @@ services:
       - "127.0.0.1:${ROSETTAX_PORT:-8050}:8050"
     environment:
       ROSETTAX_MAX_UPLOAD_SIZE: "${ROSETTAX_MAX_UPLOAD_SIZE:-2GB}"
+      ROSETTAX_ADMIN_TOKEN: "${ROSETTAX_ADMIN_TOKEN:-}"
     volumes:
       - rosettax-data:/home/rosettax/.rosettax
     init: true

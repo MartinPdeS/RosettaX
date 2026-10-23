@@ -11,6 +11,7 @@ import importlib
 
 import dash
 import pytest
+from flask import Flask
 
 from RosettaX.pages.p22_admin import services
 from RosettaX.utils import usage_metrics
@@ -139,6 +140,30 @@ class Test_AdminPage:
         assert "admin-stat-unique-visitors-today" in component_ids
         assert "admin-stat-apply-clicks" in component_ids
         assert "admin-stat-calibrated-files" in component_ids
+
+    def test_layout_reads_token_from_request_query_string(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path,
+    ) -> None:
+        """Check browser query string grants access to the admin page."""
+        monkeypatch.setenv(services.ROSETTAX_ADMIN_TOKEN_ENV_VAR, "secret-token")
+        monkeypatch.setenv(
+            usage_metrics.ROSETTAX_VISIT_LOG_PATH_ENV_VAR,
+            str(tmp_path / "visit_log.jsonl"),
+        )
+        monkeypatch.setenv(
+            usage_metrics.ROSETTAX_USAGE_METRICS_PATH_ENV_VAR,
+            str(tmp_path / "usage_metrics.json"),
+        )
+
+        admin_main = _import_admin_main(monkeypatch)
+        flask_app = Flask(__name__)
+
+        with flask_app.test_request_context("/admin?token=secret-token"):
+            layout = admin_main.layout()
+
+        assert "admin-visits-over-time-graph" in _collect_component_ids(layout)
 
 
 class Test_AdminServices:

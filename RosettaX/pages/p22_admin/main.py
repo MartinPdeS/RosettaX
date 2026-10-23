@@ -5,6 +5,7 @@ from typing import Any
 import dash
 import dash_bootstrap_components as dbc
 from dash import Input, Output, dash_table, dcc, html
+from flask import has_request_context, request
 
 from RosettaX.utils import styling, ui_forms
 
@@ -34,6 +35,9 @@ class AdminPage:
         token: str | None = None,
         **_kwargs,
     ) -> dbc.Container:
+        if token is None and has_request_context():
+            token = request.args.get("token")
+
         if not services.is_admin_access_granted(token):
             return self._access_denied_layout()
 
