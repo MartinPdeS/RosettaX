@@ -1,5 +1,6 @@
 
 import logging
+from datetime import datetime, timezone
 from typing import Any
 
 import dash
@@ -121,7 +122,7 @@ def register_application_callbacks(app: Dash) -> None:
     def track_page_visit(pathname: Any):
         record_request_page_visit(pathname)
 
-        return dash.no_update
+        return datetime.now(timezone.utc).isoformat()
 
     @app.callback(
         Output("theme-link", "href"),

@@ -57,12 +57,14 @@ class AdminPage:
             Output(self.ids.last_updated, "children"),
             Input(self.ids.refresh_interval, "n_intervals"),
             Input(self.ids.refresh_button, "n_clicks"),
+            Input("visit-tracking-store", "data"),
             Input("theme-store", "data"),
             prevent_initial_call=False,
         )
         def refresh_admin_dashboard(
             _n_intervals: Any,
             _n_clicks: Any,
+            _visit_tracking_signal: Any,
             theme_store_data: Any,
         ):
             theme = "dark"
