@@ -107,3 +107,7 @@ major minor patch:
 
 clean:
 	rm -rf $(BUILD_DIR)
+
+.PHONY: release-check
+release-check:
+	$(PYTHON) tools/check_release.py $(if $(VERSION),--version $(VERSION),)

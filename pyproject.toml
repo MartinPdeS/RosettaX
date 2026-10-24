@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=40.8.0", "wheel", "setuptools_scm[toml]>=8.0"]
+requires = ["setuptools>=40.8.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "RosettaX"
-dynamic = ["version"]
+version = "0.10.7"
 description = "Interactive fluorescence and scattering calibration workflows for flow cytometry."
 license = "AGPL-3.0-or-later"
 readme = "README.rst"
@@ -77,10 +77,6 @@ RosettaX = [
 [tool.setuptools.exclude-package-data]
 RosettaX = ["assets/sample-files/*.fcs"]
 
-[tool.setuptools_scm]
-version_scheme = "only-version"
-local_scheme = "no-local-version"
-
 [tool.setuptools.packages.find]
 include = ["RosettaX", "RosettaX.*"]
 
@@ -97,6 +93,7 @@ ignore = ["UP038"]
 "RosettaX/_version.py" = ["UP006", "UP007", "UP035"]
 
 [project.optional-dependencies]
+release = ["martinpdes-maintenance==0.2.2"]
 testing = [
     "pytest >=7.4,<10.0",
     "pytest-cov >=2,<8",
@@ -116,3 +113,8 @@ dev = [
 bundling = [
     "pyinstaller >=6.14,<7",
 ]
+
+[tool.mps-maintenance]
+version-file = "RosettaX/_version.py"
+version-method = "literal"
+conda-recipe = "conda.recipe/meta.yaml"

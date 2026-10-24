@@ -268,11 +268,11 @@ For a native Python web service on Render, set the Build Command to:
 
    bash tools/render_build.sh
 
-The script fetches release tags and complete Git history before installing the
-package, so its version is preserved in shallow deployment checkouts. It prints
-the installed version in the build log and rejects placeholder ``0.0`` versions.
+The script installs the package using its explicit project version and checks
+that the installed version matches the project metadata. Git history is not
+needed for installation.
 Keep your existing Start Command and redeploy after changing the Build Command.
-The home page displays the installed software version, with a generated-version
+The home page displays the installed software version, with a checked-in version
 fallback for source checkouts and standalone bundles.
 
 

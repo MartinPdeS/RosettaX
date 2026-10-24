@@ -9,8 +9,7 @@ COPY pyproject.toml README.rst LICENSE MANIFEST.in ./
 COPY RosettaX ./RosettaX
 
 # The build context excludes Git metadata; use the checked-in package version.
-RUN SETUPTOOLS_SCM_PRETEND_VERSION_FOR_ROSETTAX="$(python -c 'import runpy; print(runpy.run_path("RosettaX/_version.py")["__version__"])')" \
-    python -m pip wheel --only-binary=:all: --wheel-dir /wheels .
+RUN python -m pip wheel --only-binary=:all: --wheel-dir /wheels .
 
 FROM python:3.13-slim-bookworm AS runtime
 
