@@ -86,3 +86,4 @@ Full documentation map
     Theory <theory>
     API <code>
     Resources <resources>
+    Privacy policy <privacy>
