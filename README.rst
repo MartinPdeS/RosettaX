@@ -308,6 +308,9 @@ The documentation is available here:
 
 `RosettaX documentation <https://martinpdes.github.io/RosettaX/>`_
 
+See the `privacy policy <https://martinpdes.github.io/RosettaX/privacy.html>`_
+for file storage, usage information, and external service requests.
+
 The documentation is expected to evolve with the application. At this stage, the
 README provides the high level overview, while the full documentation contains
 more detailed usage information.
