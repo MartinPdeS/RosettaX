@@ -15,6 +15,7 @@ globals().update(
     configure(
         project=project,
         package=package,
+        version="auto",
         repository=repository,
         logo="_static/logo.svg",
         favicon="_static/favicon.svg",
