@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../../../" data-theme="dark">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RosettaX.pages.p04_calibrate.sections.s03_file_picker.services &#8212; RosettaX 0.10.9 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "dark";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "dark";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../../../../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/sg_gallery.css?v=c83e6b79" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/default.css?v=22616357" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/martinpdes_layout.css?v=a8cc01cd" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/layout.css?v=dc96f8db" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../../../../_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../../../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../../../../../../_static/documentation_options.js?v=9d400afe"></script>
+    <script src="../../../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../../../_static/sg-tags.js?v=d80f6fa4"></script>
+    <script src="../../../../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/RosettaX/pages/p04_calibrate/sections/s03_file_picker/services';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/MartinPdeS/RosettaX/documentation_page/version_switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.10.9';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="../../../../../../_static/favicon.svg"/>
+    <link rel="index" title="Index" href="../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.10.9" />
+  
+    
+    <script src="../../../../../../_static/searchtools.js"></script>
+    <script src="../../../../../../_static/language_data.js"></script>
+    <script src="../../../../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="dark">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="../../../../../../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.10.9 documentation - Home"/>
+    <img src="../../../../../../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.10.9 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../../quickstart.html">
+    Start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../../interface.html">
+    Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../../theory.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../../code.html">
+    API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../../resources.html">
+    Resources
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../../privacy.html">
+    Privacy policy
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MartinPdeS/RosettaX" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/RosettaX/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-box fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://anaconda.org/MartinPdeS/RosettaX" title="Anaconda" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">Anaconda</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../../quickstart.html">
+    Start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../../interface.html">
+    Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../../theory.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../../code.html">
+    API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../../resources.html">
+    Resources
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../../privacy.html">
+    Privacy policy
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MartinPdeS/RosettaX" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/RosettaX/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-box fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://anaconda.org/MartinPdeS/RosettaX" title="Anaconda" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">Anaconda</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../../../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">RosettaX.pages.p04_calibrate.sections.s03_file_picker.services</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for RosettaX.pages.p04_calibrate.sections.s03_file_picker.services</h1><div class="highlight"><pre>
+<span></span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">base64</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">plotly.graph_objects</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">go</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.pages.p04_calibrate.sections.s02_calibration_picker</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">services</span> <span class="k">as</span> <span class="n">calibration_picker_services</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">checks</span><span class="p">,</span> <span class="n">plottings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.utils.reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">FCSFile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.utils.runtime_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">RuntimeConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.utils.streamed_uploads</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">is_streamed_upload_token</span><span class="p">,</span>
+    <span class="n">raise_for_streamed_upload_error</span><span class="p">,</span>
+    <span class="n">resolve_streamed_upload</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.utils.upload_limits</span><span class="w"> </span><span class="kn">import</span> <span class="n">format_upload_size</span><span class="p">,</span> <span class="n">get_max_upload_bytes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.workflow.apply_calibration.fluorescence</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">apply_legacy_calibration_to_series</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.workflow.apply_calibration.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_uploaded_fcs_paths</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.workflow.plotting.scatter2d</span><span class="w"> </span><span class="kn">import</span> <span class="n">Scatter2DGraph</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="n">_SAVED_UPLOAD_TIMESTAMP</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"_\d</span><span class="si">{8}</span><span class="s2">_\d</span><span class="si">{6}</span><span class="s2">_\d</span><span class="si">{6}</span><span class="s2">$"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="build_upload_prompt_text">
+<a class="viewcode-back" href="../../../../../../api/pages.html#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_upload_prompt_text">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_upload_prompt_text</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Build the default FCS upload prompt text.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Upload one or more FCS files. Maximum file size: </span><span class="si">{</span><span class="n">format_upload_size</span><span class="p">()</span><span class="si">}</span><span class="s2">."</span></div>
+
+
+
+<div class="viewcode-block" id="build_upload_directory">
+<a class="viewcode-back" href="../../../../../../api/pages.html#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_upload_directory">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_upload_directory</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Build and create the local upload directory.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Path</span>
+<span class="sd">        Local upload directory used by the apply calibration file picker.</span>
+<span class="sd">    """</span>
+    <span class="n">upload_directory</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">home</span><span class="p">()</span> <span class="o">/</span> <span class="s2">".rosettax"</span> <span class="o">/</span> <span class="s2">"uploads"</span>
+
+    <span class="n">upload_directory</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span>
+        <span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+        <span class="s2">"Resolved FilePicker upload_directory=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+        <span class="nb">str</span><span class="p">(</span><span class="n">upload_directory</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">upload_directory</span></div>
+
+
+
+<div class="viewcode-block" id="validate_page_contract">
+<a class="viewcode-back" href="../../../../../../api/pages.html#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.validate_page_contract">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_page_contract</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">page</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Validate the page ID contract required by the file picker section.</span>
+
+<span class="sd">    Programming errors must fail loudly. Missing IDs indicate an invalid page</span>
+<span class="sd">    integration.</span>
+<span class="sd">    """</span>
+    <span class="n">required_attributes</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">"ids"</span><span class="p">,</span>
+        <span class="s2">"ids.FilePicker"</span><span class="p">,</span>
+        <span class="s2">"ids.FilePicker.upload"</span><span class="p">,</span>
+        <span class="s2">"ids.FilePicker.column_consistency_alert"</span><span class="p">,</span>
+        <span class="s2">"ids.FilePicker.preview_file"</span><span class="p">,</span>
+        <span class="s2">"ids.FilePicker.preview_channel"</span><span class="p">,</span>
+        <span class="s2">"ids.FilePicker.preview_graph"</span><span class="p">,</span>
+        <span class="s2">"ids.FilePicker.preview_status"</span><span class="p">,</span>
+        <span class="s2">"ids.Stores"</span><span class="p">,</span>
+        <span class="s2">"ids.Stores.uploaded_fcs_path_store"</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">required_attribute</span> <span class="ow">in</span> <span class="n">required_attributes</span><span class="p">:</span>
+        <span class="n">current_object</span> <span class="o">=</span> <span class="n">page</span>
+
+        <span class="k">for</span> <span class="n">attribute_name</span> <span class="ow">in</span> <span class="n">required_attribute</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"."</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">current_object</span><span class="p">,</span> <span class="n">attribute_name</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"FilePicker requires page.</span><span class="si">{</span><span class="n">required_attribute</span><span class="si">}</span><span class="s2">, "</span>
+                    <span class="sa">f</span><span class="s2">"but missing attribute </span><span class="si">{</span><span class="n">attribute_name</span><span class="si">!r}</span><span class="s2"> while resolving "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">required_attribute</span><span class="si">!r}</span><span class="s2">."</span>
+                <span class="p">)</span>
+
+            <span class="n">current_object</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span>
+                <span class="n">current_object</span><span class="p">,</span>
+                <span class="n">attribute_name</span><span class="p">,</span>
+            <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="validate_checks_contract">
+<a class="viewcode-back" href="../../../../../../api/pages.html#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.validate_checks_contract">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_checks_contract</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Validate the FCS consistency checker contract.</span>
+
+<span class="sd">    Programming errors must fail loudly. The file picker relies on the current</span>
+<span class="sd">    ``FCSMultiFileConsistencyChecker`` API.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">checks</span><span class="p">,</span> <span class="s2">"FCSMultiFileConsistencyChecker"</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
+            <span class="s2">"RosettaX.utils.checks must expose FCSMultiFileConsistencyChecker. "</span>
+            <span class="s2">"The old check_multifiles_consistency helper is no longer used here."</span>
+        <span class="p">)</span>
+
+    <span class="n">checker_class</span> <span class="o">=</span> <span class="n">checks</span><span class="o">.</span><span class="n">FCSMultiFileConsistencyChecker</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">checker_class</span><span class="p">,</span> <span class="s2">"check_multifiles_consistency"</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
+            <span class="s2">"FCSMultiFileConsistencyChecker must define "</span>
+            <span class="s2">"check_multifiles_consistency()."</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="validate_upload_payload">
+<a class="viewcode-back" href="../../../../../../api/pages.html#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.validate_upload_payload">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_upload_payload</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">contents_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">filenames</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Validate Dash upload payload consistency.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">contents_list</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">filenames</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"Upload payload is malformed because contents_list and filenames "</span>
+            <span class="sa">f</span><span class="s2">"have different lengths: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">contents_list</span><span class="p">)</span><span class="si">}</span><span class="s2"> != </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">filenames</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
+        <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">filenames</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">str</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Upload payload contains an empty filename."</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="save_uploaded_files">
+<a class="viewcode-back" href="../../../../../../api/pages.html#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.save_uploaded_files">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">save_uploaded_files</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">upload_directory</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">contents_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">filenames</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Save all uploaded files.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    upload_directory:</span>
+<span class="sd">        Directory where uploaded files are written.</span>
+<span class="sd">    contents_list:</span>
+<span class="sd">        Dash upload contents payloads.</span>
+<span class="sd">    filenames:</span>
+<span class="sd">        Original upload filenames.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list[Path]</span>
+<span class="sd">        Saved local file paths.</span>
+<span class="sd">    """</span>
+    <span class="n">saved_paths</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">contents</span><span class="p">,</span> <span class="n">filename</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+        <span class="n">contents_list</span><span class="p">,</span>
+        <span class="n">filenames</span><span class="p">,</span>
+        <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">saved_path</span> <span class="o">=</span> <span class="n">save_single_uploaded_file</span><span class="p">(</span>
+            <span class="n">upload_directory</span><span class="o">=</span><span class="n">upload_directory</span><span class="p">,</span>
+            <span class="n">contents</span><span class="o">=</span><span class="n">contents</span><span class="p">,</span>
+            <span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">saved_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">saved_path</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">saved_paths</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"No uploaded FCS files were saved."</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">saved_paths</span></div>
+
+
+
+<div class="viewcode-block" id="save_single_uploaded_file">
+<a class="viewcode-back" href="../../../../../../api/pages.html#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.save_single_uploaded_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">save_single_uploaded_file</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">upload_directory</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">contents</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Save one uploaded file to the local upload directory.</span>
+<span class="sd">    """</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+        <span class="s2">"save_single_uploaded_file called with filename=</span><span class="si">%r</span><span class="s2"> upload_directory=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+        <span class="n">filename</span><span class="p">,</span>
+        <span class="nb">str</span><span class="p">(</span><span class="n">upload_directory</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">raise_for_streamed_upload_error</span><span class="p">(</span><span class="n">contents</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">is_streamed_upload_token</span><span class="p">(</span><span class="n">contents</span><span class="p">):</span>
+        <span class="n">streamed_upload</span> <span class="o">=</span> <span class="n">resolve_streamed_upload</span><span class="p">(</span><span class="n">contents</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">streamed_upload</span><span class="o">.</span><span class="n">file_path</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">".fcs"</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Uploaded input file must be an .fcs file."</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">streamed_upload</span><span class="o">.</span><span class="n">file_path</span>
+
+    <span class="k">if</span> <span class="s2">","</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">contents</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Uploaded file </span><span class="si">{</span><span class="n">filename</span><span class="si">!r}</span><span class="s2"> has malformed Dash contents payload."</span>
+        <span class="p">)</span>
+
+    <span class="n">_</span><span class="p">,</span> <span class="n">encoded_payload</span> <span class="o">=</span> <span class="n">contents</span><span class="o">.</span><span class="n">split</span><span class="p">(</span>
+        <span class="s2">","</span><span class="p">,</span>
+        <span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">raw_bytes</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64decode</span><span class="p">(</span>
+        <span class="n">encoded_payload</span><span class="p">,</span>
+        <span class="n">validate</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">raw_bytes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">get_max_upload_bytes</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"Uploaded file exceeds the maximum supported size of "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">format_upload_size</span><span class="p">()</span><span class="si">}</span><span class="s2">."</span>
+        <span class="p">)</span>
+
+    <span class="n">original_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span>
+        <span class="nb">str</span><span class="p">(</span><span class="n">filename</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">safe_stem</span> <span class="o">=</span> <span class="n">original_path</span><span class="o">.</span><span class="n">stem</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">"uploaded_file"</span>
+    <span class="n">safe_suffix</span> <span class="o">=</span> <span class="n">original_path</span><span class="o">.</span><span class="n">suffix</span> <span class="k">if</span> <span class="n">original_path</span><span class="o">.</span><span class="n">suffix</span> <span class="k">else</span> <span class="s2">".fcs"</span>
+
+    <span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span>
+        <span class="s2">"%Y%m</span><span class="si">%d</span><span class="s2">_%H%M%S_</span><span class="si">%f</span><span class="s2">"</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">output_path</span> <span class="o">=</span> <span class="n">upload_directory</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">safe_stem</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">timestamp</span><span class="si">}{</span><span class="n">safe_suffix</span><span class="si">}</span><span class="s2">"</span>
+
+    <span class="n">output_path</span><span class="o">.</span><span class="n">write_bytes</span><span class="p">(</span>
+        <span class="n">raw_bytes</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">output_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Uploaded file was not written successfully: </span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">output_path</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Uploaded file was written but is empty: </span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+        <span class="s2">"Saved uploaded file successfully to output_path=</span><span class="si">%r</span><span class="s2"> byte_count=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+        <span class="nb">str</span><span class="p">(</span><span class="n">output_path</span><span class="p">),</span>
+        <span class="nb">len</span><span class="p">(</span><span class="n">raw_bytes</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">output_path</span></div>
+
+
+
+<div class="viewcode-block" id="check_saved_files_consistency">
+<a class="viewcode-back" href="../../../../../../api/pages.html#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.check_saved_files_consistency">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_saved_files_consistency</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">saved_paths</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Check uploaded FCS files for consistency.</span>
+<span class="sd">    """</span>
+    <span class="n">validate_checks_contract</span><span class="p">()</span>
+
+    <span class="n">checker</span> <span class="o">=</span> <span class="n">checks</span><span class="o">.</span><span class="n">FCSMultiFileConsistencyChecker</span><span class="p">(</span>
+        <span class="n">file_paths</span><span class="o">=</span><span class="p">[</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">saved_paths</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="n">consistency_report</span> <span class="o">=</span> <span class="n">checker</span><span class="o">.</span><span class="n">check_multifiles_consistency</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">consistency_report</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s2">"FCSMultiFileConsistencyChecker.check_multifiles_consistency() "</span>
+            <span class="sa">f</span><span class="s2">"must return a dict, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">consistency_report</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="s2">"are_all_files_consistent"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">consistency_report</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+            <span class="s2">"Consistency report is missing required key "</span>
+            <span class="s2">"'are_all_files_consistent'."</span>
+        <span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+        <span class="s2">"check_saved_files_consistency returning consistency_report=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+        <span class="n">consistency_report</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">consistency_report</span></div>
+
+
+
+<div class="viewcode-block" id="build_success_alert_payload">
+<a class="viewcode-back" href="../../../../../../api/pages.html#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_success_alert_payload">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_success_alert_payload</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">saved_paths</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">],</span>
+    <span class="n">consistency_report</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Build the upload success or warning alert payload.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">saved_paths</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Cannot build upload success payload without saved files."</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">consistency_report</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="s2">"are_all_files_consistent"</span><span class="p">,</span>
+        <span class="kc">True</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">mismatch_details</span> <span class="o">=</span> <span class="n">consistency_report</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">"mismatch_details"</span><span class="p">,</span>
+            <span class="p">[],</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">mismatch_details</span><span class="p">:</span>
+            <span class="n">preview</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">detail</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">detail</span> <span class="ow">in</span> <span class="n">mismatch_details</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span>
+            <span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">preview</span> <span class="o">=</span> <span class="s2">"Uploaded files are inconsistent."</span>
+
+        <span class="k">return</span> <span class="n">preview</span><span class="p">,</span> <span class="s2">"warning"</span><span class="p">,</span> <span class="kc">True</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">saved_paths</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"Uploaded 1 FCS file: </span><span class="si">{</span><span class="n">saved_paths</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"success"</span><span class="p">,</span> <span class="kc">True</span>
+
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Uploaded </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">saved_paths</span><span class="p">)</span><span class="si">}</span><span class="s2"> FCS files."</span><span class="p">,</span> <span class="s2">"success"</span><span class="p">,</span> <span class="kc">True</span></div>
+
+
+
+<div class="viewcode-block" id="build_preview_file_selection">
+<a class="viewcode-back" href="../../../../../../api/pages.html#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_preview_file_selection">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_preview_file_selection</span><span class="p">(</span>
+    <span class="n">uploaded_fcs_paths</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">current_value</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Build stable file options for one or many uploaded FCS paths."""</span>
+    <span class="n">paths</span> <span class="o">=</span> <span class="n">resolve_uploaded_fcs_paths</span><span class="p">(</span><span class="n">uploaded_fcs_paths</span><span class="p">)</span>
+    <span class="n">options</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">"label"</span><span class="p">:</span> <span class="n">_SAVED_UPLOAD_TIMESTAMP</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">""</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span><span class="p">)</span> <span class="o">+</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span><span class="p">,</span>
+            <span class="s2">"value"</span><span class="p">:</span> <span class="n">path</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span>
+    <span class="p">]</span>
+    <span class="n">current_path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">current_value</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="n">selected_path</span> <span class="o">=</span> <span class="n">current_path</span> <span class="k">if</span> <span class="n">current_path</span> <span class="ow">in</span> <span class="n">paths</span> <span class="k">else</span> <span class="p">(</span><span class="n">paths</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">paths</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">options</span><span class="p">,</span> <span class="n">selected_path</span></div>
+
+
+
+<div class="viewcode-block" id="resolve_selected_preview_path">
+<a class="viewcode-back" href="../../../../../../api/pages.html#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.resolve_selected_preview_path">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">resolve_selected_preview_path</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">selected_file</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">uploaded_fcs_paths</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Resolve a selected preview path only when it belongs to the upload store."""</span>
+    <span class="n">paths</span> <span class="o">=</span> <span class="n">resolve_uploaded_fcs_paths</span><span class="p">(</span><span class="n">uploaded_fcs_paths</span><span class="p">)</span>
+    <span class="n">selected_path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">selected_file</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">selected_path</span> <span class="ow">and</span> <span class="n">selected_path</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">selected_path</span>
+    <span class="k">return</span> <span class="n">paths</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">paths</span> <span class="k">else</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="build_preview_channel_selection">
+<a class="viewcode-back" href="../../../../../../api/pages.html#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_preview_channel_selection">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_preview_channel_selection</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">selected_file</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">uploaded_fcs_paths</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">selected_calibration_summary</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">current_value</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Read FCS channel names and build the preview channel selection."""</span>
+    <span class="n">selected_path</span> <span class="o">=</span> <span class="n">resolve_selected_preview_path</span><span class="p">(</span>
+        <span class="n">selected_file</span><span class="o">=</span><span class="n">selected_file</span><span class="p">,</span>
+        <span class="n">uploaded_fcs_paths</span><span class="o">=</span><span class="n">uploaded_fcs_paths</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">selected_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[],</span> <span class="kc">None</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">FCSFile</span><span class="p">(</span><span class="n">selected_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">fcs_file</span><span class="p">:</span>
+            <span class="n">channel_names</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">fcs_file</span><span class="o">.</span><span class="n">get_column_names</span><span class="p">()</span> <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="p">]</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">"Failed to read preview channels from selected_path=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span> <span class="n">selected_path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[],</span> <span class="kc">None</span>
+
+    <span class="n">affected_source_channels</span> <span class="o">=</span> <span class="n">_resolve_preview_source_channels</span><span class="p">(</span><span class="n">selected_calibration_summary</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">affected_source_channels</span><span class="p">:</span>
+        <span class="n">channel_names</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">name</span>
+            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">channel_names</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">affected_source_channels</span>
+        <span class="p">]</span>
+
+    <span class="n">options</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">"label"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span> <span class="s2">"value"</span><span class="p">:</span> <span class="n">name</span><span class="p">}</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">channel_names</span><span class="p">]</span>
+    <span class="n">current_channel</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">current_value</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="n">selected_channel</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">current_channel</span>
+        <span class="k">if</span> <span class="n">current_channel</span> <span class="ow">in</span> <span class="n">channel_names</span>
+        <span class="k">else</span> <span class="p">(</span><span class="n">channel_names</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">channel_names</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">options</span><span class="p">,</span> <span class="n">selected_channel</span></div>
+
+
+
+<div class="viewcode-block" id="build_empty_preview_figure">
+<a class="viewcode-back" href="../../../../../../api/pages.html#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_empty_preview_figure">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_empty_preview_figure</span><span class="p">(</span><span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Build a compact placeholder for the input FCS histogram."""</span>
+    <span class="n">figure</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">()</span>
+    <span class="n">figure</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span>
+        <span class="n">template</span><span class="o">=</span><span class="s2">"plotly_white"</span><span class="p">,</span>
+        <span class="n">margin</span><span class="o">=</span><span class="p">{</span><span class="s2">"l"</span><span class="p">:</span> <span class="mi">55</span><span class="p">,</span> <span class="s2">"r"</span><span class="p">:</span> <span class="mi">25</span><span class="p">,</span> <span class="s2">"t"</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span> <span class="s2">"b"</span><span class="p">:</span> <span class="mi">50</span><span class="p">},</span>
+        <span class="n">xaxis</span><span class="o">=</span><span class="p">{</span><span class="s2">"visible"</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+        <span class="n">yaxis</span><span class="o">=</span><span class="p">{</span><span class="s2">"visible"</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+        <span class="n">annotations</span><span class="o">=</span><span class="p">[</span>
+            <span class="p">{</span>
+                <span class="s2">"text"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">message</span><span class="p">),</span>
+                <span class="s2">"xref"</span><span class="p">:</span> <span class="s2">"paper"</span><span class="p">,</span>
+                <span class="s2">"yref"</span><span class="p">:</span> <span class="s2">"paper"</span><span class="p">,</span>
+                <span class="s2">"x"</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
+                <span class="s2">"y"</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
+                <span class="s2">"showarrow"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">],</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">figure</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_preview_graph_style</span><span class="p">(</span><span class="n">runtime_config</span><span class="p">:</span> <span class="n">RuntimeConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"height"</span><span class="p">:</span> <span class="n">runtime_config</span><span class="o">.</span><span class="n">get_graph_height</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">"360px"</span><span class="p">)}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_preview_calibration_summaries</span><span class="p">(</span><span class="n">calibration_summary_data</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+    <span class="k">return</span> <span class="n">calibration_picker_services</span><span class="o">.</span><span class="n">normalize_calibration_summaries</span><span class="p">(</span><span class="n">calibration_summary_data</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_preview_source_channels</span><span class="p">(</span><span class="n">calibration_summary_data</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="n">source_channels</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">calibration_summary</span> <span class="ow">in</span> <span class="n">_resolve_preview_calibration_summaries</span><span class="p">(</span><span class="n">calibration_summary_data</span><span class="p">):</span>
+        <span class="n">source_channel</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">calibration_summary</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"source_channel"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">source_channel</span> <span class="ow">and</span> <span class="n">source_channel</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">source_channels</span><span class="p">:</span>
+            <span class="n">source_channels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">source_channel</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">source_channels</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_preview_calibration_summary</span><span class="p">(</span>
+    <span class="n">calibration_summary_data</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">selected_channel</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">calibration_summaries</span> <span class="o">=</span> <span class="n">_resolve_preview_calibration_summaries</span><span class="p">(</span><span class="n">calibration_summary_data</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">calibration_summaries</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">for</span> <span class="n">calibration_summary</span> <span class="ow">in</span> <span class="n">calibration_summaries</span><span class="p">:</span>
+        <span class="n">source_channel</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">calibration_summary</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"source_channel"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">source_channel</span> <span class="ow">and</span> <span class="n">source_channel</span> <span class="o">==</span> <span class="n">selected_channel</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">calibration_summary</span>
+
+    <span class="k">return</span> <span class="n">calibration_summaries</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_build_histogram_result_from_values</span><span class="p">(</span>
+    <span class="n">values</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">n_bins_for_plots</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">use_log_x_bins</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">plottings</span><span class="o">.</span><span class="n">HistogramResult</span><span class="p">:</span>
+    <span class="n">values_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">values_array</span> <span class="o">=</span> <span class="n">values_array</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">values_array</span><span class="p">)]</span>
+
+    <span class="k">if</span> <span class="n">values_array</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"No finite signal values available to build histogram."</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">use_log_x_bins</span><span class="p">:</span>
+        <span class="n">values_array</span> <span class="o">=</span> <span class="n">values_array</span><span class="p">[</span><span class="n">values_array</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">values_array</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"No positive signal values available for logarithmic histogram bins."</span><span class="p">)</span>
+
+        <span class="n">lower_edge</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">values_array</span><span class="p">))</span>
+        <span class="n">upper_edge</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">values_array</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">lower_edge</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">upper_edge</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"No finite signal values available to build histogram."</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">lower_edge</span> <span class="o">==</span> <span class="n">upper_edge</span><span class="p">:</span>
+            <span class="n">upper_edge</span> <span class="o">=</span> <span class="n">lower_edge</span> <span class="o">*</span> <span class="mf">1.01</span>
+
+        <span class="n">edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">geomspace</span><span class="p">(</span>
+            <span class="n">lower_edge</span><span class="p">,</span>
+            <span class="n">upper_edge</span><span class="p">,</span>
+            <span class="n">num</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">n_bins_for_plots</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">counts</span><span class="p">,</span> <span class="n">edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">values_array</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">edges</span><span class="p">)</span>
+        <span class="n">centers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">edges</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">counts</span><span class="p">,</span> <span class="n">edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">values_array</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">n_bins_for_plots</span><span class="p">))</span>
+        <span class="n">centers</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">edges</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+
+    <span class="k">return</span> <span class="n">plottings</span><span class="o">.</span><span class="n">HistogramResult</span><span class="p">(</span>
+        <span class="n">values</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">values_array</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span>
+        <span class="n">counts</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span>
+        <span class="n">edges</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">edges</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span>
+        <span class="n">centers</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">centers</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="resolve_preview_control_defaults">
+<a class="viewcode-back" href="../../../../../../api/pages.html#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.resolve_preview_control_defaults">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">resolve_preview_control_defaults</span><span class="p">(</span><span class="n">runtime_config_data</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Resolve the file preview control defaults from the active profile."""</span>
+    <span class="n">runtime_config</span> <span class="o">=</span> <span class="n">RuntimeConfig</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
+        <span class="n">runtime_config_data</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">runtime_config_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="p">)</span>
+
+    <span class="n">calibration_config</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">runtime_config_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"calibration"</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">runtime_config_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+        <span class="k">else</span> <span class="p">{}</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">calibration_config</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">calibration_config</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">histogram_xscale</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
+        <span class="n">calibration_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"histogram_xscale"</span><span class="p">,</span> <span class="s2">"log"</span><span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="n">histogram_yscale</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
+        <span class="n">calibration_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">"histogram_yscale"</span><span class="p">,</span>
+            <span class="n">calibration_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"histogram_scale"</span><span class="p">,</span> <span class="s2">"log"</span><span class="p">),</span>
+        <span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"graph_height"</span><span class="p">:</span> <span class="n">runtime_config</span><span class="o">.</span><span class="n">get_graph_height</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">"360px"</span><span class="p">),</span>
+        <span class="s2">"x_log_values"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"enabled"</span><span class="p">]</span> <span class="k">if</span> <span class="n">histogram_xscale</span> <span class="o">==</span> <span class="s2">"log"</span> <span class="k">else</span> <span class="p">[],</span>
+        <span class="s2">"y_log_values"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"enabled"</span><span class="p">]</span> <span class="k">if</span> <span class="n">histogram_yscale</span> <span class="o">==</span> <span class="s2">"log"</span> <span class="k">else</span> <span class="p">[],</span>
+        <span class="s2">"n_bins_for_plots"</span><span class="p">:</span> <span class="n">_resolve_histogram_bin_count</span><span class="p">(</span>
+            <span class="n">calibration_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"n_bins_for_plots"</span><span class="p">,</span> <span class="mi">200</span><span class="p">),</span>
+            <span class="n">default</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">}</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_histogram_bin_count</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">resolved_value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">default</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">resolved_value</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="build_preview_histogram_payload">
+<a class="viewcode-back" href="../../../../../../api/pages.html#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_preview_histogram_payload">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_preview_histogram_payload</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">selected_file</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">selected_channel</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">uploaded_fcs_paths</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">selected_calibration_summary</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">runtime_config_data</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">axis_scale_toggle_values</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">preview_graph_visibility_toggle_values</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">n_bins_for_plots</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">target_mie_model</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">target_medium_refractive_index</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">target_particle_refractive_index</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">target_solid_sphere_diameter_min_nm</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">target_solid_sphere_diameter_max_nm</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">target_solid_sphere_diameter_count</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">target_core_refractive_index</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">target_shell_refractive_index</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">target_shell_thickness_nm</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">target_core_shell_core_diameter_min_nm</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">target_core_shell_core_diameter_max_nm</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">target_core_shell_core_diameter_count</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">target_model_preset</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">advanced_monotonic_mode_enabled</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">use_monotonic_smoothing_kernel</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">monotonic_smoothing_sigma_points</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Build a profile-styled histogram for the selected uploaded FCS file."""</span>
+    <span class="n">runtime_config</span> <span class="o">=</span> <span class="n">RuntimeConfig</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
+        <span class="n">runtime_config_data</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">runtime_config_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="p">)</span>
+    <span class="n">graph_style</span> <span class="o">=</span> <span class="n">_resolve_preview_graph_style</span><span class="p">(</span><span class="n">runtime_config</span><span class="p">)</span>
+    <span class="n">control_defaults</span> <span class="o">=</span> <span class="n">resolve_preview_control_defaults</span><span class="p">(</span><span class="n">runtime_config_data</span><span class="p">)</span>
+    <span class="n">selected_path</span> <span class="o">=</span> <span class="n">resolve_selected_preview_path</span><span class="p">(</span>
+        <span class="n">selected_file</span><span class="o">=</span><span class="n">selected_file</span><span class="p">,</span>
+        <span class="n">uploaded_fcs_paths</span><span class="o">=</span><span class="n">uploaded_fcs_paths</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">channel</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">selected_channel</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">selected_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="s2">"Upload an FCS file to preview its histogram."</span>
+        <span class="k">return</span> <span class="s2">"0"</span><span class="p">,</span> <span class="n">build_empty_preview_figure</span><span class="p">(</span><span class="n">message</span><span class="p">),</span> <span class="n">graph_style</span><span class="p">,</span> <span class="n">message</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">channel</span><span class="p">:</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="s2">"Select a calibration-affected channel to preview its histogram."</span>
+        <span class="k">return</span> <span class="s2">"0"</span><span class="p">,</span> <span class="n">build_empty_preview_figure</span><span class="p">(</span><span class="n">message</span><span class="p">),</span> <span class="n">graph_style</span><span class="p">,</span> <span class="n">message</span>
+
+    <span class="n">use_log_x</span><span class="p">,</span> <span class="n">use_log_y</span> <span class="o">=</span> <span class="n">Scatter2DGraph</span><span class="o">.</span><span class="n">axis_scale_from_toggle_values</span><span class="p">(</span>
+        <span class="n">axis_scale_toggle_values</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">histogram_bin_count</span> <span class="o">=</span> <span class="n">_resolve_histogram_bin_count</span><span class="p">(</span>
+        <span class="n">n_bins_for_plots</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">control_defaults</span><span class="p">[</span><span class="s2">"n_bins_for_plots"</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="n">show_preview_graph</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">preview_graph_visibility_toggle_values</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span>
+        <span class="s2">"enabled"</span> <span class="ow">in</span> <span class="n">preview_graph_visibility_toggle_values</span>
+    <span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">calibration_summary</span> <span class="o">=</span> <span class="n">_resolve_preview_calibration_summary</span><span class="p">(</span>
+            <span class="n">selected_calibration_summary</span><span class="p">,</span>
+            <span class="n">selected_channel</span><span class="o">=</span><span class="n">channel</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">calibration_summary</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="s2">"Select a calibration file to preview the calibrated channel."</span>
+            <span class="k">return</span> <span class="s2">"0"</span><span class="p">,</span> <span class="n">build_empty_preview_figure</span><span class="p">(</span><span class="n">message</span><span class="p">),</span> <span class="n">graph_style</span><span class="p">,</span> <span class="n">message</span>
+
+        <span class="n">calibration_payload</span> <span class="o">=</span> <span class="n">calibration_summary</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"calibration_payload"</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">calibration_payload</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">calibration_payload</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Selected calibration payload is missing."</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">FCSFile</span><span class="p">(</span><span class="n">selected_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">fcs_file</span><span class="p">:</span>
+            <span class="n">selected_channel_dataframe</span> <span class="o">=</span> <span class="n">fcs_file</span><span class="o">.</span><span class="n">dataframe_copy</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="n">channel</span><span class="p">])</span>
+
+        <span class="n">calibrated_channel_label</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
+            <span class="n">calibration_summary</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"applied_output_channel_name"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="n">channel</span>
+
+        <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">calibration_summary</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"requires_target_model"</span><span class="p">)):</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.pages.p04_calibrate.sections.s04_apply</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+                <span class="n">services</span> <span class="k">as</span> <span class="n">apply_services</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.workflow.apply_calibration.scattering</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+                <span class="n">apply_scattering_calibration_to_dataframe</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">target_model_parameters</span> <span class="o">=</span> <span class="n">apply_services</span><span class="o">.</span><span class="n">build_scattering_target_model_parameters_if_required</span><span class="p">(</span>
+                <span class="n">selected_calibration_summary</span><span class="o">=</span><span class="n">selected_calibration_summary</span><span class="p">,</span>
+                <span class="n">target_mie_model</span><span class="o">=</span><span class="n">target_mie_model</span><span class="p">,</span>
+                <span class="n">target_medium_refractive_index</span><span class="o">=</span><span class="n">target_medium_refractive_index</span><span class="p">,</span>
+                <span class="n">target_particle_refractive_index</span><span class="o">=</span><span class="n">target_particle_refractive_index</span><span class="p">,</span>
+                <span class="n">target_solid_sphere_diameter_min_nm</span><span class="o">=</span><span class="n">target_solid_sphere_diameter_min_nm</span><span class="p">,</span>
+                <span class="n">target_solid_sphere_diameter_max_nm</span><span class="o">=</span><span class="n">target_solid_sphere_diameter_max_nm</span><span class="p">,</span>
+                <span class="n">target_solid_sphere_diameter_count</span><span class="o">=</span><span class="n">target_solid_sphere_diameter_count</span><span class="p">,</span>
+                <span class="n">target_core_refractive_index</span><span class="o">=</span><span class="n">target_core_refractive_index</span><span class="p">,</span>
+                <span class="n">target_shell_refractive_index</span><span class="o">=</span><span class="n">target_shell_refractive_index</span><span class="p">,</span>
+                <span class="n">target_shell_thickness_nm</span><span class="o">=</span><span class="n">target_shell_thickness_nm</span><span class="p">,</span>
+                <span class="n">target_core_shell_core_diameter_min_nm</span><span class="o">=</span><span class="n">target_core_shell_core_diameter_min_nm</span><span class="p">,</span>
+                <span class="n">target_core_shell_core_diameter_max_nm</span><span class="o">=</span><span class="n">target_core_shell_core_diameter_max_nm</span><span class="p">,</span>
+                <span class="n">target_core_shell_core_diameter_count</span><span class="o">=</span><span class="n">target_core_shell_core_diameter_count</span><span class="p">,</span>
+                <span class="n">advanced_monotonic_mode_enabled</span><span class="o">=</span><span class="n">advanced_monotonic_mode_enabled</span><span class="p">,</span>
+                <span class="n">use_monotonic_smoothing_kernel</span><span class="o">=</span><span class="n">use_monotonic_smoothing_kernel</span><span class="p">,</span>
+                <span class="n">monotonic_smoothing_sigma_points</span><span class="o">=</span><span class="n">monotonic_smoothing_sigma_points</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">target_model_parameters</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Target model parameters are required for scattering calibration preview."</span><span class="p">)</span>
+
+            <span class="n">scattering_result</span> <span class="o">=</span> <span class="n">apply_scattering_calibration_to_dataframe</span><span class="p">(</span>
+                <span class="n">dataframe</span><span class="o">=</span><span class="n">selected_channel_dataframe</span><span class="p">,</span>
+                <span class="n">source_channel</span><span class="o">=</span><span class="n">channel</span><span class="p">,</span>
+                <span class="n">calibration_payload</span><span class="o">=</span><span class="n">calibration_payload</span><span class="p">,</span>
+                <span class="n">target_model_parameters</span><span class="o">=</span><span class="n">target_model_parameters</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">calibrated_values</span> <span class="o">=</span> <span class="n">scattering_result</span><span class="o">.</span><span class="n">dataframe</span><span class="p">[</span>
+                <span class="n">scattering_result</span><span class="o">.</span><span class="n">output_columns</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="n">calibrated_channel_label</span> <span class="o">=</span> <span class="n">scattering_result</span><span class="o">.</span><span class="n">output_columns</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">calibrated_values</span> <span class="o">=</span> <span class="n">apply_legacy_calibration_to_series</span><span class="p">(</span>
+                <span class="n">values</span><span class="o">=</span><span class="n">selected_channel_dataframe</span><span class="p">[</span><span class="n">channel</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                <span class="n">calibration_payload</span><span class="o">=</span><span class="n">calibration_payload</span><span class="p">,</span>
+                <span class="n">source_channel</span><span class="o">=</span><span class="n">channel</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="n">histogram</span> <span class="o">=</span> <span class="n">_build_histogram_result_from_values</span><span class="p">(</span>
+            <span class="n">calibrated_values</span><span class="p">,</span>
+            <span class="n">n_bins_for_plots</span><span class="o">=</span><span class="n">histogram_bin_count</span><span class="p">,</span>
+            <span class="n">use_log_x_bins</span><span class="o">=</span><span class="n">use_log_x</span> <span class="o">==</span> <span class="s2">"log"</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">figure</span> <span class="o">=</span> <span class="n">plottings</span><span class="o">.</span><span class="n">build_histogram_figure</span><span class="p">(</span>
+            <span class="n">detector_column</span><span class="o">=</span><span class="n">calibrated_channel_label</span><span class="p">,</span>
+            <span class="n">histogram_result</span><span class="o">=</span><span class="n">histogram</span><span class="p">,</span>
+            <span class="n">use_log_counts</span><span class="o">=</span><span class="n">use_log_y</span> <span class="o">==</span> <span class="s2">"log"</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">visual_settings</span> <span class="o">=</span> <span class="n">plottings</span><span class="o">.</span><span class="n">resolve_runtime_visualization_settings</span><span class="p">(</span><span class="n">runtime_config</span><span class="p">)</span>
+        <span class="n">plottings</span><span class="o">.</span><span class="n">apply_default_visual_style</span><span class="p">(</span>
+            <span class="n">figure</span><span class="p">,</span>
+            <span class="n">marker_size</span><span class="o">=</span><span class="n">visual_settings</span><span class="p">[</span><span class="s2">"default_marker_size"</span><span class="p">],</span>
+            <span class="n">line_width</span><span class="o">=</span><span class="n">visual_settings</span><span class="p">[</span><span class="s2">"default_line_width"</span><span class="p">],</span>
+            <span class="n">font_size</span><span class="o">=</span><span class="n">visual_settings</span><span class="p">[</span><span class="s2">"default_font_size"</span><span class="p">],</span>
+            <span class="n">tick_size</span><span class="o">=</span><span class="n">visual_settings</span><span class="p">[</span><span class="s2">"default_tick_size"</span><span class="p">],</span>
+            <span class="n">show_grid</span><span class="o">=</span><span class="n">visual_settings</span><span class="p">[</span><span class="s2">"show_grid"</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="n">figure</span><span class="o">.</span><span class="n">update_xaxes</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="n">use_log_x</span><span class="p">)</span>
+        <span class="n">figure</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span>
+            <span class="n">uirevision</span><span class="o">=</span><span class="nb">repr</span><span class="p">((</span>
+                <span class="n">selected_path</span><span class="p">,</span>
+                <span class="n">channel</span><span class="p">,</span>
+                <span class="n">calibrated_channel_label</span><span class="p">,</span>
+                <span class="n">use_log_x</span><span class="p">,</span>
+                <span class="n">use_log_y</span><span class="p">,</span>
+                <span class="n">histogram_bin_count</span><span class="p">,</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">calibration_summary</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"file_name"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)),</span>
+            <span class="p">)),</span>
+            <span class="n">margin</span><span class="o">=</span><span class="p">{</span><span class="s2">"l"</span><span class="p">:</span> <span class="mi">60</span><span class="p">,</span> <span class="s2">"r"</span><span class="p">:</span> <span class="mi">25</span><span class="p">,</span> <span class="s2">"t"</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span> <span class="s2">"b"</span><span class="p">:</span> <span class="mi">60</span><span class="p">},</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">show_preview_graph</span><span class="p">:</span>
+            <span class="n">graph_style</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">graph_style</span><span class="p">,</span> <span class="s2">"display"</span><span class="p">:</span> <span class="s2">"none"</span><span class="p">}</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span>
+            <span class="s2">"Failed to build calibrated input FCS preview for path=</span><span class="si">%r</span><span class="s2"> channel=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+            <span class="n">selected_path</span><span class="p">,</span>
+            <span class="n">channel</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"Could not render calibrated preview: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">exception</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">exception</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">return</span> <span class="s2">"0"</span><span class="p">,</span> <span class="n">build_empty_preview_figure</span><span class="p">(</span><span class="n">message</span><span class="p">),</span> <span class="n">graph_style</span><span class="p">,</span> <span class="n">message</span>
+
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">histogram</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">size</span><span class="p">)),</span>
+        <span class="n">figure</span><span class="p">,</span>
+        <span class="n">graph_style</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"Showing calibrated preview for </span><span class="si">{</span><span class="n">Path</span><span class="p">(</span><span class="n">selected_path</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> · </span><span class="si">{</span><span class="n">channel</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">calibrated_channel_label</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../../../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright Martin Poinsinet de Sivry-Houle.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

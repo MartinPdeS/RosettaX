@@ -1,0 +1,2645 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" data-theme="dark">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Index &#8212; RosettaX 0.10.9 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "dark";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "dark";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery.css?v=c83e6b79" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="_static/default.css?v=22616357" />
+    <link rel="stylesheet" type="text/css" href="_static/martinpdes_layout.css?v=a8cc01cd" />
+    <link rel="stylesheet" type="text/css" href="_static/layout.css?v=dc96f8db" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="_static/documentation_options.js?v=9d400afe"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/sg-tags.js?v=d80f6fa4"></script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'genindex';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/MartinPdeS/RosettaX/documentation_page/version_switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.10.9';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="_static/favicon.svg"/>
+    <link rel="index" title="Index" href="#" />
+    <link rel="search" title="Search" href="search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.10.9" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="dark">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.10.9 documentation - Home"/>
+    <img src="_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.10.9 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="quickstart.html">
+    Start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="interface.html">
+    Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="theory.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="code.html">
+    API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="resources.html">
+    Resources
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="privacy.html">
+    Privacy policy
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MartinPdeS/RosettaX" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/RosettaX/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-box fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://anaconda.org/MartinPdeS/RosettaX" title="Anaconda" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">Anaconda</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="quickstart.html">
+    Start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="interface.html">
+    Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="theory.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="code.html">
+    API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="resources.html">
+    Resources
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="privacy.html">
+    Privacy policy
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MartinPdeS/RosettaX" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/RosettaX/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-box fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://anaconda.org/MartinPdeS/RosettaX" title="Anaconda" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">Anaconda</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none"></div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+
+<h1 id="index">Index</h1>
+
+<div class="genindex-jumpbox">
+ <a href="#A"><strong>A</strong></a>
+ | <a href="#B"><strong>B</strong></a>
+ | <a href="#C"><strong>C</strong></a>
+ | <a href="#D"><strong>D</strong></a>
+ | <a href="#E"><strong>E</strong></a>
+ | <a href="#F"><strong>F</strong></a>
+ | <a href="#G"><strong>G</strong></a>
+ | <a href="#H"><strong>H</strong></a>
+ | <a href="#I"><strong>I</strong></a>
+ | <a href="#K"><strong>K</strong></a>
+ | <a href="#L"><strong>L</strong></a>
+ | <a href="#M"><strong>M</strong></a>
+ | <a href="#N"><strong>N</strong></a>
+ | <a href="#O"><strong>O</strong></a>
+ | <a href="#P"><strong>P</strong></a>
+ | <a href="#R"><strong>R</strong></a>
+ | <a href="#S"><strong>S</strong></a>
+ | <a href="#T"><strong>T</strong></a>
+ | <a href="#U"><strong>U</strong></a>
+ | <a href="#V"><strong>V</strong></a>
+ | <a href="#W"><strong>W</strong></a>
+ 
+</div>
+<h2 id="A">A</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.models.UploadConfig.accepted_file_extensions">accepted_file_extensions (UploadConfig attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.core.graphing.PeakWorkflowGraphBuilder.accepted_y_fill_color">accepted_y_fill_color (PeakWorkflowGraphBuilder attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelParameters.advanced_monotonic_mode_enabled">advanced_monotonic_mode_enabled (ScatteringTargetModelParameters attribute)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfigField.allow_none">allow_none (RuntimeConfigField attribute)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s04_apply.services.apply_and_prepare_calibration_export">apply_and_prepare_calibration_export() (in module RosettaX.pages.p04_calibrate.sections.s04_apply.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.services.apply_calibration_to_fcs_files">apply_calibration_to_fcs_files() (in module RosettaX.workflow.apply_calibration.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.fluorescence.apply_legacy_calibration_to_series">apply_legacy_calibration_to_series() (in module RosettaX.workflow.apply_calibration.fluorescence)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.fluorescence.apply_log_calibration_to_series">apply_log_calibration_to_series() (in module RosettaX.workflow.apply_calibration.fluorescence)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.apply_peak_process_result_to_table">apply_peak_process_result_to_table() (BasePeakWorkflowAdapter method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.apply_refractive_index_preset">apply_refractive_index_preset() (ModelConfiguration static method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.apply_scattering_calibration">apply_scattering_calibration() (in module RosettaX.workflow.scattering.calibration_services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.apply_scattering_calibration_to_dataframe">apply_scattering_calibration_to_dataframe() (in module RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringCalibration.apply_to_measured_values">apply_to_measured_values() (ScatteringCalibration method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.apply_values_to_first_matching_column">apply_values_to_first_matching_column() (BasePeakWorkflowAdapter method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.services.ApplyCalibrationFilesResult">ApplyCalibrationFilesResult (class in RosettaX.workflow.apply_calibration.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.services.ApplyCalibrationRequest">ApplyCalibrationRequest (class in RosettaX.workflow.apply_calibration.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.as_dropdown_options">as_dropdown_options() (in module RosettaX.workflow.scattering.model)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.casting.as_float">as_float() (in module RosettaX.utils.casting)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.casting.as_float_list">as_float_list() (in module RosettaX.utils.casting)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.parameters.table.as_float_list_from_runtime_value">as_float_list_from_runtime_value() (in module RosettaX.workflow.parameters.table)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.casting.as_int">as_int() (in module RosettaX.utils.casting)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringOutputColumns.as_list">as_list() (ScatteringOutputColumns method)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.casting.as_optional_float">as_optional_float() (in module RosettaX.utils.casting)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.casting.as_optional_int">as_optional_int() (in module RosettaX.utils.casting)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.casting.as_required_float">as_required_float() (in module RosettaX.utils.casting)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.casting.as_required_int">as_required_int() (in module RosettaX.utils.casting)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.services.attach_detector_metadata_override">attach_detector_metadata_override() (in module RosettaX.workflow.apply_calibration.services)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="B">B</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/pages.html#RosettaX.pages.p03_scattering.backend.BackEnd">BackEnd (class in RosettaX.pages.p03_scattering.backend)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter">BasePeakWorkflowAdapter (class in RosettaX.workflow.peak.adapters.base)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.models.FCSBatchOperationResult.batch">batch (FCSBatchOperationResult attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.OpticalParameters.blocker_bar_numerical_aperture">blocker_bar_numerical_aperture (OpticalParameters attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ScatteringModelDefaults.blocker_bar_numerical_aperture">(ScatteringModelDefaults attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.models.UploadConfig.body_style_key">body_style_key (UploadConfig attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.core.graphing.PeakWorkflowGraphBuilder.build">build() (PeakWorkflowGraphBuilder method)</a>
+</li>
+      <li><a href="api/application.html#RosettaX.application.layout.build_application_footer">build_application_footer() (in module RosettaX.application.layout)</a>
+</li>
+      <li><a href="api/application.html#RosettaX.application.layout.build_application_layout">build_application_layout() (in module RosettaX.application.layout)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.services.build_applied_output_long_name">build_applied_output_long_name() (in module RosettaX.workflow.apply_calibration.services)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s04_apply.services.build_apply_calibration_request">build_apply_calibration_request() (in module RosettaX.pages.p04_calibrate.sections.s04_apply.services)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_axis_scale_toggle_values">build_axis_scale_toggle_values() (in module RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.reader.FCSBuilder.build_bytes">build_bytes() (FCSBuilder method)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.service.build_calibration_download_filename">build_calibration_download_filename() (in module RosettaX.utils.service)</a>
+</li>
+      <li><a href="api/application.html#RosettaX.application.routes.build_calibration_json_document">build_calibration_json_document() (in module RosettaX.application.routes)</a>
+</li>
+      <li><a href="api/application.html#RosettaX.application.routes.build_calibration_json_error_document">build_calibration_json_error_document() (in module RosettaX.application.routes)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.service.build_calibration_record">build_calibration_record() (in module RosettaX.utils.service)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.build_calibration_standard_mie_relation">build_calibration_standard_mie_relation() (in module RosettaX.workflow.scattering.calibration_services)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_calibration_summary">build_calibration_summary() (in module RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.services.build_consistency_error_text">build_consistency_error_text() (in module RosettaX.workflow.upload.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.build_core_shell_scattering_calibration_from_standard_data">build_core_shell_scattering_calibration_from_standard_data() (in module RosettaX.workflow.scattering.calibration_services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.build_core_shell_target_mie_relation">build_core_shell_target_mie_relation() (in module RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.build_default_profile_defaults">build_default_profile_defaults() (ModelConfiguration static method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.build_defaults_from_runtime_config">build_defaults_from_runtime_config() (ModelConfiguration static method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.build_detector_preset_brand_options">build_detector_preset_brand_options() (ModelConfiguration static method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.build_detector_preset_model_options">build_detector_preset_model_options() (ModelConfiguration static method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.build_detector_preset_options">build_detector_preset_options() (ModelConfiguration static method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.build_detector_preset_type_options">build_detector_preset_type_options() (ModelConfiguration static method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.mie_relation.build_diameter_grid">build_diameter_grid() (in module RosettaX.workflow.scattering.mie_relation)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.checks.FCSMultiFileConsistencyChecker.build_empty_consistency_report">build_empty_consistency_report() (FCSMultiFileConsistencyChecker class method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.mie_relation.build_empty_mie_relation">build_empty_mie_relation() (in module RosettaX.workflow.scattering.mie_relation)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_empty_preview_figure">build_empty_preview_figure() (in module RosettaX.pages.p04_calibrate.sections.s03_file_picker.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.parameters.table.build_empty_row_for_model">build_empty_row_for_model() (in module RosettaX.workflow.parameters.table)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.parameters.table.build_empty_rows_for_model">build_empty_rows_for_model() (in module RosettaX.workflow.parameters.table)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_empty_target_mie_relation_figure">build_empty_target_mie_relation_figure() (in module RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s04_apply.services.build_export_column_options_and_values">build_export_column_options_and_values() (in module RosettaX.pages.p04_calibrate.sections.s04_apply.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.services.build_fcs_batch_feedback">build_fcs_batch_feedback() (in module RosettaX.workflow.upload.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.build_interval_if_valid">build_interval_if_valid() (in module RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.save.services.build_json_download_filename">build_json_download_filename() (in module RosettaX.workflow.save.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.services.build_legacy_dataframe_transformer_factory">build_legacy_dataframe_transformer_factory() (in module RosettaX.workflow.apply_calibration.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.services.build_loaded_filename_text">build_loaded_filename_text() (in module RosettaX.workflow.upload.services)</a>
+</li>
+      <li><a href="api/application.html#RosettaX.application.layout.build_main_content">build_main_content() (in module RosettaX.application.layout)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.mie_relation.build_mie_parameter_payload">build_mie_parameter_payload() (in module RosettaX.workflow.scattering.mie_relation)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.mie_relation.build_mie_relation_from_arrays">build_mie_relation_from_arrays() (in module RosettaX.workflow.scattering.mie_relation)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.mie_relation.build_mie_relation_from_callable">build_mie_relation_from_callable() (in module RosettaX.workflow.scattering.mie_relation)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.build_monotonic_branch_mie_relation">build_monotonic_branch_mie_relation() (in module RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.services.build_multi_calibration_dataframe_transformer_factory">build_multi_calibration_dataframe_transformer_factory() (in module RosettaX.workflow.apply_calibration.services)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.build_optical_configuration_preview_figure">build_optical_configuration_preview_figure() (ModelConfiguration static method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.build_page_state">build_page_state() (BasePeakWorkflowAdapter method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.registry.build_peak_process_options">build_peak_process_options() (in module RosettaX.workflow.peak.registry)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.build_peak_table_sort_key">build_peak_table_sort_key() (BasePeakWorkflowAdapter method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.core.graphing.build_peak_workflow_graph_figure">build_peak_workflow_graph_figure() (in module RosettaX.workflow.peak.core.graphing)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_preview_channel_selection">build_preview_channel_selection() (in module RosettaX.pages.p04_calibrate.sections.s03_file_picker.services)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_preview_file_selection">build_preview_file_selection() (in module RosettaX.pages.p04_calibrate.sections.s03_file_picker.services)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_preview_histogram_payload">build_preview_histogram_payload() (in module RosettaX.pages.p04_calibrate.sections.s03_file_picker.services)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_preview_items">build_preview_items() (in module RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.core.graphing.build_process_settings">build_process_settings() (in module RosettaX.workflow.peak.core.graphing)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.build_reference_table_from_rows">build_reference_table_from_rows() (in module RosettaX.workflow.scattering.calibration_services)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.service.build_reproducibility_metadata">build_reproducibility_metadata() (in module RosettaX.utils.service)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.styling.build_rgba">build_rgba() (in module RosettaX.utils.styling)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.build_scatterer_preset_options">build_scatterer_preset_options() (ModelConfiguration static method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.build_scattering_calibration">build_scattering_calibration() (in module RosettaX.workflow.scattering.calibration_services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.build_scattering_calibration_scatterer_preset_options">build_scattering_calibration_scatterer_preset_options() (in module RosettaX.workflow.scattering.model)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.build_scattering_calibration_scatterer_presets">build_scattering_calibration_scatterer_presets() (in module RosettaX.workflow.scattering.model)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.services.build_scattering_dataframe_transformer_factory">build_scattering_dataframe_transformer_factory() (in module RosettaX.workflow.apply_calibration.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.build_scattering_output_columns">build_scattering_output_columns() (in module RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_scattering_target_model_container_style">build_scattering_target_model_container_style() (in module RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s04_apply.services.build_scattering_target_model_parameters_if_required">build_scattering_target_model_parameters_if_required() (in module RosettaX.pages.p04_calibrate.sections.s04_apply.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.build_scattering_target_model_preset_options">build_scattering_target_model_preset_options() (in module RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.build_scattering_target_model_presets">build_scattering_target_model_presets() (in module RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.registry.build_script_map">build_script_map() (in module RosettaX.workflow.peak.registry)</a>
+</li>
+      <li><a href="api/application.html#RosettaX.application.layout.build_sidebar_content">build_sidebar_content() (in module RosettaX.application.layout)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.build_solid_sphere_scattering_calibration_from_standard_data">build_solid_sphere_scattering_calibration_from_standard_data() (in module RosettaX.workflow.scattering.calibration_services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.build_solid_sphere_target_mie_relation">build_solid_sphere_target_mie_relation() (in module RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+      <li><a href="api/application.html#RosettaX.application.layout.build_stores">build_stores() (in module RosettaX.application.layout)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_success_alert_payload">build_success_alert_payload() (in module RosettaX.pages.p04_calibrate.sections.s03_file_picker.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.services.build_success_message">build_success_message() (in module RosettaX.workflow.apply_calibration.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.build_table_state_from_scatterer_preset">build_table_state_from_scatterer_preset() (ModelConfiguration static method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.build_target_mie_relation">build_target_mie_relation() (in module RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_target_mie_relation_figure">build_target_mie_relation_figure() (in module RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_target_mie_relation_preview">build_target_mie_relation_preview() (in module RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_target_parameter_container_style">build_target_parameter_container_style() (in module RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services)</a>
+</li>
+      <li><a href="api/application.html#RosettaX.application.layout.build_theme_link">build_theme_link() (in module RosettaX.application.layout)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_upload_directory">build_upload_directory() (in module RosettaX.pages.p04_calibrate.sections.s03_file_picker.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.services.build_upload_error_text">build_upload_error_text() (in module RosettaX.workflow.upload.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.services.build_upload_feedback">build_upload_feedback() (in module RosettaX.workflow.upload.services)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_upload_prompt_text">build_upload_prompt_text() (in module RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services)</a>
+
+      <ul>
+        <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_upload_prompt_text">(in module RosettaX.pages.p04_calibrate.sections.s03_file_picker.services)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.services.build_upload_state">build_upload_state() (in module RosettaX.workflow.upload.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.services.build_uploaded_fcs_batch">build_uploaded_fcs_batch() (in module RosettaX.workflow.upload.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.build_visibility_styles_for_mie_model">build_visibility_styles_for_mie_model() (ModelConfiguration static method)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.styling.build_workflow_section_style">build_workflow_section_style() (in module RosettaX.utils.styling)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.reader.FCSFile.builder_from_dataframe">builder_from_dataframe() (FCSFile class method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.save.models.SaveConfig.button_text">button_text (SaveConfig attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="C">C</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/workflows.html#RosettaX.workflow.parameters.refractive_index.calculate_sellmeier_refractive_index">calculate_sellmeier_refractive_index() (in module RosettaX.workflow.parameters.refractive_index)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringCalibrationBuildResult.calibration">calibration (ScatteringCalibrationBuildResult attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.calibration_is_scattering_v2">calibration_is_scattering_v2() (in module RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.save.models.SaveConfig.calibration_kind">calibration_kind (SaveConfig attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.services.CalibrationApplication.calibration_payload">calibration_payload (CalibrationApplication attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.save.models.SaveInputs.calibration_payload">(SaveInputs attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringCalibration.calibration_standard_mie_relation">calibration_standard_mie_relation (ScatteringCalibration attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringCalibrationBuildResult.calibration_standard_mie_relation">(ScatteringCalibrationBuildResult attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.calibration_summaries_require_target_model">calibration_summaries_require_target_model() (in module RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringCalibration.calibration_type">calibration_type (ScatteringCalibration attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.services.CalibrationApplication">CalibrationApplication (class in RosettaX.workflow.apply_calibration.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.services.ApplyCalibrationRequest.calibrations">calibrations (ApplyCalibrationRequest attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.models.UploadConfig.card_title">card_title (UploadConfig attribute)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.service.ChannelOptions">ChannelOptions (class in RosettaX.utils.service)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.checks.FCSMultiFileConsistencyChecker.check_column_name_consistency">check_column_name_consistency() (FCSMultiFileConsistencyChecker method)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.checks.FCSMultiFileConsistencyChecker.check_detector_voltage_consistency">check_detector_voltage_consistency() (FCSMultiFileConsistencyChecker method)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.checks.FCSMultiFileConsistencyChecker.check_multifiles_consistency">check_multifiles_consistency() (FCSMultiFileConsistencyChecker method)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.check_saved_files_consistency">check_saved_files_consistency() (in module RosettaX.pages.p04_calibrate.sections.s03_file_picker.services)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.checks.FCSMultiFileConsistencyChecker.check_version_consistency">check_version_consistency() (FCSMultiFileConsistencyChecker method)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfigField.choices">choices (RuntimeConfigField attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.core.detectors.clean_optional_string">clean_optional_string() (in module RosettaX.workflow.peak.core.detectors)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.peak.registry.clean_optional_string">(in module RosettaX.workflow.peak.registry)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.upload.services.clean_optional_string">(in module RosettaX.workflow.upload.services)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.clear_peak_lines_payload">clear_peak_lines_payload() (BasePeakWorkflowAdapter method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.registry.clear_peak_script_cache">clear_peak_script_cache() (in module RosettaX.workflow.peak.registry)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.reader.FCSFile.close">close() (FCSFile method)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.casting.coerce_optional_integer">coerce_optional_integer() (in module RosettaX.utils.casting)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.casting.coerce_optional_number">coerce_optional_number() (in module RosettaX.utils.casting)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.casting.coerce_optional_string">coerce_optional_string() (in module RosettaX.utils.casting)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.reader.FCSFile.column_copy">column_copy() (FCSFile method)</a>
+
+      <ul>
+        <li><a href="api/utilities.html#RosettaX.utils.io.column_copy">(in module RosettaX.utils.io)</a>
+</li>
+      </ul></li>
+      <li><a href="api/utilities.html#RosettaX.utils.fcs_metadata.FCSMetadata.column_names">column_names (FCSMetadata property)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.reader.FCSFile.columns_copy">columns_copy() (FCSFile method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.parameters.model.compute_model_for_rows">compute_model_for_rows() (in module RosettaX.workflow.parameters.model)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/pages.html#RosettaX.pages.p03_scattering.backend.BackEnd.compute_modeled_coupling">compute_modeled_coupling() (BackEnd static method)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p03_scattering.backend.BackEnd.compute_modeled_coupling_from_core_shell_dimensions">compute_modeled_coupling_from_core_shell_dimensions() (BackEnd static method)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p03_scattering.backend.BackEnd.compute_modeled_coupling_from_diameters">compute_modeled_coupling_from_diameters() (BackEnd static method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.parameters.table.compute_outer_diameter_string">compute_outer_diameter_string() (in module RosettaX.workflow.parameters.table)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.compute_r_squared">compute_r_squared() (in module RosettaX.workflow.scattering.calibration_services)</a>
+</li>
+      <li><a href="api/application.html#RosettaX.application.main.configure_logging">configure_logging() (in module RosettaX.application.main)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.models.FCSBatchOperationResult.consistency_report">consistency_report (FCSBatchOperationResult attribute)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig.copy">copy() (RuntimeConfig method)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.styling.copy_style">copy_style() (in module RosettaX.utils.styling)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.CoreShellSphereTargetModel.core_diameter_count">core_diameter_count (CoreShellSphereTargetModel attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelPreset.core_diameter_count">(ScatteringTargetModelPreset attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.CoreShellSphereTargetModel.core_diameter_max_nm">core_diameter_max_nm (CoreShellSphereTargetModel attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelPreset.core_diameter_max_nm">(ScatteringTargetModelPreset attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.CoreShellSphereTargetModel.core_diameter_min_nm">core_diameter_min_nm (CoreShellSphereTargetModel attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelPreset.core_diameter_min_nm">(ScatteringTargetModelPreset attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ParsedCoreShellStandardRows.core_diameters_nm">core_diameters_nm (ParsedCoreShellStandardRows attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ScatteringCalibrationScattererPreset.core_diameters_nm">(ScatteringCalibrationScattererPreset attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.CoreShellSphereTargetModel.core_refractive_index">core_refractive_index (CoreShellSphereTargetModel attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.OpticalParameters.core_refractive_index">(OpticalParameters attribute)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ScatteringCalibrationScattererPreset.core_refractive_index">(ScatteringCalibrationScattererPreset attribute)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ScatteringModelDefaults.core_refractive_index">(ScatteringModelDefaults attribute)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelParameters.core_refractive_index">(ScatteringTargetModelParameters property)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelPreset.core_refractive_index">(ScatteringTargetModelPreset attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.core_refractive_index_presets">core_refractive_index_presets (ModelConfiguration attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ScatteringCalibrationScattererPreset.core_refractive_index_source">core_refractive_index_source (ScatteringCalibrationScattererPreset attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelPreset.core_refractive_index_source">(ScatteringTargetModelPreset attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.CoreShellSphereTargetModel">CoreShellSphereTargetModel (class in RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.MonotonicDiameterInterval.coupling_max">coupling_max (MonotonicDiameterInterval attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.MonotonicDiameterInterval.coupling_min">coupling_min (MonotonicDiameterInterval attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.mie_relation.MieRelation.coupling_to_diameter">coupling_to_diameter() (MieRelation method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.coupling_to_diameter_with_linear_extrapolation">coupling_to_diameter_with_linear_extrapolation() (in module RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.cumulative_peak_value_names">cumulative_peak_value_names (BasePeakWorkflowAdapter attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.custom_detector_preset_name">custom_detector_preset_name (ModelConfiguration attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.custom_scatterer_preset_name">custom_scatterer_preset_name (ModelConfiguration attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="D">D</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig.data">data (RuntimeConfig attribute)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.reader.FCSBuilder.dataframe">dataframe (FCSBuilder attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringApplyResult.dataframe">(ScatteringApplyResult attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/utilities.html#RosettaX.utils.reader.FCSFile.dataframe_copy">dataframe_copy() (FCSFile method)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.fcs_metadata.FCSMetadata.datatype">datatype (FCSMetadata property)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.fcs_metadata.FCSMetadata.debug_summary">debug_summary() (FCSMetadata method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.services.decode_dash_upload_contents">decode_dash_upload_contents() (in module RosettaX.workflow.upload.services)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfigField.default">default (RuntimeConfigField attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.core.graphing.PeakWorkflowGraphBuilder.default_margin">default_margin (PeakWorkflowGraphBuilder attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.default_peak_lines_payload_key">default_peak_lines_payload_key (BasePeakWorkflowAdapter attribute)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.reader.FCSBuilder.delimiter">delimiter (FCSBuilder attribute)</a>
+
+      <ul>
+        <li><a href="api/utilities.html#RosettaX.utils.reader.FCSFile.delimiter">(FCSFile attribute)</a>
+</li>
+        <li><a href="api/utilities.html#RosettaX.utils.fcs_metadata.FCSMetadata.delimiter">(FCSMetadata attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.delta_peak_value_names">delta_peak_value_names (BasePeakWorkflowAdapter attribute)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfigField.description">description (RuntimeConfigField attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ScatteringCalibrationScattererPreset.description">(ScatteringCalibrationScattererPreset attribute)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelPreset.description">(ScatteringTargetModelPreset attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.detect_detector_preset_from_uploaded_fcs">detect_detector_preset_from_uploaded_fcs() (ModelConfiguration static method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.detect_wavelength_nm_from_detector_channel">detect_wavelength_nm_from_detector_channel() (ModelConfiguration static method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.OpticalParameters.detector_angular_weights">detector_angular_weights (OpticalParameters attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.OpticalParameters.detector_cache_numerical_aperture">detector_cache_numerical_aperture (OpticalParameters attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ScatteringModelDefaults.detector_cache_numerical_aperture">(ScatteringModelDefaults attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.OpticalParameters.detector_configuration_preset_name">detector_configuration_preset_name (OpticalParameters attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.OpticalParameters.detector_gamma_angle_degree">detector_gamma_angle_degree (OpticalParameters attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ScatteringModelDefaults.detector_gamma_angle_degree">(ScatteringModelDefaults attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.OpticalParameters.detector_numerical_aperture">detector_numerical_aperture (OpticalParameters attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ScatteringModelDefaults.detector_numerical_aperture">(ScatteringModelDefaults attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.OpticalParameters.detector_phi_angle_degree">detector_phi_angle_degree (OpticalParameters attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ScatteringModelDefaults.detector_phi_angle_degree">(ScatteringModelDefaults attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.OpticalParameters.detector_sampling">detector_sampling (OpticalParameters attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ScatteringModelDefaults.detector_sampling">(ScatteringModelDefaults attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.detector_selection_runtime_config_path">detector_selection_runtime_config_path (BasePeakWorkflowAdapter attribute)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.fcs_metadata.FCSMetadata.detector_voltages">detector_voltages (FCSMetadata property)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.reader.FCSBuilder.detectors">detectors (FCSBuilder attribute)</a>
+
+      <ul>
+        <li><a href="api/utilities.html#RosettaX.utils.fcs_metadata.FCSMetadata.detectors">(FCSMetadata property)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.CoreShellSphereTargetModel.diameter_axis">diameter_axis (CoreShellSphereTargetModel property)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelParameters.diameter_axis">(ScatteringTargetModelParameters property)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.SolidSphereTargetModel.diameter_axis">(SolidSphereTargetModel property)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.CoreShellSphereTargetModel.diameter_count">diameter_count (CoreShellSphereTargetModel property)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelParameters.diameter_count">(ScatteringTargetModelParameters property)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.SolidSphereTargetModel.diameter_count">(SolidSphereTargetModel property)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.CoreShellSphereTargetModel.diameter_max_nm">diameter_max_nm (CoreShellSphereTargetModel property)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.MonotonicDiameterInterval.diameter_max_nm">(MonotonicDiameterInterval attribute)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelParameters.diameter_max_nm">(ScatteringTargetModelParameters property)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.SolidSphereTargetModel.diameter_max_nm">(SolidSphereTargetModel property)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.CoreShellSphereTargetModel.diameter_min_nm">diameter_min_nm (CoreShellSphereTargetModel property)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.MonotonicDiameterInterval.diameter_min_nm">(MonotonicDiameterInterval attribute)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelParameters.diameter_min_nm">(ScatteringTargetModelParameters property)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.SolidSphereTargetModel.diameter_min_nm">(SolidSphereTargetModel property)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.mie_relation.MieRelation.diameter_nm">diameter_nm (MieRelation attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.mie_relation.MieRelation.diameter_to_coupling">diameter_to_coupling() (MieRelation method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.MonotonicDiameterInterval.diameter_width_nm">diameter_width_nm (MonotonicDiameterInterval property)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.save.models.SaveResult.download_data">download_data (SaveResult attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.services.ApplyCalibrationFilesResult.download_filename">download_filename (ApplyCalibrationFilesResult attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="E">E</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.OpticalParameters.effective_blocker_bar_numerical_aperture">effective_blocker_bar_numerical_aperture (OpticalParameters attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.OpticalParameters.effective_detector_cache_numerical_aperture">effective_detector_cache_numerical_aperture (OpticalParameters attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.MonotonicDiameterInterval.end_index">end_index (MonotonicDiameterInterval attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringApplicationResult.estimated_coupling">estimated_coupling (ScatteringApplicationResult attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringOutputColumns.estimated_coupling">(ScatteringOutputColumns attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/pages.html#RosettaX.pages.p03_scattering.backend.ModeledCouplingResult.expected_coupling_values">expected_coupling_values (ModeledCouplingResult attribute)</a>
+
+      <ul>
+        <li><a href="api/pages.html#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.expected_coupling_values">(ScatteringCalibrationFitResult attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/pages.html#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.expected_coupling_values_log10">expected_coupling_values_log10 (ScatteringCalibrationFitResult attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/pages.html#RosettaX.pages.p03_scattering.backend.ModeledCouplingResult.expected_cross_section_nm2_values">expected_cross_section_nm2_values (ModeledCouplingResult attribute)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfigField.expected_type">expected_type (RuntimeConfigField attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.services.ApplyCalibrationRequest.export_columns">export_columns (ApplyCalibrationRequest attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.core.detectors.extract_instrument_name_from_metadata">extract_instrument_name_from_metadata() (in module RosettaX.workflow.peak.core.detectors)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.extract_peak_values_from_peak_lines_payload">extract_peak_values_from_peak_lines_payload() (BasePeakWorkflowAdapter method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.extract_peak_values_from_result">extract_peak_values_from_result() (BasePeakWorkflowAdapter method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.extract_table_prefill_rows_from_result">extract_table_prefill_rows_from_result() (BasePeakWorkflowAdapter method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.extract_x_value_from_mapping">extract_x_value_from_mapping() (BasePeakWorkflowAdapter method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.extrapolate_linearly">extrapolate_linearly() (in module RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="F">F</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/workflows.html#RosettaX.workflow.save.models.SaveConfig.failure_message">failure_message (SaveConfig attribute)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.reader.FCSBuilder.fcs_version">fcs_version (FCSBuilder attribute)</a>
+
+      <ul>
+        <li><a href="api/utilities.html#RosettaX.utils.fcs_metadata.FCSMetadata.fcs_version">(FCSMetadata property)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.models.FCSBatchOperationResult">FCSBatchOperationResult (class in RosettaX.workflow.upload.models)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.reader.FCSBuilder">FCSBuilder (class in RosettaX.utils.reader)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.reader.FCSFile">FCSFile (class in RosettaX.utils.reader)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.fcs_metadata.FCSMetadata">FCSMetadata (class in RosettaX.utils.fcs_metadata)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.checks.FCSMultiFileConsistencyChecker">FCSMultiFileConsistencyChecker (class in RosettaX.utils.checks)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.models.FCSBatchOperationResult.feedback">feedback (FCSBatchOperationResult attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.services.ApplyCalibrationFilesResult.file_count">file_count (ApplyCalibrationFilesResult attribute)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.fcs_metadata.FCSMetadata.file_name">file_name (FCSMetadata property)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.save.models.SaveInputs.file_name">(SaveInputs attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.save.models.SaveConfig.file_name_placeholder">file_name_placeholder (SaveConfig attribute)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.reader.FCSFile.file_path">file_path (FCSFile attribute)</a>
+
+      <ul>
+        <li><a href="api/utilities.html#RosettaX.utils.fcs_metadata.FCSMetadata.file_path">(FCSMetadata attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/utilities.html#RosettaX.utils.service.SavedCalibrationInfo.filename">filename (SavedCalibrationInfo attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.registry.filter_peak_processes">filter_peak_processes() (in module RosettaX.workflow.peak.registry)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.find_first_existing_column_name">find_first_existing_column_name() (BasePeakWorkflowAdapter method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.core.detectors.find_fluorescence_channel_from_column_names">find_fluorescence_channel_from_column_names() (in module RosettaX.workflow.peak.core.detectors)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.core.detectors.find_matching_column_name">find_matching_column_name() (in module RosettaX.workflow.peak.core.detectors)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.core.detectors.find_scattering_channel_from_column_names">find_scattering_channel_from_column_names() (in module RosettaX.workflow.peak.core.detectors)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.registry.find_script_class_in_module">find_script_class_in_module() (in module RosettaX.workflow.peak.registry)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.find_strictly_monotonic_diameter_intervals">find_strictly_monotonic_diameter_intervals() (in module RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.fit_linear_instrument_response">fit_linear_instrument_response() (in module RosettaX.workflow.scattering.calibration_services)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.fitted_expected_coupling_values_log10">fitted_expected_coupling_values_log10 (ScatteringCalibrationFitResult attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.flatten_datatable_values">flatten_datatable_values() (BasePeakWorkflowAdapter method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.core.graphing.PeakWorkflowGraphBuilder.fluorescence_helper_fill_color">fluorescence_helper_fill_color (PeakWorkflowGraphBuilder attribute)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.service.SavedCalibrationInfo.folder">folder (SavedCalibrationInfo attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringInstrumentResponse.force_zero_intercept">force_zero_intercept (ScatteringInstrumentResponse attribute)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.casting.format_float_list_for_input">format_float_list_for_input() (in module RosettaX.utils.casting)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.format_monotonic_interval_suggestions">format_monotonic_interval_suggestions() (in module RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.parameters.refractive_index.format_refractive_index_display">format_refractive_index_display() (in module RosettaX.workflow.parameters.refractive_index)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig.from_default_profile">from_default_profile() (RuntimeConfig class method)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ScatteringModelDefaults.from_default_profile">(ScatteringModelDefaults class method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.mie_relation.MieRelation.from_dict">from_dict() (MieRelation class method)</a>
+
+      <ul>
+        <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig.from_dict">(RuntimeConfig class method)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringCalibration.from_dict">(ScatteringCalibration class method)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringInstrumentResponse.from_dict">(ScatteringInstrumentResponse class method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig.from_json_path">from_json_path() (RuntimeConfig class method)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig.from_profile_name">from_profile_name() (RuntimeConfig class method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelParameters.from_raw_values">from_raw_values() (ScatteringTargetModelParameters class method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ScatteringModelDefaults.from_runtime_config">from_runtime_config() (ScatteringModelDefaults class method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="G">G</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig.get_bool">get_bool() (RuntimeConfig method)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.styling.get_border_token">get_border_token() (in module RosettaX.utils.styling)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.registry.get_cached_script_map">get_cached_script_map() (in module RosettaX.workflow.peak.registry)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.get_calibration_standard_parameters">get_calibration_standard_parameters() (in module RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.styling.get_color_rgb">get_color_rgb() (in module RosettaX.utils.styling)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.reader.FCSFile.get_column_names">get_column_names() (FCSFile method)</a>
+
+      <ul>
+        <li><a href="api/utilities.html#RosettaX.utils.io.get_column_names">(in module RosettaX.utils.io)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.registry.get_default_script_name">get_default_script_name() (in module RosettaX.workflow.peak.registry)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.service.get_detector_column_names_from_file">get_detector_column_names_from_file() (in module RosettaX.utils.service)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.reader.FCSFile.get_detector_voltages">get_detector_voltages() (FCSFile method)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.checks.FCSMultiFileConsistencyChecker.get_file_metadata">get_file_metadata() (FCSMultiFileConsistencyChecker method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.get_finite_positive_mie_relation_arrays">get_finite_positive_mie_relation_arrays() (in module RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.get_first_attribute_or_key">get_first_attribute_or_key() (BasePeakWorkflowAdapter method)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig.get_float">get_float() (RuntimeConfig method)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig.get_graph_height">get_graph_height() (RuntimeConfig method)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig.get_int">get_int() (RuntimeConfig method)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.reader.FCSFile.get_metadata">get_metadata() (FCSFile method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.get_page_state_from_payload">get_page_state_from_payload() (BasePeakWorkflowAdapter method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.get_page_state_payload">get_page_state_payload() (BasePeakWorkflowAdapter method)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig.get_path">get_path() (RuntimeConfig method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.get_peak_lines_payload">get_peak_lines_payload() (BasePeakWorkflowAdapter method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.registry.get_peak_process_instances">get_peak_process_instances() (in module RosettaX.workflow.peak.registry)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.get_primary_calibration_summary">get_primary_calibration_summary() (in module RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.get_primary_scattering_calibration_summary">get_primary_scattering_calibration_summary() (in module RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.registry.get_process_instance">get_process_instance() (in module RosettaX.workflow.peak.registry)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.styling.get_radius_token">get_radius_token() (in module RosettaX.utils.styling)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.get_result_table_data">get_result_table_data() (BasePeakWorkflowAdapter method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.get_scattering_calibration_scatterer_preset">get_scattering_calibration_scatterer_preset() (in module RosettaX.workflow.scattering.model)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.get_scattering_target_model_preset">get_scattering_target_model_preset() (in module RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.styling.get_section_color_name">get_section_color_name() (in module RosettaX.utils.styling)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.registry.get_selected_process_name">get_selected_process_name() (in module RosettaX.workflow.peak.registry)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.styling.get_shadow_token">get_shadow_token() (in module RosettaX.utils.styling)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig.get_show_graphs">get_show_graphs() (RuntimeConfig method)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.styling.get_spacing_token">get_spacing_token() (in module RosettaX.utils.styling)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig.get_str">get_str() (RuntimeConfig method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.parameters.table.get_table_columns_for_model">get_table_columns_for_model() (in module RosettaX.workflow.parameters.table)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig.get_theme_mode">get_theme_mode() (RuntimeConfig method)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.styling.get_typography_token">get_typography_token() (in module RosettaX.utils.styling)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.get_uploaded_fcs_path">get_uploaded_fcs_path() (BasePeakWorkflowAdapter method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.parameters.table.get_user_data_column_ids_for_model">get_user_data_column_ids_for_model() (in module RosettaX.workflow.parameters.table)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.styling.get_workflow_page_header_color">get_workflow_page_header_color() (in module RosettaX.utils.styling)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.styling.get_workflow_section_color">get_workflow_section_color() (in module RosettaX.utils.styling)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="H">H</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.has_selected_target_model_preset">has_selected_target_model_preset() (in module RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.reader.FCSFile.header">header (FCSFile attribute)</a>
+
+      <ul>
+        <li><a href="api/utilities.html#RosettaX.utils.fcs_metadata.FCSMetadata.header">(FCSMetadata attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/workflows.html#RosettaX.workflow.save.models.SaveConfig.header_title">header_title (SaveConfig attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="I">I</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.core.detectors.infer_default_detector_channel">infer_default_detector_channel() (in module RosettaX.workflow.peak.core.detectors)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.core.detectors.infer_detector_channel_from_column_names">infer_detector_channel_from_column_names() (in module RosettaX.workflow.peak.core.detectors)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.models.UploadConfig.initial_runtime_config_path">initial_runtime_config_path (UploadConfig attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringInstrumentResponse.input_quantity">input_quantity (ScatteringInstrumentResponse attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.services.inspect_compatible_fcs_batch">inspect_compatible_fcs_batch() (in module RosettaX.workflow.upload.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringCalibration.instrument_response">instrument_response (ScatteringCalibration attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringCalibrationBuildResult.instrument_response">(ScatteringCalibrationBuildResult attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/pages.html#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.intercept">intercept (ScatteringCalibrationFitResult attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringInstrumentResponse.intercept">(ScatteringInstrumentResponse attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.mie_relation.MieRelation.inversion_method">inversion_method (MieRelation attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.models.FCSBatchOperationResult.is_compatible">is_compatible (FCSBatchOperationResult property)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.service.is_invalid_detector_channel">is_invalid_detector_channel() (in module RosettaX.utils.service)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.mie_relation.MieRelation.is_monotonic">is_monotonic (MieRelation attribute)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.service.is_scatter_channel">is_scatter_channel() (in module RosettaX.utils.service)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="K">K</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/utilities.html#RosettaX.utils.reader.FCSBuilder.keywords">keywords (FCSBuilder attribute)</a>
+
+      <ul>
+        <li><a href="api/utilities.html#RosettaX.utils.fcs_metadata.FCSMetadata.keywords">(FCSMetadata property)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="L">L</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig.LEGACY_PATH_ALIASES">LEGACY_PATH_ALIASES (RuntimeConfig attribute)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.service.list_saved_calibrations_from_directory">list_saved_calibrations_from_directory() (in module RosettaX.utils.service)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.services.load_compatible_fcs_batch">load_compatible_fcs_batch() (in module RosettaX.workflow.upload.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.core.detectors.load_detector_auto_detect_rules">load_detector_auto_detect_rules() (in module RosettaX.workflow.peak.core.detectors)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.services.load_fcs_batch">load_fcs_batch() (in module RosettaX.workflow.upload.services)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig.load_json">load_json() (RuntimeConfig method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.registry.load_peak_scripts">load_peak_scripts() (in module RosettaX.workflow.peak.registry)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.io.load_signal">load_signal() (in module RosettaX.utils.io)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="M">M</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/application.html#RosettaX.application.main.main">main() (in module RosettaX.application.main)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.manual_peak_value_names">manual_peak_value_names (BasePeakWorkflowAdapter attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.mapping_x_value_keys">mapping_x_value_keys (BasePeakWorkflowAdapter attribute)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfigField.maximum">maximum (RuntimeConfigField attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringInstrumentResponse.measured_channel">measured_channel (ScatteringInstrumentResponse attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ParsedCoreShellStandardRows.measured_peak_positions">measured_peak_positions (ParsedCoreShellStandardRows attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ParsedSphereStandardRows.measured_peak_positions">(ParsedSphereStandardRows attribute)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringCalibrationBuildResult.measured_peak_positions">(ScatteringCalibrationBuildResult attribute)</a>
+</li>
+        <li><a href="api/pages.html#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.measured_peak_positions">(ScatteringCalibrationFitResult attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/pages.html#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.measured_peak_positions_log10">measured_peak_positions_log10 (ScatteringCalibrationFitResult attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringCalibration.measured_to_coupling">measured_to_coupling() (ScatteringCalibration method)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringInstrumentResponse.measured_to_coupling">(ScatteringInstrumentResponse method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringCalibration.measured_to_equivalent_diameter">measured_to_equivalent_diameter() (ScatteringCalibration method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.CoreShellSphereTargetModel.medium_refractive_index">medium_refractive_index (CoreShellSphereTargetModel attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.OpticalParameters.medium_refractive_index">(OpticalParameters attribute)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ScatteringCalibrationScattererPreset.medium_refractive_index">(ScatteringCalibrationScattererPreset attribute)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ScatteringModelDefaults.medium_refractive_index">(ScatteringModelDefaults attribute)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelParameters.medium_refractive_index">(ScatteringTargetModelParameters property)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelPreset.medium_refractive_index">(ScatteringTargetModelPreset attribute)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.SolidSphereTargetModel.medium_refractive_index">(SolidSphereTargetModel attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.medium_refractive_index_presets">medium_refractive_index_presets (ModelConfiguration attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ScatteringCalibrationScattererPreset.medium_refractive_index_source">medium_refractive_index_source (ScatteringCalibrationScattererPreset attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelPreset.medium_refractive_index_source">(ScatteringTargetModelPreset attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/utilities.html#RosettaX.utils.styling.merge_style">merge_style() (in module RosettaX.utils.styling)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.reader.FCSFile.metadata">metadata (FCSFile attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringApplicationResult.metadata">(ScatteringApplicationResult attribute)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringCalibration.metadata">(ScatteringCalibration attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringApplicationResult.mie_equivalent_diameter_nm">mie_equivalent_diameter_nm (ScatteringApplicationResult attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringOutputColumns.mie_equivalent_diameter_nm">(ScatteringOutputColumns attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.CoreShellSphereTargetModel.mie_model">mie_model (CoreShellSphereTargetModel attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.mie_relation.MieRelation.mie_model">(MieRelation attribute)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ScatteringCalibrationScattererPreset.mie_model">(ScatteringCalibrationScattererPreset attribute)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ScatteringModelDefaults.mie_model">(ScatteringModelDefaults attribute)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelParameters.mie_model">(ScatteringTargetModelParameters property)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelPreset.mie_model">(ScatteringTargetModelPreset attribute)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.SolidSphereTargetModel.mie_model">(SolidSphereTargetModel attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.mie_model_options">mie_model_options (ModelConfiguration attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.mie_relation.MieRelation">MieRelation (class in RosettaX.workflow.scattering.mie_relation)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfigField.minimum">minimum (RuntimeConfigField attribute)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.fcs_metadata.FCSMetadata.mode">mode (FCSMetadata property)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p03_scattering.backend.ModeledCouplingResult.model_metadata">model_metadata (ModeledCouplingResult attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringInstrumentResponse.model_name">model_name (ScatteringInstrumentResponse attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration">ModelConfiguration (class in RosettaX.workflow.scattering.model)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p03_scattering.backend.ModeledCouplingResult">ModeledCouplingResult (class in RosettaX.pages.p03_scattering.backend)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.OpticalParameters.modeling_blocker_bar_numerical_aperture">modeling_blocker_bar_numerical_aperture (OpticalParameters property)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.OpticalParameters.modeling_detector_cache_numerical_aperture">modeling_detector_cache_numerical_aperture (OpticalParameters property)</a>
+</li>
+      <li>
+    module
+
+      <ul>
+        <li><a href="code.html#module-RosettaX">RosettaX</a>
+</li>
+        <li><a href="api/application.html#module-RosettaX.application.callbacks">RosettaX.application.callbacks</a>
+</li>
+        <li><a href="api/application.html#module-RosettaX.application.layout">RosettaX.application.layout</a>
+</li>
+        <li><a href="api/application.html#module-RosettaX.application.main">RosettaX.application.main</a>
+</li>
+        <li><a href="api/application.html#module-RosettaX.application.pages">RosettaX.application.pages</a>
+</li>
+        <li><a href="api/application.html#module-RosettaX.application.routes">RosettaX.application.routes</a>
+</li>
+        <li><a href="api/pages.html#module-RosettaX.pages.p02_fluorescence.state">RosettaX.pages.p02_fluorescence.state</a>
+</li>
+        <li><a href="api/pages.html#module-RosettaX.pages.p03_scattering.backend">RosettaX.pages.p03_scattering.backend</a>
+</li>
+        <li><a href="api/pages.html#module-RosettaX.pages.p03_scattering.state">RosettaX.pages.p03_scattering.state</a>
+</li>
+        <li><a href="api/pages.html#module-RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services">RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services</a>
+</li>
+        <li><a href="api/pages.html#module-RosettaX.pages.p04_calibrate.sections.s03_file_picker.services">RosettaX.pages.p04_calibrate.sections.s03_file_picker.services</a>
+</li>
+        <li><a href="api/pages.html#module-RosettaX.pages.p04_calibrate.sections.s04_apply.services">RosettaX.pages.p04_calibrate.sections.s04_apply.services</a>
+</li>
+        <li><a href="api/utilities.html#module-RosettaX.utils.casting">RosettaX.utils.casting</a>
+</li>
+        <li><a href="api/utilities.html#module-RosettaX.utils.checks">RosettaX.utils.checks</a>
+</li>
+        <li><a href="api/utilities.html#module-RosettaX.utils.fcs_metadata">RosettaX.utils.fcs_metadata</a>
+</li>
+        <li><a href="api/utilities.html#module-RosettaX.utils.io">RosettaX.utils.io</a>
+</li>
+        <li><a href="api/utilities.html#module-RosettaX.utils.parser">RosettaX.utils.parser</a>
+</li>
+        <li><a href="api/utilities.html#module-RosettaX.utils.reader">RosettaX.utils.reader</a>
+</li>
+        <li><a href="api/utilities.html#module-RosettaX.utils.runtime_config">RosettaX.utils.runtime_config</a>
+</li>
+        <li><a href="api/utilities.html#module-RosettaX.utils.service">RosettaX.utils.service</a>
+</li>
+        <li><a href="api/utilities.html#module-RosettaX.utils.styling">RosettaX.utils.styling</a>
+</li>
+        <li><a href="api/workflows.html#module-RosettaX.workflow.apply_calibration.fluorescence">RosettaX.workflow.apply_calibration.fluorescence</a>
+</li>
+        <li><a href="api/workflows.html#module-RosettaX.workflow.apply_calibration.scattering">RosettaX.workflow.apply_calibration.scattering</a>
+</li>
+        <li><a href="api/workflows.html#module-RosettaX.workflow.apply_calibration.services">RosettaX.workflow.apply_calibration.services</a>
+</li>
+        <li><a href="api/workflows.html#module-RosettaX.workflow.parameters.model">RosettaX.workflow.parameters.model</a>
+</li>
+        <li><a href="api/workflows.html#module-RosettaX.workflow.parameters.refractive_index">RosettaX.workflow.parameters.refractive_index</a>
+</li>
+        <li><a href="api/workflows.html#module-RosettaX.workflow.parameters.table">RosettaX.workflow.parameters.table</a>
+</li>
+        <li><a href="api/workflows.html#module-RosettaX.workflow.peak.adapters.base">RosettaX.workflow.peak.adapters.base</a>
+</li>
+        <li><a href="api/workflows.html#module-RosettaX.workflow.peak.core.detectors">RosettaX.workflow.peak.core.detectors</a>
+</li>
+        <li><a href="api/workflows.html#module-RosettaX.workflow.peak.core.graphing">RosettaX.workflow.peak.core.graphing</a>
+</li>
+        <li><a href="api/workflows.html#module-RosettaX.workflow.peak.registry">RosettaX.workflow.peak.registry</a>
+</li>
+        <li><a href="api/workflows.html#module-RosettaX.workflow.save.models">RosettaX.workflow.save.models</a>
+</li>
+        <li><a href="api/workflows.html#module-RosettaX.workflow.save.services">RosettaX.workflow.save.services</a>
+</li>
+        <li><a href="api/workflows.html#module-RosettaX.workflow.scattering.calibration_services">RosettaX.workflow.scattering.calibration_services</a>
+</li>
+        <li><a href="api/workflows.html#module-RosettaX.workflow.scattering.mie_relation">RosettaX.workflow.scattering.mie_relation</a>
+</li>
+        <li><a href="api/workflows.html#module-RosettaX.workflow.scattering.model">RosettaX.workflow.scattering.model</a>
+</li>
+        <li><a href="api/workflows.html#module-RosettaX.workflow.upload.models">RosettaX.workflow.upload.models</a>
+</li>
+        <li><a href="api/workflows.html#module-RosettaX.workflow.upload.services">RosettaX.workflow.upload.services</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelParameters.monotonic_smoothing_sigma_points">monotonic_smoothing_sigma_points (ScatteringTargetModelParameters attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.MonotonicDiameterInterval">MonotonicDiameterInterval (class in RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.MonotonicRelationResolution">MonotonicRelationResolution (class in RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="N">N</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ScatteringCalibrationScattererPreset.name">name (ScatteringCalibrationScattererPreset attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelPreset.name">(ScatteringTargetModelPreset attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.normalize_axis_scale">normalize_axis_scale() (in module RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.normalize_calibration_summaries">normalize_calibration_summaries() (in module RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.parameters.table.normalize_cell_value">normalize_cell_value() (in module RosettaX.workflow.parameters.table)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.parameters.table.normalize_core_shell_row">normalize_core_shell_row() (in module RosettaX.workflow.parameters.table)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.normalize_datatable_value">normalize_datatable_value() (BasePeakWorkflowAdapter method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.normalize_datatable_values">normalize_datatable_values() (BasePeakWorkflowAdapter method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.core.detectors.normalize_lookup_token">normalize_lookup_token() (in module RosettaX.workflow.peak.core.detectors)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.services.normalize_multiple_upload_values">normalize_multiple_upload_values() (in module RosettaX.workflow.upload.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.parameters.table.normalize_solid_sphere_row">normalize_solid_sphere_row() (in module RosettaX.workflow.parameters.table)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.normalize_table_data">normalize_table_data() (BasePeakWorkflowAdapter method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.normalize_table_row">normalize_table_row() (BasePeakWorkflowAdapter method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.parameters.table.normalize_table_rows">normalize_table_rows() (in module RosettaX.workflow.parameters.table)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig.normalized">normalized() (RuntimeConfig method)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.fcs_metadata.FCSMetadata.number_of_events">number_of_events (FCSMetadata property)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.fcs_metadata.FCSMetadata.number_of_parameters">number_of_parameters (FCSMetadata property)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="O">O</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.OpticalParameters.optical_power_watt">optical_power_watt (OpticalParameters attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.OpticalParameters">OpticalParameters (class in RosettaX.workflow.scattering.calibration_services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.mie_relation.optional_float">optional_float() (in module RosettaX.workflow.scattering.mie_relation)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.CoreShellSphereTargetModel.outer_diameter_max_nm">outer_diameter_max_nm (CoreShellSphereTargetModel property)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.CoreShellSphereTargetModel.outer_diameter_min_nm">outer_diameter_min_nm (CoreShellSphereTargetModel property)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ParsedCoreShellStandardRows.outer_diameters_nm">outer_diameters_nm (ParsedCoreShellStandardRows attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/workflows.html#RosettaX.workflow.save.models.SaveInputs.output_channel_name">output_channel_name (SaveInputs attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.save.models.SaveConfig.output_channel_name_label">output_channel_name_label (SaveConfig attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.save.models.SaveConfig.output_channel_name_placeholder">output_channel_name_placeholder (SaveConfig attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.services.ApplyCalibrationFilesResult.output_channels">output_channels (ApplyCalibrationFilesResult attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringApplyResult.output_columns">output_columns (ScatteringApplyResult attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringInstrumentResponse.output_quantity">output_quantity (ScatteringInstrumentResponse attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="P">P</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.models.UploadCallbackResult.page_state_payload">page_state_payload (UploadCallbackResult attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.save.models.SaveConfig.page_state_saved_field">page_state_saved_field (SaveConfig attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.mie_relation.MieRelation.parameters">parameters (MieRelation attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.services.parse_allowed_upload_extensions">parse_allowed_upload_extensions() (in module RosettaX.workflow.upload.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.parse_core_shell_rows_for_fit">parse_core_shell_rows_for_fit() (in module RosettaX.workflow.scattering.calibration_services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.parse_finite_float">parse_finite_float() (in module RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.casting.parse_float_list">parse_float_list() (in module RosettaX.utils.casting)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.parse_non_negative_float">parse_non_negative_float() (in module RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.parse_optical_geometry_from_calibration_standard_parameters">parse_optical_geometry_from_calibration_standard_parameters() (in module RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.parse_optical_parameters">parse_optical_parameters() (in module RosettaX.workflow.scattering.calibration_services)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p03_scattering.backend.BackEnd.parse_particle_diameter_list">parse_particle_diameter_list() (BackEnd static method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.parse_positive_float">parse_positive_float() (in module RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.parse_positive_int">parse_positive_int() (in module RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.parse_sphere_rows_for_fit">parse_sphere_rows_for_fit() (in module RosettaX.workflow.scattering.calibration_services)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.parse_uploaded_calibration">parse_uploaded_calibration() (in module RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ParsedCoreShellStandardRows">ParsedCoreShellStandardRows (class in RosettaX.workflow.scattering.calibration_services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ParsedSphereStandardRows">ParsedSphereStandardRows (class in RosettaX.workflow.scattering.calibration_services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelPreset.particle_diameter_count">particle_diameter_count (ScatteringTargetModelPreset attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.SolidSphereTargetModel.particle_diameter_count">(SolidSphereTargetModel attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelPreset.particle_diameter_max_nm">particle_diameter_max_nm (ScatteringTargetModelPreset attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.SolidSphereTargetModel.particle_diameter_max_nm">(SolidSphereTargetModel attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelPreset.particle_diameter_min_nm">particle_diameter_min_nm (ScatteringTargetModelPreset attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.SolidSphereTargetModel.particle_diameter_min_nm">(SolidSphereTargetModel attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/pages.html#RosettaX.pages.p03_scattering.backend.ModeledCouplingResult.particle_diameters_nm">particle_diameters_nm (ModeledCouplingResult attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ParsedSphereStandardRows.particle_diameters_nm">(ParsedSphereStandardRows attribute)</a>
+</li>
+        <li><a href="api/pages.html#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.particle_diameters_nm">(ScatteringCalibrationFitResult attribute)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ScatteringCalibrationScattererPreset.particle_diameters_nm">(ScatteringCalibrationScattererPreset attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.OpticalParameters.particle_refractive_index">particle_refractive_index (OpticalParameters attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ScatteringCalibrationScattererPreset.particle_refractive_index">(ScatteringCalibrationScattererPreset attribute)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ScatteringModelDefaults.particle_refractive_index">(ScatteringModelDefaults attribute)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelParameters.particle_refractive_index">(ScatteringTargetModelParameters property)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelPreset.particle_refractive_index">(ScatteringTargetModelPreset attribute)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.SolidSphereTargetModel.particle_refractive_index">(SolidSphereTargetModel attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.particle_refractive_index_presets">particle_refractive_index_presets (ModelConfiguration attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ScatteringCalibrationScattererPreset.particle_refractive_index_source">particle_refractive_index_source (ScatteringCalibrationScattererPreset attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelPreset.particle_refractive_index_source">(ScatteringTargetModelPreset attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/utilities.html#RosettaX.utils.service.SavedCalibrationInfo.path">path (SavedCalibrationInfo attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.PeakWorkflowPageState.payload">payload (PeakWorkflowPageState attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.services.ApplyCalibrationFilesResult.payload_bytes">payload_bytes (ApplyCalibrationFilesResult attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.peak_lines_payload_keys">peak_lines_payload_keys (BasePeakWorkflowAdapter attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.peak_table_sort_order_runtime_config_path">peak_table_sort_order_runtime_config_path (BasePeakWorkflowAdapter attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.core.graphing.PeakWorkflowGraphBuilder">PeakWorkflowGraphBuilder (class in RosettaX.workflow.peak.core.graphing)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.PeakWorkflowPageState">PeakWorkflowPageState (class in RosettaX.workflow.peak.adapters.base)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.MonotonicDiameterInterval.point_count">point_count (MonotonicDiameterInterval attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.OpticalParameters.polarization_angle_degree">polarization_angle_degree (OpticalParameters attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.parameters.table.populate_core_shell_rows_from_runtime_defaults">populate_core_shell_rows_from_runtime_defaults() (in module RosettaX.workflow.parameters.table)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.core.detectors.populate_peak_script_detector_dropdowns">populate_peak_script_detector_dropdowns() (in module RosettaX.workflow.peak.core.detectors)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.parameters.table.populate_solid_sphere_rows_from_runtime_defaults">populate_solid_sphere_rows_from_runtime_defaults() (in module RosettaX.workflow.parameters.table)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.parameters.table.populate_table_from_runtime_defaults">populate_table_from_runtime_defaults() (in module RosettaX.workflow.parameters.table)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.prefactor">prefactor (ScatteringCalibrationFitResult attribute)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s04_apply.services.prepare_calibration_export">prepare_calibration_export() (in module RosettaX.pages.p04_calibrate.sections.s04_apply.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.mie_relation.prepare_unique_interpolation_grid">prepare_unique_interpolation_grid() (in module RosettaX.workflow.scattering.mie_relation)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig.preserve_unknown_paths">preserve_unknown_paths (RuntimeConfig attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="R">R</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/pages.html#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.r_squared">r_squared (ScatteringCalibrationFitResult attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringInstrumentResponse.r_squared">(ScatteringInstrumentResponse attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.services.read_uploaded_file_bytes">read_uploaded_file_bytes() (in module RosettaX.workflow.upload.services)</a>
+</li>
+      <li><a href="api/application.html#RosettaX.application.callbacks.record_request_page_visit">record_request_page_visit() (in module RosettaX.application.callbacks)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringCalibration.reference_table">reference_table (ScatteringCalibration attribute)</a>
+</li>
+      <li><a href="api/application.html#RosettaX.application.callbacks.register_application_callbacks">register_application_callbacks() (in module RosettaX.application.callbacks)</a>
+</li>
+      <li><a href="api/application.html#RosettaX.application.pages.register_pages">register_pages() (in module RosettaX.application.pages)</a>
+</li>
+      <li><a href="api/application.html#RosettaX.application.routes.register_server_routes">register_server_routes() (in module RosettaX.application.routes)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.core.graphing.PeakWorkflowGraphBuilder.rejected_x_fill_color">rejected_x_fill_color (PeakWorkflowGraphBuilder attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.core.graphing.PeakWorkflowGraphBuilder.rejected_y_fill_color">rejected_y_fill_color (PeakWorkflowGraphBuilder attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.mie_relation.relation_is_monotonic">relation_is_monotonic() (in module RosettaX.workflow.scattering.mie_relation)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.mie_relation.relation_is_strictly_monotonic">relation_is_strictly_monotonic() (in module RosettaX.workflow.scattering.mie_relation)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.mie_relation.MieRelation.relation_role">relation_role (MieRelation attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.parameters.table.remap_row_to_core_shell_model">remap_row_to_core_shell_model() (in module RosettaX.workflow.parameters.table)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.parameters.table.remap_row_to_solid_sphere_model">remap_row_to_solid_sphere_model() (in module RosettaX.workflow.parameters.table)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.parameters.table.remap_table_rows_to_model">remap_table_rows_to_model() (in module RosettaX.workflow.parameters.table)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.save.models.SaveConfig.require_output_channel_name">require_output_channel_name (SaveConfig attribute)</a>
+</li>
+      <li><a href="api/application.html#RosettaX.application.callbacks.resolve_active_profile_runtime_config">resolve_active_profile_runtime_config() (in module RosettaX.application.callbacks)</a>
+</li>
+      <li><a href="api/application.html#RosettaX.application.routes.resolve_calibration_file_path">resolve_calibration_file_path() (in module RosettaX.application.routes)</a>
+</li>
+      <li><a href="api/application.html#RosettaX.application.callbacks.resolve_client_ip_address">resolve_client_ip_address() (in module RosettaX.application.callbacks)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.service.resolve_default_dropdown_value">resolve_default_dropdown_value() (in module RosettaX.utils.service)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.core.detectors.resolve_detector_auto_detect_rule">resolve_detector_auto_detect_rule() (in module RosettaX.workflow.peak.core.detectors)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.registry.resolve_detector_channel_state">resolve_detector_channel_state() (in module RosettaX.workflow.peak.registry)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.core.detectors.resolve_detector_channels_for_process">resolve_detector_channels_for_process() (in module RosettaX.workflow.peak.core.detectors)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.resolve_detector_configuration_values">resolve_detector_configuration_values() (ModelConfiguration static method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.resolve_detector_configuration_visibility_style">resolve_detector_configuration_visibility_style() (ModelConfiguration static method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.resolve_detector_preset_brand">resolve_detector_preset_brand() (ModelConfiguration static method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.resolve_detector_preset_model">resolve_detector_preset_model() (ModelConfiguration static method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.resolve_detector_preset_wavelength_nm">resolve_detector_preset_wavelength_nm() (ModelConfiguration static method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.core.detectors.resolve_detector_selection_mode">resolve_detector_selection_mode() (in module RosettaX.workflow.peak.core.detectors)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.service.resolve_first_fcs_path">resolve_first_fcs_path() (in module RosettaX.utils.service)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.parameters.table.resolve_mie_model">resolve_mie_model() (in module RosettaX.workflow.parameters.table)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.resolve_mie_model">(in module RosettaX.workflow.scattering.calibration_services)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.resolve_mie_model">(ModelConfiguration static method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.resolve_monotonic_target_mie_relation">resolve_monotonic_target_mie_relation() (in module RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.resolve_optical_configuration_preview_parameters">resolve_optical_configuration_preview_parameters() (ModelConfiguration static method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.resolve_peak_table_sort_order">resolve_peak_table_sort_order() (BasePeakWorkflowAdapter method)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.resolve_preview_control_defaults">resolve_preview_control_defaults() (in module RosettaX.pages.p04_calibrate.sections.s03_file_picker.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.registry.resolve_process_name">resolve_process_name() (in module RosettaX.workflow.peak.registry)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.core.detectors.resolve_process_setting_state">resolve_process_setting_state() (in module RosettaX.workflow.peak.core.detectors)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.parameters.refractive_index.resolve_refractive_index_source_value">resolve_refractive_index_source_value() (in module RosettaX.workflow.parameters.refractive_index)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.parameters.refractive_index.resolve_refractive_index_value">resolve_refractive_index_value() (in module RosettaX.workflow.parameters.refractive_index)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.services.resolve_requested_output_channel_name">resolve_requested_output_channel_name() (in module RosettaX.workflow.apply_calibration.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.core.detectors.resolve_rule_based_detector_channel">resolve_rule_based_detector_channel() (in module RosettaX.workflow.peak.core.detectors)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.resolve_runtime_detector_preset">resolve_runtime_detector_preset() (ModelConfiguration static method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.resolve_runtime_scatterer_preset">resolve_runtime_scatterer_preset() (ModelConfiguration static method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.resolve_scatterer_preset_values">resolve_scatterer_preset_values() (ModelConfiguration static method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.resolve_scattering_target_model_preset">resolve_scattering_target_model_preset() (in module RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.resolve_selected_preview_path">resolve_selected_preview_path() (in module RosettaX.pages.p04_calibrate.sections.s03_file_picker.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.services.resolve_source_channel">resolve_source_channel() (in module RosettaX.workflow.apply_calibration.services)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.resolve_target_mie_model">resolve_target_mie_model() (in module RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services)</a>
+
+      <ul>
+        <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s04_apply.services.resolve_target_mie_model">(in module RosettaX.pages.p04_calibrate.sections.s04_apply.services)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.resolve_target_mie_model">(in module RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.services.resolve_unique_output_channel_name">resolve_unique_output_channel_name() (in module RosettaX.workflow.apply_calibration.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.services.resolve_upload_directory">resolve_upload_directory() (in module RosettaX.workflow.upload.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.result_has_table_data">result_has_table_data() (BasePeakWorkflowAdapter method)</a>
+</li>
+      <li>
+    RosettaX
+
+      <ul>
+        <li><a href="code.html#module-RosettaX">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.application.callbacks
+
+      <ul>
+        <li><a href="api/application.html#module-RosettaX.application.callbacks">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.application.layout
+
+      <ul>
+        <li><a href="api/application.html#module-RosettaX.application.layout">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.application.main
+
+      <ul>
+        <li><a href="api/application.html#module-RosettaX.application.main">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.application.pages
+
+      <ul>
+        <li><a href="api/application.html#module-RosettaX.application.pages">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.application.routes
+
+      <ul>
+        <li><a href="api/application.html#module-RosettaX.application.routes">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.pages.p02_fluorescence.state
+
+      <ul>
+        <li><a href="api/pages.html#module-RosettaX.pages.p02_fluorescence.state">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.pages.p03_scattering.backend
+
+      <ul>
+        <li><a href="api/pages.html#module-RosettaX.pages.p03_scattering.backend">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.pages.p03_scattering.state
+
+      <ul>
+        <li><a href="api/pages.html#module-RosettaX.pages.p03_scattering.state">module</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services
+
+      <ul>
+        <li><a href="api/pages.html#module-RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.pages.p04_calibrate.sections.s03_file_picker.services
+
+      <ul>
+        <li><a href="api/pages.html#module-RosettaX.pages.p04_calibrate.sections.s03_file_picker.services">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.pages.p04_calibrate.sections.s04_apply.services
+
+      <ul>
+        <li><a href="api/pages.html#module-RosettaX.pages.p04_calibrate.sections.s04_apply.services">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.utils.casting
+
+      <ul>
+        <li><a href="api/utilities.html#module-RosettaX.utils.casting">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.utils.checks
+
+      <ul>
+        <li><a href="api/utilities.html#module-RosettaX.utils.checks">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.utils.fcs_metadata
+
+      <ul>
+        <li><a href="api/utilities.html#module-RosettaX.utils.fcs_metadata">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.utils.io
+
+      <ul>
+        <li><a href="api/utilities.html#module-RosettaX.utils.io">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.utils.parser
+
+      <ul>
+        <li><a href="api/utilities.html#module-RosettaX.utils.parser">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.utils.reader
+
+      <ul>
+        <li><a href="api/utilities.html#module-RosettaX.utils.reader">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.utils.runtime_config
+
+      <ul>
+        <li><a href="api/utilities.html#module-RosettaX.utils.runtime_config">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.utils.service
+
+      <ul>
+        <li><a href="api/utilities.html#module-RosettaX.utils.service">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.utils.styling
+
+      <ul>
+        <li><a href="api/utilities.html#module-RosettaX.utils.styling">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.workflow.apply_calibration.fluorescence
+
+      <ul>
+        <li><a href="api/workflows.html#module-RosettaX.workflow.apply_calibration.fluorescence">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.workflow.apply_calibration.scattering
+
+      <ul>
+        <li><a href="api/workflows.html#module-RosettaX.workflow.apply_calibration.scattering">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.workflow.apply_calibration.services
+
+      <ul>
+        <li><a href="api/workflows.html#module-RosettaX.workflow.apply_calibration.services">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.workflow.parameters.model
+
+      <ul>
+        <li><a href="api/workflows.html#module-RosettaX.workflow.parameters.model">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.workflow.parameters.refractive_index
+
+      <ul>
+        <li><a href="api/workflows.html#module-RosettaX.workflow.parameters.refractive_index">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.workflow.parameters.table
+
+      <ul>
+        <li><a href="api/workflows.html#module-RosettaX.workflow.parameters.table">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.workflow.peak.adapters.base
+
+      <ul>
+        <li><a href="api/workflows.html#module-RosettaX.workflow.peak.adapters.base">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.workflow.peak.core.detectors
+
+      <ul>
+        <li><a href="api/workflows.html#module-RosettaX.workflow.peak.core.detectors">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.workflow.peak.core.graphing
+
+      <ul>
+        <li><a href="api/workflows.html#module-RosettaX.workflow.peak.core.graphing">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.workflow.peak.registry
+
+      <ul>
+        <li><a href="api/workflows.html#module-RosettaX.workflow.peak.registry">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.workflow.save.models
+
+      <ul>
+        <li><a href="api/workflows.html#module-RosettaX.workflow.save.models">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.workflow.save.services
+
+      <ul>
+        <li><a href="api/workflows.html#module-RosettaX.workflow.save.services">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.workflow.scattering.calibration_services
+
+      <ul>
+        <li><a href="api/workflows.html#module-RosettaX.workflow.scattering.calibration_services">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.workflow.scattering.mie_relation
+
+      <ul>
+        <li><a href="api/workflows.html#module-RosettaX.workflow.scattering.mie_relation">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.workflow.scattering.model
+
+      <ul>
+        <li><a href="api/workflows.html#module-RosettaX.workflow.scattering.model">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.workflow.upload.models
+
+      <ul>
+        <li><a href="api/workflows.html#module-RosettaX.workflow.upload.models">module</a>
+</li>
+      </ul></li>
+      <li>
+    RosettaX.workflow.upload.services
+
+      <ul>
+        <li><a href="api/workflows.html#module-RosettaX.workflow.upload.services">module</a>
+</li>
+      </ul></li>
+      <li><a href="api/application.html#RosettaX.application.main.RosettaXApplication">RosettaXApplication (class in RosettaX.application.main)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ParsedCoreShellStandardRows.row_count">row_count (ParsedCoreShellStandardRows property)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ParsedSphereStandardRows.row_count">(ParsedSphereStandardRows property)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ParsedCoreShellStandardRows.row_indices">row_indices (ParsedCoreShellStandardRows attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ParsedSphereStandardRows.row_indices">(ParsedSphereStandardRows attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/application.html#RosettaX.application.main.RosettaXApplication.run">run() (RosettaXApplication method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.save.services.run_save_workflow">run_save_workflow() (in module RosettaX.workflow.save.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.models.UploadCallbackResult.runtime_config_data">runtime_config_data (UploadCallbackResult attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.upload.models.UploadState.runtime_config_data">(UploadState attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.models.UploadConfig.runtime_config_output_path">runtime_config_output_path (UploadConfig attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.models.UploadConfig.runtime_config_store_id">runtime_config_store_id (UploadConfig attribute)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig">RuntimeConfig (class in RosettaX.utils.runtime_config)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfigField">RuntimeConfigField (class in RosettaX.utils.runtime_config)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfigValidationError">RuntimeConfigValidationError</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="S">S</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/utilities.html#RosettaX.utils.service.sanitize_filename">sanitize_filename() (in module RosettaX.utils.service)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.upload.services.sanitize_filename">(in module RosettaX.workflow.upload.services)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.mie_relation.sanitize_relation_arrays">sanitize_relation_arrays() (in module RosettaX.workflow.scattering.mie_relation)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.save.services.save_calibration_payload">save_calibration_payload() (in module RosettaX.workflow.save.services)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.service.save_calibration_to_file">save_calibration_to_file() (in module RosettaX.utils.service)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.save.models.SaveResult.save_out">save_out (SaveResult attribute)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.save_single_uploaded_file">save_single_uploaded_file() (in module RosettaX.pages.p04_calibrate.sections.s03_file_picker.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.services.save_uploaded_batch">save_uploaded_batch() (in module RosettaX.workflow.upload.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.services.save_uploaded_file">save_uploaded_file() (in module RosettaX.workflow.upload.services)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.save_uploaded_files">save_uploaded_files() (in module RosettaX.pages.p04_calibrate.sections.s03_file_picker.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.save.models.SaveConfig">SaveConfig (class in RosettaX.workflow.save.models)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.save.models.SaveConfig.saved_message_prefix">saved_message_prefix (SaveConfig attribute)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.service.SavedCalibrationInfo">SavedCalibrationInfo (class in RosettaX.utils.service)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.save.models.SaveInputs">SaveInputs (class in RosettaX.workflow.save.models)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.save.models.SaveResult">SaveResult (class in RosettaX.workflow.save.models)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.service.ChannelOptions.scatter_options">scatter_options (ChannelOptions attribute)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.service.ChannelOptions.scatter_value">scatter_value (ChannelOptions attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.scatterer_preset_disables_manual_controls">scatterer_preset_disables_manual_controls() (ModelConfiguration static method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.services.CalibrationApplication.scattering_target_model_parameters">scattering_target_model_parameters (CalibrationApplication attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringApplicationResult">ScatteringApplicationResult (class in RosettaX.workflow.scattering.calibration_services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringApplyResult">ScatteringApplyResult (class in RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringCalibration">ScatteringCalibration (class in RosettaX.workflow.scattering.calibration_services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringCalibrationBuildResult">ScatteringCalibrationBuildResult (class in RosettaX.workflow.scattering.calibration_services)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult">ScatteringCalibrationFitResult (class in RosettaX.pages.p03_scattering.backend)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ScatteringCalibrationScattererPreset">ScatteringCalibrationScattererPreset (class in RosettaX.workflow.scattering.model)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringInstrumentResponse">ScatteringInstrumentResponse (class in RosettaX.workflow.scattering.calibration_services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ScatteringModelDefaults">ScatteringModelDefaults (class in RosettaX.workflow.scattering.model)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringOutputColumns">ScatteringOutputColumns (class in RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelParameters">ScatteringTargetModelParameters (class in RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelPreset">ScatteringTargetModelPreset (class in RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig.SCHEMA">SCHEMA (RuntimeConfig attribute)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.service.ChannelOptions.secondary_options">secondary_options (ChannelOptions attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/utilities.html#RosettaX.utils.service.ChannelOptions.secondary_value">secondary_value (ChannelOptions attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.select_largest_monotonic_interval">select_largest_monotonic_interval() (in module RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.services.CalibrationApplication.selected_calibration">selected_calibration (CalibrationApplication attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.MonotonicRelationResolution.selected_interval">selected_interval (MonotonicRelationResolution attribute)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.service.serialize_calibration_record">serialize_calibration_record() (in module RosettaX.utils.service)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.services.set_nested_dict_value">set_nested_dict_value() (in module RosettaX.workflow.upload.services)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig.set_path">set_path() (RuntimeConfig method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.CoreShellSphereTargetModel.shell_refractive_index">shell_refractive_index (CoreShellSphereTargetModel attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.OpticalParameters.shell_refractive_index">(OpticalParameters attribute)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ScatteringCalibrationScattererPreset.shell_refractive_index">(ScatteringCalibrationScattererPreset attribute)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ScatteringModelDefaults.shell_refractive_index">(ScatteringModelDefaults attribute)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelParameters.shell_refractive_index">(ScatteringTargetModelParameters property)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelPreset.shell_refractive_index">(ScatteringTargetModelPreset attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.shell_refractive_index_presets">shell_refractive_index_presets (ModelConfiguration attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ScatteringCalibrationScattererPreset.shell_refractive_index_source">shell_refractive_index_source (ScatteringCalibrationScattererPreset attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelPreset.shell_refractive_index_source">(ScatteringTargetModelPreset attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.CoreShellSphereTargetModel.shell_thickness_nm">shell_thickness_nm (CoreShellSphereTargetModel attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelParameters.shell_thickness_nm">(ScatteringTargetModelParameters property)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelPreset.shell_thickness_nm">(ScatteringTargetModelPreset attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ParsedCoreShellStandardRows.shell_thicknesses_nm">shell_thicknesses_nm (ParsedCoreShellStandardRows attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ScatteringCalibrationScattererPreset.shell_thicknesses_nm">(ScatteringCalibrationScattererPreset attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/pages.html#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.slope">slope (ScatteringCalibrationFitResult attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringInstrumentResponse.slope">(ScatteringInstrumentResponse attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.SolidSphereTargetModel">SolidSphereTargetModel (class in RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.sort_peak_table_values">sort_peak_table_values() (BasePeakWorkflowAdapter method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.services.ApplyCalibrationFilesResult.source_channel">source_channel (ApplyCalibrationFilesResult attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringCalibration.source_channel">(ScatteringCalibration property)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.OpticalParameters.source_numerical_aperture">source_numerical_aperture (OpticalParameters attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringCalibrationBuildResult.standard_coupling_values">standard_coupling_values (ScatteringCalibrationBuildResult attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringCalibrationBuildResult.standard_diameters_nm">standard_diameters_nm (ScatteringCalibrationBuildResult attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.MonotonicDiameterInterval.start_index">start_index (MonotonicDiameterInterval attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.services.ApplyCalibrationFilesResult.status">status (ApplyCalibrationFilesResult attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="T">T</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/workflows.html#RosettaX.workflow.parameters.table.table_is_effectively_empty">table_is_effectively_empty() (in module RosettaX.workflow.parameters.table)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.MonotonicRelationResolution.target_mie_relation">target_mie_relation (MonotonicRelationResolution attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringApplicationResult.target_mie_relation">(ScatteringApplicationResult attribute)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringApplyResult.target_mie_relation">(ScatteringApplyResult attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelParameters.target_model">target_model (ScatteringTargetModelParameters attribute)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.reader.FCSFile.text">text (FCSFile attribute)</a>
+
+      <ul>
+        <li><a href="api/utilities.html#RosettaX.utils.fcs_metadata.FCSMetadata.text">(FCSMetadata attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.mie_relation.MieRelation.theoretical_coupling">theoretical_coupling (MieRelation attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ScatteringModelDefaults.to_callback_values">to_callback_values() (ScatteringModelDefaults method)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.fcs_metadata.FCSMetadata.to_dataframe_attrs">to_dataframe_attrs() (FCSMetadata method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.models.FCSBatchOperationResult.to_dict">to_dict() (FCSBatchOperationResult method)</a>
+
+      <ul>
+        <li><a href="api/utilities.html#RosettaX.utils.fcs_metadata.FCSMetadata.to_dict">(FCSMetadata method)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.mie_relation.MieRelation.to_dict">(MieRelation method)</a>
+</li>
+        <li><a href="api/pages.html#RosettaX.pages.p03_scattering.backend.ModeledCouplingResult.to_dict">(ModeledCouplingResult method)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.PeakWorkflowPageState.to_dict">(PeakWorkflowPageState method)</a>
+</li>
+        <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig.to_dict">(RuntimeConfig method)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringApplicationResult.to_dict">(ScatteringApplicationResult method)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringCalibration.to_dict">(ScatteringCalibration method)</a>
+</li>
+        <li><a href="api/pages.html#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.to_dict">(ScatteringCalibrationFitResult method)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringInstrumentResponse.to_dict">(ScatteringInstrumentResponse method)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelPreset.to_dict">(ScatteringTargetModelPreset method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig.to_json">to_json() (RuntimeConfig method)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig.to_json_path">to_json_path() (RuntimeConfig method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.MonotonicDiameterInterval.to_message_fragment">to_message_fragment() (MonotonicDiameterInterval method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.CoreShellSphereTargetModel.to_parameter_payload">to_parameter_payload() (CoreShellSphereTargetModel method)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.OpticalParameters.to_parameter_payload">(OpticalParameters method)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelParameters.to_parameter_payload">(ScatteringTargetModelParameters method)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.SolidSphereTargetModel.to_parameter_payload">(SolidSphereTargetModel method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.save.models.SaveResult.to_tuple">to_tuple() (SaveResult method)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.upload.models.UploadCallbackResult.to_tuple">(UploadCallbackResult method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.MonotonicDiameterInterval.trend">trend (MonotonicDiameterInterval attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="U">U</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig.update">update() (RuntimeConfig method)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig.update_paths">update_paths() (RuntimeConfig method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.update_peak_lines_payload">update_peak_lines_payload() (BasePeakWorkflowAdapter method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringCalibrationBuildResult.updated_table_rows">updated_table_rows (ScatteringCalibrationBuildResult attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.models.UploadConfig.upload_directory">upload_directory (UploadConfig attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.models.UploadConfig.upload_link_text">upload_link_text (UploadConfig attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.models.UploadCallbackResult">UploadCallbackResult (class in RosettaX.workflow.upload.models)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.models.UploadConfig">UploadConfig (class in RosettaX.workflow.upload.models)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.models.UploadState.uploaded_fcs_path">uploaded_fcs_path (UploadState attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.uploaded_fcs_path_keys">uploaded_fcs_path_keys (BasePeakWorkflowAdapter attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.services.ApplyCalibrationRequest.uploaded_fcs_paths">uploaded_fcs_paths (ApplyCalibrationRequest attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.models.UploadState.uploaded_filename">uploaded_filename (UploadState attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.models.UploadState">UploadState (class in RosettaX.workflow.upload.models)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelParameters.use_monotonic_smoothing_kernel">use_monotonic_smoothing_kernel (ScatteringTargetModelParameters attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.MonotonicRelationResolution.used_auto_largest_branch">used_auto_largest_branch (MonotonicRelationResolution attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="V">V</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.mie_relation.MieRelation.valid_max_coupling">valid_max_coupling (MieRelation attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.mie_relation.MieRelation.valid_max_diameter_nm">valid_max_diameter_nm (MieRelation attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.mie_relation.MieRelation.valid_min_coupling">valid_min_coupling (MieRelation attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.mie_relation.MieRelation.valid_min_diameter_nm">valid_min_diameter_nm (MieRelation attribute)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig.validate">validate() (RuntimeConfig method)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.validate_checks_contract">validate_checks_contract() (in module RosettaX.pages.p04_calibrate.sections.s03_file_picker.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.validate_diameter_grid_parameters">validate_diameter_grid_parameters() (in module RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.services.validate_fcs_metadata">validate_fcs_metadata() (in module RosettaX.workflow.upload.services)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig.validate_known_paths_on_init">validate_known_paths_on_init (RuntimeConfig attribute)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.validate_page_contract">validate_page_contract() (in module RosettaX.pages.p04_calibrate.sections.s03_file_picker.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.save.services.validate_save_inputs">validate_save_inputs() (in module RosettaX.workflow.save.services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.validate_target_mie_relation_for_diameter_inversion">validate_target_mie_relation_for_diameter_inversion() (in module RosettaX.workflow.apply_calibration.scattering)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.upload.services.validate_upload_filename">validate_upload_filename() (in module RosettaX.workflow.upload.services)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.validate_upload_payload">validate_upload_payload() (in module RosettaX.pages.p04_calibrate.sections.s03_file_picker.services)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.service.verify_reproducibility_metadata">verify_reproducibility_metadata() (in module RosettaX.utils.service)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringCalibration.version">version (ScatteringCalibration attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="W">W</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.services.ApplyCalibrationFilesResult.warnings">warnings (ApplyCalibrationFilesResult attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.MonotonicRelationResolution.warnings">(MonotonicRelationResolution attribute)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringApplicationResult.warnings">(ScatteringApplicationResult attribute)</a>
+</li>
+        <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringApplyResult.warnings">(ScatteringApplyResult attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.OpticalParameters.wavelength_nm">wavelength_nm (OpticalParameters attribute)</a>
+
+      <ul>
+        <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ScatteringModelDefaults.wavelength_nm">(ScatteringModelDefaults attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig.with_path">with_path() (RuntimeConfig method)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig.with_path_updates">with_path_updates() (RuntimeConfig method)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig.with_updates">with_updates() (RuntimeConfig method)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.reader.FCSFile.writable">writable (FCSFile attribute)</a>
+</li>
+      <li><a href="api/utilities.html#RosettaX.utils.reader.FCSBuilder.write">write() (FCSBuilder method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.write_expected_coupling_into_sphere_table">write_expected_coupling_into_sphere_table() (in module RosettaX.workflow.scattering.calibration_services)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.write_expected_coupling_into_table">write_expected_coupling_into_table() (in module RosettaX.workflow.scattering.calibration_services)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright Martin Poinsinet de Sivry-Houle.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

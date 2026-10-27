@@ -1,0 +1,1604 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../" data-theme="dark">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RosettaX.workflow.scattering.model &#8212; RosettaX 0.10.9 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "dark";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "dark";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery.css?v=c83e6b79" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/default.css?v=22616357" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/martinpdes_layout.css?v=a8cc01cd" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/layout.css?v=dc96f8db" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../../_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../../../../_static/documentation_options.js?v=9d400afe"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/sg-tags.js?v=d80f6fa4"></script>
+    <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/RosettaX/workflow/scattering/model';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/MartinPdeS/RosettaX/documentation_page/version_switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.10.9';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="../../../../_static/favicon.svg"/>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.10.9" />
+  
+    
+    <script src="../../../../_static/searchtools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <script src="../../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="dark">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="../../../../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.10.9 documentation - Home"/>
+    <img src="../../../../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.10.9 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../quickstart.html">
+    Start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../interface.html">
+    Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../theory.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../code.html">
+    API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../resources.html">
+    Resources
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../privacy.html">
+    Privacy policy
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MartinPdeS/RosettaX" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/RosettaX/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-box fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://anaconda.org/MartinPdeS/RosettaX" title="Anaconda" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">Anaconda</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../quickstart.html">
+    Start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../interface.html">
+    Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../theory.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../code.html">
+    API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../resources.html">
+    Resources
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../privacy.html">
+    Privacy policy
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MartinPdeS/RosettaX" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/RosettaX/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-box fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://anaconda.org/MartinPdeS/RosettaX" title="Anaconda" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">Anaconda</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">RosettaX.workflow.scattering.model</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for RosettaX.workflow.scattering.model</h1><div class="highlight"><pre>
+<span></span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">lru_cache</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">plotly.graph_objs</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">go</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">RuntimeConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.workflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">detector</span><span class="p">,</span> <span class="n">parameters</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.workflow.parameters.refractive_index</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">format_refractive_index_display</span><span class="p">,</span>
+    <span class="n">resolve_refractive_index_source_value</span><span class="p">,</span>
+    <span class="n">resolve_refractive_index_value</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.workflow.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">services</span> <span class="k">as</span> <span class="n">table_services</span>
+
+<span class="n">CUSTOM_SCATTERER_PRESET_NAME</span> <span class="o">=</span> <span class="s2">"Custom"</span>
+<span class="n">NO_SCATTERER_PRESET_NAME</span> <span class="o">=</span> <span class="s2">""</span>
+<span class="n">ROSETTA_MIX_PRESET_NAME</span> <span class="o">=</span> <span class="s2">"Rosetta Mix"</span>
+<span class="n">SMALL_PARTICLE_STANDARD_PRESET_NAME</span> <span class="o">=</span> <span class="s2">"Small particle standard"</span>
+<span class="n">BROAD_PARTICLE_STANDARD_PRESET_NAME</span> <span class="o">=</span> <span class="s2">"Broad particle standard"</span>
+
+
+<div class="viewcode-block" id="ScatteringCalibrationScattererPreset">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.scattering.model.ScatteringCalibrationScattererPreset">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ScatteringCalibrationScattererPreset</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Preset values for scattering calibration standards.</span>
+<span class="sd">    """</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">mie_model</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">medium_refractive_index</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">particle_refractive_index</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">core_refractive_index</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">shell_refractive_index</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">medium_refractive_index_source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">particle_refractive_index_source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">core_refractive_index_source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">shell_refractive_index_source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">particle_diameters_nm</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">core_diameters_nm</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">shell_thicknesses_nm</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span></div>
+
+
+
+<span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_load_scattering_calibration_scatterer_preset_payloads</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Load scatterer preset payloads from the packaged assets directory.</span>
+<span class="sd">    """</span>
+    <span class="n">asset_directory</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">parents</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="o">/</span> <span class="s2">"assets"</span>
+        <span class="o">/</span> <span class="s2">"scatterer_presets"</span>
+    <span class="p">)</span>
+
+    <span class="n">preset_payloads</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">json_path</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">asset_directory</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"*.json"</span><span class="p">)):</span>
+        <span class="k">with</span> <span class="n">json_path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span>
+            <span class="s2">"r"</span><span class="p">,</span>
+            <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">,</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span>
+            <span class="n">payload</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">payload</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Scatterer preset file must contain a JSON object: </span><span class="si">{</span><span class="n">json_path</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+
+        <span class="n">preset_payloads</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">preset_payloads</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="build_scattering_calibration_scatterer_presets">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.scattering.model.build_scattering_calibration_scatterer_presets">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_scattering_calibration_scatterer_presets</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScatteringCalibrationScattererPreset</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Build presets used when creating scattering calibration standards.</span>
+<span class="sd">    """</span>
+    <span class="n">presets</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScatteringCalibrationScattererPreset</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">preset_payload</span> <span class="ow">in</span> <span class="n">_load_scattering_calibration_scatterer_preset_payloads</span><span class="p">():</span>
+        <span class="n">preset</span> <span class="o">=</span> <span class="n">ScatteringCalibrationScattererPreset</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">preset_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span>
+            <span class="n">mie_model</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">preset_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"mie_model"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"Solid Sphere"</span><span class="p">),</span>
+            <span class="n">medium_refractive_index</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span>
+                <span class="n">preset_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"medium_refractive_index"</span><span class="p">,</span> <span class="mf">1.333</span><span class="p">)</span>
+            <span class="p">),</span>
+            <span class="n">particle_refractive_index</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span>
+                <span class="n">preset_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"particle_refractive_index"</span><span class="p">,</span> <span class="mf">1.59</span><span class="p">)</span>
+            <span class="p">),</span>
+            <span class="n">core_refractive_index</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span>
+                <span class="n">preset_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"core_refractive_index"</span><span class="p">,</span> <span class="mf">1.47</span><span class="p">)</span>
+            <span class="p">),</span>
+            <span class="n">shell_refractive_index</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span>
+                <span class="n">preset_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"shell_refractive_index"</span><span class="p">,</span> <span class="mf">1.46</span><span class="p">)</span>
+            <span class="p">),</span>
+            <span class="n">medium_refractive_index_source</span><span class="o">=</span><span class="n">preset_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s2">"medium_refractive_index_source"</span>
+            <span class="p">),</span>
+            <span class="n">particle_refractive_index_source</span><span class="o">=</span><span class="n">preset_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s2">"particle_refractive_index_source"</span>
+            <span class="p">),</span>
+            <span class="n">core_refractive_index_source</span><span class="o">=</span><span class="n">preset_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s2">"core_refractive_index_source"</span>
+            <span class="p">),</span>
+            <span class="n">shell_refractive_index_source</span><span class="o">=</span><span class="n">preset_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s2">"shell_refractive_index_source"</span>
+            <span class="p">),</span>
+            <span class="n">particle_diameters_nm</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span>
+                <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">preset_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"particle_diameters_nm"</span><span class="p">,</span> <span class="p">[])</span>
+            <span class="p">),</span>
+            <span class="n">core_diameters_nm</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span>
+                <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">preset_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"core_diameters_nm"</span><span class="p">,</span> <span class="p">[])</span>
+            <span class="p">),</span>
+            <span class="n">shell_thicknesses_nm</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span>
+                <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">preset_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"shell_thicknesses_nm"</span><span class="p">,</span> <span class="p">[])</span>
+            <span class="p">),</span>
+            <span class="n">description</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">preset_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"description"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">preset</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+            <span class="n">presets</span><span class="p">[</span><span class="n">preset</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">preset</span>
+
+    <span class="k">return</span> <span class="n">presets</span></div>
+
+
+
+<div class="viewcode-block" id="build_scattering_calibration_scatterer_preset_options">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.scattering.model.build_scattering_calibration_scatterer_preset_options">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_scattering_calibration_scatterer_preset_options</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Build Dash dropdown options for calibration scatterer presets.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"Select"</span><span class="p">,</span>
+            <span class="s2">"value"</span><span class="p">:</span> <span class="n">NO_SCATTERER_PRESET_NAME</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="o">*</span><span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">"label"</span><span class="p">:</span> <span class="n">preset</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="s2">"value"</span><span class="p">:</span> <span class="n">preset</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">preset</span> <span class="ow">in</span> <span class="n">build_scattering_calibration_scatterer_presets</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="p">],</span>
+    <span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="get_scattering_calibration_scatterer_preset">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.scattering.model.get_scattering_calibration_scatterer_preset">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_scattering_calibration_scatterer_preset</span><span class="p">(</span>
+    <span class="n">preset_name</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScatteringCalibrationScattererPreset</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Resolve one calibration scatterer preset by name.</span>
+<span class="sd">    """</span>
+    <span class="n">presets</span> <span class="o">=</span> <span class="n">build_scattering_calibration_scatterer_presets</span><span class="p">()</span>
+
+    <span class="n">preset_name_string</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">preset_name</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">preset_name_string</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">presets</span><span class="p">[</span><span class="n">CUSTOM_SCATTERER_PRESET_NAME</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">presets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="n">preset_name_string</span><span class="p">,</span>
+        <span class="n">presets</span><span class="p">[</span><span class="n">CUSTOM_SCATTERER_PRESET_NAME</span><span class="p">],</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="ScatteringModelDefaults">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.scattering.model.ScatteringModelDefaults">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ScatteringModelDefaults</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Default values for scattering model and optical configuration controls.</span>
+<span class="sd">    """</span>
+
+    <span class="n">mie_model</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">wavelength_nm</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">detector_numerical_aperture</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">detector_cache_numerical_aperture</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">blocker_bar_numerical_aperture</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">detector_sampling</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">detector_phi_angle_degree</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">detector_gamma_angle_degree</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">medium_refractive_index</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">particle_refractive_index</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">core_refractive_index</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">shell_refractive_index</span><span class="p">:</span> <span class="nb">float</span>
+
+<div class="viewcode-block" id="ScatteringModelDefaults.from_runtime_config">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.scattering.model.ScatteringModelDefaults.from_runtime_config">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_runtime_config</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">runtime_config</span><span class="p">:</span> <span class="n">RuntimeConfig</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"ScatteringModelDefaults"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Build scattering defaults from a runtime configuration.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">mie_model</span><span class="o">=</span><span class="n">runtime_config</span><span class="o">.</span><span class="n">get_str</span><span class="p">(</span>
+                <span class="s2">"particle_model.mie_model"</span><span class="p">,</span>
+                <span class="n">default</span><span class="o">=</span><span class="s2">"Solid Sphere"</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">wavelength_nm</span><span class="o">=</span><span class="n">runtime_config</span><span class="o">.</span><span class="n">get_float</span><span class="p">(</span>
+                <span class="s2">"optics.wavelength_nm"</span><span class="p">,</span>
+                <span class="n">default</span><span class="o">=</span><span class="mf">700.0</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">detector_numerical_aperture</span><span class="o">=</span><span class="n">runtime_config</span><span class="o">.</span><span class="n">get_float</span><span class="p">(</span>
+                <span class="s2">"optics.detector_numerical_aperture"</span><span class="p">,</span>
+                <span class="n">default</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">detector_cache_numerical_aperture</span><span class="o">=</span><span class="n">runtime_config</span><span class="o">.</span><span class="n">get_float</span><span class="p">(</span>
+                <span class="s2">"optics.detector_cache_numerical_aperture"</span><span class="p">,</span>
+                <span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">blocker_bar_numerical_aperture</span><span class="o">=</span><span class="n">runtime_config</span><span class="o">.</span><span class="n">get_float</span><span class="p">(</span>
+                <span class="s2">"optics.blocker_bar_numerical_aperture"</span><span class="p">,</span>
+                <span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">detector_sampling</span><span class="o">=</span><span class="n">runtime_config</span><span class="o">.</span><span class="n">get_int</span><span class="p">(</span>
+                <span class="s2">"optics.detector_sampling"</span><span class="p">,</span>
+                <span class="n">default</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">detector_phi_angle_degree</span><span class="o">=</span><span class="n">runtime_config</span><span class="o">.</span><span class="n">get_float</span><span class="p">(</span>
+                <span class="s2">"optics.detector_phi_angle_degree"</span><span class="p">,</span>
+                <span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">detector_gamma_angle_degree</span><span class="o">=</span><span class="n">runtime_config</span><span class="o">.</span><span class="n">get_float</span><span class="p">(</span>
+                <span class="s2">"optics.detector_gamma_angle_degree"</span><span class="p">,</span>
+                <span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">medium_refractive_index</span><span class="o">=</span><span class="n">runtime_config</span><span class="o">.</span><span class="n">get_float</span><span class="p">(</span>
+                <span class="s2">"optics.medium_refractive_index"</span><span class="p">,</span>
+                <span class="n">default</span><span class="o">=</span><span class="mf">1.333</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">particle_refractive_index</span><span class="o">=</span><span class="n">runtime_config</span><span class="o">.</span><span class="n">get_float</span><span class="p">(</span>
+                <span class="s2">"particle_model.particle_refractive_index"</span><span class="p">,</span>
+                <span class="n">default</span><span class="o">=</span><span class="mf">1.59</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">core_refractive_index</span><span class="o">=</span><span class="n">runtime_config</span><span class="o">.</span><span class="n">get_float</span><span class="p">(</span>
+                <span class="s2">"particle_model.core_refractive_index"</span><span class="p">,</span>
+                <span class="n">default</span><span class="o">=</span><span class="mf">1.47</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">shell_refractive_index</span><span class="o">=</span><span class="n">runtime_config</span><span class="o">.</span><span class="n">get_float</span><span class="p">(</span>
+                <span class="s2">"particle_model.shell_refractive_index"</span><span class="p">,</span>
+                <span class="n">default</span><span class="o">=</span><span class="mf">1.46</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ScatteringModelDefaults.from_default_profile">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.scattering.model.ScatteringModelDefaults.from_default_profile">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_default_profile</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"ScatteringModelDefaults"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Build scattering defaults from the default runtime profile.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_runtime_config</span><span class="p">(</span>
+            <span class="n">RuntimeConfig</span><span class="o">.</span><span class="n">from_default_profile</span><span class="p">(),</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ScatteringModelDefaults.to_callback_values">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.scattering.model.ScatteringModelDefaults.to_callback_values">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_callback_values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return values in the callback output order used by the scattering page.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mie_model</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">medium_refractive_index</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">particle_refractive_index</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">core_refractive_index</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">shell_refractive_index</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wavelength_nm</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">detector_numerical_aperture</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">detector_cache_numerical_aperture</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">blocker_bar_numerical_aperture</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">detector_sampling</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">detector_phi_angle_degree</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">detector_gamma_angle_degree</span><span class="p">,</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="ModelConfiguration">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ModelConfiguration</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Reusable scattering model configuration helpers.</span>
+
+<span class="sd">    This class contains logic that can be shared by the scattering calibration</span>
+<span class="sd">    page and by the apply calibration page when building target particle models.</span>
+<span class="sd">    """</span>
+
+    <span class="n">custom_detector_preset_name</span> <span class="o">=</span> <span class="n">detector</span><span class="o">.</span><span class="n">CUSTOM_DETECTOR_PRESET_NAME</span>
+    <span class="n">custom_scatterer_preset_name</span> <span class="o">=</span> <span class="n">CUSTOM_SCATTERER_PRESET_NAME</span>
+
+    <span class="n">mie_model_options</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">particle_presets</span><span class="o">.</span><span class="n">MIE_MODEL_OPTIONS</span>
+    <span class="n">medium_refractive_index_presets</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">particle_presets</span><span class="o">.</span><span class="n">MEDIUM_REFRACTIVE_INDEX_PRESETS</span>
+    <span class="n">particle_refractive_index_presets</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">particle_presets</span><span class="o">.</span><span class="n">PARTICLE_REFRACTIVE_INDEX_PRESETS</span>
+    <span class="n">core_refractive_index_presets</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">particle_presets</span><span class="o">.</span><span class="n">CORE_REFRACTIVE_INDEX_PRESETS</span>
+    <span class="n">shell_refractive_index_presets</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">particle_presets</span><span class="o">.</span><span class="n">SHELL_REFRACTIVE_INDEX_PRESETS</span>
+
+<div class="viewcode-block" id="ModelConfiguration.build_defaults_from_runtime_config">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.build_defaults_from_runtime_config">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_defaults_from_runtime_config</span><span class="p">(</span>
+        <span class="n">runtime_config_data</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScatteringModelDefaults</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Build scattering defaults from raw runtime store data.</span>
+<span class="sd">        """</span>
+        <span class="n">runtime_config</span> <span class="o">=</span> <span class="n">RuntimeConfig</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
+            <span class="n">runtime_config_data</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">runtime_config_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ScatteringModelDefaults</span><span class="o">.</span><span class="n">from_runtime_config</span><span class="p">(</span>
+            <span class="n">runtime_config</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelConfiguration.build_default_profile_defaults">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.build_default_profile_defaults">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_default_profile_defaults</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">ScatteringModelDefaults</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Build scattering defaults from the default runtime profile.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">ScatteringModelDefaults</span><span class="o">.</span><span class="n">from_default_profile</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ModelConfiguration.resolve_mie_model">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.resolve_mie_model">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">resolve_mie_model</span><span class="p">(</span>
+        <span class="n">mie_model</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Normalize the selected Mie model.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">parameters</span><span class="o">.</span><span class="n">resolve_mie_model</span><span class="p">(</span>
+            <span class="n">mie_model</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelConfiguration.build_detector_preset_options">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.build_detector_preset_options">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_detector_preset_options</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Build detector preset dropdown options.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">detector</span><span class="o">.</span><span class="n">build_detector_preset_options</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ModelConfiguration.build_detector_preset_brand_options">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.build_detector_preset_brand_options">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_detector_preset_brand_options</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Build detector preset brand dropdown options.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">detector</span><span class="o">.</span><span class="n">load_detector_configuration_brand_options</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ModelConfiguration.build_detector_preset_model_options">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.build_detector_preset_model_options">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_detector_preset_model_options</span><span class="p">(</span>
+        <span class="n">brand</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Build detector preset model dropdown options for one brand.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">detector</span><span class="o">.</span><span class="n">load_detector_configuration_model_options</span><span class="p">(</span>
+            <span class="n">brand</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelConfiguration.build_detector_preset_type_options">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.build_detector_preset_type_options">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_detector_preset_type_options</span><span class="p">(</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">brand</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">model</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Build detector preset type dropdown options for one brand/model pair.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">detector</span><span class="o">.</span><span class="n">load_detector_configuration_type_options</span><span class="p">(</span>
+            <span class="n">brand</span><span class="o">=</span><span class="n">brand</span><span class="p">,</span>
+            <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelConfiguration.resolve_detector_preset_brand">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.resolve_detector_preset_brand">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">resolve_detector_preset_brand</span><span class="p">(</span>
+        <span class="n">preset_name</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Resolve the brand label for one detector preset name.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">detector</span><span class="o">.</span><span class="n">resolve_detector_configuration_preset_brand</span><span class="p">(</span>
+            <span class="n">preset_name</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelConfiguration.resolve_detector_preset_model">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.resolve_detector_preset_model">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">resolve_detector_preset_model</span><span class="p">(</span>
+        <span class="n">preset_name</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Resolve the model label for one detector preset name.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">detector</span><span class="o">.</span><span class="n">resolve_detector_configuration_preset_model</span><span class="p">(</span>
+            <span class="n">preset_name</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelConfiguration.resolve_detector_preset_wavelength_nm">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.resolve_detector_preset_wavelength_nm">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">resolve_detector_preset_wavelength_nm</span><span class="p">(</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">preset_name</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">current_wavelength_nm</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Resolve the wavelength contributed by one detector preset.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">detector</span><span class="o">.</span><span class="n">resolve_detector_preset_wavelength_nm</span><span class="p">(</span>
+            <span class="n">preset_name</span><span class="o">=</span><span class="n">preset_name</span><span class="p">,</span>
+            <span class="n">current_wavelength_nm</span><span class="o">=</span><span class="n">current_wavelength_nm</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelConfiguration.build_scatterer_preset_options">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.build_scatterer_preset_options">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_scatterer_preset_options</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Build scatterer preset dropdown options.</span>
+<span class="sd">        """</span>
+        <span class="n">options</span> <span class="o">=</span> <span class="n">build_scattering_calibration_scatterer_preset_options</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">options</span><span class="p">:</span>
+            <span class="n">options</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="p">{</span>
+                    <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"No preset"</span><span class="p">,</span>
+                    <span class="s2">"value"</span><span class="p">:</span> <span class="n">options</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"value"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span>
+                <span class="p">},</span>
+                <span class="o">*</span><span class="n">options</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
+            <span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">options</span></div>
+
+
+<div class="viewcode-block" id="ModelConfiguration.resolve_runtime_scatterer_preset">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.resolve_runtime_scatterer_preset">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">resolve_runtime_scatterer_preset</span><span class="p">(</span>
+        <span class="n">preset_name</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Resolve a persisted scatterer preset name to a known preset.</span>
+<span class="sd">        """</span>
+        <span class="n">preset_name_string</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">preset_name</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">preset_name_string</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">NO_SCATTERER_PRESET_NAME</span>
+
+        <span class="k">return</span> <span class="n">get_scattering_calibration_scatterer_preset</span><span class="p">(</span>
+            <span class="n">preset_name_string</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">name</span></div>
+
+
+<div class="viewcode-block" id="ModelConfiguration.resolve_runtime_detector_preset">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.resolve_runtime_detector_preset">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">resolve_runtime_detector_preset</span><span class="p">(</span>
+        <span class="n">preset_name</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">runtime_config_data</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">uploaded_fcs_path</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">detector_selection_runtime_config_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Resolve a persisted detector preset name to a known preset.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">detector</span><span class="o">.</span><span class="n">resolve_runtime_detector_preset</span><span class="p">(</span>
+            <span class="n">preset_name</span><span class="p">,</span>
+            <span class="n">runtime_config_data</span><span class="o">=</span><span class="n">runtime_config_data</span><span class="p">,</span>
+            <span class="n">uploaded_fcs_path</span><span class="o">=</span><span class="n">uploaded_fcs_path</span><span class="p">,</span>
+            <span class="n">detector_selection_runtime_config_path</span><span class="o">=</span><span class="n">detector_selection_runtime_config_path</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelConfiguration.detect_detector_preset_from_uploaded_fcs">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.detect_detector_preset_from_uploaded_fcs">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">detect_detector_preset_from_uploaded_fcs</span><span class="p">(</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">uploaded_fcs_path</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">selected_detector_channel</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Detect one scattering detector preset from uploaded FCS metadata and the</span>
+<span class="sd">        selected peak detector channel.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">detector</span><span class="o">.</span><span class="n">detect_detector_preset_from_uploaded_fcs</span><span class="p">(</span>
+            <span class="n">uploaded_fcs_path</span><span class="o">=</span><span class="n">uploaded_fcs_path</span><span class="p">,</span>
+            <span class="n">selected_detector_channel</span><span class="o">=</span><span class="n">selected_detector_channel</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelConfiguration.detect_wavelength_nm_from_detector_channel">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.detect_wavelength_nm_from_detector_channel">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">detect_wavelength_nm_from_detector_channel</span><span class="p">(</span>
+        <span class="n">selected_detector_channel</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Infer one laser wavelength from the selected peak detector channel.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">detector</span><span class="o">.</span><span class="n">detect_wavelength_nm_from_detector_channel</span><span class="p">(</span>
+            <span class="n">selected_detector_channel</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelConfiguration.resolve_scatterer_preset_values">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.resolve_scatterer_preset_values">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">resolve_scatterer_preset_values</span><span class="p">(</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">preset_name</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">current_mie_model</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">current_medium_refractive_index_source</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">current_medium_refractive_index</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">current_particle_refractive_index_source</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">current_particle_refractive_index</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">current_core_refractive_index_source</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">current_core_refractive_index</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">current_shell_refractive_index_source</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">current_shell_refractive_index</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">wavelength_nm</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Resolve the page control values from the selected scatterer preset.</span>
+
+<span class="sd">        Selecting the custom preset preserves the current manual values.</span>
+<span class="sd">        """</span>
+        <span class="n">preset_name_string</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">preset_name</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">preset_name_string</span> <span class="ow">or</span> <span class="n">preset_name_string</span> <span class="o">==</span> <span class="n">CUSTOM_SCATTERER_PRESET_NAME</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="n">current_mie_model</span><span class="p">,</span>
+                <span class="n">current_medium_refractive_index_source</span><span class="p">,</span>
+                <span class="n">current_medium_refractive_index</span><span class="p">,</span>
+                <span class="n">current_particle_refractive_index_source</span><span class="p">,</span>
+                <span class="n">current_particle_refractive_index</span><span class="p">,</span>
+                <span class="n">current_core_refractive_index_source</span><span class="p">,</span>
+                <span class="n">current_core_refractive_index</span><span class="p">,</span>
+                <span class="n">current_shell_refractive_index_source</span><span class="p">,</span>
+                <span class="n">current_shell_refractive_index</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="n">preset</span> <span class="o">=</span> <span class="n">get_scattering_calibration_scatterer_preset</span><span class="p">(</span>
+            <span class="n">preset_name_string</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">preset</span><span class="o">.</span><span class="n">mie_model</span><span class="p">,</span>
+            <span class="n">preset</span><span class="o">.</span><span class="n">medium_refractive_index_source</span><span class="p">,</span>
+            <span class="n">resolve_refractive_index_source_value</span><span class="p">(</span>
+                <span class="n">preset</span><span class="o">.</span><span class="n">medium_refractive_index_source</span><span class="p">,</span>
+                <span class="n">wavelength_nm</span><span class="o">=</span><span class="n">wavelength_nm</span><span class="p">,</span>
+                <span class="n">fallback_value</span><span class="o">=</span><span class="n">preset</span><span class="o">.</span><span class="n">medium_refractive_index</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">preset</span><span class="o">.</span><span class="n">particle_refractive_index_source</span><span class="p">,</span>
+            <span class="n">resolve_refractive_index_source_value</span><span class="p">(</span>
+                <span class="n">preset</span><span class="o">.</span><span class="n">particle_refractive_index_source</span><span class="p">,</span>
+                <span class="n">wavelength_nm</span><span class="o">=</span><span class="n">wavelength_nm</span><span class="p">,</span>
+                <span class="n">fallback_value</span><span class="o">=</span><span class="n">preset</span><span class="o">.</span><span class="n">particle_refractive_index</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">preset</span><span class="o">.</span><span class="n">core_refractive_index_source</span><span class="p">,</span>
+            <span class="n">resolve_refractive_index_source_value</span><span class="p">(</span>
+                <span class="n">preset</span><span class="o">.</span><span class="n">core_refractive_index_source</span><span class="p">,</span>
+                <span class="n">wavelength_nm</span><span class="o">=</span><span class="n">wavelength_nm</span><span class="p">,</span>
+                <span class="n">fallback_value</span><span class="o">=</span><span class="n">preset</span><span class="o">.</span><span class="n">core_refractive_index</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">preset</span><span class="o">.</span><span class="n">shell_refractive_index_source</span><span class="p">,</span>
+            <span class="n">resolve_refractive_index_source_value</span><span class="p">(</span>
+                <span class="n">preset</span><span class="o">.</span><span class="n">shell_refractive_index_source</span><span class="p">,</span>
+                <span class="n">wavelength_nm</span><span class="o">=</span><span class="n">wavelength_nm</span><span class="p">,</span>
+                <span class="n">fallback_value</span><span class="o">=</span><span class="n">preset</span><span class="o">.</span><span class="n">shell_refractive_index</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelConfiguration.scatterer_preset_disables_manual_controls">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.scatterer_preset_disables_manual_controls">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">scatterer_preset_disables_manual_controls</span><span class="p">(</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">preset_name</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return whether scatterer preset selection should lock manual controls.</span>
+<span class="sd">        """</span>
+        <span class="n">preset_name_string</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">preset_name</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">preset_name_string</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="n">preset_name_string</span> <span class="o">!=</span> <span class="n">CUSTOM_SCATTERER_PRESET_NAME</span></div>
+
+
+<div class="viewcode-block" id="ModelConfiguration.build_table_state_from_scatterer_preset">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.build_table_state_from_scatterer_preset">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_table_state_from_scatterer_preset</span><span class="p">(</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">preset_name</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">current_rows</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">wavelength_nm</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Build calibration table columns and rows from a scatterer preset.</span>
+
+<span class="sd">        The custom preset returns ``None`` so user-edited rows are preserved.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">str</span><span class="p">(</span><span class="n">preset_name</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">preset</span> <span class="o">=</span> <span class="n">get_scattering_calibration_scatterer_preset</span><span class="p">(</span>
+            <span class="n">preset_name</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">preset</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">CUSTOM_SCATTERER_PRESET_NAME</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">columns</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">get_table_columns_for_model</span><span class="p">(</span>
+            <span class="n">preset</span><span class="o">.</span><span class="n">mie_model</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">populate_table_from_runtime_defaults</span><span class="p">(</span>
+            <span class="n">mie_model</span><span class="o">=</span><span class="n">preset</span><span class="o">.</span><span class="n">mie_model</span><span class="p">,</span>
+            <span class="n">runtime_particle_diameters_nm</span><span class="o">=</span><span class="n">preset</span><span class="o">.</span><span class="n">particle_diameters_nm</span><span class="p">,</span>
+            <span class="n">runtime_core_diameters_nm</span><span class="o">=</span><span class="n">preset</span><span class="o">.</span><span class="n">core_diameters_nm</span><span class="p">,</span>
+            <span class="n">runtime_shell_thicknesses_nm</span><span class="o">=</span><span class="n">preset</span><span class="o">.</span><span class="n">shell_thicknesses_nm</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">medium_refractive_index</span> <span class="o">=</span> <span class="n">resolve_refractive_index_source_value</span><span class="p">(</span>
+            <span class="n">preset</span><span class="o">.</span><span class="n">medium_refractive_index_source</span><span class="p">,</span>
+            <span class="n">wavelength_nm</span><span class="o">=</span><span class="p">(</span><span class="n">wavelength_nm</span> <span class="k">if</span> <span class="n">wavelength_nm</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span> <span class="k">else</span> <span class="mf">488.0</span><span class="p">),</span>
+            <span class="n">fallback_value</span><span class="o">=</span><span class="n">preset</span><span class="o">.</span><span class="n">medium_refractive_index</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+            <span class="n">row</span><span class="p">[</span><span class="n">parameters</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">COLUMN_MEDIUM_REFRACTIVE_INDEX</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">format_refractive_index_display</span><span class="p">(</span>
+                    <span class="n">medium_refractive_index</span><span class="p">,</span>
+                    <span class="n">source_value</span><span class="o">=</span><span class="n">preset</span><span class="o">.</span><span class="n">medium_refractive_index_source</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">preset</span><span class="o">.</span><span class="n">mie_model</span> <span class="o">==</span> <span class="n">parameters</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">MIE_MODEL_CORE_SHELL_SPHERE</span><span class="p">:</span>
+            <span class="n">core_refractive_index</span> <span class="o">=</span> <span class="n">resolve_refractive_index_source_value</span><span class="p">(</span>
+                <span class="n">preset</span><span class="o">.</span><span class="n">core_refractive_index_source</span><span class="p">,</span>
+                <span class="n">wavelength_nm</span><span class="o">=</span><span class="p">(</span><span class="n">wavelength_nm</span> <span class="k">if</span> <span class="n">wavelength_nm</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span> <span class="k">else</span> <span class="mf">488.0</span><span class="p">),</span>
+                <span class="n">fallback_value</span><span class="o">=</span><span class="n">preset</span><span class="o">.</span><span class="n">core_refractive_index</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">shell_refractive_index</span> <span class="o">=</span> <span class="n">resolve_refractive_index_source_value</span><span class="p">(</span>
+                <span class="n">preset</span><span class="o">.</span><span class="n">shell_refractive_index_source</span><span class="p">,</span>
+                <span class="n">wavelength_nm</span><span class="o">=</span><span class="p">(</span><span class="n">wavelength_nm</span> <span class="k">if</span> <span class="n">wavelength_nm</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span> <span class="k">else</span> <span class="mf">488.0</span><span class="p">),</span>
+                <span class="n">fallback_value</span><span class="o">=</span><span class="n">preset</span><span class="o">.</span><span class="n">shell_refractive_index</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+                <span class="n">row</span><span class="p">[</span><span class="n">parameters</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">COLUMN_CORE_REFRACTIVE_INDEX</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">format_refractive_index_display</span><span class="p">(</span>
+                        <span class="n">core_refractive_index</span><span class="p">,</span>
+                        <span class="n">source_value</span><span class="o">=</span><span class="n">preset</span><span class="o">.</span><span class="n">core_refractive_index_source</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">row</span><span class="p">[</span><span class="n">parameters</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">COLUMN_SHELL_REFRACTIVE_INDEX</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">format_refractive_index_display</span><span class="p">(</span>
+                        <span class="n">shell_refractive_index</span><span class="p">,</span>
+                        <span class="n">source_value</span><span class="o">=</span><span class="n">preset</span><span class="o">.</span><span class="n">shell_refractive_index_source</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">preset</span><span class="o">.</span><span class="n">mie_model</span> <span class="o">==</span> <span class="n">parameters</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">MIE_MODEL_SOLID_SPHERE</span><span class="p">:</span>
+            <span class="n">particle_refractive_index</span> <span class="o">=</span> <span class="n">resolve_refractive_index_source_value</span><span class="p">(</span>
+                <span class="n">preset</span><span class="o">.</span><span class="n">particle_refractive_index_source</span><span class="p">,</span>
+                <span class="n">wavelength_nm</span><span class="o">=</span><span class="p">(</span><span class="n">wavelength_nm</span> <span class="k">if</span> <span class="n">wavelength_nm</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span> <span class="k">else</span> <span class="mf">488.0</span><span class="p">),</span>
+                <span class="n">fallback_value</span><span class="o">=</span><span class="n">preset</span><span class="o">.</span><span class="n">particle_refractive_index</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+                <span class="n">row</span><span class="p">[</span><span class="n">parameters</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">COLUMN_PARTICLE_REFRACTIVE_INDEX</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">format_refractive_index_display</span><span class="p">(</span>
+                        <span class="n">particle_refractive_index</span><span class="p">,</span>
+                        <span class="n">source_value</span><span class="o">=</span><span class="n">preset</span><span class="o">.</span><span class="n">particle_refractive_index_source</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">current_rows</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">rows</span> <span class="o">=</span> <span class="n">ModelConfiguration</span><span class="o">.</span><span class="n">_merge_preset_geometry_with_current_table_rows</span><span class="p">(</span>
+                <span class="n">mie_model</span><span class="o">=</span><span class="n">preset</span><span class="o">.</span><span class="n">mie_model</span><span class="p">,</span>
+                <span class="n">preset_rows</span><span class="o">=</span><span class="n">rows</span><span class="p">,</span>
+                <span class="n">current_rows</span><span class="o">=</span><span class="n">current_rows</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">columns</span><span class="p">,</span> <span class="n">rows</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_merge_preset_geometry_with_current_table_rows</span><span class="p">(</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">mie_model</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">preset_rows</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">current_rows</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Merge preset geometry rows with user-entered table values.</span>
+
+<span class="sd">        Geometry comes from the selected preset. User-entered measured peaks and</span>
+<span class="sd">        other non-geometry cells are preserved by row index.</span>
+<span class="sd">        """</span>
+        <span class="n">resolved_mie_model</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">resolve_mie_model</span><span class="p">(</span>
+            <span class="n">mie_model</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">source_preset_rows</span> <span class="o">=</span> <span class="n">table_services</span><span class="o">.</span><span class="n">copy_table_rows</span><span class="p">(</span>
+            <span class="n">rows</span><span class="o">=</span><span class="n">preset_rows</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">preserved_rows</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">remap_table_rows_to_model</span><span class="p">(</span>
+            <span class="n">mie_model</span><span class="o">=</span><span class="n">resolved_mie_model</span><span class="p">,</span>
+            <span class="n">current_rows</span><span class="o">=</span><span class="n">current_rows</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">geometry_column_ids</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">parameters</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">COLUMN_CORE_DIAMETER_NM</span><span class="p">,</span>
+                <span class="n">parameters</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">COLUMN_SHELL_THICKNESS_NM</span><span class="p">,</span>
+                <span class="n">parameters</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">COLUMN_OUTER_DIAMETER_NM</span><span class="p">,</span>
+            <span class="p">]</span>
+            <span class="k">if</span> <span class="n">resolved_mie_model</span> <span class="o">==</span> <span class="n">parameters</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">MIE_MODEL_CORE_SHELL_SPHERE</span>
+            <span class="k">else</span> <span class="p">[</span>
+                <span class="n">parameters</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">COLUMN_PARTICLE_DIAMETER_NM</span><span class="p">,</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="n">merged_rows</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">row_index</span><span class="p">,</span> <span class="n">preset_row</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">source_preset_rows</span><span class="p">):</span>
+            <span class="n">merged_row</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+                <span class="n">preserved_rows</span><span class="p">[</span><span class="n">row_index</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">row_index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">preserved_rows</span><span class="p">)</span>
+                <span class="k">else</span> <span class="n">parameters</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">build_empty_row_for_model</span><span class="p">(</span>
+                    <span class="n">resolved_mie_model</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">column_id</span> <span class="ow">in</span> <span class="n">geometry_column_ids</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">column_id</span> <span class="ow">in</span> <span class="n">preset_row</span><span class="p">:</span>
+                    <span class="n">merged_row</span><span class="p">[</span><span class="n">column_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">preset_row</span><span class="p">[</span><span class="n">column_id</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">resolved_mie_model</span> <span class="o">==</span> <span class="n">parameters</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">MIE_MODEL_SOLID_SPHERE</span><span class="p">:</span>
+                <span class="n">merged_row</span><span class="p">[</span><span class="n">parameters</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">COLUMN_PARTICLE_REFRACTIVE_INDEX</span><span class="p">]</span> <span class="o">=</span> <span class="n">preset_row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                    <span class="n">parameters</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">COLUMN_PARTICLE_REFRACTIVE_INDEX</span><span class="p">,</span>
+                    <span class="s2">""</span><span class="p">,</span>
+                <span class="p">)</span>
+
+            <span class="n">merged_row</span><span class="p">[</span><span class="n">parameters</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">COLUMN_MEDIUM_REFRACTIVE_INDEX</span><span class="p">]</span> <span class="o">=</span> <span class="n">preset_row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="n">parameters</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">COLUMN_MEDIUM_REFRACTIVE_INDEX</span><span class="p">,</span>
+                <span class="s2">""</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">resolved_mie_model</span> <span class="o">==</span> <span class="n">parameters</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">MIE_MODEL_CORE_SHELL_SPHERE</span><span class="p">:</span>
+                <span class="n">merged_row</span><span class="p">[</span><span class="n">parameters</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">COLUMN_CORE_REFRACTIVE_INDEX</span><span class="p">]</span> <span class="o">=</span> <span class="n">preset_row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                    <span class="n">parameters</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">COLUMN_CORE_REFRACTIVE_INDEX</span><span class="p">,</span>
+                    <span class="s2">""</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">merged_row</span><span class="p">[</span><span class="n">parameters</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">COLUMN_SHELL_REFRACTIVE_INDEX</span><span class="p">]</span> <span class="o">=</span> <span class="n">preset_row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                    <span class="n">parameters</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">COLUMN_SHELL_REFRACTIVE_INDEX</span><span class="p">,</span>
+                    <span class="s2">""</span><span class="p">,</span>
+                <span class="p">)</span>
+
+            <span class="n">merged_rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">merged_row</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">merged_rows</span>
+
+<div class="viewcode-block" id="ModelConfiguration.resolve_detector_configuration_visibility_style">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.resolve_detector_configuration_visibility_style">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">resolve_detector_configuration_visibility_style</span><span class="p">(</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">preset_name</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return the custom detector configuration container style.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">detector</span><span class="o">.</span><span class="n">resolve_detector_configuration_visibility_style</span><span class="p">(</span>
+            <span class="n">preset_name</span><span class="o">=</span><span class="n">preset_name</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelConfiguration.resolve_detector_configuration_values">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.resolve_detector_configuration_values">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">resolve_detector_configuration_values</span><span class="p">(</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">preset_name</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">current_detector_numerical_aperture</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">current_detector_cache_numerical_aperture</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">current_blocker_bar_numerical_aperture</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">current_detector_sampling</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">current_detector_phi_angle_degree</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">current_detector_gamma_angle_degree</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Resolve detector configuration values from a preset or current controls.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">detector</span><span class="o">.</span><span class="n">resolve_detector_configuration_values</span><span class="p">(</span>
+            <span class="n">preset_name</span><span class="o">=</span><span class="n">preset_name</span><span class="p">,</span>
+            <span class="n">current_detector_numerical_aperture</span><span class="o">=</span><span class="n">current_detector_numerical_aperture</span><span class="p">,</span>
+            <span class="n">current_detector_cache_numerical_aperture</span><span class="o">=</span><span class="n">current_detector_cache_numerical_aperture</span><span class="p">,</span>
+            <span class="n">current_blocker_bar_numerical_aperture</span><span class="o">=</span><span class="n">current_blocker_bar_numerical_aperture</span><span class="p">,</span>
+            <span class="n">current_detector_sampling</span><span class="o">=</span><span class="n">current_detector_sampling</span><span class="p">,</span>
+            <span class="n">current_detector_phi_angle_degree</span><span class="o">=</span><span class="n">current_detector_phi_angle_degree</span><span class="p">,</span>
+            <span class="n">current_detector_gamma_angle_degree</span><span class="o">=</span><span class="n">current_detector_gamma_angle_degree</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelConfiguration.apply_refractive_index_preset">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.apply_refractive_index_preset">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply_refractive_index_preset</span><span class="p">(</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">preset_value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">wavelength_nm</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">current_value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Apply a refractive index preset while preserving the current value when</span>
+<span class="sd">        the preset is empty.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">preset_value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">current_value</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">resolve_refractive_index_value</span><span class="p">(</span>
+                <span class="n">preset_value</span><span class="p">,</span>
+                <span class="n">wavelength_nm</span><span class="o">=</span><span class="n">wavelength_nm</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">current_value</span></div>
+
+
+<div class="viewcode-block" id="ModelConfiguration.build_optical_configuration_preview_figure">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.build_optical_configuration_preview_figure">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_optical_configuration_preview_figure</span><span class="p">(</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">detector_numerical_aperture</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">detector_cache_numerical_aperture</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">blocker_bar_numerical_aperture</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">medium_refractive_index</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">detector_phi_angle_degree</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">detector_gamma_angle_degree</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">polarization_angle_degree</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">detector_sampling</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">detector_configuration_preset</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">detector_angular_weighting_json</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">camera</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Build the optical configuration preview figure.</span>
+<span class="sd">        """</span>
+        <span class="n">preview_parameters</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">ModelConfiguration</span><span class="o">.</span><span class="n">resolve_optical_configuration_preview_parameters</span><span class="p">(</span>
+                <span class="n">detector_numerical_aperture</span><span class="o">=</span><span class="n">detector_numerical_aperture</span><span class="p">,</span>
+                <span class="n">detector_cache_numerical_aperture</span><span class="o">=</span><span class="n">detector_cache_numerical_aperture</span><span class="p">,</span>
+                <span class="n">blocker_bar_numerical_aperture</span><span class="o">=</span><span class="n">blocker_bar_numerical_aperture</span><span class="p">,</span>
+                <span class="n">medium_refractive_index</span><span class="o">=</span><span class="n">medium_refractive_index</span><span class="p">,</span>
+                <span class="n">detector_phi_angle_degree</span><span class="o">=</span><span class="n">detector_phi_angle_degree</span><span class="p">,</span>
+                <span class="n">detector_gamma_angle_degree</span><span class="o">=</span><span class="n">detector_gamma_angle_degree</span><span class="p">,</span>
+                <span class="n">polarization_angle_degree</span><span class="o">=</span><span class="n">polarization_angle_degree</span><span class="p">,</span>
+                <span class="n">detector_sampling</span><span class="o">=</span><span class="n">detector_sampling</span><span class="p">,</span>
+                <span class="n">detector_configuration_preset</span><span class="o">=</span><span class="n">detector_configuration_preset</span><span class="p">,</span>
+                <span class="n">detector_angular_weighting_json</span><span class="o">=</span><span class="n">detector_angular_weighting_json</span><span class="p">,</span>
+                <span class="n">camera</span><span class="o">=</span><span class="n">camera</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">parameters</span><span class="o">.</span><span class="n">build_optical_configuration_preview_figure</span><span class="p">(</span>
+            <span class="o">**</span><span class="n">preview_parameters</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelConfiguration.resolve_optical_configuration_preview_parameters">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.resolve_optical_configuration_preview_parameters">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">resolve_optical_configuration_preview_parameters</span><span class="p">(</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">detector_numerical_aperture</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">detector_cache_numerical_aperture</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">blocker_bar_numerical_aperture</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">medium_refractive_index</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">detector_phi_angle_degree</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">detector_gamma_angle_degree</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">polarization_angle_degree</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">detector_sampling</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">detector_configuration_preset</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">detector_angular_weighting_json</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">camera</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Resolve preset geometry and angular weights before preview generation."""</span>
+        <span class="p">(</span>
+            <span class="n">resolved_detector_numerical_aperture</span><span class="p">,</span>
+            <span class="n">resolved_detector_cache_numerical_aperture</span><span class="p">,</span>
+            <span class="n">resolved_blocker_bar_numerical_aperture</span><span class="p">,</span>
+            <span class="n">resolved_detector_sampling</span><span class="p">,</span>
+            <span class="n">resolved_detector_phi_angle_degree</span><span class="p">,</span>
+            <span class="n">resolved_detector_gamma_angle_degree</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="n">detector</span><span class="o">.</span><span class="n">resolve_detector_configuration_values</span><span class="p">(</span>
+            <span class="n">preset_name</span><span class="o">=</span><span class="n">detector_configuration_preset</span><span class="p">,</span>
+            <span class="n">current_detector_numerical_aperture</span><span class="o">=</span><span class="n">detector_numerical_aperture</span><span class="p">,</span>
+            <span class="n">current_detector_cache_numerical_aperture</span><span class="o">=</span><span class="n">detector_cache_numerical_aperture</span><span class="p">,</span>
+            <span class="n">current_blocker_bar_numerical_aperture</span><span class="o">=</span><span class="n">blocker_bar_numerical_aperture</span><span class="p">,</span>
+            <span class="n">current_detector_sampling</span><span class="o">=</span><span class="n">detector_sampling</span><span class="p">,</span>
+            <span class="n">current_detector_phi_angle_degree</span><span class="o">=</span><span class="n">detector_phi_angle_degree</span><span class="p">,</span>
+            <span class="n">current_detector_gamma_angle_degree</span><span class="o">=</span><span class="n">detector_gamma_angle_degree</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">detector_angular_weights</span> <span class="o">=</span> <span class="n">detector</span><span class="o">.</span><span class="n">resolve_detector_angular_weights</span><span class="p">(</span>
+            <span class="n">preset_name</span><span class="o">=</span><span class="n">detector_configuration_preset</span><span class="p">,</span>
+            <span class="n">detector_sampling</span><span class="o">=</span><span class="n">resolved_detector_sampling</span><span class="p">,</span>
+            <span class="n">current_detector_numerical_aperture</span><span class="o">=</span><span class="n">resolved_detector_numerical_aperture</span><span class="p">,</span>
+            <span class="n">current_detector_cache_numerical_aperture</span><span class="o">=</span><span class="n">resolved_detector_cache_numerical_aperture</span><span class="p">,</span>
+            <span class="n">current_blocker_bar_numerical_aperture</span><span class="o">=</span><span class="n">resolved_blocker_bar_numerical_aperture</span><span class="p">,</span>
+            <span class="n">current_detector_phi_angle_degree</span><span class="o">=</span><span class="n">resolved_detector_phi_angle_degree</span><span class="p">,</span>
+            <span class="n">current_detector_gamma_angle_degree</span><span class="o">=</span><span class="n">resolved_detector_gamma_angle_degree</span><span class="p">,</span>
+            <span class="n">current_medium_refractive_index</span><span class="o">=</span><span class="n">medium_refractive_index</span><span class="p">,</span>
+            <span class="n">current_detector_angular_weighting</span><span class="o">=</span><span class="n">detector_angular_weighting_json</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="p">(</span>
+            <span class="n">_effective_detector_cache_numerical_aperture</span><span class="p">,</span>
+            <span class="n">effective_blocker_bar_numerical_aperture</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="n">detector</span><span class="o">.</span><span class="n">resolve_detector_modeling_geometry_values</span><span class="p">(</span>
+            <span class="n">preset_name</span><span class="o">=</span><span class="n">detector_configuration_preset</span><span class="p">,</span>
+            <span class="n">current_detector_cache_numerical_aperture</span><span class="o">=</span><span class="n">resolved_detector_cache_numerical_aperture</span><span class="p">,</span>
+            <span class="n">current_blocker_bar_numerical_aperture</span><span class="o">=</span><span class="n">resolved_blocker_bar_numerical_aperture</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">include_geometry</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">detector</span><span class="o">.</span><span class="n">detector_preset_is_empty</span><span class="p">(</span>
+            <span class="n">detector_configuration_preset</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"detector_numerical_aperture"</span><span class="p">:</span> <span class="n">resolved_detector_numerical_aperture</span><span class="p">,</span>
+            <span class="s2">"blocker_bar_numerical_aperture"</span><span class="p">:</span> <span class="n">effective_blocker_bar_numerical_aperture</span><span class="p">,</span>
+            <span class="s2">"medium_refractive_index"</span><span class="p">:</span> <span class="n">medium_refractive_index</span><span class="p">,</span>
+            <span class="s2">"detector_phi_angle_degree"</span><span class="p">:</span> <span class="n">resolved_detector_phi_angle_degree</span><span class="p">,</span>
+            <span class="s2">"detector_gamma_angle_degree"</span><span class="p">:</span> <span class="n">resolved_detector_gamma_angle_degree</span><span class="p">,</span>
+            <span class="s2">"polarization_angle_degree"</span><span class="p">:</span> <span class="n">polarization_angle_degree</span><span class="p">,</span>
+            <span class="s2">"detector_sampling"</span><span class="p">:</span> <span class="n">resolved_detector_sampling</span><span class="p">,</span>
+            <span class="s2">"detector_angular_weights"</span><span class="p">:</span> <span class="n">detector_angular_weights</span><span class="p">,</span>
+            <span class="s2">"camera"</span><span class="p">:</span> <span class="n">camera</span><span class="p">,</span>
+            <span class="s2">"include_geometry"</span><span class="p">:</span> <span class="n">include_geometry</span><span class="p">,</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="ModelConfiguration.build_visibility_styles_for_mie_model">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.build_visibility_styles_for_mie_model">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_visibility_styles_for_mie_model</span><span class="p">(</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">mie_model</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Build display styles for solid sphere and core shell control blocks.</span>
+<span class="sd">        """</span>
+        <span class="n">resolved_mie_model</span> <span class="o">=</span> <span class="n">ModelConfiguration</span><span class="o">.</span><span class="n">resolve_mie_model</span><span class="p">(</span>
+            <span class="n">mie_model</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">resolved_mie_model</span> <span class="o">==</span> <span class="s2">"Core/Shell Sphere"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">"display"</span><span class="p">:</span> <span class="s2">"none"</span><span class="p">,</span>
+            <span class="p">},</span> <span class="p">{</span>
+                <span class="s2">"display"</span><span class="p">:</span> <span class="s2">"block"</span><span class="p">,</span>
+            <span class="p">}</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"display"</span><span class="p">:</span> <span class="s2">"block"</span><span class="p">,</span>
+        <span class="p">},</span> <span class="p">{</span>
+            <span class="s2">"display"</span><span class="p">:</span> <span class="s2">"none"</span><span class="p">,</span>
+        <span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="as_dropdown_options">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.scattering.model.as_dropdown_options">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">as_dropdown_options</span><span class="p">(</span>
+    <span class="n">options</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return a plain list of Dash dropdown options.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="nb">dict</span><span class="p">(</span><span class="n">option</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="n">options</span>
+    <span class="p">]</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright Martin Poinsinet de Sivry-Houle.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

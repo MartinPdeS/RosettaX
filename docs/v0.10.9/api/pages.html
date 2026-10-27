@@ -1,0 +1,1668 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="dark">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Pages API &#8212; RosettaX 0.10.9 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "dark";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "dark";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=c83e6b79" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css?v=22616357" />
+    <link rel="stylesheet" type="text/css" href="../_static/martinpdes_layout.css?v=a8cc01cd" />
+    <link rel="stylesheet" type="text/css" href="../_static/layout.css?v=dc96f8db" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../_static/documentation_options.js?v=9d400afe"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/sg-tags.js?v=d80f6fa4"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/pages';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/MartinPdeS/RosettaX/documentation_page/version_switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.10.9';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="../_static/favicon.svg"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Resources" href="../resources.html" />
+    <link rel="prev" title="Workflow API" href="workflows.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.10.9" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="dark">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.10.9 documentation - Home"/>
+    <img src="../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.10.9 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../quickstart.html">
+    Start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../interface.html">
+    Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../theory.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../code.html">
+    API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../resources.html">
+    Resources
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../privacy.html">
+    Privacy policy
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MartinPdeS/RosettaX" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/RosettaX/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-box fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://anaconda.org/MartinPdeS/RosettaX" title="Anaconda" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">Anaconda</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../quickstart.html">
+    Start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../interface.html">
+    Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../theory.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../code.html">
+    API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../resources.html">
+    Resources
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../privacy.html">
+    Privacy policy
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MartinPdeS/RosettaX" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/RosettaX/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-box fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://anaconda.org/MartinPdeS/RosettaX" title="Anaconda" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">Anaconda</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="application.html">Application API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Utilities API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflows.html">Workflow API</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Pages API</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../code.html" class="nav-link">API reference</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Pages API</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="pages-api">
+<h1>Pages API<a class="headerlink" href="#pages-api" title="Link to this heading">#</a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">RosettaX.pages</span></code> package contains the Dash pages that compose the user-facing workflow. These modules are mostly orchestration layers that connect layouts, page-local callbacks, and workflow services.</p>
+<section id="page-map">
+<h2>Page map<a class="headerlink" href="#page-map" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">p00_sidebar</span></code></dt><dd><p>Shared sidebar controls and navigation state.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">p01_home</span></code></dt><dd><p>Landing page and overview content.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">p02_fluorescence</span></code></dt><dd><p>Fluorescence calibration upload, peak selection, table editing, and save flow.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">p03_scattering</span></code></dt><dd><p>Scattering calibration upload, optical model configuration, table editing, calibration fitting, and save flow.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">p04_calibrate</span></code></dt><dd><p>Applying previously generated calibrations to files.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">p05_settings</span></code></dt><dd><p>Runtime profile and default configuration management.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">p06_help</span></code></dt><dd><p>In-application help and supporting documentation.</p>
+</dd>
+</dl>
+</section>
+<section id="representative-page-modules">
+<h2>Representative page modules<a class="headerlink" href="#representative-page-modules" title="Link to this heading">#</a></h2>
+<p>The modules below are useful when extending page behavior or tracing how the UI delegates to the workflow layer.</p>
+<p id="module-RosettaX.pages.p03_scattering.backend">Compatibility imports for the scattering numerical backend.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.backend.BackEnd">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">BackEnd</span></span><a class="reference internal" href="../_modules/RosettaX/workflow/scattering/backend.html#BackEnd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p03_scattering.backend.BackEnd" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Reusable numerical backend for scattering calibration workflows.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.backend.BackEnd.compute_modeled_coupling">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">compute_modeled_coupling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">mie_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">particle_diameters_nm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">core_diameters_nm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shell_thicknesses_nm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavelength_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_numerical_aperture</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optical_power_watt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detector_numerical_aperture</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">medium_refractive_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">particle_refractive_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">core_refractive_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shell_refractive_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detector_cache_numerical_aperture</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detector_phi_offset_degree</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detector_gamma_offset_degree</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">polarization_angle_degree</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detector_sampling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">600</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detector_angular_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/scattering/backend.html#BackEnd.compute_modeled_coupling"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p03_scattering.backend.BackEnd.compute_modeled_coupling" title="Link to this definition">#</a></dt>
+<dd><p>Compute modeled coupling values for the selected Mie scatterer model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mie_model</strong> (<em>str</em>) – Scattering model name. Supported values are <code class="docutils literal notranslate"><span class="pre">Solid</span> <span class="pre">Sphere</span></code> and
+<code class="docutils literal notranslate"><span class="pre">Core/Shell</span> <span class="pre">Sphere</span></code>.</p></li>
+<li><p><strong>particle_diameters_nm</strong> (<em>ndarray</em><em> | </em><em>None</em>) – Solid sphere diameters in nanometers.</p></li>
+<li><p><strong>core_diameters_nm</strong> (<em>ndarray</em><em> | </em><em>None</em>) – Core diameters in nanometers for the core shell model.</p></li>
+<li><p><strong>shell_thicknesses_nm</strong> (<em>ndarray</em><em> | </em><em>None</em>) – Shell thicknesses in nanometers for the core shell model.</p></li>
+<li><p><strong>wavelength_nm</strong> (<em>float</em>)</p></li>
+<li><p><strong>source_numerical_aperture</strong> (<em>float</em>)</p></li>
+<li><p><strong>optical_power_watt</strong> (<em>float</em>)</p></li>
+<li><p><strong>detector_numerical_aperture</strong> (<em>float</em>)</p></li>
+<li><p><strong>medium_refractive_index</strong> (<em>float</em>)</p></li>
+<li><p><strong>particle_refractive_index</strong> (<em>float</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>core_refractive_index</strong> (<em>float</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>shell_refractive_index</strong> (<em>float</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>detector_cache_numerical_aperture</strong> (<em>float</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>detector_phi_offset_degree</strong> (<em>float</em>)</p></li>
+<li><p><strong>detector_gamma_offset_degree</strong> (<em>float</em>)</p></li>
+<li><p><strong>polarization_angle_degree</strong> (<em>float</em>)</p></li>
+<li><p><strong>detector_sampling</strong> (<em>int</em>)</p></li>
+<li><p><strong>detector_angular_weights</strong> (<em>ndarray</em><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#RosettaX.pages.p03_scattering.backend.ModeledCouplingResult" title="RosettaX.workflow.scattering.backend.ModeledCouplingResult"><em>ModeledCouplingResult</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.backend.BackEnd.compute_modeled_coupling_from_core_shell_dimensions">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">compute_modeled_coupling_from_core_shell_dimensions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">core_diameters_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shell_thicknesses_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavelength_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_numerical_aperture</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optical_power_watt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detector_numerical_aperture</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">medium_refractive_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">core_refractive_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shell_refractive_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detector_cache_numerical_aperture</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detector_phi_offset_degree</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detector_gamma_offset_degree</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">polarization_angle_degree</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detector_sampling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">600</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detector_angular_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/scattering/backend.html#BackEnd.compute_modeled_coupling_from_core_shell_dimensions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p03_scattering.backend.BackEnd.compute_modeled_coupling_from_core_shell_dimensions" title="Link to this definition">#</a></dt>
+<dd><p>Compute modeled coupling values for paired core shell sphere rows.</p>
+<p>PyMieSim scatterer sets evaluate parameter combinations as a grid when
+several geometric arrays are passed at once. For a calibration table,
+the required behavior is row wise instead:</p>
+<ul class="simple">
+<li><p>row 0 uses <code class="docutils literal notranslate"><span class="pre">core_diameters_nm[0]</span></code> with <code class="docutils literal notranslate"><span class="pre">shell_thicknesses_nm[0]</span></code></p></li>
+<li><p>row 1 uses <code class="docutils literal notranslate"><span class="pre">core_diameters_nm[1]</span></code> with <code class="docutils literal notranslate"><span class="pre">shell_thicknesses_nm[1]</span></code></p></li>
+</ul>
+<p>This method therefore evaluates one paired core shell geometry at a
+time and concatenates the resulting coupling values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>core_diameters_nm</strong> (<em>ndarray</em>)</p></li>
+<li><p><strong>shell_thicknesses_nm</strong> (<em>ndarray</em>)</p></li>
+<li><p><strong>wavelength_nm</strong> (<em>float</em>)</p></li>
+<li><p><strong>source_numerical_aperture</strong> (<em>float</em>)</p></li>
+<li><p><strong>optical_power_watt</strong> (<em>float</em>)</p></li>
+<li><p><strong>detector_numerical_aperture</strong> (<em>float</em>)</p></li>
+<li><p><strong>medium_refractive_index</strong> (<em>float</em>)</p></li>
+<li><p><strong>core_refractive_index</strong> (<em>float</em>)</p></li>
+<li><p><strong>shell_refractive_index</strong> (<em>float</em>)</p></li>
+<li><p><strong>detector_cache_numerical_aperture</strong> (<em>float</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>detector_phi_offset_degree</strong> (<em>float</em>)</p></li>
+<li><p><strong>detector_gamma_offset_degree</strong> (<em>float</em>)</p></li>
+<li><p><strong>polarization_angle_degree</strong> (<em>float</em>)</p></li>
+<li><p><strong>detector_sampling</strong> (<em>int</em>)</p></li>
+<li><p><strong>detector_angular_weights</strong> (<em>ndarray</em><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#RosettaX.pages.p03_scattering.backend.ModeledCouplingResult" title="RosettaX.workflow.scattering.backend.ModeledCouplingResult"><em>ModeledCouplingResult</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.backend.BackEnd.compute_modeled_coupling_from_diameters">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">compute_modeled_coupling_from_diameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">particle_diameters_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavelength_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_numerical_aperture</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optical_power_watt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detector_numerical_aperture</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">medium_refractive_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">particle_refractive_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detector_cache_numerical_aperture</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detector_phi_offset_degree</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detector_gamma_offset_degree</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">polarization_angle_degree</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detector_sampling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">600</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detector_angular_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/scattering/backend.html#BackEnd.compute_modeled_coupling_from_diameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p03_scattering.backend.BackEnd.compute_modeled_coupling_from_diameters" title="Link to this definition">#</a></dt>
+<dd><p>Compute modeled coupling values for solid sphere particle diameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>particle_diameters_nm</strong> (<em>ndarray</em>)</p></li>
+<li><p><strong>wavelength_nm</strong> (<em>float</em>)</p></li>
+<li><p><strong>source_numerical_aperture</strong> (<em>float</em>)</p></li>
+<li><p><strong>optical_power_watt</strong> (<em>float</em>)</p></li>
+<li><p><strong>detector_numerical_aperture</strong> (<em>float</em>)</p></li>
+<li><p><strong>medium_refractive_index</strong> (<em>float</em>)</p></li>
+<li><p><strong>particle_refractive_index</strong> (<em>float</em>)</p></li>
+<li><p><strong>detector_cache_numerical_aperture</strong> (<em>float</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>detector_phi_offset_degree</strong> (<em>float</em>)</p></li>
+<li><p><strong>detector_gamma_offset_degree</strong> (<em>float</em>)</p></li>
+<li><p><strong>polarization_angle_degree</strong> (<em>float</em>)</p></li>
+<li><p><strong>detector_sampling</strong> (<em>int</em>)</p></li>
+<li><p><strong>detector_angular_weights</strong> (<em>ndarray</em><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#RosettaX.pages.p03_scattering.backend.ModeledCouplingResult" title="RosettaX.workflow.scattering.backend.ModeledCouplingResult"><em>ModeledCouplingResult</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.backend.BackEnd.parse_particle_diameter_list">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">parse_particle_diameter_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">particle_diameter_list_text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/scattering/backend.html#BackEnd.parse_particle_diameter_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p03_scattering.backend.BackEnd.parse_particle_diameter_list" title="Link to this definition">#</a></dt>
+<dd><p>Parse a comma or semicolon separated particle diameter list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>particle_diameter_list_text</strong> (<em>str</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.backend.ModeledCouplingResult">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ModeledCouplingResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">particle_diameters_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expected_coupling_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expected_cross_section_nm2_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_metadata</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/scattering/backend.html#ModeledCouplingResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p03_scattering.backend.ModeledCouplingResult" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Container for modeled scattering coupling values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>particle_diameters_nm</strong> (<em>ndarray</em>)</p></li>
+<li><p><strong>expected_coupling_values</strong> (<em>ndarray</em>)</p></li>
+<li><p><strong>expected_cross_section_nm2_values</strong> (<em>ndarray</em>)</p></li>
+<li><p><strong>model_metadata</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.backend.ModeledCouplingResult.expected_coupling_values">
+<span class="sig-name descname"><span class="pre">expected_coupling_values</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></span><a class="headerlink" href="#RosettaX.pages.p03_scattering.backend.ModeledCouplingResult.expected_coupling_values" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.backend.ModeledCouplingResult.expected_cross_section_nm2_values">
+<span class="sig-name descname"><span class="pre">expected_cross_section_nm2_values</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></span><a class="headerlink" href="#RosettaX.pages.p03_scattering.backend.ModeledCouplingResult.expected_cross_section_nm2_values" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.backend.ModeledCouplingResult.model_metadata">
+<span class="sig-name descname"><span class="pre">model_metadata</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#RosettaX.pages.p03_scattering.backend.ModeledCouplingResult.model_metadata" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.backend.ModeledCouplingResult.particle_diameters_nm">
+<span class="sig-name descname"><span class="pre">particle_diameters_nm</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></span><a class="headerlink" href="#RosettaX.pages.p03_scattering.backend.ModeledCouplingResult.particle_diameters_nm" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.backend.ModeledCouplingResult.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/scattering/backend.html#ModeledCouplingResult.to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p03_scattering.backend.ModeledCouplingResult.to_dict" title="Link to this definition">#</a></dt>
+<dd><p>Convert the modeled coupling result to a JSON safe dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict[str, <em>Any</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ScatteringCalibrationFitResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">slope</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intercept</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefactor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_squared</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measured_peak_positions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">particle_diameters_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expected_coupling_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measured_peak_positions_log10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expected_coupling_values_log10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fitted_expected_coupling_values_log10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/scattering/backend.html#ScatteringCalibrationFitResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Container for the scattering calibration fit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>slope</strong> (<em>float</em>)</p></li>
+<li><p><strong>intercept</strong> (<em>float</em>)</p></li>
+<li><p><strong>prefactor</strong> (<em>float</em>)</p></li>
+<li><p><strong>r_squared</strong> (<em>float</em>)</p></li>
+<li><p><strong>measured_peak_positions</strong> (<em>ndarray</em>)</p></li>
+<li><p><strong>particle_diameters_nm</strong> (<em>ndarray</em>)</p></li>
+<li><p><strong>expected_coupling_values</strong> (<em>ndarray</em>)</p></li>
+<li><p><strong>measured_peak_positions_log10</strong> (<em>ndarray</em>)</p></li>
+<li><p><strong>expected_coupling_values_log10</strong> (<em>ndarray</em>)</p></li>
+<li><p><strong>fitted_expected_coupling_values_log10</strong> (<em>ndarray</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.expected_coupling_values">
+<span class="sig-name descname"><span class="pre">expected_coupling_values</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></span><a class="headerlink" href="#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.expected_coupling_values" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.expected_coupling_values_log10">
+<span class="sig-name descname"><span class="pre">expected_coupling_values_log10</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></span><a class="headerlink" href="#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.expected_coupling_values_log10" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.fitted_expected_coupling_values_log10">
+<span class="sig-name descname"><span class="pre">fitted_expected_coupling_values_log10</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></span><a class="headerlink" href="#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.fitted_expected_coupling_values_log10" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.intercept">
+<span class="sig-name descname"><span class="pre">intercept</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.intercept" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.measured_peak_positions">
+<span class="sig-name descname"><span class="pre">measured_peak_positions</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></span><a class="headerlink" href="#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.measured_peak_positions" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.measured_peak_positions_log10">
+<span class="sig-name descname"><span class="pre">measured_peak_positions_log10</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></span><a class="headerlink" href="#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.measured_peak_positions_log10" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.particle_diameters_nm">
+<span class="sig-name descname"><span class="pre">particle_diameters_nm</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></span><a class="headerlink" href="#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.particle_diameters_nm" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.prefactor">
+<span class="sig-name descname"><span class="pre">prefactor</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.prefactor" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.r_squared">
+<span class="sig-name descname"><span class="pre">r_squared</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.r_squared" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.slope">
+<span class="sig-name descname"><span class="pre">slope</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.slope" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/scattering/backend.html#ScatteringCalibrationFitResult.to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.to_dict" title="Link to this definition">#</a></dt>
+<dd><p>Convert the fit result to a JSON safe dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict[str, <em>Any</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<p id="module-RosettaX.pages.p03_scattering.state">Compatibility exports for scattering workflow state.</p>
+<p id="module-RosettaX.pages.p02_fluorescence.state">Compatibility exports for fluorescence workflow state.</p>
+<span class="target" id="module-RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services"></span><dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_axis_scale_toggle_values">
+<span class="sig-name descname"><span class="pre">build_axis_scale_toggle_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">xscale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yscale</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s02_calibration_picker/services.html#build_axis_scale_toggle_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_axis_scale_toggle_values" title="Link to this definition">#</a></dt>
+<dd><p>Convert x and y axis scales to Scatter2DGraph checklist values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>xscale</strong> (<em>Any</em>)</p></li>
+<li><p><strong>yscale</strong> (<em>Any</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_calibration_summary">
+<span class="sig-name descname"><span class="pre">build_calibration_summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_calibration</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_payload</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_file_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s02_calibration_picker/services.html#build_calibration_summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_calibration_summary" title="Link to this definition">#</a></dt>
+<dd><p>Build a lightweight calibration summary for UI decisions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>selected_calibration</strong> (<em>str</em>)</p></li>
+<li><p><strong>calibration_payload</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
+<li><p><strong>calibration_file_path</strong> (<em>Path</em><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict[str, <em>Any</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_empty_target_mie_relation_figure">
+<span class="sig-name descname"><span class="pre">build_empty_target_mie_relation_figure</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s02_calibration_picker/services.html#build_empty_target_mie_relation_figure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_empty_target_mie_relation_figure" title="Link to this definition">#</a></dt>
+<dd><p>Build an empty target Mie relation preview figure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Any</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_preview_items">
+<span class="sig-name descname"><span class="pre">build_preview_items</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">calibration_summary</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s02_calibration_picker/services.html#build_preview_items"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_preview_items" title="Link to this definition">#</a></dt>
+<dd><p>Build preview information items from calibration summary.</p>
+<p>Returns a list of HTML divs showing key calibration metadata.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>calibration_summary</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list[<em>Any</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_scattering_target_model_container_style">
+<span class="sig-name descname"><span class="pre">build_scattering_target_model_container_style</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_visible</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s02_calibration_picker/services.html#build_scattering_target_model_container_style"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_scattering_target_model_container_style" title="Link to this definition">#</a></dt>
+<dd><p>Build the target model container style.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>is_visible</strong> (<em>bool</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict[str, str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_target_mie_relation_figure">
+<span class="sig-name descname"><span class="pre">build_target_mie_relation_figure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_diameter_values_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_coupling_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monotone_diameter_values_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monotone_coupling_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis_scale_toggle_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_axis_title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uirevision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'target_mie_relation_preview'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s02_calibration_picker/services.html#build_target_mie_relation_figure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_target_mie_relation_figure" title="Link to this definition">#</a></dt>
+<dd><p>Build the target Mie relation preview figure.</p>
+<p>The preview always shows the exact full-range Mie curve in blue and the
+monotone curve used for inversion in green.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>full_diameter_values_nm</strong> (<em>Any</em>)</p></li>
+<li><p><strong>full_coupling_values</strong> (<em>Any</em>)</p></li>
+<li><p><strong>monotone_diameter_values_nm</strong> (<em>Any</em>)</p></li>
+<li><p><strong>monotone_coupling_values</strong> (<em>Any</em>)</p></li>
+<li><p><strong>axis_scale_toggle_values</strong> (<em>Any</em>)</p></li>
+<li><p><strong>x_axis_title</strong> (<em>str</em>)</p></li>
+<li><p><strong>uirevision</strong> (<em>str</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Any</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_target_mie_relation_preview">
+<span class="sig-name descname"><span class="pre">build_target_mie_relation_preview</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">controls</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s02_calibration_picker/services.html#build_target_mie_relation_preview"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_target_mie_relation_preview" title="Link to this definition">#</a></dt>
+<dd><p>Build the target preview using the same monotonic policy as export.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>controls</strong> (<em>TargetMiePreviewControls</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>TargetMiePreviewResult</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_target_parameter_container_style">
+<span class="sig-name descname"><span class="pre">build_target_parameter_container_style</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_visible</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_locked</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s02_calibration_picker/services.html#build_target_parameter_container_style"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_target_parameter_container_style" title="Link to this definition">#</a></dt>
+<dd><p>Build the target parameter group visibility style.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>is_visible</strong> (<em>bool</em>)</p></li>
+<li><p><strong>is_locked</strong> (<em>bool</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict[str, str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_upload_prompt_text">
+<span class="sig-name descname"><span class="pre">build_upload_prompt_text</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s02_calibration_picker/services.html#build_upload_prompt_text"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_upload_prompt_text" title="Link to this definition">#</a></dt>
+<dd><p>Build the default calibration upload prompt text.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.calibration_summaries_require_target_model">
+<span class="sig-name descname"><span class="pre">calibration_summaries_require_target_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">calibration_summaries</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s02_calibration_picker/services.html#calibration_summaries_require_target_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.calibration_summaries_require_target_model" title="Link to this definition">#</a></dt>
+<dd><p>Return whether any selected calibration requires scattering target parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>calibration_summaries</strong> (<em>Any</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.get_primary_calibration_summary">
+<span class="sig-name descname"><span class="pre">get_primary_calibration_summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">calibration_summaries</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s02_calibration_picker/services.html#get_primary_calibration_summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.get_primary_calibration_summary" title="Link to this definition">#</a></dt>
+<dd><p>Return the first loaded calibration summary, if any.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>calibration_summaries</strong> (<em>Any</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict[str, <em>Any</em>] | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.get_primary_scattering_calibration_summary">
+<span class="sig-name descname"><span class="pre">get_primary_scattering_calibration_summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">calibration_summaries</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s02_calibration_picker/services.html#get_primary_scattering_calibration_summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.get_primary_scattering_calibration_summary" title="Link to this definition">#</a></dt>
+<dd><p>Return the first scattering calibration summary that requires a target model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>calibration_summaries</strong> (<em>Any</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict[str, <em>Any</em>] | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.has_selected_target_model_preset">
+<span class="sig-name descname"><span class="pre">has_selected_target_model_preset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_model_preset</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s02_calibration_picker/services.html#has_selected_target_model_preset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.has_selected_target_model_preset" title="Link to this definition">#</a></dt>
+<dd><p>Return whether a concrete target model preset has been chosen.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>target_model_preset</strong> (<em>Any</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.normalize_axis_scale">
+<span class="sig-name descname"><span class="pre">normalize_axis_scale</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s02_calibration_picker/services.html#normalize_axis_scale"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.normalize_axis_scale" title="Link to this definition">#</a></dt>
+<dd><p>Normalize an axis scale value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>value</strong> (<em>Any</em>)</p></li>
+<li><p><strong>default</strong> (<em>str</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.normalize_calibration_summaries">
+<span class="sig-name descname"><span class="pre">normalize_calibration_summaries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">calibration_summaries</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s02_calibration_picker/services.html#normalize_calibration_summaries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.normalize_calibration_summaries" title="Link to this definition">#</a></dt>
+<dd><p>Normalize a selected calibration summary payload into a list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>calibration_summaries</strong> (<em>Any</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list[dict[str, <em>Any</em>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.parse_uploaded_calibration">
+<span class="sig-name descname"><span class="pre">parse_uploaded_calibration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">contents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s02_calibration_picker/services.html#parse_uploaded_calibration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.parse_uploaded_calibration" title="Link to this definition">#</a></dt>
+<dd><p>Parse and validate one uploaded calibration JSON file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>contents</strong> (<em>Any</em>)</p></li>
+<li><p><strong>filename</strong> (<em>Any</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple[str, dict[str, <em>Any</em>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.resolve_target_mie_model">
+<span class="sig-name descname"><span class="pre">resolve_target_mie_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_mie_model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s02_calibration_picker/services.html#resolve_target_mie_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.resolve_target_mie_model" title="Link to this definition">#</a></dt>
+<dd><p>Normalize the target Mie model value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>target_mie_model</strong> (<em>Any</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-RosettaX.pages.p04_calibrate.sections.s03_file_picker.services"></span><dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_empty_preview_figure">
+<span class="sig-name descname"><span class="pre">build_empty_preview_figure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s03_file_picker/services.html#build_empty_preview_figure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_empty_preview_figure" title="Link to this definition">#</a></dt>
+<dd><p>Build a compact placeholder for the input FCS histogram.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>message</strong> (<em>str</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Figure</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_preview_channel_selection">
+<span class="sig-name descname"><span class="pre">build_preview_channel_selection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uploaded_fcs_paths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_calibration_summary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s03_file_picker/services.html#build_preview_channel_selection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_preview_channel_selection" title="Link to this definition">#</a></dt>
+<dd><p>Read FCS channel names and build the preview channel selection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>selected_file</strong> (<em>Any</em>)</p></li>
+<li><p><strong>uploaded_fcs_paths</strong> (<em>Any</em>)</p></li>
+<li><p><strong>selected_calibration_summary</strong> (<em>Any</em>)</p></li>
+<li><p><strong>current_value</strong> (<em>Any</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple[list[dict[str, str]], str | None]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_preview_file_selection">
+<span class="sig-name descname"><span class="pre">build_preview_file_selection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uploaded_fcs_paths</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s03_file_picker/services.html#build_preview_file_selection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_preview_file_selection" title="Link to this definition">#</a></dt>
+<dd><p>Build stable file options for one or many uploaded FCS paths.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>uploaded_fcs_paths</strong> (<em>Any</em>)</p></li>
+<li><p><strong>current_value</strong> (<em>Any</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple[list[dict[str, str]], str | None]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_preview_histogram_payload">
+<span class="sig-name descname"><span class="pre">build_preview_histogram_payload</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_channel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uploaded_fcs_paths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_calibration_summary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runtime_config_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis_scale_toggle_values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preview_graph_visibility_toggle_values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_bins_for_plots</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_mie_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_medium_refractive_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_particle_refractive_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_solid_sphere_diameter_min_nm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_solid_sphere_diameter_max_nm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_solid_sphere_diameter_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_core_refractive_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_shell_refractive_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_shell_thickness_nm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_core_shell_core_diameter_min_nm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_core_shell_core_diameter_max_nm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_core_shell_core_diameter_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_model_preset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">advanced_monotonic_mode_enabled</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_monotonic_smoothing_kernel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monotonic_smoothing_sigma_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s03_file_picker/services.html#build_preview_histogram_payload"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_preview_histogram_payload" title="Link to this definition">#</a></dt>
+<dd><p>Build a profile-styled histogram for the selected uploaded FCS file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>selected_file</strong> (<em>Any</em>)</p></li>
+<li><p><strong>selected_channel</strong> (<em>Any</em>)</p></li>
+<li><p><strong>uploaded_fcs_paths</strong> (<em>Any</em>)</p></li>
+<li><p><strong>selected_calibration_summary</strong> (<em>Any</em>)</p></li>
+<li><p><strong>runtime_config_data</strong> (<em>Any</em>)</p></li>
+<li><p><strong>axis_scale_toggle_values</strong> (<em>Any</em>)</p></li>
+<li><p><strong>preview_graph_visibility_toggle_values</strong> (<em>Any</em>)</p></li>
+<li><p><strong>n_bins_for_plots</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_mie_model</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_medium_refractive_index</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_particle_refractive_index</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_solid_sphere_diameter_min_nm</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_solid_sphere_diameter_max_nm</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_solid_sphere_diameter_count</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_core_refractive_index</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_shell_refractive_index</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_shell_thickness_nm</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_core_shell_core_diameter_min_nm</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_core_shell_core_diameter_max_nm</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_core_shell_core_diameter_count</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_model_preset</strong> (<em>Any</em>)</p></li>
+<li><p><strong>advanced_monotonic_mode_enabled</strong> (<em>Any</em>)</p></li>
+<li><p><strong>use_monotonic_smoothing_kernel</strong> (<em>Any</em>)</p></li>
+<li><p><strong>monotonic_smoothing_sigma_points</strong> (<em>Any</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple[str, <em>Figure</em>, dict[str, str], str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_success_alert_payload">
+<span class="sig-name descname"><span class="pre">build_success_alert_payload</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">saved_paths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">consistency_report</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s03_file_picker/services.html#build_success_alert_payload"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_success_alert_payload" title="Link to this definition">#</a></dt>
+<dd><p>Build the upload success or warning alert payload.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>saved_paths</strong> (<em>list</em><em>[</em><em>Path</em><em>]</em>)</p></li>
+<li><p><strong>consistency_report</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple[<em>Any</em>, str, bool]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_upload_directory">
+<span class="sig-name descname"><span class="pre">build_upload_directory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s03_file_picker/services.html#build_upload_directory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_upload_directory" title="Link to this definition">#</a></dt>
+<dd><p>Build and create the local upload directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Local upload directory used by the apply calibration file picker.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Path</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_upload_prompt_text">
+<span class="sig-name descname"><span class="pre">build_upload_prompt_text</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s03_file_picker/services.html#build_upload_prompt_text"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_upload_prompt_text" title="Link to this definition">#</a></dt>
+<dd><p>Build the default FCS upload prompt text.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.check_saved_files_consistency">
+<span class="sig-name descname"><span class="pre">check_saved_files_consistency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">saved_paths</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s03_file_picker/services.html#check_saved_files_consistency"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.check_saved_files_consistency" title="Link to this definition">#</a></dt>
+<dd><p>Check uploaded FCS files for consistency.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>saved_paths</strong> (<em>list</em><em>[</em><em>Path</em><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict[str, <em>Any</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.resolve_preview_control_defaults">
+<span class="sig-name descname"><span class="pre">resolve_preview_control_defaults</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">runtime_config_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s03_file_picker/services.html#resolve_preview_control_defaults"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.resolve_preview_control_defaults" title="Link to this definition">#</a></dt>
+<dd><p>Resolve the file preview control defaults from the active profile.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>runtime_config_data</strong> (<em>Any</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict[str, <em>Any</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.resolve_selected_preview_path">
+<span class="sig-name descname"><span class="pre">resolve_selected_preview_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uploaded_fcs_paths</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s03_file_picker/services.html#resolve_selected_preview_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.resolve_selected_preview_path" title="Link to this definition">#</a></dt>
+<dd><p>Resolve a selected preview path only when it belongs to the upload store.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>selected_file</strong> (<em>Any</em>)</p></li>
+<li><p><strong>uploaded_fcs_paths</strong> (<em>Any</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.save_single_uploaded_file">
+<span class="sig-name descname"><span class="pre">save_single_uploaded_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">upload_directory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s03_file_picker/services.html#save_single_uploaded_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.save_single_uploaded_file" title="Link to this definition">#</a></dt>
+<dd><p>Save one uploaded file to the local upload directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>upload_directory</strong> (<em>Path</em>)</p></li>
+<li><p><strong>contents</strong> (<em>str</em>)</p></li>
+<li><p><strong>filename</strong> (<em>str</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Path</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.save_uploaded_files">
+<span class="sig-name descname"><span class="pre">save_uploaded_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">upload_directory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contents_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filenames</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s03_file_picker/services.html#save_uploaded_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.save_uploaded_files" title="Link to this definition">#</a></dt>
+<dd><p>Save all uploaded files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>upload_directory</strong> (<em>Path</em>) – Directory where uploaded files are written.</p></li>
+<li><p><strong>contents_list</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – Dash upload contents payloads.</p></li>
+<li><p><strong>filenames</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – Original upload filenames.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Saved local file paths.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[Path]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.validate_checks_contract">
+<span class="sig-name descname"><span class="pre">validate_checks_contract</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s03_file_picker/services.html#validate_checks_contract"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.validate_checks_contract" title="Link to this definition">#</a></dt>
+<dd><p>Validate the FCS consistency checker contract.</p>
+<p>Programming errors must fail loudly. The file picker relies on the current
+<code class="docutils literal notranslate"><span class="pre">FCSMultiFileConsistencyChecker</span></code> API.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.validate_page_contract">
+<span class="sig-name descname"><span class="pre">validate_page_contract</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">page</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s03_file_picker/services.html#validate_page_contract"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.validate_page_contract" title="Link to this definition">#</a></dt>
+<dd><p>Validate the page ID contract required by the file picker section.</p>
+<p>Programming errors must fail loudly. Missing IDs indicate an invalid page
+integration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>page</strong> (<em>Any</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.validate_upload_payload">
+<span class="sig-name descname"><span class="pre">validate_upload_payload</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">contents_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filenames</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s03_file_picker/services.html#validate_upload_payload"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.validate_upload_payload" title="Link to this definition">#</a></dt>
+<dd><p>Validate Dash upload payload consistency.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>contents_list</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>)</p></li>
+<li><p><strong>filenames</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-RosettaX.pages.p04_calibrate.sections.s04_apply.services"></span><dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s04_apply.services.apply_and_prepare_calibration_export">
+<span class="sig-name descname"><span class="pre">apply_and_prepare_calibration_export</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">controls</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s04_apply/services.html#apply_and_prepare_calibration_export"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s04_apply.services.apply_and_prepare_calibration_export" title="Link to this definition">#</a></dt>
+<dd><p>Apply calibration and prepare downloads, preserving report failure recovery.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>controls</strong> (<em>ApplyCalibrationControls</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>CalibrationExportResult</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s04_apply.services.build_apply_calibration_request">
+<span class="sig-name descname"><span class="pre">build_apply_calibration_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">uploaded_fcs_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_columns</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_calibration_summary</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_model_preset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_mie_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_medium_refractive_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_particle_refractive_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_solid_sphere_diameter_min_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_solid_sphere_diameter_max_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_solid_sphere_diameter_count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_core_refractive_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_shell_refractive_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_shell_thickness_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_core_shell_core_diameter_min_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_core_shell_core_diameter_max_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_core_shell_core_diameter_count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">advanced_monotonic_mode_enabled</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_monotonic_smoothing_kernel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monotonic_smoothing_sigma_points</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s04_apply/services.html#build_apply_calibration_request"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s04_apply.services.build_apply_calibration_request" title="Link to this definition">#</a></dt>
+<dd><p>Build an apply calibration request from Dash callback values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>uploaded_fcs_path</strong> (<em>Any</em>)</p></li>
+<li><p><strong>export_columns</strong> (<em>Any</em>)</p></li>
+<li><p><strong>selected_calibration_summary</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_model_preset</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_mie_model</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_medium_refractive_index</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_particle_refractive_index</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_solid_sphere_diameter_min_nm</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_solid_sphere_diameter_max_nm</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_solid_sphere_diameter_count</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_core_refractive_index</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_shell_refractive_index</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_shell_thickness_nm</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_core_shell_core_diameter_min_nm</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_core_shell_core_diameter_max_nm</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_core_shell_core_diameter_count</strong> (<em>Any</em>)</p></li>
+<li><p><strong>advanced_monotonic_mode_enabled</strong> (<em>Any</em>)</p></li>
+<li><p><strong>use_monotonic_smoothing_kernel</strong> (<em>Any</em>)</p></li>
+<li><p><strong>monotonic_smoothing_sigma_points</strong> (<em>Any</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="workflows.html#RosettaX.workflow.apply_calibration.services.ApplyCalibrationRequest" title="RosettaX.workflow.apply_calibration.services.ApplyCalibrationRequest"><em>ApplyCalibrationRequest</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s04_apply.services.build_export_column_options_and_values">
+<span class="sig-name descname"><span class="pre">build_export_column_options_and_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">uploaded_fcs_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_export_columns</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s04_apply/services.html#build_export_column_options_and_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s04_apply.services.build_export_column_options_and_values" title="Link to this definition">#</a></dt>
+<dd><p>Build export column dropdown options and preserve still valid selected values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>uploaded_fcs_path</strong> (<em>Any</em>)</p></li>
+<li><p><strong>current_export_columns</strong> (<em>Any</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple[list[dict[str, str]], list[str]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s04_apply.services.build_scattering_target_model_parameters_if_required">
+<span class="sig-name descname"><span class="pre">build_scattering_target_model_parameters_if_required</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_calibration_summary</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_mie_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_medium_refractive_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_particle_refractive_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_solid_sphere_diameter_min_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_solid_sphere_diameter_max_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_solid_sphere_diameter_count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_core_refractive_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_shell_refractive_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_shell_thickness_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_core_shell_core_diameter_min_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_core_shell_core_diameter_max_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_core_shell_core_diameter_count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">advanced_monotonic_mode_enabled</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_monotonic_smoothing_kernel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monotonic_smoothing_sigma_points</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s04_apply/services.html#build_scattering_target_model_parameters_if_required"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s04_apply.services.build_scattering_target_model_parameters_if_required" title="Link to this definition">#</a></dt>
+<dd><p>Build scattering target model parameters when the selected calibration requires them.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>selected_calibration_summary</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_mie_model</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_medium_refractive_index</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_particle_refractive_index</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_solid_sphere_diameter_min_nm</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_solid_sphere_diameter_max_nm</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_solid_sphere_diameter_count</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_core_refractive_index</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_shell_refractive_index</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_shell_thickness_nm</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_core_shell_core_diameter_min_nm</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_core_shell_core_diameter_max_nm</strong> (<em>Any</em>)</p></li>
+<li><p><strong>target_core_shell_core_diameter_count</strong> (<em>Any</em>)</p></li>
+<li><p><strong>advanced_monotonic_mode_enabled</strong> (<em>Any</em>)</p></li>
+<li><p><strong>use_monotonic_smoothing_kernel</strong> (<em>Any</em>)</p></li>
+<li><p><strong>monotonic_smoothing_sigma_points</strong> (<em>Any</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="workflows.html#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelParameters" title="RosettaX.workflow.apply_calibration.scattering.models.ScatteringTargetModelParameters"><em>ScatteringTargetModelParameters</em></a> | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s04_apply.services.prepare_calibration_export">
+<span class="sig-name descname"><span class="pre">prepare_calibration_export</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">controls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s04_apply/services.html#prepare_calibration_export"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s04_apply.services.prepare_calibration_export" title="Link to this definition">#</a></dt>
+<dd><p>Build the report and bundle it when exporting multiple files as ZIP.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>controls</strong> (<em>ApplyCalibrationControls</em>)</p></li>
+<li><p><strong>request</strong> (<a class="reference internal" href="workflows.html#RosettaX.workflow.apply_calibration.services.ApplyCalibrationRequest" title="RosettaX.workflow.apply_calibration.services.ApplyCalibrationRequest"><em>ApplyCalibrationRequest</em></a>)</p></li>
+<li><p><strong>result</strong> (<a class="reference internal" href="workflows.html#RosettaX.workflow.apply_calibration.services.ApplyCalibrationFilesResult" title="RosettaX.workflow.apply_calibration.services.ApplyCalibrationFilesResult"><em>ApplyCalibrationFilesResult</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>CalibrationExportResult</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s04_apply.services.resolve_target_mie_model">
+<span class="sig-name descname"><span class="pre">resolve_target_mie_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_mie_model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s04_apply/services.html#resolve_target_mie_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s04_apply.services.resolve_target_mie_model" title="Link to this definition">#</a></dt>
+<dd><p>Normalize the target Mie model value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>target_mie_model</strong> (<em>Any</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="extension-guidance">
+<h2>Extension guidance<a class="headerlink" href="#extension-guidance" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Put reusable scientific or data-processing logic in <code class="docutils literal notranslate"><span class="pre">RosettaX.workflow</span></code>.</p></li>
+<li><p>Keep page modules focused on UI state reconstruction, callback wiring, and presentation.</p></li>
+<li><p>Treat page-local <code class="docutils literal notranslate"><span class="pre">state</span></code> and <code class="docutils literal notranslate"><span class="pre">backend</span></code> modules as the main extension points for UI customizations.</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="workflows.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Workflow API</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../resources.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Resources</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#page-map">Page map</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#representative-page-modules">Representative page modules</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.backend.BackEnd"><code class="docutils literal notranslate"><span class="pre">BackEnd</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.backend.BackEnd.compute_modeled_coupling"><code class="docutils literal notranslate"><span class="pre">BackEnd.compute_modeled_coupling()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.backend.BackEnd.compute_modeled_coupling_from_core_shell_dimensions"><code class="docutils literal notranslate"><span class="pre">BackEnd.compute_modeled_coupling_from_core_shell_dimensions()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.backend.BackEnd.compute_modeled_coupling_from_diameters"><code class="docutils literal notranslate"><span class="pre">BackEnd.compute_modeled_coupling_from_diameters()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.backend.BackEnd.parse_particle_diameter_list"><code class="docutils literal notranslate"><span class="pre">BackEnd.parse_particle_diameter_list()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.backend.ModeledCouplingResult"><code class="docutils literal notranslate"><span class="pre">ModeledCouplingResult</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.backend.ModeledCouplingResult.expected_coupling_values"><code class="docutils literal notranslate"><span class="pre">ModeledCouplingResult.expected_coupling_values</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.backend.ModeledCouplingResult.expected_cross_section_nm2_values"><code class="docutils literal notranslate"><span class="pre">ModeledCouplingResult.expected_cross_section_nm2_values</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.backend.ModeledCouplingResult.model_metadata"><code class="docutils literal notranslate"><span class="pre">ModeledCouplingResult.model_metadata</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.backend.ModeledCouplingResult.particle_diameters_nm"><code class="docutils literal notranslate"><span class="pre">ModeledCouplingResult.particle_diameters_nm</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.backend.ModeledCouplingResult.to_dict"><code class="docutils literal notranslate"><span class="pre">ModeledCouplingResult.to_dict()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult"><code class="docutils literal notranslate"><span class="pre">ScatteringCalibrationFitResult</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.expected_coupling_values"><code class="docutils literal notranslate"><span class="pre">ScatteringCalibrationFitResult.expected_coupling_values</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.expected_coupling_values_log10"><code class="docutils literal notranslate"><span class="pre">ScatteringCalibrationFitResult.expected_coupling_values_log10</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.fitted_expected_coupling_values_log10"><code class="docutils literal notranslate"><span class="pre">ScatteringCalibrationFitResult.fitted_expected_coupling_values_log10</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.intercept"><code class="docutils literal notranslate"><span class="pre">ScatteringCalibrationFitResult.intercept</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.measured_peak_positions"><code class="docutils literal notranslate"><span class="pre">ScatteringCalibrationFitResult.measured_peak_positions</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.measured_peak_positions_log10"><code class="docutils literal notranslate"><span class="pre">ScatteringCalibrationFitResult.measured_peak_positions_log10</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.particle_diameters_nm"><code class="docutils literal notranslate"><span class="pre">ScatteringCalibrationFitResult.particle_diameters_nm</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.prefactor"><code class="docutils literal notranslate"><span class="pre">ScatteringCalibrationFitResult.prefactor</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.r_squared"><code class="docutils literal notranslate"><span class="pre">ScatteringCalibrationFitResult.r_squared</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.slope"><code class="docutils literal notranslate"><span class="pre">ScatteringCalibrationFitResult.slope</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.to_dict"><code class="docutils literal notranslate"><span class="pre">ScatteringCalibrationFitResult.to_dict()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_axis_scale_toggle_values"><code class="docutils literal notranslate"><span class="pre">build_axis_scale_toggle_values()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_calibration_summary"><code class="docutils literal notranslate"><span class="pre">build_calibration_summary()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_empty_target_mie_relation_figure"><code class="docutils literal notranslate"><span class="pre">build_empty_target_mie_relation_figure()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_preview_items"><code class="docutils literal notranslate"><span class="pre">build_preview_items()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_scattering_target_model_container_style"><code class="docutils literal notranslate"><span class="pre">build_scattering_target_model_container_style()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_target_mie_relation_figure"><code class="docutils literal notranslate"><span class="pre">build_target_mie_relation_figure()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_target_mie_relation_preview"><code class="docutils literal notranslate"><span class="pre">build_target_mie_relation_preview()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_target_parameter_container_style"><code class="docutils literal notranslate"><span class="pre">build_target_parameter_container_style()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_upload_prompt_text"><code class="docutils literal notranslate"><span class="pre">build_upload_prompt_text()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.calibration_summaries_require_target_model"><code class="docutils literal notranslate"><span class="pre">calibration_summaries_require_target_model()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.get_primary_calibration_summary"><code class="docutils literal notranslate"><span class="pre">get_primary_calibration_summary()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.get_primary_scattering_calibration_summary"><code class="docutils literal notranslate"><span class="pre">get_primary_scattering_calibration_summary()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.has_selected_target_model_preset"><code class="docutils literal notranslate"><span class="pre">has_selected_target_model_preset()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.normalize_axis_scale"><code class="docutils literal notranslate"><span class="pre">normalize_axis_scale()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.normalize_calibration_summaries"><code class="docutils literal notranslate"><span class="pre">normalize_calibration_summaries()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.parse_uploaded_calibration"><code class="docutils literal notranslate"><span class="pre">parse_uploaded_calibration()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.resolve_target_mie_model"><code class="docutils literal notranslate"><span class="pre">resolve_target_mie_model()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_empty_preview_figure"><code class="docutils literal notranslate"><span class="pre">build_empty_preview_figure()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_preview_channel_selection"><code class="docutils literal notranslate"><span class="pre">build_preview_channel_selection()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_preview_file_selection"><code class="docutils literal notranslate"><span class="pre">build_preview_file_selection()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_preview_histogram_payload"><code class="docutils literal notranslate"><span class="pre">build_preview_histogram_payload()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_success_alert_payload"><code class="docutils literal notranslate"><span class="pre">build_success_alert_payload()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_upload_directory"><code class="docutils literal notranslate"><span class="pre">build_upload_directory()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_upload_prompt_text"><code class="docutils literal notranslate"><span class="pre">build_upload_prompt_text()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.check_saved_files_consistency"><code class="docutils literal notranslate"><span class="pre">check_saved_files_consistency()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.resolve_preview_control_defaults"><code class="docutils literal notranslate"><span class="pre">resolve_preview_control_defaults()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.resolve_selected_preview_path"><code class="docutils literal notranslate"><span class="pre">resolve_selected_preview_path()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.save_single_uploaded_file"><code class="docutils literal notranslate"><span class="pre">save_single_uploaded_file()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.save_uploaded_files"><code class="docutils literal notranslate"><span class="pre">save_uploaded_files()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.validate_checks_contract"><code class="docutils literal notranslate"><span class="pre">validate_checks_contract()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.validate_page_contract"><code class="docutils literal notranslate"><span class="pre">validate_page_contract()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.validate_upload_payload"><code class="docutils literal notranslate"><span class="pre">validate_upload_payload()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s04_apply.services.apply_and_prepare_calibration_export"><code class="docutils literal notranslate"><span class="pre">apply_and_prepare_calibration_export()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s04_apply.services.build_apply_calibration_request"><code class="docutils literal notranslate"><span class="pre">build_apply_calibration_request()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s04_apply.services.build_export_column_options_and_values"><code class="docutils literal notranslate"><span class="pre">build_export_column_options_and_values()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s04_apply.services.build_scattering_target_model_parameters_if_required"><code class="docutils literal notranslate"><span class="pre">build_scattering_target_model_parameters_if_required()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s04_apply.services.prepare_calibration_export"><code class="docutils literal notranslate"><span class="pre">prepare_calibration_export()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s04_apply.services.resolve_target_mie_model"><code class="docutils literal notranslate"><span class="pre">resolve_target_mie_model()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#extension-guidance">Extension guidance</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  
+  <div class="tocsection editthispage">
+    <a href="https://github.com/MartinPdeS/RosettaX/edit/v0.10.9/docs/source/api/pages.rst">
+      <i class="fa-solid fa-pencil"></i>
+      
+      
+        
+          Edit on GitHub
+        
+      
+    </a>
+  </div>
+</div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/api/pages.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright Martin Poinsinet de Sivry-Houle.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

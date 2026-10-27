@@ -1,0 +1,1888 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" data-theme="dark">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RosettaX.utils.reader &#8212; RosettaX 0.10.9 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "dark";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "dark";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=c83e6b79" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/default.css?v=22616357" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/martinpdes_layout.css?v=a8cc01cd" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/layout.css?v=dc96f8db" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../../../_static/documentation_options.js?v=9d400afe"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/sg-tags.js?v=d80f6fa4"></script>
+    <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/RosettaX/utils/reader';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/MartinPdeS/RosettaX/documentation_page/version_switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.10.9';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="../../../_static/favicon.svg"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.10.9" />
+  
+    
+    <script src="../../../_static/searchtools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <script src="../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="dark">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="../../../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.10.9 documentation - Home"/>
+    <img src="../../../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.10.9 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../quickstart.html">
+    Start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../interface.html">
+    Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../theory.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../code.html">
+    API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../resources.html">
+    Resources
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../privacy.html">
+    Privacy policy
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MartinPdeS/RosettaX" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/RosettaX/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-box fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://anaconda.org/MartinPdeS/RosettaX" title="Anaconda" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">Anaconda</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../quickstart.html">
+    Start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../interface.html">
+    Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../theory.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../code.html">
+    API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../resources.html">
+    Resources
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../privacy.html">
+    Privacy policy
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MartinPdeS/RosettaX" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/RosettaX/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-box fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://anaconda.org/MartinPdeS/RosettaX" title="Anaconda" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">Anaconda</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">RosettaX.utils.reader</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for RosettaX.utils.reader</h1><div class="highlight"><pre>
+<span></span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">mmap</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">weakref</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing_extensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">Self</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.utils.fcs_metadata</span><span class="w"> </span><span class="kn">import</span> <span class="n">FCSMetadata</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="n">_NON_APPLICABLE_DERIVED_DETECTOR_FIELDS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"E"</span><span class="p">:</span> <span class="s2">"0,0"</span><span class="p">,</span>
+    <span class="s2">"G"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="s2">"V"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="FCSFile">
+<a class="viewcode-back" href="../../../api/utilities.html#RosettaX.utils.reader.FCSFile">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FCSFile</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Safe FCS reader.</span>
+
+<span class="sd">    Design choice</span>
+<span class="sd">    -------------</span>
+<span class="sd">    This reader never exposes zero copy pandas or NumPy views backed by the mmap</span>
+<span class="sd">    buffer. All public data accessors return owned copies so the file can always</span>
+<span class="sd">    be closed safely.</span>
+
+<span class="sd">    Recommended usage</span>
+<span class="sd">    -----------------</span>
+<span class="sd">    with FCSFile(path) as fcs:</span>
+<span class="sd">        names = fcs.get_column_names()</span>
+<span class="sd">        x = fcs.column_copy("FSC-A", dtype=float, n=200_000)</span>
+<span class="sd">    """</span>
+
+    <span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span>
+    <span class="n">writable</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="n">header</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">text</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">delimiter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">metadata</span><span class="p">:</span> <span class="n">FCSMetadata</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="n">_file_handle</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">_mmap</span><span class="p">:</span> <span class="n">mmap</span><span class="o">.</span><span class="n">mmap</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">_records</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">_finalizer</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"Initializing FCSFile with file_path=</span><span class="si">%r</span><span class="s2">, writable=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">writable</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_file</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">header</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_header</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">delimiter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_text</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span> <span class="o">=</span> <span class="n">FCSMetadata</span><span class="p">(</span>
+            <span class="n">file_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span>
+            <span class="n">header</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
+            <span class="n">delimiter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">delimiter</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"Parsed FCS metadata: </span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">debug_summary</span><span class="p">(),</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_open_mmap</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_finalizer</span> <span class="o">=</span> <span class="n">weakref</span><span class="o">.</span><span class="n">finalize</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_best_effort_close</span><span class="p">,</span>
+            <span class="bp">self</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Entering FCSFile context for file_path=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">tb</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">exc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">"Exiting FCSFile context with exception for file_path=</span><span class="si">%r</span><span class="s2">, exception_type=</span><span class="si">%r</span><span class="s2">, exception=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span>
+                <span class="n">exc_type</span><span class="p">,</span>
+                <span class="n">exc</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">"Exiting FCSFile context cleanly for file_path=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<div class="viewcode-block" id="FCSFile.get_column_names">
+<a class="viewcode-back" href="../../../api/utilities.html#RosettaX.utils.reader.FCSFile.get_column_names">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_column_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">column_names</span></div>
+
+
+<div class="viewcode-block" id="FCSFile.get_metadata">
+<a class="viewcode-back" href="../../../api/utilities.html#RosettaX.utils.reader.FCSFile.get_metadata">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FCSMetadata</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span></div>
+
+
+<div class="viewcode-block" id="FCSFile.get_detector_voltages">
+<a class="viewcode-back" href="../../../api/utilities.html#RosettaX.utils.reader.FCSFile.get_detector_voltages">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_detector_voltages</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">detector_voltages</span></div>
+
+
+<div class="viewcode-block" id="FCSFile.column_copy">
+<a class="viewcode-back" href="../../../api/utilities.html#RosettaX.utils.reader.FCSFile.column_copy">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">column_copy</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">column_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">start</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return an owned NumPy array for one column.</span>
+
+<span class="sd">        This always copies, so it is safe to use after the file closes.</span>
+<span class="sd">        """</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"Copying FCS column for file_path=</span><span class="si">%r</span><span class="s2">, column_name=</span><span class="si">%r</span><span class="s2">, dtype=</span><span class="si">%r</span><span class="s2">, n=</span><span class="si">%r</span><span class="s2">, start=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span>
+            <span class="n">column_name</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="p">,</span>
+            <span class="n">n</span><span class="p">,</span>
+            <span class="n">start</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_records_loaded</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_records</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="s2">"Internal error: records not loaded."</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s2">"</span><span class="si">%s</span><span class="s2"> file_path=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+                <span class="n">message</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+
+        <span class="n">column_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">column_name</span><span class="p">)</span>
+        <span class="n">column_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_column_index_from_name</span><span class="p">(</span><span class="n">column_name</span><span class="p">)</span>
+
+        <span class="n">raw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_records</span><span class="p">[</span><span class="sa">f</span><span class="s2">"parameter_</span><span class="si">{</span><span class="n">column_index</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">owned</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">owned</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">start</span><span class="p">:</span>
+            <span class="n">owned</span> <span class="o">=</span> <span class="n">owned</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">start</span><span class="p">)</span> <span class="p">:]</span>
+
+        <span class="k">if</span> <span class="n">n</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">owned</span> <span class="o">=</span> <span class="n">owned</span><span class="p">[:</span> <span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"Copied FCS column for file_path=</span><span class="si">%r</span><span class="s2">, column_name=</span><span class="si">%r</span><span class="s2">, result_shape=</span><span class="si">%r</span><span class="s2">, result_dtype=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span>
+            <span class="n">column_name</span><span class="p">,</span>
+            <span class="n">owned</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="n">owned</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">owned</span></div>
+
+
+<div class="viewcode-block" id="FCSFile.columns_copy">
+<a class="viewcode-back" href="../../../api/utilities.html#RosettaX.utils.reader.FCSFile.columns_copy">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">columns_copy</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">column_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">start</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return owned NumPy arrays for multiple columns.</span>
+<span class="sd">        """</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"Copying FCS columns for file_path=</span><span class="si">%r</span><span class="s2">, column_names=</span><span class="si">%r</span><span class="s2">, dtype=</span><span class="si">%r</span><span class="s2">, n=</span><span class="si">%r</span><span class="s2">, start=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span>
+            <span class="n">column_names</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="p">,</span>
+            <span class="n">n</span><span class="p">,</span>
+            <span class="n">start</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">result</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">column_names</span><span class="p">):</span>
+            <span class="n">result</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">column_copy</span><span class="p">(</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">),</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
+                <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span>
+                <span class="n">start</span><span class="o">=</span><span class="n">start</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="FCSFile.dataframe_copy">
+<a class="viewcode-back" href="../../../api/utilities.html#RosettaX.utils.reader.FCSFile.dataframe_copy">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dataframe_copy</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">columns</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">start</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">deep</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return an owned DataFrame that can outlive the file.</span>
+
+<span class="sd">        deep is kept for API compatibility, but this method always returns owned data.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">columns</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">columns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">column_names</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"Copying FCS dataframe for file_path=</span><span class="si">%r</span><span class="s2">, columns=</span><span class="si">%r</span><span class="s2">, dtype=</span><span class="si">%r</span><span class="s2">, n=</span><span class="si">%r</span><span class="s2">, start=</span><span class="si">%r</span><span class="s2">, deep=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span>
+            <span class="n">columns</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="p">,</span>
+            <span class="n">n</span><span class="p">,</span>
+            <span class="n">start</span><span class="p">,</span>
+            <span class="n">deep</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">arrays</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">columns_copy</span><span class="p">(</span>
+            <span class="nb">list</span><span class="p">(</span><span class="n">columns</span><span class="p">),</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
+            <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span>
+            <span class="n">start</span><span class="o">=</span><span class="n">start</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">dataframe</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">arrays</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">attribute_name</span><span class="p">,</span> <span class="n">attribute_value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">to_dataframe_attrs</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">dataframe</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="n">attribute_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">attribute_value</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"Copied FCS dataframe for file_path=</span><span class="si">%r</span><span class="s2">, shape=</span><span class="si">%r</span><span class="s2">, columns=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span>
+            <span class="n">dataframe</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="nb">list</span><span class="p">(</span><span class="n">dataframe</span><span class="o">.</span><span class="n">columns</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">deep</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">dataframe</span></div>
+
+
+<div class="viewcode-block" id="FCSFile.close">
+<a class="viewcode-back" href="../../../api/utilities.html#RosettaX.utils.reader.FCSFile.close">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Close mmap and file handle.</span>
+
+<span class="sd">        Always safe because we never export mmap backed views.</span>
+<span class="sd">        """</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Closing FCSFile for file_path=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">)</span>
+
+        <span class="n">mmap_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mmap</span>
+        <span class="n">file_handle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_handle</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_records</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mmap</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_file_handle</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">mmap_obj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">mmap_obj</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">"Failed to close mmap for file_path=</span><span class="si">%r</span><span class="s2">: </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span>
+                    <span class="nb">type</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                    <span class="n">exc</span><span class="p">,</span>
+                <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">file_handle</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">file_handle</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">"Failed to close file handle for file_path=</span><span class="si">%r</span><span class="s2">: </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span>
+                    <span class="nb">type</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                    <span class="n">exc</span><span class="p">,</span>
+                <span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_raise_file_error</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">exception</span><span class="p">:</span> <span class="ne">Exception</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">full_message</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'"</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">)</span><span class="si">}</span><span class="s1">" </span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s1">'</span>
+
+        <span class="k">if</span> <span class="n">exception</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s2">"Invalid FCS file: file_path=</span><span class="si">%r</span><span class="s2">, reason=</span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span>
+                <span class="n">full_message</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">full_message</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s2">"Invalid FCS file: file_path=</span><span class="si">%r</span><span class="s2">, reason=</span><span class="si">%s</span><span class="s2">, exception_type=</span><span class="si">%s</span><span class="s2">, exception=</span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span>
+            <span class="n">full_message</span><span class="p">,</span>
+            <span class="nb">type</span><span class="p">(</span><span class="n">exception</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+            <span class="n">exception</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">full_message</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exception</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_file</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Validating FCS file_path=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_raise_file_error</span><span class="p">(</span><span class="s2">"does not exist."</span><span class="p">)</span>
+
+        <span class="n">file_size</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">file_size</span> <span class="o">&lt;</span> <span class="mi">257</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_raise_file_error</span><span class="p">(</span>
+                <span class="s2">"is not a valid FCS file because it is too small."</span>
+            <span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"Validated FCS file_path=</span><span class="si">%r</span><span class="s2">, file_size=</span><span class="si">%r</span><span class="s2"> bytes"</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span>
+            <span class="n">file_size</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_read_header</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Reading FCS HEADER for file_path=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span> <span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span>
+            <span class="n">header_bytes</span> <span class="o">=</span> <span class="n">handle</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">256</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">fcs_version</span> <span class="o">=</span> <span class="n">header_bytes</span><span class="p">[:</span><span class="mi">6</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"ascii"</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">UnicodeDecodeError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_raise_file_error</span><span class="p">(</span>
+                <span class="s2">"is not a valid FCS file because the version cannot be decoded."</span><span class="p">,</span>
+                <span class="n">exception</span><span class="o">=</span><span class="n">exc</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">fcs_version</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"FCS2.0"</span><span class="p">,</span> <span class="s2">"FCS3.0"</span><span class="p">,</span> <span class="s2">"FCS3.1"</span><span class="p">}:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_raise_file_error</span><span class="p">(</span>
+                <span class="s2">"is not a valid FCS file because the version is invalid."</span>
+            <span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">text_start</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">header_bytes</span><span class="p">[</span><span class="mi">10</span><span class="p">:</span><span class="mi">18</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="sa">b</span><span class="s2">"0"</span><span class="p">)</span>
+            <span class="n">text_end</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">header_bytes</span><span class="p">[</span><span class="mi">18</span><span class="p">:</span><span class="mi">26</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="sa">b</span><span class="s2">"0"</span><span class="p">)</span>
+            <span class="n">data_start</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">header_bytes</span><span class="p">[</span><span class="mi">26</span><span class="p">:</span><span class="mi">34</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="sa">b</span><span class="s2">"0"</span><span class="p">)</span>
+            <span class="n">data_end</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">header_bytes</span><span class="p">[</span><span class="mi">34</span><span class="p">:</span><span class="mi">42</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="sa">b</span><span class="s2">"0"</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_raise_file_error</span><span class="p">(</span>
+                <span class="s2">"is not a valid FCS file because header offsets are invalid."</span><span class="p">,</span>
+                <span class="n">exception</span><span class="o">=</span><span class="n">exc</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="n">header</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"FCS version"</span><span class="p">:</span> <span class="n">fcs_version</span><span class="p">,</span>
+            <span class="s2">"Text start"</span><span class="p">:</span> <span class="n">text_start</span><span class="p">,</span>
+            <span class="s2">"Text end"</span><span class="p">:</span> <span class="n">text_end</span><span class="p">,</span>
+            <span class="s2">"Data start"</span><span class="p">:</span> <span class="n">data_start</span><span class="p">,</span>
+            <span class="s2">"Data end"</span><span class="p">:</span> <span class="n">data_end</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"Read FCS HEADER for file_path=</span><span class="si">%r</span><span class="s2">, header=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span>
+            <span class="n">header</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">header</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_split_text_payload</span><span class="p">(</span><span class="n">payload</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">delimiter</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="n">tokens</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">token_chars</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">index</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">while</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">payload</span><span class="p">):</span>
+            <span class="n">ch</span> <span class="o">=</span> <span class="n">payload</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">ch</span> <span class="o">==</span> <span class="n">delimiter</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">index</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span> <span class="ow">and</span> <span class="n">payload</span><span class="p">[</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">delimiter</span><span class="p">:</span>
+                    <span class="n">token_chars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">delimiter</span><span class="p">)</span>
+                    <span class="n">index</span> <span class="o">+=</span> <span class="mi">2</span>
+                    <span class="k">continue</span>
+
+                <span class="n">tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">token_chars</span><span class="p">))</span>
+                <span class="n">token_chars</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">index</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">continue</span>
+
+            <span class="n">token_chars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ch</span><span class="p">)</span>
+            <span class="n">index</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">token_chars</span><span class="p">:</span>
+            <span class="n">tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">token_chars</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">tokens</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_read_text</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="nb">str</span><span class="p">]:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Reading FCS TEXT for file_path=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">)</span>
+
+        <span class="n">text_start</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s2">"Text start"</span><span class="p">])</span>
+        <span class="n">text_end</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s2">"Text end"</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">text_end</span> <span class="o">&lt;=</span> <span class="n">text_start</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_raise_file_error</span><span class="p">(</span>
+                <span class="s2">"is not a valid FCS file because TEXT bounds are invalid."</span>
+            <span class="p">)</span>
+
+        <span class="n">length</span> <span class="o">=</span> <span class="n">text_end</span> <span class="o">-</span> <span class="n">text_start</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span> <span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span>
+            <span class="n">handle</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">text_start</span><span class="p">)</span>
+            <span class="n">raw</span> <span class="o">=</span> <span class="n">handle</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">length</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">text_section</span> <span class="o">=</span> <span class="n">raw</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"ascii"</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"strict"</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">UnicodeDecodeError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_raise_file_error</span><span class="p">(</span>
+                <span class="s2">"is not a valid FCS file because TEXT cannot be decoded."</span><span class="p">,</span>
+                <span class="n">exception</span><span class="o">=</span><span class="n">exc</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">text_section</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_raise_file_error</span><span class="p">(</span>
+                <span class="s2">"is not a valid FCS file because TEXT is empty."</span>
+            <span class="p">)</span>
+
+        <span class="n">delimiter</span> <span class="o">=</span> <span class="n">text_section</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">payload</span> <span class="o">=</span> <span class="n">text_section</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+        <span class="n">items</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_split_text_payload</span><span class="p">(</span><span class="n">payload</span><span class="p">,</span> <span class="n">delimiter</span><span class="p">)</span>
+
+        <span class="k">while</span> <span class="n">items</span> <span class="ow">and</span> <span class="n">items</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">""</span><span class="p">:</span>
+            <span class="n">items</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_raise_file_error</span><span class="p">(</span>
+                <span class="s2">"is not a valid FCS file because TEXT is malformed."</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">trailing_token</span> <span class="o">=</span> <span class="n">items</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">items</span> <span class="o">=</span> <span class="n">items</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">trailing_token</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">"FCS TEXT contains an odd number of tokens. Dropping the last token for file_path=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span>
+                <span class="p">)</span>
+
+        <span class="n">keywords</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">),</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">items</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">items</span><span class="p">[</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">"-"</span><span class="p">)</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+                <span class="n">keywords</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">keywords</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+        <span class="n">parsed</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"Keywords"</span><span class="p">:</span> <span class="n">keywords</span><span class="p">,</span>
+            <span class="s2">"Detectors"</span><span class="p">:</span> <span class="p">{},</span>
+        <span class="p">}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_group_detectors</span><span class="p">(</span><span class="n">parsed</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"Read FCS TEXT for file_path=</span><span class="si">%r</span><span class="s2">, delimiter=</span><span class="si">%r</span><span class="s2">, number_of_keywords=</span><span class="si">%r</span><span class="s2">, number_of_detectors=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span>
+            <span class="n">delimiter</span><span class="p">,</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">parsed</span><span class="p">[</span><span class="s2">"Keywords"</span><span class="p">]),</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">parsed</span><span class="p">[</span><span class="s2">"Detectors"</span><span class="p">]),</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">parsed</span><span class="p">,</span> <span class="n">delimiter</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_group_detectors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parsed_text</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Grouping FCS detector keywords for file_path=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">)</span>
+
+        <span class="n">keywords</span> <span class="o">=</span> <span class="n">parsed_text</span><span class="p">[</span><span class="s2">"Keywords"</span><span class="p">]</span>
+        <span class="n">detectors</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="s2">"$PAR"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">keywords</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_raise_file_error</span><span class="p">(</span>
+                <span class="s2">"is not a valid FCS file because $PAR is missing."</span>
+            <span class="p">)</span>
+
+        <span class="n">number_of_parameters</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">keywords</span><span class="p">[</span><span class="s2">"$PAR"</span><span class="p">])</span>
+        <span class="n">parameter_pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^\$P(\d+)([A-Z]+)$"</span><span class="p">)</span>
+
+        <span class="n">keys_to_remove</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">keywords</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">match</span> <span class="o">=</span> <span class="n">parameter_pattern</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="n">match</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">parameter_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+            <span class="n">suffix</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+            <span class="n">detectors</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">parameter_index</span><span class="p">,</span> <span class="p">{})[</span><span class="n">suffix</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="n">keys_to_remove</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys_to_remove</span><span class="p">:</span>
+            <span class="n">keywords</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">parameter_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">number_of_parameters</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">detectors</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">parameter_index</span><span class="p">,</span> <span class="p">{})</span>
+
+        <span class="n">parsed_text</span><span class="p">[</span><span class="s2">"Detectors"</span><span class="p">]</span> <span class="o">=</span> <span class="n">detectors</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"Grouped FCS detectors for file_path=</span><span class="si">%r</span><span class="s2">, number_of_parameters=</span><span class="si">%r</span><span class="s2">, detector_indices=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span>
+            <span class="n">number_of_parameters</span><span class="p">,</span>
+            <span class="nb">sorted</span><span class="p">(</span><span class="n">detectors</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_open_mmap</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"Opening mmap for file_path=</span><span class="si">%r</span><span class="s2">, writable=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">writable</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">mode</span> <span class="o">=</span> <span class="s2">"r+b"</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">writable</span> <span class="k">else</span> <span class="s2">"rb"</span>
+        <span class="n">access</span> <span class="o">=</span> <span class="n">mmap</span><span class="o">.</span><span class="n">ACCESS_WRITE</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">writable</span> <span class="k">else</span> <span class="n">mmap</span><span class="o">.</span><span class="n">ACCESS_READ</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_file_handle</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mmap</span> <span class="o">=</span> <span class="n">mmap</span><span class="o">.</span><span class="n">mmap</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_file_handle</span><span class="o">.</span><span class="n">fileno</span><span class="p">(),</span>
+                <span class="mi">0</span><span class="p">,</span>
+                <span class="n">access</span><span class="o">=</span><span class="n">access</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span>
+                <span class="s2">"Failed to open mmap for file_path=</span><span class="si">%r</span><span class="s2">, writable=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">writable</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">raise</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Opened mmap for file_path=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_endian_prefix</span><span class="p">(</span><span class="n">byteord</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">byteord</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">byteord</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">byteord</span> <span class="o">==</span> <span class="s2">"1,2,3,4"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">"&lt;"</span>
+
+        <span class="k">if</span> <span class="n">byteord</span> <span class="o">==</span> <span class="s2">"4,3,2,1"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">"&gt;"</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"Unsupported FCS $BYTEORD=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span> <span class="n">byteord</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Unsupported $BYTEORD "</span><span class="si">{</span><span class="n">byteord</span><span class="si">}</span><span class="s1">".'</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_dtype_for_parameter</span><span class="p">(</span><span class="n">datatype</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">bits</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">endian_prefix</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">:</span>
+        <span class="n">datatype</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">datatype</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+        <span class="n">bits</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bits</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">bits</span> <span class="o">%</span> <span class="mi">8</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s2">"Invalid FCS parameter bit width. datatype=</span><span class="si">%r</span><span class="s2">, bits=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+                <span class="n">datatype</span><span class="p">,</span>
+                <span class="n">bits</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"$PnB must be byte aligned, got </span><span class="si">{</span><span class="n">bits</span><span class="si">}</span><span class="s2"> bits."</span><span class="p">)</span>
+
+        <span class="n">number_of_bytes</span> <span class="o">=</span> <span class="n">bits</span> <span class="o">//</span> <span class="mi">8</span>
+
+        <span class="k">if</span> <span class="n">datatype</span> <span class="o">==</span> <span class="s2">"I"</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">number_of_bytes</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">endian_prefix</span> <span class="o">+</span> <span class="s2">"u1"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">number_of_bytes</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">endian_prefix</span> <span class="o">+</span> <span class="s2">"u2"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">number_of_bytes</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">endian_prefix</span> <span class="o">+</span> <span class="s2">"u4"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">number_of_bytes</span> <span class="o">==</span> <span class="mi">8</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">endian_prefix</span> <span class="o">+</span> <span class="s2">"u8"</span><span class="p">)</span>
+
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s2">"Unsupported FCS integer width. datatype=</span><span class="si">%r</span><span class="s2">, bits=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+                <span class="n">datatype</span><span class="p">,</span>
+                <span class="n">bits</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unsupported integer width: </span><span class="si">{</span><span class="n">bits</span><span class="si">}</span><span class="s2"> bits"</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">datatype</span> <span class="o">==</span> <span class="s2">"F"</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">bits</span> <span class="o">!=</span> <span class="mi">32</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                    <span class="s2">"Invalid FCS float width for $DATATYPE=F. bits=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="n">bits</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"For $DATATYPE=F, expected $PnB=32."</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">endian_prefix</span> <span class="o">+</span> <span class="s2">"f4"</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">datatype</span> <span class="o">==</span> <span class="s2">"D"</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">bits</span> <span class="o">!=</span> <span class="mi">64</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                    <span class="s2">"Invalid FCS float width for $DATATYPE=D. bits=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="n">bits</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"For $DATATYPE=D, expected $PnB=64."</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">endian_prefix</span> <span class="o">+</span> <span class="s2">"f8"</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"Unsupported FCS $DATATYPE=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span> <span class="n">datatype</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Unsupported $DATATYPE "</span><span class="si">{</span><span class="n">datatype</span><span class="si">}</span><span class="s1">".'</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_event_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">:</span>
+        <span class="n">keywords</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">text</span><span class="p">[</span><span class="s2">"Keywords"</span><span class="p">]</span>
+        <span class="n">detectors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">text</span><span class="p">[</span><span class="s2">"Detectors"</span><span class="p">]</span>
+
+        <span class="n">mode</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">keywords</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"$MODE"</span><span class="p">,</span> <span class="s2">"L"</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">mode</span> <span class="o">!=</span> <span class="s2">"L"</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s2">"Unsupported FCS $MODE for file_path=</span><span class="si">%r</span><span class="s2">, mode=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span>
+                <span class="n">mode</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Only $MODE="L" is supported.'</span><span class="p">)</span>
+
+        <span class="n">number_of_parameters</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">keywords</span><span class="p">[</span><span class="s2">"$PAR"</span><span class="p">])</span>
+        <span class="n">datatype</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">keywords</span><span class="p">[</span><span class="s2">"$DATATYPE"</span><span class="p">])</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+        <span class="n">endian_prefix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_endian_prefix</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">keywords</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"$BYTEORD"</span><span class="p">,</span> <span class="s2">"1,2,3,4"</span><span class="p">)))</span>
+
+        <span class="n">fields</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">parameter_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">number_of_parameters</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">detector</span> <span class="o">=</span> <span class="n">detectors</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter_index</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="n">bits</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">detector</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"B"</span><span class="p">,</span> <span class="n">keywords</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">"$P</span><span class="si">{</span><span class="n">parameter_index</span><span class="si">}</span><span class="s2">B"</span><span class="p">,</span> <span class="mi">32</span><span class="p">)))</span>
+            <span class="n">data_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dtype_for_parameter</span><span class="p">(</span><span class="n">datatype</span><span class="p">,</span> <span class="n">bits</span><span class="p">,</span> <span class="n">endian_prefix</span><span class="p">)</span>
+
+            <span class="n">fields</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"parameter_</span><span class="si">{</span><span class="n">parameter_index</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="n">data_type</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="n">event_dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"Built FCS event dtype for file_path=</span><span class="si">%r</span><span class="s2">, dtype=</span><span class="si">%r</span><span class="s2">, itemsize=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span>
+            <span class="n">event_dtype</span><span class="p">,</span>
+            <span class="n">event_dtype</span><span class="o">.</span><span class="n">itemsize</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">event_dtype</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_column_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">column_names</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_column_index_from_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="n">column_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_column_names</span><span class="p">()</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">index_zero_based</span> <span class="o">=</span> <span class="n">column_names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">column_name</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s2">"FCS column not found for file_path=</span><span class="si">%r</span><span class="s2">, column_name=</span><span class="si">%r</span><span class="s2">, available_columns=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span>
+                <span class="n">column_name</span><span class="p">,</span>
+                <span class="n">column_names</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Column "</span><span class="si">{</span><span class="n">column_name</span><span class="si">}</span><span class="s1">" not found.'</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+
+        <span class="k">return</span> <span class="n">index_zero_based</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_resolve_data_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expected_bytes</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+        <span class="n">keywords</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">text</span><span class="p">[</span><span class="s2">"Keywords"</span><span class="p">]</span>
+        <span class="n">file_size</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"Resolving FCS DATA bounds for file_path=</span><span class="si">%r</span><span class="s2">, expected_bytes=</span><span class="si">%r</span><span class="s2">, file_size=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span>
+            <span class="n">expected_bytes</span><span class="p">,</span>
+            <span class="n">file_size</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">candidates</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">header_start</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"Data start"</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="n">header_end</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"Data end"</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">header_start</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">header_end</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">candidates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">(</span>
+                    <span class="n">header_start</span><span class="p">,</span>
+                    <span class="n">header_end</span><span class="p">,</span>
+                    <span class="s2">"header"</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">"$BEGINDATA"</span> <span class="ow">in</span> <span class="n">keywords</span> <span class="ow">and</span> <span class="s2">"$ENDDATA"</span> <span class="ow">in</span> <span class="n">keywords</span><span class="p">:</span>
+            <span class="n">candidates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">(</span>
+                    <span class="nb">int</span><span class="p">(</span><span class="n">keywords</span><span class="p">[</span><span class="s2">"$BEGINDATA"</span><span class="p">]),</span>
+                    <span class="nb">int</span><span class="p">(</span><span class="n">keywords</span><span class="p">[</span><span class="s2">"$ENDDATA"</span><span class="p">]),</span>
+                    <span class="s2">"text"</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">normalize</span><span class="p">(</span><span class="n">start</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">start</span><span class="p">)</span>
+            <span class="n">end</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">end</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">end</span> <span class="o">==</span> <span class="n">file_size</span><span class="p">:</span>
+                <span class="n">end</span> <span class="o">=</span> <span class="n">file_size</span> <span class="o">-</span> <span class="mi">1</span>
+
+            <span class="k">return</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">is_valid</span><span class="p">(</span><span class="n">start</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">start</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">end</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+            <span class="k">if</span> <span class="n">start</span> <span class="o">&gt;=</span> <span class="n">file_size</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+            <span class="k">if</span> <span class="n">end</span> <span class="o">&gt;=</span> <span class="n">file_size</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+            <span class="k">if</span> <span class="n">end</span> <span class="o">&lt;</span> <span class="n">start</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+            <span class="n">segment_bytes</span> <span class="o">=</span> <span class="n">end</span> <span class="o">-</span> <span class="n">start</span> <span class="o">+</span> <span class="mi">1</span>
+
+            <span class="k">return</span> <span class="n">segment_bytes</span> <span class="o">&gt;=</span> <span class="n">expected_bytes</span>
+
+        <span class="k">for</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">source_name</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">:</span>
+            <span class="n">normalized_start</span><span class="p">,</span> <span class="n">normalized_end</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>
+
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">"Checking FCS DATA bounds candidate for file_path=</span><span class="si">%r</span><span class="s2">, source=</span><span class="si">%r</span><span class="s2">, start=</span><span class="si">%r</span><span class="s2">, end=</span><span class="si">%r</span><span class="s2">, normalized_start=</span><span class="si">%r</span><span class="s2">, normalized_end=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span>
+                <span class="n">source_name</span><span class="p">,</span>
+                <span class="n">start</span><span class="p">,</span>
+                <span class="n">end</span><span class="p">,</span>
+                <span class="n">normalized_start</span><span class="p">,</span>
+                <span class="n">normalized_end</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">is_valid</span><span class="p">(</span><span class="n">normalized_start</span><span class="p">,</span> <span class="n">normalized_end</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="s2">"Resolved FCS DATA bounds for file_path=</span><span class="si">%r</span><span class="s2">, source=</span><span class="si">%r</span><span class="s2">, data_start=</span><span class="si">%r</span><span class="s2">, data_end=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span>
+                    <span class="n">source_name</span><span class="p">,</span>
+                    <span class="n">normalized_start</span><span class="p">,</span>
+                    <span class="n">normalized_end</span><span class="p">,</span>
+                <span class="p">)</span>
+
+                <span class="k">return</span> <span class="n">normalized_start</span><span class="p">,</span> <span class="n">normalized_end</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s2">"Failed to resolve FCS DATA bounds for file_path=</span><span class="si">%r</span><span class="s2">, expected_bytes=</span><span class="si">%r</span><span class="s2">, candidates=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span>
+            <span class="n">expected_bytes</span><span class="p">,</span>
+            <span class="n">candidates</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_raise_file_error</span><span class="p">(</span>
+            <span class="s2">"is not a valid FCS file because DATA bounds are invalid or too small for expected payload."</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_ensure_records_loaded</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_records</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mmap</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s2">"Cannot load FCS records because file is closed. file_path=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"File is closed."</span><span class="p">)</span>
+
+        <span class="n">keywords</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">text</span><span class="p">[</span><span class="s2">"Keywords"</span><span class="p">]</span>
+        <span class="n">number_of_events</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">keywords</span><span class="p">[</span><span class="s2">"$TOT"</span><span class="p">])</span>
+
+        <span class="n">event_dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_event_dtype</span><span class="p">()</span>
+        <span class="n">bytes_per_event</span> <span class="o">=</span> <span class="n">event_dtype</span><span class="o">.</span><span class="n">itemsize</span>
+        <span class="n">expected_bytes</span> <span class="o">=</span> <span class="n">number_of_events</span> <span class="o">*</span> <span class="n">bytes_per_event</span>
+
+        <span class="n">data_start</span><span class="p">,</span> <span class="n">data_end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_data_bounds</span><span class="p">(</span>
+            <span class="n">expected_bytes</span><span class="o">=</span><span class="n">expected_bytes</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"Loading FCS records for file_path=</span><span class="si">%r</span><span class="s2">, number_of_events=</span><span class="si">%r</span><span class="s2">, bytes_per_event=</span><span class="si">%r</span><span class="s2">, expected_bytes=</span><span class="si">%r</span><span class="s2">, data_start=</span><span class="si">%r</span><span class="s2">, data_end=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span>
+            <span class="n">number_of_events</span><span class="p">,</span>
+            <span class="n">bytes_per_event</span><span class="p">,</span>
+            <span class="n">expected_bytes</span><span class="p">,</span>
+            <span class="n">data_start</span><span class="p">,</span>
+            <span class="n">data_end</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">memory_view</span> <span class="o">=</span> <span class="nb">memoryview</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mmap</span><span class="p">)[</span><span class="n">data_start</span> <span class="p">:</span> <span class="n">data_start</span> <span class="o">+</span> <span class="n">expected_bytes</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_records</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span>
+            <span class="n">memory_view</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">event_dtype</span><span class="p">,</span>
+            <span class="n">count</span><span class="o">=</span><span class="n">number_of_events</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"Loaded FCS records for file_path=</span><span class="si">%r</span><span class="s2">, records_shape=</span><span class="si">%r</span><span class="s2">, records_dtype=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_records</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_records</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_best_effort_close</span><span class="p">(</span><span class="n">instance</span><span class="p">:</span> <span class="s2">"FCSFile"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">instance</span><span class="o">.</span><span class="n">_mmap</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">instance</span><span class="o">.</span><span class="n">_mmap</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                        <span class="s2">"Best effort close failed while closing mmap for file_path=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+                        <span class="n">instance</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span>
+                        <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+                <span class="n">instance</span><span class="o">.</span><span class="n">_mmap</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="k">if</span> <span class="n">instance</span><span class="o">.</span><span class="n">_file_handle</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">instance</span><span class="o">.</span><span class="n">_file_handle</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                        <span class="s2">"Best effort close failed while closing file handle for file_path=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+                        <span class="n">instance</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span>
+                        <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+                <span class="n">instance</span><span class="o">.</span><span class="n">_file_handle</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="n">instance</span><span class="o">.</span><span class="n">_records</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">"Best effort close failed for file_path=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="s2">"file_path"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+
+<div class="viewcode-block" id="FCSFile.builder_from_dataframe">
+<a class="viewcode-back" href="../../../api/utilities.html#RosettaX.utils.reader.FCSFile.builder_from_dataframe">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">builder_from_dataframe</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">dataframe</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">template</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">"FCSFile"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">force_float32</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"FCSBuilder"</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"Creating FCSBuilder from dataframe, dataframe_shape=</span><span class="si">%r</span><span class="s2">, template_file_path=</span><span class="si">%r</span><span class="s2">, force_float32=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+            <span class="n">dataframe</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="n">template</span><span class="p">,</span> <span class="s2">"file_path"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+            <span class="n">force_float32</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">template</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">keywords</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">text</span><span class="p">[</span><span class="s2">"Keywords"</span><span class="p">])</span>
+            <span class="n">detectors</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">parameter_index</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">detector</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">parameter_index</span><span class="p">,</span> <span class="n">detector</span> <span class="ow">in</span> <span class="n">template</span><span class="o">.</span><span class="n">text</span><span class="p">[</span><span class="s2">"Detectors"</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">}</span>
+            <span class="n">template_detector_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">get_column_names</span><span class="p">())</span>
+            <span class="n">template_detectors_by_name</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">column_name</span><span class="p">):</span> <span class="nb">dict</span><span class="p">(</span>
+                    <span class="n">detectors</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parameter_index</span><span class="p">,</span> <span class="p">{})</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">parameter_index</span><span class="p">,</span> <span class="n">column_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+                    <span class="n">template_detector_names</span><span class="p">,</span>
+                    <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">}</span>
+            <span class="n">delimiter</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">delimiter</span>
+            <span class="n">version</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FCS version"</span><span class="p">,</span> <span class="s2">"FCS3.1"</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">keywords</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">"$MODE"</span><span class="p">:</span> <span class="s2">"L"</span><span class="p">,</span>
+                <span class="s2">"$BYTEORD"</span><span class="p">:</span> <span class="s2">"1,2,3,4"</span><span class="p">,</span>
+                <span class="s2">"$DATATYPE"</span><span class="p">:</span> <span class="s2">"F"</span><span class="p">,</span>
+            <span class="p">}</span>
+            <span class="n">detectors</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">template_detectors_by_name</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">delimiter</span> <span class="o">=</span> <span class="s2">"|"</span>
+            <span class="n">version</span> <span class="o">=</span> <span class="s2">"FCS3.1"</span>
+
+        <span class="n">keywords</span><span class="p">[</span><span class="s2">"$MODE"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"L"</span>
+        <span class="n">keywords</span><span class="p">[</span><span class="s2">"$TOT"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">dataframe</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">keywords</span><span class="p">[</span><span class="s2">"$PAR"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">dataframe</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">force_float32</span><span class="p">:</span>
+            <span class="n">keywords</span><span class="p">[</span><span class="s2">"$DATATYPE"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"F"</span>
+
+        <span class="n">dataframe_detector_overrides</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_normalize_detector_metadata_overrides</span><span class="p">(</span>
+            <span class="n">dataframe</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s2">"fcs_detector_metadata_overrides"</span><span class="p">,</span>
+                <span class="p">{},</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">rebuilt_detectors</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">parameter_index</span><span class="p">,</span> <span class="n">column_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">dataframe</span><span class="o">.</span><span class="n">columns</span><span class="p">),</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">detector</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+                <span class="n">template_detectors_by_name</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                    <span class="nb">str</span><span class="p">(</span><span class="n">column_name</span><span class="p">),</span>
+                    <span class="p">{},</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">detector</span><span class="p">:</span>
+                <span class="n">detector</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">_NON_APPLICABLE_DERIVED_DETECTOR_FIELDS</span><span class="p">)</span>
+
+            <span class="n">detector</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                <span class="n">dataframe_detector_overrides</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                    <span class="nb">str</span><span class="p">(</span><span class="n">column_name</span><span class="p">),</span>
+                    <span class="p">{},</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">detector</span><span class="p">[</span><span class="s2">"N"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">column_name</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">force_float32</span><span class="p">:</span>
+                <span class="n">detector</span><span class="p">[</span><span class="s2">"B"</span><span class="p">]</span> <span class="o">=</span> <span class="mi">32</span>
+
+            <span class="k">if</span> <span class="s2">"R"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">detector</span><span class="p">:</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="n">dataframe</span><span class="p">[</span><span class="n">column_name</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">):</span>
+                    <span class="n">finite</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">values</span><span class="p">)]</span>
+                    <span class="n">detector</span><span class="p">[</span><span class="s2">"R"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">finite</span><span class="p">))))</span> <span class="k">if</span> <span class="n">finite</span><span class="o">.</span><span class="n">size</span> <span class="k">else</span> <span class="mf">1.0</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">detector</span><span class="p">[</span><span class="s2">"R"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">values</span><span class="p">))))</span> <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">size</span> <span class="k">else</span> <span class="mf">1.0</span>
+
+            <span class="n">rebuilt_detectors</span><span class="p">[</span><span class="n">parameter_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">detector</span>
+
+        <span class="k">return</span> <span class="n">FCSBuilder</span><span class="p">(</span>
+            <span class="n">dataframe</span><span class="o">=</span><span class="n">dataframe</span><span class="p">,</span>
+            <span class="n">keywords</span><span class="o">=</span><span class="n">keywords</span><span class="p">,</span>
+            <span class="n">detectors</span><span class="o">=</span><span class="n">rebuilt_detectors</span><span class="p">,</span>
+            <span class="n">delimiter</span><span class="o">=</span><span class="n">delimiter</span><span class="p">,</span>
+            <span class="n">fcs_version</span><span class="o">=</span><span class="n">version</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_normalize_detector_metadata_overrides</span><span class="p">(</span>
+        <span class="n">overrides</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Normalize DataFrame detector metadata overrides keyed by column name.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">overrides</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">{}</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">column_name</span><span class="p">):</span> <span class="nb">dict</span><span class="p">(</span><span class="n">detector_metadata</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">column_name</span><span class="p">,</span> <span class="n">detector_metadata</span> <span class="ow">in</span> <span class="n">overrides</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">detector_metadata</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+        <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="FCSBuilder">
+<a class="viewcode-back" href="../../../api/utilities.html#RosettaX.utils.reader.FCSBuilder">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FCSBuilder</span><span class="p">:</span>
+    <span class="n">dataframe</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+    <span class="n">keywords</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+    <span class="n">detectors</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
+    <span class="n">delimiter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"|"</span>
+    <span class="n">fcs_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"FCS3.1"</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_endian_prefix</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">byteord</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keywords</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"$BYTEORD"</span><span class="p">,</span> <span class="s2">"1,2,3,4"</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">byteord</span> <span class="o">==</span> <span class="s2">"1,2,3,4"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">"&lt;"</span>
+
+        <span class="k">if</span> <span class="n">byteord</span> <span class="o">==</span> <span class="s2">"4,3,2,1"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">"&gt;"</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"Unsupported FCSBuilder $BYTEORD=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span> <span class="n">byteord</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Unsupported $BYTEORD "</span><span class="si">{</span><span class="n">byteord</span><span class="si">}</span><span class="s1">".'</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_dtype_for_parameter</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">datatype</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">bits</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">endian_prefix</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">:</span>
+        <span class="n">datatype</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">datatype</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+        <span class="n">bits</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bits</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">bits</span> <span class="o">%</span> <span class="mi">8</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s2">"Invalid FCSBuilder parameter bit width. datatype=</span><span class="si">%r</span><span class="s2">, bits=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+                <span class="n">datatype</span><span class="p">,</span>
+                <span class="n">bits</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"$PnB must be byte aligned, got </span><span class="si">{</span><span class="n">bits</span><span class="si">}</span><span class="s2"> bits."</span><span class="p">)</span>
+
+        <span class="n">number_of_bytes</span> <span class="o">=</span> <span class="n">bits</span> <span class="o">//</span> <span class="mi">8</span>
+
+        <span class="k">if</span> <span class="n">datatype</span> <span class="o">==</span> <span class="s2">"I"</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">number_of_bytes</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">endian_prefix</span> <span class="o">+</span> <span class="s2">"u1"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">number_of_bytes</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">endian_prefix</span> <span class="o">+</span> <span class="s2">"u2"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">number_of_bytes</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">endian_prefix</span> <span class="o">+</span> <span class="s2">"u4"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">number_of_bytes</span> <span class="o">==</span> <span class="mi">8</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">endian_prefix</span> <span class="o">+</span> <span class="s2">"u8"</span><span class="p">)</span>
+
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s2">"Unsupported FCSBuilder integer width. datatype=</span><span class="si">%r</span><span class="s2">, bits=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+                <span class="n">datatype</span><span class="p">,</span>
+                <span class="n">bits</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unsupported integer width: </span><span class="si">{</span><span class="n">bits</span><span class="si">}</span><span class="s2"> bits"</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">datatype</span> <span class="o">==</span> <span class="s2">"F"</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">bits</span> <span class="o">!=</span> <span class="mi">32</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                    <span class="s2">"Invalid FCSBuilder float width for $DATATYPE=F. bits=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="n">bits</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"For $DATATYPE=F, expected $PnB=32."</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">endian_prefix</span> <span class="o">+</span> <span class="s2">"f4"</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">datatype</span> <span class="o">==</span> <span class="s2">"D"</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">bits</span> <span class="o">!=</span> <span class="mi">64</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                    <span class="s2">"Invalid FCSBuilder float width for $DATATYPE=D. bits=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="n">bits</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"For $DATATYPE=D, expected $PnB=64."</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">endian_prefix</span> <span class="o">+</span> <span class="s2">"f8"</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"Unsupported FCSBuilder $DATATYPE=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span> <span class="n">datatype</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Unsupported $DATATYPE "</span><span class="si">{</span><span class="n">datatype</span><span class="si">}</span><span class="s1">".'</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_event_dtype_and_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+        <span class="n">datatype</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keywords</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"$DATATYPE"</span><span class="p">,</span> <span class="s2">"F"</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+        <span class="n">endian_prefix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_endian_prefix</span><span class="p">()</span>
+        <span class="n">number_of_parameters</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keywords</span><span class="p">[</span><span class="s2">"$PAR"</span><span class="p">])</span>
+
+        <span class="n">fields</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">parameter_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">number_of_parameters</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">detector</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">detectors</span><span class="p">[</span><span class="n">parameter_index</span><span class="p">]</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">detector</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"N"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"P</span><span class="si">{</span><span class="n">parameter_index</span><span class="si">}</span><span class="s2">"</span><span class="p">))</span>
+            <span class="n">bits</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">detector</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"B"</span><span class="p">,</span> <span class="mi">32</span><span class="p">))</span>
+            <span class="n">data_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dtype_for_parameter</span><span class="p">(</span>
+                <span class="n">datatype</span><span class="p">,</span>
+                <span class="n">bits</span><span class="p">,</span>
+                <span class="n">endian_prefix</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">fields</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"parameter_</span><span class="si">{</span><span class="n">parameter_index</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="n">data_type</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="n">event_dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"Built FCSBuilder event dtype, dtype=</span><span class="si">%r</span><span class="s2">, column_names=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+            <span class="n">event_dtype</span><span class="p">,</span>
+            <span class="n">names</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">event_dtype</span><span class="p">,</span> <span class="n">names</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_escape_token</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">token</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">token_string</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">token_string</span> <span class="o">==</span> <span class="s2">""</span><span class="p">:</span>
+            <span class="n">token_string</span> <span class="o">=</span> <span class="s2">" "</span>
+
+        <span class="k">return</span> <span class="n">token_string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">delimiter</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">delimiter</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">delimiter</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_text_segment</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+        <span class="n">flat</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keywords</span><span class="p">)</span>
+        <span class="n">number_of_parameters</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">flat</span><span class="p">[</span><span class="s2">"$PAR"</span><span class="p">])</span>
+
+        <span class="k">for</span> <span class="n">parameter_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">number_of_parameters</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">detector</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">detectors</span><span class="p">[</span><span class="n">parameter_index</span><span class="p">]</span>
+
+            <span class="k">for</span> <span class="n">suffix</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">detector</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">flat</span><span class="p">[</span><span class="sa">f</span><span class="s2">"$P</span><span class="si">{</span><span class="n">parameter_index</span><span class="si">}{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+        <span class="n">preferred</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">"$TOT"</span><span class="p">,</span>
+            <span class="s2">"$PAR"</span><span class="p">,</span>
+            <span class="s2">"$DATATYPE"</span><span class="p">,</span>
+            <span class="s2">"$BYTEORD"</span><span class="p">,</span>
+            <span class="s2">"$MODE"</span><span class="p">,</span>
+            <span class="s2">"$BEGINDATA"</span><span class="p">,</span>
+            <span class="s2">"$ENDDATA"</span><span class="p">,</span>
+        <span class="p">]</span>
+
+        <span class="n">ordered</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">preferred</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">flat</span> <span class="ow">and</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ordered</span><span class="p">:</span>
+                <span class="n">ordered</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">flat</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ordered</span><span class="p">:</span>
+                <span class="n">ordered</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+        <span class="n">parts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">ordered</span><span class="p">:</span>
+            <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_escape_token</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+            <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_escape_token</span><span class="p">(</span><span class="n">flat</span><span class="p">[</span><span class="n">key</span><span class="p">]))</span>
+
+        <span class="n">text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">delimiter</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">delimiter</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">delimiter</span>
+
+        <span class="k">return</span> <span class="n">text</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"ascii"</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"strict"</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_data_bytes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+        <span class="n">event_dtype</span><span class="p">,</span> <span class="n">column_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_event_dtype_and_names</span><span class="p">()</span>
+
+        <span class="n">expected_events</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keywords</span><span class="p">[</span><span class="s2">"$TOT"</span><span class="p">])</span>
+        <span class="n">expected_parameters</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keywords</span><span class="p">[</span><span class="s2">"$PAR"</span><span class="p">])</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"Building FCS DATA bytes, dataframe_shape=</span><span class="si">%r</span><span class="s2">, expected_events=</span><span class="si">%r</span><span class="s2">, expected_parameters=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="n">expected_events</span><span class="p">,</span>
+            <span class="n">expected_parameters</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">expected_events</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">expected_parameters</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s2">"DataFrame shape does not match FCS metadata. dataframe_shape=</span><span class="si">%r</span><span class="s2">, expected_events=</span><span class="si">%r</span><span class="s2">, expected_parameters=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                <span class="n">expected_events</span><span class="p">,</span>
+                <span class="n">expected_parameters</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"DataFrame shape does not match $TOT and $PAR."</span><span class="p">)</span>
+
+        <span class="n">records</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">expected_events</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">event_dtype</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">parameter_index</span><span class="p">,</span> <span class="n">column_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">column_names</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">column_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="p">[</span><span class="n">column_name</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+            <span class="n">records</span><span class="p">[</span><span class="sa">f</span><span class="s2">"parameter_</span><span class="si">{</span><span class="n">parameter_index</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span> <span class="o">=</span> <span class="n">column_values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span>
+                <span class="n">event_dtype</span><span class="p">[</span><span class="sa">f</span><span class="s2">"parameter_</span><span class="si">{</span><span class="n">parameter_index</span><span class="si">}</span><span class="s2">"</span><span class="p">],</span>
+                <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="n">data_bytes</span> <span class="o">=</span> <span class="n">records</span><span class="o">.</span><span class="n">tobytes</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="s2">"C"</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"Built FCS DATA bytes, number_of_bytes=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">data_bytes</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">data_bytes</span>
+
+<div class="viewcode-block" id="FCSBuilder.build_bytes">
+<a class="viewcode-back" href="../../../api/utilities.html#RosettaX.utils.reader.FCSBuilder.build_bytes">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_bytes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+        <span class="n">version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fcs_version</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fcs_version</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"FCS2.0"</span><span class="p">,</span> <span class="s2">"FCS3.0"</span><span class="p">,</span> <span class="s2">"FCS3.1"</span><span class="p">}</span> <span class="k">else</span> <span class="s2">"FCS3.1"</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"Building FCS bytes, requested_version=</span><span class="si">%r</span><span class="s2">, effective_version=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fcs_version</span><span class="p">,</span>
+            <span class="n">version</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">data_bytes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_data_bytes</span><span class="p">()</span>
+
+        <span class="n">text_bytes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_text_segment</span><span class="p">()</span>
+
+        <span class="n">text_start</span> <span class="o">=</span> <span class="mi">256</span>
+        <span class="n">text_end</span> <span class="o">=</span> <span class="n">text_start</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">text_bytes</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">data_start</span> <span class="o">=</span> <span class="n">text_end</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">data_end</span> <span class="o">=</span> <span class="n">data_start</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_bytes</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">keywords</span><span class="p">[</span><span class="s2">"$BEGINDATA"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">data_start</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keywords</span><span class="p">[</span><span class="s2">"$ENDDATA"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">data_end</span><span class="p">)</span>
+
+        <span class="n">text_bytes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_text_segment</span><span class="p">()</span>
+        <span class="n">text_end</span> <span class="o">=</span> <span class="n">text_start</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">text_bytes</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">data_start</span> <span class="o">=</span> <span class="n">text_end</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">data_end</span> <span class="o">=</span> <span class="n">data_start</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_bytes</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">keywords</span><span class="p">[</span><span class="s2">"$BEGINDATA"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">data_start</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keywords</span><span class="p">[</span><span class="s2">"$ENDDATA"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">data_end</span><span class="p">)</span>
+
+        <span class="n">text_bytes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_text_segment</span><span class="p">()</span>
+        <span class="n">text_end</span> <span class="o">=</span> <span class="n">text_start</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">text_bytes</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">data_start</span> <span class="o">=</span> <span class="n">text_end</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">data_end</span> <span class="o">=</span> <span class="n">data_start</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_bytes</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="n">header</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="sa">b</span><span class="s2">" "</span> <span class="o">*</span> <span class="mi">256</span><span class="p">)</span>
+        <span class="n">header</span><span class="p">[:</span><span class="mi">6</span><span class="p">]</span> <span class="o">=</span> <span class="n">version</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"ascii"</span><span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">put_int</span><span class="p">(</span><span class="n">start</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">width</span> <span class="o">=</span> <span class="n">end</span> <span class="o">-</span> <span class="n">start</span>
+            <span class="n">header</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">))</span><span class="o">.</span><span class="n">rjust</span><span class="p">(</span><span class="n">width</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"ascii"</span><span class="p">)</span>
+
+        <span class="n">put_int</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">18</span><span class="p">,</span> <span class="n">text_start</span><span class="p">)</span>
+        <span class="n">put_int</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span> <span class="mi">26</span><span class="p">,</span> <span class="n">text_end</span><span class="p">)</span>
+        <span class="n">put_int</span><span class="p">(</span><span class="mi">26</span><span class="p">,</span> <span class="mi">34</span><span class="p">,</span> <span class="n">data_start</span><span class="p">)</span>
+        <span class="n">put_int</span><span class="p">(</span><span class="mi">34</span><span class="p">,</span> <span class="mi">42</span><span class="p">,</span> <span class="n">data_end</span><span class="p">)</span>
+
+        <span class="n">payload</span> <span class="o">=</span> <span class="nb">bytes</span><span class="p">(</span><span class="n">header</span><span class="p">)</span> <span class="o">+</span> <span class="n">text_bytes</span> <span class="o">+</span> <span class="n">data_bytes</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"Built FCS payload, text_start=</span><span class="si">%r</span><span class="s2">, text_end=</span><span class="si">%r</span><span class="s2">, data_start=</span><span class="si">%r</span><span class="s2">, data_end=</span><span class="si">%r</span><span class="s2">, total_bytes=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+            <span class="n">text_start</span><span class="p">,</span>
+            <span class="n">text_end</span><span class="p">,</span>
+            <span class="n">data_start</span><span class="p">,</span>
+            <span class="n">data_end</span><span class="p">,</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">payload</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">payload</span></div>
+
+
+<div class="viewcode-block" id="FCSBuilder.write">
+<a class="viewcode-back" href="../../../api/utilities.html#RosettaX.utils.reader.FCSBuilder.write">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">resolved_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"Writing FCS file to path=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">resolved_path</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="n">payload</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_bytes</span><span class="p">()</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">resolved_path</span><span class="p">),</span> <span class="s2">"wb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span>
+                <span class="n">handle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span>
+                <span class="s2">"Failed to write FCS file to path=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">resolved_path</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="k">raise</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"Wrote FCS file to path=</span><span class="si">%r</span><span class="s2">, number_of_bytes=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">resolved_path</span><span class="p">),</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">payload</span><span class="p">),</span>
+        <span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright Martin Poinsinet de Sivry-Houle.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

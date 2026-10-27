@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../../../" data-theme="dark">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services &#8212; RosettaX 0.10.9 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "dark";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "dark";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../../../../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/sg_gallery.css?v=c83e6b79" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/default.css?v=22616357" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/martinpdes_layout.css?v=a8cc01cd" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/layout.css?v=dc96f8db" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../../../../_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../../../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../../../../../../_static/documentation_options.js?v=9d400afe"></script>
+    <script src="../../../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../../../_static/sg-tags.js?v=d80f6fa4"></script>
+    <script src="../../../../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/RosettaX/pages/p04_calibrate/sections/s02_calibration_picker/services';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/MartinPdeS/RosettaX/documentation_page/version_switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.10.9';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="../../../../../../_static/favicon.svg"/>
+    <link rel="index" title="Index" href="../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.10.9" />
+  
+    
+    <script src="../../../../../../_static/searchtools.js"></script>
+    <script src="../../../../../../_static/language_data.js"></script>
+    <script src="../../../../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="dark">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="../../../../../../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.10.9 documentation - Home"/>
+    <img src="../../../../../../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.10.9 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../../quickstart.html">
+    Start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../../interface.html">
+    Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../../theory.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../../code.html">
+    API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../../resources.html">
+    Resources
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../../privacy.html">
+    Privacy policy
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MartinPdeS/RosettaX" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/RosettaX/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-box fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://anaconda.org/MartinPdeS/RosettaX" title="Anaconda" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">Anaconda</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../../quickstart.html">
+    Start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../../interface.html">
+    Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../../theory.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../../code.html">
+    API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../../resources.html">
+    Resources
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../../privacy.html">
+    Privacy policy
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MartinPdeS/RosettaX" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/RosettaX/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-box fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://anaconda.org/MartinPdeS/RosettaX" title="Anaconda" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">Anaconda</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../../../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services</h1><div class="highlight"><pre>
+<span></span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.workflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">plotting</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.workflow.upload.services</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_uploaded_file_bytes</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">TargetMiePreviewControls</span><span class="p">,</span> <span class="n">TargetMiePreviewResult</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="build_upload_prompt_text">
+<a class="viewcode-back" href="../../../../../../api/pages.html#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_upload_prompt_text">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_upload_prompt_text</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Build the default calibration upload prompt text.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="s2">"Upload one or more calibration.json files generated by RosettaX. "</span>
+        <span class="s2">"Files are validated for schema and payload structure after upload."</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="parse_uploaded_calibration">
+<a class="viewcode-back" href="../../../../../../api/pages.html#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.parse_uploaded_calibration">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_uploaded_calibration</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">contents</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">filename</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Parse and validate one uploaded calibration JSON file.</span>
+<span class="sd">    """</span>
+    <span class="n">resolved_filename</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">filename</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">resolved_filename</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Uploaded calibration file name is missing."</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">resolved_filename</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">".json"</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Calibration upload must be a .json file."</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">contents</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Uploaded calibration file has a malformed Dash contents payload."</span><span class="p">)</span>
+
+    <span class="n">raw_bytes</span> <span class="o">=</span> <span class="n">read_uploaded_file_bytes</span><span class="p">(</span><span class="n">contents</span><span class="p">)</span>
+
+    <span class="n">record</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span>
+        <span class="n">raw_bytes</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Calibration file root record is invalid."</span><span class="p">)</span>
+
+    <span class="n">schema</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"schema"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">schema</span> <span class="o">!=</span> <span class="s2">"rosettax_calibration_v1"</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Calibration file schema is unsupported: </span><span class="si">{</span><span class="n">schema</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'&lt;missing&gt;'</span><span class="si">}</span><span class="s2">."</span>
+        <span class="p">)</span>
+
+    <span class="n">payload</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"payload"</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">payload</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Calibration file is missing top level "payload".'</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">resolved_filename</span><span class="p">,</span> <span class="n">payload</span></div>
+
+
+
+<div class="viewcode-block" id="build_calibration_summary">
+<a class="viewcode-back" href="../../../../../../api/pages.html#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_calibration_summary">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_calibration_summary</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">selected_calibration</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">calibration_payload</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">calibration_file_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Build a lightweight calibration summary for UI decisions.</span>
+<span class="sd">    """</span>
+    <span class="n">calibration_type</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
+        <span class="n">calibration_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">"calibration_type"</span><span class="p">,</span>
+            <span class="s2">""</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="n">source_channel</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
+        <span class="n">calibration_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">"source_channel"</span><span class="p">,</span>
+            <span class="s2">""</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="n">output_quantity</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
+        <span class="n">calibration_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">"output_quantity"</span><span class="p">,</span>
+            <span class="s2">""</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="n">version</span> <span class="o">=</span> <span class="n">calibration_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="s2">"version"</span><span class="p">,</span>
+        <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">applied_output_channel_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
+        <span class="n">calibration_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">"applied_output_channel_name"</span><span class="p">,</span>
+            <span class="s2">""</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="n">instrument_response</span> <span class="o">=</span> <span class="n">calibration_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="s2">"instrument_response"</span><span class="p">,</span>
+        <span class="p">{},</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instrument_response</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">measured_channel</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
+            <span class="n">instrument_response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s2">"measured_channel"</span><span class="p">,</span>
+                <span class="s2">""</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">measured_channel</span> <span class="o">=</span> <span class="s2">""</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">source_channel</span> <span class="ow">and</span> <span class="n">measured_channel</span><span class="p">:</span>
+        <span class="n">source_channel</span> <span class="o">=</span> <span class="n">measured_channel</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"selected_calibration"</span><span class="p">:</span> <span class="n">selected_calibration</span><span class="p">,</span>
+        <span class="s2">"file_name"</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">calibration_file_path</span><span class="o">.</span><span class="n">name</span>
+            <span class="k">if</span> <span class="n">calibration_file_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">selected_calibration</span><span class="p">)</span>
+        <span class="p">),</span>
+        <span class="s2">"file_path"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">calibration_file_path</span><span class="p">)</span> <span class="k">if</span> <span class="n">calibration_file_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+        <span class="s2">"calibration_type"</span><span class="p">:</span> <span class="n">calibration_type</span><span class="p">,</span>
+        <span class="s2">"source_channel"</span><span class="p">:</span> <span class="n">source_channel</span><span class="p">,</span>
+        <span class="s2">"output_quantity"</span><span class="p">:</span> <span class="n">output_quantity</span><span class="p">,</span>
+        <span class="s2">"applied_output_channel_name"</span><span class="p">:</span> <span class="n">applied_output_channel_name</span><span class="p">,</span>
+        <span class="s2">"version"</span><span class="p">:</span> <span class="n">version</span><span class="p">,</span>
+        <span class="s2">"is_scattering"</span><span class="p">:</span> <span class="n">calibration_type</span> <span class="o">==</span> <span class="s2">"scattering"</span><span class="p">,</span>
+        <span class="s2">"is_fluorescence"</span><span class="p">:</span> <span class="n">calibration_type</span> <span class="o">==</span> <span class="s2">"fluorescence"</span><span class="p">,</span>
+        <span class="s2">"requires_target_model"</span><span class="p">:</span> <span class="n">calibration_type</span> <span class="o">==</span> <span class="s2">"scattering"</span><span class="p">,</span>
+        <span class="s2">"is_valid"</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">calibration_type</span><span class="p">),</span>
+        <span class="s2">"error"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
+        <span class="s2">"calibration_payload"</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">calibration_payload</span><span class="p">),</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="normalize_calibration_summaries">
+<a class="viewcode-back" href="../../../../../../api/pages.html#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.normalize_calibration_summaries">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">normalize_calibration_summaries</span><span class="p">(</span>
+    <span class="n">calibration_summaries</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Normalize a selected calibration summary payload into a list.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">calibration_summaries</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">summary</span>
+            <span class="k">for</span> <span class="n">summary</span> <span class="ow">in</span> <span class="n">calibration_summaries</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">summary</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+        <span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">calibration_summaries</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">calibration_summaries</span><span class="p">,</span>
+        <span class="p">]</span>
+
+    <span class="k">return</span> <span class="p">[]</span></div>
+
+
+
+<div class="viewcode-block" id="get_primary_calibration_summary">
+<a class="viewcode-back" href="../../../../../../api/pages.html#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.get_primary_calibration_summary">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_primary_calibration_summary</span><span class="p">(</span>
+    <span class="n">calibration_summaries</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the first loaded calibration summary, if any.</span>
+<span class="sd">    """</span>
+    <span class="n">normalized_summaries</span> <span class="o">=</span> <span class="n">normalize_calibration_summaries</span><span class="p">(</span>
+        <span class="n">calibration_summaries</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">normalized_summaries</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">normalized_summaries</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="get_primary_scattering_calibration_summary">
+<a class="viewcode-back" href="../../../../../../api/pages.html#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.get_primary_scattering_calibration_summary">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_primary_scattering_calibration_summary</span><span class="p">(</span>
+    <span class="n">calibration_summaries</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the first scattering calibration summary that requires a target model.</span>
+<span class="sd">    """</span>
+    <span class="k">for</span> <span class="n">calibration_summary</span> <span class="ow">in</span> <span class="n">normalize_calibration_summaries</span><span class="p">(</span>
+        <span class="n">calibration_summaries</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="n">calibration_summary</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"requires_target_model"</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">calibration_summary</span>
+
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="calibration_summaries_require_target_model">
+<a class="viewcode-back" href="../../../../../../api/pages.html#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.calibration_summaries_require_target_model">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">calibration_summaries_require_target_model</span><span class="p">(</span>
+    <span class="n">calibration_summaries</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return whether any selected calibration requires scattering target parameters.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">get_primary_scattering_calibration_summary</span><span class="p">(</span>
+            <span class="n">calibration_summaries</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="resolve_target_mie_model">
+<a class="viewcode-back" href="../../../../../../api/pages.html#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.resolve_target_mie_model">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">resolve_target_mie_model</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">target_mie_model</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Normalize the target Mie model value.</span>
+<span class="sd">    """</span>
+    <span class="n">target_mie_model_string</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
+        <span class="n">target_mie_model</span> <span class="ow">or</span> <span class="s2">"Solid Sphere"</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="n">normalized_target_mie_model</span> <span class="o">=</span> <span class="n">target_mie_model_string</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">normalized_target_mie_model</span> <span class="ow">in</span> <span class="p">{</span>
+        <span class="s2">"core/shell sphere"</span><span class="p">,</span>
+        <span class="s2">"core shell sphere"</span><span class="p">,</span>
+        <span class="s2">"core-shell sphere"</span><span class="p">,</span>
+        <span class="s2">"coreshell sphere"</span><span class="p">,</span>
+        <span class="s2">"core_shell_sphere"</span><span class="p">,</span>
+    <span class="p">}:</span>
+        <span class="k">return</span> <span class="s2">"Core/Shell Sphere"</span>
+
+    <span class="k">return</span> <span class="s2">"Solid Sphere"</span></div>
+
+
+
+<div class="viewcode-block" id="build_target_parameter_container_style">
+<a class="viewcode-back" href="../../../../../../api/pages.html#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_target_parameter_container_style">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_target_parameter_container_style</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">is_visible</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">is_locked</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Build the target parameter group visibility style.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"display"</span><span class="p">:</span> <span class="s2">"block"</span> <span class="k">if</span> <span class="n">is_visible</span> <span class="k">else</span> <span class="s2">"none"</span><span class="p">,</span>
+        <span class="s2">"opacity"</span><span class="p">:</span> <span class="s2">"0.58"</span> <span class="k">if</span> <span class="n">is_locked</span> <span class="k">else</span> <span class="s2">"1.0"</span><span class="p">,</span>
+        <span class="s2">"transition"</span><span class="p">:</span> <span class="s2">"opacity 120ms ease-in-out"</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="build_scattering_target_model_container_style">
+<a class="viewcode-back" href="../../../../../../api/pages.html#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_scattering_target_model_container_style">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_scattering_target_model_container_style</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">is_visible</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Build the target model container style.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"display"</span><span class="p">:</span> <span class="s2">"block"</span> <span class="k">if</span> <span class="n">is_visible</span> <span class="k">else</span> <span class="s2">"none"</span><span class="p">,</span>
+        <span class="s2">"overflow"</span><span class="p">:</span> <span class="s2">"visible"</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="has_selected_target_model_preset">
+<a class="viewcode-back" href="../../../../../../api/pages.html#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.has_selected_target_model_preset">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">has_selected_target_model_preset</span><span class="p">(</span>
+    <span class="n">target_model_preset</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return whether a concrete target model preset has been chosen.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">target_model_preset</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span></div>
+
+
+
+<div class="viewcode-block" id="normalize_axis_scale">
+<a class="viewcode-back" href="../../../../../../api/pages.html#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.normalize_axis_scale">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">normalize_axis_scale</span><span class="p">(</span>
+    <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">default</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Normalize an axis scale value.</span>
+<span class="sd">    """</span>
+    <span class="n">value_string</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">value_string</span> <span class="ow">in</span> <span class="p">(</span>
+        <span class="s2">"linear"</span><span class="p">,</span>
+        <span class="s2">"log"</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">return</span> <span class="n">value_string</span>
+
+    <span class="k">return</span> <span class="n">default</span></div>
+
+
+
+<div class="viewcode-block" id="build_axis_scale_toggle_values">
+<a class="viewcode-back" href="../../../../../../api/pages.html#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_axis_scale_toggle_values">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_axis_scale_toggle_values</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">xscale</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">yscale</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Convert x and y axis scales to Scatter2DGraph checklist values.</span>
+<span class="sd">    """</span>
+    <span class="n">axis_scale_toggle_values</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">xscale</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"log"</span><span class="p">:</span>
+        <span class="n">axis_scale_toggle_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">plotting</span><span class="o">.</span><span class="n">scatter2d</span><span class="o">.</span><span class="n">Scatter2DGraph</span><span class="o">.</span><span class="n">x_log_value</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">yscale</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"log"</span><span class="p">:</span>
+        <span class="n">axis_scale_toggle_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">plotting</span><span class="o">.</span><span class="n">scatter2d</span><span class="o">.</span><span class="n">Scatter2DGraph</span><span class="o">.</span><span class="n">y_log_value</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">axis_scale_toggle_values</span></div>
+
+
+
+<div class="viewcode-block" id="build_empty_target_mie_relation_figure">
+<a class="viewcode-back" href="../../../../../../api/pages.html#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_empty_target_mie_relation_figure">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_empty_target_mie_relation_figure</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Build an empty target Mie relation preview figure.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">plotting</span><span class="o">.</span><span class="n">scatter2d</span><span class="o">.</span><span class="n">Scatter2DGraph</span><span class="o">.</span><span class="n">build_empty_figure</span><span class="p">(</span>
+        <span class="n">message</span><span class="o">=</span><span class="s2">"Select a scattering calibration to compute the preview."</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="build_target_mie_relation_figure">
+<a class="viewcode-back" href="../../../../../../api/pages.html#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_target_mie_relation_figure">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_target_mie_relation_figure</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">full_diameter_values_nm</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">full_coupling_values</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">monotone_diameter_values_nm</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">monotone_coupling_values</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">axis_scale_toggle_values</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">x_axis_title</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">uirevision</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"target_mie_relation_preview"</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Build the target Mie relation preview figure.</span>
+
+<span class="sd">    The preview always shows the exact full-range Mie curve in blue and the</span>
+<span class="sd">    monotone curve used for inversion in green.</span>
+<span class="sd">    """</span>
+    <span class="n">traces</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">plotting</span><span class="o">.</span><span class="n">scatter2d</span><span class="o">.</span><span class="n">Scatter2DTrace</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">traces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+        <span class="n">plotting</span><span class="o">.</span><span class="n">scatter2d</span><span class="o">.</span><span class="n">Scatter2DTrace</span><span class="p">(</span>
+            <span class="n">x_values</span><span class="o">=</span><span class="n">full_diameter_values_nm</span><span class="p">,</span>
+            <span class="n">y_values</span><span class="o">=</span><span class="n">full_coupling_values</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">"Exact Mie curve"</span><span class="p">,</span>
+            <span class="n">mode</span><span class="o">=</span><span class="s2">"lines"</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="s2">"#1f77b4"</span><span class="p">,</span>
+            <span class="n">line_width</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="n">traces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+        <span class="n">plotting</span><span class="o">.</span><span class="n">scatter2d</span><span class="o">.</span><span class="n">Scatter2DTrace</span><span class="p">(</span>
+            <span class="n">x_values</span><span class="o">=</span><span class="n">monotone_diameter_values_nm</span><span class="p">,</span>
+            <span class="n">y_values</span><span class="o">=</span><span class="n">monotone_coupling_values</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">"Monotonic curve used for calibration"</span><span class="p">,</span>
+            <span class="n">mode</span><span class="o">=</span><span class="s2">"lines"</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="s2">"#2ca02c"</span><span class="p">,</span>
+            <span class="n">line_width</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="n">figure</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">scatter2d</span><span class="o">.</span><span class="n">Scatter2DGraph</span><span class="o">.</span><span class="n">build_figure</span><span class="p">(</span>
+        <span class="n">traces</span><span class="o">=</span><span class="n">traces</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">"Target Mie relation preview"</span><span class="p">,</span>
+        <span class="n">x_axis_title</span><span class="o">=</span><span class="n">x_axis_title</span><span class="p">,</span>
+        <span class="n">y_axis_title</span><span class="o">=</span><span class="s2">"Theoretical optical coupling"</span><span class="p">,</span>
+        <span class="n">axis_scale_toggle_values</span><span class="o">=</span><span class="n">axis_scale_toggle_values</span><span class="p">,</span>
+        <span class="n">show_grid</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">hovermode</span><span class="o">=</span><span class="s2">"closest"</span><span class="p">,</span>
+        <span class="n">uirevision</span><span class="o">=</span><span class="n">uirevision</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">figure</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span>
+        <span class="n">legend</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"x"</span><span class="p">:</span> <span class="mf">0.99</span><span class="p">,</span>
+            <span class="s2">"y"</span><span class="p">:</span> <span class="mf">0.01</span><span class="p">,</span>
+            <span class="s2">"xanchor"</span><span class="p">:</span> <span class="s2">"right"</span><span class="p">,</span>
+            <span class="s2">"yanchor"</span><span class="p">:</span> <span class="s2">"bottom"</span><span class="p">,</span>
+            <span class="s2">"bgcolor"</span><span class="p">:</span> <span class="s2">"rgba(255, 255, 255, 0.72)"</span><span class="p">,</span>
+            <span class="s2">"bordercolor"</span><span class="p">:</span> <span class="s2">"rgba(0, 0, 0, 0.18)"</span><span class="p">,</span>
+            <span class="s2">"borderwidth"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">figure</span></div>
+
+
+
+<div class="viewcode-block" id="build_preview_items">
+<a class="viewcode-back" href="../../../../../../api/pages.html#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_preview_items">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_preview_items</span><span class="p">(</span>
+    <span class="n">calibration_summary</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Build preview information items from calibration summary.</span>
+
+<span class="sd">    Returns a list of HTML divs showing key calibration metadata.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">dash</span><span class="w"> </span><span class="kn">import</span> <span class="n">html</span>
+
+    <span class="n">cal_type</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">calibration_summary</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"calibration_type"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">"n/a"</span>
+    <span class="n">source_ch</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">calibration_summary</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"source_channel"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">"n/a"</span>
+    <span class="n">file_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">calibration_summary</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"file_name"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">"n/a"</span>
+    <span class="n">output_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">calibration_summary</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"applied_output_channel_name"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">"n/a"</span>
+
+    <span class="n">row</span> <span class="o">=</span> <span class="n">html</span><span class="o">.</span><span class="n">Div</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">_build_preview_info_block</span><span class="p">(</span>
+                <span class="n">label</span><span class="o">=</span><span class="s2">"Calibration type"</span><span class="p">,</span>
+                <span class="n">value</span><span class="o">=</span><span class="n">cal_type</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">_build_preview_info_block</span><span class="p">(</span>
+                <span class="n">label</span><span class="o">=</span><span class="s2">"Channel"</span><span class="p">,</span>
+                <span class="n">value</span><span class="o">=</span><span class="n">source_ch</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">_build_preview_info_block</span><span class="p">(</span>
+                <span class="n">label</span><span class="o">=</span><span class="s2">"File"</span><span class="p">,</span>
+                <span class="n">value</span><span class="o">=</span><span class="n">file_name</span><span class="p">,</span>
+                <span class="n">truncate</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">_build_preview_info_block</span><span class="p">(</span>
+                <span class="n">label</span><span class="o">=</span><span class="s2">"Output name"</span><span class="p">,</span>
+                <span class="n">value</span><span class="o">=</span><span class="n">output_name</span><span class="p">,</span>
+                <span class="n">truncate</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">],</span>
+        <span class="n">style</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"display"</span><span class="p">:</span> <span class="s2">"grid"</span><span class="p">,</span>
+            <span class="s2">"gridTemplateColumns"</span><span class="p">:</span> <span class="s2">"minmax(130px, 0.9fr) minmax(110px, 0.8fr) minmax(200px, 1.5fr) minmax(180px, 1.1fr)"</span><span class="p">,</span>
+            <span class="s2">"gap"</span><span class="p">:</span> <span class="s2">"8px"</span><span class="p">,</span>
+            <span class="s2">"width"</span><span class="p">:</span> <span class="s2">"100%"</span><span class="p">,</span>
+            <span class="s2">"alignItems"</span><span class="p">:</span> <span class="s2">"stretch"</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">row</span><span class="p">,</span>
+    <span class="p">]</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_build_preview_info_block</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">label</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">truncate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Build a single preview info block.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">dash</span><span class="w"> </span><span class="kn">import</span> <span class="n">html</span>
+
+    <span class="n">value_style</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"fontSize"</span><span class="p">:</span> <span class="s2">"0.83rem"</span><span class="p">,</span>
+        <span class="s2">"fontWeight"</span><span class="p">:</span> <span class="s2">"500"</span><span class="p">,</span>
+        <span class="s2">"lineHeight"</span><span class="p">:</span> <span class="s2">"1.15"</span><span class="p">,</span>
+        <span class="s2">"color"</span><span class="p">:</span> <span class="s2">"rgba(13, 25, 43, 0.9)"</span><span class="p">,</span>
+        <span class="s2">"whiteSpace"</span><span class="p">:</span> <span class="s2">"nowrap"</span> <span class="k">if</span> <span class="n">truncate</span> <span class="k">else</span> <span class="s2">"normal"</span><span class="p">,</span>
+        <span class="s2">"overflow"</span><span class="p">:</span> <span class="s2">"hidden"</span> <span class="k">if</span> <span class="n">truncate</span> <span class="k">else</span> <span class="s2">"visible"</span><span class="p">,</span>
+        <span class="s2">"textOverflow"</span><span class="p">:</span> <span class="s2">"ellipsis"</span> <span class="k">if</span> <span class="n">truncate</span> <span class="k">else</span> <span class="s2">"clip"</span><span class="p">,</span>
+        <span class="s2">"minWidth"</span><span class="p">:</span> <span class="s2">"0"</span><span class="p">,</span>
+        <span class="s2">"flex"</span><span class="p">:</span> <span class="s2">"1 1 auto"</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">html</span><span class="o">.</span><span class="n">Div</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">html</span><span class="o">.</span><span class="n">Span</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">:"</span><span class="p">,</span>
+                <span class="n">style</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">"fontSize"</span><span class="p">:</span> <span class="s2">"0.72rem"</span><span class="p">,</span>
+                    <span class="s2">"fontWeight"</span><span class="p">:</span> <span class="s2">"600"</span><span class="p">,</span>
+                    <span class="s2">"opacity"</span><span class="p">:</span> <span class="mf">0.74</span><span class="p">,</span>
+                    <span class="s2">"textTransform"</span><span class="p">:</span> <span class="s2">"uppercase"</span><span class="p">,</span>
+                    <span class="s2">"letterSpacing"</span><span class="p">:</span> <span class="s2">"0.4px"</span><span class="p">,</span>
+                    <span class="s2">"whiteSpace"</span><span class="p">:</span> <span class="s2">"nowrap"</span><span class="p">,</span>
+                <span class="p">},</span>
+            <span class="p">),</span>
+            <span class="n">html</span><span class="o">.</span><span class="n">Span</span><span class="p">(</span>
+                <span class="n">value</span><span class="p">,</span>
+                <span class="n">style</span><span class="o">=</span><span class="n">value_style</span><span class="p">,</span>
+                <span class="n">title</span><span class="o">=</span><span class="n">value</span> <span class="k">if</span> <span class="n">truncate</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">],</span>
+        <span class="n">style</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"display"</span><span class="p">:</span> <span class="s2">"flex"</span><span class="p">,</span>
+            <span class="s2">"alignItems"</span><span class="p">:</span> <span class="s2">"center"</span><span class="p">,</span>
+            <span class="s2">"gap"</span><span class="p">:</span> <span class="s2">"6px"</span><span class="p">,</span>
+            <span class="s2">"padding"</span><span class="p">:</span> <span class="s2">"5px 8px"</span><span class="p">,</span>
+            <span class="s2">"background"</span><span class="p">:</span> <span class="s2">"rgba(0, 123, 255, 0.035)"</span><span class="p">,</span>
+            <span class="s2">"borderRadius"</span><span class="p">:</span> <span class="s2">"6px"</span><span class="p">,</span>
+            <span class="s2">"borderLeft"</span><span class="p">:</span> <span class="s2">"2px solid rgba(0, 123, 255, 0.35)"</span><span class="p">,</span>
+            <span class="s2">"minHeight"</span><span class="p">:</span> <span class="s2">"30px"</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="build_target_mie_relation_preview">
+<a class="viewcode-back" href="../../../../../../api/pages.html#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_target_mie_relation_preview">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_target_mie_relation_preview</span><span class="p">(</span>
+    <span class="n">controls</span><span class="p">:</span> <span class="n">TargetMiePreviewControls</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TargetMiePreviewResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Build the target preview using the same monotonic policy as export."""</span>
+    <span class="n">scattering_calibration_summary</span> <span class="o">=</span> <span class="n">get_primary_scattering_calibration_summary</span><span class="p">(</span>
+        <span class="n">controls</span><span class="o">.</span><span class="n">selected_calibration_summary</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">scattering_calibration_summary</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">TargetMiePreviewResult</span><span class="p">(</span>
+            <span class="n">build_empty_target_mie_relation_figure</span><span class="p">(),</span>
+            <span class="s2">"Select a scattering calibration to preview the target Mie relation."</span><span class="p">,</span>
+            <span class="s2">"secondary"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">has_selected_target_model_preset</span><span class="p">(</span><span class="n">controls</span><span class="o">.</span><span class="n">target_model_preset</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">TargetMiePreviewResult</span><span class="p">(</span>
+            <span class="n">build_empty_target_mie_relation_figure</span><span class="p">(),</span>
+            <span class="s2">"Select a target model preset to preview the target Mie relation."</span><span class="p">,</span>
+            <span class="s2">"secondary"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.workflow.apply_calibration.scattering</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+            <span class="n">ScatteringTargetModelParameters</span><span class="p">,</span>
+            <span class="n">build_target_mie_relation</span><span class="p">,</span>
+            <span class="n">find_strictly_monotonic_diameter_intervals</span><span class="p">,</span>
+            <span class="n">format_monotonic_interval_suggestions</span><span class="p">,</span>
+            <span class="n">get_finite_positive_mie_relation_arrays</span><span class="p">,</span>
+            <span class="n">resolve_monotonic_target_mie_relation</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">calibration_payload</span> <span class="o">=</span> <span class="n">scattering_calibration_summary</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"calibration_payload"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">calibration_payload</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">calibration_payload</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Uploaded calibration payload is missing."</span><span class="p">)</span>
+        <span class="n">resolved_target_mie_model</span> <span class="o">=</span> <span class="n">resolve_target_mie_model</span><span class="p">(</span>
+            <span class="n">target_mie_model</span><span class="o">=</span><span class="n">controls</span><span class="o">.</span><span class="n">target_mie_model</span>
+        <span class="p">)</span>
+        <span class="n">is_core_shell_model</span> <span class="o">=</span> <span class="n">resolved_target_mie_model</span> <span class="o">==</span> <span class="s2">"Core/Shell Sphere"</span>
+        <span class="k">if</span> <span class="n">is_core_shell_model</span><span class="p">:</span>
+            <span class="n">resolved_target_diameter_min_nm</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">controls</span><span class="o">.</span><span class="n">target_core_shell_core_diameter_min_nm</span>
+            <span class="p">)</span>
+            <span class="n">resolved_target_diameter_max_nm</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">controls</span><span class="o">.</span><span class="n">target_core_shell_core_diameter_max_nm</span>
+            <span class="p">)</span>
+            <span class="n">resolved_target_diameter_count</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">controls</span><span class="o">.</span><span class="n">target_core_shell_core_diameter_count</span>
+            <span class="p">)</span>
+            <span class="n">x_axis_title</span> <span class="o">=</span> <span class="s2">"Target core diameter [nm]"</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">resolved_target_diameter_min_nm</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">controls</span><span class="o">.</span><span class="n">target_solid_sphere_diameter_min_nm</span>
+            <span class="p">)</span>
+            <span class="n">resolved_target_diameter_max_nm</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">controls</span><span class="o">.</span><span class="n">target_solid_sphere_diameter_max_nm</span>
+            <span class="p">)</span>
+            <span class="n">resolved_target_diameter_count</span> <span class="o">=</span> <span class="n">controls</span><span class="o">.</span><span class="n">target_solid_sphere_diameter_count</span>
+            <span class="n">x_axis_title</span> <span class="o">=</span> <span class="s2">"Target particle diameter [nm]"</span>
+        <span class="n">target_model_parameters</span> <span class="o">=</span> <span class="n">ScatteringTargetModelParameters</span><span class="o">.</span><span class="n">from_raw_values</span><span class="p">(</span>
+            <span class="n">target_mie_model</span><span class="o">=</span><span class="n">resolved_target_mie_model</span><span class="p">,</span>
+            <span class="n">target_medium_refractive_index</span><span class="o">=</span><span class="n">controls</span><span class="o">.</span><span class="n">target_medium_refractive_index</span><span class="p">,</span>
+            <span class="n">target_particle_refractive_index</span><span class="o">=</span><span class="n">controls</span><span class="o">.</span><span class="n">target_particle_refractive_index</span><span class="p">,</span>
+            <span class="n">target_core_refractive_index</span><span class="o">=</span><span class="n">controls</span><span class="o">.</span><span class="n">target_core_refractive_index</span><span class="p">,</span>
+            <span class="n">target_shell_refractive_index</span><span class="o">=</span><span class="n">controls</span><span class="o">.</span><span class="n">target_shell_refractive_index</span><span class="p">,</span>
+            <span class="n">target_shell_thickness_nm</span><span class="o">=</span><span class="n">controls</span><span class="o">.</span><span class="n">target_shell_thickness_nm</span><span class="p">,</span>
+            <span class="n">target_diameter_min_nm</span><span class="o">=</span><span class="n">resolved_target_diameter_min_nm</span><span class="p">,</span>
+            <span class="n">target_diameter_max_nm</span><span class="o">=</span><span class="n">resolved_target_diameter_max_nm</span><span class="p">,</span>
+            <span class="n">target_diameter_count</span><span class="o">=</span><span class="n">resolved_target_diameter_count</span><span class="p">,</span>
+            <span class="n">advanced_monotonic_mode_enabled</span><span class="o">=</span><span class="n">controls</span><span class="o">.</span><span class="n">advanced_monotonic_mode_enabled</span><span class="p">,</span>
+            <span class="n">use_monotonic_smoothing_kernel</span><span class="o">=</span><span class="n">controls</span><span class="o">.</span><span class="n">use_monotonic_smoothing_kernel</span><span class="p">,</span>
+            <span class="n">monotonic_smoothing_sigma_points</span><span class="o">=</span><span class="n">controls</span><span class="o">.</span><span class="n">monotonic_smoothing_sigma_points</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">calibration_file_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
+            <span class="n">scattering_calibration_summary</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"file_name"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scattering_calibration_summary</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+            <span class="k">else</span> <span class="s2">""</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">preview_uirevision</span> <span class="o">=</span> <span class="nb">repr</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">calibration_file_name</span><span class="p">,</span>
+                <span class="n">resolved_target_mie_model</span><span class="p">,</span>
+                <span class="n">controls</span><span class="o">.</span><span class="n">target_medium_refractive_index</span><span class="p">,</span>
+                <span class="n">controls</span><span class="o">.</span><span class="n">target_particle_refractive_index</span><span class="p">,</span>
+                <span class="n">controls</span><span class="o">.</span><span class="n">target_core_refractive_index</span><span class="p">,</span>
+                <span class="n">controls</span><span class="o">.</span><span class="n">target_shell_refractive_index</span><span class="p">,</span>
+                <span class="n">controls</span><span class="o">.</span><span class="n">target_shell_thickness_nm</span><span class="p">,</span>
+                <span class="n">resolved_target_diameter_min_nm</span><span class="p">,</span>
+                <span class="n">resolved_target_diameter_max_nm</span><span class="p">,</span>
+                <span class="n">resolved_target_diameter_count</span><span class="p">,</span>
+                <span class="n">controls</span><span class="o">.</span><span class="n">target_model_preset</span><span class="p">,</span>
+                <span class="nb">bool</span><span class="p">(</span><span class="n">controls</span><span class="o">.</span><span class="n">advanced_monotonic_mode_enabled</span><span class="p">),</span>
+                <span class="nb">bool</span><span class="p">(</span><span class="n">controls</span><span class="o">.</span><span class="n">use_monotonic_smoothing_kernel</span><span class="p">),</span>
+                <span class="n">controls</span><span class="o">.</span><span class="n">monotonic_smoothing_sigma_points</span><span class="p">,</span>
+                <span class="n">controls</span><span class="o">.</span><span class="n">axis_scale_toggle_values</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">full_target_mie_relation</span> <span class="o">=</span> <span class="n">build_target_mie_relation</span><span class="p">(</span>
+            <span class="n">calibration_payload</span><span class="o">=</span><span class="n">calibration_payload</span><span class="p">,</span>
+            <span class="n">target_model_parameters</span><span class="o">=</span><span class="n">target_model_parameters</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">full_diameter_values_nm</span><span class="p">,</span> <span class="n">full_coupling_values</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">get_finite_positive_mie_relation_arrays</span><span class="p">(</span>
+                <span class="n">target_mie_relation</span><span class="o">=</span><span class="n">full_target_mie_relation</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">relation_resolution</span> <span class="o">=</span> <span class="n">resolve_monotonic_target_mie_relation</span><span class="p">(</span>
+            <span class="n">target_mie_relation</span><span class="o">=</span><span class="n">full_target_mie_relation</span><span class="p">,</span>
+            <span class="n">target_model_parameters</span><span class="o">=</span><span class="n">target_model_parameters</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">relation_resolution</span><span class="o">.</span><span class="n">used_auto_largest_branch</span><span class="p">:</span>
+            <span class="n">selected_interval</span> <span class="o">=</span> <span class="n">relation_resolution</span><span class="o">.</span><span class="n">selected_interval</span>
+            <span class="k">if</span> <span class="n">selected_interval</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">"Expected a selected monotonic interval for non-monotonic target Mie relation."</span>
+                <span class="p">)</span>
+            <span class="n">approximation_diameter_values_nm</span><span class="p">,</span> <span class="n">approximation_coupling_values</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">get_finite_positive_mie_relation_arrays</span><span class="p">(</span>
+                    <span class="n">target_mie_relation</span><span class="o">=</span><span class="n">relation_resolution</span><span class="o">.</span><span class="n">target_mie_relation</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">all_monotonic_intervals</span> <span class="o">=</span> <span class="n">find_strictly_monotonic_diameter_intervals</span><span class="p">(</span>
+                <span class="n">diameter_nm</span><span class="o">=</span><span class="n">full_diameter_values_nm</span><span class="p">,</span>
+                <span class="n">theoretical_coupling</span><span class="o">=</span><span class="n">full_coupling_values</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">"Target Mie relation was not strictly monotonic. Auto left-most branch selected. selected_interval=</span><span class="si">%r</span><span class="s2"> all_interval_suggestions=</span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
+                <span class="n">relation_resolution</span><span class="o">.</span><span class="n">selected_interval</span><span class="p">,</span>
+                <span class="n">format_monotonic_interval_suggestions</span><span class="p">(</span>
+                    <span class="n">monotonic_intervals</span><span class="o">=</span><span class="n">all_monotonic_intervals</span><span class="p">,</span> <span class="n">max_interval_count</span><span class="o">=</span><span class="mi">20</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+            <span class="n">figure</span> <span class="o">=</span> <span class="n">build_target_mie_relation_figure</span><span class="p">(</span>
+                <span class="n">full_diameter_values_nm</span><span class="o">=</span><span class="n">full_diameter_values_nm</span><span class="p">,</span>
+                <span class="n">full_coupling_values</span><span class="o">=</span><span class="n">full_coupling_values</span><span class="p">,</span>
+                <span class="n">monotone_diameter_values_nm</span><span class="o">=</span><span class="n">approximation_diameter_values_nm</span><span class="p">,</span>
+                <span class="n">monotone_coupling_values</span><span class="o">=</span><span class="n">approximation_coupling_values</span><span class="p">,</span>
+                <span class="n">axis_scale_toggle_values</span><span class="o">=</span><span class="n">controls</span><span class="o">.</span><span class="n">axis_scale_toggle_values</span><span class="p">,</span>
+                <span class="n">x_axis_title</span><span class="o">=</span><span class="n">x_axis_title</span><span class="p">,</span>
+                <span class="n">uirevision</span><span class="o">=</span><span class="n">preview_uirevision</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">selected_interval_message</span> <span class="o">=</span> <span class="n">selected_interval</span><span class="o">.</span><span class="n">to_message_fragment</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">TargetMiePreviewResult</span><span class="p">(</span>
+                <span class="n">figure</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"Target Mie relation is not monotonic over the full range. Using auto left-most monotonic branch to build a monotone approximation: </span><span class="si">{</span><span class="n">selected_interval_message</span><span class="si">}</span><span class="s2">."</span>
+                <span class="o">+</span> <span class="p">(</span>
+                    <span class="s2">" Gaussian smoothing is enabled."</span>
+                    <span class="k">if</span> <span class="n">target_model_parameters</span><span class="o">.</span><span class="n">advanced_monotonic_mode_enabled</span>
+                    <span class="ow">and</span> <span class="n">target_model_parameters</span><span class="o">.</span><span class="n">use_monotonic_smoothing_kernel</span>
+                    <span class="k">else</span> <span class="s2">""</span>
+                <span class="p">),</span>
+                <span class="s2">"warning"</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">monotone_diameter_values_nm</span><span class="p">,</span> <span class="n">monotone_coupling_values</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">get_finite_positive_mie_relation_arrays</span><span class="p">(</span>
+                <span class="n">target_mie_relation</span><span class="o">=</span><span class="n">relation_resolution</span><span class="o">.</span><span class="n">target_mie_relation</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">figure</span> <span class="o">=</span> <span class="n">build_target_mie_relation_figure</span><span class="p">(</span>
+            <span class="n">full_diameter_values_nm</span><span class="o">=</span><span class="n">full_diameter_values_nm</span><span class="p">,</span>
+            <span class="n">full_coupling_values</span><span class="o">=</span><span class="n">full_coupling_values</span><span class="p">,</span>
+            <span class="n">monotone_diameter_values_nm</span><span class="o">=</span><span class="n">monotone_diameter_values_nm</span><span class="p">,</span>
+            <span class="n">monotone_coupling_values</span><span class="o">=</span><span class="n">monotone_coupling_values</span><span class="p">,</span>
+            <span class="n">axis_scale_toggle_values</span><span class="o">=</span><span class="n">controls</span><span class="o">.</span><span class="n">axis_scale_toggle_values</span><span class="p">,</span>
+            <span class="n">x_axis_title</span><span class="o">=</span><span class="n">x_axis_title</span><span class="p">,</span>
+            <span class="n">uirevision</span><span class="o">=</span><span class="n">preview_uirevision</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">TargetMiePreviewResult</span><span class="p">(</span>
+            <span class="n">figure</span><span class="p">,</span>
+            <span class="s2">"Target Mie relation is strictly monotonic over the selected diameter range. Full range will be used for diameter inversion."</span><span class="p">,</span>
+            <span class="s2">"success"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">"Failed to update target Mie relation preview."</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">TargetMiePreviewResult</span><span class="p">(</span>
+            <span class="n">build_empty_target_mie_relation_figure</span><span class="p">(),</span>
+            <span class="sa">f</span><span class="s2">"Failed to compute target Mie relation preview: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="s2">"danger"</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../../../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright Martin Poinsinet de Sivry-Houle.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

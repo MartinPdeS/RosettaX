@@ -1,0 +1,1777 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../../" data-theme="dark">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RosettaX.workflow.apply_calibration.scattering.monotonic &#8212; RosettaX 0.10.9 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "dark";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "dark";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../../../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=c83e6b79" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/default.css?v=22616357" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/martinpdes_layout.css?v=a8cc01cd" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/layout.css?v=dc96f8db" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../../../_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../../../../../_static/documentation_options.js?v=9d400afe"></script>
+    <script src="../../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../../_static/sg-tags.js?v=d80f6fa4"></script>
+    <script src="../../../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/RosettaX/workflow/apply_calibration/scattering/monotonic';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/MartinPdeS/RosettaX/documentation_page/version_switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.10.9';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="../../../../../_static/favicon.svg"/>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.10.9" />
+  
+    
+    <script src="../../../../../_static/searchtools.js"></script>
+    <script src="../../../../../_static/language_data.js"></script>
+    <script src="../../../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="dark">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="../../../../../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.10.9 documentation - Home"/>
+    <img src="../../../../../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.10.9 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../quickstart.html">
+    Start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../interface.html">
+    Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../theory.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../code.html">
+    API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../resources.html">
+    Resources
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../privacy.html">
+    Privacy policy
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MartinPdeS/RosettaX" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/RosettaX/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-box fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://anaconda.org/MartinPdeS/RosettaX" title="Anaconda" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">Anaconda</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../quickstart.html">
+    Start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../interface.html">
+    Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../theory.html">
+    Theory
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../code.html">
+    API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../resources.html">
+    Resources
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../../privacy.html">
+    Privacy policy
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MartinPdeS/RosettaX" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/RosettaX/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-solid fa-box fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://anaconda.org/MartinPdeS/RosettaX" title="Anaconda" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">Anaconda</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">RosettaX.workflow.apply_calibration.scattering.monotonic</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for RosettaX.workflow.apply_calibration.scattering.monotonic</h1><div class="highlight"><pre>
+<span></span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.workflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">scattering</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">MonotonicDiameterInterval</span><span class="p">,</span>
+    <span class="n">MonotonicRelationResolution</span><span class="p">,</span>
+    <span class="n">ScatteringTargetModelParameters</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="resolve_monotonic_target_mie_relation">
+<a class="viewcode-back" href="../../../../../api/workflows.html#RosettaX.workflow.apply_calibration.scattering.resolve_monotonic_target_mie_relation">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">resolve_monotonic_target_mie_relation</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">target_mie_relation</span><span class="p">:</span> <span class="n">scattering</span><span class="o">.</span><span class="n">MieRelation</span><span class="p">,</span>
+    <span class="n">target_model_parameters</span><span class="p">:</span> <span class="n">ScatteringTargetModelParameters</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MonotonicRelationResolution</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Resolve the monotonic target relation used for diameter inversion.</span>
+
+<span class="sd">    If the full relation is strictly monotonic, it is used directly. If not, the</span>
+<span class="sd">    widest strictly monotonic branch is selected automatically and expanded into</span>
+<span class="sd">    a monotone approximation across the full diameter range.</span>
+<span class="sd">    """</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+        <span class="s2">"resolve_monotonic_target_mie_relation called with mie_model=</span><span class="si">%r</span><span class="s2"> relation_role=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+        <span class="nb">getattr</span><span class="p">(</span><span class="n">target_mie_relation</span><span class="p">,</span> <span class="s2">"mie_model"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="nb">getattr</span><span class="p">(</span><span class="n">target_mie_relation</span><span class="p">,</span> <span class="s2">"relation_role"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">diameter_values_nm</span><span class="p">,</span> <span class="n">theoretical_coupling_values</span> <span class="o">=</span> <span class="n">get_finite_positive_mie_relation_arrays</span><span class="p">(</span>
+        <span class="n">target_mie_relation</span><span class="o">=</span><span class="n">target_mie_relation</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">scattering</span><span class="o">.</span><span class="n">relation_is_strictly_monotonic</span><span class="p">(</span>
+        <span class="n">values</span><span class="o">=</span><span class="n">theoretical_coupling_values</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"resolve_monotonic_target_mie_relation using full relation because it is strictly monotonic."</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">MonotonicRelationResolution</span><span class="p">(</span>
+            <span class="n">target_mie_relation</span><span class="o">=</span><span class="n">target_mie_relation</span><span class="p">,</span>
+            <span class="n">selected_interval</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">used_auto_largest_branch</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">warnings</span><span class="o">=</span><span class="p">[],</span>
+        <span class="p">)</span>
+
+    <span class="n">monotonic_intervals</span> <span class="o">=</span> <span class="n">find_strictly_monotonic_diameter_intervals</span><span class="p">(</span>
+        <span class="n">diameter_nm</span><span class="o">=</span><span class="n">diameter_values_nm</span><span class="p">,</span>
+        <span class="n">theoretical_coupling</span><span class="o">=</span><span class="n">theoretical_coupling_values</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+        <span class="s2">"resolve_monotonic_target_mie_relation found monotonic_interval_count=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+        <span class="nb">len</span><span class="p">(</span><span class="n">monotonic_intervals</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">monotonic_intervals</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"Target Mie relation is not strictly monotonic and no valid "</span>
+                <span class="s2">"monotonic branch was detected. Try increasing the diameter point "</span>
+                <span class="s2">"count or reducing the target diameter range."</span>
+        <span class="p">)</span>
+
+    <span class="n">selected_interval</span> <span class="o">=</span> <span class="n">select_largest_monotonic_interval</span><span class="p">(</span>
+        <span class="n">monotonic_intervals</span><span class="o">=</span><span class="n">monotonic_intervals</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">approximated_mie_relation</span> <span class="o">=</span> <span class="n">build_monotonic_approximation_mie_relation</span><span class="p">(</span>
+        <span class="n">target_mie_relation</span><span class="o">=</span><span class="n">target_mie_relation</span><span class="p">,</span>
+        <span class="n">selected_interval</span><span class="o">=</span><span class="n">selected_interval</span><span class="p">,</span>
+        <span class="n">target_model_parameters</span><span class="o">=</span><span class="n">target_model_parameters</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">smoothing_is_enabled</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span>
+        <span class="n">target_model_parameters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="ow">and</span> <span class="n">target_model_parameters</span><span class="o">.</span><span class="n">advanced_monotonic_mode_enabled</span>
+        <span class="ow">and</span> <span class="n">target_model_parameters</span><span class="o">.</span><span class="n">use_monotonic_smoothing_kernel</span>
+    <span class="p">)</span>
+
+    <span class="n">warning</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">"Target Mie relation was not strictly monotonic over the full selected "</span>
+        <span class="s2">"diameter range. RosettaX automatically selected the left-most monotonic "</span>
+        <span class="sa">f</span><span class="s2">"branch: </span><span class="si">{</span><span class="n">selected_interval</span><span class="o">.</span><span class="n">to_message_fragment</span><span class="p">()</span><span class="si">}</span><span class="s2">. A monotone "</span>
+        <span class="s2">"approximation based on that branch is used across the selected "</span>
+        <span class="s2">"diameter range."</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">smoothing_is_enabled</span><span class="p">:</span>
+        <span class="n">warning</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">warning</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> A Gaussian smoothing kernel "</span>
+            <span class="sa">f</span><span class="s2">"(sigma=</span><span class="si">{</span><span class="n">target_model_parameters</span><span class="o">.</span><span class="n">monotonic_smoothing_sigma_points</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2"> points) "</span>
+            <span class="s2">"was then applied to soften sharp transitions."</span>
+        <span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+        <span class="s2">"resolve_monotonic_target_mie_relation selected_interval=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+        <span class="n">selected_interval</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">MonotonicRelationResolution</span><span class="p">(</span>
+        <span class="n">target_mie_relation</span><span class="o">=</span><span class="n">approximated_mie_relation</span><span class="p">,</span>
+        <span class="n">selected_interval</span><span class="o">=</span><span class="n">selected_interval</span><span class="p">,</span>
+        <span class="n">used_auto_largest_branch</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">warnings</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">warning</span><span class="p">,</span>
+        <span class="p">],</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="select_largest_monotonic_interval">
+<a class="viewcode-back" href="../../../../../api/workflows.html#RosettaX.workflow.apply_calibration.scattering.select_largest_monotonic_interval">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">select_largest_monotonic_interval</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">monotonic_intervals</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">MonotonicDiameterInterval</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MonotonicDiameterInterval</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Select the left-most monotonic branch.</span>
+
+<span class="sd">    If multiple intervals start at the same index, keep the widest one, then</span>
+<span class="sd">    the one with more points.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">monotonic_intervals</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"No monotonic intervals were provided."</span><span class="p">)</span>
+
+    <span class="n">selected_interval</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">monotonic_intervals</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">interval</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">interval</span><span class="o">.</span><span class="n">start_index</span><span class="p">,</span>
+            <span class="o">-</span><span class="n">interval</span><span class="o">.</span><span class="n">diameter_width_nm</span><span class="p">,</span>
+            <span class="o">-</span><span class="n">interval</span><span class="o">.</span><span class="n">point_count</span><span class="p">,</span>
+        <span class="p">))</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+        <span class="s2">"select_largest_monotonic_interval selected left-most interval=</span><span class="si">%r</span><span class="s2"> from interval_count=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+        <span class="n">selected_interval</span><span class="p">,</span>
+        <span class="nb">len</span><span class="p">(</span><span class="n">monotonic_intervals</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">selected_interval</span></div>
+
+
+
+<div class="viewcode-block" id="build_monotonic_branch_mie_relation">
+<a class="viewcode-back" href="../../../../../api/workflows.html#RosettaX.workflow.apply_calibration.scattering.build_monotonic_branch_mie_relation">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_monotonic_branch_mie_relation</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">target_mie_relation</span><span class="p">:</span> <span class="n">scattering</span><span class="o">.</span><span class="n">MieRelation</span><span class="p">,</span>
+    <span class="n">selected_interval</span><span class="p">:</span> <span class="n">MonotonicDiameterInterval</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">scattering</span><span class="o">.</span><span class="n">MieRelation</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Crop a Mie relation to one monotonic branch.</span>
+<span class="sd">    """</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+        <span class="s2">"build_monotonic_branch_mie_relation called with selected_interval=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+        <span class="n">selected_interval</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">diameter_values_nm</span><span class="p">,</span> <span class="n">theoretical_coupling_values</span> <span class="o">=</span> <span class="n">get_finite_positive_mie_relation_arrays</span><span class="p">(</span>
+        <span class="n">target_mie_relation</span><span class="o">=</span><span class="n">target_mie_relation</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">branch_diameter_values_nm</span> <span class="o">=</span> <span class="n">diameter_values_nm</span><span class="p">[</span>
+        <span class="n">selected_interval</span><span class="o">.</span><span class="n">start_index</span> <span class="p">:</span> <span class="n">selected_interval</span><span class="o">.</span><span class="n">end_index</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="p">]</span>
+
+    <span class="n">branch_coupling_values</span> <span class="o">=</span> <span class="n">theoretical_coupling_values</span><span class="p">[</span>
+        <span class="n">selected_interval</span><span class="o">.</span><span class="n">start_index</span> <span class="p">:</span> <span class="n">selected_interval</span><span class="o">.</span><span class="n">end_index</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">branch_diameter_values_nm</span><span class="o">.</span><span class="n">size</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"Selected monotonic branch has fewer than two points."</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">scattering</span><span class="o">.</span><span class="n">relation_is_strictly_monotonic</span><span class="p">(</span>
+        <span class="n">values</span><span class="o">=</span><span class="n">branch_coupling_values</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"Selected monotonic branch is not strictly monotonic."</span>
+        <span class="p">)</span>
+
+    <span class="n">parameters</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="n">target_mie_relation</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">parameters</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">"auto_largest_monotonic_branch"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">"branch_diameter_min_nm"</span><span class="p">:</span> <span class="n">selected_interval</span><span class="o">.</span><span class="n">diameter_min_nm</span><span class="p">,</span>
+            <span class="s2">"branch_diameter_max_nm"</span><span class="p">:</span> <span class="n">selected_interval</span><span class="o">.</span><span class="n">diameter_max_nm</span><span class="p">,</span>
+            <span class="s2">"branch_coupling_min"</span><span class="p">:</span> <span class="n">selected_interval</span><span class="o">.</span><span class="n">coupling_min</span><span class="p">,</span>
+            <span class="s2">"branch_coupling_max"</span><span class="p">:</span> <span class="n">selected_interval</span><span class="o">.</span><span class="n">coupling_max</span><span class="p">,</span>
+            <span class="s2">"branch_trend"</span><span class="p">:</span> <span class="n">selected_interval</span><span class="o">.</span><span class="n">trend</span><span class="p">,</span>
+            <span class="s2">"extrapolation_enabled"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">scattering</span><span class="o">.</span><span class="n">build_mie_relation_from_arrays</span><span class="p">(</span>
+        <span class="n">diameter_nm</span><span class="o">=</span><span class="n">branch_diameter_values_nm</span><span class="p">,</span>
+        <span class="n">theoretical_coupling</span><span class="o">=</span><span class="n">branch_coupling_values</span><span class="p">,</span>
+        <span class="n">mie_model</span><span class="o">=</span><span class="n">target_mie_relation</span><span class="o">.</span><span class="n">mie_model</span><span class="p">,</span>
+        <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span><span class="p">,</span>
+        <span class="n">relation_role</span><span class="o">=</span><span class="n">target_mie_relation</span><span class="o">.</span><span class="n">relation_role</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">build_monotonic_approximation_mie_relation</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">target_mie_relation</span><span class="p">:</span> <span class="n">scattering</span><span class="o">.</span><span class="n">MieRelation</span><span class="p">,</span>
+    <span class="n">selected_interval</span><span class="p">:</span> <span class="n">MonotonicDiameterInterval</span><span class="p">,</span>
+    <span class="n">target_model_parameters</span><span class="p">:</span> <span class="n">ScatteringTargetModelParameters</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">scattering</span><span class="o">.</span><span class="n">MieRelation</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Build a monotone approximation of the full Mie relation.</span>
+
+<span class="sd">    The selected strictly monotonic branch is preserved exactly. Outside that</span>
+<span class="sd">    branch, the original curve is converted into a monotone envelope that keeps</span>
+<span class="sd">    following the same overall Mie-curve shape without introducing straight-line</span>
+<span class="sd">    segments across the whole rejected region.</span>
+<span class="sd">    """</span>
+    <span class="n">diameter_values_nm</span><span class="p">,</span> <span class="n">theoretical_coupling_values</span> <span class="o">=</span> <span class="n">get_finite_positive_mie_relation_arrays</span><span class="p">(</span>
+        <span class="n">target_mie_relation</span><span class="o">=</span><span class="n">target_mie_relation</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">approximated_coupling_values</span> <span class="o">=</span> <span class="n">build_monotonic_coupling_approximation</span><span class="p">(</span>
+        <span class="n">theoretical_coupling_values</span><span class="o">=</span><span class="n">theoretical_coupling_values</span><span class="p">,</span>
+        <span class="n">selected_interval</span><span class="o">=</span><span class="n">selected_interval</span><span class="p">,</span>
+        <span class="n">target_model_parameters</span><span class="o">=</span><span class="n">target_model_parameters</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">parameters</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="n">target_mie_relation</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">parameters</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">"auto_largest_monotonic_branch"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">"branch_diameter_min_nm"</span><span class="p">:</span> <span class="n">selected_interval</span><span class="o">.</span><span class="n">diameter_min_nm</span><span class="p">,</span>
+            <span class="s2">"branch_diameter_max_nm"</span><span class="p">:</span> <span class="n">selected_interval</span><span class="o">.</span><span class="n">diameter_max_nm</span><span class="p">,</span>
+            <span class="s2">"branch_coupling_min"</span><span class="p">:</span> <span class="n">selected_interval</span><span class="o">.</span><span class="n">coupling_min</span><span class="p">,</span>
+            <span class="s2">"branch_coupling_max"</span><span class="p">:</span> <span class="n">selected_interval</span><span class="o">.</span><span class="n">coupling_max</span><span class="p">,</span>
+            <span class="s2">"branch_trend"</span><span class="p">:</span> <span class="n">selected_interval</span><span class="o">.</span><span class="n">trend</span><span class="p">,</span>
+            <span class="s2">"extrapolation_enabled"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">"monotonic_approximation_enabled"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">"monotonic_approximation_strategy"</span><span class="p">:</span> <span class="s2">"cumulative_envelope"</span><span class="p">,</span>
+            <span class="s2">"monotonic_smoothing_enabled"</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span>
+                <span class="n">target_model_parameters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="ow">and</span> <span class="n">target_model_parameters</span><span class="o">.</span><span class="n">advanced_monotonic_mode_enabled</span>
+                <span class="ow">and</span> <span class="n">target_model_parameters</span><span class="o">.</span><span class="n">use_monotonic_smoothing_kernel</span>
+            <span class="p">),</span>
+            <span class="s2">"monotonic_smoothing_sigma_points"</span><span class="p">:</span> <span class="p">(</span>
+                <span class="nb">float</span><span class="p">(</span><span class="n">target_model_parameters</span><span class="o">.</span><span class="n">monotonic_smoothing_sigma_points</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">target_model_parameters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="k">else</span> <span class="mf">0.0</span>
+            <span class="p">),</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">scattering</span><span class="o">.</span><span class="n">build_mie_relation_from_arrays</span><span class="p">(</span>
+        <span class="n">diameter_nm</span><span class="o">=</span><span class="n">diameter_values_nm</span><span class="p">,</span>
+        <span class="n">theoretical_coupling</span><span class="o">=</span><span class="n">approximated_coupling_values</span><span class="p">,</span>
+        <span class="n">mie_model</span><span class="o">=</span><span class="n">target_mie_relation</span><span class="o">.</span><span class="n">mie_model</span><span class="p">,</span>
+        <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span><span class="p">,</span>
+        <span class="n">relation_role</span><span class="o">=</span><span class="n">target_mie_relation</span><span class="o">.</span><span class="n">relation_role</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">build_monotonic_coupling_approximation</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">theoretical_coupling_values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">selected_interval</span><span class="p">:</span> <span class="n">MonotonicDiameterInterval</span><span class="p">,</span>
+    <span class="n">target_model_parameters</span><span class="p">:</span> <span class="n">ScatteringTargetModelParameters</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Build a monotone coupling envelope anchored on the selected branch.</span>
+<span class="sd">    """</span>
+    <span class="n">coupling_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+        <span class="n">theoretical_coupling_values</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">approximated_coupling_values</span> <span class="o">=</span> <span class="n">coupling_values</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="n">branch_values</span> <span class="o">=</span> <span class="n">coupling_values</span><span class="p">[</span>
+        <span class="n">selected_interval</span><span class="o">.</span><span class="n">start_index</span> <span class="p">:</span> <span class="n">selected_interval</span><span class="o">.</span><span class="n">end_index</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">branch_values</span><span class="o">.</span><span class="n">size</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Selected monotonic branch has fewer than two points."</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">selected_interval</span><span class="o">.</span><span class="n">trend</span> <span class="o">==</span> <span class="s2">"increasing"</span><span class="p">:</span>
+        <span class="n">left_values</span> <span class="o">=</span> <span class="n">coupling_values</span><span class="p">[:</span> <span class="n">selected_interval</span><span class="o">.</span><span class="n">start_index</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">left_values</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">approximated_coupling_values</span><span class="p">[:</span> <span class="n">selected_interval</span><span class="o">.</span><span class="n">start_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="o">.</span><span class="n">accumulate</span><span class="p">(</span><span class="n">left_values</span><span class="p">),</span>
+                <span class="n">branch_values</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="p">)</span>
+
+        <span class="n">right_values</span> <span class="o">=</span> <span class="n">coupling_values</span><span class="p">[</span><span class="n">selected_interval</span><span class="o">.</span><span class="n">end_index</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]</span>
+
+        <span class="k">if</span> <span class="n">right_values</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">approximated_coupling_values</span><span class="p">[</span><span class="n">selected_interval</span><span class="o">.</span><span class="n">end_index</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="o">.</span><span class="n">accumulate</span><span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+                        <span class="p">(</span>
+                            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">branch_values</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span>
+                            <span class="n">right_values</span><span class="p">,</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">left_values</span> <span class="o">=</span> <span class="n">coupling_values</span><span class="p">[:</span> <span class="n">selected_interval</span><span class="o">.</span><span class="n">start_index</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">left_values</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">approximated_coupling_values</span><span class="p">[:</span> <span class="n">selected_interval</span><span class="o">.</span><span class="n">start_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="o">.</span><span class="n">accumulate</span><span class="p">(</span><span class="n">left_values</span><span class="p">),</span>
+                <span class="n">branch_values</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="p">)</span>
+
+        <span class="n">right_values</span> <span class="o">=</span> <span class="n">coupling_values</span><span class="p">[</span><span class="n">selected_interval</span><span class="o">.</span><span class="n">end_index</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]</span>
+
+        <span class="k">if</span> <span class="n">right_values</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">approximated_coupling_values</span><span class="p">[</span><span class="n">selected_interval</span><span class="o">.</span><span class="n">end_index</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="o">.</span><span class="n">accumulate</span><span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+                        <span class="p">(</span>
+                            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">branch_values</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span>
+                            <span class="n">right_values</span><span class="p">,</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="p">)</span>
+
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">target_model_parameters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="ow">and</span> <span class="n">target_model_parameters</span><span class="o">.</span><span class="n">advanced_monotonic_mode_enabled</span>
+        <span class="ow">and</span> <span class="n">target_model_parameters</span><span class="o">.</span><span class="n">use_monotonic_smoothing_kernel</span>
+    <span class="p">):</span>
+        <span class="n">flattened_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span>
+            <span class="n">approximated_coupling_values</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">flattened_mask</span><span class="p">[</span>
+            <span class="n">selected_interval</span><span class="o">.</span><span class="n">start_index</span> <span class="p">:</span> <span class="n">selected_interval</span><span class="o">.</span><span class="n">end_index</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="n">approximated_coupling_values</span> <span class="o">=</span> <span class="n">smooth_monotonic_coupling_approximation</span><span class="p">(</span>
+            <span class="n">approximated_coupling_values</span><span class="o">=</span><span class="n">approximated_coupling_values</span><span class="p">,</span>
+            <span class="n">selected_interval</span><span class="o">=</span><span class="n">selected_interval</span><span class="p">,</span>
+            <span class="n">sigma_points</span><span class="o">=</span><span class="n">target_model_parameters</span><span class="o">.</span><span class="n">monotonic_smoothing_sigma_points</span><span class="p">,</span>
+            <span class="n">smoothing_mask</span><span class="o">=</span><span class="n">flattened_mask</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">approximated_coupling_values</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">smooth_monotonic_coupling_approximation</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">approximated_coupling_values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">selected_interval</span><span class="p">:</span> <span class="n">MonotonicDiameterInterval</span><span class="p">,</span>
+    <span class="n">sigma_points</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">smoothing_mask</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Smooth a monotone approximation and project it back onto a monotone curve.</span>
+<span class="sd">    """</span>
+    <span class="n">coupling_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+        <span class="n">approximated_coupling_values</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">mask_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+        <span class="n">smoothing_mask</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">coupling_values</span><span class="o">.</span><span class="n">size</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">coupling_values</span>
+
+    <span class="k">if</span> <span class="n">coupling_values</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">mask_values</span><span class="o">.</span><span class="n">size</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">mask_values</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">coupling_values</span>
+
+    <span class="n">gaussian_kernel</span> <span class="o">=</span> <span class="n">build_gaussian_kernel_1d</span><span class="p">(</span>
+        <span class="n">sigma_points</span><span class="o">=</span><span class="n">sigma_points</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">padding_radius</span> <span class="o">=</span> <span class="n">gaussian_kernel</span><span class="o">.</span><span class="n">size</span> <span class="o">//</span> <span class="mi">2</span>
+
+    <span class="n">padded_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span>
+        <span class="n">coupling_values</span><span class="p">,</span>
+        <span class="n">pad_width</span><span class="o">=</span><span class="n">padding_radius</span><span class="p">,</span>
+        <span class="n">mode</span><span class="o">=</span><span class="s2">"edge"</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">smoothed_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span>
+        <span class="n">padded_values</span><span class="p">,</span>
+        <span class="n">gaussian_kernel</span><span class="p">,</span>
+        <span class="n">mode</span><span class="o">=</span><span class="s2">"valid"</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">blended_values</span> <span class="o">=</span> <span class="n">coupling_values</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">blended_values</span><span class="p">[</span><span class="n">mask_values</span><span class="p">]</span> <span class="o">=</span> <span class="n">smoothed_values</span><span class="p">[</span><span class="n">mask_values</span><span class="p">]</span>
+
+    <span class="n">start_index</span> <span class="o">=</span> <span class="n">selected_interval</span><span class="o">.</span><span class="n">start_index</span>
+    <span class="n">end_index</span> <span class="o">=</span> <span class="n">selected_interval</span><span class="o">.</span><span class="n">end_index</span>
+    <span class="n">branch_values</span> <span class="o">=</span> <span class="n">coupling_values</span><span class="p">[</span><span class="n">start_index</span> <span class="p">:</span> <span class="n">end_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">blended_values</span><span class="p">[</span><span class="n">start_index</span> <span class="p">:</span> <span class="n">end_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">branch_values</span>
+
+    <span class="n">transition_point_count</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+        <span class="mi">8</span><span class="p">,</span>
+        <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">sigma_points</span><span class="p">))),</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">selected_interval</span><span class="o">.</span><span class="n">trend</span> <span class="o">==</span> <span class="s2">"increasing"</span><span class="p">:</span>
+        <span class="n">blended_values</span> <span class="o">=</span> <span class="n">blend_transition_window</span><span class="p">(</span>
+            <span class="n">blended_values</span><span class="o">=</span><span class="n">blended_values</span><span class="p">,</span>
+            <span class="n">start_index</span><span class="o">=</span><span class="n">start_index</span><span class="p">,</span>
+            <span class="n">end_index</span><span class="o">=</span><span class="n">end_index</span><span class="p">,</span>
+            <span class="n">boundary_value</span><span class="o">=</span><span class="n">branch_values</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">transition_point_count</span><span class="o">=</span><span class="n">transition_point_count</span><span class="p">,</span>
+            <span class="n">trend</span><span class="o">=</span><span class="s2">"increasing"</span><span class="p">,</span>
+            <span class="n">side</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">blended_values</span> <span class="o">=</span> <span class="n">blend_transition_window</span><span class="p">(</span>
+            <span class="n">blended_values</span><span class="o">=</span><span class="n">blended_values</span><span class="p">,</span>
+            <span class="n">start_index</span><span class="o">=</span><span class="n">start_index</span><span class="p">,</span>
+            <span class="n">end_index</span><span class="o">=</span><span class="n">end_index</span><span class="p">,</span>
+            <span class="n">boundary_value</span><span class="o">=</span><span class="n">branch_values</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+            <span class="n">transition_point_count</span><span class="o">=</span><span class="n">transition_point_count</span><span class="p">,</span>
+            <span class="n">trend</span><span class="o">=</span><span class="s2">"increasing"</span><span class="p">,</span>
+            <span class="n">side</span><span class="o">=</span><span class="s2">"right"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">blended_values</span> <span class="o">=</span> <span class="n">blend_transition_window</span><span class="p">(</span>
+            <span class="n">blended_values</span><span class="o">=</span><span class="n">blended_values</span><span class="p">,</span>
+            <span class="n">start_index</span><span class="o">=</span><span class="n">start_index</span><span class="p">,</span>
+            <span class="n">end_index</span><span class="o">=</span><span class="n">end_index</span><span class="p">,</span>
+            <span class="n">boundary_value</span><span class="o">=</span><span class="n">branch_values</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">transition_point_count</span><span class="o">=</span><span class="n">transition_point_count</span><span class="p">,</span>
+            <span class="n">trend</span><span class="o">=</span><span class="s2">"decreasing"</span><span class="p">,</span>
+            <span class="n">side</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">blended_values</span> <span class="o">=</span> <span class="n">blend_transition_window</span><span class="p">(</span>
+            <span class="n">blended_values</span><span class="o">=</span><span class="n">blended_values</span><span class="p">,</span>
+            <span class="n">start_index</span><span class="o">=</span><span class="n">start_index</span><span class="p">,</span>
+            <span class="n">end_index</span><span class="o">=</span><span class="n">end_index</span><span class="p">,</span>
+            <span class="n">boundary_value</span><span class="o">=</span><span class="n">branch_values</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+            <span class="n">transition_point_count</span><span class="o">=</span><span class="n">transition_point_count</span><span class="p">,</span>
+            <span class="n">trend</span><span class="o">=</span><span class="s2">"decreasing"</span><span class="p">,</span>
+            <span class="n">side</span><span class="o">=</span><span class="s2">"right"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">selected_interval</span><span class="o">.</span><span class="n">trend</span> <span class="o">==</span> <span class="s2">"increasing"</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">start_index</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">left_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="o">.</span><span class="n">accumulate</span><span class="p">(</span>
+                <span class="n">blended_values</span><span class="p">[:</span><span class="n">start_index</span><span class="p">],</span>
+            <span class="p">)</span>
+            <span class="n">left_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span>
+                <span class="n">left_values</span><span class="p">,</span>
+                <span class="n">branch_values</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="p">)</span>
+            <span class="n">blended_values</span><span class="p">[:</span><span class="n">start_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">left_values</span>
+
+        <span class="k">if</span> <span class="n">end_index</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="n">blended_values</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+            <span class="n">right_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="o">.</span><span class="n">accumulate</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+                    <span class="p">(</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">branch_values</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span>
+                        <span class="n">blended_values</span><span class="p">[</span><span class="n">end_index</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:],</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="n">blended_values</span><span class="p">[</span><span class="n">end_index</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">right_values</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">start_index</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">left_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="o">.</span><span class="n">accumulate</span><span class="p">(</span>
+                <span class="n">blended_values</span><span class="p">[:</span><span class="n">start_index</span><span class="p">],</span>
+            <span class="p">)</span>
+            <span class="n">left_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span>
+                <span class="n">left_values</span><span class="p">,</span>
+                <span class="n">branch_values</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="p">)</span>
+            <span class="n">blended_values</span><span class="p">[:</span><span class="n">start_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">left_values</span>
+
+        <span class="k">if</span> <span class="n">end_index</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="n">blended_values</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+            <span class="n">right_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="o">.</span><span class="n">accumulate</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+                    <span class="p">(</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">branch_values</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span>
+                        <span class="n">blended_values</span><span class="p">[</span><span class="n">end_index</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:],</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="n">blended_values</span><span class="p">[</span><span class="n">end_index</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">right_values</span>
+
+    <span class="k">return</span> <span class="n">blended_values</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">blend_transition_window</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">blended_values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">start_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">end_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">boundary_value</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">transition_point_count</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">trend</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">side</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Blend a short transition window around the monotonic branch boundary.</span>
+
+<span class="sd">    The exact branch values stay unchanged; only the points immediately outside</span>
+<span class="sd">    the branch are eased toward the boundary value to reduce visible kinks.</span>
+<span class="sd">    """</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+        <span class="n">blended_values</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">transition_point_count</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">values</span>
+
+    <span class="k">if</span> <span class="n">side</span> <span class="o">==</span> <span class="s2">"left"</span><span class="p">:</span>
+        <span class="n">window_start</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="n">start_index</span> <span class="o">-</span> <span class="n">transition_point_count</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">window_end</span> <span class="o">=</span> <span class="n">start_index</span>
+        <span class="k">if</span> <span class="n">window_end</span> <span class="o">&lt;=</span> <span class="n">window_start</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">values</span>
+
+        <span class="n">window_values</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">window_start</span><span class="p">:</span><span class="n">window_end</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">window_values</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">values</span>
+
+        <span class="k">if</span> <span class="n">trend</span> <span class="o">==</span> <span class="s2">"increasing"</span><span class="p">:</span>
+            <span class="n">values</span><span class="p">[</span><span class="n">window_start</span><span class="p">:</span><span class="n">window_end</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span>
+                <span class="n">window_values</span> <span class="o">+</span> <span class="n">_smoothstep_weights</span><span class="p">(</span><span class="n">window_values</span><span class="o">.</span><span class="n">size</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span>
+                    <span class="n">boundary_value</span> <span class="o">-</span> <span class="n">window_values</span>
+                <span class="p">),</span>
+                <span class="n">boundary_value</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">values</span><span class="p">[</span><span class="n">window_start</span><span class="p">:</span><span class="n">window_end</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span>
+                <span class="n">window_values</span> <span class="o">+</span> <span class="n">_smoothstep_weights</span><span class="p">(</span><span class="n">window_values</span><span class="o">.</span><span class="n">size</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span>
+                    <span class="n">boundary_value</span> <span class="o">-</span> <span class="n">window_values</span>
+                <span class="p">),</span>
+                <span class="n">boundary_value</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">side</span> <span class="o">==</span> <span class="s2">"right"</span><span class="p">:</span>
+        <span class="n">window_start</span> <span class="o">=</span> <span class="n">end_index</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">window_end</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+            <span class="n">values</span><span class="o">.</span><span class="n">size</span><span class="p">,</span>
+            <span class="n">end_index</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">transition_point_count</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">window_end</span> <span class="o">&lt;=</span> <span class="n">window_start</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">values</span>
+
+        <span class="n">window_values</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">window_start</span><span class="p">:</span><span class="n">window_end</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">window_values</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">values</span>
+
+        <span class="k">if</span> <span class="n">trend</span> <span class="o">==</span> <span class="s2">"increasing"</span><span class="p">:</span>
+            <span class="n">values</span><span class="p">[</span><span class="n">window_start</span><span class="p">:</span><span class="n">window_end</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span>
+                <span class="n">boundary_value</span> <span class="o">+</span> <span class="n">_smoothstep_weights</span><span class="p">(</span><span class="n">window_values</span><span class="o">.</span><span class="n">size</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span>
+                    <span class="n">window_values</span> <span class="o">-</span> <span class="n">boundary_value</span>
+                <span class="p">),</span>
+                <span class="n">window_values</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">values</span><span class="p">[</span><span class="n">window_start</span><span class="p">:</span><span class="n">window_end</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span>
+                <span class="n">boundary_value</span> <span class="o">+</span> <span class="n">_smoothstep_weights</span><span class="p">(</span><span class="n">window_values</span><span class="o">.</span><span class="n">size</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span>
+                    <span class="n">window_values</span> <span class="o">-</span> <span class="n">boundary_value</span>
+                <span class="p">),</span>
+                <span class="n">window_values</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">values</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_smoothstep_weights</span><span class="p">(</span><span class="n">count</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Build a smoothstep ramp from 0 to 1 over the requested count.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">count</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">count</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+    <span class="n">t_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span>
+        <span class="mf">0.0</span><span class="p">,</span>
+        <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">count</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">t_values</span> <span class="o">*</span> <span class="n">t_values</span> <span class="o">*</span> <span class="p">(</span><span class="mf">3.0</span> <span class="o">-</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">t_values</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">build_gaussian_kernel_1d</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">sigma_points</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Build a normalized 1-D Gaussian kernel in index space.</span>
+<span class="sd">    """</span>
+    <span class="n">resolved_sigma_points</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+        <span class="nb">float</span><span class="p">(</span><span class="n">sigma_points</span><span class="p">),</span>
+        <span class="mf">1e-6</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">kernel_radius</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+        <span class="mi">1</span><span class="p">,</span>
+        <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="mf">3.0</span> <span class="o">*</span> <span class="n">resolved_sigma_points</span><span class="p">)),</span>
+    <span class="p">)</span>
+
+    <span class="n">offsets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span>
+        <span class="o">-</span><span class="n">kernel_radius</span><span class="p">,</span>
+        <span class="n">kernel_radius</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">kernel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span>
+        <span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">offsets</span> <span class="o">/</span> <span class="n">resolved_sigma_points</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">kernel_sum</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">kernel</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">kernel_sum</span> <span class="o">&lt;=</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">kernel_sum</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+            <span class="p">[</span><span class="mf">1.0</span><span class="p">],</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">kernel</span> <span class="o">/</span> <span class="n">kernel_sum</span>
+
+
+<div class="viewcode-block" id="coupling_to_diameter_with_linear_extrapolation">
+<a class="viewcode-back" href="../../../../../api/workflows.html#RosettaX.workflow.apply_calibration.scattering.coupling_to_diameter_with_linear_extrapolation">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">coupling_to_diameter_with_linear_extrapolation</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">target_mie_relation</span><span class="p">:</span> <span class="n">scattering</span><span class="o">.</span><span class="n">MieRelation</span><span class="p">,</span>
+    <span class="n">coupling_values</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Convert coupling to diameter with linear extrapolation.</span>
+
+<span class="sd">    This assumes the target relation is strictly monotonic. Coupling values</span>
+<span class="sd">    outside the branch range are extrapolated using the first or last two points.</span>
+<span class="sd">    """</span>
+    <span class="n">coupling_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+        <span class="n">coupling_values</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">diameter_grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+        <span class="n">target_mie_relation</span><span class="o">.</span><span class="n">diameter_nm</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">coupling_grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+        <span class="n">target_mie_relation</span><span class="o">.</span><span class="n">theoretical_coupling</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+        <span class="s2">"coupling_to_diameter_with_linear_extrapolation called with "</span>
+        <span class="s2">"coupling_array_shape=</span><span class="si">%r</span><span class="s2"> diameter_grid_size=</span><span class="si">%r</span><span class="s2"> coupling_grid_size=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+        <span class="n">coupling_array</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+        <span class="n">diameter_grid</span><span class="o">.</span><span class="n">size</span><span class="p">,</span>
+        <span class="n">coupling_grid</span><span class="o">.</span><span class="n">size</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">diameter_grid</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">coupling_grid</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"diameter_nm and theoretical_coupling must have the same length."</span>
+        <span class="p">)</span>
+
+    <span class="n">finite_mask</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">diameter_grid</span><span class="p">)</span>
+        <span class="o">&amp;</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">coupling_grid</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="n">diameter_grid</span> <span class="o">=</span> <span class="n">diameter_grid</span><span class="p">[</span><span class="n">finite_mask</span><span class="p">]</span>
+    <span class="n">coupling_grid</span> <span class="o">=</span> <span class="n">coupling_grid</span><span class="p">[</span><span class="n">finite_mask</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">diameter_grid</span><span class="o">.</span><span class="n">size</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"coupling_to_diameter_with_linear_extrapolation returning nan array because filtered grid has fewer than 2 points."</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span>
+            <span class="n">coupling_array</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">sorting_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span>
+        <span class="n">coupling_grid</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">sorted_coupling_grid</span> <span class="o">=</span> <span class="n">coupling_grid</span><span class="p">[</span><span class="n">sorting_indices</span><span class="p">]</span>
+    <span class="n">sorted_diameter_grid</span> <span class="o">=</span> <span class="n">diameter_grid</span><span class="p">[</span><span class="n">sorting_indices</span><span class="p">]</span>
+
+    <span class="n">unique_coupling_grid</span><span class="p">,</span> <span class="n">unique_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span>
+        <span class="n">sorted_coupling_grid</span><span class="p">,</span>
+        <span class="n">return_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">unique_diameter_grid</span> <span class="o">=</span> <span class="n">sorted_diameter_grid</span><span class="p">[</span><span class="n">unique_indices</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">unique_coupling_grid</span><span class="o">.</span><span class="n">size</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"coupling_to_diameter_with_linear_extrapolation returning nan array because unique coupling grid has fewer than 2 points."</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span>
+            <span class="n">coupling_array</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">interpolated_diameter</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span>
+        <span class="n">coupling_array</span><span class="p">,</span>
+        <span class="n">unique_coupling_grid</span><span class="p">,</span>
+        <span class="n">unique_diameter_grid</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">lower_mask</span> <span class="o">=</span> <span class="n">coupling_array</span> <span class="o">&lt;</span> <span class="n">unique_coupling_grid</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">upper_mask</span> <span class="o">=</span> <span class="n">coupling_array</span> <span class="o">&gt;</span> <span class="n">unique_coupling_grid</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">lower_mask</span><span class="p">):</span>
+        <span class="n">interpolated_diameter</span><span class="p">[</span><span class="n">lower_mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">extrapolate_linearly</span><span class="p">(</span>
+            <span class="n">x_values</span><span class="o">=</span><span class="n">coupling_array</span><span class="p">[</span><span class="n">lower_mask</span><span class="p">],</span>
+            <span class="n">x0</span><span class="o">=</span><span class="n">unique_coupling_grid</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">y0</span><span class="o">=</span><span class="n">unique_diameter_grid</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">x1</span><span class="o">=</span><span class="n">unique_coupling_grid</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="n">y1</span><span class="o">=</span><span class="n">unique_diameter_grid</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">upper_mask</span><span class="p">):</span>
+        <span class="n">interpolated_diameter</span><span class="p">[</span><span class="n">upper_mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">extrapolate_linearly</span><span class="p">(</span>
+            <span class="n">x_values</span><span class="o">=</span><span class="n">coupling_array</span><span class="p">[</span><span class="n">upper_mask</span><span class="p">],</span>
+            <span class="n">x0</span><span class="o">=</span><span class="n">unique_coupling_grid</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span>
+            <span class="n">y0</span><span class="o">=</span><span class="n">unique_diameter_grid</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span>
+            <span class="n">x1</span><span class="o">=</span><span class="n">unique_coupling_grid</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+            <span class="n">y1</span><span class="o">=</span><span class="n">unique_diameter_grid</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+        <span class="p">)</span>
+
+    <span class="n">interpolated_diameter</span><span class="p">[</span>
+        <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span>
+            <span class="n">coupling_array</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+    <span class="n">_log_array_summary</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"coupling_to_diameter_interpolated_diameter"</span><span class="p">,</span>
+        <span class="n">values</span><span class="o">=</span><span class="n">interpolated_diameter</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">interpolated_diameter</span></div>
+
+
+
+<div class="viewcode-block" id="extrapolate_linearly">
+<a class="viewcode-back" href="../../../../../api/workflows.html#RosettaX.workflow.apply_calibration.scattering.extrapolate_linearly">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">extrapolate_linearly</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">x_values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">x0</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">y0</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">x1</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">y1</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Linear extrapolation through two points.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">x1</span> <span class="o">==</span> <span class="n">x0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+                <span class="n">x_values</span><span class="p">,</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">slope</span> <span class="o">=</span> <span class="p">(</span><span class="n">y1</span> <span class="o">-</span> <span class="n">y0</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">x1</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">y0</span> <span class="o">+</span> <span class="n">slope</span> <span class="o">*</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+            <span class="n">x_values</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="o">-</span> <span class="n">x0</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="validate_target_mie_relation_for_diameter_inversion">
+<a class="viewcode-back" href="../../../../../api/workflows.html#RosettaX.workflow.apply_calibration.scattering.validate_target_mie_relation_for_diameter_inversion">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_target_mie_relation_for_diameter_inversion</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">target_mie_relation</span><span class="p">:</span> <span class="n">scattering</span><span class="o">.</span><span class="n">MieRelation</span><span class="p">,</span>
+    <span class="n">target_model_parameters</span><span class="p">:</span> <span class="n">ScatteringTargetModelParameters</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Validate that the target Mie relation can be inverted unambiguously.</span>
+
+<span class="sd">    This function is kept for callers that still want strict validation. The</span>
+<span class="sd">    apply workflow now uses ``resolve_monotonic_target_mie_relation`` instead.</span>
+<span class="sd">    """</span>
+    <span class="n">diameter_values_nm</span><span class="p">,</span> <span class="n">theoretical_coupling_values</span> <span class="o">=</span> <span class="n">get_finite_positive_mie_relation_arrays</span><span class="p">(</span>
+        <span class="n">target_mie_relation</span><span class="o">=</span><span class="n">target_mie_relation</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">scattering</span><span class="o">.</span><span class="n">relation_is_strictly_monotonic</span><span class="p">(</span>
+        <span class="n">values</span><span class="o">=</span><span class="n">theoretical_coupling_values</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">return</span>
+
+    <span class="n">monotonic_intervals</span> <span class="o">=</span> <span class="n">find_strictly_monotonic_diameter_intervals</span><span class="p">(</span>
+        <span class="n">diameter_nm</span><span class="o">=</span><span class="n">diameter_values_nm</span><span class="p">,</span>
+        <span class="n">theoretical_coupling</span><span class="o">=</span><span class="n">theoretical_coupling_values</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">interval_message</span> <span class="o">=</span> <span class="n">format_monotonic_interval_suggestions</span><span class="p">(</span>
+        <span class="n">monotonic_intervals</span><span class="o">=</span><span class="n">monotonic_intervals</span><span class="p">,</span>
+        <span class="n">max_interval_count</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"Target Mie relation is not strictly monotonic over the selected "</span>
+            <span class="sa">f</span><span class="s2">"diameter range [</span><span class="si">{</span><span class="n">target_model_parameters</span><span class="o">.</span><span class="n">diameter_min_nm</span><span class="si">:</span><span class="s2">.6g</span><span class="si">}</span><span class="s2">, "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">target_model_parameters</span><span class="o">.</span><span class="n">diameter_max_nm</span><span class="si">:</span><span class="s2">.6g</span><span class="si">}</span><span class="s2">] nm. "</span>
+            <span class="s2">"Diameter inversion would be ambiguous because several diameters "</span>
+            <span class="s2">"can produce the same coupling. Reduce the target diameter range "</span>
+            <span class="s2">"to one monotonic interval. "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">interval_message</span><span class="si">}</span><span class="s2">"</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_finite_positive_mie_relation_arrays">
+<a class="viewcode-back" href="../../../../../api/workflows.html#RosettaX.workflow.apply_calibration.scattering.get_finite_positive_mie_relation_arrays">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_finite_positive_mie_relation_arrays</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">target_mie_relation</span><span class="p">:</span> <span class="n">scattering</span><span class="o">.</span><span class="n">MieRelation</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return finite positive diameter and coupling arrays from a Mie relation.</span>
+<span class="sd">    """</span>
+    <span class="n">diameter_values_nm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+        <span class="n">target_mie_relation</span><span class="o">.</span><span class="n">diameter_nm</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">theoretical_coupling_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+        <span class="n">target_mie_relation</span><span class="o">.</span><span class="n">theoretical_coupling</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">diameter_values_nm</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">theoretical_coupling_values</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"Target Mie relation is invalid: diameter and coupling arrays have different lengths."</span>
+        <span class="p">)</span>
+
+    <span class="n">finite_positive_mask</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">diameter_values_nm</span><span class="p">)</span>
+        <span class="o">&amp;</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">theoretical_coupling_values</span><span class="p">)</span>
+        <span class="o">&amp;</span> <span class="p">(</span><span class="n">diameter_values_nm</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="o">&amp;</span> <span class="p">(</span><span class="n">theoretical_coupling_values</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="n">diameter_values_nm</span> <span class="o">=</span> <span class="n">diameter_values_nm</span><span class="p">[</span><span class="n">finite_positive_mask</span><span class="p">]</span>
+    <span class="n">theoretical_coupling_values</span> <span class="o">=</span> <span class="n">theoretical_coupling_values</span><span class="p">[</span><span class="n">finite_positive_mask</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">diameter_values_nm</span><span class="o">.</span><span class="n">size</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"Target Mie relation is invalid: fewer than two finite positive coupling points were computed."</span>
+        <span class="p">)</span>
+
+    <span class="n">sorting_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span>
+        <span class="n">diameter_values_nm</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">sorted_diameter_values_nm</span> <span class="o">=</span> <span class="n">diameter_values_nm</span><span class="p">[</span><span class="n">sorting_indices</span><span class="p">]</span>
+    <span class="n">sorted_theoretical_coupling_values</span> <span class="o">=</span> <span class="n">theoretical_coupling_values</span><span class="p">[</span><span class="n">sorting_indices</span><span class="p">]</span>
+
+    <span class="n">_log_array_summary</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"finite_positive_mie_relation_diameter_values_nm"</span><span class="p">,</span>
+        <span class="n">values</span><span class="o">=</span><span class="n">sorted_diameter_values_nm</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">_log_array_summary</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"finite_positive_mie_relation_theoretical_coupling_values"</span><span class="p">,</span>
+        <span class="n">values</span><span class="o">=</span><span class="n">sorted_theoretical_coupling_values</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">sorted_diameter_values_nm</span><span class="p">,</span>
+        <span class="n">sorted_theoretical_coupling_values</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="find_strictly_monotonic_diameter_intervals">
+<a class="viewcode-back" href="../../../../../api/workflows.html#RosettaX.workflow.apply_calibration.scattering.find_strictly_monotonic_diameter_intervals">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">find_strictly_monotonic_diameter_intervals</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">diameter_nm</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">theoretical_coupling</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">minimum_point_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">MonotonicDiameterInterval</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Find strictly monotonic diameter intervals in a Mie relation.</span>
+
+<span class="sd">    The algorithm splits the curve whenever the sign of the local coupling</span>
+<span class="sd">    derivative changes. Flat points are treated as branch boundaries because</span>
+<span class="sd">    strict monotonic inversion cannot include repeated coupling values.</span>
+<span class="sd">    """</span>
+    <span class="n">diameter_values_nm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+        <span class="n">diameter_nm</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">theoretical_coupling_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+        <span class="n">theoretical_coupling</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">diameter_values_nm</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">theoretical_coupling_values</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"diameter_nm and theoretical_coupling must have the same length."</span>
+        <span class="p">)</span>
+
+    <span class="n">finite_positive_mask</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">diameter_values_nm</span><span class="p">)</span>
+        <span class="o">&amp;</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">theoretical_coupling_values</span><span class="p">)</span>
+        <span class="o">&amp;</span> <span class="p">(</span><span class="n">diameter_values_nm</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="o">&amp;</span> <span class="p">(</span><span class="n">theoretical_coupling_values</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="n">diameter_values_nm</span> <span class="o">=</span> <span class="n">diameter_values_nm</span><span class="p">[</span><span class="n">finite_positive_mask</span><span class="p">]</span>
+    <span class="n">theoretical_coupling_values</span> <span class="o">=</span> <span class="n">theoretical_coupling_values</span><span class="p">[</span><span class="n">finite_positive_mask</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">diameter_values_nm</span><span class="o">.</span><span class="n">size</span> <span class="o">&lt;</span> <span class="n">minimum_point_count</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="n">sorting_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span>
+        <span class="n">diameter_values_nm</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">diameter_values_nm</span> <span class="o">=</span> <span class="n">diameter_values_nm</span><span class="p">[</span><span class="n">sorting_indices</span><span class="p">]</span>
+    <span class="n">theoretical_coupling_values</span> <span class="o">=</span> <span class="n">theoretical_coupling_values</span><span class="p">[</span><span class="n">sorting_indices</span><span class="p">]</span>
+
+    <span class="n">coupling_differences</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span>
+        <span class="n">theoretical_coupling_values</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">difference_signs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span>
+        <span class="n">coupling_differences</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">intervals</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">MonotonicDiameterInterval</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">start_index</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">current_sign</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="k">for</span> <span class="n">difference_index</span><span class="p">,</span> <span class="n">difference_sign</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">difference_signs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">difference_sign</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">intervals</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                <span class="n">build_interval_if_valid</span><span class="p">(</span>
+                    <span class="n">diameter_values_nm</span><span class="o">=</span><span class="n">diameter_values_nm</span><span class="p">,</span>
+                    <span class="n">theoretical_coupling_values</span><span class="o">=</span><span class="n">theoretical_coupling_values</span><span class="p">,</span>
+                    <span class="n">start_index</span><span class="o">=</span><span class="n">start_index</span><span class="p">,</span>
+                    <span class="n">end_index</span><span class="o">=</span><span class="n">difference_index</span><span class="p">,</span>
+                    <span class="n">minimum_point_count</span><span class="o">=</span><span class="n">minimum_point_count</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="n">start_index</span> <span class="o">=</span> <span class="n">difference_index</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">current_sign</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="n">current_sign</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">current_sign</span> <span class="o">=</span> <span class="n">difference_sign</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="n">difference_sign</span> <span class="o">!=</span> <span class="n">current_sign</span><span class="p">:</span>
+            <span class="n">intervals</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                <span class="n">build_interval_if_valid</span><span class="p">(</span>
+                    <span class="n">diameter_values_nm</span><span class="o">=</span><span class="n">diameter_values_nm</span><span class="p">,</span>
+                    <span class="n">theoretical_coupling_values</span><span class="o">=</span><span class="n">theoretical_coupling_values</span><span class="p">,</span>
+                    <span class="n">start_index</span><span class="o">=</span><span class="n">start_index</span><span class="p">,</span>
+                    <span class="n">end_index</span><span class="o">=</span><span class="n">difference_index</span><span class="p">,</span>
+                    <span class="n">minimum_point_count</span><span class="o">=</span><span class="n">minimum_point_count</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="n">start_index</span> <span class="o">=</span> <span class="n">difference_index</span>
+            <span class="n">current_sign</span> <span class="o">=</span> <span class="n">difference_sign</span>
+
+    <span class="n">intervals</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+        <span class="n">build_interval_if_valid</span><span class="p">(</span>
+            <span class="n">diameter_values_nm</span><span class="o">=</span><span class="n">diameter_values_nm</span><span class="p">,</span>
+            <span class="n">theoretical_coupling_values</span><span class="o">=</span><span class="n">theoretical_coupling_values</span><span class="p">,</span>
+            <span class="n">start_index</span><span class="o">=</span><span class="n">start_index</span><span class="p">,</span>
+            <span class="n">end_index</span><span class="o">=</span><span class="n">diameter_values_nm</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="n">minimum_point_count</span><span class="o">=</span><span class="n">minimum_point_count</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+        <span class="s2">"find_strictly_monotonic_diameter_intervals returning interval_count=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+        <span class="nb">len</span><span class="p">(</span><span class="n">intervals</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">intervals</span></div>
+
+
+
+<div class="viewcode-block" id="build_interval_if_valid">
+<a class="viewcode-back" href="../../../../../api/workflows.html#RosettaX.workflow.apply_calibration.scattering.build_interval_if_valid">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_interval_if_valid</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">diameter_values_nm</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">theoretical_coupling_values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">start_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">end_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">minimum_point_count</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">MonotonicDiameterInterval</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Build one monotonic interval if it is valid.</span>
+<span class="sd">    """</span>
+    <span class="n">start_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+        <span class="n">start_index</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">end_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+        <span class="n">end_index</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">end_index</span> <span class="o">&lt;=</span> <span class="n">start_index</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="n">interval_diameter_values_nm</span> <span class="o">=</span> <span class="n">diameter_values_nm</span><span class="p">[</span><span class="n">start_index</span> <span class="p">:</span> <span class="n">end_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">interval_coupling_values</span> <span class="o">=</span> <span class="n">theoretical_coupling_values</span><span class="p">[</span><span class="n">start_index</span> <span class="p">:</span> <span class="n">end_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">interval_diameter_values_nm</span><span class="o">.</span><span class="n">size</span> <span class="o">&lt;</span> <span class="n">minimum_point_count</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">scattering</span><span class="o">.</span><span class="n">relation_is_strictly_monotonic</span><span class="p">(</span>
+        <span class="n">values</span><span class="o">=</span><span class="n">interval_coupling_values</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="n">interval_coupling_values</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">interval_coupling_values</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="n">trend</span> <span class="o">=</span> <span class="s2">"increasing"</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">trend</span> <span class="o">=</span> <span class="s2">"decreasing"</span>
+
+    <span class="n">interval</span> <span class="o">=</span> <span class="n">MonotonicDiameterInterval</span><span class="p">(</span>
+        <span class="n">diameter_min_nm</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span>
+            <span class="n">interval_diameter_values_nm</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="p">),</span>
+        <span class="n">diameter_max_nm</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span>
+            <span class="n">interval_diameter_values_nm</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+        <span class="p">),</span>
+        <span class="n">coupling_min</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span>
+                <span class="n">interval_coupling_values</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">),</span>
+        <span class="n">coupling_max</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span>
+                <span class="n">interval_coupling_values</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">),</span>
+        <span class="n">point_count</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span>
+            <span class="n">interval_diameter_values_nm</span><span class="o">.</span><span class="n">size</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">trend</span><span class="o">=</span><span class="n">trend</span><span class="p">,</span>
+        <span class="n">start_index</span><span class="o">=</span><span class="n">start_index</span><span class="p">,</span>
+        <span class="n">end_index</span><span class="o">=</span><span class="n">end_index</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+        <span class="s2">"build_interval_if_valid accepted interval=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+        <span class="n">interval</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">interval</span><span class="p">,</span>
+    <span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="format_monotonic_interval_suggestions">
+<a class="viewcode-back" href="../../../../../api/workflows.html#RosettaX.workflow.apply_calibration.scattering.format_monotonic_interval_suggestions">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">format_monotonic_interval_suggestions</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">monotonic_intervals</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">MonotonicDiameterInterval</span><span class="p">],</span>
+    <span class="n">max_interval_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Format monotonic interval suggestions for an error or status message.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">monotonic_intervals</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="s2">"No valid monotonic interval with enough points was detected. "</span>
+            <span class="s2">"Try increasing the diameter point count or choosing a narrower diameter range."</span>
+        <span class="p">)</span>
+
+    <span class="n">sorted_intervals</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+        <span class="n">monotonic_intervals</span><span class="p">,</span>
+        <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">interval</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">interval</span><span class="o">.</span><span class="n">diameter_width_nm</span><span class="p">,</span>
+            <span class="n">interval</span><span class="o">.</span><span class="n">point_count</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">selected_intervals</span> <span class="o">=</span> <span class="n">sorted_intervals</span><span class="p">[:</span> <span class="nb">int</span><span class="p">(</span><span class="n">max_interval_count</span><span class="p">)]</span>
+
+    <span class="n">interval_fragments</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">interval</span><span class="o">.</span><span class="n">to_message_fragment</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">interval</span> <span class="ow">in</span> <span class="n">selected_intervals</span>
+    <span class="p">]</span>
+
+    <span class="n">interval_text</span> <span class="o">=</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="n">interval_fragments</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sorted_intervals</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">selected_intervals</span><span class="p">):</span>
+        <span class="n">remaining_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">sorted_intervals</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">selected_intervals</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Suggested monotonic intervals: </span><span class="si">{</span><span class="n">interval_text</span><span class="si">}</span><span class="s2">. "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">remaining_count</span><span class="si">}</span><span class="s2"> additional shorter interval(s) were omitted."</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Suggested monotonic intervals: </span><span class="si">{</span><span class="n">interval_text</span><span class="si">}</span><span class="s2">."</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_log_array_summary</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">values</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Log a compact numerical summary of an array.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+            <span class="n">values</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"</span><span class="si">%s</span><span class="s2"> summary unavailable because conversion to float array failed. raw_type=</span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
+            <span class="n">name</span><span class="p">,</span>
+            <span class="nb">type</span><span class="p">(</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="n">finite_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span>
+        <span class="n">array</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">finite_values</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">finite_mask</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">finite_values</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"</span><span class="si">%s</span><span class="s2"> summary: size=</span><span class="si">%r</span><span class="s2"> finite_count=0 nan_count=</span><span class="si">%r</span><span class="s2"> inf_count=</span><span class="si">%r</span><span class="s2"> values=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+            <span class="n">name</span><span class="p">,</span>
+            <span class="n">array</span><span class="o">.</span><span class="n">size</span><span class="p">,</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">array</span><span class="p">))),</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">array</span><span class="p">))),</span>
+            <span class="n">array</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+        <span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+        <span class="s2">"</span><span class="si">%s</span><span class="s2"> summary: size=</span><span class="si">%r</span><span class="s2"> finite_count=</span><span class="si">%r</span><span class="s2"> nan_count=</span><span class="si">%r</span><span class="s2"> inf_count=</span><span class="si">%r</span><span class="s2"> min=</span><span class="si">%r</span><span class="s2"> max=</span><span class="si">%r</span><span class="s2"> first_values=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">,</span>
+        <span class="n">array</span><span class="o">.</span><span class="n">size</span><span class="p">,</span>
+        <span class="n">finite_values</span><span class="o">.</span><span class="n">size</span><span class="p">,</span>
+        <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">array</span><span class="p">))),</span>
+        <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">array</span><span class="p">))),</span>
+        <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">finite_values</span><span class="p">)),</span>
+        <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">finite_values</span><span class="p">)),</span>
+        <span class="n">array</span><span class="p">[:</span><span class="mi">10</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+    <span class="p">)</span>
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright Martin Poinsinet de Sivry-Houle.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>
