@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import dash
@@ -203,7 +203,7 @@ class Sidebar:
                 profile_load_event = {
                     "profile_name": resolved_profile_name,
                     "n_clicks": int(n_clicks),
-                    "loaded_at": datetime.now(timezone.utc).isoformat(),
+                    "loaded_at": datetime.now(UTC).isoformat(),
                     "status": status_message,
                 }
 

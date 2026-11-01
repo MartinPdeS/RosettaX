@@ -6,7 +6,7 @@ These instructions apply to the whole RosettaX repository. Keep changes narrow, 
 ## What This Repo Is
 - RosettaX is a local Dash application for flow-cytometry fluorescence and scattering calibration workflows.
 - The main package lives under `RosettaX/`; the CLI entry point is `rosettax`, implemented in `RosettaX.__main__`.
-- Follow the repo's existing build commands with Python 3.13, while keeping code compatible with the declared minimum Python 3.10.
+- Follow the repo's existing build commands with Python 3.13, while keeping code compatible with the declared minimum Python 3.11.
 
 ## Repo Map
 - `RosettaX/application/`: app shell, top-level layout, and route wiring.

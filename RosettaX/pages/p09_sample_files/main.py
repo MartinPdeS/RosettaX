@@ -65,7 +65,7 @@ class SampleFilesPage:
                 ),
                 dbc.Tab(
                     self._build_validation_placeholder(),
-                    label="Cross-instrument validation",
+                    label="Cross-device validation",
                     tab_id="cross-instrument-validation",
                 ),
             ],
@@ -73,26 +73,69 @@ class SampleFilesPage:
             className="mb-3",
         )
 
-    def _build_validation_placeholder(self) -> dbc.Alert:
-        return dbc.Alert(
+    def _build_validation_placeholder(self) -> html.Div:
+        return html.Div(
             [
-                html.H5(
-                    "Four instruments, one bead reference", className="alert-heading"
+                dbc.Alert(
+                    [
+                        html.H5(
+                            "Cross-device Rosetta bead datasets",
+                            className="alert-heading",
+                        ),
+                        html.P(
+                            "The collection is planned to cover four flow cytometers "
+                            "using Rosetta beads. Two datasets are available now, "
+                            "from an Apogee and a Northern Lights. Instrument and "
+                            "acquisition details are shown with each download."
+                        ),
+                        html.P(
+                            "These acquisitions have different run durations, so "
+                            "treat them as real-world cross-device examples rather "
+                            "than directly matched measurements.",
+                            className="mb-0",
+                        ),
+                    ],
+                    color="light",
+                    className="mt-3",
                 ),
-                html.P(
-                    "This collection is being prepared with Rosetta bead acquisitions "
-                    "from four different flow cytometers. Each dataset will include "
-                    "the instrument model and acquisition details so results can be "
-                    "compared in context."
-                ),
-                html.P(
-                    "Datasets will appear here once all four instrument files and "
-                    "their source details are available.",
-                    className="mb-0",
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            self._build_download_card(
+                                title="Apogee flow cytometer",
+                                subtitle="Rosetta bead acquisition · 1 minute",
+                                color_name=styling.get_workflow_section_color(1),
+                                items=[
+                                    {
+                                        "title": "Rosetta beads (1 min)",
+                                        "description": "Rosetta bead sample acquired on an Apogee flow cytometer.",
+                                        "href": f"{SAMPLE_FILES_BASE_URL}/apogee_rosetta_beads_1min.fcs",
+                                        "download": "apogee_rosetta_beads_1min.fcs",
+                                    },
+                                ],
+                            ),
+                            lg=6,
+                        ),
+                        dbc.Col(
+                            self._build_download_card(
+                                title="Northern Lights flow cytometer",
+                                subtitle="Rosetta bead acquisition · 2 minutes",
+                                color_name=styling.get_workflow_section_color(2),
+                                items=[
+                                    {
+                                        "title": "Rosetta beads (2 min)",
+                                        "description": "Rosetta bead sample acquired on a Northern Lights flow cytometer.",
+                                        "href": f"{SAMPLE_FILES_BASE_URL}/northern_lights_rosetta_beads_2min.fcs",
+                                        "download": "northern_lights_rosetta_beads_2min.fcs",
+                                    },
+                                ],
+                            ),
+                            lg=6,
+                        ),
+                    ],
+                    className="g-3",
                 ),
             ],
-            color="light",
-            className="mt-3",
         )
 
     def _build_download_sections(self) -> html.Div:

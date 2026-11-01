@@ -6,7 +6,7 @@ import os
 import platform
 import threading
 from dataclasses import asdict, dataclass, field
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -377,7 +377,7 @@ def summarize_visit_events(
     resolved_today = str(today).strip() if today else ""
 
     if not resolved_today:
-        resolved_today = datetime.now(timezone.utc).date().isoformat()
+        resolved_today = datetime.now(UTC).date().isoformat()
 
     filter_local = not include_local and not should_track_local_visits()
 
@@ -761,7 +761,7 @@ def _coerce_visit_text(value: Any, *, max_length: int) -> str:
 
 
 def _current_utc_timestamp() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+    return datetime.now(UTC).isoformat(timespec="seconds")
 
 
 def _visit_event_date(event: VisitEvent) -> str | None:
@@ -794,10 +794,10 @@ def _parse_visit_timestamp(visited_at: str) -> datetime:
     try:
         parsed_timestamp = datetime.fromisoformat(visited_at)
     except (TypeError, ValueError):
-        return datetime.now(timezone.utc)
+        return datetime.now(UTC)
 
     if parsed_timestamp.tzinfo is None:
-        return parsed_timestamp.replace(tzinfo=timezone.utc)
+        return parsed_timestamp.replace(tzinfo=UTC)
 
     return parsed_timestamp
 
@@ -805,9 +805,9 @@ def _parse_visit_timestamp(visited_at: str) -> datetime:
 def _format_visit_timestamp(visited_at: Any) -> str:
     if isinstance(visited_at, datetime):
         if visited_at.tzinfo is None:
-            visited_at = visited_at.replace(tzinfo=timezone.utc)
+            visited_at = visited_at.replace(tzinfo=UTC)
 
-        return visited_at.astimezone(timezone.utc).isoformat(timespec="seconds")
+        return visited_at.astimezone(UTC).isoformat(timespec="seconds")
 
     return str(visited_at or "")
 

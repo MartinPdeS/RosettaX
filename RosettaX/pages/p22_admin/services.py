@@ -4,7 +4,7 @@ import logging
 import os
 import threading
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import plotly.graph_objects as go
@@ -211,7 +211,7 @@ def format_visit_timestamp_for_display(visited_at: str) -> str:
 
 
 def _current_utc_display_timestamp() -> str:
-    return f"{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} UTC"
+    return f"{datetime.now(UTC).strftime('%Y-%m-%d %H:%M:%S')} UTC"
 
 
 def _apply_admin_figure_style(figure: go.Figure, *, theme: str) -> go.Figure:

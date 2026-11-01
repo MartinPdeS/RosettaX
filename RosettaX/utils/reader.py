@@ -6,11 +6,10 @@ import re
 import weakref
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, Self
 
 import numpy as np
 import pandas as pd
-from typing_extensions import Self
 
 from RosettaX.utils.fcs_metadata import FCSMetadata
 
