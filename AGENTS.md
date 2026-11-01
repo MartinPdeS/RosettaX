@@ -26,10 +26,18 @@ These instructions apply to the whole RosettaX repository. Keep changes narrow, 
 
 ## Implementation Conventions
 - Match surrounding style: explicit names, small methods, concise docstrings where the module already uses them.
+- Apply these Python conventions to new and edited code; leave unrelated existing code unchanged.
+- Use keyword-only parameters by default for new functions and methods, apart from implicit `self` and `cls`. Preserve existing public calling conventions unless an API change is part of the task.
+- Use NumPy-style docstrings for classes, functions, methods, and properties. Document parameters, return values, units, array shapes, and limitations where they apply.
 - Avoid redundant self-alias imports such as `from package.module import Name as Name`; import the name directly unless the alias changes or clarifies its meaning.
 - Keep imports at module scope when practical. Use function-local imports only when needed, such as to avoid circular dependencies or defer optional or expensive dependencies.
 - Keep import statements in one contiguous block without blank lines between standard-library, third-party, and project imports.
+- Keep simple, single-purpose UI component calls on one line when practical, even when a text string is long. Use multiline formatting when several arguments or nested components make the call easier to read.
 - Keep domain names explicit. Do not shorten calibration, detector, runtime-config, upload, coupling, or refractive-index terminology.
+- Prefer descriptive variable and parameter names over abbreviations, including for local values and callback parameters.
+- Avoid extracting a helper that is used only once unless it improves clarity or separates behavior that belongs in another layer.
+- Keep callbacks focused on reading inputs, calling a service or workflow, and returning outputs. Move domain decisions and complicated data conversion into the appropriate service or workflow module.
+- Write comments to explain non-obvious reasoning, scientific assumptions, or compatibility constraints; do not use them to narrate code that is already clear.
 - Prefer `pathlib.Path` semantics in code and tests; do not assert hard-coded `/` suffixes.
 - Avoid embedding one-off scientific rules inside callbacks when a workflow or service module can own them.
 - Keep ids centralized in `ids.py` rather than reconstructing string literals across callbacks and layouts.
