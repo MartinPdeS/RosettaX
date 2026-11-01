@@ -1,4 +1,3 @@
-
 from typing import Any
 
 import dash
@@ -239,14 +238,18 @@ class VisualizationPage:
                     title="Plot settings",
                     subtitle="Choose the file, plotted channels, scales, and event limit.",
                     tooltip_text="Choose a file and plot type, then adjust the channels and display options.",
-                    body_children=[html.Div(workspace.children[:2], style=workspace.style)],
+                    body_children=[
+                        html.Div(workspace.children[:2], style=workspace.style)
+                    ],
                 ),
                 self._build_section_card(
                     section_number=3,
                     title="Data plot",
                     subtitle="Inspect the plotted events and channel distributions.",
                     tooltip_text="Explore the selected data using the Plotly zoom, pan, and export controls.",
-                    body_children=[html.Div(workspace.children[2:], style=workspace.style)],
+                    body_children=[
+                        html.Div(workspace.children[2:], style=workspace.style)
+                    ],
                 ),
             ],
         )
@@ -375,7 +378,14 @@ class VisualizationPage:
             current_x_channel: Any,
             current_y_channel: Any,
             current_file_path: Any,
-        ) -> tuple[list[dict[str, str]], Any, list[dict[str, str]], Any, list[dict[str, str]], Any]:
+        ) -> tuple[
+            list[dict[str, str]],
+            Any,
+            list[dict[str, str]],
+            Any,
+            list[dict[str, str]],
+            Any,
+        ]:
             if not isinstance(file_store, dict):
                 return [], None, [], None, [], None
 
@@ -413,7 +423,13 @@ class VisualizationPage:
         )
         def toggle_scatter_control_visibility(
             plot_type: Any,
-        ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]]:
+        ) -> tuple[
+            dict[str, Any],
+            dict[str, Any],
+            dict[str, Any],
+            dict[str, Any],
+            dict[str, Any],
+        ]:
             plot_type_string = str(plot_type or "")
             is_histogram = plot_type_string in {
                 services.PLOT_TYPE_HISTOGRAM,
@@ -512,96 +528,20 @@ class VisualizationPage:
             max_events: Any,
             runtime_config_data: Any,
         ) -> tuple[Any, str]:
-            if not isinstance(file_store, dict):
-                return (
-                    services.build_empty_figure(
-                        message="Upload compatible FCS files to start visualizing events.",
-                        runtime_config_data=runtime_config_data,
-                    ),
-                    "No file loaded.",
-                )
-
-            x_channel_string = str(x_channel or "").strip()
-            y_channel_string = str(y_channel or "").strip()
-            plot_type_string = str(plot_type or services.PLOT_TYPE_HISTOGRAM)
-            selected_file = resolve_selected_file(
-                file_store,
-                current_path=selected_file_path,
-            )
-            uploaded_fcs_path = selected_file.path if selected_file is not None else ""
-
-            if not x_channel_string:
-                return (
-                    services.build_empty_figure(
-                        message="Select an X channel to render the plot.",
-                        runtime_config_data=runtime_config_data,
-                    ),
-                    "Select an X channel.",
-                )
-
-            if plot_type_string == services.PLOT_TYPE_SCATTER and not y_channel_string:
-                return (
-                    services.build_empty_figure(
-                        message="Select a Y channel to render the 2D plot.",
-                        runtime_config_data=runtime_config_data,
-                    ),
-                    "Select a Y channel.",
-                )
-
-            try:
-                dataframe = services.load_plot_dataframe(
-                    uploaded_fcs_path=uploaded_fcs_path,
-                    x_channel=x_channel_string,
-                    y_channel=y_channel_string,
-                    max_events=services.clamp_max_events(max_events),
-                )
-                filtered_dataframe, skipped_events = services.filter_dataframe_for_plot(
-                    dataframe,
-                    x_channel=x_channel_string,
-                    y_channel=y_channel_string,
-                    log_x="enabled" in (x_log_values or []),
-                    log_y="enabled" in (y_log_values or []),
-                )
-            except Exception as exception:
-                return (
-                    services.build_empty_figure(
-                        message=f"Could not load FCS data: {type(exception).__name__}: {exception}",
-                        runtime_config_data=runtime_config_data,
-                    ),
-                    "Could not render plot.",
-                )
-
-            if filtered_dataframe.empty:
-                return (
-                    services.build_empty_figure(
-                        message="No events remain after filtering for finite/log-compatible values.",
-                        runtime_config_data=runtime_config_data,
-                    ),
-                    "No plottable events remain for the current axes and scales.",
-                )
-
-            figure = services.build_visualization_figure(
-                dataframe=filtered_dataframe,
-                uploaded_fcs_path=uploaded_fcs_path,
-                plot_type=plot_type_string,
-                x_channel=x_channel_string,
-                y_channel=y_channel_string,
-                max_events=services.clamp_max_events(max_events),
-                log_x="enabled" in (x_log_values or []),
-                log_y="enabled" in (y_log_values or []),
-                colormap_log_scale="enabled" in (colormap_log_values or []),
+            return services.render_visualization_plot(
+                file_store=file_store,
+                selected_file_path=selected_file_path,
+                plot_type=plot_type,
+                x_channel=x_channel,
+                y_channel=y_channel,
+                x_log_values=x_log_values,
+                y_log_values=y_log_values,
+                colormap_log_values=colormap_log_values,
                 marker_size=marker_size,
                 marker_opacity=marker_opacity,
                 smoothing_sigma_points=smoothing_sigma_points,
+                max_events=max_events,
                 runtime_config_data=runtime_config_data,
-            )
-
-            return (
-                figure,
-                services.build_plot_status_text(
-                    plotted_events=len(filtered_dataframe),
-                    skipped_events=skipped_events,
-                ),
             )
 
         return self

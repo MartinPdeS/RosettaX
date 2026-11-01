@@ -1,4 +1,3 @@
-
 import json
 import logging
 from pathlib import Path
@@ -39,7 +38,9 @@ def parse_uploaded_calibration(
         raise ValueError("Calibration upload must be a .json file.")
 
     if not isinstance(contents, str):
-        raise ValueError("Uploaded calibration file has a malformed Dash contents payload.")
+        raise ValueError(
+            "Uploaded calibration file has a malformed Dash contents payload."
+        )
 
     raw_bytes = read_uploaded_file_bytes(contents)
 
@@ -63,6 +64,38 @@ def parse_uploaded_calibration(
         raise ValueError('Calibration file is missing top level "payload".')
 
     return resolved_filename, payload
+
+
+def parse_uploaded_calibration_summaries(
+    *,
+    contents: Any,
+    filenames: Any,
+) -> list[dict[str, Any]]:
+    """Parse uploaded calibration files and build their lightweight summaries."""
+    contents_list = contents if isinstance(contents, list) else [contents]
+    filename_list = filenames if isinstance(filenames, list) else [filenames]
+
+    if len(contents_list) != len(filename_list):
+        raise ValueError("Calibration upload payload is inconsistent.")
+
+    calibration_summaries = []
+    for contents_item, filename_item in zip(contents_list, filename_list):
+        resolved_filename, calibration_payload = parse_uploaded_calibration(
+            contents=contents_item,
+            filename=filename_item,
+        )
+        calibration_summaries.append(
+            build_calibration_summary(
+                selected_calibration=resolved_filename,
+                calibration_payload=calibration_payload,
+            )
+        )
+
+    logger.debug(
+        "Built calibration upload summaries: %r",
+        calibration_summaries,
+    )
+    return calibration_summaries
 
 
 def build_calibration_summary(
@@ -132,7 +165,9 @@ def build_calibration_summary(
             if calibration_file_path is not None
             else str(selected_calibration)
         ),
-        "file_path": str(calibration_file_path) if calibration_file_path is not None else "",
+        "file_path": str(calibration_file_path)
+        if calibration_file_path is not None
+        else "",
         "calibration_type": calibration_type,
         "source_channel": source_channel,
         "output_quantity": output_quantity,
@@ -155,9 +190,7 @@ def normalize_calibration_summaries(
     """
     if isinstance(calibration_summaries, list):
         return [
-            summary
-            for summary in calibration_summaries
-            if isinstance(summary, dict)
+            summary for summary in calibration_summaries if isinstance(summary, dict)
         ]
 
     if isinstance(calibration_summaries, dict):
@@ -402,10 +435,14 @@ def build_preview_items(
     """
     from dash import html
 
-    cal_type = str(calibration_summary.get("calibration_type", "")).strip().upper() or "n/a"
+    cal_type = (
+        str(calibration_summary.get("calibration_type", "")).strip().upper() or "n/a"
+    )
     source_ch = str(calibration_summary.get("source_channel", "")).strip() or "n/a"
     file_name = str(calibration_summary.get("file_name", "")).strip() or "n/a"
-    output_name = str(calibration_summary.get("applied_output_channel_name", "")).strip() or "n/a"
+    output_name = (
+        str(calibration_summary.get("applied_output_channel_name", "")).strip() or "n/a"
+    )
 
     row = html.Div(
         [

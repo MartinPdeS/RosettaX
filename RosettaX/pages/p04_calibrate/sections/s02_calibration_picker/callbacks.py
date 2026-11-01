@@ -1,4 +1,3 @@
-
 import logging
 from typing import Any
 
@@ -79,8 +78,7 @@ class CalibrationPickerCallbacks:
 
             available_values = {
                 option.get("value")
-                for option in build_scattering_target_model_preset_options(
-                )
+                for option in build_scattering_target_model_preset_options()
                 if isinstance(option, dict)
             }
 
@@ -112,7 +110,9 @@ class CalibrationPickerCallbacks:
         def toggle_target_model_detail_boxes(
             target_model_preset: Any,
         ) -> tuple[dict[str, str], dict[str, str]]:
-            is_custom_preset = str(target_model_preset or "").strip() == CUSTOM_PRESET_NAME
+            is_custom_preset = (
+                str(target_model_preset or "").strip() == CUSTOM_PRESET_NAME
+            )
 
             visible_style = services.build_scattering_target_model_container_style(
                 is_visible=is_custom_preset,
@@ -195,8 +195,10 @@ class CalibrationPickerCallbacks:
             )
 
             preset_wavelength_nm = None
-            scattering_calibration_summary = services.get_primary_scattering_calibration_summary(
-                selected_calibration_summary,
+            scattering_calibration_summary = (
+                services.get_primary_scattering_calibration_summary(
+                    selected_calibration_summary,
+                )
             )
 
             if isinstance(scattering_calibration_summary, dict):
@@ -210,10 +212,12 @@ class CalibrationPickerCallbacks:
                             calibration_payload,
                         )
                     )
-                    preset_wavelength_nm = parse_optical_geometry_from_calibration_standard_parameters(
-                        calibration_standard_parameters,
-                    ).get(
-                        "wavelength_nm",
+                    preset_wavelength_nm = (
+                        parse_optical_geometry_from_calibration_standard_parameters(
+                            calibration_standard_parameters,
+                        ).get(
+                            "wavelength_nm",
+                        )
                     )
 
             preset = resolve_scattering_target_model_preset(
@@ -310,9 +314,12 @@ class CalibrationPickerCallbacks:
                 target_model_preset,
             )
 
-            is_preset_selected = str(
-                target_model_preset or CUSTOM_PRESET_NAME,
-            ).strip() != CUSTOM_PRESET_NAME
+            is_preset_selected = (
+                str(
+                    target_model_preset or CUSTOM_PRESET_NAME,
+                ).strip()
+                != CUSTOM_PRESET_NAME
+            )
 
             logger.debug(
                 "sync_target_model_controls_disabled_state returning disabled=%r",
@@ -381,9 +388,12 @@ class CalibrationPickerCallbacks:
 
                 return hidden_style, dict(hidden_style)
 
-            is_preset_selected = str(
-                target_model_preset or CUSTOM_PRESET_NAME,
-            ).strip() != CUSTOM_PRESET_NAME
+            is_preset_selected = (
+                str(
+                    target_model_preset or CUSTOM_PRESET_NAME,
+                ).strip()
+                != CUSTOM_PRESET_NAME
+            )
 
             solid_sphere_style = services.build_target_parameter_container_style(
                 is_visible=not is_core_shell_model,
@@ -493,63 +503,26 @@ class CalibrationPickerCallbacks:
                 )
 
             try:
-                if isinstance(uploaded_contents, list):
-                    contents_list = uploaded_contents
-                else:
-                    contents_list = [uploaded_contents]
-
-                if isinstance(uploaded_filename, list):
-                    filename_list = uploaded_filename
-                else:
-                    filename_list = [uploaded_filename]
-
-                if len(contents_list) != len(filename_list):
-                    raise ValueError(
-                        "Calibration upload payload is inconsistent."
-                    )
-
-                calibration_summaries: list[dict[str, Any]] = []
-
-                for contents_item, filename_item in zip(
-                    contents_list,
-                    filename_list,
-                ):
-                    resolved_filename, calibration_payload = services.parse_uploaded_calibration(
-                        contents=contents_item,
-                        filename=filename_item,
-                    )
-
-                    calibration_summaries.append(
-                        services.build_calibration_summary(
-                            selected_calibration=resolved_filename,
-                            calibration_payload=calibration_payload,
-                        )
-                    )
-
-                logger.debug(
-                    "Updating selected_calibration_summary_store=%r",
-                    calibration_summaries,
+                calibration_summaries = services.parse_uploaded_calibration_summaries(
+                    contents=uploaded_contents,
+                    filenames=uploaded_filename,
                 )
-
-                loaded_file_count = len(calibration_summaries)
-
-                return (
-                    calibration_summaries,
-                    f"Loaded {loaded_file_count} calibration file(s).",
-                    "success",
-                )
-
             except Exception as exc:
                 logger.exception(
                     "Failed to parse uploaded calibration filename=%r",
                     uploaded_filename,
                 )
-
                 return (
                     None,
                     f"Failed to load calibration JSON: {type(exc).__name__}: {exc}",
                     "danger",
                 )
+
+            return (
+                calibration_summaries,
+                f"Loaded {len(calibration_summaries)} calibration file(s).",
+                "success",
+            )
 
     def _register_calibration_preview_callback(self) -> None:
         """
@@ -662,8 +635,7 @@ class CalibrationPickerCallbacks:
         ) -> dict[str, str]:
             return services.build_target_parameter_container_style(
                 is_visible=bool(
-                    isinstance(advanced_toggle_value, list)
-                    and advanced_toggle_value
+                    isinstance(advanced_toggle_value, list) and advanced_toggle_value
                 ),
             )
 

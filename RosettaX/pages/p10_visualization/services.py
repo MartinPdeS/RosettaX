@@ -265,7 +265,9 @@ def build_upload_batch_summary(
                 path=str(path),
                 filename=str(filename),
             )
-            for path, filename in zip(uploaded_fcs_paths, uploaded_filenames, strict=True)
+            for path, filename in zip(
+                uploaded_fcs_paths, uploaded_filenames, strict=True
+            )
         ),
         reference_column_names=tuple(
             str(name) for name in consistency_report.get("reference_column_names") or []
@@ -390,9 +392,7 @@ def filter_dataframe_for_plot(
     """
     y_channel_string = str(y_channel or "").strip()
 
-    mask = np.isfinite(
-        dataframe[x_channel].to_numpy(dtype=float, copy=False)
-    )
+    mask = np.isfinite(dataframe[x_channel].to_numpy(dtype=float, copy=False))
 
     if y_channel_string:
         mask &= np.isfinite(
@@ -836,13 +836,10 @@ def compute_2d_density_values(
             density_y_values,
         )
 
-    finite_mask = (
-        np.isfinite(
-            density_x_values,
-        )
-        & np.isfinite(
-            density_y_values,
-        )
+    finite_mask = np.isfinite(
+        density_x_values,
+    ) & np.isfinite(
+        density_y_values,
     )
 
     if not np.all(finite_mask):
@@ -876,16 +873,22 @@ def compute_2d_density_values(
         bins=number_of_bins,
     )
 
-    x_bin_indices = np.searchsorted(
-        x_edges,
-        density_x_values,
-        side="right",
-    ) - 1
-    y_bin_indices = np.searchsorted(
-        y_edges,
-        density_y_values,
-        side="right",
-    ) - 1
+    x_bin_indices = (
+        np.searchsorted(
+            x_edges,
+            density_x_values,
+            side="right",
+        )
+        - 1
+    )
+    y_bin_indices = (
+        np.searchsorted(
+            y_edges,
+            density_y_values,
+            side="right",
+        )
+        - 1
+    )
 
     x_bin_indices = np.clip(
         x_bin_indices,
@@ -999,5 +1002,119 @@ def clamp_marker_opacity(
         min(
             float(maximum),
             resolved_value,
+        ),
+    )
+
+
+def render_visualization_plot(
+    *,
+    file_store: Any,
+    selected_file_path: Any,
+    plot_type: Any,
+    x_channel: Any,
+    y_channel: Any,
+    x_log_values: Any,
+    y_log_values: Any,
+    colormap_log_values: Any,
+    marker_size: Any,
+    marker_opacity: Any,
+    smoothing_sigma_points: Any,
+    max_events: Any,
+    runtime_config_data: Any,
+) -> tuple[go.Figure, str]:
+    """Load, filter, and render one visualization request."""
+    if not isinstance(file_store, dict):
+        return (
+            build_empty_figure(
+                message="Upload compatible FCS files to start visualizing events.",
+                runtime_config_data=runtime_config_data,
+            ),
+            "No file loaded.",
+        )
+
+    x_channel_string = str(x_channel or "").strip()
+    y_channel_string = str(y_channel or "").strip()
+    plot_type_string = str(plot_type or PLOT_TYPE_HISTOGRAM)
+    selected_file = resolve_selected_file(
+        file_store,
+        current_path=selected_file_path,
+    )
+    uploaded_fcs_path = selected_file.path if selected_file is not None else ""
+
+    if not x_channel_string:
+        return (
+            build_empty_figure(
+                message="Select an X channel to render the plot.",
+                runtime_config_data=runtime_config_data,
+            ),
+            "Select an X channel.",
+        )
+
+    if plot_type_string == PLOT_TYPE_SCATTER and not y_channel_string:
+        return (
+            build_empty_figure(
+                message="Select a Y channel to render the 2D plot.",
+                runtime_config_data=runtime_config_data,
+            ),
+            "Select a Y channel.",
+        )
+
+    resolved_max_events = clamp_max_events(max_events)
+    log_x = "enabled" in (x_log_values or [])
+    log_y = "enabled" in (y_log_values or [])
+
+    try:
+        dataframe = load_plot_dataframe(
+            uploaded_fcs_path=uploaded_fcs_path,
+            x_channel=x_channel_string,
+            y_channel=y_channel_string,
+            max_events=resolved_max_events,
+        )
+        filtered_dataframe, skipped_events = filter_dataframe_for_plot(
+            dataframe,
+            x_channel=x_channel_string,
+            y_channel=y_channel_string,
+            log_x=log_x,
+            log_y=log_y,
+        )
+    except Exception as exception:
+        return (
+            build_empty_figure(
+                message=f"Could not load FCS data: {type(exception).__name__}: {exception}",
+                runtime_config_data=runtime_config_data,
+            ),
+            "Could not render plot.",
+        )
+
+    if filtered_dataframe.empty:
+        return (
+            build_empty_figure(
+                message="No events remain after filtering for finite/log-compatible values.",
+                runtime_config_data=runtime_config_data,
+            ),
+            "No plottable events remain for the current axes and scales.",
+        )
+
+    figure = build_visualization_figure(
+        dataframe=filtered_dataframe,
+        uploaded_fcs_path=uploaded_fcs_path,
+        plot_type=plot_type_string,
+        x_channel=x_channel_string,
+        y_channel=y_channel_string,
+        max_events=resolved_max_events,
+        log_x=log_x,
+        log_y=log_y,
+        colormap_log_scale="enabled" in (colormap_log_values or []),
+        marker_size=marker_size,
+        marker_opacity=marker_opacity,
+        smoothing_sigma_points=smoothing_sigma_points,
+        runtime_config_data=runtime_config_data,
+    )
+
+    return (
+        figure,
+        build_plot_status_text(
+            plotted_events=len(filtered_dataframe),
+            skipped_events=skipped_events,
         ),
     )

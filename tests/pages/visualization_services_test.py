@@ -71,6 +71,64 @@ class Test_VisualizationServices:
             {"label": "SSC-A", "value": "SSC-A"},
         ]
 
+    def test_render_visualization_plot_uses_service_pipeline(self, monkeypatch) -> None:
+        """Pass normalized controls through file loading, filtering, and plotting."""
+        file_store = {
+            "files": [
+                {
+                    "uploaded_fcs_path": "/tmp/sample.fcs",
+                    "uploaded_filename": "sample.fcs",
+                }
+            ]
+        }
+        dataframe = pd.DataFrame({"FSC-A": [1.0, 2.0], "SSC-A": [3.0, 4.0]})
+        captured: dict[str, object] = {}
+
+        def load_plot_dataframe(**kwargs):
+            captured.update(kwargs)
+            return dataframe
+
+        def filter_dataframe_for_plot(dataframe_arg, **kwargs):
+            captured["filter_options"] = kwargs
+            return dataframe_arg, 0
+
+        def build_visualization_figure(**kwargs):
+            captured["figure_options"] = kwargs
+            return services.go.Figure()
+
+        monkeypatch.setattr(services, "load_plot_dataframe", load_plot_dataframe)
+        monkeypatch.setattr(services, "filter_dataframe_for_plot", filter_dataframe_for_plot)
+        monkeypatch.setattr(services, "build_visualization_figure", build_visualization_figure)
+
+        figure, status = services.render_visualization_plot(
+            file_store=file_store,
+            selected_file_path="/tmp/sample.fcs",
+            plot_type=services.PLOT_TYPE_SCATTER,
+            x_channel=" FSC-A ",
+            y_channel=" SSC-A ",
+            x_log_values=["enabled"],
+            y_log_values=[],
+            colormap_log_values=["enabled"],
+            marker_size=8,
+            marker_opacity=0.5,
+            smoothing_sigma_points=2,
+            max_events="1000",
+            runtime_config_data=None,
+        )
+
+        assert isinstance(figure, services.go.Figure)
+        assert status == "Showing 2 event(s)."
+        assert captured["uploaded_fcs_path"] == "/tmp/sample.fcs"
+        assert captured["x_channel"] == "FSC-A"
+        assert captured["max_events"] == 1_000
+        assert captured["filter_options"] == {
+            "x_channel": "FSC-A",
+            "y_channel": "SSC-A",
+            "log_x": True,
+            "log_y": False,
+        }
+        assert captured["figure_options"]["colormap_log_scale"] is True
+
     def test_build_upload_batch_summary_keeps_shared_channel_names(self) -> None:
         """Check build upload batch summary keeps shared channel names."""
         summary = services.build_upload_batch_summary(

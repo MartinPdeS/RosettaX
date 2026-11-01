@@ -26,6 +26,9 @@ These instructions apply to the whole RosettaX repository. Keep changes narrow, 
 
 ## Implementation Conventions
 - Match surrounding style: explicit names, small methods, concise docstrings where the module already uses them.
+- Avoid redundant self-alias imports such as `from package.module import Name as Name`; import the name directly unless the alias changes or clarifies its meaning.
+- Keep imports at module scope when practical. Use function-local imports only when needed, such as to avoid circular dependencies or defer optional or expensive dependencies.
+- Keep import statements in one contiguous block without blank lines between standard-library, third-party, and project imports.
 - Keep domain names explicit. Do not shorten calibration, detector, runtime-config, upload, coupling, or refractive-index terminology.
 - Prefer `pathlib.Path` semantics in code and tests; do not assert hard-coded `/` suffixes.
 - Avoid embedding one-off scientific rules inside callbacks when a workflow or service module can own them.
