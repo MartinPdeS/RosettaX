@@ -1,4 +1,3 @@
-
 import dash
 import dash_bootstrap_components as dbc
 from dash import html
@@ -23,7 +22,7 @@ class SampleFilesPage:
         return dbc.Container(
             [
                 self._build_header_card(),
-                self._build_download_sections(),
+                self._build_tabs(),
             ],
             fluid=True,
             style={
@@ -41,9 +40,8 @@ class SampleFilesPage:
                         title="Sample files",
                         title_component="H2",
                         description=(
-                            "Download example FCS files and calibration JSON templates for fluorescence, "
-                            "scattering, and apply-calibration testing. These bundled FCS examples come "
-                            "from the Vesicle Center summer school on flow cytometry."
+                            "Browse the summer-school examples or cross-instrument Rosetta bead datasets. "
+                            "Each collection includes source and acquisition details where available."
                         ),
                     ),
                 ],
@@ -57,85 +55,136 @@ class SampleFilesPage:
             },
         )
 
-    def _build_download_sections(self) -> dbc.Row:
-        return dbc.Row(
+    def _build_tabs(self) -> dbc.Tabs:
+        return dbc.Tabs(
             [
-                dbc.Col(
-                    self._build_download_card(
-                        title="Apogee flow cytometer samples",
-                        subtitle=(
-                            "Four FCS datasets from the Vesicle Center summer school on flow cytometry, "
-                            "acquired on an Apogee instrument."
-                        ),
-                        color_name=styling.get_workflow_section_color(1),
-                        items=[
-                            {
-                                "title": "Rainbow beads",
-                                "description": "Multi-color calibration standard for detector validation and linearity checks.",
-                                "href": f"{SAMPLE_FILES_BASE_URL}/apogee_rainbow_beads.fcs",
-                                "download": "apogee_rainbow_beads.fcs",
-                            },
-                            {
-                                "title": "Mixed reference beads",
-                                "description": "Apogee mix sample with multiple bead populations for scatter and fluorescence exercises.",
-                                "href": f"{SAMPLE_FILES_BASE_URL}/apogee_mixed_reference_beads.fcs",
-                                "download": "apogee_mixed_reference_beads.fcs",
-                            },
-                            {
-                                "title": "Mystery beads",
-                                "description": "Unknown bead mixture intended for identification and comparison exercises.",
-                                "href": f"{SAMPLE_FILES_BASE_URL}/apogee_mystery_beads.fcs",
-                                "download": "apogee_mystery_beads.fcs",
-                            },
-                            {
-                                "title": "Rosetta beads (1 min)",
-                                "description": "Rosetta bead acquisition with a one-minute run, useful for Rosetta Script testing.",
-                                "href": f"{SAMPLE_FILES_BASE_URL}/apogee_rosetta_beads_1min.fcs",
-                                "download": "apogee_rosetta_beads_1min.fcs",
-                            },
-                        ],
-                    ),
-                    lg=6,
+                dbc.Tab(
+                    self._build_download_sections(),
+                    label="Summer school",
+                    tab_id="summer-school",
                 ),
-                dbc.Col(
-                    self._build_download_card(
-                        title="Northern Lights flow cytometer samples",
-                        subtitle=(
-                            "Four FCS datasets from the Vesicle Center summer school on flow cytometry, "
-                            "acquired on a Northern Lights instrument."
-                        ),
-                        color_name=styling.get_workflow_section_color(2),
-                        items=[
-                            {
-                                "title": "Rainbow beads",
-                                "description": "Multi-color calibration standard acquired on the Northern Lights platform.",
-                                "href": f"{SAMPLE_FILES_BASE_URL}/northern_lights_rainbow_beads.fcs",
-                                "download": "northern_lights_rainbow_beads.fcs",
-                            },
-                            {
-                                "title": "Mixed reference beads",
-                                "description": "Compressed Northern Lights acquisition of the Apogee mix reference sample.",
-                                "href": f"{SAMPLE_FILES_BASE_URL}/northern_lights_mixed_reference_beads.fcs",
-                                "download": "northern_lights_mixed_reference_beads.fcs",
-                            },
-                            {
-                                "title": "Mystery beads",
-                                "description": "Compressed Northern Lights acquisition of the unknown bead mixture.",
-                                "href": f"{SAMPLE_FILES_BASE_URL}/northern_lights_mystery_beads.fcs",
-                                "download": "northern_lights_mystery_beads.fcs",
-                            },
-                            {
-                                "title": "Rosetta beads (2 min)",
-                                "description": "Compressed Rosetta bead acquisition with a two-minute run for Rosetta workflow practice.",
-                                "href": f"{SAMPLE_FILES_BASE_URL}/northern_lights_rosetta_beads_2min.fcs",
-                                "download": "northern_lights_rosetta_beads_2min.fcs",
-                            },
-                        ],
-                    ),
-                    lg=6,
+                dbc.Tab(
+                    self._build_validation_placeholder(),
+                    label="Cross-instrument validation",
+                    tab_id="cross-instrument-validation",
                 ),
             ],
-            className="g-3",
+            active_tab="summer-school",
+            className="mb-3",
+        )
+
+    def _build_validation_placeholder(self) -> dbc.Alert:
+        return dbc.Alert(
+            [
+                html.H5(
+                    "Four instruments, one bead reference", className="alert-heading"
+                ),
+                html.P(
+                    "This collection is being prepared with Rosetta bead acquisitions "
+                    "from four different flow cytometers. Each dataset will include "
+                    "the instrument model and acquisition details so results can be "
+                    "compared in context."
+                ),
+                html.P(
+                    "Datasets will appear here once all four instrument files and "
+                    "their source details are available.",
+                    className="mb-0",
+                ),
+            ],
+            color="light",
+            className="mt-3",
+        )
+
+    def _build_download_sections(self) -> html.Div:
+        return html.Div(
+            [
+                html.P(
+                    "The Flow Cytometry Summer School is held each summer at Amsterdam UMC. "
+                    "These example FCS files come from the course and are shared for "
+                    "hands-on practice with bead standards, instrument data, and "
+                    "calibration workflows. The collection includes acquisitions from "
+                    "Apogee and Northern Lights flow cytometers."
+                ),
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            self._build_download_card(
+                                title="Apogee flow cytometer samples",
+                                subtitle=(
+                                    "Four FCS datasets shared for the Flow Cytometry Summer School at Amsterdam UMC, "
+                                    "acquired on an Apogee instrument."
+                                ),
+                                color_name=styling.get_workflow_section_color(1),
+                                items=[
+                                    {
+                                        "title": "Rainbow beads",
+                                        "description": "Multi-color calibration standard for detector validation and linearity checks.",
+                                        "href": f"{SAMPLE_FILES_BASE_URL}/apogee_rainbow_beads.fcs",
+                                        "download": "apogee_rainbow_beads.fcs",
+                                    },
+                                    {
+                                        "title": "Mixed reference beads",
+                                        "description": "Apogee mix sample with multiple bead populations for scatter and fluorescence exercises.",
+                                        "href": f"{SAMPLE_FILES_BASE_URL}/apogee_mixed_reference_beads.fcs",
+                                        "download": "apogee_mixed_reference_beads.fcs",
+                                    },
+                                    {
+                                        "title": "Mystery beads",
+                                        "description": "Unknown bead mixture intended for identification and comparison exercises.",
+                                        "href": f"{SAMPLE_FILES_BASE_URL}/apogee_mystery_beads.fcs",
+                                        "download": "apogee_mystery_beads.fcs",
+                                    },
+                                    {
+                                        "title": "Rosetta beads (1 min)",
+                                        "description": "Rosetta bead acquisition with a one-minute run, useful for Rosetta Script testing.",
+                                        "href": f"{SAMPLE_FILES_BASE_URL}/apogee_rosetta_beads_1min.fcs",
+                                        "download": "apogee_rosetta_beads_1min.fcs",
+                                    },
+                                ],
+                            ),
+                            lg=6,
+                        ),
+                        dbc.Col(
+                            self._build_download_card(
+                                title="Northern Lights flow cytometer samples",
+                                subtitle=(
+                                    "Four FCS datasets shared for the Flow Cytometry Summer School at Amsterdam UMC, "
+                                    "acquired on a Northern Lights instrument."
+                                ),
+                                color_name=styling.get_workflow_section_color(2),
+                                items=[
+                                    {
+                                        "title": "Rainbow beads",
+                                        "description": "Multi-color calibration standard acquired on the Northern Lights platform.",
+                                        "href": f"{SAMPLE_FILES_BASE_URL}/northern_lights_rainbow_beads.fcs",
+                                        "download": "northern_lights_rainbow_beads.fcs",
+                                    },
+                                    {
+                                        "title": "Mixed reference beads",
+                                        "description": "Compressed Northern Lights acquisition of the Apogee mix reference sample.",
+                                        "href": f"{SAMPLE_FILES_BASE_URL}/northern_lights_mixed_reference_beads.fcs",
+                                        "download": "northern_lights_mixed_reference_beads.fcs",
+                                    },
+                                    {
+                                        "title": "Mystery beads",
+                                        "description": "Compressed Northern Lights acquisition of the unknown bead mixture.",
+                                        "href": f"{SAMPLE_FILES_BASE_URL}/northern_lights_mystery_beads.fcs",
+                                        "download": "northern_lights_mystery_beads.fcs",
+                                    },
+                                    {
+                                        "title": "Rosetta beads (2 min)",
+                                        "description": "Compressed Rosetta bead acquisition with a two-minute run for Rosetta workflow practice.",
+                                        "href": f"{SAMPLE_FILES_BASE_URL}/northern_lights_rosetta_beads_2min.fcs",
+                                        "download": "northern_lights_rosetta_beads_2min.fcs",
+                                    },
+                                ],
+                            ),
+                            lg=6,
+                        ),
+                    ],
+                    className="g-3",
+                ),
+            ]
         )
 
     def _build_download_card(

@@ -7,14 +7,18 @@ class SidebarIds:
     calibration_collapse = f"{prefix}-calibration-collapse"
     tools_toggle_button = f"{prefix}-tools-toggle-button"
     tools_collapse = f"{prefix}-tools-collapse"
-    manage_toggle_button = f"{prefix}-manage-toggle-button"
-    manage_collapse = f"{prefix}-manage-collapse"
-    learn_toggle_button = f"{prefix}-learn-toggle-button"
-    learn_collapse = f"{prefix}-learn-collapse"
+    resources_toggle_button = f"{prefix}-resources-toggle-button"
+    resources_collapse = f"{prefix}-resources-collapse"
+    profile_toggle_button = f"{prefix}-profile-toggle-button"
+    profile_collapse = f"{prefix}-profile-collapse"
 
     saved_calibrations_refresh_button = f"{prefix}-saved-calibrations-refresh-button"
-    saved_calibrations_open_folder_button = f"{prefix}-saved-calibrations-open-folder-button"
-    saved_calibrations_open_folder_status = f"{prefix}-saved-calibrations-open-folder-status"
+    saved_calibrations_open_folder_button = (
+        f"{prefix}-saved-calibrations-open-folder-button"
+    )
+    saved_calibrations_open_folder_status = (
+        f"{prefix}-saved-calibrations-open-folder-status"
+    )
     saved_calibrations_body_container = f"{prefix}-saved-calibrations-body-container"
     saved_calibrations_refresh_store = f"{prefix}-saved-calibrations-refresh-store"
 

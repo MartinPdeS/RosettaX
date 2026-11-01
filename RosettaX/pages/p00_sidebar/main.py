@@ -1,4 +1,3 @@
-
 import logging
 from datetime import datetime, timezone
 from typing import Any
@@ -62,8 +61,8 @@ class Sidebar:
         "/fcs-inspector",
         "/fcs-merge",
     }
-    manage_paths = {"/settings", "/sample-files"}
-    learn_paths = {"/documentation", "/help"}
+    resources_paths = {"/sample-files", "/documentation", "/help"}
+    profile_paths = {"/settings"}
 
     def _get_default_profile_name(
         self,
@@ -164,7 +163,9 @@ class Sidebar:
             return profile_options, resolved_default_profile, resolved_default_profile
 
         @dash.callback(
-            dash.Output(SidebarIds.selected_profile_store, "data", allow_duplicate=True),
+            dash.Output(
+                SidebarIds.selected_profile_store, "data", allow_duplicate=True
+            ),
             dash.Output(BROWSER_PROFILES_STORE_ID, "data", allow_duplicate=True),
             dash.Output(SidebarIds.profile_load_event_store, "data"),
             dash.Input(SidebarIds.saved_profiles_load_button, "n_clicks"),
@@ -187,9 +188,11 @@ class Sidebar:
                 return dash.no_update, dash.no_update, dash.no_update
 
             try:
-                resolved_profile_name, status_message = services.resolve_selected_profile(
-                    selected_profile,
-                    browser_profiles_payload,
+                resolved_profile_name, status_message = (
+                    services.resolve_selected_profile(
+                        selected_profile,
+                        browser_profiles_payload,
+                    )
                 )
                 browser_profiles = BrowserProfileLibrary.from_dict(
                     browser_profiles_payload,
@@ -276,18 +279,18 @@ class Sidebar:
             if triggered_id == SidebarIds.calibration_toggle_button:
                 next_is_open = not bool(is_open)
                 return next_is_open, self._nav_toggle_button_children(
-                    label="Calibrations",
+                    label="Calibration",
                     is_open=next_is_open,
                 )
 
             if pathname in self.calibration_paths:
                 return True, self._nav_toggle_button_children(
-                    label="Calibrations",
+                    label="Calibration",
                     is_open=True,
                 )
 
             return False, self._nav_toggle_button_children(
-                label="Calibrations",
+                label="Calibration",
                 is_open=False,
             )
 
@@ -316,32 +319,32 @@ class Sidebar:
             if triggered_id == SidebarIds.tools_toggle_button:
                 next_is_open = not bool(is_open)
                 return next_is_open, self._nav_toggle_button_children(
-                    label="FCS tools",
+                    label="FCS data tools",
                     is_open=next_is_open,
                 )
 
             if pathname in self.tools_paths:
                 return True, self._nav_toggle_button_children(
-                    label="FCS tools",
+                    label="FCS data tools",
                     is_open=True,
                 )
 
             return False, self._nav_toggle_button_children(
-                label="FCS tools",
+                label="FCS data tools",
                 is_open=False,
             )
 
         self._register_navigation_toggle(
-            button_id=SidebarIds.manage_toggle_button,
-            collapse_id=SidebarIds.manage_collapse,
-            label="Manage",
-            paths=self.manage_paths,
+            button_id=SidebarIds.resources_toggle_button,
+            collapse_id=SidebarIds.resources_collapse,
+            label="Guides & examples",
+            paths=self.resources_paths,
         )
         self._register_navigation_toggle(
-            button_id=SidebarIds.learn_toggle_button,
-            collapse_id=SidebarIds.learn_collapse,
-            label="Learn",
-            paths=self.learn_paths,
+            button_id=SidebarIds.profile_toggle_button,
+            collapse_id=SidebarIds.profile_collapse,
+            label="Profile",
+            paths=self.profile_paths,
         )
 
     def _register_navigation_toggle(
@@ -353,6 +356,7 @@ class Sidebar:
         paths: set[str],
     ) -> None:
         """Register route-aware behavior for one collapsible navigation tab."""
+
         @dash.callback(
             dash.Output(collapse_id, "is_open"),
             dash.Output(button_id, "children"),
@@ -479,7 +483,7 @@ class Sidebar:
                             [
                                 self._nav_toggle_button(
                                     self._nav_toggle_button_children(
-                                        label="Calibrations",
+                                        label="Calibration",
                                         is_open=False,
                                     ),
                                     button_id=SidebarIds.calibration_toggle_button,
@@ -527,7 +531,7 @@ class Sidebar:
                             [
                                 self._nav_toggle_button(
                                     self._nav_toggle_button_children(
-                                        label="FCS tools",
+                                        label="FCS data tools",
                                         is_open=False,
                                     ),
                                     button_id=SidebarIds.tools_toggle_button,
@@ -572,21 +576,27 @@ class Sidebar:
                             ]
                         ),
                         self._build_navigation_tab(
-                            label="Manage",
-                            button_id=SidebarIds.manage_toggle_button,
-                            collapse_id=SidebarIds.manage_collapse,
+                            label="Guides & examples",
+                            button_id=SidebarIds.resources_toggle_button,
+                            collapse_id=SidebarIds.resources_collapse,
                             links=[
-                                self._nav_link("Profile", "/settings", tier="child"),
-                                self._nav_link("Sample files", "/sample-files", tier="child"),
+                                self._nav_link(
+                                    "Sample files", "/sample-files", tier="child"
+                                ),
+                                self._nav_link(
+                                    "Documentation", "/documentation", tier="child"
+                                ),
+                                self._nav_link("Help", "/help", tier="child"),
                             ],
                         ),
                         self._build_navigation_tab(
-                            label="Learn",
-                            button_id=SidebarIds.learn_toggle_button,
-                            collapse_id=SidebarIds.learn_collapse,
+                            label="Profile",
+                            button_id=SidebarIds.profile_toggle_button,
+                            collapse_id=SidebarIds.profile_collapse,
                             links=[
-                                self._nav_link("Documentation", "/documentation", tier="child"),
-                                self._nav_link("Help", "/help", tier="child"),
+                                self._nav_link(
+                                    "Profile settings", "/settings", tier="child"
+                                ),
                             ],
                         ),
                     ],

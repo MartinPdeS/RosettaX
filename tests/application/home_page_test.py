@@ -85,10 +85,10 @@ class Test_HomePage:
         assert "Support Developer" in text_nodes
         assert "Project resources" not in text_nodes
         assert "What you can do" in text_nodes
-        assert "Calibrations" in text_nodes
-        assert "FCS tools" in text_nodes
-        assert "Manage" in text_nodes
-        assert "Learn" in text_nodes
+        assert "Calibration" in text_nodes
+        assert "FCS data tools" in text_nodes
+        assert "Guides & examples" in text_nodes
+        assert "Profile" in text_nodes
         assert "RosettaX usage metrics." not in text_nodes
         assert "Home page visits" not in text_nodes
         assert "Apply button clicks" not in text_nodes
@@ -124,7 +124,10 @@ class Test_HomePage:
     ],
 )
 def test_home_version_resolves_installed_metadata_and_source_fallback(
-    monkeypatch, installed_version, generated_version, expected,
+    monkeypatch,
+    installed_version,
+    generated_version,
+    expected,
 ):
     """Check home version resolves installed metadata and source fallback."""
     monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)

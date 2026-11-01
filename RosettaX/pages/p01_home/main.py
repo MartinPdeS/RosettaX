@@ -1,4 +1,3 @@
-
 import importlib.metadata
 import json
 import logging
@@ -14,7 +13,9 @@ from RosettaX import __version__
 from RosettaX.utils import ui_forms, usage_metrics
 
 logger = logging.getLogger(__name__)
-LATEST_GITHUB_TAG_API_URL = "https://api.github.com/repos/MartinPdeS/RosettaX/tags?per_page=1"
+LATEST_GITHUB_TAG_API_URL = (
+    "https://api.github.com/repos/MartinPdeS/RosettaX/tags?per_page=1"
+)
 GITHUB_TAG_REQUEST_TIMEOUT_SECONDS = 2.0
 GITHUB_TAG_CACHE_TTL_SECONDS = 300.0
 
@@ -73,7 +74,9 @@ def _fetch_latest_github_tag_label() -> str | None:
     latest_tag_name = str(payload[0].get("name", "")).strip()
 
     if not latest_tag_name:
-        logger.debug("Latest GitHub tag payload did not include a tag name: %r", payload[0])
+        logger.debug(
+            "Latest GitHub tag payload did not include a tag name: %r", payload[0]
+        )
         return None
 
     if latest_tag_name.lower().startswith("v"):
@@ -108,7 +111,9 @@ def resolve_latest_github_tag_label() -> str:
 
     try:
         local_version = importlib.metadata.version("RosettaX")
-        return f"v{local_version}" if not local_version.startswith("v") else local_version
+        return (
+            f"v{local_version}" if not local_version.startswith("v") else local_version
+        )
     except importlib.metadata.PackageNotFoundError:
         return "Unavailable"
 
@@ -130,7 +135,9 @@ class HomePage:
 
         self.github_url = "https://github.com/MartinPdeS/RosettaX"
         self.pypi_url = "https://pypi.org/project/RosettaX/"
-        self.anaconda_url = "https://anaconda.org/channels/MartinPdeS/packages/Rosettax/overview"
+        self.anaconda_url = (
+            "https://anaconda.org/channels/MartinPdeS/packages/Rosettax/overview"
+        )
         self.documentation_url = "/documentation"
         self.install_local_release_url = "/documentation/install-local"
         self.support_url = "https://github.com/sponsors/MartinPdeS"
@@ -246,7 +253,10 @@ class HomePage:
                                         f"{metrics.total_calibrated_files:,}",
                                         className="home-calibration-count",
                                     ),
-                                    html.Span("Total calibrated files", className="home-calibration-label"),
+                                    html.Span(
+                                        "Total calibrated files",
+                                        className="home-calibration-label",
+                                    ),
                                 ],
                                 className="home-calibration-metric",
                             ),
@@ -270,9 +280,17 @@ class HomePage:
             [
                 html.A(
                     [
-                        html.Span("♥", className="home-support-icon", **{"aria-hidden": "true"}),
+                        html.Span(
+                            "♥",
+                            className="home-support-icon",
+                            **{"aria-hidden": "true"},
+                        ),
                         html.Span("Support Developer", className="home-support-label"),
-                        html.Span("↗", className="home-support-arrow", **{"aria-hidden": "true"}),
+                        html.Span(
+                            "↗",
+                            className="home-support-arrow",
+                            **{"aria-hidden": "true"},
+                        ),
                     ],
                     id=self._id("support-developer"),
                     href=self.support_url,
@@ -282,9 +300,19 @@ class HomePage:
                 ),
                 html.A(
                     [
-                        html.Span("☆", className="home-support-icon", **{"aria-hidden": "true"}),
-                        html.Span("Star RosettaX on GitHub", className="home-support-label"),
-                        html.Span("↗", className="home-support-arrow", **{"aria-hidden": "true"}),
+                        html.Span(
+                            "☆",
+                            className="home-support-icon",
+                            **{"aria-hidden": "true"},
+                        ),
+                        html.Span(
+                            "Star RosettaX on GitHub", className="home-support-label"
+                        ),
+                        html.Span(
+                            "↗",
+                            className="home-support-arrow",
+                            **{"aria-hidden": "true"},
+                        ),
                     ],
                     id=self._id("star-repository"),
                     href=self.github_url,
@@ -370,20 +398,20 @@ class HomePage:
         """Explain the task-oriented groups available in the sidebar."""
         tool_descriptions = [
             (
-                "Calibrations",
+                "Calibration",
                 "Create fluorescence, scattering, or cross-calibrations, or apply a saved calibration.",
             ),
             (
-                "FCS tools",
-                "Visualize FCS data or create file slices for focused downstream work.",
+                "FCS data tools",
+                "Inspect, visualize, slice, or merge FCS files.",
             ),
             (
-                "Manage",
-                "Choose a profile and access sample files.",
+                "Guides & examples",
+                "Download sample datasets, read the documentation, or get help.",
             ),
             (
-                "Learn",
-                "Read the documentation or get help with RosettaX.",
+                "Profile",
+                "Choose or configure the active profile.",
             ),
         ]
         card = dbc.Card(

@@ -744,10 +744,9 @@ class Test_SidebarNavigation:
         text_nodes = _collect_text(navigation)
         component_ids = _collect_component_ids(navigation)
 
-        assert "Calibrations" in text_nodes
-        assert "FCS tools" in text_nodes
-        assert "Manage" in text_nodes
-        assert "Learn" in text_nodes
+        assert "Calibration" in text_nodes
+        assert "FCS data tools" in text_nodes
+        assert "Guides & examples" in text_nodes
         assert "Apply calibration" in text_nodes
         assert ">" in text_nodes
         assert "Fluorescence" in text_nodes
@@ -757,11 +756,11 @@ class Test_SidebarNavigation:
         assert SidebarIds.calibration_collapse in component_ids
         assert SidebarIds.tools_toggle_button in component_ids
         assert SidebarIds.tools_collapse in component_ids
-        assert SidebarIds.manage_toggle_button in component_ids
-        assert SidebarIds.manage_collapse in component_ids
-        assert SidebarIds.learn_toggle_button in component_ids
-        assert SidebarIds.learn_collapse in component_ids
-        assert "Profile" in text_nodes
+        assert SidebarIds.resources_toggle_button in component_ids
+        assert SidebarIds.resources_collapse in component_ids
+        assert SidebarIds.profile_toggle_button in component_ids
+        assert SidebarIds.profile_collapse in component_ids
+        assert "Profile settings" in text_nodes
         assert "Settings" not in text_nodes
         assert "/documentation" in _collect_component_hrefs(navigation)
         assert "/cross-calibration" in _collect_component_hrefs(navigation)
@@ -793,25 +792,27 @@ class Test_SidebarNavigation:
         assert "/cross-calibration" in _collect_component_hrefs(calibration_collapse)
         assert "/calibrate" in _collect_component_hrefs(calibration_collapse)
         assert "/fcs-inspector" not in _collect_component_hrefs(calibration_collapse)
-        manage_collapse = _find_component_by_id(
+        resources_collapse = _find_component_by_id(
             navigation,
-            SidebarIds.manage_collapse,
+            SidebarIds.resources_collapse,
         )
-        assert manage_collapse is not None
-        assert "/settings" in _collect_component_hrefs(manage_collapse)
-        assert "/sample-files" in _collect_component_hrefs(manage_collapse)
+        assert resources_collapse is not None
+        assert "/settings" not in _collect_component_hrefs(resources_collapse)
+        assert "/sample-files" in _collect_component_hrefs(resources_collapse)
 
-        learn_collapse = _find_component_by_id(
+        profile_collapse = _find_component_by_id(
             navigation,
-            SidebarIds.learn_collapse,
+            SidebarIds.profile_collapse,
         )
-        assert learn_collapse is not None
-        assert "/documentation" in _collect_component_hrefs(learn_collapse)
-        assert "/help" in _collect_component_hrefs(learn_collapse)
+        assert profile_collapse is not None
+        assert "/settings" in _collect_component_hrefs(profile_collapse)
 
-        assert text_nodes.index("Manage") < text_nodes.index("Profile")
-        assert text_nodes.index("Profile") < text_nodes.index("Learn")
-        assert text_nodes.index("Learn") < text_nodes.index("Documentation")
+        assert "/documentation" in _collect_component_hrefs(resources_collapse)
+        assert "/help" in _collect_component_hrefs(resources_collapse)
+
+        assert text_nodes.index("Guides & examples") < text_nodes.index("Profile")
+        assert text_nodes.index("Profile") < text_nodes.index("Profile settings")
+        assert text_nodes.index("Guides & examples") < text_nodes.index("Documentation")
         assert text_nodes.index("Documentation") < text_nodes.index("Help")
         assert navigation.children[0].style["--bs-nav-link-color"] == "#111827"
         assert (
