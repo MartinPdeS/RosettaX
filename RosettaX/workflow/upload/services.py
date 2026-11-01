@@ -5,9 +5,6 @@ import logging
 import re
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Any
-from uuid import uuid4
-
 from RosettaX.utils.checks import FCSMultiFileConsistencyChecker
 from RosettaX.utils.streamed_uploads import (
     is_streamed_upload_token,
@@ -22,6 +19,8 @@ from RosettaX.workflow.upload.models import (
     UploadConfig,
     UploadState,
 )
+from typing import Any
+from uuid import uuid4
 
 DEFAULT_UPLOAD_DIRECTORY = Path.home() / ".rosettax" / "uploads"
 DEFAULT_ALLOWED_UPLOAD_EXTENSIONS = frozenset({".fcs"})

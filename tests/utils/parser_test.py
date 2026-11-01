@@ -8,7 +8,6 @@ if __name__ == "__main__":
 
 
 import pytest
-
 from RosettaX import __version__
 from RosettaX.utils.parser import _parse_args
 

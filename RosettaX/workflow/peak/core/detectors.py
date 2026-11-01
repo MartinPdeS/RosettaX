@@ -1,14 +1,12 @@
 
 import json
 import logging
+from .. import registry
 from pathlib import Path
-from typing import Any
-
 from RosettaX.utils.fcs_metadata import FCSMetadata
 from RosettaX.utils.reader import FCSFile
 from RosettaX.utils.runtime_config import RuntimeConfig
-
-from .. import registry
+from typing import Any
 
 logger = logging.getLogger(__name__)
 DETECTOR_AUTO_DETECT_RULES_PATH = Path(__file__).parents[2] / "detector" / (

@@ -8,11 +8,9 @@ if __name__ == "__main__":
 
 
 import io
+import pytest
 import zipfile
 from dataclasses import fields, replace
-
-import pytest
-
 from RosettaX.pages.p04_calibrate.sections.s04_apply import services
 from RosettaX.pages.p04_calibrate.sections.s04_apply.models import (
     ApplyCalibrationControls,

@@ -9,9 +9,7 @@ if __name__ == "__main__":
 
 import base64
 import json
-
 import pytest
-
 from RosettaX.pages.p04_calibrate.sections.s02_calibration_picker import services
 
 

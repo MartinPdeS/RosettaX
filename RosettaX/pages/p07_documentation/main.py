@@ -1,13 +1,12 @@
 
 import dash
 import dash_bootstrap_components as dbc
-from dash import html
-
 from .components import (
     build_documentation_card,
     build_documentation_container,
     build_documentation_hero,
 )
+from dash import html
 
 
 class DocumentationPage:

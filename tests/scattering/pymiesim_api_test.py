@@ -5,13 +5,11 @@ if __name__ == "__main__":
 
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
-from types import SimpleNamespace
-
 import numpy as np
 import pytest
 from pint import UnitRegistry
-
 from RosettaX.workflow.scattering import backend
+from types import SimpleNamespace
 
 
 @pytest.mark.parametrize("labeled_result", [False, True])

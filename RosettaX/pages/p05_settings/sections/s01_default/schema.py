@@ -1,8 +1,6 @@
 
 import logging
 from dataclasses import dataclass
-from typing import Any
-
 from RosettaX.utils.runtime_config import DEFAULT_GRAPH_HEIGHT
 from RosettaX.workflow import apply_calibration, detector, scattering
 from RosettaX.workflow.peak import registry as peak_registry
@@ -10,6 +8,7 @@ from RosettaX.workflow.table.fluorescence import (
     CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME,
     build_fluorescence_reference_preset_options,
 )
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

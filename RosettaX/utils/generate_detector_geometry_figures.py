@@ -14,20 +14,18 @@ python -m RosettaX.utils.generate_detector_geometry_figures --skip-docs-static
 
 import argparse
 import math
-import re
-from pathlib import Path
-from typing import Any
-
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-
+import re
+from pathlib import Path
 from RosettaX.workflow import detector
 from RosettaX.workflow.detector.loader import (
     CUSTOM_DETECTOR_PRESET_NAME,
     load_detector_configuration_presets,
 )
 from RosettaX.workflow.plotting import optical_preview
+from typing import Any
 
 matplotlib.use("Agg")
 

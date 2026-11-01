@@ -1,11 +1,9 @@
 
-from typing import Any
-
 import dash
 import dash_bootstrap_components as dbc
-
 from RosettaX.utils import styling, ui_forms
 from RosettaX.utils.runtime_config import RuntimeConfig
+from typing import Any
 
 TOGGLE_ID_TYPE = "calibration-card-toggle"
 COLLAPSE_ID_TYPE = "calibration-card-collapse"

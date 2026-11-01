@@ -1,12 +1,10 @@
 
-import logging
-from dataclasses import dataclass
-from typing import Any, ClassVar
-
 import dash
+import logging
 import numpy as np
-
+from dataclasses import dataclass
 from RosettaX.utils import styling
+from typing import Any, ClassVar
 
 logger = logging.getLogger(__name__)
 

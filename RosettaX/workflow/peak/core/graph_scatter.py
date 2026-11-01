@@ -3,21 +3,18 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
-
 import numpy as np
 import plotly.graph_objs as go
-
+from ..scripts.base import (
+    filter_edge_artifact_pairs,
+)
 from RosettaX.utils import casting, plottings
 from RosettaX.utils.io import column_copy
 from RosettaX.workflow.plotting.axis_ranges import (
     apply_stable_2d_axis_ranges,
 )
 from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
-
-from ..scripts.base import (
-    filter_edge_artifact_pairs,
-)
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from .graphing import PeakWorkflowGraphBuilder

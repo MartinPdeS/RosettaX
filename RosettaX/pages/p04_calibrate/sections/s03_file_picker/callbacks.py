@@ -1,14 +1,11 @@
 
+import dash
 import logging
+from . import services
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
-
-import dash
-
 from RosettaX.workflow.file_selection import UploadedFile, UploadedFileBatch
-
-from . import services
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

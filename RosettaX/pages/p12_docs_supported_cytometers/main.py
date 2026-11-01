@@ -2,7 +2,6 @@
 import dash
 import dash_bootstrap_components as dbc
 from dash import Input, Output, State, callback, ctx, html, no_update
-
 from RosettaX.pages.p07_documentation.components import (
     build_documentation_card,
     build_documentation_container,

@@ -1,11 +1,8 @@
-from pathlib import Path
-from typing import Any
-
 import dash
 import dash_bootstrap_components as dbc
 import pandas as pd
 from dash import html
-
+from pathlib import Path
 from RosettaX.ui import WorkflowStep, build_workflow_page_header
 from RosettaX.utils import styling, ui_forms
 from RosettaX.utils.reader import FCSFile
@@ -14,6 +11,7 @@ from RosettaX.workflow.calibration_cards import (
     build_fcs_tool_card_stack,
 )
 from RosettaX.workflow.upload import services as upload_services
+from typing import Any
 
 
 class FCSInspectorPage:

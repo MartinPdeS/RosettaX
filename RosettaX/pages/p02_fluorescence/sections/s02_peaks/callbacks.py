@@ -1,6 +1,5 @@
 
 import logging
-
 from RosettaX.workflow.peak.callbacks.main import register_peak_callbacks
 
 logger = logging.getLogger(__name__)

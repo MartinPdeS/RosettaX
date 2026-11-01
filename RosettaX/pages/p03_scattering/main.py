@@ -1,5 +1,4 @@
 import dash
-
 from .ids import Ids
 from .sections import callbacks as section_callbacks
 from .sections import layout as section_layout

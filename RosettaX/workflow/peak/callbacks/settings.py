@@ -1,8 +1,7 @@
 
+import dash
 from decimal import Decimal, InvalidOperation
 from typing import Any
-
-import dash
 
 
 def register_setting_spinner_callbacks(

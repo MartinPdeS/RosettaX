@@ -8,7 +8,6 @@ if __name__ == "__main__":
 
 
 from flask import Flask
-
 from RosettaX.application import callbacks as application_callbacks
 from RosettaX.utils import usage_metrics
 

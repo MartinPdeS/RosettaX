@@ -8,11 +8,8 @@ if __name__ == "__main__":
 
 
 import logging
-from types import SimpleNamespace
-
 import numpy as np
 import pandas as pd
-
 from RosettaX.pages.p03_scattering.sections.s05_calibration import (
     services as calibration_services,
 )
@@ -22,6 +19,7 @@ from RosettaX.workflow.apply_calibration.scattering import (
     SolidSphereTargetModel,
     apply_scattering_calibration_to_dataframe,
 )
+from types import SimpleNamespace
 
 
 def _fake_modeled_coupling_from_diameters(*args, **kwargs) -> SimpleNamespace:

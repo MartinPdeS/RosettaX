@@ -1,11 +1,10 @@
 """Scattering calibration standard table behavior."""
 
 import logging
-from typing import Any
-
 from RosettaX.utils import RuntimeConfig
 from RosettaX.workflow import parameters, scattering
 from RosettaX.workflow.table import services as table_services
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

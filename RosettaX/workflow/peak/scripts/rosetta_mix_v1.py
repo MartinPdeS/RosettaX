@@ -1,12 +1,10 @@
 
 import logging
-from dataclasses import replace
-from typing import Any
-
 import numpy as np
-
 from .base import PeakProcessResult
 from .rosetta_mix import FluorescenceGuidedScatterPeakProcess
+from dataclasses import replace
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

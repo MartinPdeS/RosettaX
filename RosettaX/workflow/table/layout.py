@@ -1,13 +1,11 @@
 
-import logging
-from dataclasses import dataclass
-from typing import Any
-
 import dash
 import dash_bootstrap_components as dbc
-
+import logging
+from dataclasses import dataclass
 from RosettaX.utils import styling
 from RosettaX.workflow.table.validation import build_reference_table_feedback
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

@@ -7,12 +7,9 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 
-from types import SimpleNamespace
-
 import dash
 import numpy as np
 import pytest
-
 from RosettaX.pages.p03_scattering.ids import Ids as ScatteringIds
 from RosettaX.pages.p03_scattering.sections.s03_model import preview_callbacks
 from RosettaX.pages.p03_scattering.sections.s03_model.main import (
@@ -25,6 +22,7 @@ from RosettaX.workflow.plotting.optical_preview import (
     build_optical_configuration_preview_signature,
 )
 from RosettaX.workflow.scattering import ModelConfiguration
+from types import SimpleNamespace
 
 
 def _find_component_by_id(component, target_id: str):

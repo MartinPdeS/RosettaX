@@ -7,11 +7,8 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 
-from types import SimpleNamespace
-
 import dash
 import pytest
-
 from RosettaX.pages.p03_scattering.ids import Ids
 from RosettaX.pages.p03_scattering.sections.s03_model import (
     callbacks,
@@ -21,6 +18,7 @@ from RosettaX.pages.p03_scattering.sections.s03_model.main import Model
 from RosettaX.workflow.parameters.refractive_index import (
     calculate_sellmeier_refractive_index,
 )
+from types import SimpleNamespace
 
 
 @pytest.fixture

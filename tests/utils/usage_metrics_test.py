@@ -8,11 +8,9 @@ if __name__ == "__main__":
 
 
 import json
-from datetime import datetime, timezone
-from pathlib import Path
-
 import pytest
-
+from datetime import UTC, datetime
+from pathlib import Path
 from RosettaX.utils import usage_metrics
 
 
@@ -388,7 +386,7 @@ class Test_VisitLog:
 
     def test_summarize_visit_events_defaults_today_to_current_utc_date(self) -> None:
         """Check summarize visit events defaults today to current utc date."""
-        current_utc_date = datetime.now(timezone.utc).date().isoformat()
+        current_utc_date = datetime.now(UTC).date().isoformat()
 
         summary = usage_metrics.summarize_visit_events(
             [

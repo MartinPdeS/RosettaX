@@ -1,15 +1,13 @@
 
 import logging
-import re
-from dataclasses import dataclass
-from typing import Any
-
 import numpy as np
 import plotly.graph_objs as go
-
+import re
+from dataclasses import dataclass
 from RosettaX.utils import plottings
 from RosettaX.workflow import scattering
 from RosettaX.workflow.scattering.backend import BackEnd
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

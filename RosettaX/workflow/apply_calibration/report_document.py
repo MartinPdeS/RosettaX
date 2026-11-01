@@ -1,12 +1,11 @@
 """Low-level PDF pages, objects, text metrics, and serialization."""
 
-from dataclasses import dataclass, field
-
 from .report_styles import (
     HELVETICA_WIDTHS,
     PAGE_HEIGHT,
     PAGE_WIDTH,
 )
+from dataclasses import dataclass, field
 
 
 @dataclass

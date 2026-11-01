@@ -1,17 +1,15 @@
 """Shared headers used by multi-step RosettaX workflow pages."""
 
-from collections.abc import Sequence
-from dataclasses import dataclass
-from typing import Any
-
 import dash_bootstrap_components as dbc
+from collections.abc import Sequence
 from dash import html
-
+from dataclasses import dataclass
 from RosettaX.utils import styling, ui_forms
 from RosettaX.workflow.calibration_cards import (
     WORKFLOW_STEP_CARD_ID_TYPE,
     workflow_section_dom_id,
 )
+from typing import Any
 
 
 @dataclass(frozen=True)

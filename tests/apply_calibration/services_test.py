@@ -7,12 +7,11 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 
+import numpy as np
+import pandas as pd
 import sys
 import types
 from types import SimpleNamespace
-
-import numpy as np
-import pandas as pd
 
 
 class _PyMieSimStub(types.ModuleType):

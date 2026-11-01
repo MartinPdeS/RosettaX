@@ -1,9 +1,7 @@
 
 import dash
-
-from RosettaX.workflow.calibration_cards import build_collapsible_section_layout
-
 from ..state import FluorescencePageState
+from RosettaX.workflow.calibration_cards import build_collapsible_section_layout
 
 
 def build_page_layout(page, sections) -> dash.html.Div:

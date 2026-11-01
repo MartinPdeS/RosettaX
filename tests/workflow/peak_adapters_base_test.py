@@ -7,14 +7,12 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 
-from unittest.mock import Mock
-
 import pytest
-
 from RosettaX.workflow.peak.adapters.base import (
     BasePeakWorkflowAdapter,
     PeakWorkflowPageState,
 )
+from unittest.mock import Mock
 
 
 class Test_PeakWorkflowPageState:

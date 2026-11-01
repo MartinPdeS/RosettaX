@@ -8,7 +8,6 @@ if __name__ == "__main__":
 
 
 import dash_bootstrap_components as dbc
-
 from RosettaX.utils import styling, ui_forms
 from RosettaX.workflow import calibration_cards
 

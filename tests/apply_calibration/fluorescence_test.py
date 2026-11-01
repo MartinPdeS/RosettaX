@@ -8,7 +8,6 @@ if __name__ == "__main__":
 
 
 import numpy as np
-
 from RosettaX.workflow.apply_calibration.fluorescence import (
     apply_legacy_calibration_to_series,
 )

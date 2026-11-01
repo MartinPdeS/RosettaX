@@ -1,14 +1,12 @@
 
 import json
+from . import services as table_services
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
-
 from RosettaX.utils import casting
 from RosettaX.utils.runtime_config import RuntimeConfig
-
-from . import services as table_services
+from typing import Any
 
 CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME = "Custom"
 GENERIC_FLUORESCENCE_REFERENCE_PRESET_NAME = "Generic"

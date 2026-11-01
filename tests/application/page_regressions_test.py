@@ -6,14 +6,11 @@ if __name__ == "__main__":
 
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
+import dash
 import importlib
 import logging
-from types import SimpleNamespace
-
-import dash
 import numpy as np
 import pytest
-
 from RosettaX.application import layout as application_layout
 from RosettaX.pages.p00_sidebar.ids import SidebarIds
 from RosettaX.pages.p00_sidebar.main import Sidebar
@@ -34,6 +31,7 @@ from RosettaX.utils.upload_limits import get_max_upload_bytes
 from RosettaX.workflow.parameters.refractive_index import (
     calculate_sellmeier_refractive_index,
 )
+from types import SimpleNamespace
 
 
 def _collect_component_ids(component) -> set[str]:

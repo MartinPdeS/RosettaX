@@ -1,18 +1,15 @@
 
+import dash_bootstrap_components as dbc
 import json
 import logging
-from typing import Any
-
-import dash_bootstrap_components as dbc
-from dash import dcc, html
-
-from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.workflow.plotting import layout as plotting_layout
-from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph, Scatter2DGraphIds
-
 from . import registry
 from .callbacks.shared import get_peak_processes
 from .models import PeakConfig
+from dash import dcc, html
+from RosettaX.utils.runtime_config import RuntimeConfig
+from RosettaX.workflow.plotting import layout as plotting_layout
+from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph, Scatter2DGraphIds
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

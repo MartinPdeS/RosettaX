@@ -8,12 +8,10 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 
-from pathlib import Path
-
 import numpy as np
 import pandas as pd
 import pytest
-
+from pathlib import Path
 from RosettaX.utils import directories
 from RosettaX.utils.reader import FCSFile
 

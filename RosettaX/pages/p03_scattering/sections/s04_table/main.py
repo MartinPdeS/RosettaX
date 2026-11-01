@@ -1,10 +1,11 @@
 
-import logging
-from typing import Any
-
 import dash
 import dash_bootstrap_components as dbc
-
+import logging
+from ..s03_model.main import Model as ScatteringModelSection
+from ..s05_calibration import services as calibration_services
+from ..s05_calibration.main import build_scattering_axis_control_block
+from .services import ScatteringCalibrationStandardTable
 from RosettaX.pages.p00_sidebar.ids import SidebarIds
 from RosettaX.pages.p03_scattering.sections.s03_model import layout as model_layout
 from RosettaX.pages.p03_scattering.state import ScatteringPageState
@@ -16,11 +17,7 @@ from RosettaX.workflow.table.layout import (
     ReferenceTableLayout,
 )
 from RosettaX.workflow.table.validation import register_reference_table_validation
-
-from ..s03_model.main import Model as ScatteringModelSection
-from ..s05_calibration import services as calibration_services
-from ..s05_calibration.main import build_scattering_axis_control_block
-from .services import ScatteringCalibrationStandardTable
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

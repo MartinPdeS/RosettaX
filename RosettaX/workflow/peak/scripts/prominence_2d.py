@@ -1,11 +1,6 @@
 
 import logging
-from typing import Any
-
 import numpy as np
-
-from RosettaX.utils.io import column_copy
-
 from .base import (
     BasePeakProcess,
     PeakProcessResult,
@@ -17,6 +12,8 @@ from .base import (
     resolve_integer_value,
     resolve_yes_no_setting,
 )
+from RosettaX.utils.io import column_copy
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

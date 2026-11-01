@@ -5,7 +5,6 @@ import numpy as np
 import plotly.graph_objs as go
 from dash import dcc, html
 from plotly.subplots import make_subplots
-
 from RosettaX.pages.p07_documentation.components import (
     build_documentation_card,
     build_documentation_container,

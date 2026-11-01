@@ -1,16 +1,6 @@
 
 import logging
-from typing import Any
-
 import numpy as np
-
-from RosettaX.scattering.calibration import ScatteringCalibration
-from RosettaX.workflow.calibration.mie_relation import (
-    MieRelation,
-    build_mie_relation_from_arrays,
-    relation_is_strictly_monotonic,
-)
-
 from .mie_relation_builder import build_target_mie_relation
 from .models import (
     MonotonicDiameterInterval,
@@ -19,6 +9,13 @@ from .models import (
     ScatteringOutputColumns,
     ScatteringTargetModelParameters,
 )
+from RosettaX.scattering.calibration import ScatteringCalibration
+from RosettaX.workflow.calibration.mie_relation import (
+    MieRelation,
+    build_mie_relation_from_arrays,
+    relation_is_strictly_monotonic,
+)
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

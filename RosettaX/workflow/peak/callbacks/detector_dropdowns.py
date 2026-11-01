@@ -1,10 +1,8 @@
 
-import logging
-from typing import Any
-
 import dash
-
+import logging
 from ..core import detectors
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

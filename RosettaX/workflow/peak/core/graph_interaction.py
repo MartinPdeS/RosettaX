@@ -1,17 +1,14 @@
 """Peak graph controls, interaction revisions, and post-layout annotations."""
 
-from typing import Any
-
 import numpy as np
 import plotly.graph_objs as go
-
-from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
-
 from .. import registry
 from .rosetta_annotations import (
     add_rosetta_scatter_guide_annotations,
     extract_rosetta_scatter_guide_annotations,
 )
+from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
+from typing import Any
 
 
 def is_enabled(

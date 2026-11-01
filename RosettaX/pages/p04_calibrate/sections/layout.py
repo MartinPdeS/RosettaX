@@ -1,10 +1,8 @@
 
 import dash_bootstrap_components as dbc
-from dash import dcc
-
-from RosettaX.workflow.calibration_cards import build_collapsible_section_layout
-
 from ..state import ApplyCalibrationPageState
+from dash import dcc
+from RosettaX.workflow.calibration_cards import build_collapsible_section_layout
 
 
 def build_page_layout(page, sections) -> dbc.Container:

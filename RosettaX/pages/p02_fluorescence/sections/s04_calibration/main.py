@@ -1,10 +1,8 @@
 
-import logging
-from typing import Any
-
 import dash_bootstrap_components as dbc
-
+import logging
 from . import callbacks, layout
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

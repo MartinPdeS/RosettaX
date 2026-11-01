@@ -8,11 +8,9 @@ if __name__ == "__main__":
 
 
 import json
+import pytest
 import sys
 import types
-
-import pytest
-
 from RosettaX.utils.fcs_metadata import FCSMetadata
 
 
@@ -41,10 +39,9 @@ sys.modules.setdefault(
     _DashBootstrapComponentsStub("dash_bootstrap_components"),
 )
 
-from typing_extensions import Self
-
 from RosettaX.workflow.detector import configuration as detector_configuration
 from RosettaX.workflow.peak.core import detectors
+from typing import Self
 
 
 def build_metadata(

@@ -8,7 +8,6 @@ if __name__ == "__main__":
 
 
 import numpy as np
-
 from RosettaX.utils import plottings
 
 

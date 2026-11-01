@@ -1,14 +1,12 @@
 
-import logging
-from typing import Any
-
 import dash
-
+import logging
 from RosettaX.pages.p00_sidebar.ids import SidebarIds
 from RosettaX.pages.p02_fluorescence.state import FluorescencePageState
 from RosettaX.utils import RuntimeConfig
 from RosettaX.workflow.table.fluorescence import FluorescenceReferenceTable
 from RosettaX.workflow.table.validation import register_reference_table_validation
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

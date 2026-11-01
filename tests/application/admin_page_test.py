@@ -7,12 +7,10 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 
-import importlib
-
 import dash
+import importlib
 import pytest
 from flask import Flask
-
 from RosettaX.pages.p22_admin import services
 from RosettaX.utils import usage_metrics
 

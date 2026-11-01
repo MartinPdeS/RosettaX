@@ -8,7 +8,6 @@ if __name__ == "__main__":
 
 
 import pytest
-
 from RosettaX.pages.p03_scattering.sections.s03_model.services import (
     resolve_profile_parameter_state,
 )

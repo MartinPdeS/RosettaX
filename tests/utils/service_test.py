@@ -7,12 +7,10 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 import json
-from pathlib import Path
-
 import pytest
-from typing_extensions import Self
-
+from pathlib import Path
 from RosettaX.utils import service
+from typing import Self
 
 
 class _FakeFCSFile:

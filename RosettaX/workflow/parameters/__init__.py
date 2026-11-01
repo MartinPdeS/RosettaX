@@ -1,7 +1,3 @@
-from RosettaX.workflow.plotting.optical_preview import (
-    build_optical_configuration_preview_figure as build_optical_configuration_preview_figure,
-)
-
 from . import particle_presets, table
 from .model import compute_model_for_rows
 from .table import (
@@ -12,6 +8,9 @@ from .table import (
     remap_table_rows_to_model,
     resolve_mie_model,
     sphere_table_columns,
+)
+from RosettaX.workflow.plotting.optical_preview import (
+    build_optical_configuration_preview_figure,
 )
 
 __all__ = [

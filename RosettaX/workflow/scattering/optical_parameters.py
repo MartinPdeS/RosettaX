@@ -1,13 +1,11 @@
 """Scattering optical parameters."""
 
 import logging
-from typing import Any
-
-from RosettaX.utils import casting
-from RosettaX.workflow import detector
-
 from .calibration_models import OpticalParameters
 from .validation import validate_optical_parameters
+from RosettaX.utils import casting
+from RosettaX.workflow import detector
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

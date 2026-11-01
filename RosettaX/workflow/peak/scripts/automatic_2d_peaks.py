@@ -1,12 +1,6 @@
 
 import logging
-from typing import Any
-
 import numpy as np
-
-from RosettaX.utils.io import column_copy
-from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
-
 from .base import (
     BasePeakProcess,
     PeakProcessResult,
@@ -15,6 +9,9 @@ from .base import (
     resolve_integer_setting,
     resolve_integer_value,
 )
+from RosettaX.utils.io import column_copy
+from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

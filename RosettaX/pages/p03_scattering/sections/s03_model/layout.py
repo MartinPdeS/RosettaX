@@ -1,15 +1,12 @@
 from __future__ import annotations
 
-import logging
-from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any
-
 import dash
 import dash_bootstrap_components as dbc
-
-from RosettaX.utils import styling, ui_forms
-
+import logging
 from . import services
+from collections.abc import Sequence
+from RosettaX.utils import styling, ui_forms
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from .main import Model

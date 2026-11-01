@@ -7,11 +7,8 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 
-from types import SimpleNamespace
-
 import numpy as np
 import pytest
-
 from RosettaX.workflow.apply_calibration.scattering.mie_relation_builder import (
     build_target_mie_relation,
 )
@@ -20,6 +17,7 @@ from RosettaX.workflow.apply_calibration.scattering.models import (
     ScatteringTargetModelParameters,
     SolidSphereTargetModel,
 )
+from types import SimpleNamespace
 
 
 class Test_ApplyCalibrationScatteringMieRelationBuilder:

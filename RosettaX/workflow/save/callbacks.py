@@ -1,14 +1,12 @@
 
-import logging
-from typing import Any
-
 import dash
 import dash_bootstrap_components as dbc
-from dash import html
-
+import logging
 from . import services
 from .adapters import SaveAdapter
 from .models import SaveConfig
+from dash import html
+from typing import Any
 
 
 def save_button_should_be_disabled(

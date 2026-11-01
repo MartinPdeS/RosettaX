@@ -1,14 +1,11 @@
 
-import logging
-from typing import Any
-
 import dash
 import dash_bootstrap_components as dbc
-
+import logging
+from . import services
 from RosettaX.utils import ui_forms
 from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph, Scatter2DGraphIds
-
-from . import services
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

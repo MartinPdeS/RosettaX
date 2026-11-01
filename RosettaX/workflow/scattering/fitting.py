@@ -1,9 +1,7 @@
 """Scattering fitting."""
 
 import logging
-
 import numpy as np
-
 from .calibration_models import ScatteringInstrumentResponse
 from .numerical_arrays import _as_flat_float_array, _validate_same_size
 

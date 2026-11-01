@@ -1,13 +1,11 @@
 
-import logging
-from pathlib import Path
-from typing import Any
-
 import dash_bootstrap_components as dbc
-
+import logging
 from . import services
 from .callbacks import FilePickerCallbacks
 from .layout import FilePickerLayout
+from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

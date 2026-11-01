@@ -3,8 +3,6 @@ import io
 import zipfile
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Any
-
 from RosettaX.utils.reader import FCSFile
 from RosettaX.workflow.upload.services import (
     build_upload_feedback,
@@ -12,6 +10,7 @@ from RosettaX.workflow.upload.services import (
     normalize_multiple_upload_values,
     save_uploaded_batch,
 )
+from typing import Any
 
 DEFAULT_UPLOAD_DIRECTORY = Path.home() / ".rosettax" / "uploads" / "fcs-slicer"
 

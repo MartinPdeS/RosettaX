@@ -7,12 +7,11 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 
+import dash
 import sys
 import types
-from pathlib import Path
-
-import dash
 from dash import html
+from pathlib import Path
 
 
 class _DashBootstrapComponentsSentinel:

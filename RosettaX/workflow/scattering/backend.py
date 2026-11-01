@@ -1,14 +1,13 @@
 
 import logging
+import numpy as np
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import Any
-
-import numpy as np
 from PyMieSim import experiment as PyMieSim
 from PyMieSim.units import ureg
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

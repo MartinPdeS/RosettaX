@@ -1,6 +1,5 @@
 
 import dash_bootstrap_components as dbc
-
 from RosettaX.ui import WorkflowStep, build_workflow_page_header
 from RosettaX.utils import styling
 

@@ -1,17 +1,14 @@
 
-import logging
-from typing import Any
-
 import dash
 import dash_bootstrap_components as dbc
+import logging
+from ...state import SettingsPageState
+from . import schema, services
 from dash import Input, Output, State, callback, html
-
 from RosettaX.utils import styling, ui_forms
 from RosettaX.utils.browser_profiles import BROWSER_PROFILES_STORE_ID
 from RosettaX.utils.runtime_config import RuntimeConfig
-
-from ...state import SettingsPageState
-from . import schema, services
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

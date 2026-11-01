@@ -7,15 +7,13 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 
-import os
-from unittest.mock import Mock
-
 import numpy as np
+import os
 import pandas as pd
 import pytest
-
 from RosettaX.utils import io
 from RosettaX.utils.reader import FCSFile
+from unittest.mock import Mock
 
 
 @pytest.fixture

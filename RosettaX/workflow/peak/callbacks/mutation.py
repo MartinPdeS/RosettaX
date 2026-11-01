@@ -1,19 +1,16 @@
 
+import dash
+import dash_bootstrap_components as dbc
 import inspect
 import logging
 import time
 import uuid
-from types import SimpleNamespace
-from typing import Any
-
-import dash
-import dash_bootstrap_components as dbc
-
-from RosettaX.utils import casting
-from RosettaX.utils.runtime_config import RuntimeConfig
-
 from .. import registry
 from ..core import detectors
+from RosettaX.utils import casting
+from RosettaX.utils.runtime_config import RuntimeConfig
+from types import SimpleNamespace
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

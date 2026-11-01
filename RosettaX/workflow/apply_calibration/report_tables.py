@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import textwrap
-from typing import TYPE_CHECKING, Any
-
 from .report_helpers import (
     format_display_value as _format_display_value,
 )
@@ -17,6 +15,7 @@ from .report_styles import (
     PAGE_BOTTOM,
     PAGE_MARGIN,
 )
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from .report_pdf import _PdfReportComposer

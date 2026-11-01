@@ -7,7 +7,6 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 import pytest
-
 from RosettaX.workflow.table.validation import (
     build_reference_table_feedback,
     validate_reference_table_cells,

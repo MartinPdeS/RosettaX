@@ -1,9 +1,8 @@
-from typing import Any
-
 import dash
 import dash_bootstrap_components as dbc
+from . import services
+from .ids import Ids
 from dash import dcc, html
-
 from RosettaX.ui import (
     WorkflowStep,
     build_workflow_page_header,
@@ -20,9 +19,7 @@ from RosettaX.workflow.file_selection.services import (
 )
 from RosettaX.workflow.plotting import layout as plotting_layout
 from RosettaX.workflow.upload import services as upload_services
-
-from . import services
-from .ids import Ids
+from typing import Any
 
 
 class VisualizationPage:

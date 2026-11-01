@@ -1,13 +1,10 @@
 """Assembly of the scattering optical configuration section."""
 
-import logging
-from typing import Any
-
 import dash_bootstrap_components as dbc
-
-from RosettaX.workflow.scattering import ModelConfiguration
-
+import logging
 from . import callbacks, layout
+from RosettaX.workflow.scattering import ModelConfiguration
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

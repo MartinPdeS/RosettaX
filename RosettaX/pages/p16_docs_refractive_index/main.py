@@ -1,11 +1,9 @@
 
-import json
-from pathlib import Path
-
 import dash
 import dash_bootstrap_components as dbc
+import json
 from dash import dcc, html
-
+from pathlib import Path
 from RosettaX.pages.p07_documentation.components import (
     build_documentation_card,
     build_documentation_container,

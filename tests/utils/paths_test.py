@@ -8,7 +8,6 @@ if __name__ == "__main__":
 
 
 import pytest
-
 from RosettaX.utils.paths import resolve_profile_file_path
 from RosettaX.workflow.apply_calibration.io import resolve_calibration_file_path
 

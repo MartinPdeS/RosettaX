@@ -7,11 +7,9 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 
-from pathlib import Path
-
 import pandas as pd
 import pytest
-
+from pathlib import Path
 from RosettaX.pages.p24_fcs_merge import services
 from RosettaX.utils import directories
 from RosettaX.utils.reader import FCSFile

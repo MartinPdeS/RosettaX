@@ -1,8 +1,6 @@
 """Composition of the apply report PDF from prepared evidence sections."""
 
 import textwrap
-from typing import Any
-
 from . import report_charts, report_tables
 from .report_document import (
     _build_pdf_document,
@@ -47,6 +45,7 @@ from .report_styles import (
     PAGE_WIDTH,
     RUNNING_HEADER_HEIGHT,
 )
+from typing import Any
 
 
 def build_apply_report_pdf_bytes(

@@ -1,14 +1,9 @@
 
-import json
-import logging
-from typing import Any
-
 import dash
 import dash_bootstrap_components as dbc
+import json
+import logging
 import numpy as np
-
-from RosettaX.utils.io import column_copy
-
 from .base import (
     BasePeakProcess,
     PeakProcessResult,
@@ -18,6 +13,8 @@ from .base import (
     resolve_integer_setting,
     resolve_integer_value,
 )
+from RosettaX.utils.io import column_copy
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

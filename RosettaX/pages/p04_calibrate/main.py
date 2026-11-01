@@ -1,15 +1,12 @@
 
-from typing import Self
-
 import dash
 import dash_bootstrap_components as dbc
-
-from RosettaX.utils import styling
-
 from .ids import Ids
 from .sections import callbacks as section_callbacks
 from .sections import layout as section_layout
 from .sections import services as section_services
+from RosettaX.utils import styling
+from typing import Self
 
 
 class ApplyCalibrationPage:

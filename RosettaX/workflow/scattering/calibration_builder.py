@@ -1,10 +1,7 @@
 """Scattering calibration builder."""
 
 import logging
-from typing import Any
-
 import numpy as np
-
 from . import mie_relation
 from .calibration_models import (
     OpticalParameters,
@@ -20,6 +17,7 @@ from .standard_rows import (
     parse_sphere_rows_for_fit,
     write_expected_coupling_into_table,
 )
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

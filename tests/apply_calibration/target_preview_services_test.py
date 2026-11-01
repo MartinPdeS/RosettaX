@@ -7,10 +7,8 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 
-from dataclasses import replace
-
 import pytest
-
+from dataclasses import replace
 from RosettaX.pages.p04_calibrate.sections.s02_calibration_picker import services
 from RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.models import (
     TargetMiePreviewControls,

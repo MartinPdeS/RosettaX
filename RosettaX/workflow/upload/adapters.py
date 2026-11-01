@@ -1,10 +1,9 @@
 
-from typing import Any, Protocol
-
 from RosettaX.workflow.page_session.fluorescence import (
     FluorescencePageState,
     build_empty_peak_lines_payload,
 )
+from typing import Any, Protocol
 
 
 class UploadAdapter(Protocol):

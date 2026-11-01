@@ -1,12 +1,10 @@
 import logging
+import numpy as np
 from collections import OrderedDict
 from pathlib import Path
+from RosettaX.utils.reader import FCSFile
 from threading import RLock
 from typing import Any
-
-import numpy as np
-
-from RosettaX.utils.reader import FCSFile
 
 logger = logging.getLogger(__name__)
 

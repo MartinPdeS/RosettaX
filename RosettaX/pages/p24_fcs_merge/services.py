@@ -1,12 +1,10 @@
 
+import pandas as pd
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Any
-
-import pandas as pd
-
 from RosettaX.utils.reader import FCSFile
 from RosettaX.workflow.upload import services as upload_services
+from typing import Any
 
 DEFAULT_UPLOAD_DIRECTORY = Path.home() / ".rosettax" / "uploads" / "fcs-merge"
 

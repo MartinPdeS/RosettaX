@@ -7,11 +7,9 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 
-from unittest.mock import Mock
-
 import numpy as np
-
 from RosettaX.workflow.detector import mesh
+from unittest.mock import Mock
 
 
 def test_mesh_reuses_geometry_and_invalidates_on_each_optical_parameter(monkeypatch):

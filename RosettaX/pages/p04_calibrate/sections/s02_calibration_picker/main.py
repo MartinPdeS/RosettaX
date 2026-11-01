@@ -1,11 +1,9 @@
 
-import logging
-from typing import Any
-
 import dash_bootstrap_components as dbc
-
+import logging
 from .callbacks import CalibrationPickerCallbacks
 from .layout import CalibrationPickerLayout
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

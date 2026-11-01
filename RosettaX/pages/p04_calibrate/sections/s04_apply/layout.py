@@ -1,11 +1,9 @@
 
-import logging
-from typing import Any
-
 import dash
 import dash_bootstrap_components as dbc
-
+import logging
 from RosettaX.utils import styling, ui_forms
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

@@ -1,13 +1,11 @@
 import copy
 import json
 import logging
+import numpy as np
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, ClassVar
-
-import numpy as np
-
 from RosettaX.utils import directories
+from typing import Any, ClassVar
 
 logger = logging.getLogger(__name__)
 

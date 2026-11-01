@@ -1,11 +1,8 @@
 
 import logging
-from dataclasses import dataclass
-from typing import Any
-
 import numpy as np
 import plotly.graph_objs as go
-
+from dataclasses import dataclass
 from RosettaX.utils import styling
 from RosettaX.utils.io import load_signal
 from RosettaX.utils.runtime_config import RuntimeConfig
@@ -14,6 +11,7 @@ from RosettaX.workflow.plotting.transforms import (
     build_histogram_arrays,
     finite_plot_values,
 )
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

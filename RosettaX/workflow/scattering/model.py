@@ -1,13 +1,10 @@
 
 import json
+import plotly.graph_objs as go
 from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
-
-import plotly.graph_objs as go
-
 from RosettaX.utils import RuntimeConfig
 from RosettaX.workflow import detector, parameters
 from RosettaX.workflow.parameters.refractive_index import (
@@ -16,6 +13,7 @@ from RosettaX.workflow.parameters.refractive_index import (
     resolve_refractive_index_value,
 )
 from RosettaX.workflow.table import services as table_services
+from typing import Any
 
 CUSTOM_SCATTERER_PRESET_NAME = "Custom"
 NO_SCATTERER_PRESET_NAME = ""

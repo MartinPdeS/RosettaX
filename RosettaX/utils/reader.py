@@ -1,17 +1,15 @@
 import logging
 import mmap
+import numpy as np
 import os
+import pandas as pd
 import re
 import weakref
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Optional, Self
-
-import numpy as np
-import pandas as pd
-
 from RosettaX.utils.fcs_builder import FCSBuilder
 from RosettaX.utils.fcs_metadata import FCSMetadata
+from typing import Any, Optional, Self
 
 logger = logging.getLogger(__name__)
 

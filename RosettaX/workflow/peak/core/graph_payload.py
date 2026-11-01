@@ -3,13 +3,11 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
-
 import numpy as np
-
 from .graph_interaction import (
     unique_finite_preserving_order,
 )
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .graphing import PeakWorkflowGraphBuilder

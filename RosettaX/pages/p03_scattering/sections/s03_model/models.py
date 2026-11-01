@@ -1,9 +1,8 @@
 """Named state exchanged by optical configuration services and Dash callbacks."""
 
 from dataclasses import asdict, astuple, dataclass
-from typing import Any
-
 from RosettaX.workflow.scattering.model import ScatteringModelDefaults
+from typing import Any
 
 
 @dataclass(frozen=True)

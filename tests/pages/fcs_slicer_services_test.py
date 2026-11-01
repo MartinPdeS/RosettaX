@@ -9,11 +9,9 @@ if __name__ == "__main__":
 
 import base64
 import io
+import pytest
 import zipfile
 from pathlib import Path
-
-import pytest
-
 from RosettaX.pages.p21_fcs_slicer import services
 from RosettaX.utils import directories
 from RosettaX.utils.reader import FCSFile

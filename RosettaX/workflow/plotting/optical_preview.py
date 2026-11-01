@@ -3,12 +3,9 @@
 import hashlib
 import json
 import logging
-from functools import lru_cache
-from typing import Any
-
 import numpy as np
 import plotly.graph_objects as go
-
+from functools import lru_cache
 from RosettaX.workflow.constants import (
     DEFAULT_SOURCE_POLARIZATION_ANGLE_DEGREE,
 )
@@ -18,6 +15,7 @@ from RosettaX.workflow.detector.mesh import (
     build_detector_mesh_coordinates,
     normalize_coordinate_array_to_unit_sphere,
 )
+from typing import Any
 
 logger = logging.getLogger(__name__)
 OPTICAL_PREVIEW_UIREVISION = "optical-configuration-preview-v2"

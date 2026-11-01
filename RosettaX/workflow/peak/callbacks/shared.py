@@ -1,17 +1,14 @@
 
-from typing import Any
-
 import dash
-
-from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.workflow.page_session.ids import PROFILE_LOAD_EVENT_STORE_ID
-from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
-
 from .. import registry
 from .detector_dropdowns import register_detector_dropdown_callbacks
 from .graph import register_graph_callbacks
 from .mutation import register_mutation_callbacks
 from .visibility import register_visibility_callbacks
+from RosettaX.utils.runtime_config import RuntimeConfig
+from RosettaX.workflow.page_session.ids import PROFILE_LOAD_EVENT_STORE_ID
+from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
+from typing import Any
 
 
 class PeakWorkflowCallbacks:

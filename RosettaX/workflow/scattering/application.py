@@ -1,12 +1,10 @@
 """Scattering application."""
 
 import logging
-from typing import Any
-
 import numpy as np
-
 from .calibration_models import ScatteringApplicationResult, ScatteringCalibration
 from .mie_relation import MieRelation
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

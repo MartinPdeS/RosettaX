@@ -1,10 +1,9 @@
 
 import logging
 from pathlib import Path
-from typing import Any
-
 from RosettaX.utils.fcs_metadata import FCSMetadata
 from RosettaX.utils.reader import FCSFile
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

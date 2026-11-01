@@ -1,12 +1,10 @@
 
-from typing import Self
-
 import dash
-
 from .ids import Ids
 from .sections import callbacks as section_callbacks
 from .sections import layout as section_layout
 from .sections import services as section_services
+from typing import Self
 
 
 class FluorescencePage:

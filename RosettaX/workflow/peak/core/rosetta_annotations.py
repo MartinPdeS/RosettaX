@@ -1,8 +1,7 @@
 
-from typing import Any
-
 import numpy as np
 import plotly.graph_objs as go
+from typing import Any
 
 ROSETTA_SCATTER_LABEL_AXIS_POSITION = 0.90
 

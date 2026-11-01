@@ -1,11 +1,10 @@
 
 import logging
 from dataclasses import asdict, dataclass, field
-from typing import Any
-
 from RosettaX.utils import directories
 from RosettaX.utils.paths import normalize_profile_filename
 from RosettaX.utils.runtime_config import RuntimeConfig
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

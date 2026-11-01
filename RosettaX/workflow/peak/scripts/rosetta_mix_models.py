@@ -1,16 +1,14 @@
 """Settings and structured results for the Rosetta bead workflow."""
 
-from dataclasses import dataclass
-from typing import Any
-
 import numpy as np
-
 from .base import resolve_edge_artifact_filter_enabled
 from .rosetta_mix_algorithms import (
     resolve_enabled_setting,
     resolve_float,
     resolve_integer,
 )
+from dataclasses import dataclass
+from typing import Any
 
 DEFAULT_BASELINE_SIGMA_MULTIPLIER = 3.0
 

@@ -1,11 +1,6 @@
 
 import logging
-from typing import Any
-
 import numpy as np
-
-from RosettaX.workflow import scattering
-
 from .mie_relation_builder import build_target_mie_relation
 from .models import (
     ScatteringApplyResult,
@@ -16,6 +11,8 @@ from .monotonic import (
     coupling_to_diameter_with_linear_extrapolation,
     resolve_monotonic_target_mie_relation,
 )
+from RosettaX.workflow import scattering
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

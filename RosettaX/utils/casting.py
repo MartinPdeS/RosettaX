@@ -1,7 +1,6 @@
+import numpy as np
 import re
 from typing import Any
-
-import numpy as np
 
 
 def as_float(value: Any) -> float | None:

@@ -1,12 +1,10 @@
 
-import logging
-from dataclasses import dataclass
-from typing import Any
-
 import dash
+import logging
 import numpy as np
-
+from dataclasses import dataclass
 from RosettaX.utils.runtime_config import RuntimeConfig
+from typing import Any
 
 
 @dataclass

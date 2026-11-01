@@ -1,14 +1,11 @@
 
-import logging
-from typing import Any
-
 import dash
+import logging
 import plotly.graph_objs as go
-
+from . import services
 from RosettaX.pages.p02_fluorescence.state import FluorescencePageState
 from RosettaX.utils import RuntimeConfig, plottings, styling
-
-from . import services
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

@@ -6,10 +6,9 @@ if __name__ == "__main__":
 
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
+import pytest
 import sys
 import types
-
-import pytest
 
 
 class _DashBootstrapComponentsSentinel:

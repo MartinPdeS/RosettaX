@@ -8,9 +8,8 @@ if __name__ == "__main__":
 
 
 import importlib.util
-from pathlib import Path
-
 import pytest
+from pathlib import Path
 
 specification = importlib.util.spec_from_file_location(
     "profile_navigation",

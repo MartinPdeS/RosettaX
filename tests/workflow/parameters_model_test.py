@@ -8,13 +8,9 @@ if __name__ == "__main__":
 
 
 import logging
-from pathlib import Path
-from types import SimpleNamespace
-from unittest.mock import Mock, patch
-
 import numpy as np
 import pytest
-
+from pathlib import Path
 from RosettaX.workflow.detector import (
     DetectorPresetLoader,
     resolve_detector_angular_weights,
@@ -36,6 +32,8 @@ from RosettaX.workflow.parameters.model import (
     compute_model_for_rows,
 )
 from RosettaX.workflow.scattering.model import ModelConfiguration
+from types import SimpleNamespace
+from unittest.mock import Mock, patch
 
 
 class Test_ModelConstants:

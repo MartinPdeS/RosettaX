@@ -1,18 +1,15 @@
 """Scattering calibration models."""
 
 import logging
-from dataclasses import asdict, dataclass
-from typing import Any
-
 import numpy as np
-
-from RosettaX.workflow.constants import (
-    DEFAULT_SOURCE_POLARIZATION_ANGLE_DEGREE as DEFAULT_SOURCE_POLARIZATION_ANGLE_DEGREE,
-)
-
 from . import mie_relation
 from .mie_relation import MieRelation
 from .numerical_arrays import _log_array_summary
+from dataclasses import asdict, dataclass
+from RosettaX.workflow.constants import (
+    DEFAULT_SOURCE_POLARIZATION_ANGLE_DEGREE,
+)
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

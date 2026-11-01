@@ -6,13 +6,11 @@ if __name__ == "__main__":
 
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
-import sys
-import types
-
 import numpy as np
 import plotly.graph_objs as go
 import pytest
-
+import sys
+import types
 from RosettaX.workflow.peak.core import graph_histogram, graph_overlays, graph_scatter
 
 

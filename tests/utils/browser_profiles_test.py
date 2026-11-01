@@ -7,7 +7,6 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 import pytest
-
 from RosettaX.utils import browser_profiles
 from RosettaX.utils.browser_profiles import (
     DEFAULT_PROFILE_FILENAME,

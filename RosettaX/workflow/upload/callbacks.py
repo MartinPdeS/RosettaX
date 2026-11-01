@@ -1,13 +1,11 @@
 
-import logging
-from typing import Any
-
 import dash
+import logging
 from dash import Input, Output, State, callback
-
 from RosettaX.workflow.upload import services
 from RosettaX.workflow.upload.adapters import UploadAdapter
 from RosettaX.workflow.upload.models import UploadConfig
+from typing import Any
 
 
 def register_upload_callbacks(

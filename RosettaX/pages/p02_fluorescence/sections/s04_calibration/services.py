@@ -1,16 +1,14 @@
 
-import logging
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Any
-
 import dash
+import logging
 import numpy as np
 import plotly.graph_objs as go
-
+from dataclasses import dataclass
+from pathlib import Path
 from RosettaX.utils import casting
 from RosettaX.utils.plottings import _make_info_figure
 from RosettaX.utils.reader import FCSFile
+from typing import Any
 
 
 @dataclass

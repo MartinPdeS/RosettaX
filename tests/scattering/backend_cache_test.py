@@ -7,11 +7,9 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 
-from unittest.mock import patch
-
 import numpy as np
-
 from RosettaX.pages.p03_scattering.backend import BackEnd
+from unittest.mock import patch
 
 
 class Test_ScatteringBackendCache:

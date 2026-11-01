@@ -7,16 +7,14 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 
-import importlib
-import json
-from typing import Any
-
 import dash
 import dash_bootstrap_components as dbc
+import importlib
+import json
 import pytest
-
 from RosettaX.application.callbacks import register_application_callbacks
 from RosettaX.workflow import calibration_cards
+from typing import Any
 
 
 def _collect_pattern_ids(component: Any) -> list[dict[str, str]]:

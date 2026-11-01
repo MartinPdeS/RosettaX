@@ -8,9 +8,7 @@ if __name__ == "__main__":
 
 
 import base64
-
 import pytest
-
 from RosettaX.workflow.upload.services import (
     decode_dash_upload_contents,
     parse_allowed_upload_extensions,

@@ -3,10 +3,9 @@ import re
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
+from RosettaX.utils.upload_limits import format_upload_size, get_max_upload_bytes
 from typing import Any, BinaryIO
 from uuid import UUID, uuid4
-
-from RosettaX.utils.upload_limits import format_upload_size, get_max_upload_bytes
 
 STREAMED_UPLOAD_TOKEN_PREFIX = "rosettax-upload://"
 STREAMED_UPLOAD_ERROR_PREFIX = "rosettax-upload-error://"

@@ -9,9 +9,7 @@ if __name__ == "__main__":
 
 import base64
 import json
-
 import pytest
-
 from RosettaX.workflow.cross_calibration import services
 
 

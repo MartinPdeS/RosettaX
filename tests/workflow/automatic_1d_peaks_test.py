@@ -8,7 +8,6 @@ if __name__ == "__main__":
 
 
 import numpy as np
-
 from RosettaX.workflow.peak.scripts.automatic_1d_peaks import (
     Automatic1DPeaksProcess,
 )

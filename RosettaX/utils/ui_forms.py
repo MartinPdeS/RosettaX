@@ -1,11 +1,9 @@
 
-from typing import Any
-
 import dash_bootstrap_components as dbc
 from dash import dcc, html
-
 from RosettaX.utils import styling
 from RosettaX.utils.upload_limits import format_upload_size, get_max_upload_bytes
+from typing import Any
 
 
 def _token_px_to_int(token_value: str, fallback: int) -> int:

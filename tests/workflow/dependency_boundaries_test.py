@@ -7,10 +7,9 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 
+import pytest
 import subprocess
 import sys
-
-import pytest
 
 
 @pytest.mark.parametrize(

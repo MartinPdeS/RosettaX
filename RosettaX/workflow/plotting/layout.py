@@ -1,8 +1,7 @@
 
-from typing import Any
-
 import dash_bootstrap_components as dbc
 from dash import html
+from typing import Any
 
 PLOT_CONTROL_LABEL_STYLE = {
     "marginBottom": "4px",

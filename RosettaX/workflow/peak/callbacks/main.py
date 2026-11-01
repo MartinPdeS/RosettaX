@@ -1,9 +1,8 @@
 
 import logging
-from typing import Any
-
 from ..models import PeakConfig
 from .shared import PeakWorkflowCallbacks
+from typing import Any
 
 
 def register_peak_callbacks(

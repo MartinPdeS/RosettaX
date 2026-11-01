@@ -1,9 +1,8 @@
 
+import numpy as np
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from typing import Any
-
-import numpy as np
 
 
 @dataclass(frozen=True)

@@ -1,12 +1,13 @@
 
+import dash
 import logging
 import sys
 import webbrowser
+from .callbacks import register_application_callbacks
+from .layout import build_application_layout
+from .pages import register_pages
+from .routes import register_server_routes
 from pathlib import Path
-from threading import Timer
-
-import dash
-
 from RosettaX.pages.p00_sidebar.main import register_sidebar_callbacks
 from RosettaX.utils.parser import _parse_args
 from RosettaX.utils.streamed_uploads import DEFAULT_STREAMED_UPLOAD_DIRECTORY
@@ -15,11 +16,7 @@ from RosettaX.utils.upload_limits import (
     format_upload_size,
     get_max_upload_bytes,
 )
-
-from .callbacks import register_application_callbacks
-from .layout import build_application_layout
-from .pages import register_pages
-from .routes import register_server_routes
+from threading import Timer
 
 logger = logging.getLogger(__name__)
 

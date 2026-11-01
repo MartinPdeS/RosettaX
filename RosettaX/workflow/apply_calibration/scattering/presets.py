@@ -3,11 +3,10 @@ import json
 from dataclasses import asdict, dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
-
 from RosettaX.workflow.parameters.refractive_index import (
     resolve_refractive_index_source_value,
 )
+from typing import Any
 
 CUSTOM_PRESET_NAME = "Custom"
 EXTRACELLULAR_VESICLES_PRESET_NAME = "Extracellular Vesicles"

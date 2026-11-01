@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-import logging
-from typing import TYPE_CHECKING, Any
-
 import dash
-
-from RosettaX.utils import casting
-
+import logging
 from . import detector_callbacks, preview_callbacks, profile_callbacks, services
+from RosettaX.utils import casting
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from .main import Model

@@ -7,14 +7,12 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 
-from types import SimpleNamespace
-
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-
 from RosettaX.pages.p04_calibrate.sections.s03_file_picker import services
 from RosettaX.utils.plottings import HistogramResult
+from types import SimpleNamespace
 
 
 class Test_FilePickerPreview:

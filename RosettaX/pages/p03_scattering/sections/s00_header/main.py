@@ -1,18 +1,15 @@
 
-import logging
-from typing import Any
-
 import dash
 import dash_bootstrap_components as dbc
-
+import logging
+from . import callbacks
 from RosettaX.ui import (
     WorkflowStep,
     build_workflow_page_header,
     build_workflow_step_cards,
 )
 from RosettaX.utils import styling
-
-from . import callbacks
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

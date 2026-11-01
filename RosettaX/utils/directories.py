@@ -3,10 +3,9 @@
 import logging
 import os
 import platform
+import RosettaX
 import subprocess
 from pathlib import Path
-
-import RosettaX
 
 logger = logging.getLogger(__name__)
 

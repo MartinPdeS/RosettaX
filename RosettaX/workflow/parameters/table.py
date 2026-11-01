@@ -1,10 +1,8 @@
 
-from typing import Any
-
 import numpy as np
 from dash.dash_table.Format import Format, Scheme
-
 from RosettaX.workflow.table import services as table_services
+from typing import Any
 
 MIE_MODEL_SOLID_SPHERE = "Solid Sphere"
 MIE_MODEL_CORE_SHELL_SPHERE = "Core/Shell Sphere"

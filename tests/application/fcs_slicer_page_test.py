@@ -7,11 +7,9 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 
-import importlib
-
 import dash
 import dash_bootstrap_components as dbc
-
+import importlib
 from RosettaX.utils.upload_limits import get_max_upload_bytes
 from RosettaX.workflow.calibration_cards import COLLAPSE_ID_TYPE
 

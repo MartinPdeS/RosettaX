@@ -1,17 +1,15 @@
 """Apply report payloads, request signatures, and download filenames."""
 
 import re
-from datetime import datetime
-from pathlib import Path
-from typing import Any
-
-from RosettaX.utils.service import build_reproducibility_metadata
-
 from .services import (
     ApplyCalibrationFilesResult,
     ApplyCalibrationRequest,
     resolve_source_channel,
 )
+from datetime import datetime
+from pathlib import Path
+from RosettaX.utils.service import build_reproducibility_metadata
+from typing import Any
 
 
 def build_apply_report_payload(

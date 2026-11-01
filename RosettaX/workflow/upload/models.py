@@ -2,10 +2,9 @@
 from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
-
 from RosettaX.workflow.file_selection.models import UploadedFileBatch
 from RosettaX.workflow.page_session import FeedbackState
+from typing import Any
 
 
 @dataclass(frozen=True)

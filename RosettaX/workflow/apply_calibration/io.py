@@ -4,11 +4,10 @@ import json
 import zipfile
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any
-
 from RosettaX.utils.paths import resolve_selected_calibration_file_path
 from RosettaX.utils.reader import FCSFile
 from RosettaX.workflow.file_selection import UploadedFileBatch
+from typing import Any
 
 
 def resolve_first_uploaded_fcs_path(

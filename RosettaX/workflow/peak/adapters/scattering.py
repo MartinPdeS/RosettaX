@@ -1,16 +1,13 @@
 
-import logging
-from typing import Any
-
 import dash
+import logging
 import numpy as np
-
+from .base import BasePeakWorkflowAdapter
 from RosettaX.workflow.parameters.refractive_index import (
     format_refractive_index_display,
     resolve_refractive_index_source_value,
 )
-
-from .base import BasePeakWorkflowAdapter
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import math
-from typing import TYPE_CHECKING, Any
-
 from .report_document import (
     _escape_pdf_text,
     _measure_helvetica_text,
@@ -26,6 +24,7 @@ from .report_styles import (
     CONTENT_WIDTH,
     PAGE_MARGIN,
 )
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from .report_pdf import _PdfReportComposer

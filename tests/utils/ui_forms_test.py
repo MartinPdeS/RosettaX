@@ -9,7 +9,6 @@ if __name__ == "__main__":
 
 import dash_bootstrap_components as dbc
 from dash import dcc
-
 from RosettaX.utils import ui_forms
 from RosettaX.utils.upload_limits import format_upload_size, get_max_upload_bytes
 

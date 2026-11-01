@@ -1,8 +1,7 @@
 
+import dash
 from dataclasses import dataclass
 from typing import Any
-
-import dash
 
 
 @dataclass(frozen=True)

@@ -9,7 +9,6 @@ if __name__ == "__main__":
 
 import json
 from io import BytesIO
-
 from RosettaX.pages.p04_calibrate.sections.s02_calibration_picker import (
     services as calibration_picker_services,
 )

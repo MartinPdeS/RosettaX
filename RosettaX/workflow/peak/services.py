@@ -1,12 +1,9 @@
 
-import logging
-from typing import Any
-
 import dash
-
-from RosettaX.utils import service
-
+import logging
 from .models import SaveConfig, SaveInputs, SaveResult
+from RosettaX.utils import service
+from typing import Any
 
 
 def validate_save_inputs(

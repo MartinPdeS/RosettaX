@@ -5,9 +5,8 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any
-
 from RosettaX.utils.reader import FCSFile
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

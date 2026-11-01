@@ -1,8 +1,7 @@
 """File-selection behavior shared by multi-file workflows."""
 
-from typing import Any
-
 from .models import UploadedFile, UploadedFileBatch
+from typing import Any
 
 
 def resolve_batch(value: UploadedFileBatch | dict[str, Any] | list[Any] | None) -> UploadedFileBatch:

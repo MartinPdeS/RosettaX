@@ -8,11 +8,8 @@ if __name__ == "__main__":
 
 
 import base64
-from pathlib import Path
-from unittest.mock import Mock
-
 import pytest
-
+from pathlib import Path
 from RosettaX.workflow.upload.models import UploadConfig
 from RosettaX.workflow.upload.services import (
     DEFAULT_UPLOAD_DIRECTORY,
@@ -24,6 +21,7 @@ from RosettaX.workflow.upload.services import (
     resolve_upload_directory,
     sanitize_filename,
 )
+from unittest.mock import Mock
 
 
 def test_build_upload_feedback_includes_file_summary_and_fcs_version() -> None:

@@ -1,9 +1,7 @@
 
 import dash
-
-from RosettaX.ui.workflow_header import build_workflow_step_cards
-
 from .layout import _build_steps
+from RosettaX.ui.workflow_header import build_workflow_step_cards
 
 
 def register_callbacks(section) -> None:

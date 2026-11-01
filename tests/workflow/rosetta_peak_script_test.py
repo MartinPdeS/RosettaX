@@ -7,11 +7,9 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 
-from types import SimpleNamespace
-
 import numpy as np
-
 from RosettaX.workflow.peak.scripts import rosetta_mix
+from types import SimpleNamespace
 
 
 def _build_synthetic_dataset_with_two_markers() -> tuple[np.ndarray, np.ndarray]:

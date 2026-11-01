@@ -1,15 +1,12 @@
 from __future__ import annotations
 
-import logging
-from dataclasses import replace
-from typing import TYPE_CHECKING, Any
-
 import dash
-
-from RosettaX.utils import RuntimeConfig, casting
-
+import logging
 from . import services
 from .models import DetectorGeometryValues
+from dataclasses import replace
+from RosettaX.utils import RuntimeConfig, casting
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from .main import Model

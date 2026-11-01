@@ -1,16 +1,13 @@
 
 import logging
-from typing import Any
-
 import numpy as np
-
-from RosettaX.workflow import scattering
-
 from .models import (
     MonotonicDiameterInterval,
     MonotonicRelationResolution,
     ScatteringTargetModelParameters,
 )
+from RosettaX.workflow import scattering
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

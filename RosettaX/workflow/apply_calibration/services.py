@@ -1,9 +1,5 @@
 
-from dataclasses import dataclass, field
-from typing import Any
-
 import numpy as np
-
 from . import io
 from .fluorescence import apply_legacy_calibration_to_series
 from .scattering import (
@@ -12,6 +8,8 @@ from .scattering import (
     build_scattering_output_columns,
     calibration_is_scattering_v2,
 )
+from dataclasses import dataclass, field
+from typing import Any
 
 
 @dataclass(frozen=True)

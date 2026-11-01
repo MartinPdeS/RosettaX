@@ -3,17 +3,14 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
-
 import numpy as np
 import plotly.graph_objs as go
-
-from RosettaX.utils import casting, plottings
-
 from .graph_interaction import (
     axis_scale_selection_is_log,
     scale_selection_is_log,
 )
+from RosettaX.utils import casting, plottings
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from .graphing import PeakWorkflowGraphBuilder

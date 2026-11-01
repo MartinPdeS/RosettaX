@@ -1,14 +1,13 @@
 
 import logging
 from pathlib import Path
-from typing import Any
-from urllib.parse import quote
-
 from RosettaX.utils import directories
 from RosettaX.utils.browser_profiles import BrowserProfileLibrary, build_profile_label
 from RosettaX.utils.paths import (
     normalize_profile_filename as normalize_safe_profile_filename,
 )
+from typing import Any
+from urllib.parse import quote
 
 logger = logging.getLogger(__name__)
 

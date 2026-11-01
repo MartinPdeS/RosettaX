@@ -1,7 +1,6 @@
 
-from typing import Any
-
 import numpy as np
+from typing import Any
 
 
 def apply_legacy_calibration_to_series(

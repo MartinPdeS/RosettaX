@@ -1,7 +1,6 @@
 import dash
 import dash_bootstrap_components as dbc
 from dash import html
-
 from RosettaX.utils import styling, ui_forms
 
 SAMPLE_FILES_BASE_URL = (

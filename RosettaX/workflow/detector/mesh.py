@@ -1,9 +1,8 @@
 """Detector mesh construction, orientation, and geometric filtering."""
 
 import logging
-from functools import lru_cache
-
 import numpy as np
+from functools import lru_cache
 
 logger = logging.getLogger(__name__)
 

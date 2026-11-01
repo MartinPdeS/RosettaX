@@ -1,12 +1,10 @@
 """Cell-level feedback for editable calibration reference values."""
 
-from dataclasses import dataclass
-from typing import Any
-
 import dash
-
+from dataclasses import dataclass
 from RosettaX.utils import casting, styling
 from RosettaX.workflow.table.services import value_is_not_empty
+from typing import Any
 
 
 @dataclass(frozen=True)

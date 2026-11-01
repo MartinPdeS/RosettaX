@@ -1,10 +1,8 @@
 
-from dataclasses import dataclass
-from typing import Any
-
 import numpy as np
-
+from dataclasses import dataclass
 from RosettaX.workflow.scattering import MieRelation
+from typing import Any
 
 SOLID_SPHERE_MODEL_NAME = "Solid Sphere"
 CORE_SHELL_SPHERE_MODEL_NAME = "Core/Shell Sphere"

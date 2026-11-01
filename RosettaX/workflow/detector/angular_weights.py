@@ -2,11 +2,9 @@
 
 import json
 import logging
-from typing import Any
-
 import numpy as np
-
 from . import configuration as _configuration
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

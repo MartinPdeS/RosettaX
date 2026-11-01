@@ -7,14 +7,13 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 
-from types import SimpleNamespace
-
 from RosettaX.pages.p02_fluorescence.sections.s00_header import (
     layout as fluorescence_header_layout,
 )
 from RosettaX.pages.p03_scattering.sections.s00_header import Header as ScatteringHeader
 from RosettaX.ui import WorkflowStep, build_workflow_progress_content
 from RosettaX.utils import styling
+from types import SimpleNamespace
 
 
 class Test_WorkflowPageStyling:

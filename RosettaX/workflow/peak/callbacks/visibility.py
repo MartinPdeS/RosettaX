@@ -1,9 +1,7 @@
 
-from typing import Any
-
 import dash
-
 from .. import registry
+from typing import Any
 
 
 def register_visibility_callbacks(

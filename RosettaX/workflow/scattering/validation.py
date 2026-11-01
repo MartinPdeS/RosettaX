@@ -1,7 +1,6 @@
 
-from typing import Any
-
 import numpy as np
+from typing import Any
 
 
 def validate_optical_parameters(optical_parameters: Any) -> None:

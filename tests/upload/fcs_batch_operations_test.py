@@ -6,10 +6,8 @@ if __name__ == "__main__":
 
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
-from pathlib import Path
-
 import pytest
-
+from pathlib import Path
 from RosettaX.workflow.upload import services
 from RosettaX.workflow.upload.models import FCSBatchOperationResult
 

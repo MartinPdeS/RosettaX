@@ -1,16 +1,13 @@
 
-import logging
-from typing import Any
-
 import dash
 import dash_bootstrap_components as dbc
-from dash import Input, Output, dash_table, dcc, html
-from flask import has_request_context, request
-
-from RosettaX.utils import styling, ui_forms
-
+import logging
 from . import services
 from .ids import Ids
+from dash import Input, Output, dash_table, dcc, html
+from flask import has_request_context, request
+from RosettaX.utils import styling, ui_forms
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

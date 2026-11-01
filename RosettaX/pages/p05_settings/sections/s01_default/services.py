@@ -1,8 +1,6 @@
 
-from typing import Any
-
 import numpy as np
-
+from . import schema
 from RosettaX.utils import casting
 from RosettaX.utils.browser_profiles import BrowserProfileLibrary
 from RosettaX.utils.runtime_config import RuntimeConfig
@@ -11,8 +9,7 @@ from RosettaX.workflow.table.fluorescence import (
     FluorescenceReferenceTable,
     get_fluorescence_reference_preset,
 )
-
-from . import schema
+from typing import Any
 
 
 def _json_safe_scalar(value: Any) -> Any:

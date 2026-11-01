@@ -8,10 +8,8 @@ if __name__ == "__main__":
 
 
 import json
-from pathlib import Path
-
 import pytest
-
+from pathlib import Path
 from RosettaX.utils import directories
 from RosettaX.utils.runtime_config import RuntimeConfig, RuntimeConfigValidationError
 

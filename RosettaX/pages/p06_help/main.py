@@ -2,7 +2,6 @@
 import dash
 import dash_bootstrap_components as dbc
 from dash import html
-
 from RosettaX.utils import ui_forms
 
 

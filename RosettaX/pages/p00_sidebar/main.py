@@ -1,11 +1,9 @@
-import logging
-from datetime import UTC, datetime
-from typing import Any
-
 import dash
 import dash_bootstrap_components as dbc
+import logging
+from .ids import SidebarIds
 from dash import dcc, html
-
+from datetime import UTC, datetime
 from RosettaX.utils import styling
 from RosettaX.utils.browser_profiles import (
     BROWSER_PROFILES_STORE_ID,
@@ -14,8 +12,7 @@ from RosettaX.utils.browser_profiles import (
     build_profile_label,
 )
 from RosettaX.workflow.sidebar import services
-
-from .ids import SidebarIds
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -583,6 +580,7 @@ class Sidebar:
                                 self._nav_link(
                                     "Sample files", "/sample-files", tier="child"
                                 ),
+                                self._nav_link("Tutorials", "/tutorials", tier="child"),
                                 self._nav_link(
                                     "Documentation", "/documentation", tier="child"
                                 ),

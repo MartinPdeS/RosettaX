@@ -1,14 +1,11 @@
 
 import base64
 import logging
+import numpy as np
+import plotly.graph_objects as go
 import re
 from datetime import datetime
 from pathlib import Path
-from typing import Any
-
-import numpy as np
-import plotly.graph_objects as go
-
 from RosettaX.pages.p04_calibrate.sections.s02_calibration_picker import (
     services as calibration_picker_services,
 )
@@ -26,6 +23,7 @@ from RosettaX.workflow.apply_calibration.fluorescence import (
 )
 from RosettaX.workflow.apply_calibration.io import resolve_uploaded_fcs_paths
 from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

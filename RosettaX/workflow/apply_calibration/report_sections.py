@@ -1,8 +1,6 @@
 """Calibration evidence, reference tables, and chart specifications for reports."""
 
 import math
-from typing import Any
-
 from .report_helpers import (
     build_saved_payload_section_specs as _build_saved_payload_section_specs_from_payload,
 )
@@ -18,6 +16,7 @@ from .report_payload import (
     _normalize_calibration_summaries,
     _normalize_string_list,
 )
+from typing import Any
 
 
 def _build_cover_summary_items(

@@ -1,12 +1,10 @@
 
+import dash
 import logging
 from pathlib import Path
-from typing import Any
-
-import dash
-
 from RosettaX.utils import service
 from RosettaX.workflow.save.models import SaveConfig, SaveInputs, SaveResult
+from typing import Any
 
 
 def build_json_download_filename(name: Any, *, default: str = "calibration") -> str:

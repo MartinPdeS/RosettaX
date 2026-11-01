@@ -1,10 +1,9 @@
 """Peak fitting, classification, and diagnostics for Rosetta bead signals."""
 
 import logging
+import numpy as np
 from collections.abc import Callable
 from typing import Any
-
-import numpy as np
 
 logger = logging.getLogger(__name__)
 

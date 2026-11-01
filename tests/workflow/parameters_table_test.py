@@ -7,10 +7,7 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 
-from unittest.mock import patch
-
 import pytest
-
 from RosettaX.workflow.parameters.table import (
     COLUMN_CORE_DIAMETER_NM,
     COLUMN_EXPECTED_COUPLING,
@@ -27,6 +24,7 @@ from RosettaX.workflow.parameters.table import (
     resolve_mie_model,
     sphere_table_columns,
 )
+from unittest.mock import patch
 
 
 class Test_ModelConstants:

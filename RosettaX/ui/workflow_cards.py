@@ -1,11 +1,9 @@
 """Shared workflow section-card composition."""
 
-from typing import Any
-
 import dash_bootstrap_components as dbc
 from dash import html
-
 from RosettaX.utils import styling, ui_forms
+from typing import Any
 
 
 def build_workflow_section_card(

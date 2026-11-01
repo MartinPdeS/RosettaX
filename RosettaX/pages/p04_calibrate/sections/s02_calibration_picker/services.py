@@ -1,12 +1,11 @@
 import json
 import logging
+from .models import TargetMiePreviewControls, TargetMiePreviewResult
+from dash import html
 from pathlib import Path
-from typing import Any
-
 from RosettaX.workflow import plotting
 from RosettaX.workflow.upload.services import read_uploaded_file_bytes
-
-from .models import TargetMiePreviewControls, TargetMiePreviewResult
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -429,12 +428,18 @@ def build_preview_items(
     calibration_summary: dict[str, Any],
 ) -> list[Any]:
     """
-    Build preview information items from calibration summary.
+    Build preview information items from a calibration summary.
 
-    Returns a list of HTML divs showing key calibration metadata.
+    Parameters
+    ----------
+    calibration_summary : dict[str, Any]
+        Parsed calibration metadata used to build the preview rows.
+
+    Returns
+    -------
+    list[Any]
+        Dash HTML components showing key calibration metadata.
     """
-    from dash import html
-
     cal_type = (
         str(calibration_summary.get("calibration_type", "")).strip().upper() or "n/a"
     )
@@ -487,9 +492,21 @@ def _build_preview_info_block(
 ) -> Any:
     """
     Build a single preview info block.
-    """
-    from dash import html
 
+    Parameters
+    ----------
+    label : str
+        Label displayed beside the preview value.
+    value : str
+        Value to display in the block.
+    truncate : bool, default=False
+        Whether to constrain and truncate the displayed value.
+
+    Returns
+    -------
+    Any
+        A Dash HTML component containing the label and value.
+    """
     value_style = {
         "fontSize": "0.83rem",
         "fontWeight": "500",

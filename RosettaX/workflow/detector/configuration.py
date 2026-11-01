@@ -1,13 +1,11 @@
 import json
 import logging
 import re
+from .loader import get_default_detector_preset_loader
 from pathlib import Path
-from typing import Any
-
 from RosettaX.utils.fcs_metadata import FCSMetadata
 from RosettaX.utils.reader import FCSFile
-
-from .loader import get_default_detector_preset_loader
+from typing import Any
 
 logger = logging.getLogger(__name__)
 _DETECTOR_PRESET_LOADER = get_default_detector_preset_loader()

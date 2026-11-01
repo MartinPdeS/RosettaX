@@ -1,15 +1,12 @@
 """Input validation and signal helpers for Rosetta peak detection."""
 
 import logging
+import numpy as np
+from .base import build_edge_pileup_mask as shared_build_edge_pileup_mask
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any
-
-import numpy as np
-
 from RosettaX.utils.reader import FCSFile
-
-from .base import build_edge_pileup_mask as shared_build_edge_pileup_mask
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

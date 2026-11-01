@@ -3,23 +3,20 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
-
 import numpy as np
 import plotly.graph_objs as go
-
-from RosettaX.utils import plottings
-from RosettaX.utils.io import column_copy
-from RosettaX.workflow.plotting.axis_ranges import (
-    compute_stable_axis_range,
-)
-
 from ..scripts.base import (
     filter_edge_artifact_values,
 )
 from .graph_interaction import (
     axis_scale_selection_is_log,
 )
+from RosettaX.utils import plottings
+from RosettaX.utils.io import column_copy
+from RosettaX.workflow.plotting.axis_ranges import (
+    compute_stable_axis_range,
+)
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .graphing import PeakWorkflowGraphBuilder

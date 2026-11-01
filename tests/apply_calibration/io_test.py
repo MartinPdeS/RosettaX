@@ -9,7 +9,6 @@ if __name__ == "__main__":
 
 import io
 import zipfile
-
 from RosettaX.workflow.apply_calibration.io import (
     append_files_to_zip_bytes,
     build_export_filename,

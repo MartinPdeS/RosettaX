@@ -7,12 +7,9 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 
-from dataclasses import FrozenInstanceError
-from unittest.mock import patch
-
 import numpy as np
 import pytest
-
+from dataclasses import FrozenInstanceError
 from RosettaX.workflow.scattering.calibration_services import (
     DEFAULT_SOURCE_POLARIZATION_ANGLE_DEGREE,
     OpticalParameters,
@@ -20,6 +17,7 @@ from RosettaX.workflow.scattering.calibration_services import (
     fit_linear_instrument_response,
     parse_optical_parameters,
 )
+from unittest.mock import patch
 
 
 class Test_OpticalParameters:

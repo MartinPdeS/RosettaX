@@ -7,11 +7,9 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 
+import dash
 import json
 import logging
-
-import dash
-
 from RosettaX.workflow.save.callbacks import (
     _build_save_review_summary,
     save_button_should_be_disabled,

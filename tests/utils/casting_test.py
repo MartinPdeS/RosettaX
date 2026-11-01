@@ -8,10 +8,8 @@ if __name__ == "__main__":
 
 
 import math
-
 import numpy as np
 import pytest
-
 from RosettaX.utils.casting import (
     as_float,
     as_float_list,

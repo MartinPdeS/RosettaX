@@ -1,13 +1,11 @@
 from __future__ import annotations
 
+import dash
 import json
 import logging
-from typing import TYPE_CHECKING, Any
-
-import dash
 import numpy as np
-
 from RosettaX.workflow import detector
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from .main import Model

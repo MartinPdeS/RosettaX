@@ -1,17 +1,14 @@
 
-import logging
-from typing import Any
-
 import dash_bootstrap_components as dbc
-
+import logging
+from . import callbacks, layout
 from RosettaX.utils import RuntimeConfig
 from RosettaX.workflow.table.fluorescence import (
     CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME,
     FluorescenceReferenceTable,
 )
 from RosettaX.workflow.table.layout import ReferenceTableConfig, ReferenceTableLayout
-
-from . import callbacks, layout
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

@@ -1,16 +1,14 @@
+import dash
+import dash_bootstrap_components as dbc
 import importlib.metadata
 import json
 import logging
 import re
 import time
-from urllib import error, request
-
-import dash
-import dash_bootstrap_components as dbc
 from dash import html
-
 from RosettaX import __version__
 from RosettaX.utils import ui_forms, usage_metrics
+from urllib import error, request
 
 logger = logging.getLogger(__name__)
 LATEST_GITHUB_TAG_API_URL = (

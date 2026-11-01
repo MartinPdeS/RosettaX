@@ -1,8 +1,7 @@
 
-from typing import Any
-
 import numpy as np
 import plotly.graph_objs as go
+from typing import Any
 
 
 def compute_stable_axis_range(

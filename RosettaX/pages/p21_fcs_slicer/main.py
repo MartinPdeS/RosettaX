@@ -1,10 +1,9 @@
 
-from typing import Any
-
 import dash
 import dash_bootstrap_components as dbc
+from . import services
+from .ids import Ids
 from dash import dcc, html
-
 from RosettaX.ui import (
     WorkflowStep,
     build_workflow_page_header,
@@ -15,9 +14,7 @@ from RosettaX.workflow.calibration_cards import (
     build_fcs_tool_card_stack,
 )
 from RosettaX.workflow.file_selection import UploadedFile, UploadedFileBatch
-
-from . import services
-from .ids import Ids
+from typing import Any
 
 
 class FCSSlicerPage:

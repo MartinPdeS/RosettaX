@@ -1,6 +1,5 @@
 
 from pathlib import Path
-
 from RosettaX.utils import directories
 
 

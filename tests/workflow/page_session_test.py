@@ -7,7 +7,6 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 import pytest
-
 from RosettaX.workflow.page_session import FeedbackState, WorkflowProgressState
 
 

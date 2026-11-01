@@ -7,12 +7,11 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 
+import dash
+import pytest
 import sys
 import types
 from types import SimpleNamespace
-
-import dash
-import pytest
 
 
 class _DashBootstrapComponentsSentinel:

@@ -1,17 +1,15 @@
 
-from dataclasses import dataclass
-from typing import Any
-
 import dash
 import numpy as np
 import plotly.graph_objs as go
-
+from dataclasses import dataclass
 from RosettaX.utils import plottings, styling
 from RosettaX.workflow.plotting.layout import (
     build_plot_axis_checklist,
     build_plot_control_panel,
 )
 from RosettaX.workflow.plotting.models import ScatterOptions
+from typing import Any
 
 
 @dataclass(frozen=True)

@@ -2,14 +2,12 @@
 import hmac
 import logging
 import os
+import plotly.graph_objects as go
 import threading
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from typing import Any
-
-import plotly.graph_objects as go
-
 from RosettaX.utils import usage_metrics
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

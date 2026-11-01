@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-import logging
-from typing import TYPE_CHECKING, Any
-
 import dash
-
-from RosettaX.pages.p00_sidebar.ids import SidebarIds
-
+import logging
 from . import services
+from RosettaX.pages.p00_sidebar.ids import SidebarIds
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from .main import Model

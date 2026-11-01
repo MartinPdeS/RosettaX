@@ -8,7 +8,6 @@ if __name__ == "__main__":
 
 
 import dash
-
 from RosettaX.pages.p02_fluorescence.sections.s03_table import callbacks
 
 

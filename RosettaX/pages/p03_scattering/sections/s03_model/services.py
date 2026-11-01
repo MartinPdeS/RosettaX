@@ -1,21 +1,19 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import asdict, replace
-from typing import TYPE_CHECKING, Any
-
-from RosettaX.utils import RuntimeConfig, casting, styling
-from RosettaX.workflow.constants import DEFAULT_SOURCE_POLARIZATION_ANGLE_DEGREE
-from RosettaX.workflow.peak.core import detectors as peak_detectors
-from RosettaX.workflow.plotting import optical_preview
-from RosettaX.workflow.scattering import ModelConfiguration
-
 from .models import (
     DetectorGeometryValues,
     OpticalPreviewControls,
     OpticalPreviewUpdate,
     ProfileParameterState,
 )
+from dataclasses import asdict, replace
+from RosettaX.utils import RuntimeConfig, casting, styling
+from RosettaX.workflow.constants import DEFAULT_SOURCE_POLARIZATION_ANGLE_DEGREE
+from RosettaX.workflow.peak.core import detectors as peak_detectors
+from RosettaX.workflow.plotting import optical_preview
+from RosettaX.workflow.scattering import ModelConfiguration
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from .main import Model

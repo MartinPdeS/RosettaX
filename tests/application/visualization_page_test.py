@@ -7,10 +7,8 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 
-import importlib
-
 import dash
-
+import importlib
 from RosettaX.pages.p10_visualization import services
 
 

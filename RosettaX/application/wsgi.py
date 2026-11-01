@@ -1,6 +1,5 @@
 
 import os
-
 from RosettaX.application.main import RosettaXApplication, configure_logging
 from RosettaX.utils.upload_limits import configure_max_upload_bytes
 

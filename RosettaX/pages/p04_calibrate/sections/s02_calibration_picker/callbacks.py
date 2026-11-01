@@ -1,8 +1,7 @@
-import logging
-from typing import Any
-
 import dash
-
+import logging
+from . import services
+from .models import TargetMiePreviewControls
 from RosettaX.utils import RuntimeConfig
 from RosettaX.workflow.apply_calibration.scattering import (
     CUSTOM_PRESET_NAME,
@@ -11,9 +10,7 @@ from RosettaX.workflow.apply_calibration.scattering import (
     parse_optical_geometry_from_calibration_standard_parameters,
     resolve_scattering_target_model_preset,
 )
-
-from . import services
-from .models import TargetMiePreviewControls
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

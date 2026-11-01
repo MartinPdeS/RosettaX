@@ -1,19 +1,16 @@
 
-import logging
-from typing import Any
-
 import dash
 import dash_bootstrap_components as dbc
+import logging
+from .ids import SIDEBAR_NAVIGATION_ID
 from dash import dcc, html
-
 from RosettaX.utils import styling
 from RosettaX.utils.browser_profiles import (
     BROWSER_PROFILES_STORE_ID,
     BrowserProfileLibrary,
 )
 from RosettaX.utils.runtime_config import RuntimeConfig
-
-from .ids import SIDEBAR_NAVIGATION_ID
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

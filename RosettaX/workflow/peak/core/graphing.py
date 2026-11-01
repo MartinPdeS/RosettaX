@@ -1,20 +1,7 @@
 import inspect
 import logging
-from typing import Any
-
 import numpy as np
 import plotly.graph_objs as go
-
-from RosettaX.utils import plottings
-from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.workflow.plotting.axis_ranges import (
-    apply_stable_2d_axis_ranges as apply_stable_2d_axis_ranges,
-)
-from RosettaX.workflow.plotting.axis_ranges import (
-    compute_stable_axis_range as compute_stable_axis_range,
-)
-from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
-
 from .. import registry
 from ..scripts.base import (
     resolve_edge_artifact_filter_enabled,
@@ -27,29 +14,23 @@ from . import (
     graph_settings,
 )
 from .graph_interaction import (
-    _is_rosetta_script_process_name as _is_rosetta_script_process_name,
+    _is_rosetta_script_process_name,
+    add_peak_workflow_post_layout_overlays,  # noqa: F401
+    apply_peak_workflow_interaction_revision,  # noqa: F401
+    axis_scale_selection_is_log,  # noqa: F401
+    build_peak_workflow_uirevision,  # noqa: F401
+    is_enabled,
+    scale_selection_is_log,  # noqa: F401
+    unique_finite_preserving_order,  # noqa: F401
 )
-from .graph_interaction import (
-    add_peak_workflow_post_layout_overlays as add_peak_workflow_post_layout_overlays,
+from RosettaX.utils import plottings
+from RosettaX.utils.runtime_config import RuntimeConfig
+from RosettaX.workflow.plotting.axis_ranges import (
+    apply_stable_2d_axis_ranges,  # noqa: F401
+    compute_stable_axis_range,  # noqa: F401
 )
-from .graph_interaction import (
-    apply_peak_workflow_interaction_revision as apply_peak_workflow_interaction_revision,
-)
-from .graph_interaction import (
-    axis_scale_selection_is_log as axis_scale_selection_is_log,
-)
-from .graph_interaction import (
-    build_peak_workflow_uirevision as build_peak_workflow_uirevision,
-)
-from .graph_interaction import (
-    is_enabled as is_enabled,
-)
-from .graph_interaction import (
-    scale_selection_is_log as scale_selection_is_log,
-)
-from .graph_interaction import (
-    unique_finite_preserving_order as unique_finite_preserving_order,
-)
+from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

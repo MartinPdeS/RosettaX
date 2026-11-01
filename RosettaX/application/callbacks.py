@@ -1,12 +1,9 @@
 
-import logging
-from datetime import UTC, datetime
-from typing import Any
-
 import dash
+import logging
 from dash import MATCH, Dash, Input, Output, State
+from datetime import UTC, datetime
 from flask import request as flask_request
-
 from RosettaX.application.layout import THEME_DARK, THEME_LIGHT
 from RosettaX.pages.p00_sidebar.main import SidebarIds, sidebar_html
 from RosettaX.utils import ipinfo, usage_metrics
@@ -16,6 +13,7 @@ from RosettaX.utils.browser_profiles import (
 )
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow import calibration_cards
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

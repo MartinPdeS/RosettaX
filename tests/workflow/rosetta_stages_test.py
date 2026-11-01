@@ -7,11 +7,9 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 
-from dataclasses import FrozenInstanceError
-
 import numpy as np
 import pytest
-
+from dataclasses import FrozenInstanceError
 from RosettaX.workflow.peak.scripts import rosetta_mix
 
 

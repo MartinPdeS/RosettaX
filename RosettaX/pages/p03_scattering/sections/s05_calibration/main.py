@@ -1,15 +1,12 @@
 
-import logging
-from typing import Any
-
 import dash
 import dash_bootstrap_components as dbc
+import logging
 import plotly.graph_objs as go
-
+from . import services
 from RosettaX.pages.p03_scattering.state import ScatteringPageState
 from RosettaX.utils import RuntimeConfig, plottings, styling, ui_forms
-
-from . import services
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

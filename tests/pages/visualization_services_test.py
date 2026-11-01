@@ -8,7 +8,6 @@ if __name__ == "__main__":
 
 
 import pandas as pd
-
 from RosettaX.pages.p10_visualization import services
 from RosettaX.utils.runtime_config import DEFAULT_GRAPH_HEIGHT
 

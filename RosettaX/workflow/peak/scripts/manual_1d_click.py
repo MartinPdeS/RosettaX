@@ -1,21 +1,18 @@
 
-import logging
-from typing import Any
-
 import dash
 import dash_bootstrap_components as dbc
+import logging
 import numpy as np
-
-from RosettaX.utils.io import column_copy
-from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
-
 from .base import (
     BasePeakProcess,
     PeakProcessResult,
     filter_edge_artifact_values,
     resolve_edge_artifact_filter_enabled,
 )
+from RosettaX.utils.io import column_copy
+from RosettaX.utils.runtime_config import RuntimeConfig
+from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

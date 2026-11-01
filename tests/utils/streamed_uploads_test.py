@@ -7,10 +7,8 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 
-from io import BytesIO
-
 import pytest
-
+from io import BytesIO
 from RosettaX.utils.streamed_uploads import (
     build_streamed_upload_error_token,
     resolve_streamed_upload,

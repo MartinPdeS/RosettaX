@@ -1,12 +1,10 @@
 """Scattering standard rows."""
 
 import logging
-from typing import Any
-
 import numpy as np
-
 from .calibration_models import ParsedCoreShellStandardRows, ParsedSphereStandardRows
 from .numerical_arrays import _log_array_summary
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

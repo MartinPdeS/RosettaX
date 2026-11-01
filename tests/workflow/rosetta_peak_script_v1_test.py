@@ -7,13 +7,10 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 
-from types import SimpleNamespace
-
 import pytest
-
-from RosettaX.workflow.peak.scripts import rosetta_mix, rosetta_mix_v1
-
 from .rosetta_peak_script_test import _build_synthetic_dataset_with_two_markers
+from RosettaX.workflow.peak.scripts import rosetta_mix, rosetta_mix_v1
+from types import SimpleNamespace
 
 
 class Test_RosettaPeakScriptV1:

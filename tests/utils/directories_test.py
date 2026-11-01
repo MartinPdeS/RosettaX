@@ -8,12 +8,10 @@ if __name__ == "__main__":
 
 import json
 import os
+import pytest
 import subprocess
 import sys
 from pathlib import Path
-
-import pytest
-
 from RosettaX.utils import directories
 
 

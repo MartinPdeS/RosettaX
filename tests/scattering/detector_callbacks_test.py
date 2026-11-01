@@ -7,14 +7,12 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 
-from types import SimpleNamespace
-
 import dash
 import pytest
-
 from RosettaX.pages.p03_scattering.ids import Ids
 from RosettaX.pages.p03_scattering.sections.s03_model import detector_callbacks
 from RosettaX.pages.p03_scattering.sections.s03_model.main import Model
+from types import SimpleNamespace
 
 
 @pytest.fixture

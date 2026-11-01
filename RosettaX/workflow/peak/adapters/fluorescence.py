@@ -1,12 +1,10 @@
 
+import dash
 import logging
+import numpy as np
+from .base import BasePeakWorkflowAdapter
 from dataclasses import dataclass
 from typing import Any
-
-import dash
-import numpy as np
-
-from .base import BasePeakWorkflowAdapter
 
 logger = logging.getLogger(__name__)
 

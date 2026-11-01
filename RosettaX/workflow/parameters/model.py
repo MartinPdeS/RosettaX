@@ -1,9 +1,7 @@
 
 import logging
-from typing import Any
-
 import numpy as np
-
+from . import table
 from RosettaX.utils.casting import as_optional_float, as_required_float, as_required_int
 from RosettaX.workflow.detector import (
     resolve_detector_angular_weights,
@@ -13,8 +11,7 @@ from RosettaX.workflow.scattering.backend import BackEnd
 from RosettaX.workflow.scattering.calibration_services import (
     DEFAULT_SOURCE_POLARIZATION_ANGLE_DEGREE,
 )
-
-from . import table
+from typing import Any
 
 SOLID_SPHERE_MODEL_NAME = "Solid Sphere"
 CORE_SHELL_SPHERE_MODEL_NAME = "Core/Shell Sphere"

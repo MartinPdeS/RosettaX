@@ -7,18 +7,16 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 
-import importlib
-from typing import Any
-
 import dash
 import dash_bootstrap_components as dbc
+import importlib
 import pytest
-
 from RosettaX.application.callbacks import (
     register_application_callbacks,
     resolve_active_profile_runtime_config,
 )
 from RosettaX.workflow import calibration_cards
+from typing import Any
 
 
 def _find_component_by_id(component: Any, component_id: Any) -> Any | None:

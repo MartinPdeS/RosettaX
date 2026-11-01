@@ -1,11 +1,8 @@
-from functools import lru_cache
-from pathlib import Path
-from typing import Any
-
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-
+from functools import lru_cache
+from pathlib import Path
 from RosettaX.utils import plottings
 from RosettaX.utils.reader import FCSFile
 from RosettaX.utils.runtime_config import RuntimeConfig
@@ -37,6 +34,7 @@ from RosettaX.workflow.plotting.transforms import (
     smooth_histogram_counts as _smooth_histogram_counts,
 )
 from RosettaX.workflow.upload import services as upload_services
+from typing import Any
 
 VISUALIZATION_UPLOAD_DIRECTORY = (
     upload_services.DEFAULT_UPLOAD_DIRECTORY / "visualization"

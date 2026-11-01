@@ -7,10 +7,9 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 
+import numpy as np
 import sys
 import types
-
-import numpy as np
 
 
 class _DashBootstrapComponentsSentinel:
