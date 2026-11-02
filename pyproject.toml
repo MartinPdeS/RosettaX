@@ -95,22 +95,14 @@ no-sections = true
 "RosettaX/_version.py" = ["UP006", "UP007", "UP035"]
 
 [project.optional-dependencies]
-release = ["martinpdes-maintenance==0.2.2"]
-testing = [
-    "pytest >=7.4,<10.0",
-    "pytest-cov >=2,<8",
-    "pytest-json-report ~=1.5",
-    "coverage ~=7.6"
-]
+release = ["martinpdes-maintenance==0.2.3"]
+testing = ["martinpdes-maintenance[testing]==0.2.3", "pytest-json-report ~=1.5", "coverage ~=7.6", "pytest-cov<8"]
 
 documentation = [
     "MartinPdeS-docs>=0.4.0,<0.5",
 ]
 
-dev = [
-    "flake8 ==7.4.1",
-    "ruff >=0.6,<1",
-]
+dev = ["martinpdes-maintenance[quality]==0.2.3", "flake8 ==7.4.1"]
 
 bundling = [
     "pyinstaller >=6.14,<7",
