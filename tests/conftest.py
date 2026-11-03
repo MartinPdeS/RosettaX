@@ -35,6 +35,9 @@ class _DashBootstrapComponentsStub(types.ModuleType):
 
     def __getattr__(self, name):
         """Handle dynamic attribute lookup for this test double."""
+        if name.startswith("__") and name.endswith("__"):
+            raise AttributeError(name)
+
         component_type = self._component_types.get(name)
         if component_type is None:
             component_type = type(name, (_DashBootstrapComponent,), {})
