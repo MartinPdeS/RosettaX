@@ -355,3 +355,27 @@ def test_handle_manual_graph_click_ignores_empty_selection_payload_dict(
     assert page_state_result is dash.no_update
     assert table_result is dash.no_update
     assert status_children == [dash.no_update]
+
+
+def test_warning_does_not_replace_existing_results(monkeypatch):
+    """An unsuccessful automatic run shows a warning and preserves state and table."""
+    adapter = _StubAdapter()
+    monkeypatch.setattr(mutation, "context_is_valid_for_process", lambda **kwargs: True)
+    monkeypatch.setattr(
+        mutation,
+        "call_run_automatic_action_with_supported_arguments",
+        lambda **kwargs: SimpleNamespace(warning=True, status="Warning: Review the markers."),
+    )
+
+    state, table, status = mutation.handle_run_action(
+        page=SimpleNamespace(), adapter=adapter, process=_StubProcess(),
+        target_process_name="automatic_1d_peaks", page_state=_StubPageState(),
+        uploaded_fcs_path="example.fcs", detector_channels={"x": "FSC-A"},
+        process_setting_ids=[], process_setting_values=[], max_events_for_plots=1000,
+        table_data=[{"measured_peak_position": 9.9}], mie_model="Solid Sphere",
+        runtime_config_data={}, status_component_ids=[{"process": "automatic_1d_peaks"}],
+    )
+
+    assert state is dash.no_update
+    assert table is dash.no_update
+    assert status[0].color == "warning"

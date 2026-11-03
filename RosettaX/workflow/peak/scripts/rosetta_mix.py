@@ -810,9 +810,9 @@ def build_rosetta_detection_result(
         table_prefill_rows=[
             {
                 "measured_peak_position": float(point["x"]),
-                "particle_diameter_nm": float(index),
+                "particle_diameter_nm": "",
             }
-            for index, point in enumerate(table_points, start=1)
+            for point in table_points
         ],
     )
 

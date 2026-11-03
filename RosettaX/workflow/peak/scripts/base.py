@@ -42,6 +42,9 @@ class PeakProcessResult:
         Whether downstream table update logic should clear the measured peak
         column before applying the current result.
 
+    warning:
+        Whether the action stopped and should display a warning without applying results.
+
     table_prefill_rows:
         Optional semantic table rows produced by a script. Adapters translate
         these rows into page-specific DataTable columns when present. Scripts
@@ -59,6 +62,7 @@ class PeakProcessResult:
     new_peak_positions: list[Any] | None = None
     clear_existing_table_peaks: bool = False
     table_prefill_rows: list[dict[str, Any]] | None = None
+    warning: bool = False
 
 
 def resolve_enabled_toggle_value(

@@ -29,13 +29,6 @@ ROSETTA_MIX_PARTICLE_DIAMETERS_NM = (
     70.0,
 )
 
-# Single-anchor fallback: diameter scales with SSC-A as d proportional to
-# scatter ** exponent. An exponent of 0.25 corresponds to SSC-A growing with
-# diameter ** 4, a reasonable effective slope across the Rosetta Mix size range
-# under 488 nm illumination. It is only used when the two-marker slope cannot be
-# fitted (bright marker saturated or absent).
-SINGLE_ANCHOR_DIAMETER_SCATTER_EXPONENT = 0.25
-
 # A fluorescent marker whose peak intensity reaches this fraction of the
 # fluorescence saturation intensity is treated as detector-saturated, so its
 # scatter gate is contaminated and its scatter anchor is considered unreliable.
@@ -58,6 +51,19 @@ class FluorescenceGuidedScatterPeakProcessV1(FluorescenceGuidedScatterPeakProces
         "diameter inference anchored by the 140 nm and 380 nm marker beads."
     )
     sort_order = 21
+
+    def get_detector_channel_labels(self) -> dict[str, str]:
+        """Return the labels for the required FCS channels.
+
+        Returns
+        -------
+        dict[str, str]
+            Channel roles mapped to their displayed labels.
+        """
+        return {
+            "scattering": "Side scattering channel",
+            "green_fluorescence": "Green fluorescence channel",
+        }
 
     def run_automatic_action(
         self,
@@ -85,6 +91,26 @@ class FluorescenceGuidedScatterPeakProcessV1(FluorescenceGuidedScatterPeakProces
         resolved_rows, status_suffix = build_rosetta_mix_v1_table_prefill_rows(
             result=result,
         )
+
+        if not resolved_rows and result.status:
+            return replace(result, status=f"Warning: {result.status}", warning=True)
+
+        if status_suffix.startswith("Warning:") or any(
+            not row.get("particle_diameter_nm") for row in resolved_rows
+        ):
+            return replace(
+                result,
+                peak_positions=[],
+                new_peak_positions=[],
+                table_prefill_rows=[],
+                peak_lines_payload={},
+                status=(
+                    status_suffix
+                    if status_suffix.startswith("Warning:")
+                    else f"Warning: {status_suffix}"
+                ),
+                warning=True,
+            )
 
         updated_status = str(result.status or "").strip()
 
@@ -173,6 +199,7 @@ def build_rosetta_mix_v1_table_prefill_rows(
     non_fluorescent_peak_positions: list[float] = []
 
     for row_index, row in enumerate(rows):
+        row["particle_diameter_nm"] = ""
         metadata = (
             table_point_metadata[row_index]
             if row_index < len(table_point_metadata)
@@ -220,11 +247,14 @@ def build_rosetta_mix_v1_table_prefill_rows(
             inferred_diameters_nm,
         )
         unassigned_suffix = (
-            f" {unassigned_peak_count} scatter peak(s) exceeded the Rosetta Mix size"
-            " range and were left blank for manual review."
+            f" Warning: {unassigned_peak_count} scatter peak(s) exceeded the Rosetta Mix size"
+            " range; review the detected peaks."
             if unassigned_peak_count > 0
             else ""
         )
+
+        if unassigned_peak_count:
+            return rows, unassigned_suffix.strip()
 
         if used_marker_count >= 2:
             return (
@@ -233,28 +263,9 @@ def build_rosetta_mix_v1_table_prefill_rows(
                 + unassigned_suffix,
             )
 
-        if used_marker_count == 1:
-            bright_marker_present = (
-                marker_positions.get("Bright marker") is not None
-            )
-
-            if bright_marker_present and not bright_marker_is_reliable:
-                return (
-                    rows,
-                    "Rosetta Script V1 anchored Rosetta Mix diameters on the 140 nm marker "
-                    "because the 380 nm marker was fluorescence-saturated."
-                    + unassigned_suffix,
-                )
-
-            return (
-                rows,
-                "Rosetta Script V1 assigned approximate Rosetta Mix diameters from a single marker anchor."
-                + unassigned_suffix,
-            )
-
     return (
         rows,
-        "Rosetta Script V1 kept placeholder Rosetta Mix diameters because the marker anchors were insufficient for size assignment.",
+        "Warning: Size assignment needs both reliable 140 nm and 380 nm marker anchors; review the selected channels and data.",
     )
 
 
@@ -391,10 +402,7 @@ def infer_rosetta_mix_particle_diameters_nm(
     """
     Infer Rosetta Mix non-fluorescent diameters from measured scatter peaks.
 
-    When both markers are reliable, the scatter-to-size exponent is fitted from
-    the 140 nm and 380 nm anchors. When the bright (380 nm) marker is saturated
-    or absent, the dim (140 nm) marker becomes the sole anchor and a fixed
-    scatter-vs-size exponent is used instead of the fitted slope.
+    Both fluorescent marker anchors must be present and reliable.
     """
     valid_peak_positions = [
         float(value)
@@ -412,48 +420,26 @@ def infer_rosetta_mix_particle_diameters_nm(
         marker_positions.get("Bright marker"),
     )
 
-    estimated_sizes_nm: list[float] = []
-    used_marker_count = 0
-
     if (
-        dim_marker_position is not None
-        and bright_marker_position is not None
-        and bright_marker_is_reliable
-        and bright_marker_position > dim_marker_position
+        dim_marker_position is None
+        or bright_marker_position is None
+        or not bright_marker_is_reliable
+        or bright_marker_position <= dim_marker_position
     ):
-        used_marker_count = 2
-        marker_exponent = float(
-            np.log(BRIGHT_MARKER_DIAMETER_NM / DIM_MARKER_DIAMETER_NM)
-            / np.log(bright_marker_position / dim_marker_position)
+        return [], 0
+
+    used_marker_count = 2
+    marker_exponent = float(
+        np.log(BRIGHT_MARKER_DIAMETER_NM / DIM_MARKER_DIAMETER_NM)
+        / np.log(bright_marker_position / dim_marker_position)
+    )
+    estimated_sizes_nm = [
+        float(
+            DIM_MARKER_DIAMETER_NM
+            * (float(peak_position) / dim_marker_position) ** marker_exponent
         )
-
-        estimated_sizes_nm = [
-            float(
-                DIM_MARKER_DIAMETER_NM
-                * (float(peak_position) / dim_marker_position) ** marker_exponent
-            )
-            for peak_position in valid_peak_positions
-        ]
-
-    else:
-        if dim_marker_position is not None:
-            anchor_position = dim_marker_position
-            anchor_diameter_nm = DIM_MARKER_DIAMETER_NM
-        elif bright_marker_position is not None:
-            anchor_position = bright_marker_position
-            anchor_diameter_nm = BRIGHT_MARKER_DIAMETER_NM
-        else:
-            return [], 0
-
-        used_marker_count = 1
-        estimated_sizes_nm = [
-            float(
-                anchor_diameter_nm
-                * (float(peak_position) / anchor_position)
-                ** SINGLE_ANCHOR_DIAMETER_SCATTER_EXPONENT
-            )
-            for peak_position in valid_peak_positions
-        ]
+        for peak_position in valid_peak_positions
+    ]
 
     if not estimated_sizes_nm:
         return [], used_marker_count
@@ -644,7 +630,7 @@ def bright_marker_scatter_anchor_is_reliable(
 
     A bright marker whose fluorescence peak reaches the detector saturation
     intensity has a contaminated scatter gate, so its scatter position is not a
-    dependable size anchor and the dim marker should anchor size inference.
+    dependable size anchor for size inference.
     """
     if not isinstance(peak_lines_payload, dict):
         return True

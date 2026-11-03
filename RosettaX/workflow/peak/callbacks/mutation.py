@@ -816,6 +816,17 @@ def handle_run_action(
             ),
         )
 
+    if getattr(result, "warning", False):
+        return (
+            dash.no_update,
+            dash.no_update,
+            build_status_children(
+                status_component_ids=status_component_ids,
+                target_process_name=target_process_name,
+                status=result.status,
+            ),
+        )
+
     page_state = adapter.update_peak_lines_payload(
         page_state=page_state,
         peak_lines_payload=result.peak_lines_payload,
@@ -1259,6 +1270,9 @@ def classify_status_alert_color(
 
     if not normalized_status_text:
         return "secondary"
+
+    if normalized_status_text.startswith("warning:"):
+        return "warning"
 
     error_markers = [
         "error",

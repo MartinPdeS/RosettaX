@@ -1,6 +1,7 @@
 
 import json
 import logging
+import re
 from .. import registry
 from pathlib import Path
 from RosettaX.utils.fcs_metadata import FCSMetadata
@@ -65,6 +66,8 @@ def populate_peak_script_detector_dropdowns(
     current_detector_values: list[Any],
     runtime_config_data: Any = None,
     detector_selection_runtime_config_path: str | None = None,
+    auto_select_rosetta_v1: bool = False,
+    reset_rosetta_v1: bool = False,
     logger: logging.Logger,
 ) -> tuple[list[list[dict[str, Any]]], list[Any]]:
     """
@@ -163,6 +166,31 @@ def populate_peak_script_detector_dropdowns(
 
     resolved_options: list[list[dict[str, Any]]] = []
     resolved_values: list[Any] = []
+    rosetta_scattering_index = next(
+        (
+            index
+            for index, detector_dropdown_id in enumerate(detector_dropdown_ids or [])
+            if isinstance(detector_dropdown_id, dict)
+            and detector_dropdown_id.get("process") == "Rosetta Script V1"
+            and detector_dropdown_id.get("channel") == "scattering"
+        ),
+        None,
+    )
+    selected_scattering_channel = None
+    if rosetta_scattering_index is not None:
+        current_scattering_channel = (current_detector_values or [])[rosetta_scattering_index]
+        if auto_select_rosetta_v1 or current_scattering_channel in valid_values:
+            selected_scattering_channel = (
+                infer_rosetta_v1_channel(
+                    column_names=column_names,
+                    detector_role="scattering",
+                )
+                if auto_select_rosetta_v1
+                else current_scattering_channel
+            )
+    scattering_wavelength_nm = extract_channel_wavelength_nm(
+        channel_name=selected_scattering_channel,
+    )
 
     for detector_dropdown_id, current_value in zip(
         detector_dropdown_ids or [],
@@ -173,24 +201,41 @@ def populate_peak_script_detector_dropdowns(
             options,
         )
 
-        if current_value in valid_values:
-            resolved_values.append(
-                current_value,
-            )
-            continue
-
         detector_role = None
-
+        is_rosetta_v1 = (
+            isinstance(detector_dropdown_id, dict)
+            and detector_dropdown_id.get("process") == "Rosetta Script V1"
+        )
         if isinstance(detector_dropdown_id, dict):
             detector_role = detector_dropdown_id.get("channel")
 
-        default_value = infer_default_detector_channel(
-            column_names=column_names,
-            metadata=metadata,
-            detector_role=detector_role,
-            selection_mode=selection_mode,
-            matched_rule=matched_rule,
-        )
+        if is_rosetta_v1 and reset_rosetta_v1:
+            default_value = None
+        elif is_rosetta_v1:
+            selected = (
+                infer_rosetta_v1_channel(
+                    column_names=column_names,
+                    detector_role=detector_role,
+                    preferred_wavelength_nm=(
+                        scattering_wavelength_nm
+                        if detector_role == "green_fluorescence"
+                        else None
+                    ),
+                )
+                if auto_select_rosetta_v1
+                else None
+            )
+            default_value = selected or (current_value if current_value in valid_values else None)
+        elif current_value in valid_values:
+            default_value = current_value
+        else:
+            default_value = infer_default_detector_channel(
+                column_names=column_names,
+                metadata=metadata,
+                detector_role=detector_role,
+                selection_mode=selection_mode,
+                matched_rule=matched_rule,
+            )
 
         resolved_values.append(
             default_value,
@@ -204,6 +249,75 @@ def populate_peak_script_detector_dropdowns(
         )
 
     return resolved_options, resolved_values
+
+
+
+def infer_rosetta_v1_channel(
+    *,
+    column_names: list[str],
+    detector_role: Any,
+    preferred_wavelength_nm: int | None = None,
+) -> str | None:
+    """Select a uniquely named side-scatter or green-fluorescence channel.
+
+    Parameters
+    ----------
+    column_names : list[str]
+        Available FCS channel names.
+    detector_role : Any
+        The V1 channel role.
+    preferred_wavelength_nm : int or None, optional
+        Preferred wavelength for green fluorescence channels, in nanometers.
+
+    Returns
+    -------
+    str or None
+        The matching channel, or None if names are absent or ambiguous.
+    """
+    keywords = {
+        "scattering": ("ssc", "side scatter", "sidescatter", "lals", "lasl"),
+        "green_fluorescence": ("green", "grn", "fitc", "fl1", "gfp"),
+    }.get(detector_role, ())
+    matches = [
+        name for name in column_names
+        if any(keyword in str(name).lower() for keyword in keywords)
+    ]
+    if detector_role == "green_fluorescence":
+        wavelength_matches = [
+            name
+            for name in matches
+            if extract_channel_wavelength_nm(channel_name=name)
+            == preferred_wavelength_nm
+        ]
+        if preferred_wavelength_nm is not None and wavelength_matches:
+            matches = wavelength_matches
+        else:
+            preferred = [name for name in matches if "488" in str(name).lower()]
+            if preferred:
+                matches = preferred
+
+    peak_matches = [name for name in matches if "(peak)" in str(name).lower()]
+    if peak_matches:
+        matches = peak_matches
+
+    return matches[0] if len(matches) == 1 else None
+
+
+def extract_channel_wavelength_nm(*, channel_name: Any) -> int | None:
+    """Extract a three-digit wavelength from an FCS channel name.
+
+    Parameters
+    ----------
+    channel_name : Any
+        Candidate FCS channel name.
+
+    Returns
+    -------
+    int or None
+        Wavelength in nanometers when encoded in the channel name.
+    """
+    match = re.search(r"(?<!\d)(\d{3})(?!\d)", str(channel_name or ""))
+    return int(match.group(1)) if match is not None else None
 
 
 def infer_default_detector_channel(

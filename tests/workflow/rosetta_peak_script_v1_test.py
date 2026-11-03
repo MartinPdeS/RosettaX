@@ -98,7 +98,7 @@ class Test_RosettaPeakScriptV1:
             994.0,
             "",
         ]
-        assert "left blank for manual review" in status_suffix
+        assert "review the detected peaks" in status_suffix
 
     def test_bright_marker_scatter_anchor_flags_saturation(self) -> None:
         """Check bright marker scatter anchor flags saturation."""
@@ -126,10 +126,10 @@ class Test_RosettaPeakScriptV1:
             is True
         )
 
-    def test_infer_falls_back_to_single_anchor_when_bright_marker_unreliable(
+    def test_infer_rejects_unreliable_bright_marker(
         self,
     ) -> None:
-        """Check infer falls back to single anchor when bright marker unreliable."""
+        """Check inference rejects an unreliable bright marker."""
         measured_peak_positions = [700.0, 1000.0, 1470.0, 2960.0, 6000.0, 9940.0]
         marker_positions = {"Dim marker": 1400.0, "Bright marker": 3800.0}
 
@@ -149,13 +149,13 @@ class Test_RosettaPeakScriptV1:
         )
 
         assert two_marker_count == 2
-        assert single_marker_count == 1
-        assert single_anchor_diameters != two_marker_diameters
+        assert single_marker_count == 0
+        assert single_anchor_diameters == []
 
-    def test_build_table_prefill_reports_saturated_bright_marker_fallback(
+    def test_build_table_prefill_reports_saturated_bright_marker(
         self,
     ) -> None:
-        """Check build table prefill reports saturated bright marker fallback."""
+        """Check build table prefill reports a saturated bright marker."""
         scatter_peak_positions = [700.0, 1000.0, 2030.0]
 
         synthetic_result = rosetta_mix_v1.PeakProcessResult(
@@ -192,18 +192,14 @@ class Test_RosettaPeakScriptV1:
             )
         )
 
-        assert "fluorescence-saturated" in status_suffix
-        assert all(
-            isinstance(row["particle_diameter_nm"], float)
-            and row["particle_diameter_nm"] > 0.0
-            for row in resolved_rows
-        )
+        assert "both reliable" in status_suffix
+        assert all(row["particle_diameter_nm"] == "" for row in resolved_rows)
 
-    def test_run_automatic_action_replaces_placeholder_diameters_with_rosetta_mix_sizes(
+    def test_run_automatic_action_warns_when_only_one_marker_is_found(
         self,
         monkeypatch,
     ) -> None:
-        """Check run automatic action replaces placeholder diameters with Rosetta mix sizes."""
+        """Check a single detected marker stops size assignment."""
         scattering, fluorescence = _build_synthetic_dataset_with_two_markers()
 
         def fake_column_copy(*, fcs_file_path, detector_column, dtype=float, n=None):
@@ -244,43 +240,15 @@ class Test_RosettaPeakScriptV1:
         )
 
         assert result is not None
-        assert result.table_prefill_rows
-        assert [row["measured_peak_position"] for row in result.table_prefill_rows] == [
-            float(value)
-            for value in (result.new_peak_positions or [])
-        ]
-        assert [
-            row["particle_diameter_nm"]
-            for row in result.table_prefill_rows
-        ] == [125.0, 147.0, 203.0]
-        scatter_guide_annotations = result.peak_lines_payload.get(
-            "scatter_guide_annotations",
-        )
+        assert result.warning is True
+        assert result.table_prefill_rows == []
+        assert "both reliable" in result.status
 
-        assert isinstance(scatter_guide_annotations, list)
-        assert [
-            entry["label"]
-            for entry in scatter_guide_annotations
-        ] == [
-            "125 nm",
-            "147 nm",
-            "140 nm",
-            "203 nm",
-        ]
-        assert [
-            entry["x"]
-            for entry in scatter_guide_annotations
-        ] == [
-            pytest.approx(value)
-            for value in result.peak_lines_payload.get("scatter_guide_positions", [])
-        ]
-        assert "single marker anchor" in str(result.status)
-
-    def test_run_automatic_action_hides_status_when_advanced_mode_disabled(
+    def test_run_automatic_action_warns_with_advanced_mode_disabled(
         self,
         monkeypatch,
     ) -> None:
-        """Check run automatic action hides status when advanced mode disabled."""
+        """Check the warning is retained when advanced mode is disabled."""
         synthetic_result = rosetta_mix_v1.PeakProcessResult(
             peak_positions=[1000.0],
             new_peak_positions=[1000.0],
@@ -333,13 +301,14 @@ class Test_RosettaPeakScriptV1:
         )
 
         assert result is not None
-        assert result.status == ""
+        assert result.warning is True
+        assert "both reliable" in result.status
 
-    def test_run_automatic_action_adds_marker_size_annotations_without_table_rows(
+    def test_run_automatic_action_warns_without_table_rows(
         self,
         monkeypatch,
     ) -> None:
-        """Check run automatic action adds marker size annotations without table rows."""
+        """Check a marker-only result raises a warning."""
         synthetic_result = rosetta_mix_v1.PeakProcessResult(
             peak_positions=[],
             new_peak_positions=[],
@@ -386,15 +355,82 @@ class Test_RosettaPeakScriptV1:
         )
 
         assert result is not None
-        assert result.table_prefill_rows == []
-        scatter_guide_annotations = result.peak_lines_payload.get(
-            "scatter_guide_annotations",
-        )
-        assert isinstance(scatter_guide_annotations, list)
-        assert [
-            entry["label"]
-            for entry in scatter_guide_annotations
-        ] == [
-            "140 nm",
-            "380 nm",
-        ]
+        assert result.warning is True
+        assert result.status.startswith("Warning:")
+
+
+def test_missing_marker_anchors_stop_run_and_show_warning(monkeypatch):
+    """Unresolved peaks never become nanometer labels or calibration diameters."""
+    result = rosetta_mix_v1.PeakProcessResult(
+        peak_positions=[{"x": 1000.0, "y": 100.0}, {"x": 2000.0, "y": 100.0}],
+        new_peak_positions=[1000.0, 2000.0],
+        peak_lines_payload={
+            "points": [
+                {"x": 1000.0, "y": 100.0, "kind": "peak"},
+                {"x": 2000.0, "y": 100.0, "kind": "peak"},
+            ],
+            "labels": ["Peak 1", "Peak 2"],
+        },
+        status="",
+        clear_existing_table_peaks=False,
+        table_prefill_rows=[
+            {"measured_peak_position": 1000.0, "particle_diameter_nm": 1.0},
+            {"measured_peak_position": 2000.0, "particle_diameter_nm": 2.0},
+        ],
+    )
+    monkeypatch.setattr(
+        rosetta_mix_v1.FluorescenceGuidedScatterPeakProcess,
+        "run_automatic_action",
+        lambda self, **kwargs: result,
+    )
+
+    resolved = rosetta_mix_v1.FluorescenceGuidedScatterPeakProcessV1().run_automatic_action(
+        backend=None,
+        detector_channels={},
+        peak_count=2,
+        max_events_for_analysis=100,
+        process_settings={"advanced_mode": []},
+    )
+
+    assert resolved.warning is True
+    assert resolved.table_prefill_rows == []
+    assert resolved.peak_lines_payload == {}
+    assert "both reliable" in resolved.status
+
+
+def test_two_reliable_markers_assign_diameters(monkeypatch):
+    """Two reliable markers permit the normal size-assignment path."""
+    result = rosetta_mix_v1.PeakProcessResult(
+        peak_positions=[{"x": 700.0, "y": 100.0}],
+        new_peak_positions=[700.0],
+        peak_lines_payload={
+            "points": [
+                {"x": 700.0, "y": 100.0, "kind": "peak"},
+                {"x": 1400.0, "y": 200.0, "kind": "marker"},
+                {"x": 3800.0, "y": 400.0, "kind": "marker"},
+            ],
+            "labels": ["Peak 1", "Dim marker", "Bright marker"],
+        },
+        status="",
+        table_prefill_rows=[{"measured_peak_position": 700.0, "particle_diameter_nm": ""}],
+    )
+    monkeypatch.setattr(
+        rosetta_mix_v1.FluorescenceGuidedScatterPeakProcess,
+        "run_automatic_action",
+        lambda self, **kwargs: result,
+    )
+
+    resolved = rosetta_mix_v1.FluorescenceGuidedScatterPeakProcessV1().run_automatic_action(
+        backend=None, detector_channels={}, peak_count=1,
+        max_events_for_analysis=100, process_settings={},
+    )
+
+    assert resolved.warning is False
+    assert resolved.table_prefill_rows[0]["particle_diameter_nm"] == 70.0
+    assert any(item["label"] == "70 nm" for item in resolved.peak_lines_payload["scatter_guide_annotations"])
+
+
+def test_rosetta_v1_displays_side_scattering_channel_label():
+    """The V1 scattering selector identifies the requested channel role."""
+    process = rosetta_mix_v1.FluorescenceGuidedScatterPeakProcessV1()
+    assert process.get_detector_channel_labels()["scattering"] == "Side scattering channel"

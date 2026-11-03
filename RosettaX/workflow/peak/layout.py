@@ -363,7 +363,17 @@ class PeakLayout:
             if setting_controls
             else None,
             html.Div(
-                self._build_process_action_buttons(
+                ([
+                    dbc.Button(
+                        "Auto-select detectors",
+                        id=self.ids.rosetta_v1_auto_select_detectors,
+                        n_clicks=0,
+                        size="sm",
+                        color="secondary",
+                        outline=True,
+                    ),
+                ] if process_name == "Rosetta Script V1" else [])
+                + self._build_process_action_buttons(
                     process_name=process_name,
                     supports_automatic_action=bool(
                         getattr(
@@ -471,8 +481,9 @@ class PeakLayout:
                         process_name=process_name,
                         channel_name=channel_name,
                     ),
-                    label=label,
+                    label="" if process_name == "Rosetta Script V1" else label,
                     placeholder=f"Select {label.lower()}",
+                    persistence=process_name != "Rosetta Script V1",
                 )
             )
 
@@ -952,6 +963,7 @@ class PeakLayout:
         label: str,
         value: Any = None,
         placeholder: str = "Select detector",
+        persistence: bool = True,
     ) -> html.Div:
         """
         Build a detector dropdown used by a peak process.
@@ -964,14 +976,14 @@ class PeakLayout:
                         "marginBottom": "4px",
                         "fontSize": "0.85rem",
                     },
-                ),
+                ) if label else None,
                 dcc.Dropdown(
                     id=dropdown_id,
                     options=[],
                     value=value,
                     placeholder=placeholder,
                     clearable=True,
-                    persistence=True,
+                    persistence=persistence,
                     persistence_type="session",
                 ),
             ],

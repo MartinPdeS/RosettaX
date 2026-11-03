@@ -696,16 +696,15 @@ def register_status_area_visibility_callback(
             "gap": "10px",
         }
 
+        if registry.get_selected_process_name(process_name) == "Rosetta Script V1":
+            return base_style
+
         visibility_style = build_rosetta_advanced_only_style(
             process_name=process_name,
             graph_toggle_value=graph_toggle_value,
             advanced_mode_value=advanced_mode_value,
         )
-
-        return {
-            **base_style,
-            **visibility_style,
-        }
+        return {**base_style, **visibility_style}
 
 
 def register_graph_controls_visibility_callback(

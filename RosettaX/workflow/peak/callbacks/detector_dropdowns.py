@@ -36,7 +36,9 @@ def register_detector_dropdown_callbacks(
             "value",
         ),
         dash.Input(page_state_store_id, "data"),
+        dash.Input(ids.process_dropdown, "value"),
         dash.Input("runtime-config-store", "data"),
+        dash.Input(ids.rosetta_v1_auto_select_detectors, "n_clicks", allow_optional=True),
         dash.State(
             ids.process_detector_dropdown_pattern(),
             "id",
@@ -53,7 +55,9 @@ def register_detector_dropdown_callbacks(
     )
     def populate_detector_dropdowns(
         page_state_payload: Any,
+        selected_process: Any,
         runtime_config_data: Any,
+        auto_select_clicks: Any,
         detector_dropdown_ids: list[dict[str, Any]],
         current_detector_options: list[Any],
         current_detector_values: list[Any],
@@ -69,6 +73,14 @@ def register_detector_dropdown_callbacks(
         resolved_options, resolved_values = detectors.populate_peak_script_detector_dropdowns(
             uploaded_fcs_path=uploaded_fcs_path,
             detector_dropdown_ids=detector_dropdown_ids,
+            reset_rosetta_v1=(
+                selected_process == "Rosetta Script V1"
+                and ids.process_dropdown in dash.ctx.triggered_prop_ids.values()
+            ),
+            auto_select_rosetta_v1=(
+                bool(auto_select_clicks)
+                and dash.ctx.triggered_id == ids.rosetta_v1_auto_select_detectors
+            ),
             current_detector_values=current_detector_values,
             runtime_config_data=runtime_config_data,
             detector_selection_runtime_config_path=getattr(

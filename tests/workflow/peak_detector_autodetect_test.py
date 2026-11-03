@@ -620,3 +620,72 @@ class Test_DetectorAutoDetect:
         )
 
         assert resolved_channel == "SSC-A"
+
+
+@pytest.mark.parametrize(
+    ("channels", "role", "expected"),
+    [
+        (["405SALS(Peak)", "405LALS(Peak)", "488Grn(Peak)"], "scattering", "405LALS(Peak)"),
+        (["405SALS(Peak)", "405LALS(Peak)", "488Grn(Peak)"], "green_fluorescence", "488Grn(Peak)"),
+        (["FSC-A", "SSC-A", "FITC-A"], "scattering", "SSC-A"),
+        (["FSC-A", "SSC-A", "FITC-A"], "green_fluorescence", "FITC-A"),
+        (["FSC-A", "Time"], "scattering", None),
+        (["FSC-A", "Time"], "green_fluorescence", None),
+        (["SSC-A", "SSC-H"], "scattering", None),
+        (["FITC-A", "FL1-A"], "green_fluorescence", None),
+        (["405LALS(Area)", "405LALS(Peak)"], "scattering", "405LALS(Peak)"),
+        (["405Grn(Peak)", "488Grn(Area)", "488Grn(Peak)"], "green_fluorescence", "488Grn(Peak)"),
+    ],
+)
+def test_rosetta_v1_selects_only_unambiguous_channels(channels, role, expected):
+    """V1 avoids choosing unrelated or ambiguous channels automatically."""
+    assert detectors.infer_rosetta_v1_channel(column_names=channels, detector_role=role) == expected
+
+
+def test_rosetta_v1_dropdowns_autodetect_and_preserve_user_selection(monkeypatch):
+    """V1 selects channels only on request and otherwise retains user choices."""
+    metadata = build_metadata(
+        instrument_name="unknown",
+        column_names=["405SALS(Peak)", "405LALS(Peak)", "405Grn(Peak)", "488Grn(Peak)"],
+    )
+    fake_file = FakeFCSFile(metadata)
+    fake_file.get_column_names = lambda: metadata.column_names
+    monkeypatch.setattr(detectors, "FCSFile", lambda path: fake_file)
+    dropdowns = [
+        {"process": "Rosetta Script V1", "channel": "scattering"},
+        {"process": "Rosetta Script V1", "channel": "green_fluorescence"},
+    ]
+
+    _, initial = detectors.populate_peak_script_detector_dropdowns(
+        uploaded_fcs_path="example.fcs", detector_dropdown_ids=dropdowns,
+        current_detector_values=[None, None], logger=detectors.logger,
+    )
+    _, detected = detectors.populate_peak_script_detector_dropdowns(
+        uploaded_fcs_path="example.fcs", detector_dropdown_ids=dropdowns,
+        current_detector_values=["405SALS(Peak)", None],
+        auto_select_rosetta_v1=True, logger=detectors.logger,
+    )
+    _, preserved = detectors.populate_peak_script_detector_dropdowns(
+        uploaded_fcs_path="example.fcs", detector_dropdown_ids=dropdowns,
+        current_detector_values=["405SALS(Peak)", "488Grn(Peak)"], logger=detectors.logger,
+    )
+
+    _, reset = detectors.populate_peak_script_detector_dropdowns(
+        uploaded_fcs_path="example.fcs", detector_dropdown_ids=dropdowns,
+        current_detector_values=["405LALS(Peak)", "488Grn(Peak)"],
+        reset_rosetta_v1=True, logger=detectors.logger,
+    )
+
+    assert initial == [None, None]
+    assert reset == [None, None]
+    assert detected == ["405LALS(Peak)", "405Grn(Peak)"]
+    assert preserved == ["405SALS(Peak)", "488Grn(Peak)"]
+
+
+def test_rosetta_v1_prefers_green_channel_matching_scatter_wavelength():
+    """Prefer green fluorescence excited at the selected scatter wavelength."""
+    assert detectors.infer_rosetta_v1_channel(
+        column_names=["405Grn(Peak)", "488Grn(Peak)"],
+        detector_role="green_fluorescence",
+        preferred_wavelength_nm=405,
+    ) == "405Grn(Peak)"

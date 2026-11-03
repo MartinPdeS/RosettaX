@@ -707,9 +707,9 @@ class Test_RosettaPeakScript:
         assert result.table_prefill_rows == [
             {
                 "measured_peak_position": float(value),
-                "particle_diameter_nm": float(index),
+                "particle_diameter_nm": "",
             }
-            for index, value in enumerate(result.new_peak_positions or [], start=1)
+            for value in result.new_peak_positions or []
         ]
 
     def test_run_automatic_action_can_insert_marker_associated_scatter_peaks_into_table(

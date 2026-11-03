@@ -41,6 +41,11 @@ class PeakIds:
         return f"{self.prefix}-peak-workflow-axis-scale-toggle"
 
     @property
+    def rosetta_v1_auto_select_detectors(self) -> str:
+        """Return the page-specific ID of the V1 detector selection button."""
+        return f"{self.prefix}-rosetta-v1-auto-select-detectors"
+
+    @property
     def process_detector_dropdown_type(self) -> str:
         return f"{self.resolved_namespace}-peak-script-detector-dropdown"
 
