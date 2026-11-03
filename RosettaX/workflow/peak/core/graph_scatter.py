@@ -150,7 +150,7 @@ def build_default_2d_scatter_figure(builder: PeakWorkflowGraphBuilder) -> go.Fig
         y_axis_title=f"{y_detector_column} [a.u.]",
         x_axis_type="log" if graph_settings.x_axis_is_log(builder) else "linear",
         y_axis_type="log" if graph_settings.y_axis_is_log(builder) else "linear",
-        show_grid=graph_settings.show_grid_by_default(builder),
+        show_grid=graph_settings.resolve_show_grid_by_default(builder),
         hovermode="closest",
         uirevision=f"peak_workflow_{builder.resolved_process_name}_2d_scatter",
     )

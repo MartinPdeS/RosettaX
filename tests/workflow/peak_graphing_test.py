@@ -810,3 +810,47 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
 
         assert annotations[0].x == pytest.approx(np.log10(100.0))
         assert annotations[1].x == pytest.approx(np.log10(900.0))
+
+
+@pytest.mark.parametrize("show_grid", [True, False])
+def test_scatter_graphs_use_configured_grid(show_grid, monkeypatch):
+    """Both fallback and custom scatter graphs honor the configured grid."""
+    process = types.SimpleNamespace(
+        graph_type="2d_scatter",
+        process_label="Test scatter",
+        required_detector_channels=["x", "y"],
+        build_graph_figure=lambda: go.Figure(),
+    )
+    builder = types.SimpleNamespace(
+        process=process,
+        detector_channels={"x": "X", "y": "Y"},
+        runtime_config_data={"visualization": {"show_grid_by_default": show_grid}},
+        runtime_config=types.SimpleNamespace(get_int=lambda *args, **kwargs: 100),
+        nbins=None,
+        max_events_for_plots=None,
+        marker_size=None,
+        marker_opacity=None,
+        resolved_process_name="test",
+        backend=None,
+        uploaded_fcs_path=None,
+        process_settings={},
+        peak_lines_payload=None,
+        xscale_selection=None,
+        yscale_selection=None,
+        _edge_artifact_filter_is_enabled=lambda: False,
+        _advanced_mode_is_enabled=lambda: False,
+        _call_with_supported_arguments=lambda method, **kwargs: method(),
+    )
+    monkeypatch.setattr(
+        graph_scatter,
+        "extract_plot_values_from_peak_lines_payload",
+        lambda builder: (np.array([1.0, 2.0]), np.array([2.0, 3.0])),
+    )
+    monkeypatch.setattr(graph_overlays, "add_2d_overlays", lambda builder, *, figure: figure)
+
+    fallback = graph_scatter.build_default_2d_scatter_figure(builder)
+    custom = PeakWorkflowGraphBuilder._try_build_custom_process_figure(builder)
+
+    for figure in (fallback, custom):
+        assert figure.layout.xaxis.showgrid is show_grid
+        assert figure.layout.yaxis.showgrid is show_grid

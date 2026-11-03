@@ -381,7 +381,7 @@ class PeakWorkflowGraphBuilder:
                     y_axis_type="log"
                     if graph_settings.y_axis_is_log(self)
                     else "linear",
-                    show_grid=graph_settings.show_grid_by_default(self),
+                    show_grid=graph_settings.resolve_show_grid_by_default(self),
                     hovermode="closest",
                     uirevision=f"peak_workflow_{self.resolved_process_name}_2d_scatter",
                 )
