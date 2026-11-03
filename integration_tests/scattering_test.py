@@ -96,3 +96,28 @@ def test_real_mie_relation_inverts_modeled_diameters(optical_parameters):
     assert relation.is_monotonic
     np.testing.assert_allclose(relation.coupling_to_diameter(modeled.expected_coupling_values), diameters, rtol=1e-10)
     assert np.isnan(relation.coupling_to_diameter(np.array([0.0]))[0])
+
+
+def test_weighted_detector_solid_and_core_shell_coupling(optical_parameters):
+    """Weighted native calculations preserve power scaling and sphere equivalence."""
+    weighted = {
+        **optical_parameters,
+        "detector_angular_weights": np.ones(optical_parameters["detector_sampling"], dtype=complex),
+    }
+    diameters = np.array([80.0, 120.0])
+    solid = BackEnd.compute_modeled_coupling_from_diameters(
+        diameters, particle_refractive_index=1.45, **weighted,
+    )
+    doubled = BackEnd.compute_modeled_coupling_from_diameters(
+        diameters, particle_refractive_index=1.45,
+        **{**weighted, "optical_power_watt": 2.0},
+    )
+    core_shell = BackEnd.compute_modeled_coupling_from_core_shell_dimensions(
+        diameters - 20.0, np.full(2, 10.0), core_refractive_index=1.45,
+        shell_refractive_index=1.45, **weighted,
+    )
+
+    assert np.all(np.isfinite(solid.expected_coupling_values))
+    assert np.all(solid.expected_coupling_values > 0)
+    np.testing.assert_allclose(doubled.expected_coupling_values, 2 * solid.expected_coupling_values, rtol=1e-10)
+    np.testing.assert_allclose(core_shell.expected_coupling_values, solid.expected_coupling_values, rtol=1e-8)

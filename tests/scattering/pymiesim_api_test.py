@@ -64,3 +64,16 @@ def test_coupling_extraction_preserves_values_across_pymiesim_apis(
     )
     np.testing.assert_array_equal(actual, expected.reshape(-1))
     assert calls == ["coupling"]
+
+
+@pytest.mark.parametrize("class_name", ["Setup", "Experiment"])
+def test_experiment_constructor_supports_both_pymiesim_exports(monkeypatch, class_name):
+    """Construct experiments with either supported PyMieSim class name."""
+    expected_sets = {"source_set": object(), "scatterer_set": object()}
+    monkeypatch.setattr(
+        backend,
+        "PyMieSim",
+        SimpleNamespace(**{class_name: lambda **kwargs: kwargs}),
+    )
+
+    assert backend.BackEnd._build_experiment(**expected_sets) == expected_sets

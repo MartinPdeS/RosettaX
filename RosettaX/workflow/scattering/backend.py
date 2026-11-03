@@ -98,6 +98,25 @@ class BackEnd:
     layer. The scattering backend only consumes the resulting peak positions.
     """
 
+    @staticmethod
+    def _build_experiment(**kwargs: Any) -> Any:
+        """Construct an experiment using the installed PyMieSim API.
+
+        Parameters
+        ----------
+        **kwargs : Any
+            Source, scatterer, and optional detector sets.
+
+        Returns
+        -------
+        Any
+            Configured PyMieSim experiment.
+        """
+        experiment_class = getattr(PyMieSim, "Experiment", None)
+        if experiment_class is None:
+            experiment_class = PyMieSim.Setup
+        return experiment_class(**kwargs)
+
     def __init__(self) -> None:
         logger.debug("Initialized Scattering BackEnd.")
 
@@ -522,7 +541,7 @@ class BackEnd:
             medium=np.full(target_size, float(medium_refractive_index)),
         )
 
-        experiment = PyMieSim.Setup(
+        experiment = BackEnd._build_experiment(
             scatterer_set=scatterer_set,
             source_set=source_set,
         )
@@ -867,7 +886,7 @@ class BackEnd:
             medium=np.full(target_size, float(medium_refractive_index)),
         )
 
-        experiment = PyMieSim.Setup(
+        experiment = BackEnd._build_experiment(
             scatterer_set=scatterer_set,
             source_set=source_set,
         )
@@ -988,7 +1007,7 @@ class BackEnd:
             angular_weights=np.asarray(detector_angular_weights, dtype=np.complex128),
         )
 
-        experiment = PyMieSim.Setup(
+        experiment = BackEnd._build_experiment(
             scatterer_set=scatterer_set,
             source_set=source_set,
             detector_set=detector_set,
@@ -1054,7 +1073,7 @@ class BackEnd:
             angular_weights=np.asarray(detector_angular_weights, dtype=np.complex128),
         )
 
-        experiment = PyMieSim.Setup(
+        experiment = BackEnd._build_experiment(
             scatterer_set=scatterer_set,
             source_set=source_set,
             detector_set=detector_set,
@@ -1111,7 +1130,7 @@ class BackEnd:
 
         logger.debug("Building Setup.")
 
-        experiment = PyMieSim.Setup(
+        experiment = BackEnd._build_experiment(
             scatterer_set=scatterer_set,
             source_set=source_set,
             detector_set=detector_set,
