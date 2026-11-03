@@ -30,6 +30,13 @@ def validate_reference_table_cells(
             if not value_is_not_empty(value):
                 continue
             parsed = casting.as_float(value)
+            if parsed is None and column_id in (
+                "particle_refractive_index",
+                "medium_refractive_index",
+                "core_refractive_index",
+                "shell_refractive_index",
+            ):
+                parsed = casting.labeled_refractive_index(value=value)
             if isinstance(value, bool) or parsed is None:
                 message = "Enter a finite number."
             elif parsed <= 0:

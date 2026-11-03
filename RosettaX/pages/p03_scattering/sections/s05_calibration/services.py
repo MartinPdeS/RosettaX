@@ -2,19 +2,13 @@
 import logging
 import numpy as np
 import plotly.graph_objs as go
-import re
 from dataclasses import dataclass
-from RosettaX.utils import plottings
+from RosettaX.utils import casting, plottings
 from RosettaX.workflow import scattering
 from RosettaX.workflow.scattering.backend import BackEnd
 from typing import Any
 
 logger = logging.getLogger(__name__)
-
-
-_LABELED_REFRACTIVE_INDEX_PATTERN = re.compile(
-    r"^[^()]+\(\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?)\s*\)$"
-)
 
 
 def resolve_table_refractive_index(
@@ -54,13 +48,10 @@ def resolve_table_refractive_index(
 
             continue
 
-        match = _LABELED_REFRACTIVE_INDEX_PATTERN.fullmatch(raw_value_text)
+        parsed_value = casting.labeled_refractive_index(value=raw_value_text)
 
-        if match is not None:
-            parsed_value = float(match.group(1))
-
-            if np.isfinite(parsed_value) and parsed_value > 0.0:
-                return parsed_value
+        if parsed_value is not None and parsed_value > 0.0:
+            return parsed_value
 
     return fallback_value
 

@@ -38,6 +38,33 @@ def as_float(value: Any) -> float | None:
     return None
 
 
+
+def labeled_refractive_index(*, value: Any) -> float | None:
+    """Parse a finite refractive index displayed as ``Material(number)``.
+
+    Parameters
+    ----------
+    value : Any
+        Candidate material label.
+
+    Returns
+    -------
+    float or None
+        The index, or None when the label is malformed or non-finite.
+    """
+    if not isinstance(value, str):
+        return None
+
+    match = re.fullmatch(
+        r"[^()]+\(\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?)\s*\)",
+        value.strip(),
+    )
+    if match is None:
+        return None
+
+    return as_float(match.group(1))
+
+
 def as_int(value: Any, default: int, min_value: int, max_value: int) -> int:
     """
     Parse a value into an int, falling back to a default and clamping within bounds.
