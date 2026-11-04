@@ -82,13 +82,8 @@ class SampleFilesPage:
                             className="alert-heading",
                         ),
                         html.P(
-                            "Explore Rosetta bead acquisitions from different flow cytometers. "
-                            "Instrument and acquisition details are shown with each download."
-                        ),
-                        html.P(
                             "Acquisition conditions and samples differ between files, "
-                            "so treat them as real-world cross-device examples rather "
-                            "than directly matched measurements.",
+                            "so these examples are not directly matched measurements.",
                             className="mb-0",
                         ),
                     ],
@@ -100,120 +95,120 @@ class SampleFilesPage:
                         dbc.Col(
                             self._build_download_card(
                                 title="Apogee flow cytometer",
-                                subtitle="Rosetta bead acquisition · 1 minute",
-                                color_name=styling.get_workflow_section_color(1),
+                                subtitle="1 minute",
+                                color_name="green",
                                 items=[
                                     {
                                         "title": "Rosetta beads (1 min)",
-                                        "description": "Rosetta bead sample acquired on an Apogee flow cytometer.",
+                                        "description": "",
                                         "href": f"{SAMPLE_FILES_BASE_URL}/apogee_rosetta_beads_1min.fcs",
                                         "download": "apogee_rosetta_beads_1min.fcs",
                                     },
                                 ],
                             ),
-                            lg=6,
+                            md=6, xl=4,
                         ),
                         dbc.Col(
                             self._build_download_card(
                                 title="Northern Lights flow cytometer",
-                                subtitle="Rosetta bead acquisition · 2 minutes",
-                                color_name=styling.get_workflow_section_color(2),
+                                subtitle="2 minutes",
+                                color_name="cyan",
                                 items=[
                                     {
                                         "title": "Rosetta beads (2 min)",
-                                        "description": "Rosetta bead sample acquired on a Northern Lights flow cytometer.",
+                                        "description": "",
                                         "href": f"{SAMPLE_FILES_BASE_URL}/northern_lights_rosetta_beads_2min.fcs",
                                         "download": "northern_lights_rosetta_beads_2min.fcs",
                                     },
                                 ],
                             ),
-                            lg=6,
+                            md=6, xl=4,
                         ),
                         dbc.Col(
                             self._build_download_card(
                                 title="BD FACSLyric flow cytometer",
-                                subtitle="Rosetta beads + 3 µm beads · 350 V scatter settings",
-                                color_name=styling.get_workflow_section_color(3),
+                                subtitle="3 µm beads added · FSC and SSC at 350 V",
+                                color_name="blue",
                                 items=[
                                     {
                                         "title": "Rosetta beads + 3 µm beads",
-                                        "description": "FACSLyric acquisition with FSC and SSC set to 350 V.",
+                                        "description": "",
                                         "href": f"{SAMPLE_FILES_BASE_URL}/bd_facslyric_rosetta_3um_beads.fcs",
                                         "download": "bd_facslyric_rosetta_3um_beads.fcs",
                                     },
                                 ],
                             ),
-                            lg=6,
+                            md=6, xl=4,
                         ),
                         dbc.Col(
                             self._build_download_card(
                                 title="BD FACSCanto I",
-                                subtitle="Rosetta bead acquisition · 15 May 2015",
-                                color_name=styling.get_workflow_section_color(1),
+                                subtitle="15 May 2015",
+                                color_name="blue",
                                 items=[
                                     {
                                         "title": "Rosetta beads",
-                                        "description": "Rosetta bead acquisition on a BD FACSCanto I.",
+                                        "description": "",
                                         "href": f"{SAMPLE_FILES_BASE_URL}/bd_facscanto_i_rosetta_beads.fcs",
                                         "download": "bd_facscanto_i_rosetta_beads.fcs",
                                     },
                                 ],
                             ),
-                            lg=6,
+                            md=6, xl=4,
                         ),
                         dbc.Col(
                             self._build_download_card(
                                 title="BD LSR II",
-                                subtitle="Rosetta bead acquisition · 10 June 2014",
-                                color_name=styling.get_workflow_section_color(2),
+                                subtitle="10 June 2014",
+                                color_name="blue",
                                 items=[
                                     {
                                         "title": "Rosetta beads",
-                                        "description": "Rosetta bead acquisition on a BD LSR II.",
+                                        "description": "",
                                         "href": f"{SAMPLE_FILES_BASE_URL}/bd_lsrii_rosetta_beads.fcs",
                                         "download": "bd_lsrii_rosetta_beads.fcs",
                                     },
                                 ],
                             ),
-                            lg=6,
+                            md=6, xl=4,
                         ),
                         dbc.Col(
                             self._build_download_card(
                                 title="BD FACSCalibur",
-                                subtitle="Rosetta bead acquisition · 8 February 2023",
-                                color_name=styling.get_workflow_section_color(3),
+                                subtitle="8 February 2023",
+                                color_name="blue",
                                 items=[
                                     {
                                         "title": "Rosetta beads",
-                                        "description": "Rosetta bead acquisition on a BD FACSCalibur.",
+                                        "description": "",
                                         "href": f"{SAMPLE_FILES_BASE_URL}/bd_facscalibur_rosetta_beads.fcs",
                                         "download": "bd_facscalibur_rosetta_beads.fcs",
                                     },
                                 ],
                             ),
-                            lg=6,
+                            md=6, xl=4,
                         ),
                         dbc.Col(
                             self._build_download_card(
                                 title="BD FACSymphony A1",
-                                subtitle="Rosetta bead acquisition · 16 November 2022",
-                                color_name=styling.get_workflow_section_color(1),
+                                subtitle="16 November 2022",
+                                color_name="blue",
                                 items=[
                                     {
                                         "title": "Rosetta beads",
-                                        "description": "Rosetta bead acquisition on a BD FACSymphony A1.",
+                                        "description": "",
                                         "href": f"{SAMPLE_FILES_BASE_URL}/bd_facsymphony_a1_rosetta_beads.fcs",
                                         "download": "bd_facsymphony_a1_rosetta_beads.fcs",
                                     },
                                 ],
                             ),
-                            lg=6,
+                            md=6, xl=4,
                         ),
                         dbc.Col(
                             self._build_download_card(
                                 title="Beckman Coulter CytoFLEX S",
-                                subtitle="Rosetta bead acquisition · 5 January 2023",
-                                color_name=styling.get_workflow_section_color(2),
+                                subtitle="5 January 2023",
+                                color_name="purple",
                                 items=[
                                     {
                                         "title": "Rosetta beads",
@@ -223,42 +218,42 @@ class SampleFilesPage:
                                     },
                                 ],
                             ),
-                            lg=6,
+                            md=6, xl=4,
                         ),
                         dbc.Col(
                             self._build_download_card(
                                 title="Miltenyi MACSQuant Analyzer 16",
-                                subtitle="Rosetta bead acquisition · 13 May 2022",
-                                color_name=styling.get_workflow_section_color(3),
+                                subtitle="13 May 2022",
+                                color_name="pink",
                                 items=[
                                     {
                                         "title": "Rosetta beads",
-                                        "description": "Rosetta bead acquisition on a Miltenyi MACSQuant Analyzer 16.",
+                                        "description": "",
                                         "href": f"{SAMPLE_FILES_BASE_URL}/miltenyi_macsquant_analyzer_16_rosetta_beads.fcs",
                                         "download": "miltenyi_macsquant_analyzer_16_rosetta_beads.fcs",
                                     },
                                 ],
                             ),
-                            lg=6,
+                            md=6, xl=4,
                         ),
                         dbc.Col(
                             self._build_download_card(
                                 title="Stratedigm S1313EX",
-                                subtitle="Rosetta bead acquisition · 15 May 2014",
-                                color_name=styling.get_workflow_section_color(1),
+                                subtitle="15 May 2014",
+                                color_name="red",
                                 items=[
                                     {
                                         "title": "Rosetta beads",
-                                        "description": "Rosetta bead acquisition on a Stratedigm S1313EX.",
+                                        "description": "",
                                         "href": f"{SAMPLE_FILES_BASE_URL}/stratedigm_s1313ex_rosetta_beads.fcs",
                                         "download": "stratedigm_s1313ex_rosetta_beads.fcs",
                                     },
                                 ],
                             ),
-                            lg=6,
+                            md=6, xl=4,
                         ),
                     ],
-                    className="g-3",
+                    className="g-2",
                 ),
             ],
         )
@@ -363,6 +358,32 @@ class SampleFilesPage:
         color_name: str,
         items: list[dict[str, str]],
     ) -> dbc.Card:
+        if len(items) == 1:
+            item = items[0]
+            return dbc.Card(
+                dbc.CardBody(
+                    [
+                        html.Div(
+                            [
+                                html.Div(title, style={"fontWeight": "700"}),
+                                html.Div(subtitle, style={"fontSize": "0.85rem", "opacity": 0.75}),
+                                html.Div(item["description"], style={"fontSize": "0.85rem", "opacity": 0.75}) if item["description"] else None,
+                            ],
+                            style={"minWidth": "0", "flex": "1 1 auto"},
+                        ),
+                        html.A(
+                            dbc.Button("Download", color="primary", outline=True, size="sm"),
+                            href=item["href"],
+                            download=item["download"],
+                        ),
+                    ],
+                    style={"display": "flex", "alignItems": "center", "justifyContent": "space-between", "gap": "12px", "padding": "10px 12px"},
+                ),
+                style=ui_forms.build_workflow_subpanel_card_style(
+                    color_name=color_name,
+                    style_overrides={"background": styling.build_rgba(color_name, 0.04), "height": "100%"},
+                ),
+            )
         return dbc.Card(
             [
                 dbc.CardHeader(
@@ -386,7 +407,7 @@ class SampleFilesPage:
                 dbc.CardBody(
                     [
                         self._build_download_item(
-                            title=item["title"],
+                            title=item["title"] if len(items) > 1 else "",
                             description=item["description"],
                             href=item["href"],
                             download=item["download"],
@@ -431,14 +452,14 @@ class SampleFilesPage:
                                 "fontWeight": "700",
                                 "marginBottom": "2px",
                             },
-                        ),
+                        ) if title else None,
                         html.Div(
                             description,
                             style={
                                 "fontSize": "0.9rem",
                                 "opacity": 0.78,
                             },
-                        ),
+                        ) if description else None,
                     ],
                     style={
                         "flex": "1 1 auto",
