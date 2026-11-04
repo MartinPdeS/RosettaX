@@ -538,6 +538,29 @@ class Test_DocumentationDeepDivePages:
         assert "/documentation" in hrefs
         assert "/documentation/supported-cytometers" in hrefs
 
+    def test_sample_files_page_lists_cross_device_rosetta_acquisitions(
+        self, monkeypatch
+    ) -> None:
+        """Cross-device downloads include the added instruments and extraction guidance."""
+        monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
+        sample_files_main = importlib.import_module("RosettaX.pages.p09_sample_files.main")
+        layout = sample_files_main.SampleFilesPage().layout()
+        text_nodes = _collect_text(layout)
+        hrefs = _collect_component_hrefs(layout)
+        for instrument in (
+            "BD FACSCanto I", "BD LSR II", "BD FACSCalibur", "BD FACSymphony A1",
+            "Beckman Coulter CytoFLEX S", "Miltenyi MACSQuant Analyzer 16", "Stratedigm S1313EX",
+        ):
+            assert instrument in text_nodes
+        for filename in (
+            "bd_facscanto_i_rosetta_beads.fcs", "bd_lsrii_rosetta_beads.fcs",
+            "bd_facscalibur_rosetta_beads.fcs", "bd_facsymphony_a1_rosetta_beads.fcs",
+            "beckman_cytoflex_s_rosetta_beads.fcs.gz",
+            "miltenyi_macsquant_analyzer_16_rosetta_beads.fcs", "stratedigm_s1313ex_rosetta_beads.fcs",
+        ):
+            assert f"{sample_files_main.SAMPLE_FILES_BASE_URL}/{filename}" in hrefs
+        assert "Compressed FCS file; extract it before uploading to RosettaX." in text_nodes
+
     def test_supported_cytometers_page_layout_contains_catalog_and_contact(
         self, monkeypatch
     ) -> None:

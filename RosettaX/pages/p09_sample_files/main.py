@@ -82,14 +82,12 @@ class SampleFilesPage:
                             className="alert-heading",
                         ),
                         html.P(
-                            "The collection is planned to cover four flow cytometers "
-                            "using Rosetta beads. Three datasets are available now, "
-                            "from an Apogee, a Northern Lights, and a BD FACSLyric. Instrument and "
-                            "acquisition details are shown with each download."
+                            "Explore Rosetta bead acquisitions from different flow cytometers. "
+                            "Instrument and acquisition details are shown with each download."
                         ),
                         html.P(
-                            "These acquisitions have different run durations, so "
-                            "treat them as real-world cross-device examples rather "
+                            "Acquisition conditions and samples differ between files, "
+                            "so treat them as real-world cross-device examples rather "
                             "than directly matched measurements.",
                             className="mb-0",
                         ),
@@ -142,6 +140,118 @@ class SampleFilesPage:
                                         "description": "FACSLyric acquisition with FSC and SSC set to 350 V.",
                                         "href": f"{SAMPLE_FILES_BASE_URL}/bd_facslyric_rosetta_3um_beads.fcs",
                                         "download": "bd_facslyric_rosetta_3um_beads.fcs",
+                                    },
+                                ],
+                            ),
+                            lg=6,
+                        ),
+                        dbc.Col(
+                            self._build_download_card(
+                                title="BD FACSCanto I",
+                                subtitle="Rosetta bead acquisition · 15 May 2015",
+                                color_name=styling.get_workflow_section_color(1),
+                                items=[
+                                    {
+                                        "title": "Rosetta beads",
+                                        "description": "Rosetta bead acquisition on a BD FACSCanto I.",
+                                        "href": f"{SAMPLE_FILES_BASE_URL}/bd_facscanto_i_rosetta_beads.fcs",
+                                        "download": "bd_facscanto_i_rosetta_beads.fcs",
+                                    },
+                                ],
+                            ),
+                            lg=6,
+                        ),
+                        dbc.Col(
+                            self._build_download_card(
+                                title="BD LSR II",
+                                subtitle="Rosetta bead acquisition · 10 June 2014",
+                                color_name=styling.get_workflow_section_color(2),
+                                items=[
+                                    {
+                                        "title": "Rosetta beads",
+                                        "description": "Rosetta bead acquisition on a BD LSR II.",
+                                        "href": f"{SAMPLE_FILES_BASE_URL}/bd_lsrii_rosetta_beads.fcs",
+                                        "download": "bd_lsrii_rosetta_beads.fcs",
+                                    },
+                                ],
+                            ),
+                            lg=6,
+                        ),
+                        dbc.Col(
+                            self._build_download_card(
+                                title="BD FACSCalibur",
+                                subtitle="Rosetta bead acquisition · 8 February 2023",
+                                color_name=styling.get_workflow_section_color(3),
+                                items=[
+                                    {
+                                        "title": "Rosetta beads",
+                                        "description": "Rosetta bead acquisition on a BD FACSCalibur.",
+                                        "href": f"{SAMPLE_FILES_BASE_URL}/bd_facscalibur_rosetta_beads.fcs",
+                                        "download": "bd_facscalibur_rosetta_beads.fcs",
+                                    },
+                                ],
+                            ),
+                            lg=6,
+                        ),
+                        dbc.Col(
+                            self._build_download_card(
+                                title="BD FACSymphony A1",
+                                subtitle="Rosetta bead acquisition · 16 November 2022",
+                                color_name=styling.get_workflow_section_color(1),
+                                items=[
+                                    {
+                                        "title": "Rosetta beads",
+                                        "description": "Rosetta bead acquisition on a BD FACSymphony A1.",
+                                        "href": f"{SAMPLE_FILES_BASE_URL}/bd_facsymphony_a1_rosetta_beads.fcs",
+                                        "download": "bd_facsymphony_a1_rosetta_beads.fcs",
+                                    },
+                                ],
+                            ),
+                            lg=6,
+                        ),
+                        dbc.Col(
+                            self._build_download_card(
+                                title="Beckman Coulter CytoFLEX S",
+                                subtitle="Rosetta bead acquisition · 5 January 2023",
+                                color_name=styling.get_workflow_section_color(2),
+                                items=[
+                                    {
+                                        "title": "Rosetta beads",
+                                        "description": "Compressed FCS file; extract it before uploading to RosettaX.",
+                                        "href": f"{SAMPLE_FILES_BASE_URL}/beckman_cytoflex_s_rosetta_beads.fcs.gz",
+                                        "download": "beckman_cytoflex_s_rosetta_beads.fcs.gz",
+                                    },
+                                ],
+                            ),
+                            lg=6,
+                        ),
+                        dbc.Col(
+                            self._build_download_card(
+                                title="Miltenyi MACSQuant Analyzer 16",
+                                subtitle="Rosetta bead acquisition · 13 May 2022",
+                                color_name=styling.get_workflow_section_color(3),
+                                items=[
+                                    {
+                                        "title": "Rosetta beads",
+                                        "description": "Rosetta bead acquisition on a Miltenyi MACSQuant Analyzer 16.",
+                                        "href": f"{SAMPLE_FILES_BASE_URL}/miltenyi_macsquant_analyzer_16_rosetta_beads.fcs",
+                                        "download": "miltenyi_macsquant_analyzer_16_rosetta_beads.fcs",
+                                    },
+                                ],
+                            ),
+                            lg=6,
+                        ),
+                        dbc.Col(
+                            self._build_download_card(
+                                title="Stratedigm S1313EX",
+                                subtitle="Rosetta bead acquisition · 15 May 2014",
+                                color_name=styling.get_workflow_section_color(1),
+                                items=[
+                                    {
+                                        "title": "Rosetta beads",
+                                        "description": "Rosetta bead acquisition on a Stratedigm S1313EX.",
+                                        "href": f"{SAMPLE_FILES_BASE_URL}/stratedigm_s1313ex_rosetta_beads.fcs",
+                                        "download": "stratedigm_s1313ex_rosetta_beads.fcs",
                                     },
                                 ],
                             ),
@@ -281,6 +391,7 @@ class SampleFilesPage:
                             href=item["href"],
                             download=item["download"],
                             color_name=color_name,
+                            bordered=len(items) > 1,
                         )
                         for item in items
                     ],
@@ -308,6 +419,7 @@ class SampleFilesPage:
         href: str,
         download: str,
         color_name: str,
+        bordered: bool = True,
     ) -> html.Div:
         return html.Div(
             [
@@ -352,10 +464,12 @@ class SampleFilesPage:
                 "alignItems": "center",
                 "justifyContent": "space-between",
                 "gap": "12px",
-                "padding": "11px 12px",
-                "border": f"1px solid {styling.build_rgba(color_name, 0.22)}",
-                "borderRadius": "10px",
-                "background": styling.build_rgba(color_name, 0.04),
+                **({
+                    "padding": "11px 12px",
+                    "border": f"1px solid {styling.build_rgba(color_name, 0.22)}",
+                    "borderRadius": "10px",
+                    "background": styling.build_rgba(color_name, 0.04),
+                } if bordered else {}),
             },
         )
 
