@@ -176,3 +176,15 @@ The script stops with an informative status message if:
 The workflow does not use marker positions to anchor bead-to-diameter
 assignments directly. That assignment is determined by the calibration-standard
 table preset (e.g. *Rosetta Mix*) in the scattering model section.
+
+Rosetta Script V1 assigns Rosetta Mix sizes using both the 140 nm and 380 nm
+fluorescent marker anchors. If either anchor is unavailable or unreliable, or
+not all detected peaks can be assigned, it shows a warning and leaves the
+existing graph and calibration table unchanged.
+
+For Rosetta Script V1, use *Auto-select detectors* to select uniquely named
+side-scattering and green-fluorescence channels. It prefers peak measurements and a green channel with the same encoded
+wavelength as the selected scattering channel; if that is unavailable, it uses
+a uniquely identifiable 488 nm green channel. If names are missing or multiple
+channels still match a role, select that channel manually. Verify that the
+selected channels match the instrument and measurement being analyzed.

@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Pages API &#8212; RosettaX 0.10.9 documentation</title>
+    <title>Pages API &#8212; RosettaX 0.11.0 documentation</title>
   
   
   
@@ -26,8 +26,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=c83e6b79" />
@@ -40,21 +40,21 @@
     <link rel="stylesheet" type="text/css" href="../_static/layout.css?v=dc96f8db" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <script defer src="../_static/scripts/fontawesome.js?digest=75c7c72ae941e8b558d8"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=9d400afe"></script>
+    <script src="../_static/documentation_options.js?v=1a9b1e2b"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/sg-tags.js?v=d80f6fa4"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/pages';</script>
     <script>
-        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/MartinPdeS/RosettaX/documentation_page/version_switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.10.9';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.11.0';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -67,7 +67,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.10.9" />
+  <meta name="docsearch:version" content="0.11.0" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -115,7 +115,7 @@
   
     <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
 <div class="bd-header__inner bd-page-width">
-  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation" aria-expanded="false" aria-controls="pst-primary-sidebar-modal">
     <span class="fa-solid fa-bars"></span>
   </button>
   
@@ -137,8 +137,8 @@
     
     
     
-    <img src="../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.10.9 documentation - Home"/>
-    <img src="../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.10.9 documentation - Home"/>
+    <img src="../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.11.0 documentation - Home"/>
+    <img src="../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.11.0 documentation - Home"/>
   
   
 </a></div>
@@ -237,14 +237,14 @@
 
 <div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
   <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
-    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
   </button>
   <ul class="dropdown-menu dropdown-menu-end">
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
   </ul>
 </div></div>
       
@@ -301,7 +301,7 @@
   
 
   
-    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page" aria-expanded="false" aria-controls="pst-secondary-sidebar-modal">
       <span class="fa-solid fa-outdent"></span>
     </button>
   
@@ -315,7 +315,7 @@
       
       
       
-      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <dialog id="pst-primary-sidebar-modal" tabindex="-1"></dialog>
       <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
 
@@ -406,14 +406,14 @@
 
 <div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
   <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
-    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
   </button>
   <ul class="dropdown-menu dropdown-menu-end">
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
-    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
   </ul>
 </div></div>
         
@@ -513,7 +513,7 @@
     
     <li class="breadcrumb-item breadcrumb-home">
       <a href="../index.html" class="nav-link" aria-label="Home">
-        <i class="fa-solid fa-home"></i>
+        <i class="fa-solid fa-house"></i>
       </a>
     </li>
     
@@ -819,7 +819,385 @@ time and concatenates the resulting coupling values.</p>
 </dd></dl>
 
 <p id="module-RosettaX.pages.p03_scattering.state">Compatibility exports for scattering workflow state.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.state.ScatteringPageState">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ScatteringPageState</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uploaded_fcs_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uploaded_filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_lines_payload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scattering_peak_lines_payload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scattering_parameters_payload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_graph_payload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_model_graph_payload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_payload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_saved</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status_message</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/page_session/scattering.html#ScatteringPageState"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p03_scattering.state.ScatteringPageState" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Single source of truth for the scattering calibration page.</p>
+<p>This state object is serialized into one Dash dcc.Store and progressively
+replaces scattered section specific stores.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>uploaded_fcs_path</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>uploaded_filename</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>peak_lines_payload</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>scattering_peak_lines_payload</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>scattering_parameters_payload</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>calibration_graph_payload</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>calibration_model_graph_payload</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>calibration_payload</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>calibration_saved</strong> (<em>bool</em>)</p></li>
+<li><p><strong>status_message</strong> (<em>str</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.state.ScatteringPageState.calibration_graph_payload">
+<span class="sig-name descname"><span class="pre">calibration_graph_payload</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#RosettaX.pages.p03_scattering.state.ScatteringPageState.calibration_graph_payload" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.state.ScatteringPageState.calibration_model_graph_payload">
+<span class="sig-name descname"><span class="pre">calibration_model_graph_payload</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#RosettaX.pages.p03_scattering.state.ScatteringPageState.calibration_model_graph_payload" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.state.ScatteringPageState.calibration_payload">
+<span class="sig-name descname"><span class="pre">calibration_payload</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#RosettaX.pages.p03_scattering.state.ScatteringPageState.calibration_payload" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.state.ScatteringPageState.calibration_saved">
+<span class="sig-name descname"><span class="pre">calibration_saved</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#RosettaX.pages.p03_scattering.state.ScatteringPageState.calibration_saved" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.state.ScatteringPageState.empty">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">empty</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/page_session/scattering.html#ScatteringPageState.empty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p03_scattering.state.ScatteringPageState.empty" title="Link to this definition">#</a></dt>
+<dd><p>Build an empty scattering page state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Empty page state.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#RosettaX.pages.p03_scattering.state.ScatteringPageState" title="RosettaX.pages.p03_scattering.state.ScatteringPageState">ScatteringPageState</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.state.ScatteringPageState.from_dict">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/page_session/scattering.html#ScatteringPageState.from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p03_scattering.state.ScatteringPageState.from_dict" title="Link to this definition">#</a></dt>
+<dd><p>Build a scattering page state from a serialized dictionary.</p>
+<p>Unknown keys are ignored so older browser sessions do not crash after
+the state schema evolves.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>payload</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>) – Serialized page state from Dash dcc.Store.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Parsed scattering page state.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#RosettaX.pages.p03_scattering.state.ScatteringPageState" title="RosettaX.pages.p03_scattering.state.ScatteringPageState">ScatteringPageState</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.state.ScatteringPageState.peak_lines_payload">
+<span class="sig-name descname"><span class="pre">peak_lines_payload</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#RosettaX.pages.p03_scattering.state.ScatteringPageState.peak_lines_payload" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.state.ScatteringPageState.scattering_parameters_payload">
+<span class="sig-name descname"><span class="pre">scattering_parameters_payload</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#RosettaX.pages.p03_scattering.state.ScatteringPageState.scattering_parameters_payload" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.state.ScatteringPageState.scattering_peak_lines_payload">
+<span class="sig-name descname"><span class="pre">scattering_peak_lines_payload</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#RosettaX.pages.p03_scattering.state.ScatteringPageState.scattering_peak_lines_payload" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.state.ScatteringPageState.status_message">
+<span class="sig-name descname"><span class="pre">status_message</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></span><a class="headerlink" href="#RosettaX.pages.p03_scattering.state.ScatteringPageState.status_message" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.state.ScatteringPageState.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/page_session/scattering.html#ScatteringPageState.to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p03_scattering.state.ScatteringPageState.to_dict" title="Link to this definition">#</a></dt>
+<dd><p>Serialize the scattering page state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary suitable for Dash dcc.Store.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict[str, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.state.ScatteringPageState.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">changes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/page_session/scattering.html#ScatteringPageState.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p03_scattering.state.ScatteringPageState.update" title="Link to this definition">#</a></dt>
+<dd><p>Return a new state with selected fields changed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>**changes</strong> (<em>Any</em>) – Field values to update.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Updated immutable state.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#RosettaX.pages.p03_scattering.state.ScatteringPageState" title="RosettaX.pages.p03_scattering.state.ScatteringPageState">ScatteringPageState</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>KeyError</strong> – If an unknown state field is provided.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.state.ScatteringPageState.uploaded_fcs_path">
+<span class="sig-name descname"><span class="pre">uploaded_fcs_path</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#RosettaX.pages.p03_scattering.state.ScatteringPageState.uploaded_fcs_path" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p03_scattering.state.ScatteringPageState.uploaded_filename">
+<span class="sig-name descname"><span class="pre">uploaded_filename</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#RosettaX.pages.p03_scattering.state.ScatteringPageState.uploaded_filename" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 <p id="module-RosettaX.pages.p02_fluorescence.state">Compatibility exports for fluorescence workflow state.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="RosettaX.pages.p02_fluorescence.state.FluorescencePageState">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">FluorescencePageState</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uploaded_fcs_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uploaded_filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_payload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_saved</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scattering_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fluorescence_histogram_payload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fluorescence_source_channel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_lines_payload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fluorescence_peak_lines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_table_rows</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_detector_channels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status_message</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/page_session/fluorescence.html#FluorescencePageState"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Single source of truth for the fluorescence calibration page.</p>
+<p>This state stores upload state, threshold state, peak workflow state,
+histogram state, and calibration state in one serializable object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>uploaded_fcs_path</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>uploaded_filename</strong> (<em>str</em>)</p></li>
+<li><p><strong>calibration_payload</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>calibration_saved</strong> (<em>bool</em>)</p></li>
+<li><p><strong>scattering_threshold</strong> (<em>float</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>fluorescence_histogram_payload</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>fluorescence_source_channel</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>peak_lines_payload</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>fluorescence_peak_lines</strong> (<em>list</em><em>[</em><em>float</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>reference_table_rows</strong> (<em>list</em><em>[</em><em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>last_detector_channels</strong> (<em>list</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>status_message</strong> (<em>str</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p02_fluorescence.state.FluorescencePageState.calibration_payload">
+<span class="sig-name descname"><span class="pre">calibration_payload</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.calibration_payload" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p02_fluorescence.state.FluorescencePageState.calibration_saved">
+<span class="sig-name descname"><span class="pre">calibration_saved</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.calibration_saved" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="RosettaX.pages.p02_fluorescence.state.FluorescencePageState.empty">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">empty</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/page_session/fluorescence.html#FluorescencePageState.empty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.empty" title="Link to this definition">#</a></dt>
+<dd><p>Build an empty fluorescence page state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Empty page state.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState" title="RosettaX.pages.p02_fluorescence.state.FluorescencePageState">FluorescencePageState</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p02_fluorescence.state.FluorescencePageState.fluorescence_histogram_payload">
+<span class="sig-name descname"><span class="pre">fluorescence_histogram_payload</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.fluorescence_histogram_payload" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p02_fluorescence.state.FluorescencePageState.fluorescence_peak_lines">
+<span class="sig-name descname"><span class="pre">fluorescence_peak_lines</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.fluorescence_peak_lines" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p02_fluorescence.state.FluorescencePageState.fluorescence_source_channel">
+<span class="sig-name descname"><span class="pre">fluorescence_source_channel</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.fluorescence_source_channel" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="RosettaX.pages.p02_fluorescence.state.FluorescencePageState.from_dict">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/page_session/fluorescence.html#FluorescencePageState.from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.from_dict" title="Link to this definition">#</a></dt>
+<dd><p>Build a fluorescence page state from a serialized dictionary.</p>
+<p>Unknown keys are ignored so older browser sessions do not crash after
+the state schema evolves.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>payload</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>) – Serialized page state from Dash dcc.Store.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Parsed fluorescence page state.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState" title="RosettaX.pages.p02_fluorescence.state.FluorescencePageState">FluorescencePageState</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p02_fluorescence.state.FluorescencePageState.last_detector_channels">
+<span class="sig-name descname"><span class="pre">last_detector_channels</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.last_detector_channels" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p02_fluorescence.state.FluorescencePageState.peak_lines_payload">
+<span class="sig-name descname"><span class="pre">peak_lines_payload</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.peak_lines_payload" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p02_fluorescence.state.FluorescencePageState.reference_table_rows">
+<span class="sig-name descname"><span class="pre">reference_table_rows</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.reference_table_rows" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p02_fluorescence.state.FluorescencePageState.scattering_threshold">
+<span class="sig-name descname"><span class="pre">scattering_threshold</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.scattering_threshold" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p02_fluorescence.state.FluorescencePageState.status_message">
+<span class="sig-name descname"><span class="pre">status_message</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></span><a class="headerlink" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.status_message" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="RosettaX.pages.p02_fluorescence.state.FluorescencePageState.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/page_session/fluorescence.html#FluorescencePageState.to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.to_dict" title="Link to this definition">#</a></dt>
+<dd><p>Serialize the fluorescence page state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary suitable for Dash dcc.Store.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict[str, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="RosettaX.pages.p02_fluorescence.state.FluorescencePageState.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">changes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/page_session/fluorescence.html#FluorescencePageState.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.update" title="Link to this definition">#</a></dt>
+<dd><p>Return a new state with selected fields changed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>**changes</strong> (<em>Any</em>) – Field values to update.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Updated immutable state.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState" title="RosettaX.pages.p02_fluorescence.state.FluorescencePageState">FluorescencePageState</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>KeyError</strong> – If an unknown state field is provided.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p02_fluorescence.state.FluorescencePageState.uploaded_fcs_path">
+<span class="sig-name descname"><span class="pre">uploaded_fcs_path</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.uploaded_fcs_path" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.pages.p02_fluorescence.state.FluorescencePageState.uploaded_filename">
+<span class="sig-name descname"><span class="pre">uploaded_filename</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></span><a class="headerlink" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.uploaded_filename" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p02_fluorescence.state.build_empty_peak_lines_payload">
+<span class="sig-name descname"><span class="pre">build_empty_peak_lines_payload</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/page_session/fluorescence.html#build_empty_peak_lines_payload"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p02_fluorescence.state.build_empty_peak_lines_payload" title="Link to this definition">#</a></dt>
+<dd><p>Build an empty peak annotation payload.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Empty peak annotation payload.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict[str, list[Any]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p02_fluorescence.state.build_peak_lines_payload_from_legacy_lines">
+<span class="sig-name descname"><span class="pre">build_peak_lines_payload_from_legacy_lines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fluorescence_peak_lines</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/page_session/fluorescence.html#build_peak_lines_payload_from_legacy_lines"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p02_fluorescence.state.build_peak_lines_payload_from_legacy_lines" title="Link to this definition">#</a></dt>
+<dd><p>Build a peak payload from the previous fluorescence_peak_lines list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fluorescence_peak_lines</strong> (<em>Any</em>) – Legacy list of 1D peak positions.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Peak annotation payload.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict[str, list[Any]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p02_fluorescence.state.extract_1d_positions_from_peak_payload">
+<span class="sig-name descname"><span class="pre">extract_1d_positions_from_peak_payload</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">peak_lines_payload</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/page_session/fluorescence.html#extract_1d_positions_from_peak_payload"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p02_fluorescence.state.extract_1d_positions_from_peak_payload" title="Link to this definition">#</a></dt>
+<dd><p>Extract 1D positions from a peak annotation payload.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>peak_lines_payload</strong> (<em>Any</em>) – Peak annotation payload.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Extracted positions.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p02_fluorescence.state.infer_uploaded_filename">
+<span class="sig-name descname"><span class="pre">infer_uploaded_filename</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uploaded_fcs_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/page_session/fluorescence.html#infer_uploaded_filename"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p02_fluorescence.state.infer_uploaded_filename" title="Link to this definition">#</a></dt>
+<dd><p>Infer the uploaded filename from the uploaded FCS path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>uploaded_fcs_path</strong> (<em>Any</em>) – Uploaded FCS path.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Filename or empty string.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p02_fluorescence.state.normalize_legacy_payload_keys">
+<span class="sig-name descname"><span class="pre">normalize_legacy_payload_keys</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/page_session/fluorescence.html#normalize_legacy_payload_keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p02_fluorescence.state.normalize_legacy_payload_keys" title="Link to this definition">#</a></dt>
+<dd><p>Normalize legacy page state field names to canonical field names.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>payload</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – Raw page state payload or update dictionary.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Payload with canonical keys.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict[str, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
 <span class="target" id="module-RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services"></span><dl class="py function">
 <dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_axis_scale_toggle_values">
 <span class="sig-name descname"><span class="pre">build_axis_scale_toggle_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">xscale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yscale</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s02_calibration_picker/services.html#build_axis_scale_toggle_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_axis_scale_toggle_values" title="Link to this definition">#</a></dt>
@@ -869,14 +1247,16 @@ time and concatenates the resulting coupling values.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_preview_items">
 <span class="sig-name descname"><span class="pre">build_preview_items</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">calibration_summary</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s02_calibration_picker/services.html#build_preview_items"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_preview_items" title="Link to this definition">#</a></dt>
-<dd><p>Build preview information items from calibration summary.</p>
-<p>Returns a list of HTML divs showing key calibration metadata.</p>
+<dd><p>Build preview information items from a calibration summary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>calibration_summary</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p>
+<dd class="field-odd"><p><strong>calibration_summary</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – Parsed calibration metadata used to build the preview rows.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>list[<em>Any</em>]</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dash HTML components showing key calibration metadata.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[Any]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1061,6 +1441,23 @@ monotone curve used for inversion in green.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>tuple[str, dict[str, <em>Any</em>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.parse_uploaded_calibration_summaries">
+<span class="sig-name descname"><span class="pre">parse_uploaded_calibration_summaries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">contents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filenames</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/pages/p04_calibrate/sections/s02_calibration_picker/services.html#parse_uploaded_calibration_summaries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.parse_uploaded_calibration_summaries" title="Link to this definition">#</a></dt>
+<dd><p>Parse uploaded calibration files and build their lightweight summaries.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>contents</strong> (<em>Any</em>)</p></li>
+<li><p><strong>filenames</strong> (<em>Any</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list[dict[str, <em>Any</em>]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1514,7 +1911,7 @@ integration.</p>
             
             
               
-                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <dialog id="pst-secondary-sidebar-modal" tabindex="-1"></dialog>
                 <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
 
@@ -1557,6 +1954,47 @@ integration.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.to_dict"><code class="docutils literal notranslate"><span class="pre">ScatteringCalibrationFitResult.to_dict()</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.state.ScatteringPageState"><code class="docutils literal notranslate"><span class="pre">ScatteringPageState</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.state.ScatteringPageState.calibration_graph_payload"><code class="docutils literal notranslate"><span class="pre">ScatteringPageState.calibration_graph_payload</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.state.ScatteringPageState.calibration_model_graph_payload"><code class="docutils literal notranslate"><span class="pre">ScatteringPageState.calibration_model_graph_payload</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.state.ScatteringPageState.calibration_payload"><code class="docutils literal notranslate"><span class="pre">ScatteringPageState.calibration_payload</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.state.ScatteringPageState.calibration_saved"><code class="docutils literal notranslate"><span class="pre">ScatteringPageState.calibration_saved</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.state.ScatteringPageState.empty"><code class="docutils literal notranslate"><span class="pre">ScatteringPageState.empty()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.state.ScatteringPageState.from_dict"><code class="docutils literal notranslate"><span class="pre">ScatteringPageState.from_dict()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.state.ScatteringPageState.peak_lines_payload"><code class="docutils literal notranslate"><span class="pre">ScatteringPageState.peak_lines_payload</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.state.ScatteringPageState.scattering_parameters_payload"><code class="docutils literal notranslate"><span class="pre">ScatteringPageState.scattering_parameters_payload</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.state.ScatteringPageState.scattering_peak_lines_payload"><code class="docutils literal notranslate"><span class="pre">ScatteringPageState.scattering_peak_lines_payload</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.state.ScatteringPageState.status_message"><code class="docutils literal notranslate"><span class="pre">ScatteringPageState.status_message</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.state.ScatteringPageState.to_dict"><code class="docutils literal notranslate"><span class="pre">ScatteringPageState.to_dict()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.state.ScatteringPageState.update"><code class="docutils literal notranslate"><span class="pre">ScatteringPageState.update()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.state.ScatteringPageState.uploaded_fcs_path"><code class="docutils literal notranslate"><span class="pre">ScatteringPageState.uploaded_fcs_path</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p03_scattering.state.ScatteringPageState.uploaded_filename"><code class="docutils literal notranslate"><span class="pre">ScatteringPageState.uploaded_filename</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState"><code class="docutils literal notranslate"><span class="pre">FluorescencePageState</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.calibration_payload"><code class="docutils literal notranslate"><span class="pre">FluorescencePageState.calibration_payload</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.calibration_saved"><code class="docutils literal notranslate"><span class="pre">FluorescencePageState.calibration_saved</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.empty"><code class="docutils literal notranslate"><span class="pre">FluorescencePageState.empty()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.fluorescence_histogram_payload"><code class="docutils literal notranslate"><span class="pre">FluorescencePageState.fluorescence_histogram_payload</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.fluorescence_peak_lines"><code class="docutils literal notranslate"><span class="pre">FluorescencePageState.fluorescence_peak_lines</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.fluorescence_source_channel"><code class="docutils literal notranslate"><span class="pre">FluorescencePageState.fluorescence_source_channel</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.from_dict"><code class="docutils literal notranslate"><span class="pre">FluorescencePageState.from_dict()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.last_detector_channels"><code class="docutils literal notranslate"><span class="pre">FluorescencePageState.last_detector_channels</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.peak_lines_payload"><code class="docutils literal notranslate"><span class="pre">FluorescencePageState.peak_lines_payload</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.reference_table_rows"><code class="docutils literal notranslate"><span class="pre">FluorescencePageState.reference_table_rows</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.scattering_threshold"><code class="docutils literal notranslate"><span class="pre">FluorescencePageState.scattering_threshold</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.status_message"><code class="docutils literal notranslate"><span class="pre">FluorescencePageState.status_message</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.to_dict"><code class="docutils literal notranslate"><span class="pre">FluorescencePageState.to_dict()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.update"><code class="docutils literal notranslate"><span class="pre">FluorescencePageState.update()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.uploaded_fcs_path"><code class="docutils literal notranslate"><span class="pre">FluorescencePageState.uploaded_fcs_path</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.uploaded_filename"><code class="docutils literal notranslate"><span class="pre">FluorescencePageState.uploaded_filename</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p02_fluorescence.state.build_empty_peak_lines_payload"><code class="docutils literal notranslate"><span class="pre">build_empty_peak_lines_payload()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p02_fluorescence.state.build_peak_lines_payload_from_legacy_lines"><code class="docutils literal notranslate"><span class="pre">build_peak_lines_payload_from_legacy_lines()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p02_fluorescence.state.extract_1d_positions_from_peak_payload"><code class="docutils literal notranslate"><span class="pre">extract_1d_positions_from_peak_payload()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p02_fluorescence.state.infer_uploaded_filename"><code class="docutils literal notranslate"><span class="pre">infer_uploaded_filename()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p02_fluorescence.state.normalize_legacy_payload_keys"><code class="docutils literal notranslate"><span class="pre">normalize_legacy_payload_keys()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_axis_scale_toggle_values"><code class="docutils literal notranslate"><span class="pre">build_axis_scale_toggle_values()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_calibration_summary"><code class="docutils literal notranslate"><span class="pre">build_calibration_summary()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.build_empty_target_mie_relation_figure"><code class="docutils literal notranslate"><span class="pre">build_empty_target_mie_relation_figure()</span></code></a></li>
@@ -1573,6 +2011,7 @@ integration.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.normalize_axis_scale"><code class="docutils literal notranslate"><span class="pre">normalize_axis_scale()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.normalize_calibration_summaries"><code class="docutils literal notranslate"><span class="pre">normalize_calibration_summaries()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.parse_uploaded_calibration"><code class="docutils literal notranslate"><span class="pre">parse_uploaded_calibration()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.parse_uploaded_calibration_summaries"><code class="docutils literal notranslate"><span class="pre">parse_uploaded_calibration_summaries()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services.resolve_target_mie_model"><code class="docutils literal notranslate"><span class="pre">resolve_target_mie_model()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_empty_preview_figure"><code class="docutils literal notranslate"><span class="pre">build_empty_preview_figure()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.pages.p04_calibrate.sections.s03_file_picker.services.build_preview_channel_selection"><code class="docutils literal notranslate"><span class="pre">build_preview_channel_selection()</span></code></a></li>
@@ -1605,7 +2044,7 @@ integration.</p>
 
   
   <div class="tocsection editthispage">
-    <a href="https://github.com/MartinPdeS/RosettaX/edit/v0.10.9/docs/source/api/pages.rst">
+    <a href="https://github.com/MartinPdeS/RosettaX/edit/v0.11.0/docs/source/api/pages.rst">
       <i class="fa-solid fa-pencil"></i>
       
       
@@ -1639,8 +2078,8 @@ integration.</p>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
-<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+  <script defer src="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">

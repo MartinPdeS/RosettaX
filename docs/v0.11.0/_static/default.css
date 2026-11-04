@@ -1,0 +1,167 @@
+/* Additional styling for the PyData Sphinx theme. */
+
+:root {
+  --rx-surface-0: #f8f8f6;
+  --rx-surface-1: #ffffff;
+  --rx-ink: #182126;
+  --rx-muted: #4a5b63;
+  --rx-accent: #0f766e;
+  --rx-accent-strong: #115e59;
+  --rx-border: #dbe4e8;
+  --rx-shadow: 0 10px 30px rgba(16, 24, 40, 0.08);
+}
+
+html[data-theme="dark"] {
+  --rx-surface-0: #132026;
+  --rx-surface-1: #1a2b33;
+  --rx-ink: #e9f0f2;
+  --rx-muted: #b0c0c7;
+  --rx-accent: #34d399;
+  --rx-accent-strong: #6ee7b7;
+  --rx-border: #2f4650;
+  --rx-shadow: 0 12px 26px rgba(0, 0, 0, 0.26);
+}
+
+.bd-main .bd-content .bd-article-container {
+  max-width: 1100px;
+}
+
+.bd-main .bd-content .bd-article-container h1 {
+  letter-spacing: -0.01em;
+}
+
+.rx-hero {
+  background:
+    radial-gradient(circle at 8% 12%, color-mix(in srgb, var(--rx-accent) 12%, transparent), transparent 36%),
+    linear-gradient(135deg, var(--rx-surface-0) 0%, var(--rx-surface-1) 100%);
+  border: 1px solid var(--rx-border);
+  border-radius: 18px;
+  box-shadow: var(--rx-shadow);
+  color: var(--rx-ink);
+  margin: 1.2rem 0 2rem;
+  padding: 1.1rem 1.3rem;
+}
+
+.rx-hero p {
+  color: var(--rx-ink);
+  font-size: 1.04rem;
+  line-height: 1.62;
+  margin-bottom: 0.6rem;
+}
+
+.rx-card-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 1.4rem;
+}
+
+.rx-card {
+  background: var(--rx-surface-1);
+  border: 1px solid var(--rx-border);
+  border-radius: 16px;
+  box-shadow: var(--rx-shadow);
+  height: 100%;
+  padding: 1rem 1.1rem;
+}
+
+.rx-card p {
+  color: var(--rx-muted);
+  margin-bottom: 0.7rem;
+}
+
+.rx-card ul {
+  margin-bottom: 0;
+  margin-top: 0.45rem;
+  padding-left: 1.1rem;
+}
+
+.rx-card li {
+  margin-bottom: 0.35rem;
+}
+
+.rx-card a,
+.rx-hero a {
+  color: var(--rx-accent);
+  font-weight: 600;
+}
+
+.rx-card a:hover,
+.rx-hero a:hover {
+  color: var(--rx-accent-strong);
+}
+
+@media (max-width: 980px) {
+  .rx-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .rx-hero {
+    padding: 1rem;
+  }
+}
+
+.rx-system-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 1.4rem;
+}
+
+.rx-system-card {
+  background: var(--rx-surface-1);
+  border: 1px solid var(--rx-border);
+  border-radius: 16px;
+  box-shadow: var(--rx-shadow);
+  color: var(--rx-ink);
+  padding: 1rem;
+}
+
+.rx-system-card p {
+  color: var(--rx-muted);
+  margin-bottom: 0.65rem;
+}
+
+.rx-system-image {
+  background: var(--rx-surface-0);
+  border: 1px solid var(--rx-border);
+  border-radius: 12px;
+  display: block;
+  margin: 0.55rem 0;
+  padding: 0.35rem;
+  width: 100%;
+}
+
+.rx-system-placeholder {
+  background: color-mix(in srgb, var(--rx-surface-0) 75%, var(--rx-surface-1));
+  border: 1px dashed var(--rx-border);
+  border-radius: 12px;
+  color: var(--rx-muted);
+  font-style: italic;
+  margin: 0.55rem 0;
+  padding: 0.9rem;
+}
+
+@media (max-width: 980px) {
+  .rx-system-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Use hyperlink color for grid-item-cards.
+TODO find a way to only apply this to grid-item-cards that link somewhere */
+.sd-card-title {
+    color: var(--pst-color-link);
+}
+
+/* Use text base color for hyperlinks in code cells. Pygments "default" theme
+doesn't seem to set this color, so the default light blue link color is applied
+which has a very low contrast with the background. */
+div.highlight a {
+    color: var(--pst-color-text-base);
+}
+
+/* Stack components in footer vertically. */
+.bd-footer .footer-items__end, .bd-footer .footer-items__start {
+  flex-direction: row;
+}

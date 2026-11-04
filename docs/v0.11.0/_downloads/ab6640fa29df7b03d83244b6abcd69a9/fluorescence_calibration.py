@@ -1,0 +1,78 @@
+r"""
+Fit a fluorescence calibration
+==============================
+
+This example mirrors the fluorescence calibration step in RosettaX. A measured
+peak from each bead population is paired with its assigned reference intensity.
+RosettaX fits those approved pairs in log10 space:
+
+.. math::
+
+   \log_{10}(\mathrm{reference}) = m\log_{10}(\mathrm{measured}) + b.
+
+The resulting relation is a power law. In the application, obtain the measured
+values from the peak-identification step, confirm the pairing in the reference
+table, and save the resulting calibration JSON.
+"""
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+from RosettaX.pages.p02_fluorescence.sections.s04_calibration.services import (
+    fit_log10_calibration,
+)
+
+
+# These values are illustrative only. Replace neither the values nor the
+# resulting coefficients in a real calibration; derive them from your approved
+# bead table in the RosettaX interface.
+measured_intensity_au = np.array([240.0, 1_050.0, 4_800.0, 22_000.0])
+reference_intensity_mesf = np.array([600.0, 2_700.0, 12_700.0, 59_000.0])
+
+fit = fit_log10_calibration(
+    intensity_au=measured_intensity_au,
+    intensity_calibrated_units=reference_intensity_mesf,
+)
+
+print(f"Slope: {fit.slope:.4f}")
+print(f"Intercept: {fit.intercept:.4f}")
+print(f"R²: {fit.r_squared:.4f}")
+print(
+    "Calibration relation: "
+    f"MESF = {fit.prefactor:.4g} × measured intensity^{fit.slope:.4f}"
+)
+
+
+# Use a dense positive range so that the fitted power law is displayed as a
+# straight line on logarithmic axes.
+measured_range = np.geomspace(
+    measured_intensity_au.min() / 1.5,
+    measured_intensity_au.max() * 1.5,
+    200,
+)
+predicted_mesf = fit.prefactor * measured_range**fit.slope
+
+figure, axis = plt.subplots(figsize=(7, 4.5))
+axis.scatter(
+    measured_intensity_au,
+    reference_intensity_mesf,
+    color="#0f766e",
+    label="Approved bead-reference pairs",
+    zorder=3,
+)
+axis.plot(
+    measured_range,
+    predicted_mesf,
+    color="#115e59",
+    label=f"Power-law fit (R² = {fit.r_squared:.4f})",
+)
+axis.set(
+    xscale="log",
+    yscale="log",
+    xlabel="Measured peak intensity [a.u.]",
+    ylabel="Assigned fluorescence intensity [MESF]",
+    title="Illustrative fluorescence calibration",
+)
+axis.grid(True, which="both", alpha=0.25)
+axis.legend()
+figure.tight_layout()
