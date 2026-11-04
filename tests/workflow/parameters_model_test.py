@@ -83,6 +83,10 @@ class Test_DetectorPresetLoaderCatalog:
                 "label": "FACSCanto II",
                 "value": "FACSCanto II",
             },
+            {
+                "label": "FACSLyric",
+                "value": "FACSLyric",
+            },
         ]
 
     def test_loader_builds_type_options_for_one_brand_and_model(self):
@@ -104,6 +108,17 @@ class Test_DetectorPresetLoaderCatalog:
                 "value": "BD FACSCanto II SSC",
             },
         ]
+
+    def test_facslyric_presets_use_facscanto_geometry(self):
+        """FACSLyric scatter presets use the assumed FACSCanto configuration."""
+        loader = DetectorPresetLoader()
+        presets = loader.load_presets()
+        for channel in ("FSC", "SSC"):
+            lyric = presets[f"BD FACSLyric {channel}"]
+            canto = presets[f"BD FACSCanto II {channel}"]
+            for key in ("detector_type", "wavelength_nm", "detector_numerical_aperture", "detector_cache_numerical_aperture", "detector_sampling", "blocker_bar_numerical_aperture", "detector_phi_angle_degree", "detector_gamma_angle_degree"):
+                assert lyric[key] == canto[key]
+            assert "assum" in lyric["description"].lower()
 
     def test_loader_resolves_custom_brand_for_generic_detector(self):
         """Check loader resolves custom brand for generic detector."""
@@ -285,6 +300,8 @@ class Test_DetectorPresetLoaderCatalog:
             "Apogee - Side",
             "BD FACSCanto II FSC",
             "BD FACSCanto II SSC",
+            "BD FACSLyric FSC",
+            "BD FACSLyric SSC",
             "Beckman Coulter CytoFLEX Fluorescence",
             "Beckman Coulter CytoFLEX SSC",
             "Cytek Aurora FSC",

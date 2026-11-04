@@ -83,8 +83,8 @@ class SampleFilesPage:
                         ),
                         html.P(
                             "The collection is planned to cover four flow cytometers "
-                            "using Rosetta beads. Two datasets are available now, "
-                            "from an Apogee and a Northern Lights. Instrument and "
+                            "using Rosetta beads. Three datasets are available now, "
+                            "from an Apogee, a Northern Lights, and a BD FACSLyric. Instrument and "
                             "acquisition details are shown with each download."
                         ),
                         html.P(
@@ -126,6 +126,22 @@ class SampleFilesPage:
                                         "description": "Rosetta bead sample acquired on a Northern Lights flow cytometer.",
                                         "href": f"{SAMPLE_FILES_BASE_URL}/northern_lights_rosetta_beads_2min.fcs",
                                         "download": "northern_lights_rosetta_beads_2min.fcs",
+                                    },
+                                ],
+                            ),
+                            lg=6,
+                        ),
+                        dbc.Col(
+                            self._build_download_card(
+                                title="BD FACSLyric flow cytometer",
+                                subtitle="Rosetta beads + 3 µm beads · 350 V scatter settings",
+                                color_name=styling.get_workflow_section_color(3),
+                                items=[
+                                    {
+                                        "title": "Rosetta beads + 3 µm beads",
+                                        "description": "FACSLyric acquisition with FSC and SSC set to 350 V.",
+                                        "href": f"{SAMPLE_FILES_BASE_URL}/bd_facslyric_rosetta_3um_beads.fcs",
+                                        "download": "bd_facslyric_rosetta_3um_beads.fcs",
                                     },
                                 ],
                             ),
