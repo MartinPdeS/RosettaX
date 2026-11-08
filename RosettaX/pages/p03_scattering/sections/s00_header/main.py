@@ -54,8 +54,12 @@ class Header:
         return self.workflow_header.build_header(
             progress_id=getattr(state_ids, "workflow_progress", None),
             step_target_page_name=getattr(page_ids, "page_name", None),
-            description_tooltip_target_id=page_ids.State.description_tooltip_target,
-            description_tooltip_id=page_ids.State.description_tooltip,
+            description_tooltip_target_id=getattr(
+                state_ids,
+                "description_tooltip_target",
+                None,
+            ),
+            description_tooltip_id=getattr(state_ids, "description_tooltip", None),
         )
 
     def register_callbacks(self) -> None:

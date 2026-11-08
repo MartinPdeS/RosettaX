@@ -35,6 +35,22 @@ def _find_component_by_id(component: Any, component_id: Any) -> Any | None:
     return None
 
 
+def _find_component_by_type(component: Any, component_type: type) -> Any | None:
+    """Find the first component of a given type in the layout tree."""
+    if isinstance(component, component_type):
+        return component
+
+    children = getattr(component, "children", None)
+    if isinstance(children, (list, tuple)):
+        for child in children:
+            found = _find_component_by_type(child, component_type)
+            if found is not None:
+                return found
+    elif children is not None:
+        return _find_component_by_type(children, component_type)
+    return None
+
+
 def _collect_text(component: Any) -> list[str]:
     """Collect text recursively from the test component tree."""
     if isinstance(component, str):
@@ -47,63 +63,42 @@ def _collect_text(component: Any) -> list[str]:
 
 
 @pytest.mark.parametrize(
-    ("module_name", "page_class_name", "page_name", "section_keys", "subtitles"),
+    ("module_name", "page_class_name", "page_name", "section_keys"),
     [
         (
             "RosettaX.pages.p02_fluorescence.main",
             "FluorescencePage",
             "fluorescent_calibration",
             ("1", "2", "3", "4", "5"),
-            tuple(
-                calibration_cards.CALIBRATION_WORKFLOW_SUBTITLES[
-                    "fluorescent_calibration"
-                ].values()
-            ),
         ),
         (
             "RosettaX.pages.p03_scattering.main",
             "ScatterCalibrationPage",
             "scattering_calibration",
-            ("1", "2", "3", "4", "5", "6", "7"),
-            tuple(
-                calibration_cards.CALIBRATION_WORKFLOW_SUBTITLES[
-                    "scattering_calibration"
-                ].values()
-            ),
+            ("1", "2", "3", "4", "5", "6"),
         ),
         (
             "RosettaX.pages.p04_calibrate.main",
             "ApplyCalibrationPage",
             "apply_calibration",
             ("1", "2", "3"),
-            tuple(
-                calibration_cards.CALIBRATION_WORKFLOW_SUBTITLES[
-                    "apply_calibration"
-                ].values()
-            ),
         ),
         (
             "RosettaX.pages.p08_cross_calibration.main",
             "CrossCalibrationPage",
             "cross-calibration",
             ("1", "2", "3"),
-            (
-                "Load the reference and routine-bead calibrations used to build the transfer relation.",
-                "Inspect the fitted relation before exporting it for routine-bead calibration.",
-                "Download the transfer calibration for later use with the routine bead set.",
-            ),
         ),
     ],
 )
-def test_calibration_workflow_cards_start_collapsed_without_header_descriptions(
+def test_calibration_workflow_cards_start_collapsed_with_description_tooltips(
     monkeypatch,
     module_name: str,
     page_class_name: str,
     page_name: str,
     section_keys: tuple[str, ...],
-    subtitles: tuple[str, ...],
 ) -> None:
-    """Check calibration workflow cards start collapsed without header descriptions."""
+    """Check calibration workflow cards start collapsed with descriptions in tooltips."""
     monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
     sections_callback_module_name = module_name.rsplit(".", 1)[0] + ".sections.callbacks"
     if page_name != "cross-calibration":
@@ -116,7 +111,7 @@ def test_calibration_workflow_cards_start_collapsed_without_header_descriptions(
     page_module = importlib.import_module(module_name)
     layout = getattr(page_module, page_class_name)().layout()
 
-    for section_key, subtitle in zip(section_keys, subtitles, strict=True):
+    for section_key in section_keys:
         card = _find_component_by_id(
             layout,
             calibration_cards.workflow_section_dom_id(
@@ -131,7 +126,9 @@ def test_calibration_workflow_cards_start_collapsed_without_header_descriptions(
         assert calibration_cards.collapse_label(is_open=False) in _collect_text(
             card.children[0]
         )
-        assert subtitle not in _collect_text(card.children[0])
+        tooltip = _find_component_by_type(card.children[0], dbc.Tooltip)
+        assert tooltip is not None
+        assert any(text.strip() for text in _collect_text(tooltip))
 
 
 def test_calibration_card_callback_does_not_hydrate_card_state() -> None:

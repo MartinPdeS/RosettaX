@@ -632,17 +632,17 @@ class Test_DetectorAutoDetect:
         (["FSC-A", "SSC-A", "FITC-A"], "green_fluorescence", "FITC-A"),
         (["FSC-A", "Time"], "scattering", None),
         (["FSC-A", "Time"], "green_fluorescence", None),
-        (["SSC-A", "SSC-H"], "scattering", None),
+        (["SSC-A", "SSC-H"], "scattering", "SSC-H"),
         (["FITC-A", "FL1-A"], "green_fluorescence", None),
-        (["V525/50-A", "B535/30-A", "B535/30-H"], "green_fluorescence", "B535/30-A"),
+        (["V525/50-A", "B535/30-A", "B535/30-H"], "green_fluorescence", "B535/30-H"),
         (["B525/50-A", "B535/30-A"], "green_fluorescence", None),
-        (["B535/30-H", "B535/30-W"], "green_fluorescence", None),
+        (["B535/30-H", "B535/30-W"], "green_fluorescence", "B535/30-H"),
         (["405LALS(Area)", "405LALS(Peak)"], "scattering", "405LALS(Peak)"),
         (["405Grn(Peak)", "488Grn(Area)", "488Grn(Peak)"], "green_fluorescence", "488Grn(Peak)"),
     ],
 )
-def test_rosetta_v1_selects_only_unambiguous_channels(channels, role, expected):
-    """V1 avoids choosing unrelated or ambiguous channels automatically."""
+def test_rosetta_v1_selects_channels_using_h_preference(channels, role, expected):
+    """V1 avoids unrelated channels and prefers H measurements by default."""
     assert detectors.infer_rosetta_v1_channel(column_names=channels, detector_role=role) == expected
 
 
@@ -696,30 +696,30 @@ def test_rosetta_v1_prefers_green_channel_matching_scatter_wavelength():
 
 
 def test_rosetta_v1_detects_green_filter_in_bundled_lsrii_sample():
-    """Identify the green filter while leaving ambiguous scatter measurements unset."""
+    """Identify the H green-filter and scatter measurements in the bundled sample."""
     sample_path = Path(__file__).resolve().parents[2] / "RosettaX/assets/sample-files/bd_lsrii_rosetta_beads.fcs"
     with detectors.FCSFile(sample_path) as fcs:
         channels = fcs.get_column_names()
-    assert detectors.infer_rosetta_v1_channel(column_names=channels, detector_role="green_fluorescence") == "B535/30-A"
-    assert detectors.infer_rosetta_v1_channel(column_names=channels, detector_role="scattering") is None
+    assert detectors.infer_rosetta_v1_channel(column_names=channels, detector_role="green_fluorescence") == "B535/30-H"
+    assert detectors.infer_rosetta_v1_channel(column_names=channels, detector_role="scattering") == "SSC-H"
 
 
-def test_rosetta_suggestions_explain_filter_and_ambiguous_scattering():
-    """Give a reason for the filter suggestion and list unresolved candidates."""
+def test_rosetta_suggestions_explain_filter_and_h_preference():
+    """Explain green-filter suggestions and the default H channel preference."""
     channel, explanation = detectors.resolve_rosetta_v1_suggestion(
         column_names=["B535/30-A", "B535/30-H"], detector_role="green_fluorescence",
     )
-    assert channel == "B535/30-A"
+    assert channel == "B535/30-H"
     assert "green emission filter" in explanation
     channel, explanation = detectors.resolve_rosetta_v1_suggestion(
         column_names=["SSC-A", "SSC-H"], detector_role="scattering",
     )
-    assert channel is None
-    assert "SSC-A" in explanation and "SSC-H" in explanation
+    assert channel == "SSC-H"
+    assert "SSC-H" in explanation
 
 
-def test_rosetta_uses_unambiguous_instrument_preference():
-    """Use instrument preferences only when one listed channel is present."""
+def test_rosetta_uses_h_channel_instrument_preference():
+    """Prefer an instrument's H channel when both measurement types are present."""
     rule = {"name": "Example", "detector_channels": {"scattering": ["SSC-A", "SSC-H"]}}
     channel, explanation = detectors.resolve_rosetta_v1_suggestion(
         column_names=["SSC-A"], detector_role="scattering", matched_rule=rule,
@@ -729,4 +729,4 @@ def test_rosetta_uses_unambiguous_instrument_preference():
     channel, _ = detectors.resolve_rosetta_v1_suggestion(
         column_names=["SSC-A", "SSC-H"], detector_role="scattering", matched_rule=rule,
     )
-    assert channel is None
+    assert channel == "SSC-H"

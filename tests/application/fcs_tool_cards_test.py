@@ -49,6 +49,22 @@ def _find_component_by_id(component: Any, component_id: Any) -> Any | None:
     return None
 
 
+def _find_component_by_type(component: Any, component_type: type) -> Any | None:
+    """Find the first component of a given type in the layout tree."""
+    if isinstance(component, component_type):
+        return component
+
+    children = getattr(component, "children", None)
+    if isinstance(children, (list, tuple)):
+        for child in children:
+            found = _find_component_by_type(child, component_type)
+            if found is not None:
+                return found
+    elif children is not None:
+        return _find_component_by_type(children, component_type)
+    return None
+
+
 def _collect_text(component: Any) -> list[str]:
     """Collect text recursively from the test component tree."""
     if isinstance(component, str):
@@ -176,7 +192,9 @@ def test_fcs_tool_layouts_include_collapsible_cards_with_uniform_gaps(
         assert section_card is not None
         assert "marginBottom" not in section_card.style
         assert section_card.children[1].kwargs["is_open"] is False
-        assert subtitle not in _collect_text(section_card.children[0])
+        tooltip = _find_component_by_type(section_card.children[0], dbc.Tooltip)
+        assert tooltip is not None
+        assert any(text.strip() for text in _collect_text(tooltip))
 
     direct_cards = [
         child for child in card_stack.children if isinstance(child, dbc.Card)
