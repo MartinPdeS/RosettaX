@@ -3,11 +3,9 @@ import dash_bootstrap_components as dbc
 import logging
 from . import callbacks
 from RosettaX.ui import (
+    WorkflowHeader,
     WorkflowStep,
-    build_workflow_page_header,
-    build_workflow_step_cards,
 )
-from RosettaX.utils import styling
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -32,6 +30,15 @@ class Header:
     ) -> None:
         self.page = page
         self.card_color = card_color
+        self.workflow_header = WorkflowHeader(
+            title="Scattering calibration",
+            description=(
+                "Create a scattering calibration from bead FCS data by detecting bead populations, configuring the Mie model, computing coupling values, fitting the response, and saving the result for reuse."
+            ),
+            steps=self._build_steps(),
+            card_color=card_color,
+            column_kwargs={"xs": 12, "md": 6, "lg": 4, "xl": 2},
+        )
 
         logger.debug(
             "Initialized Scattering Header section with page=%r",
@@ -44,17 +51,9 @@ class Header:
         """
         page_ids = getattr(self.page, "ids", None)
         state_ids = getattr(page_ids, "State", None)
-        return build_workflow_page_header(
-            title="Scattering calibration",
-            description=(
-                "Create a scattering calibration from bead FCS data by detecting bead populations, configuring the Mie model, computing coupling values, fitting the response, and saving the result for reuse."
-            ),
-            steps=self._build_steps(),
+        return self.workflow_header.build_header(
             progress_id=getattr(state_ids, "workflow_progress", None),
             step_target_page_name=getattr(page_ids, "page_name", None),
-            card_color=self.card_color,
-            column_kwargs={"xs": 12, "md": 6, "lg": 4, "xl": 2},
-            compact_steps=True,
             description_tooltip_target_id=page_ids.State.description_tooltip_target,
             description_tooltip_id=page_ids.State.description_tooltip,
         )
@@ -71,57 +70,45 @@ class Header:
         """
         return [
             WorkflowStep(
-                "1",
-                "Upload bead FCS",
-                (
+                title="Upload bead FCS",
+                description=(
                     "Load the scattering bead file acquired on the instrument. "
                     "This file becomes the source for detector selection and peak detection."
                 ),
-                styling.get_workflow_section_color(1),
             ),
             WorkflowStep(
-                "2",
-                "Detect peaks",
-                (
+                title="Detect peaks",
+                description=(
                     "Select the scattering detector channel, inspect the event distribution, "
                     "and detect the bead population peaks from the uploaded FCS file."
                 ),
-                styling.get_workflow_section_color(2),
             ),
             WorkflowStep(
-                "3",
-                "Configure detector",
-                (
+                title="Configure detector",
+                description=(
                     "Choose the scattering detector channel used for the calibration workflow."
                 ),
-                styling.get_workflow_section_color(3),
             ),
             WorkflowStep(
-                "4",
-                "Compute coupling",
-                (
+                title="Compute coupling",
+                description=(
                     "Enter the particle diameters and compute the expected scattering "
                     "coupling from the selected Mie model."
                 ),
-                styling.get_workflow_section_color(4),
             ),
             WorkflowStep(
-                "5",
-                "Create calibration",
-                (
+                title="Create calibration",
+                description=(
                     "Match detected peak positions to the computed coupling values and fit "
                     "the scattering calibration relation."
                 ),
-                styling.get_workflow_section_color(5),
             ),
             WorkflowStep(
-                "6",
-                "Save calibration",
-                (
+                title="Save calibration",
+                description=(
                     "Save the fitted calibration so it can be reused later when applying "
                     "calibration to experimental FCS files."
                 ),
-                styling.get_workflow_section_color(6),
             ),
         ]
 
@@ -158,12 +145,9 @@ class Header:
         if completed_count == 5 and state.get("calibration_saved"):
             completed_count = 6
 
-        return build_workflow_step_cards(
-            steps=self._build_steps(),
+        return self.workflow_header.build_progress(
             completed_count=completed_count,
             page_name=self.page.ids.page_name,
-            column_kwargs={"xs": 12, "md": 6, "lg": 4, "xl": 2},
-            compact=True,
         )
 
     @staticmethod

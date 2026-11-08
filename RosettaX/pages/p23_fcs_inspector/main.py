@@ -3,7 +3,7 @@ import dash_bootstrap_components as dbc
 import pandas as pd
 from dash import html
 from pathlib import Path
-from RosettaX.ui import WorkflowStep, build_workflow_page_header
+from RosettaX.ui import WorkflowHeader, WorkflowStep
 from RosettaX.utils import styling, ui_forms
 from RosettaX.utils.reader import FCSFile
 from RosettaX.workflow.calibration_cards import (
@@ -19,18 +19,32 @@ class FCSInspectorPage:
 
     prefix = "fcs-inspector"
 
+    def __init__(self) -> None:
+        self.workflow_header = WorkflowHeader(
+            title="FCS Inspector",
+            description=(
+                "Review file metadata, acquisition details, and channel definitions "
+                "before downstream work."
+            ),
+            steps=[
+                WorkflowStep(
+                    title="Upload FCS file",
+                    description="Select one FCS file to inspect.",
+                ),
+                WorkflowStep(
+                    title="Review metadata",
+                    description="Check file details and channel definitions.",
+                ),
+            ],
+            column_kwargs={"xl": True},
+        )
+
     def layout(self) -> dbc.Container:
         return dbc.Container(
             [
                 build_fcs_tool_card_stack(
                     [
-                        build_workflow_page_header(
-                            title="FCS Inspector",
-                            description="Review file metadata, acquisition details, and channel definitions before downstream work.",
-                            steps=[
-                                WorkflowStep("1", "Upload FCS file", "Select one FCS file to inspect.", "yellow"),
-                                WorkflowStep("2", "Review metadata", "Check file details and channel definitions.", "blue"),
-                            ],
+                        self.workflow_header.build_header(
                             step_target_page_name=self.prefix,
                             style_overrides={"marginBottom": "0px"},
                         ),
@@ -85,7 +99,8 @@ class FCSInspectorPage:
                 saved_path = upload_services.save_uploaded_file(
                     contents=contents,
                     filename=filename,
-                    upload_directory=upload_services.DEFAULT_UPLOAD_DIRECTORY / "fcs-inspector",
+                    upload_directory=upload_services.DEFAULT_UPLOAD_DIRECTORY
+                    / "fcs-inspector",
                 )
                 with FCSFile(saved_path, writable=False) as fcs_file:
                     metadata = fcs_file.get_metadata()
@@ -100,7 +115,10 @@ class FCSInspectorPage:
                         ("File", Path(str(filename)).name),
                         ("FCS version", metadata.fcs_version or "Not specified"),
                         ("Events", metadata.number_of_events or "Not specified"),
-                        ("Parameters", metadata.number_of_parameters or "Not specified"),
+                        (
+                            "Parameters",
+                            metadata.number_of_parameters or "Not specified",
+                        ),
                     ]
                 return (
                     f"Loaded file: {Path(str(filename)).name}",
@@ -108,7 +126,14 @@ class FCSInspectorPage:
                     html.Div(
                         [
                             dbc.Table(
-                                [html.Tbody([html.Tr([html.Th(key), html.Td(str(value))]) for key, value in summary])],
+                                [
+                                    html.Tbody(
+                                        [
+                                            html.Tr([html.Th(key), html.Td(str(value))])
+                                            for key, value in summary
+                                        ]
+                                    )
+                                ],
                                 bordered=True,
                                 size="sm",
                             ),
@@ -127,7 +152,10 @@ class FCSInspectorPage:
                 return (
                     upload_services.build_upload_error_text(error),
                     "danger",
-                    html.Div("No readable FCS metadata is available.", style={"opacity": 0.76}),
+                    html.Div(
+                        "No readable FCS metadata is available.",
+                        style={"opacity": 0.76},
+                    ),
                 )
 
         return self
@@ -136,4 +164,6 @@ class FCSInspectorPage:
 _page = FCSInspectorPage().register_callbacks()
 layout = _page.layout
 
-dash.register_page(__name__, path="/fcs-inspector", name="FCS Inspector", order=23, layout=layout)
+dash.register_page(
+    __name__, path="/fcs-inspector", name="FCS Inspector", order=23, layout=layout
+)

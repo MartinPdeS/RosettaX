@@ -4,7 +4,7 @@ import dash_bootstrap_components as dbc
 import re
 from collections.abc import Sequence
 from dash import html
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from RosettaX.utils import styling, ui_forms
 from RosettaX.workflow.calibration_cards import (
     WORKFLOW_STEP_CARD_ID_TYPE,
@@ -15,12 +15,100 @@ from typing import Any
 
 @dataclass(frozen=True)
 class WorkflowStep:
-    """Description of one step shown in a workflow page header."""
+    """Content for one workflow step before numbering and coloring."""
 
-    number: str
+    number: str | None = None
+    title: str = ""
+    description: str = ""
+    color_name: str | None = None
+
+
+@dataclass
+class WorkflowHeader:
+    """Shared configuration and renderer for multi-step workflow headers.
+
+    Parameters
+    ----------
+    title : str
+        Workflow title shown in the page header.
+    description : str
+        Explanatory text shown from the header info hover.
+    steps : Sequence[WorkflowStep]
+        Ordered step cards shown in the header and progress updates.
+    card_color : str, optional
+        Header card accent color.
+    column_kwargs : dict[str, Any], optional
+        Responsive column settings used to lay out the step cards.
+    """
+
     title: str
     description: str
-    color_name: str
+    steps: list[WorkflowStep] = field(default_factory=list)
+    card_color: str | None = None
+    column_kwargs: dict[str, Any] | None = None
+
+    def __post_init__(self) -> None:
+        initial_steps = list(self.steps)
+        self.steps = []
+        for step in initial_steps:
+            self.add_workflow_step(step)
+
+    def add_workflow_step(self, workflow_step: WorkflowStep) -> None:
+        """Append a step and assign its number and accent color by order."""
+        step_number = len(self.steps) + 1
+        self.steps.append(
+            WorkflowStep(
+                number=str(step_number),
+                title=workflow_step.title,
+                description=workflow_step.description,
+                color_name=styling.get_workflow_section_color(step_number),
+            )
+        )
+
+    def build_header(
+        self,
+        *,
+        progress_id: Any | None = None,
+        step_target_page_name: str | None = None,
+        component_id: Any | None = None,
+        card_color: str | None = None,
+        style_overrides: dict[str, Any] | None = None,
+        description_tooltip_target_id: str | None = None,
+        description_tooltip_id: str | None = None,
+        alert: Any | None = None,
+    ) -> dbc.Card:
+        """Render the workflow title, description hover, and step cards."""
+        return build_workflow_page_header(
+            title=self.title,
+            description=self.description,
+            steps=self.steps,
+            card_color=card_color or self.card_color,
+            alert=alert,
+            column_kwargs=self.column_kwargs,
+            component_id=component_id,
+            style_overrides=style_overrides,
+            progress_id=progress_id,
+            step_target_page_name=step_target_page_name,
+            compact_steps=False,
+            description_tooltip_target_id=description_tooltip_target_id,
+            description_tooltip_id=description_tooltip_id,
+        )
+
+    def build_progress(
+        self,
+        *,
+        completed_count: int,
+        page_name: str | None = None,
+        column_kwargs: dict[str, Any] | None = None,
+    ) -> html.Div:
+        """Render this workflow's steps with the current completion state."""
+        return build_workflow_step_cards(
+            steps=self.steps,
+            completed_count=completed_count,
+            page_name=page_name,
+            column_kwargs=(column_kwargs or self.column_kwargs),
+            compact=False,
+        )
 
 
 def build_workflow_page_header(
@@ -73,11 +161,13 @@ def build_workflow_page_header(
     if alert is not None:
         children.append(alert)
 
+    resolved_steps = _resolve_workflow_steps(steps)
+
     if progress_id is not None:
         children.append(
             html.Div(
                 build_workflow_step_cards(
-                    steps=steps,
+                    steps=resolved_steps,
                     completed_count=0,
                     page_name=step_target_page_name,
                     column_kwargs=resolved_column_kwargs,
@@ -97,7 +187,7 @@ def build_workflow_page_header(
                         ),
                         **resolved_column_kwargs,
                     )
-                    for step in steps
+                    for step in resolved_steps
                 ],
                 className="g-2",
             )
@@ -130,7 +220,7 @@ def build_workflow_progress_content(
     completed_count: int,
 ) -> html.Div:
     """Build the compact, state-aware workflow progress indicator."""
-    step_list = list(steps)
+    step_list = _resolve_workflow_steps(steps)
     step_count = len(step_list)
     bounded_completed_count = max(0, min(int(completed_count), step_count))
     active_index = min(bounded_completed_count, max(step_count - 1, 0))
@@ -211,7 +301,7 @@ def build_workflow_step_cards(
     compact: bool = False,
 ) -> dbc.Row | html.Div:
     """Build state-aware workflow cards that navigate to their sections."""
-    step_list = list(steps)
+    step_list = _resolve_workflow_steps(steps)
     bounded_completed_count = max(0, min(int(completed_count), len(step_list)))
     active_index = min(bounded_completed_count, max(len(step_list) - 1, 0))
     if compact:
@@ -335,6 +425,7 @@ def _build_step_card(
             },
         ),
     )
+
     if page_name is None:
         return card
 
@@ -365,3 +456,22 @@ def _build_step_card(
             "aria-label": f"Toggle step {step.number}: {step.title}",
         },
     )
+
+
+def _resolve_workflow_steps(
+    steps: Sequence[WorkflowStep],
+) -> list[WorkflowStep]:
+    """Fill omitted step numbers and colors using their list positions."""
+    resolved_steps: list[WorkflowStep] = []
+    for index, step in enumerate(steps, start=1):
+        resolved_steps.append(
+            WorkflowStep(
+                number=str(step.number or index),
+                title=step.title,
+                description=step.description,
+                color_name=(
+                    step.color_name or styling.get_workflow_section_color(index)
+                ),
+            )
+        )
+    return resolved_steps

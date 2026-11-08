@@ -2,6 +2,7 @@
 
 from .workflow_cards import build_workflow_section_card
 from .workflow_header import (
+    WorkflowHeader,
     WorkflowStep,
     build_workflow_page_header,
     build_workflow_progress_content,
@@ -10,6 +11,7 @@ from .workflow_header import (
 
 __all__ = [
     "WorkflowStep",
+    "WorkflowHeader",
     "build_workflow_page_header",
     "build_workflow_progress_content",
     "build_workflow_section_card",

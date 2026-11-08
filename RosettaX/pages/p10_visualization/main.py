@@ -4,8 +4,8 @@ from . import services
 from .ids import Ids
 from dash import dcc, html
 from RosettaX.ui import (
+    WorkflowHeader,
     WorkflowStep,
-    build_workflow_page_header,
 )
 from RosettaX.utils import styling, ui_forms
 from RosettaX.workflow.calibration_cards import (
@@ -29,6 +29,15 @@ class VisualizationPage:
 
     def __init__(self) -> None:
         self.ids = Ids()
+        self.workflow_header = WorkflowHeader(
+            title="Visualization",
+            description=(
+                "Upload compatible FCS files, choose one to inspect, and view it "
+                "with a 1D histogram or a 2D scatter colored by local event density."
+            ),
+            steps=self._build_steps(),
+            column_kwargs={"xl": True},
+        )
 
     def layout(self) -> html.Div:
         default_controls = services.resolve_visualization_control_defaults()
@@ -252,12 +261,7 @@ class VisualizationPage:
         )
 
     def _build_header_card(self) -> dbc.Card:
-        return build_workflow_page_header(
-            title="Visualization",
-            description=(
-                "Upload compatible FCS files, choose one to inspect, and view it with a 1D histogram or a 2D scatter colored by local event density."
-            ),
-            steps=self._build_steps(),
+        return self.workflow_header.build_header(
             step_target_page_name=self.ids.page_prefix,
             style_overrides={"marginBottom": "0px"},
         )
@@ -286,28 +290,22 @@ class VisualizationPage:
     def _build_steps(self) -> list[WorkflowStep]:
         return [
             WorkflowStep(
-                number="1",
                 title="Upload FCS file",
                 description=(
                     "Load one or more compatible FCS files so RosettaX can read their channels and metadata for plotting."
                 ),
-                color_name=styling.get_workflow_section_color(1),
             ),
             WorkflowStep(
-                number="2",
                 title="Choose plot settings",
                 description=(
                     "Pick histogram or 2D scatter, then configure the plotted axes, scaling, and event limit."
                 ),
-                color_name=styling.get_workflow_section_color(2),
             ),
             WorkflowStep(
-                number="3",
                 title="Inspect the data",
                 description=(
                     "Explore the plotted events to validate channels and distributions."
                 ),
-                color_name=styling.get_workflow_section_color(3),
             ),
         ]
 

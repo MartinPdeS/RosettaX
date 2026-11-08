@@ -4,9 +4,8 @@ import json
 from .ids import Ids
 from dash import dash_table, dcc, html
 from RosettaX.ui import (
+    WorkflowHeader,
     WorkflowStep,
-    build_workflow_page_header,
-    build_workflow_step_cards,
 )
 from RosettaX.utils import styling, ui_forms
 from RosettaX.workflow.calibration_cards import build_calibration_workflow_section_card
@@ -22,6 +21,15 @@ class CrossCalibrationPage:
     def __init__(self) -> None:
         self.ids = Ids()
         self.style = styling.PAGE
+        self.workflow_header = WorkflowHeader(
+            title="Cross calibration",
+            description=(
+                "Create a transfer calibration from a primary reference bead set used less often to a cheaper routine bead set measured more often. "
+                "This workflow is experimental and may change as transfer-calibration support develops."
+            ),
+            steps=self._build_header_steps(),
+            column_kwargs={"xl": True},
+        )
 
     def layout(self) -> dbc.Container:
         return dbc.Container(
@@ -68,44 +76,31 @@ class CrossCalibrationPage:
         )
 
     def _build_header_card(self) -> dbc.Card:
-        return build_workflow_page_header(
-            title="Cross calibration",
-            description=(
-                "Create a transfer calibration from a primary reference bead set used less often to a cheaper routine bead set measured more often. "
-                "This workflow is experimental and may change as transfer-calibration support develops."
-            ),
-            steps=self._build_header_steps(),
+        return self.workflow_header.build_header(
             progress_id=f"{self.ids.page_prefix}-workflow-progress",
             step_target_page_name=self.ids.page_prefix,
-            column_kwargs={"xl": True},
         )
 
     def _build_header_steps(self) -> list[WorkflowStep]:
         return [
             WorkflowStep(
-                "1",
-                "Load primary calibration",
-                (
+                title="Load primary calibration",
+                description=(
                     "Upload the high-confidence calibration built from the expensive bead set. "
                     "This defines the primary calibrated scale you want to preserve over time."
                 ),
-                styling.get_workflow_section_color(1),
             ),
             WorkflowStep(
-                "2",
-                "Load routine-bead calibration",
-                (
+                title="Load routine-bead calibration",
+                description=(
                     "Upload the cheaper secondary bead calibration measured more often on the same detector."
                 ),
-                styling.get_workflow_section_color(2),
             ),
             WorkflowStep(
-                "3",
-                "Build transfer relation",
-                (
+                title="Build transfer relation",
+                description=(
                     "Fit the routine bead peaks onto the primary calibrated scale so the secondary bead set can act as a weekly bridge."
                 ),
-                styling.get_workflow_section_color(3),
             ),
         ]
 
@@ -365,11 +360,9 @@ class CrossCalibrationPage:
                 completed = 2
             if completed == 2 and isinstance(result, dict):
                 completed = 3
-            return build_workflow_step_cards(
-                steps=self._build_header_steps(),
+            return self.workflow_header.build_progress(
                 completed_count=completed,
                 page_name=self.ids.page_prefix,
-                column_kwargs={"xl": True},
             )
 
         @dash.callback(

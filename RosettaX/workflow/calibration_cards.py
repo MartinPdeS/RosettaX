@@ -1,4 +1,3 @@
-
 import dash
 import dash_bootstrap_components as dbc
 from RosettaX.utils import styling, ui_forms
@@ -184,17 +183,26 @@ def build_calibration_workflow_section_card(
     """
     if card is None:
         if title is None or body_children is None:
-            raise ValueError("title and body_children are required when card is omitted")
+            raise ValueError(
+                "title and body_children are required when card is omitted"
+            )
         from RosettaX.ui.workflow_cards import build_workflow_section_card
 
+        resolved_tooltip_text = str(tooltip_text or subtitle or "").strip()
+        resolved_tooltip_target_id = tooltip_target_id or (
+            f"{page_name}-workflow-section-{section_number}-info-target"
+        )
+        resolved_tooltip_id = tooltip_id or (
+            f"{page_name}-workflow-section-{section_number}-info-tooltip"
+        )
         card = build_workflow_section_card(
             section_number=section_number,
             title=title,
             subtitle=None,
             body_children=body_children,
-            tooltip_text=tooltip_text,
-            tooltip_target_id=tooltip_target_id,
-            tooltip_id=tooltip_id,
+            tooltip_text=resolved_tooltip_text or None,
+            tooltip_target_id=resolved_tooltip_target_id,
+            tooltip_id=resolved_tooltip_id,
             color_name=color_name,
             style_overrides=style_overrides,
         )

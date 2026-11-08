@@ -1,12 +1,11 @@
-
 import dash
 import dash_bootstrap_components as dbc
 from . import services
 from .ids import Ids
 from dash import dcc, html
 from RosettaX.ui import (
+    WorkflowHeader,
     WorkflowStep,
-    build_workflow_page_header,
 )
 from RosettaX.utils import styling, ui_forms
 from RosettaX.workflow.calibration_cards import (
@@ -23,13 +22,24 @@ class FCSMergePage:
 
     def __init__(self) -> None:
         self.ids = Ids()
+        self.workflow_header = WorkflowHeader(
+            title="FCS Merge",
+            description=(
+                "Upload compatible FCS files and download one file containing all "
+                "events in the uploaded order."
+            ),
+            steps=self._build_header_steps(),
+            column_kwargs={"xl": True},
+        )
 
     def layout(self) -> dbc.Container:
         return dbc.Container(
             [
                 build_fcs_tool_card_stack(
                     [
-                        dcc.Store(id=self.ids.file_store, data=None, storage_type="session"),
+                        dcc.Store(
+                            id=self.ids.file_store, data=None, storage_type="session"
+                        ),
                         dcc.Download(id=self.ids.download),
                         self._build_header_card(),
                         self._build_upload_card(),
@@ -47,35 +57,29 @@ class FCSMergePage:
         )
 
     def _build_header_card(self) -> dbc.Card:
-        return build_workflow_page_header(
-            title="FCS Merge",
-            description=(
-                "Upload compatible FCS files and download one file containing all "
-                "events in the uploaded order."
-            ),
-            steps=[
-                WorkflowStep(
-                    number="1",
-                    title="Upload compatible files",
-                    description=(
-                        "RosettaX checks that channels, FCS versions, and detector "
-                        "voltages match."
-                    ),
-                    color_name=styling.get_workflow_section_color(1),
-                ),
-                WorkflowStep(
-                    number="2",
-                    title="Download merged file",
-                    description=(
-                        "All events are concatenated in input order, using the first "
-                        "file as the metadata template."
-                    ),
-                    color_name=styling.get_workflow_section_color(2),
-                ),
-            ],
+        return self.workflow_header.build_header(
             step_target_page_name=self.ids.page_prefix,
             style_overrides={"marginBottom": "0px"},
         )
+
+    def _build_header_steps(self) -> list[WorkflowStep]:
+        """Build the FCS merge workflow overview shown in the page header."""
+        return [
+            WorkflowStep(
+                title="Upload compatible files",
+                description=(
+                    "RosettaX checks that channels, FCS versions, and detector "
+                    "voltages match."
+                ),
+            ),
+            WorkflowStep(
+                title="Download merged file",
+                description=(
+                    "All events are concatenated in input order, using the first "
+                    "file as the metadata template."
+                ),
+            ),
+        ]
 
     def _build_upload_card(self) -> dbc.Card:
         return self._build_section_card(
@@ -163,7 +167,9 @@ class FCSMergePage:
                 store_data = UploadedFileBatch(
                     files=tuple(
                         UploadedFile(path=str(path), filename=filename)
-                        for path, filename in zip(saved_paths, safe_filenames, strict=True)
+                        for path, filename in zip(
+                            saved_paths, safe_filenames, strict=True
+                        )
                     ),
                     reference_column_names=tuple(
                         str(name)

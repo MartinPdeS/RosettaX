@@ -1,13 +1,12 @@
-
 import dash
-from .layout import _build_steps
-from RosettaX.ui.workflow_header import build_workflow_step_cards
+from .layout import CALIBRATION_WORKFLOW
 
 
 def register_callbacks(section) -> None:
     """
     Register the fluorescence workflow progress callback.
     """
+
     @dash.callback(
         dash.Output(section.page.ids.State.workflow_progress, "children"),
         dash.Input(section.page.ids.State.page_state_store, "data"),
@@ -24,8 +23,7 @@ def register_callbacks(section) -> None:
             "fluorescence_peak_lines_payload",
         )
         if completed_count == 1 and (
-            state.get("fluorescence_peak_lines")
-            or peak_payload.get("positions")
+            state.get("fluorescence_peak_lines") or peak_payload.get("positions")
         ):
             completed_count = 2
         if completed_count == 2 and state.get("reference_table_rows"):
@@ -35,11 +33,9 @@ def register_callbacks(section) -> None:
         if completed_count == 4 and state.get("calibration_saved"):
             completed_count = 5
 
-        return build_workflow_step_cards(
-            steps=_build_steps(),
+        return CALIBRATION_WORKFLOW.build_progress(
             completed_count=completed_count,
             page_name=section.page.ids.page_name,
-            column_kwargs={"xl": True},
         )
 
 

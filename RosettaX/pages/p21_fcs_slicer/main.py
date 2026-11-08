@@ -1,12 +1,11 @@
-
 import dash
 import dash_bootstrap_components as dbc
 from . import services
 from .ids import Ids
 from dash import dcc, html
 from RosettaX.ui import (
+    WorkflowHeader,
     WorkflowStep,
-    build_workflow_page_header,
 )
 from RosettaX.utils import styling, ui_forms
 from RosettaX.workflow.calibration_cards import (
@@ -22,13 +21,24 @@ class FCSSlicerPage:
 
     def __init__(self) -> None:
         self.ids = Ids()
+        self.workflow_header = WorkflowHeader(
+            title="Slicing",
+            description=(
+                "Upload a compatible batch, choose the detector channels to keep, "
+                "and download sliced FCS copies with every event preserved."
+            ),
+            steps=self._build_header_steps(),
+            column_kwargs={"xl": True},
+        )
 
     def layout(self) -> dbc.Container:
         return dbc.Container(
             [
                 build_fcs_tool_card_stack(
                     [
-                        dcc.Store(id=self.ids.file_store, data=None, storage_type="session"),
+                        dcc.Store(
+                            id=self.ids.file_store, data=None, storage_type="session"
+                        ),
                         dcc.Download(id=self.ids.download),
                         self._build_header_card(),
                         self._build_upload_card(),
@@ -47,13 +57,7 @@ class FCSSlicerPage:
         )
 
     def _build_header_card(self) -> dbc.Card:
-        return build_workflow_page_header(
-            title="Slicing",
-            description=(
-                "Upload a compatible batch, choose the detector channels to keep, "
-                "and download sliced FCS copies with every event preserved."
-            ),
-            steps=self._build_header_steps(),
+        return self.workflow_header.build_header(
             step_target_page_name=self.ids.page_prefix,
             style_overrides={"marginBottom": "0px"},
         )
@@ -62,31 +66,25 @@ class FCSSlicerPage:
         """Build the FCS slicing workflow overview shown in the page header."""
         return [
             WorkflowStep(
-                number="1",
                 title="Upload compatible files",
                 description=(
                     "Load one or more FCS files. RosettaX checks that their channels, "
                     "FCS versions, and detector voltages match."
                 ),
-                color_name=styling.get_workflow_section_color(1),
             ),
             WorkflowStep(
-                number="2",
                 title="Choose channels",
                 description=(
                     "Select the detector channels to retain. The original channel order "
                     "and every recorded event are preserved."
                 ),
-                color_name=styling.get_workflow_section_color(2),
             ),
             WorkflowStep(
-                number="3",
                 title="Download sliced files",
                 description=(
                     "Export the sliced FCS copies together in one ZIP package while "
                     "keeping the selected channel metadata."
                 ),
-                color_name=styling.get_workflow_section_color(3),
             ),
         ]
 
@@ -200,7 +198,9 @@ class FCSSlicerPage:
                 store_data = UploadedFileBatch(
                     files=tuple(
                         UploadedFile(path=str(path), filename=filename)
-                        for path, filename in zip(saved_paths, safe_filenames, strict=True)
+                        for path, filename in zip(
+                            saved_paths, safe_filenames, strict=True
+                        )
                     ),
                     reference_column_names=tuple(channels),
                 ).to_dict()
@@ -234,7 +234,10 @@ class FCSSlicerPage:
             except ValueError as exception:
                 return True, str(exception)
 
-            return False, f"{len(selected)} of {len(available_channels)} channels selected."
+            return (
+                False,
+                f"{len(selected)} of {len(available_channels)} channels selected.",
+            )
 
         @dash.callback(
             dash.Output(self.ids.download, "data"),

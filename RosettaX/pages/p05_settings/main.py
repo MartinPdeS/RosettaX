@@ -1,10 +1,9 @@
-
 import dash
 import dash_bootstrap_components as dbc
 from . import sections
 from .ids import Ids
 from .state import SettingsPageState
-from RosettaX.ui import WorkflowStep, build_workflow_page_header
+from RosettaX.ui import WorkflowHeader, WorkflowStep
 from RosettaX.utils import styling
 
 
@@ -22,6 +21,15 @@ class SettingsPage:
         self.sections = [
             sections.DefaultProfile(page=self),
         ]
+        self.workflow_header = WorkflowHeader(
+            title="Settings",
+            description=(
+                "Configure reusable defaults for fluorescence, scattering, "
+                "apply-calibration, and visualization behavior. Save everything as "
+                "browser profiles for rapid workflow switching."
+            ),
+            steps=self._build_steps(),
+        )
 
         self.backend = None
 
@@ -40,10 +48,7 @@ class SettingsPage:
                     data=SettingsPageState.empty().to_dict(),
                 ),
                 self._build_header_card(),
-                *[
-                    section.get_layout()
-                    for section in self.sections
-                ],
+                *[section.get_layout() for section in self.sections],
             ],
             style={
                 "display": "flex",
@@ -53,44 +58,30 @@ class SettingsPage:
         )
 
     def _build_header_card(self) -> dbc.Card:
-        return build_workflow_page_header(
-            title="Settings",
-            description=(
-                "Configure reusable defaults for fluorescence, scattering, "
-                "apply-calibration, and visualization behavior. Save everything as "
-                "browser profiles for rapid workflow switching."
-            ),
-            steps=self._build_steps(),
-        )
+        return self.workflow_header.build_header()
 
     def _build_steps(self) -> list[WorkflowStep]:
         return [
             WorkflowStep(
-                number="1",
                 title="Edit defaults",
                 description=(
                     "Adjust startup defaults for calibration pages, chart behavior, and "
                     "runtime options in one centralized form."
                 ),
-                color_name=styling.get_workflow_section_color(1),
             ),
             WorkflowStep(
-                number="2",
                 title="Create profile",
                 description=(
                     "Save the current defaults as a named browser profile for quick context "
                     "switching across experiments and instruments."
                 ),
-                color_name=styling.get_workflow_section_color(2),
             ),
             WorkflowStep(
-                number="3",
                 title="Clean up profiles",
                 description=(
                     "Remove stale profiles and keep only actively used defaults to reduce "
                     "configuration drift."
                 ),
-                color_name=styling.get_workflow_section_color(3),
             ),
         ]
 
