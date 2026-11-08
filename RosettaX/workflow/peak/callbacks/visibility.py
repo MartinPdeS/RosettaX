@@ -517,11 +517,12 @@ def register_process_visibility_callback(
                 )
                 continue
 
-            styles.append(
-                process.build_visibility_style(
-                    selected_process_name=selected_process_name,
-                )
+            process_style = process.build_visibility_style(
+                selected_process_name=selected_process_name,
             )
+            if process_style.get("display") != "none":
+                process_style = {**process_style, "alignItems": "stretch", "marginTop": "12px"}
+            styles.append(process_style)
 
         return styles
 

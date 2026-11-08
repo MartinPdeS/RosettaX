@@ -375,8 +375,6 @@ WORKFLOW_SECTION = {
     "title_with_info": {
         "display": "flex",
         "alignItems": "center",
-        "fontWeight": get_typography_token("section_title_weight", "750"),
-        "fontSize": get_typography_token("section_title_size", "1.02rem"),
     },
 }
 

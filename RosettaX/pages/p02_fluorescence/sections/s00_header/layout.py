@@ -18,6 +18,8 @@ def get_layout(section) -> dbc.Card:
         step_target_page_name=getattr(page_ids, "page_name", None),
         card_color=section.card_color,
         column_kwargs={"xl": True},
+        description_tooltip_target_id=state_ids.description_tooltip_target,
+        description_tooltip_id=state_ids.description_tooltip,
     )
 
 

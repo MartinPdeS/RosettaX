@@ -44,3 +44,13 @@ class SaveIds:
     @property
     def download(self) -> str:
         return f"{self.prefix}-save-download"
+
+    @property
+    def description_target(self) -> str:
+        """Return the ID for the save section information badge."""
+        return f"{self.prefix}-save-description-target"
+
+    @property
+    def description_tooltip(self) -> str:
+        """Return the ID for the save section description tooltip."""
+        return f"{self.prefix}-save-description-tooltip"

@@ -188,3 +188,9 @@ wavelength as the selected scattering channel; if that is unavailable, it uses
 a uniquely identifiable 488 nm green channel. If names are missing or multiple
 channels still match a role, select that channel manually. Verify that the
 selected channels match the instrument and measurement being analyzed.
+For blue-laser channels named by emission filter (for example,
+``B535/30-A``), auto-selection recognizes a single green-range filter and
+prefers its area measurement. Multiple matching filters remain unselected.
+The suggestion message explains the channel-name or instrument rule used and
+lists ambiguous matches. Channel names and instrument preferences are maintained
+in ``RosettaX/workflow/detector/detector_auto_detect_rules.json``.

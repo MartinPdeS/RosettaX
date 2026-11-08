@@ -41,6 +41,12 @@ class Save:
         self.config = SaveConfig(
             calibration_kind="fluorescence",
             header_title=f"{self.section_number}. Save calibration",
+            description_tooltip_text=(
+                "Choose a file name and output channel label, then download the "
+                "completed fluorescence calibration as a reusable JSON file."
+            ),
+            description_tooltip_target_id=self.ids.description_target,
+            description_tooltip_id=self.ids.description_tooltip,
             button_text="Download calibration.json",
             file_name_placeholder="file name",
             output_channel_name_placeholder="e.g. FITC (MESF)",

@@ -125,6 +125,7 @@ A typical RosettaX session follows these steps:
 #. choose the fluorescence or scattering calibration workflow
 #. configure the detector, optical, and calibration parameters
 #. inspect histograms and identify calibration peaks
+#. optionally review scattering signal and peak-detection quality
 #. fit the calibration model
 #. review the calibration result
 #. save the calibration for later reuse

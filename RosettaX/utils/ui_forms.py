@@ -258,6 +258,7 @@ def build_title_with_info(
             styling.WORKFLOW_SECTION["title_with_info"],
             title_style_overrides,
         ),
+        className="rosettax-workflow-card-title",
     )
 
 
@@ -729,6 +730,9 @@ def build_section_intro(
     description_margin_bottom_px: int = _token_px_to_int(styling.get_spacing_token("sm"), 12),
     description_style_overrides: dict[str, Any] | None = None,
     container_style: dict[str, Any] | None = None,
+    title_tooltip_target_id: str | None = None,
+    title_tooltip_id: str | None = None,
+    title_tooltip_text: str | None = None,
 ) -> html.Div:
     """
     Build a small section intro block with a title and optional description.
@@ -774,15 +778,24 @@ def build_section_intro(
             }
         )
 
-    children: list[Any] = [
-        heading_factory(
-            title,
-            style=styling.merge_style(
-                default_title_style,
-                title_style_overrides,
-            ),
+    heading_style = styling.merge_style(default_title_style, title_style_overrides)
+    if title_tooltip_target_id and title_tooltip_id:
+        title_content: Any = html.Div(
+            [
+                heading_factory(title, style={**heading_style, "margin": "0"}),
+                build_info_badge(tooltip_target_id=title_tooltip_target_id),
+                dbc.Tooltip(
+                    title_tooltip_text or description or "",
+                    id=title_tooltip_id,
+                    target=title_tooltip_target_id,
+                    placement="right",
+                ),
+            ],
+            style={"display": "flex", "alignItems": "center", "gap": "8px", **heading_style},
         )
-    ]
+    else:
+        title_content = heading_factory(title, style=heading_style)
+    children: list[Any] = [title_content]
 
     if description:
         children.append(

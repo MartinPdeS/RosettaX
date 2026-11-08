@@ -46,6 +46,21 @@ class PeakIds:
         return f"{self.prefix}-rosetta-v1-auto-select-detectors"
 
     @property
+    def rosetta_v1_detector_suggestions(self) -> str:
+        """Return the ID for the detector suggestion explanation."""
+        return f"{self.prefix}-rosetta-v1-detector-suggestions"
+
+    def process_description_target(self, *, process_name: str) -> str:
+        """Return a process-specific description badge ID."""
+        process_slug = "-".join(str(process_name).strip().lower().split())
+        return f"{self.prefix}-{process_slug}-description-target"
+
+    def process_description_tooltip(self, *, process_name: str) -> str:
+        """Return a process-specific description tooltip ID."""
+        process_slug = "-".join(str(process_name).strip().lower().split())
+        return f"{self.prefix}-{process_slug}-description-tooltip"
+
+    @property
     def process_detector_dropdown_type(self) -> str:
         return f"{self.resolved_namespace}-peak-script-detector-dropdown"
 

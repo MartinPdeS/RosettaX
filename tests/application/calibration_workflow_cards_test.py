@@ -64,7 +64,7 @@ def _collect_text(component: Any) -> list[str]:
             "RosettaX.pages.p03_scattering.main",
             "ScatterCalibrationPage",
             "scattering_calibration",
-            ("1", "2", "3", "4", "5", "6"),
+            ("1", "2", "3", "4", "5", "6", "7"),
             tuple(
                 calibration_cards.CALIBRATION_WORKFLOW_SUBTITLES[
                     "scattering_calibration"

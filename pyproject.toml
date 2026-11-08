@@ -72,6 +72,7 @@ RosettaX = [
     "presets/**/*.json",
     "calibrations/**/*.json",
     "data/**/*",
+    "workflow/detector/*.json",
 ]
 
 [tool.setuptools.exclude-package-data]

@@ -2,6 +2,7 @@
 import dash
 import dash_bootstrap_components as dbc
 import logging
+from RosettaX.utils import ui_forms
 from RosettaX.workflow.save.models import SaveConfig
 from typing import Any
 
@@ -42,9 +43,19 @@ class SaveLayout:
         """
         Build the save section header.
         """
-        return dbc.CardHeader(
-            self.config.header_title,
-        )
+        header_title: Any = self.config.header_title
+        if (
+            self.config.description_tooltip_text
+            and self.config.description_tooltip_target_id
+            and self.config.description_tooltip_id
+        ):
+            header_title = ui_forms.build_title_with_info(
+                title=self.config.header_title,
+                tooltip_target_id=self.config.description_tooltip_target_id,
+                tooltip_id=self.config.description_tooltip_id,
+                tooltip_text=self.config.description_tooltip_text,
+            )
+        return dbc.CardHeader(header_title)
 
     def _build_collapse(self) -> dbc.Collapse:
         """

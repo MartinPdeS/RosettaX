@@ -29,6 +29,7 @@ class Automatic2DPeakProcess(BasePeakProcess):
 
     process_name = "Automatic 2D"
     process_label = "Automatic 2D"
+    description = "Detect local maxima automatically in a two-dimensional event density plot."
     graph_type = "2d_scatter"
     sort_order = 40
 

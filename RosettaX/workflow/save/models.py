@@ -12,6 +12,9 @@ class SaveConfig:
 
     calibration_kind: str
     header_title: str = "5. Save calibration"
+    description_tooltip_text: str = ""
+    description_tooltip_target_id: str | None = None
+    description_tooltip_id: str | None = None
     button_text: str = "Save calibration"
     file_name_placeholder: str = "file name"
     output_channel_name_label: str = "Applied output channel name"

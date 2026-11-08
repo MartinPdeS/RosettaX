@@ -11,8 +11,18 @@
         "novocyte quattro"
       ],
       "detector_channels": {
-        "default": ["SSC-A", "SSC-H", "SSC Area", "SSC"],
-        "forward": ["FSC-A", "FSC-H", "FSC Area", "FSC"]
+        "default": [
+          "SSC-A",
+          "SSC-H",
+          "SSC Area",
+          "SSC"
+        ],
+        "forward": [
+          "FSC-A",
+          "FSC-H",
+          "FSC Area",
+          "FSC"
+        ]
       }
     },
     {
@@ -24,8 +34,18 @@
         "aurora 5l"
       ],
       "detector_channels": {
-        "default": ["SSC-A", "SSC-H", "SSC Area", "SSC"],
-        "forward": ["FSC-A", "FSC-H", "FSC Area", "FSC"]
+        "default": [
+          "SSC-A",
+          "SSC-H",
+          "SSC Area",
+          "SSC"
+        ],
+        "forward": [
+          "FSC-A",
+          "FSC-H",
+          "FSC Area",
+          "FSC"
+        ]
       }
     },
     {
@@ -36,8 +56,18 @@
         "sony spectral analyzer"
       ],
       "detector_channels": {
-        "default": ["SSC-A", "SSC-H", "SSC Area", "SSC"],
-        "forward": ["FSC-A", "FSC-H", "FSC Area", "FSC"]
+        "default": [
+          "SSC-A",
+          "SSC-H",
+          "SSC Area",
+          "SSC"
+        ],
+        "forward": [
+          "FSC-A",
+          "FSC-H",
+          "FSC Area",
+          "FSC"
+        ]
       }
     },
     {
@@ -49,10 +79,30 @@
         "nano analyzer"
       ],
       "detector_channels": {
-        "x": ["405Blu(Area)", "405 Blu", "Blu", "Blue"],
-        "y": ["405LALS(Area)", "LALS", "SSC-A", "SSC-H"],
-        "default": ["405LALS(Area)", "LALS", "SSC-A", "SSC-H"],
-        "forward": ["405SALS(Area)", "SALS", "FSC-A", "FSC-H"]
+        "x": [
+          "405Blu(Area)",
+          "405 Blu",
+          "Blu",
+          "Blue"
+        ],
+        "y": [
+          "405LALS(Area)",
+          "LALS",
+          "SSC-A",
+          "SSC-H"
+        ],
+        "default": [
+          "405LALS(Area)",
+          "LALS",
+          "SSC-A",
+          "SSC-H"
+        ],
+        "forward": [
+          "405SALS(Area)",
+          "SALS",
+          "FSC-A",
+          "FSC-H"
+        ]
       }
     },
     {
@@ -63,9 +113,118 @@
         "attune"
       ],
       "detector_channels": {
-        "default": ["SSC-A", "SSC-H", "SSC Area", "SSC"],
-        "forward": ["FSC-A", "FSC-H", "FSC Area", "FSC"]
+        "default": [
+          "SSC-A",
+          "SSC-H",
+          "SSC Area",
+          "SSC"
+        ],
+        "forward": [
+          "FSC-A",
+          "FSC-H",
+          "FSC Area",
+          "FSC"
+        ]
       }
     }
-  ]
+  ],
+  "channel_names": {
+    "role_aliases": {
+      "primary": [
+        "primary",
+        "default"
+      ],
+      "scattering": [
+        "scattering",
+        "primary",
+        "default",
+        "x",
+        "x_axis"
+      ],
+      "forward": [
+        "forward",
+        "fsc"
+      ],
+      "green_fluorescence": [
+        "green_fluorescence",
+        "fluorescence",
+        "green",
+        "fitc",
+        "fl1",
+        "y",
+        "y_axis"
+      ]
+    },
+    "rosetta_keywords": {
+      "scattering": [
+        "ssc",
+        "side scatter",
+        "sidescatter",
+        "lals",
+        "lasl"
+      ],
+      "green_fluorescence": [
+        "green",
+        "grn",
+        "fitc",
+        "fl1",
+        "gfp"
+      ]
+    },
+    "fallback_keywords": [
+      "ssc",
+      "fsc",
+      "scatter",
+      "fl",
+      "height",
+      "area"
+    ],
+    "fluorescence_keywords": [
+      "fitc",
+      "fl1",
+      "green",
+      "fluor",
+      "fluorescence",
+      "gfp",
+      "525",
+      "530",
+      "533",
+      "bl1"
+    ],
+    "fluorescence_prefixes": [
+      "fl"
+    ],
+    "scattering_keywords": {
+      "forward": [
+        "fsc",
+        "forward",
+        "lals"
+      ],
+      "primary": [
+        "ssc",
+        "sals",
+        "side",
+        "scatter",
+        "blu",
+        "fsc"
+      ],
+      "scattering": [
+        "ssc",
+        "sals",
+        "side",
+        "scatter",
+        "blu",
+        "fsc"
+      ]
+    },
+    "green_filter": {
+      "pattern": "B(5\\d{2})/\\d+-([AHW])",
+      "minimum_wavelength_nm": 520,
+      "maximum_wavelength_nm": 550,
+      "preferred_measurement": "H"
+    },
+    "preferred_green_wavelength_nm": 488,
+    "preferred_measurement_token": "(peak)",
+    "preferred_pulse_measurement_suffix": "-H"
+  }
 }

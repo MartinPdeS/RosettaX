@@ -325,6 +325,7 @@ class BasePeakProcess:
 
     process_name: ClassVar[str] = ""
     process_label: ClassVar[str] = ""
+    description: ClassVar[str] = ""
     graph_type: ClassVar[str] = "1d_histogram"
     sort_order: ClassVar[int] = 100
 

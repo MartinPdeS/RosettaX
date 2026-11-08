@@ -11,6 +11,7 @@ import json
 import pytest
 import sys
 import types
+from pathlib import Path
 from RosettaX.utils.fcs_metadata import FCSMetadata
 
 
@@ -633,6 +634,9 @@ class Test_DetectorAutoDetect:
         (["FSC-A", "Time"], "green_fluorescence", None),
         (["SSC-A", "SSC-H"], "scattering", None),
         (["FITC-A", "FL1-A"], "green_fluorescence", None),
+        (["V525/50-A", "B535/30-A", "B535/30-H"], "green_fluorescence", "B535/30-A"),
+        (["B525/50-A", "B535/30-A"], "green_fluorescence", None),
+        (["B535/30-H", "B535/30-W"], "green_fluorescence", None),
         (["405LALS(Area)", "405LALS(Peak)"], "scattering", "405LALS(Peak)"),
         (["405Grn(Peak)", "488Grn(Area)", "488Grn(Peak)"], "green_fluorescence", "488Grn(Peak)"),
     ],
@@ -689,3 +693,40 @@ def test_rosetta_v1_prefers_green_channel_matching_scatter_wavelength():
         detector_role="green_fluorescence",
         preferred_wavelength_nm=405,
     ) == "405Grn(Peak)"
+
+
+def test_rosetta_v1_detects_green_filter_in_bundled_lsrii_sample():
+    """Identify the green filter while leaving ambiguous scatter measurements unset."""
+    sample_path = Path(__file__).resolve().parents[2] / "RosettaX/assets/sample-files/bd_lsrii_rosetta_beads.fcs"
+    with detectors.FCSFile(sample_path) as fcs:
+        channels = fcs.get_column_names()
+    assert detectors.infer_rosetta_v1_channel(column_names=channels, detector_role="green_fluorescence") == "B535/30-A"
+    assert detectors.infer_rosetta_v1_channel(column_names=channels, detector_role="scattering") is None
+
+
+def test_rosetta_suggestions_explain_filter_and_ambiguous_scattering():
+    """Give a reason for the filter suggestion and list unresolved candidates."""
+    channel, explanation = detectors.resolve_rosetta_v1_suggestion(
+        column_names=["B535/30-A", "B535/30-H"], detector_role="green_fluorescence",
+    )
+    assert channel == "B535/30-A"
+    assert "green emission filter" in explanation
+    channel, explanation = detectors.resolve_rosetta_v1_suggestion(
+        column_names=["SSC-A", "SSC-H"], detector_role="scattering",
+    )
+    assert channel is None
+    assert "SSC-A" in explanation and "SSC-H" in explanation
+
+
+def test_rosetta_uses_unambiguous_instrument_preference():
+    """Use instrument preferences only when one listed channel is present."""
+    rule = {"name": "Example", "detector_channels": {"scattering": ["SSC-A", "SSC-H"]}}
+    channel, explanation = detectors.resolve_rosetta_v1_suggestion(
+        column_names=["SSC-A"], detector_role="scattering", matched_rule=rule,
+    )
+    assert channel == "SSC-A"
+    assert "Example" in explanation
+    channel, _ = detectors.resolve_rosetta_v1_suggestion(
+        column_names=["SSC-A", "SSC-H"], detector_role="scattering", matched_rule=rule,
+    )
+    assert channel is None

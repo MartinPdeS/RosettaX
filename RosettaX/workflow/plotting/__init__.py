@@ -3,6 +3,7 @@
 from .layout import (
     PLOT_CONTROL_LABEL_STYLE,
     PLOT_CONTROL_PANEL_STYLE,
+    PlotOptions,
     build_plot_axis_checklist,
     build_plot_control_panel,
     build_plot_control_panel_style,
@@ -25,6 +26,7 @@ from .transforms import (
 __all__ = [
     "PLOT_CONTROL_LABEL_STYLE",
     "PLOT_CONTROL_PANEL_STYLE",
+    "PlotOptions",
     "AxisOptions",
     "HistogramOptions",
     "PlotStyleOptions",

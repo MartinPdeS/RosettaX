@@ -1,4 +1,3 @@
-
 import dash
 import dash_bootstrap_components as dbc
 import logging
@@ -55,6 +54,9 @@ class Header:
             step_target_page_name=getattr(page_ids, "page_name", None),
             card_color=self.card_color,
             column_kwargs={"xs": 12, "md": 6, "lg": 4, "xl": 2},
+            compact_steps=True,
+            description_tooltip_target_id=page_ids.State.description_tooltip_target,
+            description_tooltip_id=page_ids.State.description_tooltip,
         )
 
     def register_callbacks(self) -> None:
@@ -69,7 +71,8 @@ class Header:
         """
         return [
             WorkflowStep(
-                "1", "Upload bead FCS",
+                "1",
+                "Upload bead FCS",
                 (
                     "Load the scattering bead file acquired on the instrument. "
                     "This file becomes the source for detector selection and peak detection."
@@ -77,7 +80,8 @@ class Header:
                 styling.get_workflow_section_color(1),
             ),
             WorkflowStep(
-                "2", "Detect peaks",
+                "2",
+                "Detect peaks",
                 (
                     "Select the scattering detector channel, inspect the event distribution, "
                     "and detect the bead population peaks from the uploaded FCS file."
@@ -85,14 +89,16 @@ class Header:
                 styling.get_workflow_section_color(2),
             ),
             WorkflowStep(
-                "3", "Configure detector",
+                "3",
+                "Configure detector",
                 (
                     "Choose the scattering detector channel used for the calibration workflow."
                 ),
                 styling.get_workflow_section_color(3),
             ),
             WorkflowStep(
-                "4", "Compute coupling",
+                "4",
+                "Compute coupling",
                 (
                     "Enter the particle diameters and compute the expected scattering "
                     "coupling from the selected Mie model."
@@ -100,7 +106,8 @@ class Header:
                 styling.get_workflow_section_color(4),
             ),
             WorkflowStep(
-                "5", "Create calibration",
+                "5",
+                "Create calibration",
                 (
                     "Match detected peak positions to the computed coupling values and fit "
                     "the scattering calibration relation."
@@ -108,7 +115,8 @@ class Header:
                 styling.get_workflow_section_color(5),
             ),
             WorkflowStep(
-                "6", "Save calibration",
+                "6",
+                "Save calibration",
                 (
                     "Save the fitted calibration so it can be reused later when applying "
                     "calibration to experimental FCS files."
@@ -129,7 +137,11 @@ class Header:
         if state.get("uploaded_fcs_path"):
             completed_count = 1
         peak_payload = self._find_completed_peak_payload(state)
-        if completed_count == 1 and isinstance(peak_payload, dict) and peak_payload.get("positions"):
+        if (
+            completed_count == 1
+            and isinstance(peak_payload, dict)
+            and peak_payload.get("positions")
+        ):
             completed_count = 2
         detector_configured = _has_complete_detector_configuration(
             detector_configuration_values,
@@ -151,6 +163,7 @@ class Header:
             completed_count=completed_count,
             page_name=self.page.ids.page_name,
             column_kwargs={"xs": 12, "md": 6, "lg": 4, "xl": 2},
+            compact=True,
         )
 
     @staticmethod

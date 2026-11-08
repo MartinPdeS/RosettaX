@@ -216,7 +216,10 @@ def get_peak_process_instances() -> list[Any]:
     list[Any]
         Instantiated peak process objects.
     """
-    return list(load_peak_scripts())
+    return sorted(
+        load_peak_scripts(),
+        key=lambda script: int(getattr(script, "sort_order", 100)),
+    )
 
 
 def filter_peak_processes(

@@ -6,13 +6,13 @@ from . import registry
 from .callbacks.shared import get_peak_processes
 from .models import PeakConfig
 from dash import dcc, html
+from RosettaX.utils import ui_forms
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.plotting import layout as plotting_layout
 from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph, Scatter2DGraphIds
 from typing import Any
 
 logger = logging.getLogger(__name__)
-
 
 class PeakLayout:
     """
@@ -316,25 +316,15 @@ class PeakLayout:
         )
 
         children: list[Any] = [
-            html.Div(
-                [
-                    html.H6(
-                        process_label,
-                        style={
-                            "marginBottom": "4px",
-                        },
-                    ),
-                    html.P(
-                        process_description,
-                        style={
-                            "marginBottom": "12px",
-                            "fontSize": "0.9rem",
-                            "opacity": 0.8,
-                        },
-                    )
-                    if process_description
-                    else None,
-                ]
+            ui_forms.build_title_with_info(
+                title=process_label,
+                tooltip_target_id=self.ids.process_description_target(process_name=process_name),
+                tooltip_id=self.ids.process_description_tooltip(process_name=process_name),
+                tooltip_text=process_description,
+                title_style_overrides={"marginBottom": "12px"},
+            ) if process_description else html.H6(
+                process_label,
+                style={"marginBottom": "12px", "fontWeight": "700"},
             ),
             html.Div(
                 self._build_detector_controls(
@@ -369,8 +359,8 @@ class PeakLayout:
                         id=self.ids.rosetta_v1_auto_select_detectors,
                         n_clicks=0,
                         size="sm",
-                        color="secondary",
-                        outline=True,
+                        color="light",
+                        className="peak-action-button peak-action-button--auto",
                     ),
                 ] if process_name == "Rosetta Script V1" else [])
                 + self._build_process_action_buttons(
@@ -393,9 +383,12 @@ class PeakLayout:
                 style={
                     "display": "flex",
                     "gap": "8px",
+                    "flexWrap": "wrap",
                     "marginTop": "12px",
                 },
             ),
+            html.Div(id=self.ids.rosetta_v1_detector_suggestions, style={"marginTop": "12px"})
+            if process_name == "Rosetta Script V1" else None,
         ]
 
         return dbc.Card(
@@ -481,9 +474,10 @@ class PeakLayout:
                         process_name=process_name,
                         channel_name=channel_name,
                     ),
-                    label="" if process_name == "Rosetta Script V1" else label,
+                    label=label,
                     placeholder=f"Select {label.lower()}",
                     persistence=process_name != "Rosetta Script V1",
+                    visually_hidden_label=process_name == "Rosetta Script V1",
                 )
             )
 
@@ -964,6 +958,7 @@ class PeakLayout:
         value: Any = None,
         placeholder: str = "Select detector",
         persistence: bool = True,
+        visually_hidden_label: bool = False,
     ) -> html.Div:
         """
         Build a detector dropdown used by a peak process.
@@ -972,6 +967,8 @@ class PeakLayout:
             [
                 dbc.Label(
                     label,
+                    html_for=json.dumps(dropdown_id, sort_keys=True, separators=(",", ":")) if isinstance(dropdown_id, dict) else dropdown_id,
+                    className="visually-hidden" if visually_hidden_label else None,
                     style={
                         "marginBottom": "4px",
                         "fontSize": "0.85rem",
@@ -1222,7 +1219,8 @@ class PeakLayout:
                     ),
                     n_clicks=0,
                     size="sm",
-                    color="primary",
+                    color="light",
+                    className="peak-action-button peak-action-button--run",
                 )
             )
 
@@ -1236,8 +1234,8 @@ class PeakLayout:
                     ),
                     n_clicks=0,
                     size="sm",
-                    color="secondary",
-                    outline=True,
+                    color="light",
+                    className="peak-action-button peak-action-button--clear",
                 )
             )
 

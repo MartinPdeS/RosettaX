@@ -1,6 +1,7 @@
 """Shared headers used by multi-step RosettaX workflow pages."""
 
 import dash_bootstrap_components as dbc
+import re
 from collections.abc import Sequence
 from dash import html
 from dataclasses import dataclass
@@ -34,8 +35,22 @@ def build_workflow_page_header(
     style_overrides: dict[str, Any] | None = None,
     progress_id: Any | None = None,
     step_target_page_name: str | None = None,
+    compact_steps: bool = False,
+    description_tooltip_target_id: str | None = None,
+    description_tooltip_id: str | None = None,
 ) -> dbc.Card:
     """Build the standard explanatory header for a workflow page."""
+    tooltip_prefix = str(
+        step_target_page_name
+        or (component_id if isinstance(component_id, str) else "")
+        or re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
+    )
+    resolved_tooltip_target_id = (
+        description_tooltip_target_id or f"{tooltip_prefix}-description-tooltip-target"
+    )
+    resolved_tooltip_id = (
+        description_tooltip_id or f"{tooltip_prefix}-description-tooltip"
+    )
     resolved_column_kwargs = {
         "xs": 12,
         "md": 6,
@@ -49,7 +64,10 @@ def build_workflow_page_header(
         ui_forms.build_section_intro(
             title=title,
             title_component="H2",
-            description=description,
+            description=None,
+            title_tooltip_target_id=resolved_tooltip_target_id,
+            title_tooltip_id=resolved_tooltip_id,
+            title_tooltip_text=description,
         ),
     ]
     if alert is not None:
@@ -63,6 +81,7 @@ def build_workflow_page_header(
                     completed_count=0,
                     page_name=step_target_page_name,
                     column_kwargs=resolved_column_kwargs,
+                    compact=compact_steps,
                 ),
                 id=progress_id,
             )
@@ -123,9 +142,7 @@ def build_workflow_progress_content(
     elif bounded_completed_count >= step_count:
         status_text = "Workflow complete"
     else:
-        status_text = (
-            f"Step {active_index + 1} of {step_count}: {active_step.title}"
-        )
+        status_text = f"Step {active_index + 1} of {step_count}: {active_step.title}"
 
     return html.Div(
         [
@@ -191,11 +208,41 @@ def build_workflow_step_cards(
     completed_count: int,
     page_name: str | None,
     column_kwargs: dict[str, Any],
-) -> dbc.Row:
+    compact: bool = False,
+) -> dbc.Row | html.Div:
     """Build state-aware workflow cards that navigate to their sections."""
     step_list = list(steps)
     bounded_completed_count = max(0, min(int(completed_count), len(step_list)))
     active_index = min(bounded_completed_count, max(len(step_list) - 1, 0))
+    if compact:
+        return html.Div(
+            [
+                html.Div(
+                    _build_step_card(
+                        step,
+                        state=(
+                            "complete"
+                            if index < bounded_completed_count
+                            else "current"
+                            if index == active_index
+                            else "blocked"
+                        ),
+                        page_name=page_name,
+                    ),
+                    style={"flex": "0 0 212px", "minWidth": "0"},
+                )
+                for index, step in enumerate(step_list)
+            ],
+            style={
+                "display": "flex",
+                "flexWrap": "nowrap",
+                "gap": "8px",
+                "overflowX": "auto",
+                "paddingBottom": "8px",
+                "scrollbarWidth": "thin",
+                "width": "100%",
+            },
+        )
     return dbc.Row(
         [
             dbc.Col(
@@ -246,7 +293,9 @@ def _build_step_card(
                                 "justifyContent": "center",
                                 "fontWeight": "700",
                                 "fontSize": "0.9rem",
-                                "backgroundColor": styling.build_rgba(step.color_name, 0.12),
+                                "backgroundColor": styling.build_rgba(
+                                    step.color_name, 0.12
+                                ),
                                 "border": f"1px solid {styling.build_rgba(step.color_name, 0.35)}",
                             },
                         ),

@@ -13,20 +13,27 @@ logger = logging.getLogger(__name__)
 DETECTOR_AUTO_DETECT_RULES_PATH = Path(__file__).parents[2] / "detector" / (
     "detector_auto_detect_rules.json"
 )
-DETECTOR_ROLE_ALIASES: dict[str, list[str]] = {
-    "primary": ["primary", "default"],
-    "scattering": ["scattering", "primary", "default", "x", "x_axis"],
-    "forward": ["forward", "fsc"],
-    "green_fluorescence": [
-        "green_fluorescence",
-        "fluorescence",
-        "green",
-        "fitc",
-        "fl1",
-        "y",
-        "y_axis",
-    ],
-}
+# Keep the shared channel catalog independent of test overrides for instrument rules.
+CHANNEL_CATALOG_PATH = Path(__file__).parents[2] / "detector" / "detector_auto_detect_rules.json"
+
+
+def load_channel_catalog() -> dict[str, Any]:
+    """Load shared channel names and matching patterns from the detector catalog.
+
+    Returns
+    -------
+    dict[str, Any]
+        Catalog entries, or an empty dictionary if the resource is unavailable.
+    """
+    try:
+        payload = json.loads(CHANNEL_CATALOG_PATH.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        logger.exception("Could not load channel catalog from %s", CHANNEL_CATALOG_PATH)
+        return {}
+    catalog = payload.get("channel_names", {}) if isinstance(payload, dict) else {}
+    return catalog if isinstance(catalog, dict) else {}
+
+
 SCATTERING_ROLE_NAMES = {"primary", "scattering", "forward"}
 FLUORESCENCE_ROLE_NAMES = {"green_fluorescence"}
 
@@ -184,6 +191,7 @@ def populate_peak_script_detector_dropdowns(
                 infer_rosetta_v1_channel(
                     column_names=column_names,
                     detector_role="scattering",
+                    matched_rule=matched_rule,
                 )
                 if auto_select_rosetta_v1
                 else current_scattering_channel
@@ -221,6 +229,7 @@ def populate_peak_script_detector_dropdowns(
                         if detector_role == "green_fluorescence"
                         else None
                     ),
+                    matched_rule=matched_rule,
                 )
                 if auto_select_rosetta_v1
                 else None
@@ -252,55 +261,130 @@ def populate_peak_script_detector_dropdowns(
 
 
 
+def resolve_rosetta_v1_suggestion(
+    *,
+    column_names: list[str],
+    detector_role: Any,
+    preferred_wavelength_nm: int | None = None,
+    matched_rule: dict[str, Any] | None = None,
+) -> tuple[str | None, str]:
+    """Suggest a channel and explain the match or ambiguity.
+
+    Parameters
+    ----------
+    column_names : list[str]
+        Available FCS channels.
+    detector_role : Any
+        Scattering or green fluorescence role.
+    preferred_wavelength_nm : int or None
+        Preferred excitation wavelength, in nanometers.
+    matched_rule : dict or None
+        Instrument-specific preferences from the detector catalog.
+
+    Returns
+    -------
+    tuple[str or None, str]
+        Suggested channel and explanation for the user.
+    """
+    catalog = load_channel_catalog()
+    role_aliases = catalog.get("role_aliases", {}).get(detector_role, [detector_role])
+    channel_rules = (matched_rule or {}).get("detector_channels", {})
+    aliases = next((channel_rules.get(role) for role in role_aliases if channel_rules.get(role)), [])
+    instrument_matches = [
+        name for name in column_names
+        if any(str(name).casefold() == str(alias).casefold() for alias in aliases)
+    ]
+    instrument_matches = _prefer_channel_measurement(
+        channel_names=instrument_matches,
+        suffix=catalog.get("preferred_pulse_measurement_suffix", "-H"),
+    )
+    if len(instrument_matches) == 1:
+        name = instrument_matches[0]
+        return name, f"Suggested {name} from instrument rule {matched_rule.get('name', '')}."
+
+    keywords = catalog.get("rosetta_keywords", {}).get(detector_role, ())
+    matches = [name for name in column_names if any(keyword in str(name).lower() for keyword in keywords)]
+    if detector_role == "green_fluorescence":
+        if not matches:
+            filter_matches = []
+            filter_rule = catalog.get("green_filter", {})
+            for name in column_names:
+                match = re.fullmatch(filter_rule.get("pattern", r"(?!)"), str(name), re.IGNORECASE)
+                if match and filter_rule.get("minimum_wavelength_nm", 0) <= int(match.group(1)) <= filter_rule.get("maximum_wavelength_nm", 0):
+                    filter_matches.append((name, str(name).rsplit("-", 1)[0].lower(), match.group(2).upper()))
+            if len({base for _, base, _ in filter_matches}) == 1:
+                preferred_matches = [name for name, _, measurement in filter_matches if measurement == filter_rule.get("preferred_measurement")]
+                if len(preferred_matches) == 1:
+                    return preferred_matches[0], f"Suggested {preferred_matches[0]} from its blue-laser green emission filter; height was preferred."
+                if len(filter_matches) == 1:
+                    name = filter_matches[0][0]
+                    return name, f"Suggested {name} from its blue-laser green emission filter."
+            matches = [name for name, _, _ in filter_matches]
+            if matches:
+                return None, f"Multiple green filter measurements match: {', '.join(matches)}. Select one manually."
+        wavelength_matches = [name for name in matches if extract_channel_wavelength_nm(channel_name=name) == preferred_wavelength_nm]
+        if preferred_wavelength_nm is not None and wavelength_matches:
+            matches = wavelength_matches
+        else:
+            preferred_wavelength = str(catalog.get("preferred_green_wavelength_nm", ""))
+            preferred = [name for name in matches if preferred_wavelength and preferred_wavelength in str(name).lower()]
+            if preferred:
+                matches = preferred
+
+    measurement_token = catalog.get("preferred_measurement_token", "")
+    peak_matches = [name for name in matches if measurement_token and measurement_token in str(name).lower()]
+    if peak_matches:
+        matches = peak_matches
+    matches = _prefer_channel_measurement(
+        channel_names=matches,
+        suffix=catalog.get("preferred_pulse_measurement_suffix", "-H"),
+    )
+    if len(matches) == 1:
+        return matches[0], f"Suggested {matches[0]} from its channel name and measurement."
+    if matches:
+        return None, f"Multiple channels match: {', '.join(matches)}. Select one manually."
+    return None, "No matching channel name was found. Select one manually."
+
+
+def _prefer_channel_measurement(*, channel_names: list[str], suffix: str) -> list[str]:
+    """Prefer one pulse measurement suffix when matching channels include it."""
+    if not suffix:
+        return channel_names
+    preferred = [name for name in channel_names if str(name).upper().endswith(str(suffix).upper())]
+    return preferred or channel_names
+
+
 def infer_rosetta_v1_channel(
     *,
     column_names: list[str],
     detector_role: Any,
     preferred_wavelength_nm: int | None = None,
+    matched_rule: dict[str, Any] | None = None,
 ) -> str | None:
-    """Select a uniquely named side-scatter or green-fluorescence channel.
+    """Return a Rosetta channel suggestion, leaving ambiguous matches unset.
 
     Parameters
     ----------
     column_names : list[str]
-        Available FCS channel names.
+        Available FCS channels.
     detector_role : Any
-        The V1 channel role.
-    preferred_wavelength_nm : int or None, optional
-        Preferred wavelength for green fluorescence channels, in nanometers.
+        Scattering or green fluorescence role.
+    preferred_wavelength_nm : int or None
+        Preferred excitation wavelength, in nanometers.
+    matched_rule : dict or None
+        Optional instrument-specific preferences.
 
     Returns
     -------
     str or None
-        The matching channel, or None if names are absent or ambiguous.
+        Suggested channel when the catalog resolves a unique match.
     """
-    keywords = {
-        "scattering": ("ssc", "side scatter", "sidescatter", "lals", "lasl"),
-        "green_fluorescence": ("green", "grn", "fitc", "fl1", "gfp"),
-    }.get(detector_role, ())
-    matches = [
-        name for name in column_names
-        if any(keyword in str(name).lower() for keyword in keywords)
-    ]
-    if detector_role == "green_fluorescence":
-        wavelength_matches = [
-            name
-            for name in matches
-            if extract_channel_wavelength_nm(channel_name=name)
-            == preferred_wavelength_nm
-        ]
-        if preferred_wavelength_nm is not None and wavelength_matches:
-            matches = wavelength_matches
-        else:
-            preferred = [name for name in matches if "488" in str(name).lower()]
-            if preferred:
-                matches = preferred
-
-    peak_matches = [name for name in matches if "(peak)" in str(name).lower()]
-    if peak_matches:
-        matches = peak_matches
-
-    return matches[0] if len(matches) == 1 else None
+    return resolve_rosetta_v1_suggestion(
+        column_names=column_names,
+        detector_role=detector_role,
+        preferred_wavelength_nm=preferred_wavelength_nm,
+        matched_rule=matched_rule,
+    )[0]
 
 
 def extract_channel_wavelength_nm(*, channel_name: Any) -> int | None:
@@ -384,14 +468,7 @@ def infer_detector_channel_from_column_names(
         if scattering_channel:
             return scattering_channel
 
-    preferred_keywords = [
-        "ssc",
-        "fsc",
-        "scatter",
-        "fl",
-        "height",
-        "area",
-    ]
+    preferred_keywords = load_channel_catalog().get("fallback_keywords", [])
 
     for keyword in preferred_keywords:
         for column_name in column_names:
@@ -411,18 +488,8 @@ def find_fluorescence_channel_from_column_names(
     """
     Find a likely fluorescence detector channel from the available column names.
     """
-    preferred_keywords = [
-        "fitc",
-        "fl1",
-        "green",
-        "fluor",
-        "fluorescence",
-        "gfp",
-        "525",
-        "530",
-        "533",
-        "bl1",
-    ]
+    catalog = load_channel_catalog()
+    preferred_keywords = catalog.get("fluorescence_keywords", [])
 
     for keyword in preferred_keywords:
         for column_name in column_names:
@@ -432,7 +499,7 @@ def find_fluorescence_channel_from_column_names(
 
     for column_name in column_names:
         normalized_column_name = str(column_name).lower()
-        if normalized_column_name.startswith("fl"):
+        if any(normalized_column_name.startswith(prefix) for prefix in catalog.get("fluorescence_prefixes", [])):
             return column_name
 
     return None
@@ -446,29 +513,7 @@ def find_scattering_channel_from_column_names(
     """
     Find a likely scattering detector channel from the available column names.
     """
-    role_specific_keywords = {
-        "forward": [
-            "fsc",
-            "forward",
-            "lals",
-        ],
-        "primary": [
-            "ssc",
-            "sals",
-            "side",
-            "scatter",
-            "blu",
-            "fsc",
-        ],
-        "scattering": [
-            "ssc",
-            "sals",
-            "side",
-            "scatter",
-            "blu",
-            "fsc",
-        ],
-    }
+    role_specific_keywords = load_channel_catalog().get("scattering_keywords", {})
 
     for keyword in role_specific_keywords.get(detector_role, []):
         for column_name in column_names:
@@ -573,7 +618,7 @@ def resolve_rule_based_detector_channel(
 
     candidate_aliases = None
 
-    for role_alias in DETECTOR_ROLE_ALIASES.get(role_name, [role_name]):
+    for role_alias in load_channel_catalog().get("role_aliases", {}).get(role_name, [role_name]):
         candidate_aliases = detector_channels.get(role_alias)
         if isinstance(candidate_aliases, list) and candidate_aliases:
             break

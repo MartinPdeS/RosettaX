@@ -1,4 +1,3 @@
-
 import dash
 import dash_bootstrap_components as dbc
 import logging
@@ -6,54 +5,10 @@ import plotly.graph_objs as go
 from . import services
 from RosettaX.pages.p03_scattering.state import ScatteringPageState
 from RosettaX.utils import RuntimeConfig, plottings, styling, ui_forms
+from RosettaX.workflow.plotting import PlotOptions
 from typing import Any
 
 logger = logging.getLogger(__name__)
-
-
-def build_scattering_axis_control_block(
-    *,
-    x_switch_id: str,
-    y_switch_id: str,
-    x_default_enabled: bool,
-    y_default_enabled: bool,
-) -> dash.html.Div:
-    """
-    Build the axis control block placed above a graph.
-    """
-    return dash.html.Div(
-        [
-            dbc.Checklist(
-                id=x_switch_id,
-                options=[
-                    {
-                        "label": "Log x",
-                        "value": "log",
-                    }
-                ],
-                value=["log"] if x_default_enabled else [],
-                switch=True,
-                inline=True,
-                persistence=True,
-                persistence_type="session",
-            ),
-            dbc.Checklist(
-                id=y_switch_id,
-                options=[
-                    {
-                        "label": "Log y",
-                        "value": "log",
-                    }
-                ],
-                value=["log"] if y_default_enabled else [],
-                switch=True,
-                inline=True,
-                persistence=True,
-                persistence_type="session",
-            ),
-        ],
-        style=ui_forms.build_compact_control_panel_style(),
-    )
 
 
 def build_scattering_graph_panel_card(
@@ -66,10 +21,8 @@ def build_scattering_graph_panel_card(
     tooltip_id: str,
     tooltip_text: str,
     graph_id: str,
-    x_switch_id: str,
-    y_switch_id: str,
-    x_default_enabled: bool,
-    y_default_enabled: bool,
+    plot_options_id: str,
+    default_plot_options: list[str],
     footer_content: Any,
     graph_style: dict[str, Any],
 ) -> dbc.Card:
@@ -96,17 +49,6 @@ def build_scattering_graph_panel_card(
         ),
         dbc.CardBody(
             [
-                build_scattering_axis_control_block(
-                    x_switch_id=x_switch_id,
-                    y_switch_id=y_switch_id,
-                    x_default_enabled=x_default_enabled,
-                    y_default_enabled=y_default_enabled,
-                ),
-                dash.html.Div(
-                    style={
-                        "height": "12px",
-                    },
-                ),
                 dash.dcc.Loading(
                     dash.dcc.Graph(
                         responsive=True,
@@ -117,6 +59,10 @@ def build_scattering_graph_panel_card(
                     type="circle",
                     color="#0d6efd",
                     delay_show=150,
+                ),
+                PlotOptions.build_component(
+                    component_id=plot_options_id,
+                    value=default_plot_options,
                 ),
             ],
             style={
@@ -191,11 +137,19 @@ class Calibration:
         self.header_tooltip_target_id = f"{self.ids.calibrate_btn}-section-info-target"
         self.header_tooltip_id = f"{self.ids.calibrate_btn}-section-info-tooltip"
 
-        self.compute_model_tooltip_target_id = f"{self.ids.calibrate_btn}-compute-model-info-target"
-        self.compute_model_tooltip_id = f"{self.ids.calibrate_btn}-compute-model-info-tooltip"
+        self.compute_model_tooltip_target_id = (
+            f"{self.ids.calibrate_btn}-compute-model-info-target"
+        )
+        self.compute_model_tooltip_id = (
+            f"{self.ids.calibrate_btn}-compute-model-info-tooltip"
+        )
 
-        self.instrument_response_tooltip_target_id = f"{self.ids.graph_calibration}-info-target"
-        self.instrument_response_tooltip_id = f"{self.ids.graph_calibration}-info-tooltip"
+        self.instrument_response_tooltip_target_id = (
+            f"{self.ids.graph_calibration}-info-target"
+        )
+        self.instrument_response_tooltip_id = (
+            f"{self.ids.graph_calibration}-info-tooltip"
+        )
 
         self.mie_relation_tooltip_target_id = f"{self.ids.graph_model}-info-target"
         self.mie_relation_tooltip_id = f"{self.ids.graph_model}-info-tooltip"
@@ -349,10 +303,8 @@ class Calibration:
                         "The fitted slope is the instrument gain."
                     ),
                     graph_id=self.ids.graph_calibration,
-                    x_switch_id=self.ids.instrument_response_x_log_switch,
-                    y_switch_id=self.ids.instrument_response_y_log_switch,
-                    x_default_enabled=False,
-                    y_default_enabled=False,
+                    plot_options_id=self.ids.instrument_response_plot_options,
+                    default_plot_options=[],
                     footer_content=self._build_instrument_response_footer(),
                 ),
             ],
@@ -375,10 +327,8 @@ class Calibration:
         tooltip_id: str,
         tooltip_text: str,
         graph_id: str,
-        x_switch_id: str,
-        y_switch_id: str,
-        x_default_enabled: bool,
-        y_default_enabled: bool,
+        plot_options_id: str,
+        default_plot_options: list[str],
         footer_content: Any,
     ) -> dbc.Card:
         """
@@ -393,10 +343,8 @@ class Calibration:
             tooltip_id=tooltip_id,
             tooltip_text=tooltip_text,
             graph_id=graph_id,
-            x_switch_id=x_switch_id,
-            y_switch_id=y_switch_id,
-            x_default_enabled=x_default_enabled,
-            y_default_enabled=y_default_enabled,
+            plot_options_id=plot_options_id,
+            default_plot_options=default_plot_options,
             footer_content=footer_content,
             graph_style=self._build_graph_style(),
         )
@@ -503,8 +451,12 @@ class Calibration:
             font_size=float(visualization_settings["default_font_size"]),
             tick_size=float(visualization_settings["default_tick_size"]),
             show_grid=bool(visualization_settings["show_grid"]),
-            legend_vertical_anchor=str(visualization_settings["legend_vertical_anchor"]),
-            annotation_text_position=str(visualization_settings["annotation_text_position"]),
+            legend_vertical_anchor=str(
+                visualization_settings["legend_vertical_anchor"]
+            ),
+            annotation_text_position=str(
+                visualization_settings["annotation_text_position"]
+            ),
             margin={
                 "l": 70,
                 "r": 24,
@@ -521,7 +473,14 @@ class Calibration:
         """
         Resolve Plotly axis type from a Dash checklist value.
         """
-        if isinstance(value, list) and "log" in value:
+        if isinstance(value, list) and any(
+            value_name in value
+            for value_name in (
+                "log",
+                PlotOptions.x_log_value,
+                PlotOptions.y_log_value,
+            )
+        ):
             return "log"
 
         return "linear"
@@ -548,6 +507,22 @@ class Calibration:
             )
         )
 
+        return figure
+
+    def _apply_plot_options_axis_scales(
+        self,
+        *,
+        figure: go.Figure,
+        plot_options: Any,
+    ) -> go.Figure:
+        """Apply shared PlotOptions axis values to a figure."""
+        selected_options = plot_options if isinstance(plot_options, list) else []
+        figure.update_xaxes(
+            type=("log" if PlotOptions.x_log_value in selected_options else "linear")
+        )
+        figure.update_yaxes(
+            type=("log" if PlotOptions.y_log_value in selected_options else "linear")
+        )
         return figure
 
     def _resolve_calibration_detector_column(
@@ -682,19 +657,29 @@ class Calibration:
             ),
             dash.State(self.page.ids.Parameters.mie_model, "value"),
             dash.State(self.ids.bead_table, "data"),
-            dash.State(self.page.ids.Parameters.medium_refractive_index_custom, "value"),
-            dash.State(self.page.ids.Parameters.particle_refractive_index_custom, "value"),
+            dash.State(
+                self.page.ids.Parameters.medium_refractive_index_custom, "value"
+            ),
+            dash.State(
+                self.page.ids.Parameters.particle_refractive_index_custom, "value"
+            ),
             dash.State(self.page.ids.Parameters.core_refractive_index_custom, "value"),
             dash.State(self.page.ids.Parameters.shell_refractive_index_custom, "value"),
             dash.State(self.page.ids.Parameters.wavelength_nm, "value"),
             dash.State(self.page.ids.Parameters.detector_numerical_aperture, "value"),
-            dash.State(self.page.ids.Parameters.detector_cache_numerical_aperture, "value"),
-            dash.State(self.page.ids.Parameters.blocker_bar_numerical_aperture, "value"),
+            dash.State(
+                self.page.ids.Parameters.detector_cache_numerical_aperture, "value"
+            ),
+            dash.State(
+                self.page.ids.Parameters.blocker_bar_numerical_aperture, "value"
+            ),
             dash.State(self.page.ids.Parameters.detector_sampling, "value"),
             dash.State(self.page.ids.Parameters.detector_phi_angle_degree, "value"),
             dash.State(self.page.ids.Parameters.detector_gamma_angle_degree, "value"),
             dash.State(self.page.ids.Parameters.detector_configuration_preset, "value"),
-            dash.State(self.page.ids.Parameters.detector_angular_weighting_json, "value"),
+            dash.State(
+                self.page.ids.Parameters.detector_angular_weighting_json, "value"
+            ),
             dash.State(self.ids.force_zero_intercept_toggle, "value"),
             prevent_initial_call=True,
         )
@@ -815,15 +800,13 @@ class Calibration:
         @dash.callback(
             dash.Output(self.ids.graph_calibration, "figure"),
             dash.Input(self.page.ids.State.page_state_store, "data"),
-            dash.Input(self.ids.instrument_response_x_log_switch, "value"),
-            dash.Input(self.ids.instrument_response_y_log_switch, "value"),
+            dash.Input(self.ids.instrument_response_plot_options, "value"),
             dash.State("runtime-config-store", "data"),
             prevent_initial_call=False,
         )
         def update_left_graph(
             page_state_payload: Any,
-            x_log_value: Any,
-            y_log_value: Any,
+            plot_options: Any,
             runtime_config_data: Any,
         ) -> go.Figure:
             page_state = ScatteringPageState.from_dict(
@@ -833,10 +816,9 @@ class Calibration:
             stored_figure = page_state.calibration_graph_payload
 
             logger.debug(
-                "update_left_graph called with stored_figure_type=%s x_log_value=%r y_log_value=%r",
+                "update_left_graph called with stored_figure_type=%s plot_options=%r",
                 type(stored_figure).__name__,
-                x_log_value,
-                y_log_value,
+                plot_options,
             )
 
             if not stored_figure:
@@ -860,10 +842,9 @@ class Calibration:
                         "Failed to render instrument response graph."
                     )
 
-            figure = self._apply_axis_scales(
+            figure = self._apply_plot_options_axis_scales(
                 figure=figure,
-                x_log_value=x_log_value,
-                y_log_value=y_log_value,
+                plot_options=plot_options,
             )
 
             return self._finalize_figure_size(
@@ -879,15 +860,13 @@ class Calibration:
         @dash.callback(
             dash.Output(self.ids.graph_model, "figure"),
             dash.Input(self.page.ids.State.page_state_store, "data"),
-            dash.Input(self.ids.mie_relation_x_log_switch, "value"),
-            dash.Input(self.ids.mie_relation_y_log_switch, "value"),
+            dash.Input(self.ids.mie_relation_plot_options, "value"),
             dash.State("runtime-config-store", "data"),
             prevent_initial_call=False,
         )
         def update_right_graph(
             page_state_payload: Any,
-            x_log_value: Any,
-            y_log_value: Any,
+            plot_options: Any,
             runtime_config_data: Any,
         ) -> go.Figure:
             page_state = ScatteringPageState.from_dict(
@@ -897,10 +876,9 @@ class Calibration:
             stored_figure = page_state.calibration_model_graph_payload
 
             logger.debug(
-                "update_right_graph called with stored_figure_type=%s x_log_value=%r y_log_value=%r",
+                "update_right_graph called with stored_figure_type=%s plot_options=%r",
                 type(stored_figure).__name__,
-                x_log_value,
-                y_log_value,
+                plot_options,
             )
 
             if not stored_figure:
@@ -925,10 +903,9 @@ class Calibration:
                         "Failed to render calibration standard Mie relation graph."
                     )
 
-            figure = self._apply_axis_scales(
+            figure = self._apply_plot_options_axis_scales(
                 figure=figure,
-                x_log_value=x_log_value,
-                y_log_value=y_log_value,
+                plot_options=plot_options,
             )
 
             return self._finalize_figure_size(

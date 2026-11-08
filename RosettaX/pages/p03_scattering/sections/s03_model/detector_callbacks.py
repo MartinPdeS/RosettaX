@@ -304,28 +304,16 @@ def register_detector_configuration_callbacks(section: Model) -> None:
             section.ids.detector_configuration_custom_values_container,
             "style",
         ),
-        dash.Input("runtime-config-store", "data"),
         dash.Input(section.ids.detector_configuration_preset, "value"),
         prevent_initial_call=False,
     )
     def toggle_detector_configuration_custom_values(
-        runtime_config_data: Any,
         preset_name: Any,
     ) -> dict[str, str]:
-        logger.debug(
-            "toggle_detector_configuration_custom_values called with preset_name=%r",
-            preset_name,
-        )
-
-        show_preset_configuration = services.resolve_show_preset_configuration(
-            runtime_config_data,
-        )
-
         return services.build_parameter_group_style(
-            is_visible=services.should_show_detector_preset_configuration(
-                section,
-                preset_name=preset_name,
-                show_preset_configuration=show_preset_configuration,
+            is_visible=(
+                str(preset_name or "").strip()
+                == section.model_configuration.custom_detector_preset_name
             ),
         )
 

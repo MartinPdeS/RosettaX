@@ -1,13 +1,9 @@
-
 import dash
 import numpy as np
 import plotly.graph_objs as go
 from dataclasses import dataclass
 from RosettaX.utils import plottings, styling
-from RosettaX.workflow.plotting.layout import (
-    build_plot_axis_checklist,
-    build_plot_control_panel,
-)
+from RosettaX.workflow.plotting.layout import PlotOptions
 from RosettaX.workflow.plotting.models import ScatterOptions
 from typing import Any
 
@@ -62,9 +58,9 @@ class Scatter2DGraph:
     Use ``build_figure`` inside callbacks that construct the scatter plot.
     """
 
-    x_log_value = "x_log"
-    y_log_value = "y_log"
-    colormap_log_value = "colormap_log"
+    x_log_value = PlotOptions.x_log_value
+    y_log_value = PlotOptions.y_log_value
+    colormap_log_value = PlotOptions.color_log_value
 
     default_height = "52vh"
     default_marker_size = ScatterOptions().marker_size
@@ -148,43 +144,16 @@ class Scatter2DGraph:
         """
         Build the compact x log and y log toggle box below the graph.
         """
-        options = [
-            {
-                "label": "x log",
-                "value": cls.x_log_value,
-            },
-            {
-                "label": "y log",
-                "value": cls.y_log_value,
-            },
-        ]
-
-        if colormap_log_toggle_enabled:
-            options.append(
-                {
-                    "label": "color log",
-                    "value": cls.colormap_log_value,
-                }
-            )
-
-        controls: list[Any] = [
-            build_plot_axis_checklist(
-                component_id=component_id,
-                options=options,
-                value=value,
+        return PlotOptions.build_component(
+            component_id=component_id,
+            value=value,
+            color_log_enabled=colormap_log_toggle_enabled,
+            display_controls=(
+                [control for control in bottom_controls if control is not None]
+                if isinstance(bottom_controls, list)
+                else None
             ),
-        ]
-
-        if isinstance(bottom_controls, list):
-            controls.extend(
-                [
-                    control
-                    for control in bottom_controls
-                    if control is not None
-                ]
-            )
-
-        return build_plot_control_panel(controls)
+        )
 
     @classmethod
     def axis_scale_from_toggle_values(
@@ -194,19 +163,13 @@ class Scatter2DGraph:
         """
         Convert checklist values into x and y axis scale strings.
         """
-        resolved_toggle_values = toggle_values if isinstance(toggle_values, list) else []
-
-        x_axis_type = (
-            "log"
-            if cls.x_log_value in resolved_toggle_values
-            else "linear"
+        resolved_toggle_values = (
+            toggle_values if isinstance(toggle_values, list) else []
         )
 
-        y_axis_type = (
-            "log"
-            if cls.y_log_value in resolved_toggle_values
-            else "linear"
-        )
+        x_axis_type = "log" if cls.x_log_value in resolved_toggle_values else "linear"
+
+        y_axis_type = "log" if cls.y_log_value in resolved_toggle_values else "linear"
 
         return x_axis_type, y_axis_type
 
@@ -256,10 +219,7 @@ class Scatter2DGraph:
                     f'Scatter trace "{trace.name}" has different x and y lengths.'
                 )
 
-            finite_mask = (
-                np.isfinite(x_values)
-                & np.isfinite(y_values)
-            )
+            finite_mask = np.isfinite(x_values) & np.isfinite(y_values)
 
             if x_axis_type == "log":
                 finite_mask &= x_values > 0.0
@@ -381,9 +341,7 @@ class Scatter2DGraph:
         any Plotly title.
         """
         trace_names = [
-            str(trace.name).strip()
-            for trace in figure.data
-            if str(trace.name).strip()
+            str(trace.name).strip() for trace in figure.data if str(trace.name).strip()
         ]
 
         show_legend = len(trace_names) > 0

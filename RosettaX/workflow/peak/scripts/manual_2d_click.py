@@ -30,6 +30,7 @@ class Manual2DClickProcess(BasePeakProcess):
 
     process_name = "Manual 2D"
     process_label = "Manual 2D"
+    description = "Click the two-dimensional scatter plot to add calibration peak positions."
     graph_type = "2d_scatter"
     sort_order = 30
 

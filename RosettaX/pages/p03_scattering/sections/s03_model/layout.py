@@ -19,11 +19,6 @@ FIELD_LABEL_STYLE_OVERRIDES = {
     "letterSpacing": "0.006em",
     "opacity": 0.9,
 }
-SECTION_TITLE_STYLE_OVERRIDES = {
-    "fontSize": "1.14rem",
-    "fontWeight": "780",
-    "letterSpacing": "-0.01em",
-}
 
 
 def get_layout(section: Model) -> dbc.Card:
@@ -54,7 +49,6 @@ def build_header(section: Model) -> dbc.CardHeader:
             "values."
         ),
         color_name=section.card_color,
-        title_style_overrides=SECTION_TITLE_STYLE_OVERRIDES,
     )
 
 
@@ -106,13 +100,10 @@ def build_optical_configuration_controls(section: Model) -> dash.html.Div:
                         "Auto-detect",
                         id=section.ids.detector_configuration_auto_detect_button,
                         n_clicks=0,
-                        color="secondary",
-                        outline=True,
+                        color="light",
                         size="sm",
-                        style={
-                            "whiteSpace": "nowrap",
-                            "flexShrink": 0,
-                        },
+                        className="peak-action-button peak-action-button--auto",
+                        style={"whiteSpace": "nowrap", "flexShrink": 0},
                     ),
                     dbc.Alert(
                         "",
@@ -135,266 +126,265 @@ def build_optical_configuration_controls(section: Model) -> dash.html.Div:
                     "marginBottom": styling.get_spacing_token("xs"),
                 },
             ),
-            ui_forms.build_inline_row(
-                label="Detector preset:",
-                control=dash.html.Div(
-                    [
-                        dash.dcc.Dropdown(
-                            id=section.ids.detector_configuration_brand,
-                            options=[
-                                {
-                                    "label": "No preset",
-                                    "value": "",
-                                },
-                                *section.model_configuration.build_detector_preset_brand_options(),
-                            ],
-                            value="",
-                            placeholder="Select brand",
-                            clearable=False,
-                            searchable=False,
-                            persistence=True,
-                            persistence_type="session",
-                            style={
-                                "width": "220px",
-                            },
-                        ),
-                        dash.dcc.Dropdown(
-                            id=section.ids.detector_configuration_model,
-                            options=[],
-                            value=None,
-                            placeholder="Select model",
-                            clearable=True,
-                            searchable=False,
-                            disabled=True,
-                            persistence=True,
-                            persistence_type="session",
-                            style={
-                                "width": "220px",
-                                "marginLeft": "10px",
-                            },
-                        ),
-                        dash.dcc.Dropdown(
-                            id=section.ids.detector_configuration_type,
-                            options=[],
-                            value=None,
-                            placeholder="Select detector type",
-                            clearable=True,
-                            searchable=False,
-                            disabled=True,
-                            persistence=True,
-                            persistence_type="session",
-                            style={
-                                "width": "220px",
-                                "marginLeft": "10px",
-                            },
-                        ),
-                        dash.dcc.Dropdown(
-                            id=section.ids.detector_configuration_preset,
-                            options=[
-                                {
-                                    "label": "No preset",
-                                    "value": "",
-                                },
-                                *section.model_configuration.build_detector_preset_options(),
-                            ],
-                            value="",
-                            clearable=True,
-                            searchable=False,
-                            persistence=True,
-                            persistence_type="session",
-                            style={
-                                "display": "none",
-                            },
-                        ),
-                        dbc.Tooltip(
-                            (
-                                "Choose a detector brand first, then one model, then one "
-                                "detector type (for example FSC or SSC) to load a predefined "
-                                "collection geometry. "
-                                "Leave the brand on No preset to keep the detector unconfigured, "
-                                "select Custom to edit a Generic detector manually, or click "
-                                "Auto-detect above to try matching the uploaded FCS "
-                                "metadata to a known preset."
-                            ),
-                            id=section.detector_preset_tooltip_id,
-                            target=section.detector_preset_tooltip_target_id,
-                            placement="right",
-                        ),
-                        ui_forms.build_info_badge(
-                            tooltip_target_id=section.detector_preset_tooltip_target_id,
-                        ),
-                    ],
-                    style={
-                        "display": "flex",
-                        "alignItems": "center",
-                        "overflow": "visible",
-                    },
-                ),
-                label_width_px=170,
-                margin_top=True,
-                margin_top_px=8,
-                label_style_overrides=FIELD_LABEL_STYLE_OVERRIDES,
-                row_style_overrides={
-                    "overflow": "visible",
-                },
-                control_wrapper_style_overrides={
-                    "overflow": "visible",
-                },
-            ),
-            dbc.Accordion(
+            dbc.Card(
                 [
-                    dbc.AccordionItem(
+                    dbc.CardHeader(
+                        ui_forms.build_title_with_info(
+                            title="Detector",
+                            tooltip_target_id=section.detector_preset_tooltip_target_id,
+                            tooltip_id=section.detector_preset_tooltip_id,
+                            tooltip_text=(
+                                "Choose a detector brand, model, and type to load a "
+                                "predefined collection geometry. Choose Custom to edit "
+                                "a Generic detector manually. Auto-detect can match the "
+                                "uploaded FCS metadata to a known preset."
+                            ),
+                            title_style_overrides={"fontSize": "1rem"},
+                        ),
+                        style=ui_forms.build_workflow_subpanel_header_style(
+                            color_name=section.card_color,
+                        ),
+                    ),
+                    dbc.CardBody(
                         dash.html.Div(
                             [
-                                build_numeric_input_row(
-                                    section,
-                                    label="Wavelength (nm):",
-                                    component_id=section.ids.wavelength_nm,
-                                    placeholder="Wavelength (nm)",
-                                    value=section.default_values.wavelength_nm,
-                                    min_value=1,
-                                    step=1,
-                                    input_mode="numeric",
-                                    width_px=220,
-                                ),
-                                build_numeric_input_row(
-                                    section,
-                                    label="Detector NA:",
-                                    component_id=section.ids.detector_numerical_aperture,
-                                    placeholder="Detector NA",
-                                    value=section.default_values.detector_numerical_aperture,
-                                    min_value=0.0,
-                                    max_value=1.5,
-                                    step=0.001,
-                                    width_px=220,
-                                ),
-                                build_numeric_input_row(
-                                    section,
-                                    label="Detector cache NA:",
-                                    component_id=section.ids.detector_cache_numerical_aperture,
-                                    placeholder="Detector cache NA",
-                                    value=section.default_values.detector_cache_numerical_aperture,
-                                    min_value=0.0,
-                                    max_value=section.default_values.detector_numerical_aperture,
-                                    step=0.001,
-                                    width_px=220,
-                                ),
-                                build_numeric_input_row(
-                                    section,
-                                    label="Blocker bar NA:",
-                                    component_id=section.ids.blocker_bar_numerical_aperture,
-                                    placeholder="Blocker bar NA",
-                                    value=section.default_values.blocker_bar_numerical_aperture,
-                                    min_value=0.0,
-                                    max_value=1.5,
-                                    step=0.001,
-                                    width_px=220,
-                                ),
-                                build_numeric_input_row(
-                                    section,
-                                    label="Detector sampling:",
-                                    component_id=section.ids.detector_sampling,
-                                    placeholder="Detector sampling",
-                                    value=section.default_values.detector_sampling,
-                                    min_value=1,
-                                    step=1,
-                                    input_mode="numeric",
-                                    width_px=220,
-                                ),
-                                build_numeric_input_row(
-                                    section,
-                                    label="Detector phi angle (deg):",
-                                    component_id=section.ids.detector_phi_angle_degree,
-                                    placeholder="Detector phi angle",
-                                    value=section.default_values.detector_phi_angle_degree,
-                                    min_value=-360.0,
-                                    max_value=360.0,
-                                    step=0.1,
-                                    width_px=220,
-                                ),
-                                build_numeric_input_row(
-                                    section,
-                                    label="Detector gamma angle (deg):",
-                                    component_id=section.ids.detector_gamma_angle_degree,
-                                    placeholder="Detector gamma angle",
-                                    value=section.default_values.detector_gamma_angle_degree,
-                                    min_value=-360.0,
-                                    max_value=360.0,
-                                    step=0.1,
-                                    width_px=220,
-                                ),
-                                ui_forms.build_inline_row(
-                                    label="Detector angular weighting:",
-                                    control=dash.html.Div(
-                                        [
-                                            dash.dcc.Textarea(
-                                                id=section.ids.detector_angular_weighting_json,
-                                                value="",
-                                                persistence=True,
-                                                persistence_type="session",
-                                                style={
-                                                    "width": "520px",
-                                                    "height": "120px",
-                                                    "fontFamily": "SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-                                                    "fontSize": "0.84rem",
-                                                },
-                                                placeholder=(
-                                                    "{\n"
-                                                    '  "mode": "split-separation-angle",\n'
-                                                    '  "metric": "local-top-bottom",\n'
-                                                    '  "keep": "positive",\n'
-                                                    '  "separation_angle_degree": 20.0\n'
-                                                    "}"
-                                                ),
-                                            ),
-                                            dbc.FormText(
-                                                "Optional JSON object using the detector_angular_weighting schema from detector definition files.",
-                                                style={
-                                                    "maxWidth": "520px",
-                                                },
-                                            ),
-                                        ],
-                                        style={
-                                            "display": "flex",
-                                            "flexDirection": "column",
-                                            "gap": "6px",
+                                dash.dcc.Dropdown(
+                                    id=section.ids.detector_configuration_brand,
+                                    options=[
+                                        {
+                                            "label": "No preset",
+                                            "value": "",
                                         },
-                                    ),
-                                    margin_top_px=8,
-                                    label_style_overrides=FIELD_LABEL_STYLE_OVERRIDES,
-                                    row_style_overrides={
-                                        "overflow": "visible",
-                                        "alignItems": "flex-start",
-                                    },
-                                    control_wrapper_style_overrides={
-                                        "overflow": "visible",
+                                        *section.model_configuration.build_detector_preset_brand_options(),
+                                    ],
+                                    value="",
+                                    placeholder="Select brand",
+                                    clearable=False,
+                                    searchable=False,
+                                    persistence=True,
+                                    persistence_type="session",
+                                    style={
+                                        "width": "220px",
                                     },
                                 ),
-                                dbc.Alert(
-                                    "",
-                                    id=section.ids.detector_angular_weighting_alert,
-                                    color="warning",
-                                    is_open=False,
+                                dash.dcc.Dropdown(
+                                    id=section.ids.detector_configuration_model,
+                                    options=[],
+                                    value=None,
+                                    placeholder="Select model",
+                                    clearable=True,
+                                    searchable=False,
+                                    disabled=True,
+                                    persistence=True,
+                                    persistence_type="session",
                                     style={
-                                        "marginTop": "4px",
-                                        "marginBottom": "0px",
-                                        "borderRadius": "10px",
-                                        "padding": "8px 12px",
-                                        "fontSize": "0.9rem",
+                                        "width": "220px",
+                                        "marginLeft": "10px",
+                                    },
+                                ),
+                                dash.dcc.Dropdown(
+                                    id=section.ids.detector_configuration_type,
+                                    options=[],
+                                    value=None,
+                                    placeholder="Select detector type",
+                                    clearable=True,
+                                    searchable=False,
+                                    disabled=True,
+                                    persistence=True,
+                                    persistence_type="session",
+                                    style={
+                                        "width": "220px",
+                                        "marginLeft": "10px",
+                                    },
+                                ),
+                                dash.dcc.Dropdown(
+                                    id=section.ids.detector_configuration_preset,
+                                    options=[
+                                        {
+                                            "label": "No preset",
+                                            "value": "",
+                                        },
+                                        *section.model_configuration.build_detector_preset_options(),
+                                    ],
+                                    value="",
+                                    clearable=True,
+                                    searchable=False,
+                                    persistence=True,
+                                    persistence_type="session",
+                                    style={
+                                        "display": "none",
                                     },
                                 ),
                             ],
-                            id=section.ids.detector_configuration_custom_values_container,
-                            style=services.build_parameter_group_style(
-                                is_visible=False,
-                            ),
+                            style={
+                                "display": "flex",
+                                "alignItems": "center",
+                                "gap": "10px",
+                                "flexWrap": "wrap",
+                                "overflow": "visible",
+                            },
                         ),
-                        title="Advanced optical and detector settings",
+                        style=ui_forms.build_workflow_panel_body_style(),
                     ),
                 ],
-                start_collapsed=True,
-                always_open=True,
-                style={"marginTop": "8px"},
+                style=ui_forms.build_workflow_subpanel_card_style(
+                    color_name=section.card_color,
+                ),
+            ),
+            dash.html.Div(
+                dbc.Card(
+                    [
+                        dbc.CardHeader("Custom detector settings"),
+                        dbc.CardBody(
+                            dash.html.Div(
+                                [
+                                    build_numeric_input_row(
+                                        section,
+                                        label="Wavelength (nm):",
+                                        component_id=section.ids.wavelength_nm,
+                                        placeholder="Wavelength (nm)",
+                                        value=section.default_values.wavelength_nm,
+                                        min_value=1,
+                                        step=1,
+                                        input_mode="numeric",
+                                        width_px=220,
+                                    ),
+                                    build_numeric_input_row(
+                                        section,
+                                        label="Detector NA:",
+                                        component_id=section.ids.detector_numerical_aperture,
+                                        placeholder="Detector NA",
+                                        value=section.default_values.detector_numerical_aperture,
+                                        min_value=0.0,
+                                        max_value=1.5,
+                                        step=0.001,
+                                        width_px=220,
+                                    ),
+                                    build_numeric_input_row(
+                                        section,
+                                        label="Detector cache NA:",
+                                        component_id=section.ids.detector_cache_numerical_aperture,
+                                        placeholder="Detector cache NA",
+                                        value=section.default_values.detector_cache_numerical_aperture,
+                                        min_value=0.0,
+                                        max_value=section.default_values.detector_numerical_aperture,
+                                        step=0.001,
+                                        width_px=220,
+                                    ),
+                                    build_numeric_input_row(
+                                        section,
+                                        label="Blocker bar NA:",
+                                        component_id=section.ids.blocker_bar_numerical_aperture,
+                                        placeholder="Blocker bar NA",
+                                        value=section.default_values.blocker_bar_numerical_aperture,
+                                        min_value=0.0,
+                                        max_value=1.5,
+                                        step=0.001,
+                                        width_px=220,
+                                    ),
+                                    build_numeric_input_row(
+                                        section,
+                                        label="Detector sampling:",
+                                        component_id=section.ids.detector_sampling,
+                                        placeholder="Detector sampling",
+                                        value=section.default_values.detector_sampling,
+                                        min_value=1,
+                                        step=1,
+                                        input_mode="numeric",
+                                        width_px=220,
+                                    ),
+                                    build_numeric_input_row(
+                                        section,
+                                        label="Detector phi angle (deg):",
+                                        component_id=section.ids.detector_phi_angle_degree,
+                                        placeholder="Detector phi angle",
+                                        value=section.default_values.detector_phi_angle_degree,
+                                        min_value=-360.0,
+                                        max_value=360.0,
+                                        step=0.1,
+                                        width_px=220,
+                                    ),
+                                    build_numeric_input_row(
+                                        section,
+                                        label="Detector gamma angle (deg):",
+                                        component_id=section.ids.detector_gamma_angle_degree,
+                                        placeholder="Detector gamma angle",
+                                        value=section.default_values.detector_gamma_angle_degree,
+                                        min_value=-360.0,
+                                        max_value=360.0,
+                                        step=0.1,
+                                        width_px=220,
+                                    ),
+                                    ui_forms.build_inline_row(
+                                        label="Detector angular weighting:",
+                                        control=dash.html.Div(
+                                            [
+                                                dash.dcc.Textarea(
+                                                    id=section.ids.detector_angular_weighting_json,
+                                                    value="",
+                                                    persistence=True,
+                                                    persistence_type="session",
+                                                    style={
+                                                        "width": "520px",
+                                                        "height": "120px",
+                                                        "fontFamily": "SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                                                        "fontSize": "0.84rem",
+                                                    },
+                                                    placeholder=(
+                                                        "{\n"
+                                                        '  "mode": "split-separation-angle",\n'
+                                                        '  "metric": "local-top-bottom",\n'
+                                                        '  "keep": "positive",\n'
+                                                        '  "separation_angle_degree": 20.0\n'
+                                                        "}"
+                                                    ),
+                                                ),
+                                                dbc.FormText(
+                                                    "Optional JSON object using the detector_angular_weighting schema from detector definition files.",
+                                                    style={
+                                                        "maxWidth": "520px",
+                                                    },
+                                                ),
+                                            ],
+                                            style={
+                                                "display": "flex",
+                                                "flexDirection": "column",
+                                                "gap": "6px",
+                                            },
+                                        ),
+                                        margin_top_px=8,
+                                        label_style_overrides=FIELD_LABEL_STYLE_OVERRIDES,
+                                        row_style_overrides={
+                                            "overflow": "visible",
+                                            "alignItems": "flex-start",
+                                        },
+                                        control_wrapper_style_overrides={
+                                            "overflow": "visible",
+                                        },
+                                    ),
+                                    dbc.Alert(
+                                        "",
+                                        id=section.ids.detector_angular_weighting_alert,
+                                        color="warning",
+                                        is_open=False,
+                                        style={
+                                            "marginTop": "4px",
+                                            "marginBottom": "0px",
+                                            "borderRadius": "10px",
+                                            "padding": "8px 12px",
+                                            "fontSize": "0.9rem",
+                                        },
+                                    ),
+                                ],
+                            ),
+                        ),
+                    ],
+                    style=ui_forms.build_workflow_subpanel_card_style(
+                        color_name=section.card_color,
+                    ),
+                ),
+                id=section.ids.detector_configuration_custom_values_container,
+                style=services.build_parameter_group_style(is_visible=False),
             ),
             dbc.Alert(
                 "",

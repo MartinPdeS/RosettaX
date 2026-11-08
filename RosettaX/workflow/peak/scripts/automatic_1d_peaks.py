@@ -35,6 +35,7 @@ class Automatic1DPeaksProcess(BasePeakProcess):
 
     process_name = "Automatic 1D"
     process_label = "Automatic 1D"
+    description = "Detect peaks automatically from a one-dimensional signal histogram."
     graph_type = "1d_histogram"
     sort_order = 20
 

@@ -30,6 +30,12 @@ class Save:
         self.config = SaveConfig(
             calibration_kind="scattering",
             header_title=f"{self.section_number}. Save calibration",
+            description_tooltip_text=(
+                "Choose a file name and output channel label, then download the "
+                "completed scattering calibration as a reusable JSON file."
+            ),
+            description_tooltip_target_id=self.ids.description_target,
+            description_tooltip_id=self.ids.description_tooltip,
             button_text="Download calibration.json",
             file_name_placeholder="file name",
             output_channel_name_placeholder="e.g. Diameter (nm)",

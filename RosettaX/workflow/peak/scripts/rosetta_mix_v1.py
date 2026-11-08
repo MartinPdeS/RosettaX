@@ -45,12 +45,12 @@ class FluorescenceGuidedScatterPeakProcessV1(FluorescenceGuidedScatterPeakProces
     """
 
     process_name = "Rosetta Script V1"
-    process_label = "Rosetta Script V1"
+    process_label = "Rosetta Script"
     description = (
-        "Fluorescence-guided scatter peak identification with Rosetta Mix "
-        "diameter inference anchored by the 140 nm and 380 nm marker beads."
+        "Identify scatter peaks and estimate bead sizes using the 140 nm and "
+        "380 nm fluorescent markers."
     )
-    sort_order = 21
+    sort_order = 0
 
     def get_detector_channel_labels(self) -> dict[str, str]:
         """Return the labels for the required FCS channels.

@@ -1,4 +1,3 @@
-
 import dash
 import dash_bootstrap_components as dbc
 import json
@@ -72,12 +71,8 @@ class CrossCalibrationPage:
         return build_workflow_page_header(
             title="Cross calibration",
             description=(
-                "Create a transfer calibration from a primary reference bead set used less often to a cheaper routine bead set measured more often."
-            ),
-            alert=dbc.Alert(
-                "Experimental workflow: this page is still under active development and may change as the transfer-calibration workflow matures.",
-                color="warning",
-                className="mb-3",
+                "Create a transfer calibration from a primary reference bead set used less often to a cheaper routine bead set measured more often. "
+                "This workflow is experimental and may change as transfer-calibration support develops."
             ),
             steps=self._build_header_steps(),
             progress_id=f"{self.ids.page_prefix}-workflow-progress",
@@ -88,7 +83,8 @@ class CrossCalibrationPage:
     def _build_header_steps(self) -> list[WorkflowStep]:
         return [
             WorkflowStep(
-                "1", "Load primary calibration",
+                "1",
+                "Load primary calibration",
                 (
                     "Upload the high-confidence calibration built from the expensive bead set. "
                     "This defines the primary calibrated scale you want to preserve over time."
@@ -96,14 +92,16 @@ class CrossCalibrationPage:
                 styling.get_workflow_section_color(1),
             ),
             WorkflowStep(
-                "2", "Load routine-bead calibration",
+                "2",
+                "Load routine-bead calibration",
                 (
                     "Upload the cheaper secondary bead calibration measured more often on the same detector."
                 ),
                 styling.get_workflow_section_color(2),
             ),
             WorkflowStep(
-                "3", "Build transfer relation",
+                "3",
+                "Build transfer relation",
                 (
                     "Fit the routine bead peaks onto the primary calibrated scale so the secondary bead set can act as a weekly bridge."
                 ),
@@ -156,12 +154,19 @@ class CrossCalibrationPage:
                     ),
                     html.Div(
                         id=self.ids.status,
-                        style={"minHeight": "24px", "display": "flex", "alignItems": "center"},
+                        style={
+                            "minHeight": "24px",
+                            "display": "flex",
+                            "alignItems": "center",
+                        },
                     ),
                 ],
                 style={
-                    "display": "flex", "gap": "14px", "alignItems": "center",
-                    "marginTop": "16px", "flexWrap": "wrap",
+                    "display": "flex",
+                    "gap": "14px",
+                    "alignItems": "center",
+                    "marginTop": "16px",
+                    "flexWrap": "wrap",
                 },
             ),
         ]
@@ -276,31 +281,34 @@ class CrossCalibrationPage:
             title="Review transfer relation",
             subtitle="Inspect the fitted relation before exporting it for routine-bead calibration.",
             body_children=[
-                        dcc.Graph(
-                            responsive=True,
-                            id=self.ids.graph,
-                            figure=services.build_empty_result_figure(
-                                message="Upload a primary and a secondary calibration to build a transfer relation.",
-                            ),
-                            config=styling.PLOTLY_GRAPH_CONFIG,
-                            style=services.resolve_graph_style(),
-                        ),
-                        dash_table.DataTable(
-                            id=self.ids.table,
-                            columns=[
-                                {"name": "Bead", "id": "Bead"},
-                                {"name": "Secondary peak", "id": "Secondary peak"},
-                                {"name": "Primary calibrated value", "id": "Primary calibrated value"},
-                                {"name": "Primary peak", "id": "Primary peak"},
-                            ],
-                            data=[],
-                            page_size=8,
-                            fixed_rows=styling.DATATABLE["fixed_rows"],
-                            style_table=styling.DATATABLE["style_table"],
-                            style_cell=styling.DATATABLE["style_cell"],
-                            style_header=styling.DATATABLE["style_header"],
-                            style_data=styling.DATATABLE["style_data"],
-                        ),
+                dcc.Graph(
+                    responsive=True,
+                    id=self.ids.graph,
+                    figure=services.build_empty_result_figure(
+                        message="Upload a primary and a secondary calibration to build a transfer relation.",
+                    ),
+                    config=styling.PLOTLY_GRAPH_CONFIG,
+                    style=services.resolve_graph_style(),
+                ),
+                dash_table.DataTable(
+                    id=self.ids.table,
+                    columns=[
+                        {"name": "Bead", "id": "Bead"},
+                        {"name": "Secondary peak", "id": "Secondary peak"},
+                        {
+                            "name": "Primary calibrated value",
+                            "id": "Primary calibrated value",
+                        },
+                        {"name": "Primary peak", "id": "Primary peak"},
+                    ],
+                    data=[],
+                    page_size=8,
+                    fixed_rows=styling.DATATABLE["fixed_rows"],
+                    style_table=styling.DATATABLE["style_table"],
+                    style_cell=styling.DATATABLE["style_cell"],
+                    style_header=styling.DATATABLE["style_header"],
+                    style_data=styling.DATATABLE["style_data"],
+                ),
             ],
             color_name=styling.get_workflow_section_color(2),
         )
@@ -312,33 +320,33 @@ class CrossCalibrationPage:
             title="Export transfer relation",
             subtitle="Download the transfer calibration for later use with the routine bead set.",
             body_children=[
-                        html.Div(
-                            "Provide a file name to export the generated transfer calibration JSON.",
-                            style={"marginBottom": "10px"},
+                html.Div(
+                    "Provide a file name to export the generated transfer calibration JSON.",
+                    style={"marginBottom": "10px"},
+                ),
+                html.Div(
+                    [
+                        dcc.Input(
+                            id=self.ids.export_name,
+                            type="text",
+                            value=services.DEFAULT_EXPORT_FILE_NAME,
+                            placeholder="cross_calibration",
+                            style={"width": "280px"},
                         ),
-                        html.Div(
-                            [
-                                dcc.Input(
-                                    id=self.ids.export_name,
-                                    type="text",
-                                    value=services.DEFAULT_EXPORT_FILE_NAME,
-                                    placeholder="cross_calibration",
-                                    style={"width": "280px"},
-                                ),
-                                dbc.Button(
-                                    "Download transfer calibration JSON",
-                                    id=self.ids.export_button,
-                                    n_clicks=0,
-                                    color="secondary",
-                                ),
-                            ],
-                            style={
-                                "display": "flex",
-                                "gap": "12px",
-                                "alignItems": "center",
-                                "flexWrap": "wrap",
-                            },
+                        dbc.Button(
+                            "Download transfer calibration JSON",
+                            id=self.ids.export_button,
+                            n_clicks=0,
+                            color="secondary",
                         ),
+                    ],
+                    style={
+                        "display": "flex",
+                        "gap": "12px",
+                        "alignItems": "center",
+                        "flexWrap": "wrap",
+                    },
+                ),
             ],
             color_name=styling.get_workflow_section_color(3),
         )
@@ -358,8 +366,10 @@ class CrossCalibrationPage:
             if completed == 2 and isinstance(result, dict):
                 completed = 3
             return build_workflow_step_cards(
-                steps=self._build_header_steps(), completed_count=completed,
-                page_name=self.ids.page_prefix, column_kwargs={"xl": True},
+                steps=self._build_header_steps(),
+                completed_count=completed,
+                page_name=self.ids.page_prefix,
+                column_kwargs={"xl": True},
             )
 
         @dash.callback(
@@ -375,7 +385,11 @@ class CrossCalibrationPage:
             filename: Any,
         ) -> tuple[Any, str, list[Any]]:
             if not contents:
-                return dash.no_update, "No file loaded.", ["No primary calibration loaded."]
+                return (
+                    dash.no_update,
+                    "No file loaded.",
+                    ["No primary calibration loaded."],
+                )
 
             try:
                 resolved_filename, payload = services.parse_uploaded_calibration(
@@ -417,7 +431,11 @@ class CrossCalibrationPage:
             filename: Any,
         ) -> tuple[Any, str, list[Any]]:
             if not contents:
-                return dash.no_update, "No file loaded.", ["No secondary calibration loaded."]
+                return (
+                    dash.no_update,
+                    "No file loaded.",
+                    ["No secondary calibration loaded."],
+                )
 
             try:
                 resolved_filename, payload = services.parse_uploaded_calibration(
@@ -474,7 +492,9 @@ class CrossCalibrationPage:
                     [],
                 )
 
-            if not isinstance(primary_summary, dict) or not isinstance(secondary_summary, dict):
+            if not isinstance(primary_summary, dict) or not isinstance(
+                secondary_summary, dict
+            ):
                 empty_figure = services.build_empty_result_figure(
                     message="Load a primary and a secondary calibration first.",
                     runtime_config_data=runtime_config_data,
@@ -555,7 +575,9 @@ class CrossCalibrationPage:
             result: Any,
             export_name: Any,
         ) -> bool:
-            return not isinstance(result, dict) or not bool(str(export_name or "").strip())
+            return not isinstance(result, dict) or not bool(
+                str(export_name or "").strip()
+            )
 
         @dash.callback(
             dash.Output(self.ids.export_download, "data"),

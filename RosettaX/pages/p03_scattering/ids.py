@@ -196,20 +196,12 @@ class CalibrationSectionIds:
         return f"{self.prefix}-calibration-standard-mie-relation-graph"
 
     @property
-    def instrument_response_x_log_switch(self) -> str:
-        return f"{self.prefix}-instrument-response-x-log-switch"
+    def instrument_response_plot_options(self) -> str:
+        return f"{self.prefix}-instrument-response-plot-options"
 
     @property
-    def instrument_response_y_log_switch(self) -> str:
-        return f"{self.prefix}-instrument-response-y-log-switch"
-
-    @property
-    def mie_relation_x_log_switch(self) -> str:
-        return f"{self.prefix}-mie-relation-x-log-switch"
-
-    @property
-    def mie_relation_y_log_switch(self) -> str:
-        return f"{self.prefix}-mie-relation-y-log-switch"
+    def mie_relation_plot_options(self) -> str:
+        return f"{self.prefix}-mie-relation-plot-options"
 
     @property
     def slope_out(self) -> str:
@@ -269,6 +261,15 @@ class Ids:
     class State:
         page_state_store = f"{PAGE_NAME}-page-state-store"
         workflow_progress = f"{PAGE_NAME}-workflow-progress"
+        description_tooltip_target = f"{PAGE_NAME}-description-tooltip-target"
+        description_tooltip = f"{PAGE_NAME}-description-tooltip"
+
+    class Quality:
+        run = f"{PAGE_NAME}-quality-run"
+        snapshot = f"{PAGE_NAME}-quality-snapshot"
+        result = f"{PAGE_NAME}-quality-result"
+        description_target = f"{PAGE_NAME}-quality-description-target"
+        description_tooltip = f"{PAGE_NAME}-quality-description-tooltip"
 
     Upload = UploadSectionIds(
         prefix=PAGE_NAME,

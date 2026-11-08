@@ -22,10 +22,11 @@ CALIBRATION_WORKFLOW_SUBTITLES = {
     "scattering_calibration": {
         "1": "Load the bead measurement used to establish the scattering response.",
         "2": "Identify the scattering bead populations and record their measured peaks.",
-        "3": "Configure the optical and detector model used for the calibration.",
-        "4": "Define the calibration standard and calculate its modeled coupling.",
-        "5": "Fit the instrument response from the measured and modeled bead values.",
-        "6": "Download the completed scattering calibration for later use.",
+        "3": "Review the selected signals and peak detection results.",
+        "4": "Configure the optical and detector model used for the calibration.",
+        "5": "Define the calibration standard and calculate its modeled coupling.",
+        "6": "Fit the instrument response from the measured and modeled bead values.",
+        "7": "Download the completed scattering calibration for later use.",
     },
     "apply_calibration": {
         "1": "Choose the saved calibration files to apply to matching FCS channels.",

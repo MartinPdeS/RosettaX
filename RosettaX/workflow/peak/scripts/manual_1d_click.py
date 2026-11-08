@@ -30,6 +30,7 @@ class Manual1DClickProcess(BasePeakProcess):
 
     process_name = "Manual 1D"
     process_label = "Manual 1D"
+    description = "Click the one-dimensional signal graph to add calibration peak positions."
     graph_type = "1d_histogram"
     sort_order = 10
 

@@ -1,16 +1,15 @@
-
 import dash
 import dash_bootstrap_components as dbc
 import logging
 from ..s03_model.main import Model as ScatteringModelSection
 from ..s05_calibration import services as calibration_services
-from ..s05_calibration.main import build_scattering_axis_control_block
 from .services import ScatteringCalibrationStandardTable
 from RosettaX.pages.p00_sidebar.ids import SidebarIds
 from RosettaX.pages.p03_scattering.sections.s03_model import layout as model_layout
 from RosettaX.pages.p03_scattering.state import ScatteringPageState
 from RosettaX.utils import RuntimeConfig, styling, ui_forms
 from RosettaX.workflow import parameters, scattering
+from RosettaX.workflow.plotting import PlotOptions
 from RosettaX.workflow.table.layout import (
     ReferenceTableActionConfig,
     ReferenceTableConfig,
@@ -46,7 +45,9 @@ class ReferenceTable:
     """
 
     sphere_table_columns = ScatteringCalibrationStandardTable.sphere_table_columns
-    core_shell_table_columns = ScatteringCalibrationStandardTable.core_shell_table_columns
+    core_shell_table_columns = (
+        ScatteringCalibrationStandardTable.core_shell_table_columns
+    )
     simulated_curve_point_count = 200
 
     def __init__(
@@ -61,10 +62,14 @@ class ReferenceTable:
         self.card_color = card_color
 
         self.description_tooltip_id = f"{self.ids.bead_table}-description-tooltip"
-        self.description_tooltip_target_id = f"{self.ids.bead_table}-description-tooltip-target"
+        self.description_tooltip_target_id = (
+            f"{self.ids.bead_table}-description-tooltip-target"
+        )
 
         self.compute_model_tooltip_id = f"{self.ids.compute_model_btn}-info-tooltip"
-        self.compute_model_tooltip_target_id = f"{self.ids.compute_model_btn}-info-target"
+        self.compute_model_tooltip_target_id = (
+            f"{self.ids.compute_model_btn}-info-target"
+        )
         self.model_section = ScatteringModelSection(
             page=page,
             section_number=section_number,
@@ -181,7 +186,9 @@ class ReferenceTable:
             },
         )
 
-    def _build_default_table_state(self) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    def _build_default_table_state(
+        self,
+    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         """
         Build initial table columns and rows from the default runtime profile.
         """
@@ -203,17 +210,6 @@ class ReferenceTable:
 
         return dash.html.Div(
             [
-                build_scattering_axis_control_block(
-                    x_switch_id=self.ids.mie_relation_x_log_switch,
-                    y_switch_id=self.ids.mie_relation_y_log_switch,
-                    x_default_enabled=False,
-                    y_default_enabled=True,
-                ),
-                dash.html.Div(
-                    style={
-                        "height": "12px",
-                    },
-                ),
                 dash.dcc.Loading(
                     dash.dcc.Graph(
                         id=self.ids.graph_model,
@@ -223,6 +219,10 @@ class ReferenceTable:
                     type="circle",
                     color="#0d6efd",
                     delay_show=150,
+                ),
+                PlotOptions.build_component(
+                    component_id=self.ids.mie_relation_plot_options,
+                    value=[PlotOptions.y_log_value],
                 ),
             ],
             style={
@@ -270,10 +270,12 @@ class ReferenceTable:
             wavelength_nm: Any,
             current_rows: Any,
         ) -> tuple[Any, Any]:
-            preset_table_state = scattering.ModelConfiguration.build_table_state_from_scatterer_preset(
-                preset_name=scatterer_preset,
-                current_rows=current_rows,
-                wavelength_nm=wavelength_nm,
+            preset_table_state = (
+                scattering.ModelConfiguration.build_table_state_from_scatterer_preset(
+                    preset_name=scatterer_preset,
+                    current_rows=current_rows,
+                    wavelength_nm=wavelength_nm,
+                )
             )
 
             if preset_table_state is None:
@@ -327,10 +329,12 @@ class ReferenceTable:
                 )
             )
 
-            should_rebuild_table = ScatteringCalibrationStandardTable.should_rebuild_from_runtime_config(
-                mie_model=resolved_mie_model,
-                profile_load_event_data=profile_load_event_data,
-                current_rows=current_rows,
+            should_rebuild_table = (
+                ScatteringCalibrationStandardTable.should_rebuild_from_runtime_config(
+                    mie_model=resolved_mie_model,
+                    profile_load_event_data=profile_load_event_data,
+                    current_rows=current_rows,
+                )
             )
 
             normalized_current_rows = ScatteringCalibrationStandardTable.normalize_rows(
@@ -338,8 +342,10 @@ class ReferenceTable:
                 rows=current_rows,
             )
 
-            user_data_column_ids = ScatteringCalibrationStandardTable.get_user_data_column_ids_for_model(
-                resolved_mie_model,
+            user_data_column_ids = (
+                ScatteringCalibrationStandardTable.get_user_data_column_ids_for_model(
+                    resolved_mie_model,
+                )
             )
 
             logger.debug(
@@ -363,8 +369,10 @@ class ReferenceTable:
 
                 return dash.no_update, dash.no_update
 
-            columns, rows = ScatteringCalibrationStandardTable.build_state_from_runtime_config(
-                runtime_config=runtime_config,
+            columns, rows = (
+                ScatteringCalibrationStandardTable.build_state_from_runtime_config(
+                    runtime_config=runtime_config,
+                )
             )
 
             logger.debug(
@@ -404,10 +412,12 @@ class ReferenceTable:
         ) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
             resolved_mie_model = parameters.table.resolve_mie_model(mie_model)
 
-            next_columns, next_rows = ScatteringCalibrationStandardTable.build_state_for_model_selection(
-                mie_model=resolved_mie_model,
-                scatterer_preset=scatterer_preset,
-                current_rows=current_rows,
+            next_columns, next_rows = (
+                ScatteringCalibrationStandardTable.build_state_for_model_selection(
+                    mie_model=resolved_mie_model,
+                    scatterer_preset=scatterer_preset,
+                    current_rows=current_rows,
+                )
             )
 
             logger.debug(
@@ -522,19 +532,29 @@ class ReferenceTable:
             dash.Input(self.ids.compute_model_btn, "n_clicks"),
             dash.State(self.page.ids.Parameters.mie_model, "value"),
             dash.State(self.ids.bead_table, "data"),
-            dash.State(self.page.ids.Parameters.medium_refractive_index_custom, "value"),
-            dash.State(self.page.ids.Parameters.particle_refractive_index_custom, "value"),
+            dash.State(
+                self.page.ids.Parameters.medium_refractive_index_custom, "value"
+            ),
+            dash.State(
+                self.page.ids.Parameters.particle_refractive_index_custom, "value"
+            ),
             dash.State(self.page.ids.Parameters.core_refractive_index_custom, "value"),
             dash.State(self.page.ids.Parameters.shell_refractive_index_custom, "value"),
             dash.State(self.page.ids.Parameters.wavelength_nm, "value"),
             dash.State(self.page.ids.Parameters.detector_numerical_aperture, "value"),
-            dash.State(self.page.ids.Parameters.detector_cache_numerical_aperture, "value"),
-            dash.State(self.page.ids.Parameters.blocker_bar_numerical_aperture, "value"),
+            dash.State(
+                self.page.ids.Parameters.detector_cache_numerical_aperture, "value"
+            ),
+            dash.State(
+                self.page.ids.Parameters.blocker_bar_numerical_aperture, "value"
+            ),
             dash.State(self.page.ids.Parameters.detector_sampling, "value"),
             dash.State(self.page.ids.Parameters.detector_phi_angle_degree, "value"),
             dash.State(self.page.ids.Parameters.detector_gamma_angle_degree, "value"),
             dash.State(self.page.ids.Parameters.detector_configuration_preset, "value"),
-            dash.State(self.page.ids.Parameters.detector_angular_weighting_json, "value"),
+            dash.State(
+                self.page.ids.Parameters.detector_angular_weighting_json, "value"
+            ),
             dash.State(self.page.ids.State.page_state_store, "data"),
             prevent_initial_call=True,
         )

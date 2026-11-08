@@ -1,4 +1,3 @@
-
 import dash_bootstrap_components as dbc
 from dash import html
 from typing import Any
@@ -77,6 +76,7 @@ def build_plot_control_panel(
     children: list[Any],
     *,
     component_id: str | None = None,
+    style_overrides: dict[str, Any] | None = None,
 ) -> html.Div:
     """Build the themed panel that contains plot options."""
     kwargs: dict[str, Any] = {}
@@ -84,7 +84,7 @@ def build_plot_control_panel(
         kwargs["id"] = component_id
     return html.Div(
         children,
-        style=build_plot_control_panel_style(),
+        style={**build_plot_control_panel_style(), **(style_overrides or {})},
         **kwargs,
     )
 
@@ -105,3 +105,69 @@ def build_plot_axis_checklist(
         persistence=True,
         persistence_type="session",
     )
+
+
+class PlotOptions:
+    """Build the shared Axes and Display options used below plots."""
+
+    x_log_value = "x_log"
+    y_log_value = "y_log"
+    color_log_value = "colormap_log"
+
+    @classmethod
+    def build_component(
+        cls,
+        *,
+        component_id: str,
+        value: list[str] | None = None,
+        color_log_enabled: bool = False,
+        display_controls: list[Any] | None = None,
+    ) -> html.Div:
+        """Build standardized Axes and optional Display option groups."""
+        axis_options = [
+            {"label": "x log", "value": cls.x_log_value},
+            {"label": "y log", "value": cls.y_log_value},
+        ]
+        if color_log_enabled:
+            axis_options.append({"label": "color log", "value": cls.color_log_value})
+
+        axis_control = build_plot_axis_checklist(
+            component_id=component_id,
+            options=axis_options,
+            value=value,
+        )
+        control_row_style = {
+            "display": "flex",
+            "alignItems": "center",
+            "gap": "16px",
+            "flexWrap": "wrap",
+            "padding": "8px 10px",
+            "border": "1px solid var(--rosettax-border-color)",
+            "borderRadius": "8px",
+        }
+        rows: list[Any] = [
+            html.Div(
+                [html.Strong("Axes", style={"minWidth": "64px"}), axis_control],
+                style=control_row_style,
+            ),
+        ]
+        if display_controls:
+            rows.append(
+                html.Div(
+                    [
+                        html.Strong("Display", style={"minWidth": "64px"}),
+                        *display_controls,
+                    ],
+                    style=control_row_style,
+                )
+            )
+
+        return build_plot_control_panel(
+            rows,
+            style_overrides={
+                "display": "flex",
+                "flexDirection": "column",
+                "alignItems": "stretch",
+                "gap": "8px",
+            },
+        )
