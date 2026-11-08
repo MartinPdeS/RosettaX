@@ -3,6 +3,7 @@ import dash_bootstrap_components as dbc
 import logging
 from . import callbacks as _callbacks
 from . import layout as _layout
+from RosettaX.ui import WorkflowStep
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -24,9 +25,16 @@ class Header:
         self,
         page: Any,
         card_color: str,
+        *,
+        workflow_steps: list[WorkflowStep] | None = None,
     ) -> None:
         self.page = page
         self.card_color = card_color
+        if workflow_steps is None:
+            from ..services import SECTION_TYPES
+
+            workflow_steps = [section_type.workflow_step for section_type in SECTION_TYPES]
+        self.workflow_header = _layout.build_workflow(workflow_steps=workflow_steps)
 
         logger.debug(
             "Initialized Fluorescence Header section with page=%r",

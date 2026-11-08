@@ -2,6 +2,7 @@
 import dash_bootstrap_components as dbc
 import logging
 from . import callbacks, layout
+from RosettaX.ui import WorkflowStep
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -25,6 +26,18 @@ class Calibration:
     owned by the dedicated reference table section. This section only reads
     ``self.ids.bead_table`` during calibration.
     """
+
+    workflow_step = WorkflowStep(
+        title="Create calibration",
+        description=(
+            "Relate arbitrary units of fluorescence intensity to standard units by "
+            "fitting the calibration table data."
+        ),
+        hover_description=(
+            "This section creates the fluorescence calibration from the measured bead "
+            "peak positions and the known MESF values in the reference table."
+        ),
+    )
 
     graph_min_width_px = 760
 

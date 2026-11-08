@@ -3,6 +3,7 @@ import dash_bootstrap_components as dbc
 import logging
 from . import callbacks as _callbacks
 from . import layout as _layout
+from RosettaX.ui import WorkflowStep
 from RosettaX.workflow.save.adapters import CalibrationStoreSaveAdapter
 from RosettaX.workflow.save.layout import SaveLayout
 from RosettaX.workflow.save.models import SaveConfig
@@ -27,6 +28,18 @@ class Save:
     delegated to RosettaX.workflow.save.
     """
 
+    workflow_step = WorkflowStep(
+        title="Save calibration",
+        description=(
+            "Save the calibration for later reuse when applying it to uncalibrated FCS "
+            "files."
+        ),
+        hover_description=(
+            "Choose a file name and output channel label, then download the completed "
+            "fluorescence calibration as a reusable JSON file."
+        ),
+    )
+
     def __init__(
         self,
         page: Any,
@@ -40,11 +53,8 @@ class Save:
 
         self.config = SaveConfig(
             calibration_kind="fluorescence",
-            header_title=f"{self.section_number}. Save calibration",
-            description_tooltip_text=(
-                "Choose a file name and output channel label, then download the "
-                "completed fluorescence calibration as a reusable JSON file."
-            ),
+            header_title=f"{self.section_number}. {self.workflow_step.title}",
+            description_tooltip_text=self.workflow_step.tooltip_text,
             description_tooltip_target_id=self.ids.description_target,
             description_tooltip_id=self.ids.description_tooltip,
             button_text="Download calibration.json",

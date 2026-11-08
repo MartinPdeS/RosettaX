@@ -45,6 +45,8 @@ class Ids:
         settings.sections.s01_default.schema.FIELD_DEFINITIONS.
         """
 
+        description_target = f"{PAGE_NAME}-default-description-target"
+        description_tooltip = f"{PAGE_NAME}-default-description-tooltip"
         values_profile_dropdown = f"{PAGE_NAME}-values-profile-dropdown"
         save_changes_button = f"{PAGE_NAME}-save-changes-button"
         save_confirmation = f"{PAGE_NAME}-save-confirmation"

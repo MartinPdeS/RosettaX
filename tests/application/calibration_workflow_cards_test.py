@@ -109,9 +109,15 @@ def test_calibration_workflow_cards_start_collapsed_with_description_tooltips(
             lambda _sections: None,
         )
     page_module = importlib.import_module(module_name)
-    layout = getattr(page_module, page_class_name)().layout()
+    page = getattr(page_module, page_class_name)()
+    layout = page.layout()
+    workflow_header = (
+        page.workflow_header if page_name == "cross-calibration"
+        else page.sections[0].workflow_header
+    )
+    overview_text = _collect_text(workflow_header.build_header())
 
-    for section_key in section_keys:
+    for section_key, step in zip(section_keys, workflow_header.steps, strict=True):
         card = _find_component_by_id(
             layout,
             calibration_cards.workflow_section_dom_id(
@@ -128,7 +134,30 @@ def test_calibration_workflow_cards_start_collapsed_with_description_tooltips(
         )
         tooltip = _find_component_by_type(card.children[0], dbc.Tooltip)
         assert tooltip is not None
-        assert any(text.strip() for text in _collect_text(tooltip))
+        assert step.tooltip_text in _collect_text(tooltip)
+        assert f"{section_key}. {step.title}" in _collect_text(card.children[0])
+        assert step.number == section_key
+        assert step.title in overview_text
+        assert step.description in overview_text
+        if page_name != "cross-calibration":
+            section = page.sections[int(section_key)]
+            assert workflow_header.get_workflow_step(workflow_step=section.workflow_step) == step
+
+
+def test_settings_profile_card_uses_its_workflow_step(monkeypatch) -> None:
+    """Use the profile section metadata in both the settings header and card."""
+    monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
+    page_module = importlib.import_module("RosettaX.pages.p05_settings.main")
+    page = page_module.SettingsPage()
+    section = page.sections[0]
+    step = page.workflow_header.get_workflow_step(workflow_step=section.workflow_step)
+    card = section._build_profile_controls_card()
+    tooltip = _find_component_by_type(card.children[0], dbc.Tooltip)
+
+    assert f"{step.number}. {step.title}" in _collect_text(card.children[0])
+    assert tooltip is not None
+    assert step.tooltip_text in _collect_text(tooltip)
+    assert step.description in _collect_text(page.workflow_header.build_header())
 
 
 def test_calibration_card_callback_does_not_hydrate_card_state() -> None:

@@ -40,14 +40,10 @@ def build_header(section: Model) -> dbc.CardHeader:
     Build section header.
     """
     return ui_forms.build_card_header_with_info(
-        title=f"{section.section_number}. Set optical configuration",
+        title=f"{section.section_number}. {section.workflow_step.title}",
         tooltip_target_id=section.section_tooltip_target_id,
         tooltip_id=section.section_tooltip_id,
-        tooltip_text=(
-            "These controls define the illumination, detector geometry, and "
-            "angular sampling used to compute the calibration standard coupling "
-            "values."
-        ),
+        tooltip_text=section.workflow_step.tooltip_text,
         color_name=section.card_color,
     )
 

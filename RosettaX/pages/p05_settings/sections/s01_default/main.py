@@ -5,6 +5,7 @@ import logging
 from ...state import SettingsPageState
 from . import schema, services
 from dash import Input, Output, State, callback, html
+from RosettaX.ui import WorkflowStep
 from RosettaX.utils import styling, ui_forms
 from RosettaX.utils.browser_profiles import BROWSER_PROFILES_STORE_ID
 from RosettaX.utils.runtime_config import RuntimeConfig
@@ -29,6 +30,29 @@ class DefaultProfile:
     The editable form values are mirrored into SettingsPageState instead of a
     section local dcc.Store.
     """
+
+    workflow_step = WorkflowStep(
+        title="Edit defaults",
+        description=(
+            "Adjust startup defaults for calibration pages, chart behavior, and "
+            "runtime options in one centralized form."
+        ),
+    )
+    create_profile_step = WorkflowStep(
+        title="Create profile",
+        description=(
+            "Save the current defaults as a named browser profile for quick context "
+            "switching across experiments and instruments."
+        ),
+    )
+    cleanup_profiles_step = WorkflowStep(
+        title="Clean up profiles",
+        description=(
+            "Remove stale profiles and keep only actively used defaults to reduce "
+            "configuration drift."
+        ),
+    )
+    workflow_steps = (workflow_step, create_profile_step, cleanup_profiles_step)
 
     collapsed_sections = {
         "fluorescence": True,
@@ -78,14 +102,18 @@ class DefaultProfile:
         default_profile_value = services.resolve_default_profile_value(
             profile_options,
         )
+        step = self.page.workflow_header.get_workflow_step(
+            workflow_step=self.workflow_step,
+        )
 
         return dbc.Card(
             [
-                dbc.CardHeader(
-                    "1. Edit default settings",
-                    style=ui_forms.build_workflow_section_header_style(
-                        color_name=styling.get_workflow_section_color(1),
-                    ),
+                ui_forms.build_card_header_with_info(
+                    title=f"{step.number}. {step.title}",
+                    tooltip_target_id=self.ids.description_target,
+                    tooltip_id=self.ids.description_tooltip,
+                    tooltip_text=step.tooltip_text,
+                    color_name=step.color_name,
                 ),
                 dbc.CardBody(
                     [
@@ -121,7 +149,7 @@ class DefaultProfile:
                 ),
             ],
             style=ui_forms.build_workflow_section_card_style(
-                color_name=styling.get_workflow_section_color(1),
+                color_name=step.color_name,
             ),
         )
 

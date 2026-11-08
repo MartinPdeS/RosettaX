@@ -779,10 +779,7 @@ class Test_SidebarNavigation:
         assert SidebarIds.tools_collapse in component_ids
         assert SidebarIds.resources_toggle_button in component_ids
         assert SidebarIds.resources_collapse in component_ids
-        assert SidebarIds.profile_toggle_button in component_ids
-        assert SidebarIds.profile_collapse in component_ids
-        assert "Profile settings" in text_nodes
-        assert "Settings" not in text_nodes
+        assert "/settings" not in _collect_component_hrefs(navigation)
         assert "/documentation" in _collect_component_hrefs(navigation)
         assert "/cross-calibration" in _collect_component_hrefs(navigation)
         assert "/visualization" in _collect_component_hrefs(navigation)
@@ -821,18 +818,9 @@ class Test_SidebarNavigation:
         assert "/settings" not in _collect_component_hrefs(resources_collapse)
         assert "/sample-files" in _collect_component_hrefs(resources_collapse)
 
-        profile_collapse = _find_component_by_id(
-            navigation,
-            SidebarIds.profile_collapse,
-        )
-        assert profile_collapse is not None
-        assert "/settings" in _collect_component_hrefs(profile_collapse)
-
         assert "/documentation" in _collect_component_hrefs(resources_collapse)
         assert "/help" in _collect_component_hrefs(resources_collapse)
 
-        assert text_nodes.index("Guides & examples") < text_nodes.index("Profile")
-        assert text_nodes.index("Profile") < text_nodes.index("Profile settings")
         assert text_nodes.index("Guides & examples") < text_nodes.index("Documentation")
         assert text_nodes.index("Documentation") < text_nodes.index("Help")
         assert navigation.children[0].style["--bs-nav-link-color"] == "#111827"
@@ -840,6 +828,22 @@ class Test_SidebarNavigation:
             navigation.children[0].style["--bs-nav-pills-link-active-color"]
             == "#111827"
         )
+
+    def test_navigation_icons_and_settings_footer(self) -> None:
+        """Show decorative navigation icons and put settings at the sidebar end."""
+        sidebar = Sidebar()
+        scattering_link = sidebar._nav_link("Scattering", "/scattering", tier="child")
+        icon, label = scattering_link.children
+
+        assert label.children == "Scattering"
+        assert icon.className == "rosettax-navigation-icon"
+        assert icon.style["maskImage"].startswith('url("data:image/svg+xml,')
+        assert icon.to_plotly_json()["props"]["aria-hidden"] == "true"
+
+        footer = sidebar.layout().children[-1]
+        assert footer.className == "rosettax-sidebar-footer"
+        assert "/settings" in _collect_component_hrefs(footer)
+        assert "Settings" in _collect_text(footer)
 
     def test_logo_links_to_home_page(self) -> None:
         """Check logo links to home page."""

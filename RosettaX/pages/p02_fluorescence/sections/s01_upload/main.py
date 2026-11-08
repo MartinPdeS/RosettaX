@@ -2,6 +2,7 @@
 import dash_bootstrap_components as dbc
 import logging
 from . import callbacks, layout
+from RosettaX.ui import WorkflowStep
 from RosettaX.workflow.upload.adapters import FluorescenceUploadAdapter
 from RosettaX.workflow.upload.layout import UploadLayout
 from RosettaX.workflow.upload.models import UploadConfig
@@ -25,6 +26,19 @@ class Upload:
     Upload persistence, runtime config synchronization, filename display, and
     page state reset behavior are delegated to ``RosettaX.workflow.upload``.
     """
+
+    workflow_step = WorkflowStep(
+        title="Upload bead FCS file",
+        description=(
+            "Load the FCS file of fluorescent reference beads. This FCS file becomes "
+            "the source for parameter selection and detection of fluorescence peaks."
+        ),
+        hover_description=(
+            "Upload an FCS file measured from fluorescence calibration beads with known "
+            "MESF values. RosettaX uses the bead peak positions and the known MESF "
+            "references to build the fluorescence calibration."
+        ),
+    )
 
     def __init__(
         self,

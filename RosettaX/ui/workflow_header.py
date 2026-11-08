@@ -15,12 +15,32 @@ from typing import Any
 
 @dataclass(frozen=True)
 class WorkflowStep:
-    """Content for one workflow step before numbering and coloring."""
+    """Content for a workflow step.
+
+    Parameters
+    ----------
+    number : str, optional
+        Assigned step number.
+    title : str
+        Title used in the overview and the section card.
+    description : str
+        Description shown in the overview and used as the default hover text.
+    color_name : str, optional
+        Assigned accent color.
+    hover_description : str, optional
+        More detailed section hover text.
+    """
 
     number: str | None = None
     title: str = ""
     description: str = ""
     color_name: str | None = None
+    hover_description: str | None = None
+
+    @property
+    def tooltip_text(self) -> str:
+        """Return the section hover description, falling back to its summary."""
+        return self.hover_description or self.description
 
 
 @dataclass
@@ -46,6 +66,7 @@ class WorkflowHeader:
     steps: list[WorkflowStep] = field(default_factory=list)
     card_color: str | None = None
     column_kwargs: dict[str, Any] | None = None
+    _source_steps: list[WorkflowStep] = field(default_factory=list, init=False, repr=False)
 
     def __post_init__(self) -> None:
         initial_steps = list(self.steps)
@@ -56,14 +77,39 @@ class WorkflowHeader:
     def add_workflow_step(self, workflow_step: WorkflowStep) -> None:
         """Append a step and assign its number and accent color by order."""
         step_number = len(self.steps) + 1
+        self._source_steps.append(workflow_step)
         self.steps.append(
             WorkflowStep(
                 number=str(step_number),
                 title=workflow_step.title,
                 description=workflow_step.description,
                 color_name=styling.get_workflow_section_color(step_number),
+                hover_description=workflow_step.hover_description,
             )
         )
+
+    def get_workflow_step(self, *, workflow_step: WorkflowStep) -> WorkflowStep:
+        """Return the numbered step corresponding to a section's metadata.
+
+        Parameters
+        ----------
+        workflow_step : WorkflowStep
+            Original step registered with this header.
+
+        Returns
+        -------
+        WorkflowStep
+            Step with the number and color assigned by the header.
+
+        Raises
+        ------
+        ValueError
+            If the step was not registered with this header.
+        """
+        for source, numbered in zip(self._source_steps, self.steps, strict=True):
+            if source is workflow_step:
+                return numbered
+        raise ValueError("The workflow step is not registered with this header")
 
     def build_header(
         self,
@@ -469,6 +515,7 @@ def _resolve_workflow_steps(
                 number=str(step.number or index),
                 title=step.title,
                 description=step.description,
+                hover_description=step.hover_description,
                 color_name=(
                     step.color_name or styling.get_workflow_section_color(index)
                 ),

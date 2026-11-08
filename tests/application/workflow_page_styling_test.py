@@ -11,13 +11,30 @@ from RosettaX.pages.p02_fluorescence.sections.s00_header import (
     layout as fluorescence_header_layout,
 )
 from RosettaX.pages.p03_scattering.sections.s00_header import Header as ScatteringHeader
-from RosettaX.ui import WorkflowStep, build_workflow_progress_content
+from RosettaX.ui import WorkflowHeader, WorkflowStep, build_workflow_progress_content
 from RosettaX.utils import styling
 from types import SimpleNamespace
 
 
 class Test_WorkflowPageStyling:
     """Regression checks for workflow page styling."""
+
+    def test_section_step_uses_its_position_for_number_and_color(self) -> None:
+        """Look up a section's step after the workflow order changes."""
+        first = WorkflowStep(
+            title="First",
+            description="First description",
+        )
+        second = WorkflowStep(
+            title="Second",
+            description="Second description",
+        )
+        header = WorkflowHeader(title="Example", description="Example", steps=[second, first])
+
+        numbered_first = header.get_workflow_step(workflow_step=first)
+        assert numbered_first.number == "2"
+        assert numbered_first.color_name == styling.get_workflow_section_color(2)
+        assert numbered_first.tooltip_text == first.description
 
     def test_workflow_page_color_scheme_uses_shared_sequence(self) -> None:
         """Check workflow page color scheme uses shared sequence."""

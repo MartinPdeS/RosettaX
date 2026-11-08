@@ -2,10 +2,24 @@
 import dash
 import dash_bootstrap_components as dbc
 import logging
+from RosettaX.ui import WorkflowStep
 from RosettaX.utils import styling, ui_forms
 from typing import Any
 
 logger = logging.getLogger(__name__)
+
+
+WORKFLOW_STEP = WorkflowStep(
+    title="Apply and export",
+    description=(
+        "Choose optional extra raw channels to preserve, run the calibration, and "
+        "download the calibrated export package."
+    ),
+    hover_description=(
+        "Apply the selected calibration to the uploaded FCS files, choose optional "
+        "extra channels to preserve, and export the calibrated output files."
+    ),
+)
 
 
 class ApplyLayout:
@@ -78,13 +92,11 @@ class ApplyLayout:
         Build the section header.
         """
         return ui_forms.build_card_header_with_info(
-            title=f"{self.section_number}. Apply and export",
+            title=f"{self.section_number}. {WORKFLOW_STEP.title}",
             tooltip_target_id=self.header_tooltip_target_id,
             tooltip_id=self.header_tooltip_id,
             tooltip_text=(
-                "Apply the selected calibration to the uploaded FCS files, "
-                "choose optional extra channels to preserve, and export the "
-                "calibrated output files."
+                WORKFLOW_STEP.tooltip_text
             ),
             color_name=self.card_color,
         )

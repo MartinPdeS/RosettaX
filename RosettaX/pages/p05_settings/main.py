@@ -3,7 +3,7 @@ import dash_bootstrap_components as dbc
 from . import sections
 from .ids import Ids
 from .state import SettingsPageState
-from RosettaX.ui import WorkflowHeader, WorkflowStep
+from RosettaX.ui import WorkflowHeader
 from RosettaX.utils import styling
 
 
@@ -28,7 +28,7 @@ class SettingsPage:
                 "apply-calibration, and visualization behavior. Save everything as "
                 "browser profiles for rapid workflow switching."
             ),
-            steps=self._build_steps(),
+            steps=[step for section in self.sections for step in section.workflow_steps],
         )
 
         self.backend = None
@@ -60,30 +60,6 @@ class SettingsPage:
     def _build_header_card(self) -> dbc.Card:
         return self.workflow_header.build_header()
 
-    def _build_steps(self) -> list[WorkflowStep]:
-        return [
-            WorkflowStep(
-                title="Edit defaults",
-                description=(
-                    "Adjust startup defaults for calibration pages, chart behavior, and "
-                    "runtime options in one centralized form."
-                ),
-            ),
-            WorkflowStep(
-                title="Create profile",
-                description=(
-                    "Save the current defaults as a named browser profile for quick context "
-                    "switching across experiments and instruments."
-                ),
-            ),
-            WorkflowStep(
-                title="Clean up profiles",
-                description=(
-                    "Remove stale profiles and keep only actively used defaults to reduce "
-                    "configuration drift."
-                ),
-            ),
-        ]
 
 
 _page = SettingsPage().register_callbacks()

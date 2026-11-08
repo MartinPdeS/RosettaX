@@ -30,14 +30,10 @@ def _build_header(section) -> dbc.CardHeader:
     return dbc.CardHeader(
         [
             ui_forms.build_title_with_info(
-                title=f"{section.section_number}. Calibration",
+                title=f"{section.section_number}. {section.workflow_step.title}",
                 tooltip_target_id=section.section_tooltip_target_id,
                 tooltip_id=section.section_tooltip_id,
-                tooltip_text=(
-                    "This section creates the fluorescence calibration from the "
-                    "measured bead peak positions and the known MESF values in the "
-                    "reference table."
-                ),
+                tooltip_text=section.workflow_step.tooltip_text,
             ),
         ],
         style=ui_forms.build_workflow_section_header_style(

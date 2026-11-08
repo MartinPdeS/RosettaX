@@ -3,7 +3,7 @@ import dash_bootstrap_components as dbc
 import logging
 from . import services
 from .callbacks import FilePickerCallbacks
-from .layout import FilePickerLayout
+from .layout import WORKFLOW_STEP, FilePickerLayout
 from pathlib import Path
 from typing import Any
 
@@ -27,6 +27,8 @@ class FilePicker:
     - Delegate layout construction.
     - Delegate callback registration.
     """
+
+    workflow_step = WORKFLOW_STEP
 
     def __init__(
         self,

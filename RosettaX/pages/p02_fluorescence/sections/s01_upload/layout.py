@@ -18,13 +18,8 @@ def build_card_title(section) -> dash.html.Div:
     Build the card title with compact hover help.
     """
     return ui_forms.build_title_with_info(
-        title=f"{section.section_number}. Upload calibration FCS file",
+        title=f"{section.section_number}. {section.workflow_step.title}",
         tooltip_target_id=section.upload_tooltip_target_id,
         tooltip_id=section.upload_tooltip_id,
-        tooltip_text=(
-            "Upload an FCS file measured from fluorescence calibration "
-            "beads with known MESF values. RosettaX uses the bead peak "
-            "positions and the known MESF references to build the "
-            "fluorescence calibration."
-        ),
+        tooltip_text=section.workflow_step.tooltip_text,
     )

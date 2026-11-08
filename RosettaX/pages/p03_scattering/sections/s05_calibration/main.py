@@ -4,6 +4,7 @@ import logging
 import plotly.graph_objs as go
 from . import services
 from RosettaX.pages.p03_scattering.state import ScatteringPageState
+from RosettaX.ui import WorkflowStep
 from RosettaX.utils import RuntimeConfig, plottings, styling, ui_forms
 from RosettaX.workflow.plotting import PlotOptions
 from typing import Any
@@ -120,6 +121,19 @@ class Calibration:
     standard data into a saved scattering calibration object.
     """
 
+    workflow_step = WorkflowStep(
+        title="Create calibration",
+        description=(
+            "Match detected peak positions to the computed coupling values and fit the "
+            "scattering calibration relation."
+        ),
+        hover_description=(
+            "This section fits the relation between the measured standard peak "
+            "positions and the modeled coupling values in watts from the calibration "
+            "standard table."
+        ),
+    )
+
     simulated_curve_point_count = 200
     graph_min_width_px = 760
 
@@ -177,14 +191,10 @@ class Calibration:
         return dbc.CardHeader(
             [
                 ui_forms.build_title_with_info(
-                    title=f"{self.section_number}. Fit instrument response",
+                    title=f"{self.section_number}. {self.workflow_step.title}",
                     tooltip_target_id=self.header_tooltip_target_id,
                     tooltip_id=self.header_tooltip_id,
-                    tooltip_text=(
-                        "This section fits the relation between the measured standard "
-                        "peak positions and the modeled coupling values in watts from "
-                        "the calibration standard table."
-                    ),
+                    tooltip_text=self.workflow_step.tooltip_text,
                 ),
             ],
             style=ui_forms.build_workflow_section_header_style(

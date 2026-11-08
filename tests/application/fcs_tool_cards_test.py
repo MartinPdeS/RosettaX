@@ -95,7 +95,6 @@ def _callback_input_id_types(callback: dict[str, Any]) -> set[str]:
         "page_name",
         "section_keys",
         "step_section_keys",
-        "subtitles",
     ),
     [
         (
@@ -104,11 +103,6 @@ def _callback_input_id_types(callback: dict[str, Any]) -> set[str]:
             "visualization",
             ("1", "2", "3"),
             ("1", "2", "3"),
-            (
-                "Load compatible FCS files, then choose which file to inspect.",
-                "Choose the file, plotted channels, scales, and event limit.",
-                "Inspect the plotted events and channel distributions.",
-            ),
         ),
         (
             "RosettaX.pages.p21_fcs_slicer.main",
@@ -116,11 +110,6 @@ def _callback_input_id_types(callback: dict[str, Any]) -> set[str]:
             "fcs-slicer",
             ("1", "2", "3"),
             ("1", "2", "3"),
-            (
-                "Files must have the same channels, FCS version, and detector voltages.",
-                "The selected channel order follows the original FCS files.",
-                "RosettaX packages the sliced FCS copies in one ZIP download.",
-            ),
         ),
         (
             "RosettaX.pages.p23_fcs_inspector.main",
@@ -128,10 +117,6 @@ def _callback_input_id_types(callback: dict[str, Any]) -> set[str]:
             "fcs-inspector",
             ("1", "2"),
             ("1", "2"),
-            (
-                "The inspector reads metadata only; event measurements remain unloaded.",
-                "Upload an FCS file to view its metadata.",
-            ),
         ),
         (
             "RosettaX.pages.p24_fcs_merge.main",
@@ -139,10 +124,6 @@ def _callback_input_id_types(callback: dict[str, Any]) -> set[str]:
             "fcs-merge",
             ("1", "2"),
             ("1", "2"),
-            (
-                "Select at least two files with matching channels, FCS version, and detector voltages.",
-                "The merged file preserves the first file's metadata and all input events.",
-            ),
         ),
     ],
 )
@@ -153,12 +134,13 @@ def test_fcs_tool_layouts_include_collapsible_cards_with_uniform_gaps(
     page_name: str,
     section_keys: tuple[str, ...],
     step_section_keys: tuple[str, ...],
-    subtitles: tuple[str, ...],
 ) -> None:
     """Check FCS tool layouts include collapsible cards with uniform gaps."""
     monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
     page_module = importlib.import_module(module_name)
-    layout = getattr(page_module, page_class_name)().layout()
+    page = getattr(page_module, page_class_name)()
+    layout = page.layout()
+    overview_text = _collect_text(page.workflow_header.build_header())
     pattern_ids = _collect_pattern_ids(layout)
     card_stack = (
         layout
@@ -171,7 +153,7 @@ def test_fcs_tool_layouts_include_collapsible_cards_with_uniform_gaps(
         "flexDirection": "column",
         "gap": calibration_cards.FCS_TOOL_CARD_GAP,
     }
-    for section_key, subtitle in zip(section_keys, subtitles, strict=True):
+    for section_key, step in zip(section_keys, page.workflow_header.steps, strict=True):
         assert {
             "type": calibration_cards.TOGGLE_ID_TYPE,
             "page": page_name,
@@ -194,7 +176,11 @@ def test_fcs_tool_layouts_include_collapsible_cards_with_uniform_gaps(
         assert section_card.children[1].kwargs["is_open"] is False
         tooltip = _find_component_by_type(section_card.children[0], dbc.Tooltip)
         assert tooltip is not None
-        assert any(text.strip() for text in _collect_text(tooltip))
+        assert step.tooltip_text in _collect_text(tooltip)
+        assert f"{section_key}. {step.title}" in _collect_text(section_card.children[0])
+        assert step.number == section_key
+        assert step.title in overview_text
+        assert step.description in overview_text
 
     direct_cards = [
         child for child in card_stack.children if isinstance(child, dbc.Card)

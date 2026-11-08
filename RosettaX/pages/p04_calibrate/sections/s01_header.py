@@ -11,15 +11,21 @@ class Header:
         self,
         page,
         card_color: str = "green",
+        *,
+        workflow_steps: list[WorkflowStep] | None = None,
     ) -> None:
         self.page = page
         self.card_color = card_color
+        if workflow_steps is None:
+            from .services import SECTION_TYPES
+
+            workflow_steps = [section_type.workflow_step for section_type in SECTION_TYPES]
         self.workflow_header = WorkflowHeader(
             title="Apply calibration",
             description=(
                 "Use this page when you already have a saved calibration and want to apply it to one or more FCS files. Select the calibration payload, upload the target files, choose the relevant detector mapping, and export calibrated outputs."
             ),
-            steps=self._build_steps(),
+            steps=workflow_steps,
             card_color=card_color,
             column_kwargs={"lg": 4},
         )
@@ -54,32 +60,3 @@ class Header:
                 completed_count=completed,
                 page_name=self.page.ids.page_name,
             )
-
-    def _build_steps(self) -> list[WorkflowStep]:
-        """
-        Build the apply calibration workflow step metadata.
-        """
-        return [
-            WorkflowStep(
-                title="Select calibration",
-                description=(
-                    "Choose the saved fluorescence or scattering calibration JSON "
-                    "that will be applied to the uploaded data. For scattering "
-                    "payloads, confirm the target particle model before continuing."
-                ),
-            ),
-            WorkflowStep(
-                title="Upload input FCS",
-                description=(
-                    "Load one or more experimental FCS files that should receive "
-                    "the calibrated output channels."
-                ),
-            ),
-            WorkflowStep(
-                title="Apply and export",
-                description=(
-                    "Choose optional extra raw channels to preserve, run the "
-                    "calibration, and download the calibrated export package."
-                ),
-            ),
-        ]

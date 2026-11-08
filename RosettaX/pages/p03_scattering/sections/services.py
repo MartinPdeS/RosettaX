@@ -6,45 +6,16 @@ from .s04_table import ReferenceTable
 from .s05_calibration import Calibration
 from .s06_save import Save
 from RosettaX.utils import styling
+from RosettaX.workflow.calibration_cards import build_workflow_sections
+
+SECTION_TYPES = (Upload, Peaks, Model, ReferenceTable, Calibration, Save,)
 
 
 def build_sections(page) -> list:
-    """
-    Build the ordered scattering page sections.
-    """
-    return [
-        Header(
-            page=page,
-            card_color=styling.get_workflow_page_header_color(),
-        ),
-        Upload(
-            page=page,
-            section_number=1,
-            card_color=styling.get_workflow_section_color(1),
-        ),
-        Peaks(
-            page=page,
-            section_number=2,
-            card_color=styling.get_workflow_section_color(2),
-        ),
-        Model(
-            page=page,
-            section_number=3,
-            card_color=styling.get_workflow_section_color(3),
-        ),
-        ReferenceTable(
-            page=page,
-            section_number=4,
-            card_color=styling.get_workflow_section_color(4),
-        ),
-        Calibration(
-            page=page,
-            section_number=5,
-            card_color=styling.get_workflow_section_color(5),
-        ),
-        Save(
-            page=page,
-            section_number=6,
-            card_color=styling.get_workflow_section_color(6),
-        ),
-    ]
+    """Build sections in workflow order and assign their numbers and colors."""
+    return build_workflow_sections(
+        page=page,
+        section_types=SECTION_TYPES,
+        header_type=Header,
+        header_color=styling.get_workflow_page_header_color(),
+    )

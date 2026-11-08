@@ -26,18 +26,23 @@ class FCSInspectorPage:
                 "Review file metadata, acquisition details, and channel definitions "
                 "before downstream work."
             ),
-            steps=[
-                WorkflowStep(
-                    title="Upload FCS file",
-                    description="Select one FCS file to inspect.",
-                ),
-                WorkflowStep(
-                    title="Review metadata",
-                    description="Check file details and channel definitions.",
-                ),
-            ],
+            steps=[self.upload_step, self.details_step],
             column_kwargs={"xl": True},
         )
+
+    upload_step = WorkflowStep(
+        title="Upload FCS file",
+        description="Select one FCS file to inspect.",
+        hover_description=(
+            "The inspector reads metadata only; event measurements remain unloaded."
+        ),
+    )
+
+    details_step = WorkflowStep(
+        title="Review metadata",
+        description="Check file details and channel definitions.",
+        hover_description="Upload an FCS file to view its metadata.",
+    )
 
     def layout(self) -> dbc.Container:
         return dbc.Container(
@@ -50,9 +55,7 @@ class FCSInspectorPage:
                         ),
                         build_calibration_workflow_section_card(
                             page_name=self.prefix,
-                            section_number=1,
-                            title="Upload FCS file",
-                            subtitle="The inspector reads metadata only; event measurements remain unloaded.",
+                            workflow_step=self.workflow_header.get_workflow_step(workflow_step=self.upload_step),
                             body_children=[
                                 ui_forms.build_upload_widget(
                                     upload_id=f"{self.prefix}-upload",
@@ -68,9 +71,7 @@ class FCSInspectorPage:
                         ),
                         build_calibration_workflow_section_card(
                             page_name=self.prefix,
-                            section_number=2,
-                            title="File details",
-                            subtitle="Upload an FCS file to view its metadata.",
+                            workflow_step=self.workflow_header.get_workflow_step(workflow_step=self.details_step),
                             body_children=[html.Div(id=f"{self.prefix}-report")],
                         ),
                     ],

@@ -27,15 +27,21 @@ class Header:
         self,
         page: Any,
         card_color: str = "blue",
+        *,
+        workflow_steps: list[WorkflowStep] | None = None,
     ) -> None:
         self.page = page
         self.card_color = card_color
+        if workflow_steps is None:
+            from ..services import SECTION_TYPES
+
+            workflow_steps = [section_type.workflow_step for section_type in SECTION_TYPES]
         self.workflow_header = WorkflowHeader(
             title="Scattering calibration",
             description=(
                 "Create a scattering calibration from bead FCS data by detecting bead populations, configuring the Mie model, computing coupling values, fitting the response, and saving the result for reuse."
             ),
-            steps=self._build_steps(),
+            steps=workflow_steps,
             card_color=card_color,
             column_kwargs={"xs": 12, "md": 6, "lg": 4, "xl": 2},
         )
@@ -68,53 +74,6 @@ class Header:
         """
         callbacks.register_callbacks(self)
 
-    def _build_steps(self) -> list[WorkflowStep]:
-        """
-        Build the workflow step metadata.
-        """
-        return [
-            WorkflowStep(
-                title="Upload bead FCS",
-                description=(
-                    "Load the scattering bead file acquired on the instrument. "
-                    "This file becomes the source for detector selection and peak detection."
-                ),
-            ),
-            WorkflowStep(
-                title="Detect peaks",
-                description=(
-                    "Select the scattering detector channel, inspect the event distribution, "
-                    "and detect the bead population peaks from the uploaded FCS file."
-                ),
-            ),
-            WorkflowStep(
-                title="Configure detector",
-                description=(
-                    "Choose the scattering detector channel used for the calibration workflow."
-                ),
-            ),
-            WorkflowStep(
-                title="Compute coupling",
-                description=(
-                    "Enter the particle diameters and compute the expected scattering "
-                    "coupling from the selected Mie model."
-                ),
-            ),
-            WorkflowStep(
-                title="Create calibration",
-                description=(
-                    "Match detected peak positions to the computed coupling values and fit "
-                    "the scattering calibration relation."
-                ),
-            ),
-            WorkflowStep(
-                title="Save calibration",
-                description=(
-                    "Save the fitted calibration so it can be reused later when applying "
-                    "calibration to experimental FCS files."
-                ),
-            ),
-        ]
 
     def build_progress_content(
         self,

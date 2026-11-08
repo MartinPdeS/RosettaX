@@ -18,15 +18,10 @@ def build_section_title(section) -> dash.html.Div:
     Build the section title with compact hover help.
     """
     return ui_forms.build_title_with_info(
-        title=f"{section.section_number}. Fluorescence peak detection",
+        title=f"{section.section_number}. {section.workflow_step.title}",
         tooltip_target_id=section.section_tooltip_target_id,
         tooltip_id=section.section_tooltip_id,
-        tooltip_text=(
-            "Use this section to detect fluorescence bead population peaks "
-            "from the calibration FCS file. These measured peak positions are "
-            "written into the fluorescence calibration table and paired with "
-            "the known MESF values."
-        ),
+        tooltip_text=section.workflow_step.tooltip_text,
     )
 
 

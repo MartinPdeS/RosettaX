@@ -7,6 +7,7 @@ from .services import ScatteringCalibrationStandardTable
 from RosettaX.pages.p00_sidebar.ids import SidebarIds
 from RosettaX.pages.p03_scattering.sections.s03_model import layout as model_layout
 from RosettaX.pages.p03_scattering.state import ScatteringPageState
+from RosettaX.ui import WorkflowStep
 from RosettaX.utils import RuntimeConfig, styling, ui_forms
 from RosettaX.workflow import parameters, scattering
 from RosettaX.workflow.plotting import PlotOptions
@@ -43,6 +44,21 @@ class ReferenceTable:
     they define the same calibration standard as the table rows. Generic table rendering is delegated to
     ``ReferenceTableLayout``.
     """
+
+    workflow_step = WorkflowStep(
+        title="Compute coupling",
+        description=(
+            "Enter the particle diameters and compute the expected scattering coupling "
+            "from the selected Mie model."
+        ),
+        hover_description=(
+            "This section defines the calibration standard used to infer the instrument "
+            "response. Set the particle model and refractive indices above, then edit "
+            "the standard particle geometry in the table. Measured peak positions are "
+            "optional at this stage. First click Compute model to fill the modeled "
+            "coupling column. Then fit the instrument response in the next section."
+        ),
+    )
 
     sphere_table_columns = ScatteringCalibrationStandardTable.sphere_table_columns
     core_shell_table_columns = (
@@ -146,17 +162,10 @@ class ReferenceTable:
         Build the card title with compact hover help.
         """
         return ui_forms.build_title_with_info(
-            title=f"{self.section_number}. Calibration standard table",
+            title=f"{self.section_number}. {self.workflow_step.title}",
             tooltip_target_id=self.description_tooltip_target_id,
             tooltip_id=self.description_tooltip_id,
-            tooltip_text=(
-                "This section defines the calibration standard used to infer "
-                "the instrument response. Set the particle model and refractive "
-                "indices above, then edit the standard particle geometry in the "
-                "table. Measured peak positions are optional at this stage. First "
-                "click Compute model to fill the modeled coupling column. Then fit "
-                "the instrument response in the next section."
-            ),
+            tooltip_text=self.workflow_step.tooltip_text,
         )
 
     def _build_compute_model_description(self) -> dash.html.Div:

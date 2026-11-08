@@ -28,9 +28,31 @@ class FCSMergePage:
                 "Upload compatible FCS files and download one file containing all "
                 "events in the uploaded order."
             ),
-            steps=self._build_header_steps(),
+            steps=[self.upload_step, self.export_step],
             column_kwargs={"xl": True},
         )
+
+    upload_step = WorkflowStep(
+        title="Upload compatible files",
+        description=(
+            "RosettaX checks that channels, FCS versions, and detector voltages match."
+        ),
+        hover_description=(
+            "Select at least two files with matching channels, FCS version, and "
+            "detector voltages."
+        ),
+    )
+
+    export_step = WorkflowStep(
+        title="Download merged file",
+        description=(
+            "All events are concatenated in input order, using the first file as the "
+            "metadata template."
+        ),
+        hover_description=(
+            "The merged file preserves the first file's metadata and all input events."
+        ),
+    )
 
     def layout(self) -> dbc.Container:
         return dbc.Container(
@@ -62,33 +84,10 @@ class FCSMergePage:
             style_overrides={"marginBottom": "0px"},
         )
 
-    def _build_header_steps(self) -> list[WorkflowStep]:
-        """Build the FCS merge workflow overview shown in the page header."""
-        return [
-            WorkflowStep(
-                title="Upload compatible files",
-                description=(
-                    "RosettaX checks that channels, FCS versions, and detector "
-                    "voltages match."
-                ),
-            ),
-            WorkflowStep(
-                title="Download merged file",
-                description=(
-                    "All events are concatenated in input order, using the first "
-                    "file as the metadata template."
-                ),
-            ),
-        ]
 
     def _build_upload_card(self) -> dbc.Card:
         return self._build_section_card(
-            number=1,
-            title="Upload FCS files",
-            subtitle=(
-                "Select at least two files with matching channels, FCS version, and "
-                "detector voltages."
-            ),
+            workflow_step=self.workflow_header.get_workflow_step(workflow_step=self.upload_step),
             children=[
                 ui_forms.build_upload_widget(
                     upload_id=self.ids.upload,
@@ -108,9 +107,7 @@ class FCSMergePage:
 
     def _build_export_card(self) -> dbc.Card:
         return self._build_section_card(
-            number=2,
-            title="Download merged FCS file",
-            subtitle="The merged file preserves the first file's metadata and all input events.",
+            workflow_step=self.workflow_header.get_workflow_step(workflow_step=self.export_step),
             children=[
                 dbc.Button(
                     "Download merged FCS file",
@@ -128,16 +125,12 @@ class FCSMergePage:
     def _build_section_card(
         self,
         *,
-        number: int,
-        title: str,
-        subtitle: str,
+        workflow_step: WorkflowStep,
         children: list[Any],
     ) -> dbc.Card:
         return build_calibration_workflow_section_card(
             page_name=self.ids.page_prefix,
-            section_number=number,
-            title=title,
-            subtitle=subtitle,
+            workflow_step=workflow_step,
             body_children=children,
         )
 

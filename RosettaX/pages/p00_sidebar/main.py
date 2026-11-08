@@ -13,8 +13,26 @@ from RosettaX.utils.browser_profiles import (
 )
 from RosettaX.workflow.sidebar import services
 from typing import Any
+from urllib.parse import quote
 
 logger = logging.getLogger(__name__)
+
+NAVIGATION_ICONS = {
+    "/": '<path d="M3 11 12 4l9 7v9h-6v-6H9v6H3z"/>',
+    "/fluorescence": '<path d="M12 2c1 6 3 8 9 10-6 1-8 3-9 10-1-7-3-9-9-10 6-2 8-4 9-10z"/>',
+    "/scattering": '<circle cx="6" cy="18" r="1"/><circle cx="9" cy="15" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="15" cy="9" r="1"/><circle cx="18" cy="6" r="1"/><circle cx="10" cy="19" r="1"/><circle cx="16" cy="13" r="1"/>',
+    "/calibrate": '<path d="m12 3 9 5-9 5-9-5 9-5zm-9 9 9 5 9-5M3 16l9 5 9-5"/>',
+    "/cross-calibration": '<path d="M3 8h17m-4-4 4 4-4 4M21 16H4m4-4-4 4 4 4"/>',
+    "/visualization": '<path d="M4 20v-7h4v7zm6 0V4h4v16zm6 0v-11h4v11z"/>',
+    "/fcs-slicer": '<path d="M4 9V4h5m6 0h5v5m0 6v5h-5M9 20H4v-5" stroke-dasharray="3 2"/>',
+    "/fcs-inspector": '<circle cx="10" cy="10" r="7"/><path d="m15 15 6 6"/>',
+    "/fcs-merge": '<circle cx="9" cy="12" r="7"/><circle cx="15" cy="12" r="7"/>',
+    "/sample-files": '<path d="M3 7h7l2 2h9v10H3z"/><path d="M3 7V5h7l2 2"/>',
+    "/tutorials": '<path d="M4 4h12a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3z"/><path d="M4 17a3 3 0 0 1 3-3h12M8 8h7"/>',
+    "/documentation": '<path d="M5 3h10l4 4v14H5zM14 3v5h5M8 12h8M8 16h8"/>',
+    "/help": '<circle cx="12" cy="12" r="9"/><path d="M9 9a3 3 0 1 1 4 3c-1 .5-1 1-1 2m0 3h.01"/>',
+    "/settings": '<path d="M10 2h4l.6 2.2 2 .8 2-1 2.8 2.8-1 2 .8 2L23 11v3l-2.2.6-.8 2 1 2-2.8 2.8-2-1-2 .8L14 23h-4l-.6-2.2-2-.8-2 1-2.8-2.8 1-2-.8-2L1 14v-3l2.2-.6.8-2-1-2L5.8 3.6l2 1 2-.8z"/><circle cx="12" cy="12" r="3"/>',
+}
 
 
 class Sidebar:
@@ -59,7 +77,6 @@ class Sidebar:
         "/fcs-merge",
     }
     resources_paths = {"/sample-files", "/documentation", "/help"}
-    profile_paths = {"/settings"}
 
     def _get_default_profile_name(
         self,
@@ -337,12 +354,6 @@ class Sidebar:
             label="Guides & examples",
             paths=self.resources_paths,
         )
-        self._register_navigation_toggle(
-            button_id=SidebarIds.profile_toggle_button,
-            collapse_id=SidebarIds.profile_collapse,
-            label="Profile",
-            paths=self.profile_paths,
-        )
 
     def _register_navigation_toggle(
         self,
@@ -423,6 +434,18 @@ class Sidebar:
                     id=SidebarIds.profile_load_event_store,
                     data=None,
                     storage_type="session",
+                ),
+                html.Div(
+                    dbc.Nav(
+                        self._nav_link("Settings", "/settings"),
+                        vertical=True,
+                        pills=True,
+                        style={
+                            "--bs-nav-pills-link-active-color": "#111827",
+                            "--bs-nav-pills-link-active-bg": "#e2e8f0",
+                        },
+                    ),
+                    className="rosettax-sidebar-footer",
                 ),
             ],
             style={
@@ -587,16 +610,6 @@ class Sidebar:
                                 self._nav_link("Help", "/help", tier="child"),
                             ],
                         ),
-                        self._build_navigation_tab(
-                            label="Profile",
-                            button_id=SidebarIds.profile_toggle_button,
-                            collapse_id=SidebarIds.profile_collapse,
-                            links=[
-                                self._nav_link(
-                                    "Profile settings", "/settings", tier="child"
-                                ),
-                            ],
-                        ),
                     ],
                     vertical=True,
                     pills=True,
@@ -722,11 +735,30 @@ class Sidebar:
                 "color": "#111827",
             }
 
+        icon = NAVIGATION_ICONS.get(href)
+        children: Any = label
+        if icon:
+            svg = (
+                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" '
+                'fill="none" stroke="black" stroke-width="1.8" '
+                'stroke-linecap="round" stroke-linejoin="round">'
+                f"{icon}</svg>"
+            )
+            mask = f'url("data:image/svg+xml,{quote(svg)}")'
+            children = [
+                html.Span(
+                    className="rosettax-navigation-icon",
+                    style={"maskImage": mask, "WebkitMaskImage": mask},
+                    **{"aria-hidden": "true"},
+                ),
+                html.Span(label),
+            ]
+
         return dbc.NavLink(
-            label,
+            children,
             href=href,
             active="exact",
-            style=link_style,
+            style={**link_style, "display": "flex", "alignItems": "center", "gap": "0.7rem"},
         )
 
     def _build_saved_profiles_section(

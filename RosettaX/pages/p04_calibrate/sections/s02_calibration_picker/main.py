@@ -2,7 +2,7 @@
 import dash_bootstrap_components as dbc
 import logging
 from .callbacks import CalibrationPickerCallbacks
-from .layout import CalibrationPickerLayout
+from .layout import WORKFLOW_STEP, CalibrationPickerLayout
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -25,6 +25,8 @@ class CalibrationPicker:
     - Delegate layout construction.
     - Delegate callback registration.
     """
+
+    workflow_step = WORKFLOW_STEP
 
     def __init__(
         self,

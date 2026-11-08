@@ -2,6 +2,7 @@
 import dash_bootstrap_components as dbc
 import logging
 from RosettaX.pages.p03_scattering.state import ScatteringPageState
+from RosettaX.ui import WorkflowStep
 from RosettaX.workflow.save.adapters import PageStateSaveAdapter
 from RosettaX.workflow.save.callbacks import register_save_callbacks
 from RosettaX.workflow.save.layout import SaveLayout
@@ -16,6 +17,18 @@ class Save:
     Scattering calibration save section.
     """
 
+    workflow_step = WorkflowStep(
+        title="Save calibration",
+        description=(
+            "Save the fitted calibration so it can be reused later when applying "
+            "calibration to experimental FCS files."
+        ),
+        hover_description=(
+            "Choose a file name and output channel label, then download the completed "
+            "scattering calibration as a reusable JSON file."
+        ),
+    )
+
     def __init__(
         self,
         page: Any,
@@ -29,11 +42,8 @@ class Save:
 
         self.config = SaveConfig(
             calibration_kind="scattering",
-            header_title=f"{self.section_number}. Save calibration",
-            description_tooltip_text=(
-                "Choose a file name and output channel label, then download the "
-                "completed scattering calibration as a reusable JSON file."
-            ),
+            header_title=f"{self.section_number}. {self.workflow_step.title}",
+            description_tooltip_text=self.workflow_step.tooltip_text,
             description_tooltip_target_id=self.ids.description_target,
             description_tooltip_id=self.ids.description_tooltip,
             button_text="Download calibration.json",

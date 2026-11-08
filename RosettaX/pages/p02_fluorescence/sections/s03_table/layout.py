@@ -31,15 +31,10 @@ def build_card_title(section) -> dash.html.Div:
     Build the card title with compact hover help.
     """
     return ui_forms.build_title_with_info(
-        title=f"{section.section_number}. Calibration reference table",
+        title=f"{section.section_number}. {section.workflow_step.title}",
         tooltip_target_id=section.reference_table_tooltip_target_id,
         tooltip_id=section.reference_table_tooltip_id,
-        tooltip_text=(
-            "Enter the known MESF values for the fluorescence calibration "
-            "beads and use the fluorescence peak detection section to fill "
-            "the measured peak positions. This table is the source of truth "
-            "for the fluorescence calibration fit."
-        ),
+        tooltip_text=section.workflow_step.tooltip_text,
     )
 
 

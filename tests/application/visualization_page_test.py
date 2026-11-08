@@ -127,8 +127,8 @@ class Test_VisualizationPage:
         assert "Upload FCS file" in text_nodes
         assert "Choose plot settings" in text_nodes
         assert "Inspect the data" in text_nodes
-        assert "2. Plot settings" in text_nodes
-        assert "3. Data plot" in text_nodes
+        assert "2. Choose plot settings" in text_nodes
+        assert "3. Inspect the data" in text_nodes
         assert "Configure plot" not in text_nodes
         assert "Inspect metadata and plot" not in text_nodes
         assert "File summary" not in text_nodes

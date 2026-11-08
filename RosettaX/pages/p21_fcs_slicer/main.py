@@ -27,9 +27,40 @@ class FCSSlicerPage:
                 "Upload a compatible batch, choose the detector channels to keep, "
                 "and download sliced FCS copies with every event preserved."
             ),
-            steps=self._build_header_steps(),
+            steps=[self.upload_step, self.selection_step, self.export_step],
             column_kwargs={"xl": True},
         )
+
+    upload_step = WorkflowStep(
+        title="Upload compatible files",
+        description=(
+            "Load one or more FCS files. RosettaX checks that their channels, FCS "
+            "versions, and detector voltages match."
+        ),
+        hover_description=(
+            "Files must have the same channels, FCS version, and detector voltages."
+        ),
+    )
+
+    selection_step = WorkflowStep(
+        title="Choose channels",
+        description=(
+            "Select the detector channels to retain. The original channel order and "
+            "every recorded event are preserved."
+        ),
+        hover_description="The selected channel order follows the original FCS files.",
+    )
+
+    export_step = WorkflowStep(
+        title="Download sliced files",
+        description=(
+            "Export the sliced FCS copies together in one ZIP package while keeping the "
+            "selected channel metadata."
+        ),
+        hover_description=(
+            "RosettaX packages the sliced FCS copies in one ZIP download."
+        ),
+    )
 
     def layout(self) -> dbc.Container:
         return dbc.Container(
@@ -62,39 +93,10 @@ class FCSSlicerPage:
             style_overrides={"marginBottom": "0px"},
         )
 
-    def _build_header_steps(self) -> list[WorkflowStep]:
-        """Build the FCS slicing workflow overview shown in the page header."""
-        return [
-            WorkflowStep(
-                title="Upload compatible files",
-                description=(
-                    "Load one or more FCS files. RosettaX checks that their channels, "
-                    "FCS versions, and detector voltages match."
-                ),
-            ),
-            WorkflowStep(
-                title="Choose channels",
-                description=(
-                    "Select the detector channels to retain. The original channel order "
-                    "and every recorded event are preserved."
-                ),
-            ),
-            WorkflowStep(
-                title="Download sliced files",
-                description=(
-                    "Export the sliced FCS copies together in one ZIP package while "
-                    "keeping the selected channel metadata."
-                ),
-            ),
-        ]
 
     def _build_upload_card(self) -> dbc.Card:
         return self._build_section_card(
-            number=1,
-            title="Upload FCS files",
-            subtitle=(
-                "Files must have the same channels, FCS version, and detector voltages."
-            ),
+            workflow_step=self.workflow_header.get_workflow_step(workflow_step=self.upload_step),
             children=[
                 ui_forms.build_upload_widget(
                     upload_id=self.ids.upload,
@@ -114,9 +116,7 @@ class FCSSlicerPage:
 
     def _build_selection_card(self) -> dbc.Card:
         return self._build_section_card(
-            number=2,
-            title="Select detector channels",
-            subtitle="The selected channel order follows the original FCS files.",
+            workflow_step=self.workflow_header.get_workflow_step(workflow_step=self.selection_step),
             children=[
                 dcc.Dropdown(
                     id=self.ids.channels,
@@ -135,9 +135,7 @@ class FCSSlicerPage:
 
     def _build_export_card(self) -> dbc.Card:
         return self._build_section_card(
-            number=3,
-            title="Export sliced files",
-            subtitle="RosettaX packages the sliced FCS copies in one ZIP download.",
+            workflow_step=self.workflow_header.get_workflow_step(workflow_step=self.export_step),
             children=[
                 dbc.Button(
                     "Download sliced FCS files",
@@ -155,16 +153,12 @@ class FCSSlicerPage:
     def _build_section_card(
         self,
         *,
-        number: int,
-        title: str,
-        subtitle: str,
+        workflow_step: WorkflowStep,
         children: list[Any],
     ) -> dbc.Card:
         return build_calibration_workflow_section_card(
             page_name=self.ids.page_prefix,
-            section_number=number,
-            title=title,
-            subtitle=subtitle,
+            workflow_step=workflow_step,
             body_children=children,
         )
 

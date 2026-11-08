@@ -2,6 +2,7 @@
 import dash_bootstrap_components as dbc
 import logging
 from . import callbacks, layout
+from RosettaX.ui import WorkflowStep
 from RosettaX.workflow.peak.adapters.fluorescence import FluorescencePeakWorkflowAdapter
 from RosettaX.workflow.peak.layout import PeakLayout
 from RosettaX.workflow.peak.models import PeakConfig
@@ -36,6 +37,19 @@ class Peaks:
     still receives its component ID so it can write detected peak positions into
     it.
     """
+
+    workflow_step = WorkflowStep(
+        title="Detect fluorescence peaks",
+        description=(
+            "Select the parameter to calibrate, inspect the event distribution, and "
+            "detect the fluorescence bead populations from the uploaded FCS file."
+        ),
+        hover_description=(
+            "Use this section to detect fluorescence bead population peaks from the "
+            "calibration FCS file. These measured peak positions are written into the "
+            "fluorescence calibration table and paired with the known MESF values."
+        ),
+    )
 
     def __init__(
         self,

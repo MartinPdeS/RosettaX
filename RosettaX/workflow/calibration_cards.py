@@ -1,5 +1,6 @@
 import dash
 import dash_bootstrap_components as dbc
+from collections.abc import Sequence
 from RosettaX.utils import styling, ui_forms
 from RosettaX.utils.runtime_config import RuntimeConfig
 from typing import Any
@@ -10,29 +11,46 @@ TOGGLE_LABEL_ID_TYPE = "calibration-card-toggle-label"
 WORKFLOW_STEP_CARD_ID_TYPE = "workflow-step-card"
 FCS_TOOL_CARD_GAP = styling.get_spacing_token("lg")
 
-CALIBRATION_WORKFLOW_SUBTITLES = {
-    "fluorescent_calibration": {
-        "1": "Load the bead measurement used to establish the fluorescence response.",
-        "2": "Identify the fluorescence bead populations and record their measured peaks.",
-        "3": "Pair the measured peaks with the known MESF reference values.",
-        "4": "Fit the fluorescence response from the reference values and bead peaks.",
-        "5": "Download the completed fluorescence calibration for later use.",
-    },
-    "scattering_calibration": {
-        "1": "Load the bead measurement used to establish the scattering response.",
-        "2": "Identify the scattering bead populations and record their measured peaks.",
-        "3": "Configure the optical and detector model used for the calibration.",
-        "4": "Define the calibration standard and calculate its modeled coupling.",
-        "5": "Fit the instrument response from the measured and modeled bead values.",
-        "6": "Download the completed scattering calibration for later use.",
-    },
-    "apply_calibration": {
-        "1": "Choose the saved calibration files to apply to matching FCS channels.",
-        "2": "Load the input FCS files that will receive the selected calibrations.",
-        "3": "Generate and download calibrated FCS output files.",
-    },
-}
 
+def build_workflow_sections(
+    *,
+    page: Any,
+    section_types: Sequence[type],
+    header_type: type,
+    header_color: str,
+) -> list[Any]:
+    """Build ordered workflow sections and a header from their step metadata.
+
+    Parameters
+    ----------
+    page : Any
+        Page that owns the sections.
+    section_types : Sequence[type]
+        Section classes in display order, each exposing ``workflow_step``.
+    header_type : type
+        Header class accepting the ordered step metadata.
+    header_color : str
+        Accent color for the workflow header.
+
+    Returns
+    -------
+    list[Any]
+        Header followed by its numbered and colored section instances.
+    """
+    sections = [
+        section_type(
+            page=page,
+            section_number=index,
+            card_color=styling.get_workflow_section_color(index),
+        )
+        for index, section_type in enumerate(section_types, start=1)
+    ]
+    header = header_type(
+        page=page,
+        card_color=header_color,
+        workflow_steps=[section.workflow_step for section in sections],
+    )
+    return [header, *sections]
 
 def _component_id(*, id_type: str, page_name: str, section_key: str) -> dict[str, str]:
     return {
@@ -155,9 +173,6 @@ def build_collapsible_section_layout(section: Any, *, page_name: str) -> Any:
         card=layout,
         page_name=page_name,
         section_number=section_number,
-        subtitle=CALIBRATION_WORKFLOW_SUBTITLES.get(page_name, {}).get(
-            str(section_number)
-        ),
         color_name=getattr(section, "card_color", None),
     )
 
@@ -165,8 +180,9 @@ def build_collapsible_section_layout(section: Any, *, page_name: str) -> Any:
 def build_calibration_workflow_section_card(
     *,
     page_name: str,
-    section_number: int,
-    subtitle: str | None,
+    section_number: int | None = None,
+    subtitle: str | None = None,
+    workflow_step: Any | None = None,
     card: dbc.Card | None = None,
     title: str | None = None,
     body_children: list[Any] | None = None,
@@ -178,8 +194,44 @@ def build_calibration_workflow_section_card(
 ) -> dbc.Card:
     """Build a workflow section with a compact, title-only collapse header.
 
-    The subtitle argument remains accepted for existing page builders.
+    Parameters
+    ----------
+    page_name : str
+        Page identifier used for the card and tooltip IDs.
+    section_number : int, optional
+        Section number when no workflow step is provided.
+    subtitle : str, optional
+        Hover text for existing callers without a workflow step.
+    workflow_step : WorkflowStep, optional
+        Step already numbered by a workflow header. Its title, number, color,
+        and hover text are used for the section card.
+    card : dbc.Card, optional
+        Existing section card to make collapsible.
+    title : str, optional
+        Title for a newly built card without a workflow step.
+    body_children : list[Any], optional
+        Body content for a newly built card.
+    tooltip_text : str, optional
+        Hover text for a newly built card without a workflow step.
+    tooltip_target_id, tooltip_id : Any, optional
+        IDs for a newly built card's hover target and tooltip.
+    color_name : str, optional
+        Accent color when no workflow step is provided.
+    style_overrides : dict[str, Any], optional
+        Additional styles for a newly built card.
+
+    Returns
+    -------
+    dbc.Card
+        Collapsible section card.
     """
+    if workflow_step is not None:
+        section_number = int(workflow_step.number)
+        title = workflow_step.title
+        tooltip_text = workflow_step.tooltip_text
+        color_name = workflow_step.color_name
+    if section_number is None:
+        raise ValueError("section_number or a numbered workflow_step is required")
     if card is None:
         if title is None or body_children is None:
             raise ValueError(

@@ -27,9 +27,43 @@ class CrossCalibrationPage:
                 "Create a transfer calibration from a primary reference bead set used less often to a cheaper routine bead set measured more often. "
                 "This workflow is experimental and may change as transfer-calibration support develops."
             ),
-            steps=self._build_header_steps(),
+            steps=[self.upload_step, self.result_step, self.export_step],
             column_kwargs={"xl": True},
         )
+
+    upload_step = WorkflowStep(
+        title="Load primary and secondary calibrations",
+        description=(
+            "Upload the primary reference and routine-bead calibrations used to build "
+            "the transfer relation."
+        ),
+        hover_description=(
+            "Load the reference and routine-bead calibrations used to build the "
+            "transfer relation."
+        ),
+    )
+
+    result_step = WorkflowStep(
+        title="Review transfer relation",
+        description=(
+            "Inspect the fitted transfer relation between the routine bead and primary "
+            "calibration."
+        ),
+        hover_description=(
+            "Inspect the fitted relation before exporting it for routine-bead "
+            "calibration."
+        ),
+    )
+
+    export_step = WorkflowStep(
+        title="Export transfer relation",
+        description=(
+            "Download the transfer calibration for later use with the routine bead set."
+        ),
+        hover_description=(
+            "Download the transfer calibration for later use with the routine bead set."
+        ),
+    )
 
     def layout(self) -> dbc.Container:
         return dbc.Container(
@@ -81,28 +115,6 @@ class CrossCalibrationPage:
             step_target_page_name=self.ids.page_prefix,
         )
 
-    def _build_header_steps(self) -> list[WorkflowStep]:
-        return [
-            WorkflowStep(
-                title="Load primary calibration",
-                description=(
-                    "Upload the high-confidence calibration built from the expensive bead set. "
-                    "This defines the primary calibrated scale you want to preserve over time."
-                ),
-            ),
-            WorkflowStep(
-                title="Load routine-bead calibration",
-                description=(
-                    "Upload the cheaper secondary bead calibration measured more often on the same detector."
-                ),
-            ),
-            WorkflowStep(
-                title="Build transfer relation",
-                description=(
-                    "Fit the routine bead peaks onto the primary calibrated scale so the secondary bead set can act as a weekly bridge."
-                ),
-            ),
-        ]
 
     def _build_upload_card(self) -> dbc.Card:
         body_children = [
@@ -167,11 +179,8 @@ class CrossCalibrationPage:
         ]
         return build_calibration_workflow_section_card(
             page_name=self.ids.page_prefix,
-            section_number=1,
-            title="Load primary and secondary calibrations",
-            subtitle="Load the reference and routine-bead calibrations used to build the transfer relation.",
+            workflow_step=self.workflow_header.get_workflow_step(workflow_step=self.upload_step),
             body_children=body_children,
-            color_name=styling.get_workflow_section_color(1),
         )
 
     def _build_upload_panel(
@@ -272,9 +281,7 @@ class CrossCalibrationPage:
     def _build_result_card(self) -> dbc.Card:
         return build_calibration_workflow_section_card(
             page_name=self.ids.page_prefix,
-            section_number=2,
-            title="Review transfer relation",
-            subtitle="Inspect the fitted relation before exporting it for routine-bead calibration.",
+            workflow_step=self.workflow_header.get_workflow_step(workflow_step=self.result_step),
             body_children=[
                 dcc.Graph(
                     responsive=True,
@@ -305,15 +312,12 @@ class CrossCalibrationPage:
                     style_data=styling.DATATABLE["style_data"],
                 ),
             ],
-            color_name=styling.get_workflow_section_color(2),
         )
 
     def _build_export_card(self) -> dbc.Card:
         return build_calibration_workflow_section_card(
             page_name=self.ids.page_prefix,
-            section_number=3,
-            title="Export transfer relation",
-            subtitle="Download the transfer calibration for later use with the routine bead set.",
+            workflow_step=self.workflow_header.get_workflow_step(workflow_step=self.export_step),
             body_children=[
                 html.Div(
                     "Provide a file name to export the generated transfer calibration JSON.",
@@ -343,7 +347,6 @@ class CrossCalibrationPage:
                     },
                 ),
             ],
-            color_name=styling.get_workflow_section_color(3),
         )
 
     def register_callbacks(self) -> "CrossCalibrationPage":

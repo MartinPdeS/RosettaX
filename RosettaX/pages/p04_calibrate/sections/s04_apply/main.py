@@ -2,7 +2,7 @@
 import dash_bootstrap_components as dbc
 import logging
 from .callbacks import ApplyCallbacks
-from .layout import ApplyLayout
+from .layout import WORKFLOW_STEP, ApplyLayout
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -25,6 +25,8 @@ class Apply:
     - Delegate layout construction.
     - Delegate callback registration.
     """
+
+    workflow_step = WORKFLOW_STEP
 
     def __init__(
         self,

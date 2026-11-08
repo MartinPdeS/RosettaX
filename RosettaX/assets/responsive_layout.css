@@ -27,6 +27,27 @@
     outline-offset: -3px;
 }
 
+.rosettax-navigation-icon {
+    display: inline-block;
+    flex: 0 0 1.25rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    background-color: currentColor;
+    mask-size: contain;
+    mask-position: center;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: contain;
+    -webkit-mask-position: center;
+    -webkit-mask-repeat: no-repeat;
+}
+
+.rosettax-sidebar-footer {
+    margin-top: auto;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--rosettax-border-color);
+    flex-shrink: 0;
+}
+
 .rosettax-reference-table .dash-cell,
 .rosettax-reference-table .dash-header {
     vertical-align: middle !important;

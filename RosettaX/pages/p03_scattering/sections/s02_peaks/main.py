@@ -2,6 +2,7 @@
 import dash
 import dash_bootstrap_components as dbc
 import logging
+from RosettaX.ui import WorkflowStep
 from RosettaX.utils import ui_forms
 from RosettaX.workflow.peak.adapters.scattering import ScatteringPeakWorkflowAdapter
 from RosettaX.workflow.peak.callbacks.main import register_peak_callbacks
@@ -25,6 +26,19 @@ class Peaks:
     """
     Scattering peak detection section.
     """
+
+    workflow_step = WorkflowStep(
+        title="Detect peaks",
+        description=(
+            "Select the scattering detector channel, inspect the event distribution, "
+            "and detect the bead population peaks from the uploaded FCS file."
+        ),
+        hover_description=(
+            "Use this section to detect bead population peaks in the scattering "
+            "reference FCS file. The selected peak positions are passed to the "
+            "calibration standard table and used later to fit the instrument response."
+        ),
+    )
 
     def __init__(
         self,
@@ -78,14 +92,10 @@ class Peaks:
         Build the section title with compact hover help.
         """
         return ui_forms.build_title_with_info(
-            title=f"{self.section_number}. Scattering peak detection",
+            title=f"{self.section_number}. {self.workflow_step.title}",
             tooltip_target_id=self.section_tooltip_target_id,
             tooltip_id=self.section_tooltip_id,
-            tooltip_text=(
-                "Use this section to detect bead population peaks in the scattering "
-                "reference FCS file. The selected peak positions are passed to the "
-                "calibration standard table and used later to fit the instrument response."
-            ),
+            tooltip_text=self.workflow_step.tooltip_text,
         )
 
     def _build_graph_title(self) -> dash.html.Div:

@@ -1,5 +1,4 @@
 import dash
-from .layout import CALIBRATION_WORKFLOW
 
 
 def register_callbacks(section) -> None:
@@ -33,7 +32,7 @@ def register_callbacks(section) -> None:
         if completed_count == 4 and state.get("calibration_saved"):
             completed_count = 5
 
-        return CALIBRATION_WORKFLOW.build_progress(
+        return section.workflow_header.build_progress(
             completed_count=completed_count,
             page_name=section.page.ids.page_name,
         )

@@ -2,6 +2,7 @@
 import dash_bootstrap_components as dbc
 import logging
 from . import callbacks, layout
+from RosettaX.ui import WorkflowStep
 from RosettaX.utils import RuntimeConfig
 from RosettaX.workflow.table.fluorescence import (
     CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME,
@@ -31,6 +32,20 @@ class ReferenceTable:
     This section owns fluorescence reference table behavior. Generic table
     rendering is delegated to ``ReferenceTableLayout``.
     """
+
+    workflow_step = WorkflowStep(
+        title="Add standard units to calibration table",
+        description=(
+            "Add standard units (ABC, ERF, MESF) to the calibration table. The provided "
+            "values define the calibrated fluorescence scale."
+        ),
+        hover_description=(
+            "Enter the known MESF values for the fluorescence calibration beads and use "
+            "the fluorescence peak detection section to fill the measured peak "
+            "positions. This table is the source of truth for the fluorescence "
+            "calibration fit."
+        ),
+    )
 
     calibrated_intensity_column_name = FluorescenceReferenceTable.column_calibrated_intensity
     measured_intensity_column_name = FluorescenceReferenceTable.column_measured_intensity

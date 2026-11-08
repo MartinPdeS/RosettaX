@@ -3,6 +3,7 @@ import dash
 import dash_bootstrap_components as dbc
 import logging
 from ...state import ScatteringPageState
+from RosettaX.ui import WorkflowStep
 from RosettaX.utils import ui_forms
 from RosettaX.workflow.upload.adapters import ScatteringUploadAdapter
 from RosettaX.workflow.upload.callbacks import register_upload_callbacks
@@ -17,6 +18,19 @@ class Upload:
     """
     Scattering FCS upload section.
     """
+
+    workflow_step = WorkflowStep(
+        title="Upload bead FCS",
+        description=(
+            "Load the scattering bead file acquired on the instrument. This file "
+            "becomes the source for detector selection and peak detection."
+        ),
+        hover_description=(
+            "Upload an FCS file measured from calibration beads. The bead populations "
+            "should have known reference values, so RosettaX can link measured peak "
+            "positions to physical calibration standards."
+        ),
+    )
 
     def __init__(
         self,
@@ -67,15 +81,10 @@ class Upload:
         Build the card title with compact hover help.
         """
         return ui_forms.build_title_with_info(
-            title=f"{self.section_number}. Upload calibration FCS file",
+            title=f"{self.section_number}. {self.workflow_step.title}",
             tooltip_target_id=self.upload_tooltip_target_id,
             tooltip_id=self.upload_tooltip_id,
-            tooltip_text=(
-                "Upload an FCS file measured from calibration beads. "
-                "The bead populations should have known reference values, "
-                "so RosettaX can link measured peak positions to physical "
-                "calibration standards."
-            ),
+            tooltip_text=self.workflow_step.tooltip_text,
         )
 
     def register_callbacks(self) -> None:

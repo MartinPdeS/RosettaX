@@ -3,11 +3,26 @@ import dash
 import dash_bootstrap_components as dbc
 import logging
 from . import services
+from RosettaX.ui import WorkflowStep
 from RosettaX.utils import ui_forms
 from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph, Scatter2DGraphIds
 from typing import Any
 
 logger = logging.getLogger(__name__)
+
+
+WORKFLOW_STEP = WorkflowStep(
+    title="Upload input FCS",
+    description=(
+        "Load one or more experimental FCS files that should receive the calibrated "
+        "output channels."
+    ),
+    hover_description=(
+        "Upload one or more FCS files to apply a saved calibration. When multiple files "
+        "are uploaded, RosettaX checks whether their channel structure is consistent "
+        "before continuing."
+    ),
+)
 
 
 class FilePickerLayout:
@@ -56,13 +71,11 @@ class FilePickerLayout:
         Build the section header.
         """
         return ui_forms.build_card_header_with_info(
-            title=f"{self.section_number}. Upload input FCS",
+            title=f"{self.section_number}. {WORKFLOW_STEP.title}",
             tooltip_target_id=self.header_tooltip_target_id,
             tooltip_id=self.header_tooltip_id,
             tooltip_text=(
-                "Upload one or more FCS files to apply a saved calibration. "
-                "When multiple files are uploaded, RosettaX checks whether "
-                "their channel structure is consistent before continuing."
+                WORKFLOW_STEP.tooltip_text
             ),
             color_name=self.card_color,
         )

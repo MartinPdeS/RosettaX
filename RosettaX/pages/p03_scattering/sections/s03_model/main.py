@@ -3,6 +3,7 @@
 import dash_bootstrap_components as dbc
 import logging
 from . import callbacks, layout
+from RosettaX.ui import WorkflowStep
 from RosettaX.workflow.scattering import ModelConfiguration
 from typing import Any
 
@@ -15,6 +16,17 @@ class Model:
     Layout builders own the component tree; services resolve local state.
     Reusable scientific behavior belongs to the scattering workflow.
     """
+
+    workflow_step = WorkflowStep(
+        title="Configure detector",
+        description=(
+            "Choose the scattering detector channel used for the calibration workflow."
+        ),
+        hover_description=(
+            "These controls define the illumination, detector geometry, and angular "
+            "sampling used to compute the calibration standard coupling values."
+        ),
+    )
 
     model_configuration = ModelConfiguration
 

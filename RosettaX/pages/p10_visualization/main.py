@@ -35,9 +35,43 @@ class VisualizationPage:
                 "Upload compatible FCS files, choose one to inspect, and view it "
                 "with a 1D histogram or a 2D scatter colored by local event density."
             ),
-            steps=self._build_steps(),
+            steps=[self.upload_step, self.settings_step, self.plot_step],
             column_kwargs={"xl": True},
         )
+
+    upload_step = WorkflowStep(
+        title="Upload FCS file",
+        description=(
+            "Load one or more compatible FCS files so RosettaX can read their channels "
+            "and metadata for plotting."
+        ),
+        hover_description=(
+            "Upload one or more FCS files with matching channels, FCS versions, and "
+            "detector voltages. The file selector in the plot settings lets you choose "
+            "which compatible file to inspect."
+        ),
+    )
+
+    settings_step = WorkflowStep(
+        title="Choose plot settings",
+        description=(
+            "Pick histogram or 2D scatter, then configure the plotted axes, scaling, "
+            "and event limit."
+        ),
+        hover_description=(
+            "Choose a file and plot type, then adjust the channels and display options."
+        ),
+    )
+
+    plot_step = WorkflowStep(
+        title="Inspect the data",
+        description=(
+            "Explore the plotted events to validate channels and distributions."
+        ),
+        hover_description=(
+            "Explore the selected data using the Plotly zoom, pan, and export controls."
+        ),
+    )
 
     def layout(self) -> html.Div:
         default_controls = services.resolve_visualization_control_defaults()
@@ -51,14 +85,7 @@ class VisualizationPage:
                 ),
                 self._build_header_card(),
                 self._build_section_card(
-                    section_number=1,
-                    title="Upload visualization FCS files",
-                    subtitle="Load compatible FCS files, then choose which file to inspect.",
-                    tooltip_text=(
-                        "Upload one or more FCS files with matching channels, FCS versions, "
-                        "and detector voltages. The file selector in the plot settings lets "
-                        "you choose which compatible file to inspect."
-                    ),
+                    workflow_step=self.workflow_header.get_workflow_step(workflow_step=self.upload_step),
                     body_children=[
                         ui_forms.build_upload_widget(
                             upload_id=self.ids.upload,
@@ -240,19 +267,13 @@ class VisualizationPage:
         return build_fcs_tool_card_stack(
             [
                 self._build_section_card(
-                    section_number=2,
-                    title="Plot settings",
-                    subtitle="Choose the file, plotted channels, scales, and event limit.",
-                    tooltip_text="Choose a file and plot type, then adjust the channels and display options.",
+                    workflow_step=self.workflow_header.get_workflow_step(workflow_step=self.settings_step),
                     body_children=[
                         html.Div(workspace.children[:2], style=workspace.style)
                     ],
                 ),
                 self._build_section_card(
-                    section_number=3,
-                    title="Data plot",
-                    subtitle="Inspect the plotted events and channel distributions.",
-                    tooltip_text="Explore the selected data using the Plotly zoom, pan, and export controls.",
+                    workflow_step=self.workflow_header.get_workflow_step(workflow_step=self.plot_step),
                     body_children=[
                         html.Div(workspace.children[2:], style=workspace.style)
                     ],
@@ -269,45 +290,15 @@ class VisualizationPage:
     def _build_section_card(
         self,
         *,
-        section_number: int,
-        title: str,
-        subtitle: str,
-        tooltip_text: str,
+        workflow_step: WorkflowStep,
         body_children: list[Any],
     ) -> dbc.Card:
-        section_key = title.lower().replace(" ", "-")
         return build_calibration_workflow_section_card(
             page_name=self.ids.page_prefix,
-            section_number=section_number,
-            title=title,
-            subtitle=subtitle,
+            workflow_step=workflow_step,
             body_children=body_children,
-            tooltip_text=tooltip_text,
-            tooltip_target_id=f"{self.ids.page_prefix}-{section_key}-info-target",
-            tooltip_id=f"{self.ids.page_prefix}-{section_key}-info-tooltip",
         )
 
-    def _build_steps(self) -> list[WorkflowStep]:
-        return [
-            WorkflowStep(
-                title="Upload FCS file",
-                description=(
-                    "Load one or more compatible FCS files so RosettaX can read their channels and metadata for plotting."
-                ),
-            ),
-            WorkflowStep(
-                title="Choose plot settings",
-                description=(
-                    "Pick histogram or 2D scatter, then configure the plotted axes, scaling, and event limit."
-                ),
-            ),
-            WorkflowStep(
-                title="Inspect the data",
-                description=(
-                    "Explore the plotted events to validate channels and distributions."
-                ),
-            ),
-        ]
 
     def register_callbacks(self) -> "VisualizationPage":
         @dash.callback(
