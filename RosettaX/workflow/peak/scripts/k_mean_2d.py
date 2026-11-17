@@ -1,6 +1,12 @@
 
 import logging
 import numpy as np
+from ._numerics import (  # noqa: F401
+    compute_quantile_gate,
+    initialize_kmeans_centers,
+    run_kmeans,
+    standardize_feature_matrix,
+)
 from .base import (
     BasePeakProcess,
     PeakProcessResult,
@@ -741,41 +747,6 @@ def prepare_axis_values(
     )
 
 
-def compute_quantile_gate(
-    *,
-    values: np.ndarray,
-    lower_quantile: float,
-    upper_quantile: float,
-) -> tuple[float, float]:
-    """
-    Compute lower and upper gate thresholds from quantiles.
-    """
-    values = np.asarray(
-        values,
-        dtype=float,
-    )
-
-    values = values[
-        np.isfinite(values)
-    ]
-
-    if values.size == 0:
-        return 0.0, 0.0
-
-    lower_gate, upper_gate = np.quantile(
-        values,
-        [
-            lower_quantile,
-            upper_quantile,
-        ],
-    )
-
-    return (
-        float(lower_gate),
-        float(upper_gate),
-    )
-
-
 def build_feature_matrix(
     *,
     x_axis_values: np.ndarray,
@@ -803,152 +774,6 @@ def build_feature_matrix(
             y_axis_values,
         ]
     )
-
-
-def standardize_feature_matrix(
-    *,
-    feature_matrix: np.ndarray,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """
-    Standardize columns of a feature matrix.
-    """
-    feature_center = np.median(
-        feature_matrix,
-        axis=0,
-    )
-
-    feature_scale = np.std(
-        feature_matrix,
-        axis=0,
-    )
-
-    feature_scale = np.where(
-        feature_scale > 0.0,
-        feature_scale,
-        1.0,
-    )
-
-    standardized_feature_matrix = (
-        feature_matrix
-        - feature_center
-    ) / feature_scale
-
-    return (
-        standardized_feature_matrix,
-        feature_center,
-        feature_scale,
-    )
-
-
-def run_kmeans(
-    *,
-    feature_matrix: np.ndarray,
-    cluster_count: int,
-    maximum_iterations: int,
-) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Run deterministic K means.
-    """
-    feature_matrix = np.asarray(
-        feature_matrix,
-        dtype=float,
-    )
-
-    if feature_matrix.ndim != 2:
-        raise ValueError("feature_matrix must be two dimensional.")
-
-    if feature_matrix.shape[0] == 0:
-        return (
-            np.asarray([], dtype=int),
-            np.asarray([], dtype=float).reshape(0, feature_matrix.shape[1]),
-        )
-
-    centers = initialize_kmeans_centers(
-        feature_matrix=feature_matrix,
-        cluster_count=cluster_count,
-    )
-
-    labels = np.zeros(
-        feature_matrix.shape[0],
-        dtype=int,
-    )
-
-    for _iteration_index in range(int(maximum_iterations)):
-        distances = np.sum(
-            (
-                feature_matrix[:, None, :]
-                - centers[None, :, :]
-            )
-            ** 2,
-            axis=2,
-        )
-
-        next_labels = np.argmin(
-            distances,
-            axis=1,
-        )
-
-        next_centers = centers.copy()
-
-        for cluster_index in range(int(cluster_count)):
-            cluster_mask = next_labels == cluster_index
-
-            if np.any(cluster_mask):
-                next_centers[cluster_index] = np.mean(
-                    feature_matrix[cluster_mask],
-                    axis=0,
-                )
-
-        if np.array_equal(next_labels, labels) and np.allclose(
-            next_centers,
-            centers,
-            rtol=1e-7,
-            atol=1e-9,
-        ):
-            labels = next_labels
-            centers = next_centers
-            break
-
-        labels = next_labels
-        centers = next_centers
-
-    return labels, centers
-
-
-def initialize_kmeans_centers(
-    *,
-    feature_matrix: np.ndarray,
-    cluster_count: int,
-) -> np.ndarray:
-    """
-    Initialize K means centers deterministically along the x feature axis.
-    """
-    initialization_axis = feature_matrix[:, 0]
-
-    quantile_positions = np.linspace(
-        0.0,
-        1.0,
-        int(cluster_count) + 2,
-    )[1:-1]
-
-    center_indices = [
-        int(
-            np.argmin(
-                np.abs(
-                    initialization_axis
-                    - np.quantile(
-                        initialization_axis,
-                        quantile_position,
-                    )
-                )
-            )
-        )
-        for quantile_position in quantile_positions
-    ]
-
-    return feature_matrix[
-        center_indices,
-    ].copy()
 
 
 def convert_kmeans_centers_to_peak_positions(

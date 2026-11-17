@@ -1,6 +1,10 @@
 
 import logging
 import numpy as np
+from ._numerics import (  # noqa: F401
+    compute_quantile_gate,
+    inverse_transform_position,
+)
 from .base import (
     BasePeakProcess,
     PeakProcessResult,
@@ -993,59 +997,6 @@ def prepare_axis_values(
         original_y_values,
         transformed_x_values,
         transformed_y_values,
-    )
-
-
-def inverse_transform_position(
-    *,
-    transformed_position: float,
-    use_log_transform: bool,
-) -> float:
-    """
-    Convert a transformed peak position back to original detector units.
-    """
-    if use_log_transform:
-        return float(
-            10.0 ** float(transformed_position),
-        )
-
-    return float(
-        transformed_position,
-    )
-
-
-def compute_quantile_gate(
-    *,
-    values: np.ndarray,
-    lower_quantile: float,
-    upper_quantile: float,
-) -> tuple[float, float]:
-    """
-    Compute lower and upper gate thresholds from quantiles.
-    """
-    values = np.asarray(
-        values,
-        dtype=float,
-    )
-
-    values = values[
-        np.isfinite(values)
-    ]
-
-    if values.size == 0:
-        return 0.0, 0.0
-
-    lower_gate, upper_gate = np.quantile(
-        values,
-        [
-            lower_quantile,
-            upper_quantile,
-        ],
-    )
-
-    return (
-        float(lower_gate),
-        float(upper_gate),
     )
 
 

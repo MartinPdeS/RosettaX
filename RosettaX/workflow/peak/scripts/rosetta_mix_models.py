@@ -2,7 +2,7 @@
 
 import numpy as np
 from .base import resolve_edge_artifact_filter_enabled
-from .rosetta_mix_algorithms import (
+from .rosetta_mix_support import (
     resolve_enabled_setting,
     resolve_float,
     resolve_integer,

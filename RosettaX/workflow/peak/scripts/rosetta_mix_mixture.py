@@ -1,12 +1,10 @@
 """Experimental Rosetta mode with prominence and joint scatter mixture fitting."""
 
 from .base import PeakProcessResult
+from .rosetta_mix_diagnostics import build_marker_anchor_warning
 from .rosetta_mix_mixture_fitting import find_mixture_scatter_peaks
-from .rosetta_mix_modes import (
-    RosettaMixSizeAssignmentProcess,
-    build_marker_anchor_warning,
-)
-from .rosetta_mix_v1 import (
+from .rosetta_mix_modes import RosettaMixSizeAssignmentProcess
+from .rosetta_mix_sizing import (
     _as_positive_float,
     bright_marker_scatter_anchor_is_reliable,
     build_peak_metadata,

@@ -11,7 +11,7 @@ from pathlib import Path
 
 
 def test_rosetta_calibration_on_real_beads() -> None:
-    """Check the real FCS detection, calibration, and application baselines."""
+    """Check all Rosetta modes and the real calibration/application baselines."""
     repository = Path(__file__).resolve().parents[2]
     integration_test = repository / "integration_tests" / "scattering_fcs_test.py"
     result = subprocess.run(
@@ -20,6 +20,7 @@ def test_rosetta_calibration_on_real_beads() -> None:
             "-m",
             "pytest",
             str(integration_test),
+            str(repository / "integration_tests" / "rosetta_scripts_fcs_test.py"),
             "-o",
             "addopts=",
             "-q",
@@ -27,7 +28,7 @@ def test_rosetta_calibration_on_real_beads() -> None:
         cwd=repository,
         capture_output=True,
         text=True,
-        timeout=180,
+        timeout=300,
         check=False,
     )
     assert result.returncode == 0, (
