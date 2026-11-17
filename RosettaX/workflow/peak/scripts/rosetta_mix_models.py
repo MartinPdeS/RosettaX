@@ -156,6 +156,7 @@ class RosettaFluorescenceAnalysis:
 class RosettaMarkerScatter:
     points: list[dict[str, Any]]
     guide_positions: list[float]
+    diagnostics: list[dict[str, Any]]
 
 
 @dataclass(frozen=True)

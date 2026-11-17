@@ -35,10 +35,6 @@ def register_visibility_callbacks(
         ids=ids,
     )
 
-    register_graph_helper_legend_callback(
-        ids=ids,
-    )
-
     register_status_area_visibility_callback(
         ids=ids,
     )
@@ -114,9 +110,17 @@ def build_advanced_mode_control_style(
     """
     Build the advanced mode toggle style for the selected process state.
     """
-    return build_graph_toggle_control_style(
-        process_name,
-    )
+    if not has_selected_process(process_name):
+        return {"display": "none"}
+
+    process = registry.get_process_instance(process_name=process_name)
+    if process is not None and (
+        not getattr(process, "supports_advanced_mode", True)
+        or getattr(process, "always_advanced_mode", False)
+    ):
+        return {"display": "none"}
+
+    return {"display": "inline-flex"}
 
 
 def build_data_filter_control_style(
@@ -127,6 +131,13 @@ def build_data_filter_control_style(
     """Show the shared zero/saturation filter only in advanced mode."""
     if not has_selected_process(process_name):
         return {"display": "none"}
+
+    process = registry.get_process_instance(process_name=process_name)
+    if process is not None:
+        if getattr(process, "always_advanced_mode", False):
+            return {"display": "inline-flex"}
+        if not getattr(process, "supports_advanced_mode", True):
+            return {"display": "none"}
 
     if not graph_toggle_is_enabled(advanced_mode_value):
         return {"display": "none"}
@@ -147,7 +158,23 @@ def build_process_settings_container_style(
             "display": "none",
         }
 
-    if not graph_toggle_is_enabled(advanced_mode_value):
+    process = registry.get_process_instance(process_name=process_name)
+    if process is not None:
+        if getattr(process, "always_show_process_settings", False):
+            return {
+                "display": "flex",
+                "alignItems": "end",
+                "gap": "12px",
+                "flexWrap": "wrap",
+                "marginTop": "10px",
+            }
+        if not getattr(process, "supports_advanced_mode", True):
+            return {"display": "none"}
+
+    if (
+        not graph_toggle_is_enabled(advanced_mode_value)
+        and registry.get_selected_process_name(process_name) != "Rosetta Script V1"
+    ):
         return {
             "display": "none",
         }
@@ -196,6 +223,9 @@ def build_rosetta_advanced_only_style(
     selected_process_name = registry.get_selected_process_name(
         process_name,
     )
+    selected_process = registry.get_process_instance(
+        process_name=selected_process_name,
+    )
 
     if not is_rosetta_process_name(
         selected_process_name,
@@ -209,7 +239,10 @@ def build_rosetta_advanced_only_style(
             "display": "none",
         }
 
-    if not graph_toggle_is_enabled(advanced_mode_value):
+    if (
+        not getattr(selected_process, "always_advanced_mode", False)
+        and not graph_toggle_is_enabled(advanced_mode_value)
+    ):
         return {
             "display": "none",
         }
@@ -253,8 +286,14 @@ def build_graph_helper_panel(
     selected_process_name = registry.get_selected_process_name(
         process_name,
     )
+    selected_process = registry.get_process_instance(
+        process_name=selected_process_name,
+    )
 
-    if not graph_toggle_is_enabled(advanced_mode_value):
+    if (
+        not getattr(selected_process, "always_advanced_mode", False)
+        and not graph_toggle_is_enabled(advanced_mode_value)
+    ):
         return [], {**base_style, "display": "none"}
 
     title = "Workflow guide"
@@ -346,7 +385,10 @@ def build_graph_helper_panel(
     if (
         is_rosetta_process_name(selected_process_name)
         and graph_toggle_is_enabled(graph_toggle_value)
-        and graph_toggle_is_enabled(advanced_mode_value)
+        and (
+            getattr(selected_process, "always_advanced_mode", False)
+            or graph_toggle_is_enabled(advanced_mode_value)
+        )
     ):
         children.extend(
             [
@@ -697,7 +739,7 @@ def register_status_area_visibility_callback(
             "gap": "10px",
         }
 
-        if registry.get_selected_process_name(process_name) == "Rosetta Script V1":
+        if is_rosetta_process_name(process_name):
             return base_style
 
         visibility_style = build_rosetta_advanced_only_style(

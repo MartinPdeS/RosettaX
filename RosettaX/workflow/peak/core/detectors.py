@@ -74,6 +74,7 @@ def populate_peak_script_detector_dropdowns(
     runtime_config_data: Any = None,
     detector_selection_runtime_config_path: str | None = None,
     auto_select_rosetta_v1: bool = False,
+    auto_select_process_name: str | None = None,
     reset_rosetta_v1: bool = False,
     logger: logging.Logger,
 ) -> tuple[list[list[dict[str, Any]]], list[Any]]:
@@ -178,7 +179,11 @@ def populate_peak_script_detector_dropdowns(
             index
             for index, detector_dropdown_id in enumerate(detector_dropdown_ids or [])
             if isinstance(detector_dropdown_id, dict)
-            and detector_dropdown_id.get("process") == "Rosetta Script V1"
+            and str(detector_dropdown_id.get("process", "")).startswith("Rosetta Script")
+            and (
+                auto_select_process_name is None
+                or detector_dropdown_id.get("process") == auto_select_process_name
+            )
             and detector_dropdown_id.get("channel") == "scattering"
         ),
         None,
@@ -210,16 +215,23 @@ def populate_peak_script_detector_dropdowns(
         )
 
         detector_role = None
-        is_rosetta_v1 = (
+        is_rosetta_script = (
             isinstance(detector_dropdown_id, dict)
-            and detector_dropdown_id.get("process") == "Rosetta Script V1"
+            and str(detector_dropdown_id.get("process", "")).startswith("Rosetta Script")
+        )
+        auto_select_this_process = auto_select_rosetta_v1 and (
+            auto_select_process_name is None
+            or (
+                isinstance(detector_dropdown_id, dict)
+                and detector_dropdown_id.get("process") == auto_select_process_name
+            )
         )
         if isinstance(detector_dropdown_id, dict):
             detector_role = detector_dropdown_id.get("channel")
 
-        if is_rosetta_v1 and reset_rosetta_v1:
+        if is_rosetta_script and reset_rosetta_v1:
             default_value = None
-        elif is_rosetta_v1:
+        elif is_rosetta_script:
             selected = (
                 infer_rosetta_v1_channel(
                     column_names=column_names,
@@ -231,7 +243,7 @@ def populate_peak_script_detector_dropdowns(
                     ),
                     matched_rule=matched_rule,
                 )
-                if auto_select_rosetta_v1
+                if auto_select_this_process
                 else None
             )
             default_value = selected or (current_value if current_value in valid_values else None)

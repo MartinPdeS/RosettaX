@@ -138,28 +138,13 @@ class PeakLayout:
                     processes=processes,
                 )
             ),
+            self._build_process_status_area(
+                processes=processes,
+            ),
             self._build_graph_container(
                 container_id=self.ids.graph_toggle_container,
                 graph_id=self.ids.graph_hist,
                 axis_scale_toggle_id=self._get_axis_scale_toggle_id(),
-            ),
-            self._build_process_status_area(
-                processes=processes,
-            ),
-            html.Div(
-                id=self.ids.graph_helper_legend,
-                style={
-                    "display": "none",
-                    "marginTop": "8px",
-                    "marginBottom": "14px",
-                    "padding": "10px 12px",
-                    "borderRadius": "8px",
-                    "backgroundColor": "#f6f9fc",
-                    "border": "1px solid #d6e0ea",
-                    "fontSize": "0.9rem",
-                    "lineHeight": "1.45",
-                    "color": "#22324a",
-                },
             ),
         ]
 
@@ -356,13 +341,15 @@ class PeakLayout:
                 ([
                     dbc.Button(
                         "Auto-select detectors",
-                        id=self.ids.rosetta_v1_auto_select_detectors,
+                        id=self.ids.rosetta_auto_select_detectors(
+                            process_name=process_name,
+                        ),
                         n_clicks=0,
                         size="sm",
                         color="light",
                         className="peak-action-button peak-action-button--auto",
                     ),
-                ] if process_name == "Rosetta Script V1" else [])
+                ] if process_name.startswith("Rosetta Script") else [])
                 + self._build_process_action_buttons(
                     process_name=process_name,
                     supports_automatic_action=bool(
@@ -387,8 +374,6 @@ class PeakLayout:
                     "marginTop": "12px",
                 },
             ),
-            html.Div(id=self.ids.rosetta_v1_detector_suggestions, style={"marginTop": "12px"})
-            if process_name == "Rosetta Script V1" else None,
         ]
 
         return dbc.Card(
@@ -413,7 +398,7 @@ class PeakLayout:
         processes: list[Any],
     ) -> html.Div:
         """
-        Build the shared process status area below the graph.
+        Build the shared process status area above the graph.
         """
         return dcc.Loading(
             html.Div(
@@ -435,7 +420,8 @@ class PeakLayout:
             type="default",
             color="#0d6efd",
             style={
-                "marginTop": "12px",
+                "marginTop": "8px",
+                "marginBottom": "8px",
                 "display": "flex",
                 "flexDirection": "column",
                 "gap": "10px",
@@ -476,8 +462,8 @@ class PeakLayout:
                     ),
                     label=label,
                     placeholder=f"Select {label.lower()}",
-                    persistence=process_name != "Rosetta Script V1",
-                    visually_hidden_label=process_name == "Rosetta Script V1",
+                    persistence=not process_name.startswith("Rosetta Script"),
+                    visually_hidden_label=process_name.startswith("Rosetta Script"),
                 )
             )
 

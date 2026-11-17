@@ -247,16 +247,18 @@ def add_selected_peak_markers(
     the plot area.
     """
     points = graph_payload.extract_points_from_peak_lines_payload(builder)
-
-    if not points:
-        return figure
+    is_rosetta_script = builder._is_rosetta_script_process()
+    is_size_assignment_warning = (
+        isinstance(builder.peak_lines_payload, dict)
+        and bool(builder.peak_lines_payload.get("rosetta_size_assignment_warning"))
+    )
 
     labels = graph_payload.extract_labels_from_peak_lines_payload(
         builder,
         point_count=len(points),
     )
 
-    if builder._is_rosetta_script_process():
+    if is_rosetta_script:
         scatter_guide_positions = (
             graph_payload.extract_numeric_list_from_peak_lines_payload(
                 builder,
@@ -296,7 +298,7 @@ def add_selected_peak_markers(
                 line_color="#7c3aed" if is_marker else ("#008c80" if classified_points else "#1f9d55"),
             )
 
-        if builder._advanced_mode_is_enabled():
+        if builder._advanced_mode_is_enabled() or is_size_assignment_warning:
             for fluorescence_position in fluorescence_guide_positions:
                 add_horizontal_shape_line(
                     builder,
@@ -307,7 +309,23 @@ def add_selected_peak_markers(
                     line_color="#d64545",
                 )
 
+        if is_size_assignment_warning and fluorescence_guide_positions:
+            figure.add_trace(
+                go.Scatter(
+                    x=[None, None],
+                    y=[None, None],
+                    mode="lines",
+                    name="Fluorescence marker candidate",
+                    showlegend=True,
+                    hoverinfo="skip",
+                    line={"width": 2, "dash": "dash", "color": "#d64545"},
+                )
+            )
+
     else:
+        if not points:
+            return figure
+
         for point in points:
             add_vertical_shape_line(
                 builder,
@@ -318,7 +336,10 @@ def add_selected_peak_markers(
                 line_color=None,
             )
 
-    if builder._is_rosetta_script_process() and any(point.get("kind") in ("marker", "non_fluorescent") for point in points):
+    if not points:
+        return figure
+
+    if is_rosetta_script and any(point.get("kind") in ("marker", "non_fluorescent") for point in points):
         for kind, name in (
             ("non_fluorescent", "Non-fluorescent peak"),
             ("marker", "Fluorescent marker"),

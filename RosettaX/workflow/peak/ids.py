@@ -46,6 +46,18 @@ class PeakIds:
         return f"{self.prefix}-rosetta-v1-auto-select-detectors"
 
     @property
+    def rosetta_auto_select_detectors_type(self) -> str:
+        """Return the pattern ID type shared by Rosetta detector buttons."""
+        return f"{self.prefix}-rosetta-auto-select-detectors"
+
+    def rosetta_auto_select_detectors(self, *, process_name: str) -> dict[str, Any]:
+        """Return a process-specific Rosetta detector selection button ID."""
+        return {
+            "type": self.rosetta_auto_select_detectors_type,
+            "process": process_name,
+        }
+
+    @property
     def rosetta_v1_detector_suggestions(self) -> str:
         """Return the ID for the detector suggestion explanation."""
         return f"{self.prefix}-rosetta-v1-detector-suggestions"

@@ -27,50 +27,6 @@ def register_detector_dropdown_callbacks(
     """
 
     @dash.callback(
-        dash.Output(ids.rosetta_v1_detector_suggestions, "children"),
-        dash.Input(ids.rosetta_v1_auto_select_detectors, "n_clicks"),
-        dash.Input(page_state_store_id, "data"),
-        prevent_initial_call=True,
-    )
-    def explain_detector_suggestions(clicks: Any, page_state_payload: Any) -> Any:
-        """Explain the channel suggestions made for the current FCS file."""
-        if not clicks:
-            return ""
-        page_state = adapter.get_page_state_from_payload(page_state_payload)
-        file_path = adapter.get_uploaded_fcs_path(page_state=page_state)
-        if not file_path:
-            return "Load an FCS file before selecting detectors."
-        try:
-            with detectors.FCSFile(file_path) as fcs:
-                channel_names = fcs.get_column_names()
-                rule = detectors.resolve_detector_auto_detect_rule(metadata=fcs.get_metadata())
-        except Exception:
-            logger.exception("Could not read FCS file for detector suggestions")
-            return "Could not read detector names from the selected FCS file."
-        scatter, scatter_reason = detectors.resolve_rosetta_v1_suggestion(
-            column_names=channel_names, detector_role="scattering", matched_rule=rule,
-        )
-        _, fluorescence_reason = detectors.resolve_rosetta_v1_suggestion(
-            column_names=channel_names,
-            detector_role="green_fluorescence",
-            preferred_wavelength_nm=detectors.extract_channel_wavelength_nm(channel_name=scatter),
-            matched_rule=rule,
-        )
-        return dash.html.Div(
-            [
-                dash.html.Div([dash.html.Strong("Scattering: "), scatter_reason]),
-                dash.html.Div([dash.html.Strong("Green fluorescence: "), fluorescence_reason]),
-            ],
-            style={
-                "backgroundColor": "rgba(128, 128, 128, 0.08)",
-                "borderRadius": "8px",
-                "padding": "10px 12px",
-                "fontSize": "0.88rem",
-                "lineHeight": "1.5",
-            },
-        )
-
-    @dash.callback(
         dash.Output(
             ids.process_detector_dropdown_pattern(),
             "options",
@@ -82,7 +38,14 @@ def register_detector_dropdown_callbacks(
         dash.Input(page_state_store_id, "data"),
         dash.Input(ids.process_dropdown, "value"),
         dash.Input("runtime-config-store", "data"),
-        dash.Input(ids.rosetta_v1_auto_select_detectors, "n_clicks", allow_optional=True),
+        dash.Input(
+            {
+                "type": ids.rosetta_auto_select_detectors_type,
+                "process": dash.ALL,
+            },
+            "n_clicks",
+            allow_optional=True,
+        ),
         dash.State(
             ids.process_detector_dropdown_pattern(),
             "id",
@@ -118,12 +81,20 @@ def register_detector_dropdown_callbacks(
             uploaded_fcs_path=uploaded_fcs_path,
             detector_dropdown_ids=detector_dropdown_ids,
             reset_rosetta_v1=(
-                selected_process == "Rosetta Script V1"
+                str(selected_process or "").startswith("Rosetta Script")
                 and ids.process_dropdown in dash.ctx.triggered_prop_ids.values()
             ),
             auto_select_rosetta_v1=(
-                bool(auto_select_clicks)
-                and dash.ctx.triggered_id == ids.rosetta_v1_auto_select_detectors
+                isinstance(dash.ctx.triggered_id, dict)
+                and dash.ctx.triggered_id.get("type") == ids.rosetta_auto_select_detectors_type
+                and dash.ctx.triggered_id.get("process") == selected_process
+            ),
+            auto_select_process_name=(
+                str(dash.ctx.triggered_id.get("process"))
+                if isinstance(dash.ctx.triggered_id, dict)
+                and dash.ctx.triggered_id.get("type") == ids.rosetta_auto_select_detectors_type
+                and dash.ctx.triggered_id.get("process") == selected_process
+                else None
             ),
             current_detector_values=current_detector_values,
             runtime_config_data=runtime_config_data,

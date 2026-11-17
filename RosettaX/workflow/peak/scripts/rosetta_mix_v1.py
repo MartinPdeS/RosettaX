@@ -45,12 +45,16 @@ class FluorescenceGuidedScatterPeakProcessV1(FluorescenceGuidedScatterPeakProces
     """
 
     process_name = "Rosetta Script V1"
-    process_label = "Rosetta Script"
+    process_label = "Rosetta Script — Debug"
     description = (
-        "Identify scatter peaks and estimate bead sizes using the 140 nm and "
-        "380 nm fluorescent markers."
+        "Custom Rosetta Script with editable detection settings and marker-based "
+        "bead sizing from the 140 nm and 380 nm fluorescent markers."
     )
-    sort_order = 0
+    sort_order = 3
+    supports_advanced_mode = False
+    always_advanced_mode = True
+    always_show_process_settings = True
+    supports_debug_diagnostics = True
 
     def get_detector_channel_labels(self) -> dict[str, str]:
         """Return the labels for the required FCS channels.
@@ -77,12 +81,16 @@ class FluorescenceGuidedScatterPeakProcessV1(FluorescenceGuidedScatterPeakProces
         """
         Run Rosetta detection, then infer Rosetta Mix diameter assignments.
         """
+        resolved_process_settings = dict(process_settings or {})
+        if self.always_advanced_mode:
+            resolved_process_settings["advanced_mode"] = ["enabled"]
+
         result = super().run_automatic_action(
             backend=backend,
             detector_channels=detector_channels,
             peak_count=peak_count,
             max_events_for_analysis=max_events_for_analysis,
-            process_settings=process_settings,
+            process_settings=resolved_process_settings,
         )
 
         if result is None:
@@ -98,12 +106,22 @@ class FluorescenceGuidedScatterPeakProcessV1(FluorescenceGuidedScatterPeakProces
         if status_suffix.startswith("Warning:") or any(
             not row.get("particle_diameter_nm") for row in resolved_rows
         ):
+            debug_diagnostics = (
+                result.peak_lines_payload.get("rosetta_debug_diagnostics")
+                if isinstance(result.peak_lines_payload, dict)
+                else None
+            )
+            warning_payload = (
+                {"rosetta_debug_diagnostics": debug_diagnostics}
+                if isinstance(debug_diagnostics, dict)
+                else {}
+            )
             return replace(
                 result,
                 peak_positions=[],
                 new_peak_positions=[],
                 table_prefill_rows=[],
-                peak_lines_payload={},
+                peak_lines_payload=warning_payload,
                 status=(
                     status_suffix
                     if status_suffix.startswith("Warning:")
@@ -118,7 +136,7 @@ class FluorescenceGuidedScatterPeakProcessV1(FluorescenceGuidedScatterPeakProces
             updated_status = f"{updated_status} {status_suffix}".strip()
 
         if not _advanced_mode_enabled(
-            process_settings=process_settings,
+            process_settings=resolved_process_settings,
         ):
             updated_status = ""
 

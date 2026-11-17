@@ -248,4 +248,6 @@ def _is_rosetta_script_process_name(
     return normalized_name in {
         "rosetta script",
         "rosetta script v1",
+        "rosetta script conservative",
+        "rosetta script sensitive",
     }

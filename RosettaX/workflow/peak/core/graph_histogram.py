@@ -116,6 +116,21 @@ def build_default_1d_histogram_figure(builder: PeakWorkflowGraphBuilder) -> go.F
     )
 
     peak_positions = graph_payload.extract_x_positions_from_peak_lines_payload(builder)
+    if (
+        builder._is_rosetta_script_process()
+        and isinstance(builder.peak_lines_payload, dict)
+        and builder.peak_lines_payload.get("rosetta_size_assignment_warning")
+        and str(detector_column)
+        == str(builder.detector_channels.get("green_fluorescence") or "")
+    ):
+        fluorescence_marker_positions = (
+            graph_payload.extract_numeric_list_from_peak_lines_payload(
+                builder,
+                key="fluorescence_guide_positions",
+            )
+        )
+        if fluorescence_marker_positions:
+            peak_positions = fluorescence_marker_positions
 
     figure = plottings.build_histogram_figure(
         histogram_result=histogram_result,

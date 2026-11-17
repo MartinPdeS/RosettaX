@@ -405,6 +405,18 @@ class PeakWorkflowGraphBuilder:
         """
         Return whether advanced mode is enabled for graph diagnostics.
         """
+        if self.process is not None and getattr(
+            self.process,
+            "always_advanced_mode",
+            False,
+        ):
+            return True
+        if self.process is not None and not getattr(
+            self.process,
+            "supports_advanced_mode",
+            True,
+        ):
+            return False
         return is_enabled(
             self.advanced_mode_value,
         )

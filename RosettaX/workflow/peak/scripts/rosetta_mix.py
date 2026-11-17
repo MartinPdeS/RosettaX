@@ -311,6 +311,22 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
             return self._build_stop_result(
                 status=fluorescence.stop_status,
                 fluorescence_analysis=fluorescence.analysis,
+                debug_diagnostics=build_rosetta_debug_diagnostics(
+                    fluorescence_analysis=fluorescence.analysis,
+                    fluorescence_baseline_peak=fluorescence.baseline_peak,
+                    fluorescence_saturation_intensity=fluorescence.saturation_intensity,
+                    settings=settings,
+                ),
+                fluorescence_marker_candidates=(
+                    extract_marker_candidate_fluorescence_diagnostics(
+                        fluorescence=fluorescence,
+                    )
+                ),
+                fluorescence_marker_positions=(
+                    extract_marker_candidate_fluorescence_positions(
+                        fluorescence=fluorescence,
+                    )
+                ),
                 baseline_lower_gate=fluorescence.baseline_lower_gate,
                 baseline_upper_gate=fluorescence.baseline_upper_gate,
                 plot_scattering_values=events.scattering_values,
@@ -330,6 +346,25 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
             return self._build_stop_result(
                 status=scatter.stop_status,
                 fluorescence_analysis=fluorescence.analysis,
+                debug_diagnostics=build_rosetta_debug_diagnostics(
+                    fluorescence_analysis=fluorescence.analysis,
+                    fluorescence_baseline_peak=fluorescence.baseline_peak,
+                    fluorescence_saturation_intensity=fluorescence.saturation_intensity,
+                    marker_scatter_diagnostics=markers.diagnostics,
+                    scatter_analysis=scatter.analysis,
+                    settings=settings,
+                ),
+                fluorescence_marker_candidates=(
+                    extract_marker_candidate_fluorescence_diagnostics(
+                        fluorescence=fluorescence,
+                    )
+                ),
+                fluorescence_marker_positions=(
+                    extract_marker_candidate_fluorescence_positions(
+                        fluorescence=fluorescence,
+                    )
+                ),
+                marker_scatter_diagnostics=markers.diagnostics,
                 baseline_lower_gate=fluorescence.baseline_lower_gate,
                 baseline_upper_gate=fluorescence.baseline_upper_gate,
                 marker_points=markers.points,
@@ -351,6 +386,10 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
         *,
         status: str,
         fluorescence_analysis: dict[str, Any] | None = None,
+        debug_diagnostics: dict[str, Any] | None = None,
+        fluorescence_marker_candidates: list[dict[str, Any]] | None = None,
+        fluorescence_marker_positions: list[float] | None = None,
+        marker_scatter_diagnostics: list[dict[str, Any]] | None = None,
         baseline_lower_gate: float | None = None,
         baseline_upper_gate: float | None = None,
         marker_points: list[dict[str, float]] | None = None,
@@ -361,11 +400,30 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
         Build a stop result with optional diagnostic payload.
         """
         payload = self.build_empty_peak_lines_payload()
+        marker_positions = list(fluorescence_marker_positions or [])
+        if debug_diagnostics:
+            payload["rosetta_debug_diagnostics"] = debug_diagnostics
 
         if fluorescence_analysis is not None:
-            payload["fluorescence_peak_count"] = len(
-                fluorescence_analysis.get("validated_peaks", [])
+            validated_fluorescence_peaks = fluorescence_analysis.get(
+                "validated_peaks",
+                [],
             )
+            payload["fluorescence_peak_count"] = len(validated_fluorescence_peaks)
+            if len(validated_fluorescence_peaks) > 1:
+                baseline_peak = resolve_baseline_peak(
+                    peaks=validated_fluorescence_peaks,
+                )
+                marker_positions.extend(
+                    float(peak["mean"])
+                    for peak in validated_fluorescence_peaks
+                    if peak is not baseline_peak
+                )
+
+        if fluorescence_marker_candidates:
+            payload["fluorescence_marker_candidates"] = fluorescence_marker_candidates
+        if marker_scatter_diagnostics:
+            payload["marker_scatter_diagnostics"] = marker_scatter_diagnostics
 
         if baseline_lower_gate is not None and np.isfinite(baseline_lower_gate):
             payload["y_lower_gate"] = float(baseline_lower_gate)
@@ -392,9 +450,14 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
             payload["scatter_guide_positions"] = unique_sorted_finite_values(
                 [float(point["x"]) for point in marker_points]
             )
-            payload["fluorescence_guide_positions"] = unique_sorted_finite_values(
-                [float(point["y"]) for point in marker_points]
+            marker_positions.extend(
+                float(point["y"])
+                for point in marker_points
             )
+
+        payload["fluorescence_guide_positions"] = unique_sorted_finite_values(
+            marker_positions
+        )
 
         if plot_scattering_values is not None and plot_fluorescence_values is not None:
             payload["plot_x_values"] = np.asarray(
@@ -594,6 +657,188 @@ def analyze_rosetta_fluorescence(
     )
 
 
+def extract_marker_candidate_fluorescence_positions(
+    *,
+    fluorescence: RosettaFluorescenceAnalysis,
+) -> list[float]:
+    """Return fluorescence candidate positions excluding the baseline peak.
+
+    Parameters
+    ----------
+    fluorescence : RosettaFluorescenceAnalysis
+        Fitted fluorescence populations, including rejected candidates.
+
+    Returns
+    -------
+    list[float]
+        Sorted candidate marker positions in fluorescence detector units.
+    """
+    return unique_sorted_finite_values(
+        [
+            float(peak["position"])
+            for peak in extract_marker_candidate_fluorescence_diagnostics(
+                fluorescence=fluorescence,
+            )
+        ]
+    )
+
+
+def extract_marker_candidate_fluorescence_diagnostics(
+    *,
+    fluorescence: RosettaFluorescenceAnalysis,
+) -> list[dict[str, Any]]:
+    """Return fit diagnostics for fluorescence candidates other than baseline.
+
+    Parameters
+    ----------
+    fluorescence : RosettaFluorescenceAnalysis
+        Fitted fluorescence populations, including rejected candidates.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Candidate fit statistics and rejection reasons.
+    """
+    all_peaks = fluorescence.analysis.get("all_peaks", [])
+    if not isinstance(all_peaks, list) or not all_peaks:
+        return []
+
+    baseline_peak = fluorescence.baseline_peak
+    if baseline_peak is None:
+        baseline_peak = resolve_baseline_peak(peaks=all_peaks)
+    baseline_mean = float(baseline_peak["mean"])
+
+    diagnostics: list[dict[str, Any]] = []
+    for peak in all_peaks:
+        if not isinstance(peak, dict):
+            continue
+        try:
+            peak_mean = float(peak["mean"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if not np.isfinite(peak_mean) or np.isclose(peak_mean, baseline_mean):
+            continue
+        diagnostics.append(
+            {
+                "position": peak_mean,
+                "validated": bool(peak.get("validated", False)),
+                "count": peak.get("count"),
+                "r2": peak.get("r2"),
+                "cv": peak.get("cv"),
+                "rejection_reasons": list(peak.get("rejection_reasons") or []),
+            }
+        )
+    return sorted(diagnostics, key=lambda item: item["position"])
+
+
+def build_rosetta_debug_diagnostics(
+    *,
+    fluorescence_analysis: dict[str, Any],
+    fluorescence_baseline_peak: dict[str, Any] | None,
+    fluorescence_saturation_intensity: float,
+    settings: RosettaRunSettings,
+    marker_scatter_diagnostics: list[dict[str, Any]] | None = None,
+    scatter_analysis: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Build serializable fit details for the Custom Rosetta debug panel.
+
+    Parameters
+    ----------
+    fluorescence_analysis : dict[str, Any]
+        Fluorescence fit candidates and validation outcomes.
+    fluorescence_baseline_peak : dict[str, Any] | None
+        Baseline fluorescence fit, when one was validated.
+    fluorescence_saturation_intensity : float
+        Estimated detector saturation level in fluorescence units.
+    settings : RosettaRunSettings
+        Effective detection thresholds used for this run.
+    marker_scatter_diagnostics : list[dict[str, Any]] | None, optional
+        Marker-gated scatter fit summaries.
+    scatter_analysis : dict[str, Any] | None, optional
+        Baseline-gated scatter fit candidates and validation outcomes.
+
+    Returns
+    -------
+    dict[str, Any]
+        JSON-serializable diagnostics for display in the peak workflow.
+    """
+    fluorescence_peaks = fluorescence_analysis.get("all_peaks", [])
+    fluorescence_peaks = (
+        sorted(
+            [peak for peak in fluorescence_peaks if isinstance(peak, dict)],
+            key=lambda peak: float(peak.get("mean", 0.0)),
+        )
+        if isinstance(fluorescence_peaks, list)
+        else []
+    )
+    baseline_mean = (
+        float(fluorescence_baseline_peak["mean"])
+        if isinstance(fluorescence_baseline_peak, dict)
+        else None
+    )
+    marker_candidate_index = 0
+    fluorescence_rows: list[dict[str, Any]] = []
+    for peak in fluorescence_peaks:
+        mean_value = float(peak.get("mean", 0.0))
+        if baseline_mean is not None and np.isclose(mean_value, baseline_mean):
+            population = "Baseline"
+        else:
+            marker_candidate_index += 1
+            population = (
+                "Dim marker candidate"
+                if marker_candidate_index == 1
+                else "Bright marker candidate"
+                if marker_candidate_index == 2
+                else f"Fluorescence candidate {marker_candidate_index}"
+            )
+        fluorescence_rows.append(
+            {
+                "population": population,
+                "position": mean_value,
+                "events": peak.get("count"),
+                "r2": peak.get("r2"),
+                "cv": peak.get("cv"),
+                "validated": bool(peak.get("validated", False)),
+                "rejection_reasons": list(peak.get("rejection_reasons") or []),
+            }
+        )
+
+    scatter_peaks = (
+        scatter_analysis.get("all_peaks", [])
+        if isinstance(scatter_analysis, dict)
+        else []
+    )
+    scatter_rows = [
+        {
+            "population": f"Scatter candidate {index}",
+            "position": peak.get("mean"),
+            "events": peak.get("count"),
+            "r2": peak.get("r2"),
+            "cv": peak.get("cv"),
+            "validated": bool(peak.get("validated", False)),
+            "rejection_reasons": list(peak.get("rejection_reasons") or []),
+        }
+        for index, peak in enumerate(scatter_peaks, start=1)
+        if isinstance(peak, dict)
+    ]
+
+    return {
+        "thresholds": {
+            "fluorescence_r2_minimum": settings.fit_r2_threshold,
+            "fluorescence_cv_maximum": settings.fit_cv_threshold,
+            "scatter_r2_minimum": settings.scatter_fit_r2_threshold,
+            "scatter_cv_maximum": settings.scatter_fit_cv_threshold,
+            "minimum_events_per_peak": settings.minimum_events_per_peak,
+            "minimum_peak_fraction": settings.minimum_peak_fraction,
+            "marker_gate_sigma_multiplier": settings.marker_gate_sigma_multiplier,
+            "fluorescence_saturation_intensity": fluorescence_saturation_intensity,
+        },
+        "fluorescence_peaks": fluorescence_rows,
+        "marker_scatter_fits": list(marker_scatter_diagnostics or []),
+        "scatter_peaks": scatter_rows,
+    }
+
+
 def find_marker_scatter_points(
     *,
     events: RosettaEventData,
@@ -606,6 +851,7 @@ def find_marker_scatter_points(
     )
     marker_points: list[dict[str, float]] = []
     marker_scatter_guide_positions: list[float] = []
+    marker_scatter_diagnostics: list[dict[str, Any]] = []
     for marker_peak in marker_classification:
         marker_gate_mask = build_sigma_gate_mask(
             values=events.fluorescence_values,
@@ -614,6 +860,11 @@ def find_marker_scatter_points(
             sigma_multiplier=settings.marker_gate_sigma_multiplier,
         )
         gated_scatter_values = events.scattering_values[marker_gate_mask]
+        gated_event_count = int(
+            np.count_nonzero(
+                np.isfinite(gated_scatter_values) & (gated_scatter_values > 0.0)
+            )
+        )
         scatter_peak = select_primary_validated_peak(
             values=gated_scatter_values,
             peak_count=1,
@@ -623,7 +874,52 @@ def find_marker_scatter_points(
             fit_cv_threshold=settings.scatter_fit_cv_threshold,
         )
         if scatter_peak is None:
+            scatter_analysis = find_fit_validate_peaks_1d(
+                values=gated_scatter_values,
+                peak_count=1,
+                minimum_peak_fraction=settings.minimum_peak_fraction,
+                minimum_events_per_peak=settings.minimum_events_per_peak,
+                fit_r2_threshold=settings.scatter_fit_r2_threshold,
+                fit_cv_threshold=settings.scatter_fit_cv_threshold,
+                saturation_intensity=float("inf"),
+            )
+            marker_scatter_diagnostics.append(
+                {
+                    "marker_role": str(marker_peak["marker_role"]),
+                    "fluorescence_position": float(marker_peak["mean"]),
+                    "gated_event_count": gated_event_count,
+                    "validated": False,
+                    "rejected_peaks": [
+                        {
+                            "mean": peak.get("mean"),
+                            "count": peak.get("count"),
+                            "r2": peak.get("r2"),
+                            "cv": peak.get("cv"),
+                            "rejection_reasons": list(
+                                peak.get("rejection_reasons") or []
+                            ),
+                        }
+                        for peak in scatter_analysis.get("all_peaks", [])
+                        if not peak.get("validated")
+                    ],
+                }
+            )
             continue
+        marker_scatter_diagnostics.append(
+            {
+                "marker_role": str(marker_peak["marker_role"]),
+                "fluorescence_position": float(marker_peak["mean"]),
+                "gated_event_count": gated_event_count,
+                "validated": True,
+                "selected_peak": {
+                    "mean": scatter_peak.get("mean"),
+                    "count": scatter_peak.get("count"),
+                    "r2": scatter_peak.get("r2"),
+                    "cv": scatter_peak.get("cv"),
+                },
+                "rejected_peaks": [],
+            }
+        )
         marker_scatter_guide_positions.append(float(scatter_peak["mean"]))
         marker_points.append(
             {
@@ -633,7 +929,11 @@ def find_marker_scatter_points(
                 "label": str(marker_peak["marker_role"]),
             }
         )
-    return RosettaMarkerScatter(marker_points, marker_scatter_guide_positions)
+    return RosettaMarkerScatter(
+        points=marker_points,
+        guide_positions=marker_scatter_guide_positions,
+        diagnostics=marker_scatter_diagnostics,
+    )
 
 
 def analyze_non_fluorescent_scatter(
@@ -714,8 +1014,8 @@ def build_rosetta_detection_result(
     scatter_guide_positions = unique_sorted_finite_values(
         [*scatter.positions, *markers.guide_positions]
     )
-    fluorescence_guide_positions = unique_sorted_finite_values(
-        [float(peak["mean"]) for peak in fluorescence.marker_peaks]
+    fluorescence_guide_positions = extract_marker_candidate_fluorescence_positions(
+        fluorescence=fluorescence,
     )
     peak_lines_payload = {
         "positions": [float(point["x"]) for point in all_points],
@@ -734,6 +1034,20 @@ def build_rosetta_detection_result(
         "labels": labels,
         "scatter_guide_positions": scatter_guide_positions,
         "fluorescence_guide_positions": fluorescence_guide_positions,
+        "fluorescence_marker_candidates": (
+            extract_marker_candidate_fluorescence_diagnostics(
+                fluorescence=fluorescence,
+            )
+        ),
+        "marker_scatter_diagnostics": markers.diagnostics,
+        "rosetta_debug_diagnostics": build_rosetta_debug_diagnostics(
+            fluorescence_analysis=fluorescence.analysis,
+            fluorescence_baseline_peak=fluorescence.baseline_peak,
+            fluorescence_saturation_intensity=fluorescence.saturation_intensity,
+            marker_scatter_diagnostics=markers.diagnostics,
+            scatter_analysis=scatter.analysis,
+            settings=settings,
+        ),
         "baseline_cutoff": fluorescence.baseline_upper_gate,
         "y_lower_gate": fluorescence.baseline_lower_gate,
         "y_upper_gate": fluorescence.baseline_upper_gate,

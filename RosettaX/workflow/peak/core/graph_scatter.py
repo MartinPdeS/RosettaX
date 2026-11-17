@@ -127,6 +127,7 @@ def build_default_2d_scatter_figure(builder: PeakWorkflowGraphBuilder) -> go.Fig
                 "colorscale": "Turbo",
                 "showscale": False,
             },
+            showlegend=False,
             customdata=density_values,
             hovertemplate=(
                 f"{x_detector_column}=%{{x:.6g}}<br>"
@@ -174,8 +175,16 @@ def build_default_2d_scatter_figure(builder: PeakWorkflowGraphBuilder) -> go.Fig
             figure=figure,
         )
 
+    show_rosetta_legend = builder._is_rosetta_script_process()
     figure.update_layout(
-        showlegend=False,
+        showlegend=show_rosetta_legend,
+        legend={
+            "x": 0.01,
+            "y": 0.99,
+            "xanchor": "left",
+            "yanchor": "top",
+            "bgcolor": "rgba(255,255,255,0.75)",
+        },
     )
 
     return figure
