@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>RosettaX.workflow.peak.core.graphing &#8212; RosettaX 0.11.1 documentation</title>
+    <title>RosettaX.workflow.peak.core.graphing &#8212; RosettaX 0.13.0 documentation</title>
   
   
   
@@ -44,7 +44,7 @@
   <link rel="preload" as="script" href="../../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../../_static/documentation_options.js?v=b3db6a4d"></script>
+    <script src="../../../../../_static/documentation_options.js?v=d304bea3"></script>
     <script src="../../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../../_static/sg-tags.js?v=d80f6fa4"></script>
@@ -53,7 +53,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/MartinPdeS/RosettaX/documentation_page/version_switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.11.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.13.0';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -64,7 +64,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.11.1" />
+  <meta name="docsearch:version" content="0.13.0" />
   
     
     <script src="../../../../../_static/searchtools.js"></script>
@@ -134,8 +134,8 @@
     
     
     
-    <img src="../../../../../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.11.1 documentation - Home"/>
-    <img src="../../../../../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.11.1 documentation - Home"/>
+    <img src="../../../../../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.13.0 documentation - Home"/>
+    <img src="../../../../../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.13.0 documentation - Home"/>
   
   
 </a></div>
@@ -616,8 +616,8 @@
 
     <span class="n">rejected_x_fill_color</span> <span class="o">=</span> <span class="s2">"rgba(20, 20, 20, 0.16)"</span>
     <span class="n">rejected_y_fill_color</span> <span class="o">=</span> <span class="s2">"rgba(20, 20, 20, 0.22)"</span>
-    <span class="n">accepted_y_fill_color</span> <span class="o">=</span> <span class="s2">"rgba(38, 196, 78, 0.20)"</span>
-    <span class="n">fluorescence_helper_fill_color</span> <span class="o">=</span> <span class="s2">"rgba(64, 138, 255, 0.12)"</span>
+    <span class="n">accepted_y_fill_color</span> <span class="o">=</span> <span class="s2">"rgba(38, 196, 78, 0.08)"</span>
+    <span class="n">fluorescence_helper_fill_color</span> <span class="o">=</span> <span class="s2">"rgba(64, 138, 255, 0.05)"</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -924,6 +924,18 @@
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return whether advanced mode is enabled for graph diagnostics.</span>
 <span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="p">,</span>
+            <span class="s2">"always_advanced_mode"</span><span class="p">,</span>
+            <span class="kc">False</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="p">,</span>
+            <span class="s2">"supports_advanced_mode"</span><span class="p">,</span>
+            <span class="kc">True</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
         <span class="k">return</span> <span class="n">is_enabled</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">advanced_mode_value</span><span class="p">,</span>
         <span class="p">)</span>

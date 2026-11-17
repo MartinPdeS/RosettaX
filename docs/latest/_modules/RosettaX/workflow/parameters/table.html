@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>RosettaX.workflow.parameters.table &#8212; RosettaX 0.11.1 documentation</title>
+    <title>RosettaX.workflow.parameters.table &#8212; RosettaX 0.13.0 documentation</title>
   
   
   
@@ -44,7 +44,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=b3db6a4d"></script>
+    <script src="../../../../_static/documentation_options.js?v=d304bea3"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/sg-tags.js?v=d80f6fa4"></script>
@@ -53,7 +53,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/MartinPdeS/RosettaX/documentation_page/version_switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.11.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.13.0';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -64,7 +64,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.11.1" />
+  <meta name="docsearch:version" content="0.13.0" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -134,8 +134,8 @@
     
     
     
-    <img src="../../../../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.11.1 documentation - Home"/>
-    <img src="../../../../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.11.1 documentation - Home"/>
+    <img src="../../../../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.13.0 documentation - Home"/>
+    <img src="../../../../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.13.0 documentation - Home"/>
   
   
 </a></div>
@@ -512,6 +512,12 @@
 <span></span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dash.dash_table.Format</span><span class="w"> </span><span class="kn">import</span> <span class="n">Format</span><span class="p">,</span> <span class="n">Scheme</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">casting</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.workflow.parameters.refractive_index</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">calculate_sellmeier_refractive_index</span><span class="p">,</span>
+    <span class="n">format_refractive_index_display</span><span class="p">,</span>
+    <span class="n">is_sellmeier_material</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.workflow.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">services</span> <span class="k">as</span> <span class="n">table_services</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
 
@@ -543,16 +549,19 @@
         <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Particle diameter [nm]"</span><span class="p">,</span>
         <span class="s2">"id"</span><span class="p">:</span> <span class="n">COLUMN_PARTICLE_DIAMETER_NM</span><span class="p">,</span>
         <span class="s2">"editable"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"numeric"</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="p">{</span>
         <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Refractive index"</span><span class="p">,</span>
         <span class="s2">"id"</span><span class="p">:</span> <span class="n">COLUMN_PARTICLE_REFRACTIVE_INDEX</span><span class="p">,</span>
         <span class="s2">"editable"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"text"</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="p">{</span>
         <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Medium refractive index"</span><span class="p">,</span>
         <span class="s2">"id"</span><span class="p">:</span> <span class="n">COLUMN_MEDIUM_REFRACTIVE_INDEX</span><span class="p">,</span>
         <span class="s2">"editable"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"text"</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="p">{</span>
         <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Coupling [W]"</span><span class="p">,</span>
@@ -578,11 +587,13 @@
         <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Core diameter [nm]"</span><span class="p">,</span>
         <span class="s2">"id"</span><span class="p">:</span> <span class="n">COLUMN_CORE_DIAMETER_NM</span><span class="p">,</span>
         <span class="s2">"editable"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"numeric"</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="p">{</span>
         <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Shell thickness [nm]"</span><span class="p">,</span>
         <span class="s2">"id"</span><span class="p">:</span> <span class="n">COLUMN_SHELL_THICKNESS_NM</span><span class="p">,</span>
         <span class="s2">"editable"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"numeric"</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="p">{</span>
         <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Outer diameter [nm]"</span><span class="p">,</span>
@@ -593,16 +604,19 @@
         <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Medium refractive index"</span><span class="p">,</span>
         <span class="s2">"id"</span><span class="p">:</span> <span class="n">COLUMN_MEDIUM_REFRACTIVE_INDEX</span><span class="p">,</span>
         <span class="s2">"editable"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"text"</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="p">{</span>
         <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Core refractive index"</span><span class="p">,</span>
         <span class="s2">"id"</span><span class="p">:</span> <span class="n">COLUMN_CORE_REFRACTIVE_INDEX</span><span class="p">,</span>
         <span class="s2">"editable"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"text"</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="p">{</span>
         <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Shell refractive index"</span><span class="p">,</span>
         <span class="s2">"id"</span><span class="p">:</span> <span class="n">COLUMN_SHELL_REFRACTIVE_INDEX</span><span class="p">,</span>
         <span class="s2">"editable"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"text"</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="p">{</span>
         <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Coupling [W]"</span><span class="p">,</span>
@@ -758,6 +772,47 @@
 
 
 
+<div class="viewcode-block" id="normalize_refractive_index_value">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.parameters.table.normalize_refractive_index_value">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">normalize_refractive_index_value</span><span class="p">(</span>
+    <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">wavelength_nm</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Format recognized material names with their index at the chosen wavelength."""</span>
+    <span class="n">normalized_value</span> <span class="o">=</span> <span class="n">normalize_cell_value</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="n">parsed_value</span> <span class="o">=</span> <span class="n">casting</span><span class="o">.</span><span class="n">labeled_refractive_index</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">normalized_value</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">parsed_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">material_name</span> <span class="o">=</span> <span class="n">normalized_value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"("</span><span class="p">,</span> <span class="n">maxsplit</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">is_sellmeier_material</span><span class="p">(</span><span class="n">material_name</span><span class="p">)</span> <span class="ow">and</span> <span class="n">wavelength_nm</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">""</span><span class="p">):</span>
+            <span class="n">resolved_value</span> <span class="o">=</span> <span class="n">calculate_sellmeier_refractive_index</span><span class="p">(</span>
+                <span class="n">material_name</span><span class="p">,</span>
+                <span class="n">wavelength_nm</span><span class="o">=</span><span class="n">wavelength_nm</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">format_refractive_index_display</span><span class="p">(</span>
+                <span class="n">resolved_value</span><span class="p">,</span>
+                <span class="n">source_value</span><span class="o">=</span><span class="n">material_name</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">is_sellmeier_material</span><span class="p">(</span><span class="n">material_name</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">normalized_value</span>
+        <span class="k">return</span> <span class="n">normalized_value</span>
+
+    <span class="k">if</span> <span class="n">is_sellmeier_material</span><span class="p">(</span><span class="n">normalized_value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">wavelength_nm</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">""</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">normalized_value</span>
+        <span class="n">resolved_value</span> <span class="o">=</span> <span class="n">calculate_sellmeier_refractive_index</span><span class="p">(</span>
+            <span class="n">normalized_value</span><span class="p">,</span>
+            <span class="n">wavelength_nm</span><span class="o">=</span><span class="n">wavelength_nm</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">format_refractive_index_display</span><span class="p">(</span>
+            <span class="n">resolved_value</span><span class="p">,</span>
+            <span class="n">source_value</span><span class="o">=</span><span class="n">normalized_value</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">normalized_value</span></div>
+
+
+
 <div class="viewcode-block" id="compute_outer_diameter_string">
 <a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.parameters.table.compute_outer_diameter_string">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">compute_outer_diameter_string</span><span class="p">(</span>
@@ -897,15 +952,9 @@
             <span class="n">core_diameter_nm</span><span class="o">=</span><span class="n">core_diameter_nm</span><span class="p">,</span>
             <span class="n">shell_thickness_nm</span><span class="o">=</span><span class="n">shell_thickness_nm</span><span class="p">,</span>
         <span class="p">),</span>
-        <span class="n">COLUMN_MEDIUM_REFRACTIVE_INDEX</span><span class="p">:</span> <span class="n">normalize_cell_value</span><span class="p">(</span>
-            <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">COLUMN_MEDIUM_REFRACTIVE_INDEX</span><span class="p">)</span>
-        <span class="p">),</span>
-        <span class="n">COLUMN_CORE_REFRACTIVE_INDEX</span><span class="p">:</span> <span class="n">normalize_cell_value</span><span class="p">(</span>
-            <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">COLUMN_CORE_REFRACTIVE_INDEX</span><span class="p">)</span>
-        <span class="p">),</span>
-        <span class="n">COLUMN_SHELL_REFRACTIVE_INDEX</span><span class="p">:</span> <span class="n">normalize_cell_value</span><span class="p">(</span>
-            <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">COLUMN_SHELL_REFRACTIVE_INDEX</span><span class="p">)</span>
-        <span class="p">),</span>
+        <span class="n">COLUMN_MEDIUM_REFRACTIVE_INDEX</span><span class="p">:</span> <span class="n">normalize_refractive_index_value</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">COLUMN_MEDIUM_REFRACTIVE_INDEX</span><span class="p">)),</span>
+        <span class="n">COLUMN_CORE_REFRACTIVE_INDEX</span><span class="p">:</span> <span class="n">normalize_refractive_index_value</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">COLUMN_CORE_REFRACTIVE_INDEX</span><span class="p">)),</span>
+        <span class="n">COLUMN_SHELL_REFRACTIVE_INDEX</span><span class="p">:</span> <span class="n">normalize_refractive_index_value</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">COLUMN_SHELL_REFRACTIVE_INDEX</span><span class="p">)),</span>
         <span class="n">COLUMN_MEASURED_PEAK_POSITION</span><span class="p">:</span> <span class="n">measured_peak_position</span><span class="p">,</span>
         <span class="n">COLUMN_EXPECTED_COUPLING</span><span class="p">:</span> <span class="n">expected_coupling</span><span class="p">,</span>
         <span class="n">COLUMN_EXPECTED_CROSS_SECTION_NM2</span><span class="p">:</span> <span class="n">expected_cross_section_nm2</span><span class="p">,</span>
@@ -968,12 +1017,8 @@
 
     <span class="k">return</span> <span class="p">{</span>
         <span class="n">COLUMN_PARTICLE_DIAMETER_NM</span><span class="p">:</span> <span class="n">particle_diameter_nm</span><span class="p">,</span>
-        <span class="n">COLUMN_PARTICLE_REFRACTIVE_INDEX</span><span class="p">:</span> <span class="n">normalize_cell_value</span><span class="p">(</span>
-            <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">COLUMN_PARTICLE_REFRACTIVE_INDEX</span><span class="p">)</span>
-        <span class="p">),</span>
-        <span class="n">COLUMN_MEDIUM_REFRACTIVE_INDEX</span><span class="p">:</span> <span class="n">normalize_cell_value</span><span class="p">(</span>
-            <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">COLUMN_MEDIUM_REFRACTIVE_INDEX</span><span class="p">)</span>
-        <span class="p">),</span>
+        <span class="n">COLUMN_PARTICLE_REFRACTIVE_INDEX</span><span class="p">:</span> <span class="n">normalize_refractive_index_value</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">COLUMN_PARTICLE_REFRACTIVE_INDEX</span><span class="p">)),</span>
+        <span class="n">COLUMN_MEDIUM_REFRACTIVE_INDEX</span><span class="p">:</span> <span class="n">normalize_refractive_index_value</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">COLUMN_MEDIUM_REFRACTIVE_INDEX</span><span class="p">)),</span>
         <span class="n">COLUMN_MEASURED_PEAK_POSITION</span><span class="p">:</span> <span class="n">measured_peak_position</span><span class="p">,</span>
         <span class="n">COLUMN_EXPECTED_COUPLING</span><span class="p">:</span> <span class="n">expected_coupling</span><span class="p">,</span>
         <span class="n">COLUMN_EXPECTED_CROSS_SECTION_NM2</span><span class="p">:</span> <span class="n">expected_cross_section_nm2</span><span class="p">,</span>
@@ -987,6 +1032,7 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="n">mie_model</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="n">current_rows</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">wavelength_nm</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Normalize table rows according to the selected Mie model schema.</span>
@@ -1000,19 +1046,36 @@
     <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">resolved_mie_model</span> <span class="o">==</span> <span class="n">MIE_MODEL_CORE_SHELL_SPHERE</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">[</span>
+        <span class="n">normalized_rows</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">normalize_core_shell_row</span><span class="p">(</span>
                 <span class="n">row</span><span class="o">=</span><span class="n">row</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">source_rows</span>
         <span class="p">]</span>
 
-    <span class="k">return</span> <span class="p">[</span>
-        <span class="n">normalize_solid_sphere_row</span><span class="p">(</span>
-            <span class="n">row</span><span class="o">=</span><span class="n">row</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">source_rows</span>
-    <span class="p">]</span></div>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">normalized_rows</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">normalize_solid_sphere_row</span><span class="p">(</span>
+                <span class="n">row</span><span class="o">=</span><span class="n">row</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">source_rows</span>
+        <span class="p">]</span>
+
+    <span class="n">refractive_index_column_ids</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">COLUMN_MEDIUM_REFRACTIVE_INDEX</span><span class="p">,</span>
+        <span class="n">COLUMN_PARTICLE_REFRACTIVE_INDEX</span><span class="p">,</span>
+        <span class="n">COLUMN_CORE_REFRACTIVE_INDEX</span><span class="p">,</span>
+        <span class="n">COLUMN_SHELL_REFRACTIVE_INDEX</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">normalized_rows</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">column_id</span> <span class="ow">in</span> <span class="n">refractive_index_column_ids</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">column_id</span> <span class="ow">in</span> <span class="n">row</span><span class="p">:</span>
+                <span class="n">row</span><span class="p">[</span><span class="n">column_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">normalize_refractive_index_value</span><span class="p">(</span>
+                    <span class="n">row</span><span class="p">[</span><span class="n">column_id</span><span class="p">],</span>
+                    <span class="n">wavelength_nm</span><span class="o">=</span><span class="n">wavelength_nm</span><span class="p">,</span>
+                <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">normalized_rows</span></div>
 
 
 
@@ -1044,15 +1107,9 @@
             <span class="n">core_diameter_nm</span><span class="o">=</span><span class="n">core_diameter_nm</span><span class="p">,</span>
             <span class="n">shell_thickness_nm</span><span class="o">=</span><span class="n">shell_thickness_nm</span><span class="p">,</span>
         <span class="p">),</span>
-        <span class="n">COLUMN_MEDIUM_REFRACTIVE_INDEX</span><span class="p">:</span> <span class="n">normalize_cell_value</span><span class="p">(</span>
-            <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">COLUMN_MEDIUM_REFRACTIVE_INDEX</span><span class="p">)</span>
-        <span class="p">),</span>
-        <span class="n">COLUMN_CORE_REFRACTIVE_INDEX</span><span class="p">:</span> <span class="n">normalize_cell_value</span><span class="p">(</span>
-            <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">COLUMN_CORE_REFRACTIVE_INDEX</span><span class="p">)</span>
-        <span class="p">),</span>
-        <span class="n">COLUMN_SHELL_REFRACTIVE_INDEX</span><span class="p">:</span> <span class="n">normalize_cell_value</span><span class="p">(</span>
-            <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">COLUMN_SHELL_REFRACTIVE_INDEX</span><span class="p">)</span>
-        <span class="p">),</span>
+        <span class="n">COLUMN_MEDIUM_REFRACTIVE_INDEX</span><span class="p">:</span> <span class="n">normalize_refractive_index_value</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">COLUMN_MEDIUM_REFRACTIVE_INDEX</span><span class="p">)),</span>
+        <span class="n">COLUMN_CORE_REFRACTIVE_INDEX</span><span class="p">:</span> <span class="n">normalize_refractive_index_value</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">COLUMN_CORE_REFRACTIVE_INDEX</span><span class="p">)),</span>
+        <span class="n">COLUMN_SHELL_REFRACTIVE_INDEX</span><span class="p">:</span> <span class="n">normalize_refractive_index_value</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">COLUMN_SHELL_REFRACTIVE_INDEX</span><span class="p">)),</span>
         <span class="n">COLUMN_MEASURED_PEAK_POSITION</span><span class="p">:</span> <span class="n">normalize_cell_value</span><span class="p">(</span>
             <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
                 <span class="n">COLUMN_MEASURED_PEAK_POSITION</span><span class="p">,</span>
@@ -1091,12 +1148,8 @@
                 <span class="n">COLUMN_PARTICLE_DIAMETER_NM</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="p">),</span>
-        <span class="n">COLUMN_PARTICLE_REFRACTIVE_INDEX</span><span class="p">:</span> <span class="n">normalize_cell_value</span><span class="p">(</span>
-            <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">COLUMN_PARTICLE_REFRACTIVE_INDEX</span><span class="p">)</span>
-        <span class="p">),</span>
-        <span class="n">COLUMN_MEDIUM_REFRACTIVE_INDEX</span><span class="p">:</span> <span class="n">normalize_cell_value</span><span class="p">(</span>
-            <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">COLUMN_MEDIUM_REFRACTIVE_INDEX</span><span class="p">)</span>
-        <span class="p">),</span>
+        <span class="n">COLUMN_PARTICLE_REFRACTIVE_INDEX</span><span class="p">:</span> <span class="n">normalize_refractive_index_value</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">COLUMN_PARTICLE_REFRACTIVE_INDEX</span><span class="p">)),</span>
+        <span class="n">COLUMN_MEDIUM_REFRACTIVE_INDEX</span><span class="p">:</span> <span class="n">normalize_refractive_index_value</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">COLUMN_MEDIUM_REFRACTIVE_INDEX</span><span class="p">)),</span>
         <span class="n">COLUMN_MEASURED_PEAK_POSITION</span><span class="p">:</span> <span class="n">normalize_cell_value</span><span class="p">(</span>
             <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
                 <span class="n">COLUMN_MEASURED_PEAK_POSITION</span><span class="p">,</span>

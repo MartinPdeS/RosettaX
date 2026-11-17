@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Workflow API &#8212; RosettaX 0.11.1 documentation</title>
+    <title>Workflow API &#8212; RosettaX 0.13.0 documentation</title>
   
   
   
@@ -45,7 +45,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=b3db6a4d"></script>
+    <script src="../_static/documentation_options.js?v=d304bea3"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/sg-tags.js?v=d80f6fa4"></script>
@@ -54,7 +54,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/MartinPdeS/RosettaX/documentation_page/version_switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.11.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.13.0';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -67,7 +67,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.11.1" />
+  <meta name="docsearch:version" content="0.13.0" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -137,8 +137,8 @@
     
     
     
-    <img src="../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.11.1 documentation - Home"/>
-    <img src="../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.11.1 documentation - Home"/>
+    <img src="../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.13.0 documentation - Home"/>
+    <img src="../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.13.0 documentation - Home"/>
   
   
 </a></div>
@@ -1216,6 +1216,23 @@ Malformed upload payloads and unreadable FCS metadata retain their existing
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.workflow.parameters.table.normalize_refractive_index_value">
+<span class="sig-name descname"><span class="pre">normalize_refractive_index_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavelength_nm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/parameters/table.html#normalize_refractive_index_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.workflow.parameters.table.normalize_refractive_index_value" title="Link to this definition">#</a></dt>
+<dd><p>Format recognized material names with their index at the chosen wavelength.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>value</strong> (<em>Any</em>)</p></li>
+<li><p><strong>wavelength_nm</strong> (<em>Any</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="RosettaX.workflow.parameters.table.normalize_solid_sphere_row">
 <span class="sig-name descname"><span class="pre">normalize_solid_sphere_row</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">row</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/parameters/table.html#normalize_solid_sphere_row"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.workflow.parameters.table.normalize_solid_sphere_row" title="Link to this definition">#</a></dt>
 <dd><p>Normalize one solid sphere table row.</p>
@@ -1231,13 +1248,14 @@ Malformed upload payloads and unreadable FCS metadata retain their existing
 
 <dl class="py function">
 <dt class="sig sig-object py" id="RosettaX.workflow.parameters.table.normalize_table_rows">
-<span class="sig-name descname"><span class="pre">normalize_table_rows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">mie_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_rows</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/parameters/table.html#normalize_table_rows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.workflow.parameters.table.normalize_table_rows" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">normalize_table_rows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">mie_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_rows</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavelength_nm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/parameters/table.html#normalize_table_rows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.workflow.parameters.table.normalize_table_rows" title="Link to this definition">#</a></dt>
 <dd><p>Normalize table rows according to the selected Mie model schema.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>mie_model</strong> (<em>Any</em>)</p></li>
 <li><p><strong>current_rows</strong> (<em>list</em><em>[</em><em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>wavelength_nm</strong> (<em>Any</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -1448,6 +1466,20 @@ row geometry is valid and the PyMieSim computation succeeds.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RosettaX.workflow.parameters.refractive_index.is_sellmeier_material">
+<span class="sig-name descname"><span class="pre">is_sellmeier_material</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">material_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/parameters/refractive_index.html#is_sellmeier_material"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.workflow.parameters.refractive_index.is_sellmeier_material" title="Link to this definition">#</a></dt>
+<dd><p>Return whether a material identifier exists in the packaged bank.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>material_id</strong> (<em>Any</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
 </dd>
 </dl>
 </dd></dl>
@@ -5376,7 +5408,7 @@ details. This builder retains the process context and public graph API.</p>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="RosettaX.workflow.peak.core.graphing.PeakWorkflowGraphBuilder.accepted_y_fill_color">
-<span class="sig-name descname"><span class="pre">accepted_y_fill_color</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'rgba(38,</span> <span class="pre">196,</span> <span class="pre">78,</span> <span class="pre">0.20)'</span></span><a class="headerlink" href="#RosettaX.workflow.peak.core.graphing.PeakWorkflowGraphBuilder.accepted_y_fill_color" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">accepted_y_fill_color</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'rgba(38,</span> <span class="pre">196,</span> <span class="pre">78,</span> <span class="pre">0.08)'</span></span><a class="headerlink" href="#RosettaX.workflow.peak.core.graphing.PeakWorkflowGraphBuilder.accepted_y_fill_color" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -5397,7 +5429,7 @@ details. This builder retains the process context and public graph API.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="RosettaX.workflow.peak.core.graphing.PeakWorkflowGraphBuilder.fluorescence_helper_fill_color">
-<span class="sig-name descname"><span class="pre">fluorescence_helper_fill_color</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'rgba(64,</span> <span class="pre">138,</span> <span class="pre">255,</span> <span class="pre">0.12)'</span></span><a class="headerlink" href="#RosettaX.workflow.peak.core.graphing.PeakWorkflowGraphBuilder.fluorescence_helper_fill_color" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">fluorescence_helper_fill_color</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'rgba(64,</span> <span class="pre">138,</span> <span class="pre">255,</span> <span class="pre">0.05)'</span></span><a class="headerlink" href="#RosettaX.workflow.peak.core.graphing.PeakWorkflowGraphBuilder.fluorescence_helper_fill_color" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -5665,7 +5697,7 @@ is delegated to PeakWorkflowGraphBuilder.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="RosettaX.workflow.peak.core.detectors.populate_peak_script_detector_dropdowns">
-<span class="sig-name descname"><span class="pre">populate_peak_script_detector_dropdowns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">uploaded_fcs_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detector_dropdown_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_detector_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runtime_config_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detector_selection_runtime_config_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto_select_rosetta_v1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reset_rosetta_v1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/peak/core/detectors.html#populate_peak_script_detector_dropdowns"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.workflow.peak.core.detectors.populate_peak_script_detector_dropdowns" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">populate_peak_script_detector_dropdowns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">uploaded_fcs_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detector_dropdown_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_detector_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runtime_config_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detector_selection_runtime_config_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto_select_rosetta_v1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto_select_process_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reset_rosetta_v1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/peak/core/detectors.html#populate_peak_script_detector_dropdowns"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.workflow.peak.core.detectors.populate_peak_script_detector_dropdowns" title="Link to this definition">#</a></dt>
 <dd><p>Populate every detector dropdown owned by peak scripts.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -5677,6 +5709,7 @@ is delegated to PeakWorkflowGraphBuilder.</p>
 <li><p><strong>runtime_config_data</strong> (<em>Any</em>)</p></li>
 <li><p><strong>detector_selection_runtime_config_path</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>auto_select_rosetta_v1</strong> (<em>bool</em>)</p></li>
+<li><p><strong>auto_select_process_name</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>reset_rosetta_v1</strong> (<em>bool</em>)</p></li>
 </ul>
 </dd>
@@ -6394,6 +6427,7 @@ that has:
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.parameters.table.get_user_data_column_ids_for_model"><code class="docutils literal notranslate"><span class="pre">get_user_data_column_ids_for_model()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.parameters.table.normalize_cell_value"><code class="docutils literal notranslate"><span class="pre">normalize_cell_value()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.parameters.table.normalize_core_shell_row"><code class="docutils literal notranslate"><span class="pre">normalize_core_shell_row()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.parameters.table.normalize_refractive_index_value"><code class="docutils literal notranslate"><span class="pre">normalize_refractive_index_value()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.parameters.table.normalize_solid_sphere_row"><code class="docutils literal notranslate"><span class="pre">normalize_solid_sphere_row()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.parameters.table.normalize_table_rows"><code class="docutils literal notranslate"><span class="pre">normalize_table_rows()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.parameters.table.populate_core_shell_rows_from_runtime_defaults"><code class="docutils literal notranslate"><span class="pre">populate_core_shell_rows_from_runtime_defaults()</span></code></a></li>
@@ -6407,6 +6441,7 @@ that has:
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.parameters.model.compute_model_for_rows"><code class="docutils literal notranslate"><span class="pre">compute_model_for_rows()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.parameters.refractive_index.calculate_sellmeier_refractive_index"><code class="docutils literal notranslate"><span class="pre">calculate_sellmeier_refractive_index()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.parameters.refractive_index.format_refractive_index_display"><code class="docutils literal notranslate"><span class="pre">format_refractive_index_display()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.parameters.refractive_index.is_sellmeier_material"><code class="docutils literal notranslate"><span class="pre">is_sellmeier_material()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.parameters.refractive_index.resolve_refractive_index_source_value"><code class="docutils literal notranslate"><span class="pre">resolve_refractive_index_source_value()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.parameters.refractive_index.resolve_refractive_index_value"><code class="docutils literal notranslate"><span class="pre">resolve_refractive_index_value()</span></code></a></li>
 </ul>
@@ -6919,7 +6954,7 @@ that has:
 
   
   <div class="tocsection editthispage">
-    <a href="https://github.com/MartinPdeS/RosettaX/edit/v0.11.1/docs/source/api/workflows.rst">
+    <a href="https://github.com/MartinPdeS/RosettaX/edit/v0.13.0/docs/source/api/workflows.rst">
       <i class="fa-solid fa-pencil"></i>
       
       

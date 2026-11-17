@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>RosettaX.workflow.parameters.model &#8212; RosettaX 0.11.1 documentation</title>
+    <title>RosettaX.workflow.parameters.model &#8212; RosettaX 0.13.0 documentation</title>
   
   
   
@@ -44,7 +44,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=b3db6a4d"></script>
+    <script src="../../../../_static/documentation_options.js?v=d304bea3"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/sg-tags.js?v=d80f6fa4"></script>
@@ -53,7 +53,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/MartinPdeS/RosettaX/documentation_page/version_switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.11.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.13.0';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -64,7 +64,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.11.1" />
+  <meta name="docsearch:version" content="0.13.0" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -134,8 +134,8 @@
     
     
     
-    <img src="../../../../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.11.1 documentation - Home"/>
-    <img src="../../../../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.11.1 documentation - Home"/>
+    <img src="../../../../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.13.0 documentation - Home"/>
+    <img src="../../../../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.13.0 documentation - Home"/>
   
   
 </a></div>
@@ -513,6 +513,8 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">table</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.refractive_index</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_refractive_index_value</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">casting</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.utils.casting</span><span class="w"> </span><span class="kn">import</span> <span class="n">as_optional_float</span><span class="p">,</span> <span class="n">as_required_float</span><span class="p">,</span> <span class="n">as_required_int</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.workflow.detector</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">resolve_detector_angular_weights</span><span class="p">,</span>
@@ -618,11 +620,28 @@
         <span class="k">return</span> <span class="p">[]</span>
 
     <span class="n">resolved_mie_model</span> <span class="o">=</span> <span class="n">_normalize_mie_model</span><span class="p">(</span><span class="n">mie_model</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">resolve_row_material</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">column_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">fallback_value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Resolve the latest entered row index or use the section default."""</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">resolved_rows</span><span class="p">):</span>
+            <span class="n">raw_value</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">column_id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">raw_value</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">""</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">labeled_value</span> <span class="o">=</span> <span class="n">casting</span><span class="o">.</span><span class="n">labeled_refractive_index</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">raw_value</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">labeled_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">labeled_value</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">resolve_refractive_index_value</span><span class="p">(</span>
+                    <span class="n">raw_value</span><span class="p">,</span>
+                    <span class="n">wavelength_nm</span><span class="o">=</span><span class="n">wavelength_nm</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+                <span class="k">continue</span>
+        <span class="k">return</span> <span class="n">as_required_float</span><span class="p">(</span><span class="n">fallback_value</span><span class="p">,</span> <span class="n">column_id</span><span class="p">)</span>
 
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">resolved_medium_refractive_index</span> <span class="o">=</span> <span class="n">as_required_float</span><span class="p">(</span>
-            <span class="n">medium_refractive_index</span><span class="p">,</span>
-            <span class="s2">"medium_refractive_index"</span><span class="p">,</span>
+        <span class="n">resolved_medium_refractive_index</span> <span class="o">=</span> <span class="n">resolve_row_material</span><span class="p">(</span>
+            <span class="n">column_id</span><span class="o">=</span><span class="n">table</span><span class="o">.</span><span class="n">COLUMN_MEDIUM_REFRACTIVE_INDEX</span><span class="p">,</span>
+            <span class="n">fallback_value</span><span class="o">=</span><span class="n">medium_refractive_index</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">resolved_wavelength_nm</span> <span class="o">=</span> <span class="n">as_required_float</span><span class="p">(</span>
             <span class="n">wavelength_nm</span><span class="p">,</span>
@@ -681,8 +700,14 @@
             <span class="n">current_rows</span><span class="o">=</span><span class="n">resolved_rows</span><span class="p">,</span>
             <span class="n">mie_model</span><span class="o">=</span><span class="n">resolved_mie_model</span><span class="p">,</span>
             <span class="n">medium_refractive_index</span><span class="o">=</span><span class="n">resolved_medium_refractive_index</span><span class="p">,</span>
-            <span class="n">core_refractive_index</span><span class="o">=</span><span class="n">core_refractive_index</span><span class="p">,</span>
-            <span class="n">shell_refractive_index</span><span class="o">=</span><span class="n">shell_refractive_index</span><span class="p">,</span>
+            <span class="n">core_refractive_index</span><span class="o">=</span><span class="n">resolve_row_material</span><span class="p">(</span>
+                <span class="n">column_id</span><span class="o">=</span><span class="n">table</span><span class="o">.</span><span class="n">COLUMN_CORE_REFRACTIVE_INDEX</span><span class="p">,</span>
+                <span class="n">fallback_value</span><span class="o">=</span><span class="n">core_refractive_index</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">shell_refractive_index</span><span class="o">=</span><span class="n">resolve_row_material</span><span class="p">(</span>
+                <span class="n">column_id</span><span class="o">=</span><span class="n">table</span><span class="o">.</span><span class="n">COLUMN_SHELL_REFRACTIVE_INDEX</span><span class="p">,</span>
+                <span class="n">fallback_value</span><span class="o">=</span><span class="n">shell_refractive_index</span><span class="p">,</span>
+            <span class="p">),</span>
             <span class="n">wavelength_nm</span><span class="o">=</span><span class="n">resolved_wavelength_nm</span><span class="p">,</span>
             <span class="n">detector_numerical_aperture</span><span class="o">=</span><span class="n">resolved_detector_numerical_aperture</span><span class="p">,</span>
             <span class="n">detector_cache_numerical_aperture</span><span class="o">=</span><span class="n">resolved_detector_cache_numerical_aperture</span><span class="p">,</span>
@@ -699,7 +724,10 @@
         <span class="n">current_rows</span><span class="o">=</span><span class="n">resolved_rows</span><span class="p">,</span>
         <span class="n">mie_model</span><span class="o">=</span><span class="n">resolved_mie_model</span><span class="p">,</span>
         <span class="n">medium_refractive_index</span><span class="o">=</span><span class="n">resolved_medium_refractive_index</span><span class="p">,</span>
-        <span class="n">particle_refractive_index</span><span class="o">=</span><span class="n">particle_refractive_index</span><span class="p">,</span>
+        <span class="n">particle_refractive_index</span><span class="o">=</span><span class="n">resolve_row_material</span><span class="p">(</span>
+            <span class="n">column_id</span><span class="o">=</span><span class="n">table</span><span class="o">.</span><span class="n">COLUMN_PARTICLE_REFRACTIVE_INDEX</span><span class="p">,</span>
+            <span class="n">fallback_value</span><span class="o">=</span><span class="n">particle_refractive_index</span><span class="p">,</span>
+        <span class="p">),</span>
         <span class="n">wavelength_nm</span><span class="o">=</span><span class="n">resolved_wavelength_nm</span><span class="p">,</span>
         <span class="n">detector_numerical_aperture</span><span class="o">=</span><span class="n">resolved_detector_numerical_aperture</span><span class="p">,</span>
         <span class="n">detector_cache_numerical_aperture</span><span class="o">=</span><span class="n">resolved_detector_cache_numerical_aperture</span><span class="p">,</span>
