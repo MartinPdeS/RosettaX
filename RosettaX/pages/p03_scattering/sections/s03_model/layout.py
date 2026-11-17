@@ -101,18 +101,13 @@ def build_optical_configuration_controls(section: Model) -> dash.html.Div:
                         className="peak-action-button peak-action-button--auto",
                         style={"whiteSpace": "nowrap", "flexShrink": 0},
                     ),
-                    dbc.Alert(
+                    dash.html.Span(
                         "",
                         id=section.ids.detector_configuration_auto_detect_status,
-                        color="info",
-                        is_open=False,
+                        role="status",
                         style={
                             "marginLeft": "12px",
-                            "marginBottom": "0px",
-                            "borderRadius": "10px",
-                            "padding": "6px 12px",
                             "fontSize": "0.85rem",
-                            "display": "inline-block",
                         },
                     ),
                 ],
@@ -329,12 +324,6 @@ def build_optical_configuration_controls(section: Model) -> dash.html.Div:
                                                         "}"
                                                     ),
                                                 ),
-                                                dbc.FormText(
-                                                    "Optional JSON object using the detector_angular_weighting schema from detector definition files.",
-                                                    style={
-                                                        "maxWidth": "520px",
-                                                    },
-                                                ),
                                             ],
                                             style={
                                                 "display": "flex",
@@ -404,26 +393,6 @@ def build_optical_configuration_visualization(section: Model) -> dash.html.Div:
     """
     return dash.html.Div(
         [
-            dash.html.Div(
-                ui_forms.build_title_with_info(
-                    title="Optical preview",
-                    tooltip_target_id=section.optical_preview_tooltip_target_id,
-                    tooltip_id=section.optical_preview_tooltip_id,
-                    tooltip_text=(
-                        "This preview visualizes the detector collection region "
-                        "and blocker bar geometry from the current optical "
-                        "configuration. It is only a geometric preview, not the "
-                        "final Mie coupling curve."
-                    ),
-                    title_style_overrides={
-                        "fontSize": "1.02rem",
-                        "fontWeight": "700",
-                    },
-                ),
-                style={
-                    "marginBottom": "8px",
-                },
-            ),
             dash.html.Div(
                 [
                     dash.dcc.Store(

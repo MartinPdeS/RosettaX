@@ -26,12 +26,12 @@ def build_scattering_graph_panel_card(
     default_plot_options: list[str],
     footer_content: Any,
     graph_style: dict[str, Any],
-) -> dbc.Card:
+) -> dash.html.Div:
     """
-    Build one self contained graph panel card.
+    Build the graph and its controls within the calibration section.
     """
     card_children = [
-        dbc.CardHeader(
+        dash.html.Div(
             [
                 ui_forms.build_title_with_info(
                     title=title,
@@ -44,11 +44,9 @@ def build_scattering_graph_panel_card(
                     },
                 ),
             ],
-            style=ui_forms.build_workflow_subpanel_header_style(
-                color_name=color_name,
-            ),
+            style={"marginBottom": "8px"},
         ),
-        dbc.CardBody(
+        dash.html.Div(
             [
                 dash.dcc.Loading(
                     dash.dcc.Graph(
@@ -67,7 +65,6 @@ def build_scattering_graph_panel_card(
                 ),
             ],
             style={
-                "padding": "14px",
                 "overflow": "visible",
             },
         ),
@@ -75,27 +72,21 @@ def build_scattering_graph_panel_card(
 
     if footer_content is not None:
         card_children.append(
-            dbc.CardFooter(
+            dash.html.Div(
                 footer_content,
                 style={
                     "opacity": 0.95,
-                    "padding": "12px 14px",
-                    "borderTop": "1px solid rgba(128, 128, 128, 0.18)",
-                    "background": "rgba(128, 128, 128, 0.04)",
+                    "paddingTop": "12px",
                 },
             )
         )
 
-    return dbc.Card(
+    return dash.html.Div(
         card_children,
         style={
-            **ui_forms.build_workflow_subpanel_card_style(
-                color_name=color_name,
-            ),
             "flex": "1 1 0",
             "minWidth": f"{graph_min_width_px}px",
         },
-        class_name="h-100",
     )
 
 
@@ -340,9 +331,9 @@ class Calibration:
         plot_options_id: str,
         default_plot_options: list[str],
         footer_content: Any,
-    ) -> dbc.Card:
+    ) -> dash.html.Div:
         """
-        Build one self contained graph panel card.
+        Build the graph panel contents.
         """
         return build_scattering_graph_panel_card(
             color_name=self.card_color,
@@ -931,11 +922,13 @@ class Calibration:
         @dash.callback(
             dash.Output(self.ids.graph_diameter_peak_position, "figure"),
             dash.Input(self.page.ids.State.page_state_store, "data"),
+            dash.Input(self.ids.diameter_peak_position_plot_options, "value"),
             dash.State("runtime-config-store", "data"),
             prevent_initial_call=False,
         )
         def update_diameter_peak_position_graph(
             page_state_payload: Any,
+            plot_options: Any,
             runtime_config_data: Any,
         ) -> go.Figure:
             page_state = ScatteringPageState.from_dict(
@@ -958,6 +951,10 @@ class Calibration:
                         "Could not render graph."
                     )
 
+            figure = self._apply_plot_options_axis_scales(
+                figure=figure,
+                plot_options=plot_options,
+            )
             return self._finalize_figure_size(
                 figure,
                 runtime_config_data=runtime_config_data,

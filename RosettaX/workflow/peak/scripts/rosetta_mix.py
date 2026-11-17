@@ -35,9 +35,11 @@ from .rosetta_mix_fitting import (
 )
 from .rosetta_mix_models import (
     DEFAULT_BASELINE_SIGMA_MULTIPLIER,
+    MarkerScatterDiagnostic,
     RosettaEventData,
     RosettaFluorescenceAnalysis,
     RosettaMarkerScatter,
+    RosettaPeakPoint,
     RosettaRunSettings,
     RosettaScatterAnalysis,
 )
@@ -699,9 +701,9 @@ def find_marker_scatter_points(
     marker_classification = classify_marker_peaks(
         marker_peaks=fluorescence.marker_peaks
     )
-    marker_points: list[dict[str, float]] = []
+    marker_points: list[RosettaPeakPoint] = []
     marker_scatter_guide_positions: list[float] = []
-    marker_scatter_diagnostics: list[dict[str, Any]] = []
+    marker_scatter_diagnostics: list[MarkerScatterDiagnostic] = []
     for marker_peak in marker_classification:
         marker_gate_mask = build_sigma_gate_mask(
             values=events.fluorescence_values,

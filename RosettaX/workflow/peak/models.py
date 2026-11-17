@@ -1,6 +1,14 @@
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, NamedTuple
+
+
+class PeakMutationOutput(NamedTuple):
+    """Dash callback outputs: serialized state, table update, and statuses."""
+
+    page_state: Any
+    table_data: Any
+    status_children: list[Any]
 
 
 @dataclass(frozen=True)

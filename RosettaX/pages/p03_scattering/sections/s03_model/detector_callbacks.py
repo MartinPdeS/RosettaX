@@ -178,8 +178,6 @@ def register_detector_configuration_callbacks(section: Model) -> None:
             allow_duplicate=True,
         ),
         dash.Output(section.ids.detector_configuration_auto_detect_status, "children"),
-        dash.Output(section.ids.detector_configuration_auto_detect_status, "color"),
-        dash.Output(section.ids.detector_configuration_auto_detect_status, "is_open"),
         dash.Input(section.ids.detector_configuration_auto_detect_button, "n_clicks"),
         dash.State("runtime-config-store", "data"),
         dash.State(section.page.ids.Scattering.process_dropdown, "value"),
@@ -201,9 +199,9 @@ def register_detector_configuration_callbacks(section: Model) -> None:
         detector_dropdown_ids: list[dict[str, Any]],
         detector_dropdown_values: list[Any],
         current_wavelength_nm: Any,
-    ) -> tuple[Any, Any, str, str, bool]:
+    ) -> tuple[Any, Any, str]:
         if not n_clicks:
-            return dash.no_update, dash.no_update, "", "info", False
+            return dash.no_update, dash.no_update, ""
 
         runtime_config = RuntimeConfig.from_dict(
             runtime_config_data if isinstance(runtime_config_data, dict) else None
@@ -218,8 +216,6 @@ def register_detector_configuration_callbacks(section: Model) -> None:
                 dash.no_update,
                 dash.no_update,
                 "Upload a scattering FCS file before running detector auto-detect.",
-                "warning",
-                True,
             )
 
         selected_detector_channel = services.resolve_selected_peak_detector_channel(
@@ -233,8 +229,6 @@ def register_detector_configuration_callbacks(section: Model) -> None:
                 dash.no_update,
                 dash.no_update,
                 "Select the peak detector channel before running detector auto-detect.",
-                "warning",
-                True,
             )
 
         detected_preset = (
@@ -245,22 +239,10 @@ def register_detector_configuration_callbacks(section: Model) -> None:
         )
 
         if not detected_preset:
-            filled_fields: list[str] = []
-            missing_fields: list[str] = ["detector preset", "wavelength"]
-
-            status_text = (
-                "Auto-detect could only fill some fields. "
-                f"Filled: {', '.join(filled_fields) if filled_fields else 'none'}. "
-                f"Missing: {', '.join(missing_fields)}. "
-                f"Selected peak detector channel: {selected_detector_channel}."
-            )
-
             return (
                 dash.no_update,
                 dash.no_update,
-                status_text,
-                "warning",
-                True,
+                f"Could not detect a detector preset or wavelength for {selected_detector_channel}.",
             )
 
         detected_wavelength_nm = (
@@ -270,33 +252,18 @@ def register_detector_configuration_callbacks(section: Model) -> None:
             )
         )
 
-        wavelength_status_text = ""
-
-        if detected_wavelength_nm is not None:
-            wavelength_status_text = f" Wavelength: {detected_wavelength_nm} nm."
-
-        filled_fields = [f"detector preset={detected_preset}"]
-        missing_fields: list[str] = []
-
-        if detected_wavelength_nm is not None:
-            filled_fields.append(f"wavelength={detected_wavelength_nm} nm")
-        else:
-            missing_fields.append("wavelength")
+        wavelength_status = (
+            f"{detected_wavelength_nm:g} nm"
+            if detected_wavelength_nm is not None
+            else "wavelength not detected"
+        )
 
         return (
             detected_preset,
             detected_wavelength_nm
             if detected_wavelength_nm is not None
             else current_wavelength_nm,
-            (
-                "Auto-detect completed. "
-                f"Filled: {', '.join(filled_fields)}. "
-                f"Missing: {', '.join(missing_fields) if missing_fields else 'none'}. "
-                f"Selected peak detector channel: {selected_detector_channel}."
-                f"{wavelength_status_text}"
-            ),
-            "info",
-            True,
+            f"Detected {detected_preset}; {wavelength_status}; channel {selected_detector_channel}.",
         )
 
     @dash.callback(

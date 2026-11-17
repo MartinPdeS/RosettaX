@@ -3,7 +3,6 @@ from __future__ import annotations
 import dash
 import json
 import logging
-import numpy as np
 from RosettaX.workflow import detector
 from typing import TYPE_CHECKING, Any
 
@@ -147,7 +146,7 @@ def register_optical_configuration_preview_callback(section: Model) -> None:
             )
 
         try:
-            detector_angular_weights = detector.resolve_detector_angular_weights(
+            detector.resolve_detector_angular_weights(
                 preset_name=detector_configuration_preset,
                 detector_sampling=detector_sampling,
                 current_detector_numerical_aperture=detector_numerical_aperture,
@@ -161,23 +160,4 @@ def register_optical_configuration_preview_callback(section: Model) -> None:
         except Exception as exc:
             return f"Detector angular weighting is invalid: {exc}", True, "warning"
 
-        if detector_angular_weights is None:
-            return (
-                "Custom detector angular weighting is loaded, but no detector geometry is available to display yet.",
-                True,
-                "info",
-            )
-
-        weight_array = np.asarray(
-            detector_angular_weights,
-            dtype=np.complex128,
-        ).reshape(-1)
-        kept_count = int(np.count_nonzero(weight_array != 0.0))
-        total_count = int(weight_array.size)
-        kept_fraction = 0.0 if total_count == 0 else kept_count / total_count
-
-        return (
-            f"Custom detector angular weighting is active: keeping {kept_count}/{total_count} angular samples ({kept_fraction:.1%}).",
-            True,
-            "info",
-        )
+        return "", False, "warning"

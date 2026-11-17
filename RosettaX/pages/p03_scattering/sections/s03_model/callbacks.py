@@ -3,6 +3,7 @@ from __future__ import annotations
 import dash
 import logging
 from . import detector_callbacks, preview_callbacks, profile_callbacks, services
+from .input_validation import detector_input_validity
 from RosettaX.utils import casting
 from typing import TYPE_CHECKING, Any
 
@@ -22,8 +23,44 @@ def register_callbacks(section: Model) -> None:
     register_refractive_index_callbacks(section)
     detector_callbacks.register_detector_configuration_callbacks(section)
     register_detector_numerical_aperture_warning_callback(section)
+    register_detector_input_validation_callback(section)
     preview_callbacks.register_optical_configuration_preview_callback(section)
     profile_callbacks.register_runtime_sync_callbacks(section)
+
+
+def register_detector_input_validation_callback(section: Model) -> None:
+    """Highlight invalid custom detector values and angular weighting."""
+    field_ids = (
+        section.ids.wavelength_nm,
+        section.ids.detector_numerical_aperture,
+        section.ids.detector_cache_numerical_aperture,
+        section.ids.blocker_bar_numerical_aperture,
+        section.ids.detector_sampling,
+        section.ids.detector_phi_angle_degree,
+        section.ids.detector_gamma_angle_degree,
+    )
+
+    @dash.callback(
+        *[dash.Output(field_id, "className") for field_id in field_ids],
+        dash.Output(section.ids.detector_angular_weighting_json, "className"),
+        *[dash.Input(field_id, "value") for field_id in field_ids],
+        dash.Input(section.ids.medium_refractive_index_custom, "value"),
+        dash.Input(section.ids.detector_angular_weighting_alert, "is_open"),
+        prevent_initial_call=False,
+    )
+    def update_detector_input_validation(
+        wavelength_nm: Any, detector_na: Any, cache_na: Any, blocker_na: Any,
+        sampling: Any, phi_degree: Any, gamma_degree: Any,
+        medium_refractive_index: Any, angular_weighting_invalid: Any,
+    ) -> tuple[str, ...]:
+        validity = detector_input_validity(
+            wavelength_nm=wavelength_nm, detector_na=detector_na, cache_na=cache_na,
+            blocker_na=blocker_na, sampling=sampling, phi_degree=phi_degree,
+            gamma_degree=gamma_degree, medium_refractive_index=medium_refractive_index,
+        )
+        invalid_class = "custom-detector-input-invalid"
+        return (*("" if valid else invalid_class for valid in validity),
+                invalid_class if angular_weighting_invalid else "")
 
 
 def register_visibility_callbacks(section: Model) -> None:

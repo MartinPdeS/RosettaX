@@ -23,6 +23,7 @@ from .graph_interaction import (
     scale_selection_is_log,  # noqa: F401
     unique_finite_preserving_order,  # noqa: F401
 )
+from .process_settings import build_process_settings
 from RosettaX.utils import plottings
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.plotting.axis_ranges import (
@@ -460,43 +461,3 @@ class PeakWorkflowGraphBuilder:
         return callable_object(
             **accepted_arguments,
         )
-
-
-def build_process_settings(
-    *,
-    process_setting_ids: list[dict[str, Any]],
-    process_setting_values: list[Any],
-    process_name: str,
-) -> dict[str, Any]:
-    """
-    Build a dictionary of process setting values for the selected process.
-
-    Kept as a module level helper for compatibility with older imports.
-    """
-    resolved_process_name = registry.resolve_process_name(
-        process_name,
-    )
-
-    process_settings: dict[str, Any] = {}
-
-    for process_setting_id, process_setting_value in zip(
-        process_setting_ids or [],
-        process_setting_values or [],
-        strict=False,
-    ):
-        if not isinstance(process_setting_id, dict):
-            continue
-
-        if process_setting_id.get("process") != resolved_process_name:
-            continue
-
-        setting_name = process_setting_id.get(
-            "setting",
-        )
-
-        if not isinstance(setting_name, str):
-            continue
-
-        process_settings[setting_name] = process_setting_value
-
-    return process_settings

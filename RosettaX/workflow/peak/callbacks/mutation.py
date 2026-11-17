@@ -1,13 +1,18 @@
 
 import dash
 import dash_bootstrap_components as dbc
-import inspect
 import logging
-import math
 import time
 import uuid
 from .. import registry
 from ..core import detectors
+from ..core.process_calls import (
+    call_add_clicked_peak_with_supported_arguments,
+    call_run_automatic_action_with_supported_arguments,
+)
+from ..core.process_settings import build_process_settings
+from ..models import PeakMutationOutput
+from .debug_panel import build_rosetta_debug_panel
 from dash import html
 from RosettaX.utils import casting
 from RosettaX.utils.runtime_config import RuntimeConfig
@@ -390,10 +395,10 @@ def clear_peak_context(
         status="",
     )
 
-    return (
-        page_state.to_dict(),
-        table_result,
-        status_children,
+    return PeakMutationOutput(
+        page_state=page_state.to_dict(),
+        table_data=table_result,
+        status_children=status_children,
     )
 
 
@@ -551,10 +556,10 @@ def handle_manual_graph_click(
         status=result.status,
     )
 
-    return (
-        page_state.to_dict(),
-        table_result,
-        status_children,
+    return PeakMutationOutput(
+        page_state=page_state.to_dict(),
+        table_data=table_result,
+        status_children=status_children,
     )
 
 
@@ -703,10 +708,10 @@ def handle_clear_action(
         status=result.status,
     )
 
-    return (
-        page_state.to_dict(),
-        table_result,
-        status_children,
+    return PeakMutationOutput(
+        page_state=page_state.to_dict(),
+        table_data=table_result,
+        status_children=status_children,
     )
 
 
@@ -840,17 +845,6 @@ def handle_run_action(
                     status=result.status,
                 ),
             )
-        if getattr(process, "supports_debug_diagnostics", False):
-            return (
-                dash.no_update,
-                dash.no_update,
-                build_status_children(
-                    status_component_ids=status_component_ids,
-                    target_process_name=target_process_name,
-                    status=result.status,
-                    debug_payload=result.peak_lines_payload,
-                ),
-            )
         return (
             dash.no_update,
             dash.no_update,
@@ -858,6 +852,11 @@ def handle_run_action(
                 status_component_ids=status_component_ids,
                 target_process_name=target_process_name,
                 status=result.status,
+                debug_payload=(
+                    result.peak_lines_payload
+                    if getattr(process, "supports_debug_diagnostics", False)
+                    else None
+                ),
             ),
         )
 
@@ -913,153 +912,10 @@ def handle_run_action(
         ).get("peak_graph_revision"),
     )
 
-    return (
-        page_state.to_dict(),
-        table_result,
-        status_children,
-    )
-
-
-def call_run_automatic_action_with_supported_arguments(
-    *,
-    process: Any,
-    backend: Any,
-    detector_channels: dict[str, Any],
-    process_settings: dict[str, Any],
-    peak_count: int,
-    max_events_for_analysis: int,
-    max_events_for_plots: int,
-    runtime_config_data: Any,
-) -> Any:
-    """
-    Call ``process.run_automatic_action`` with only the arguments supported by
-    that process.
-
-    This keeps old peak scripts working while allowing newer scripts to use
-    richer context such as ``process_settings`` and ``runtime_config_data``.
-    """
-    method = getattr(
-        process,
-        "run_automatic_action",
-        None,
-    )
-
-    if not callable(method):
-        logger.debug(
-            "Process %r does not implement run_automatic_action.",
-            getattr(process, "process_name", process),
-        )
-
-        return None
-
-    candidate_arguments = {
-        "backend": backend,
-        "detector_channels": detector_channels,
-        "process_settings": process_settings,
-        "peak_count": peak_count,
-        "max_events_for_analysis": max_events_for_analysis,
-        "max_events_for_plots": max_events_for_plots,
-        "runtime_config_data": runtime_config_data,
-    }
-
-    signature = inspect.signature(
-        method,
-    )
-
-    accepts_arbitrary_keywords = any(
-        parameter.kind == inspect.Parameter.VAR_KEYWORD
-        for parameter in signature.parameters.values()
-    )
-
-    if accepts_arbitrary_keywords:
-        logger.debug(
-            "Calling automatic process %r with all candidate arguments.",
-            getattr(process, "process_name", process),
-        )
-
-        return method(
-            **candidate_arguments,
-        )
-
-    supported_arguments = {
-        argument_name: argument_value
-        for argument_name, argument_value in candidate_arguments.items()
-        if argument_name in signature.parameters
-    }
-
-    logger.debug(
-        "Calling automatic process %r with supported arguments=%r.",
-        getattr(process, "process_name", process),
-        list(supported_arguments.keys()),
-    )
-
-    return method(
-        **supported_arguments,
-    )
-
-
-def call_add_clicked_peak_with_supported_arguments(
-    *,
-    process: Any,
-    click_data: Any,
-    selected_data: Any,
-    existing_peak_lines_payload: Any,
-    backend: Any,
-    detector_channels: dict[str, Any],
-    process_settings: dict[str, Any],
-    runtime_config_data: Any,
-    axis_scale_toggle_values: Any,
-) -> Any:
-    """
-    Call ``process.add_clicked_peak`` with only the arguments it supports.
-    """
-    method = getattr(
-        process,
-        "add_clicked_peak",
-        None,
-    )
-
-    if not callable(method):
-        logger.debug(
-            "Process %r does not implement add_clicked_peak.",
-            getattr(process, "process_name", process),
-        )
-
-        return None
-
-    candidate_arguments = {
-        "click_data": click_data,
-        "selected_data": selected_data,
-        "existing_peak_lines_payload": existing_peak_lines_payload,
-        "backend": backend,
-        "detector_channels": detector_channels,
-        "process_settings": process_settings,
-        "runtime_config_data": runtime_config_data,
-        "axis_scale_toggle_values": axis_scale_toggle_values,
-    }
-
-    signature = inspect.signature(
-        method,
-    )
-
-    accepts_arbitrary_keywords = any(
-        parameter.kind == inspect.Parameter.VAR_KEYWORD
-        for parameter in signature.parameters.values()
-    )
-
-    if accepts_arbitrary_keywords:
-        return method(
-            **candidate_arguments,
-        )
-
-    supported_arguments = {
-        argument_name: argument_value
-        for argument_name, argument_value in candidate_arguments.items()
-        if argument_name in signature.parameters
-    }
-
-    return method(
-        **supported_arguments,
+    return PeakMutationOutput(
+        page_state=page_state.to_dict(),
+        table_data=table_result,
+        status_children=status_children,
     )
 
 
@@ -1148,42 +1004,6 @@ def touch_peak_graph_revision(
     return adapter.build_page_state(
         payload=payload,
     )
-
-
-def build_process_settings(
-    *,
-    process_setting_ids: list[dict[str, Any]],
-    process_setting_values: list[Any],
-    process_name: str,
-) -> dict[str, Any]:
-    """
-    Build a dictionary of process setting values for the selected process.
-    """
-    resolved_process_name = registry.resolve_process_name(
-        process_name,
-    )
-
-    process_settings: dict[str, Any] = {}
-
-    for process_setting_id, process_setting_value in zip(
-        process_setting_ids or [],
-        process_setting_values or [],
-        strict=False,
-    ):
-        if not isinstance(process_setting_id, dict):
-            continue
-
-        if process_setting_id.get("process") != resolved_process_name:
-            continue
-
-        setting_name = process_setting_id.get("setting")
-
-        if not isinstance(setting_name, str):
-            continue
-
-        process_settings[setting_name] = process_setting_value
-
-    return process_settings
 
 
 def context_is_valid_for_process(
@@ -1275,171 +1095,6 @@ def build_status_children(
             )
 
     return children
-
-
-def build_rosetta_debug_panel(*, peak_lines_payload: Any) -> Any:
-    """Build a collapsed Custom Rosetta diagnostic section.
-
-    Parameters
-    ----------
-    peak_lines_payload : Any
-        Peak result payload containing ``rosetta_debug_diagnostics``.
-
-    Returns
-    -------
-    Any
-        A collapsed details panel, or ``None`` when there are no diagnostics.
-    """
-    if not isinstance(peak_lines_payload, dict):
-        return None
-    diagnostics = peak_lines_payload.get("rosetta_debug_diagnostics")
-    if not isinstance(diagnostics, dict):
-        return None
-
-    thresholds = diagnostics.get("thresholds", {})
-    threshold_summary = (
-        "Thresholds: fluorescence "
-        f"R² ≥ {_format_debug_value(thresholds.get('fluorescence_r2_minimum'))}, "
-        f"CV ≤ {_format_debug_value(thresholds.get('fluorescence_cv_maximum'))}; "
-        "scatter "
-        f"R² ≥ {_format_debug_value(thresholds.get('scatter_r2_minimum'))}, "
-        f"CV ≤ {_format_debug_value(thresholds.get('scatter_cv_maximum'))}; "
-        f"minimum {thresholds.get('minimum_events_per_peak', '—')} events per peak; "
-        "marker gate ±"
-        f"{_format_debug_value(thresholds.get('marker_gate_sigma_multiplier'))}σ; "
-        "fluorescence saturation estimate "
-        f"{_format_debug_value(thresholds.get('fluorescence_saturation_intensity'))} a.u."
-    )
-    sections: list[Any] = [html.Div(threshold_summary, style={"margin": "6px 0"})]
-
-    fluorescence_rows = diagnostics.get("fluorescence_peaks", [])
-    if fluorescence_rows:
-        sections.append(
-            _build_rosetta_debug_table(
-                title="Fluorescence fits",
-                rows=fluorescence_rows,
-            )
-        )
-
-    marker_rows: list[dict[str, Any]] = []
-    for marker_fit in diagnostics.get("marker_scatter_fits", []):
-        marker_name = str(marker_fit.get("marker_role", "Marker"))
-        selected_peak = marker_fit.get("selected_peak")
-        if isinstance(selected_peak, dict):
-            marker_rows.append(
-                {
-                    "population": f"{marker_name} (gate {marker_fit.get('gated_event_count', '—')} events)",
-                    **selected_peak,
-                    "validated": True,
-                    "rejection_reasons": [],
-                }
-            )
-            continue
-        rejected_peaks = marker_fit.get("rejected_peaks", [])
-        if rejected_peaks:
-            for rejected_peak in rejected_peaks:
-                marker_rows.append(
-                    {
-                        "population": f"{marker_name} candidate",
-                        **rejected_peak,
-                        "validated": False,
-                    }
-                )
-        else:
-            marker_rows.append(
-                {
-                    "population": f"{marker_name} gate ({marker_fit.get('gated_event_count', '—')} events)",
-                    "validated": False,
-                    "rejection_reasons": ["No scatter peak candidate was fitted"],
-                }
-            )
-    if marker_rows:
-        sections.append(
-            _build_rosetta_debug_table(
-                title="Marker-gated scatter fits",
-                rows=marker_rows,
-            )
-        )
-
-    scatter_rows = diagnostics.get("scatter_peaks", [])
-    if scatter_rows:
-        sections.append(
-            _build_rosetta_debug_table(
-                title="Non-fluorescent scatter fits",
-                rows=scatter_rows,
-            )
-        )
-
-    return html.Details(
-        [html.Summary("Debug diagnostics"), html.Div(sections)],
-        style={"marginTop": "8px", "fontSize": "0.9rem"},
-    )
-
-
-def _build_rosetta_debug_table(*, title: str, rows: list[dict[str, Any]]) -> Any:
-    """Build a compact table of peak fit values and validation decisions.
-
-    Parameters
-    ----------
-    title : str
-        Visible heading for this group of fits.
-    rows : list[dict[str, Any]]
-        Fit summaries to display.
-
-    Returns
-    -------
-    Any
-        A heading and responsive Bootstrap table.
-    """
-    headers = ["Peak", "Position [a.u.]", "Events", "R²", "CV", "Result", "Reason"]
-    body_rows = []
-    for row in rows:
-        reasons = row.get("rejection_reasons") or []
-        body_rows.append(
-            html.Tr(
-                [
-                    html.Td(row.get("population", "—")),
-                    html.Td(_format_debug_value(row.get("position", row.get("mean")))),
-                    html.Td(_format_debug_value(row.get("events", row.get("count")))),
-                    html.Td(_format_debug_value(row.get("r2"))),
-                    html.Td(_format_debug_value(row.get("cv"))),
-                    html.Td("Accepted" if row.get("validated") else "Rejected"),
-                    html.Td("; ".join(str(reason) for reason in reasons) or "—"),
-                ]
-            )
-        )
-    return html.Div(
-        [
-            html.Div(title, style={"fontWeight": "600", "marginTop": "8px"}),
-            dbc.Table(
-                [
-                    html.Thead(html.Tr([html.Th(header) for header in headers])),
-                    html.Tbody(body_rows),
-                ],
-                bordered=True,
-                hover=True,
-                responsive=True,
-                size="sm",
-                striped=True,
-                style={"marginBottom": "4px", "fontSize": "0.82rem"},
-            ),
-        ]
-    )
-
-
-def _format_debug_value(value: Any) -> str:
-    """Format one numeric debug value compactly."""
-    if value is None:
-        return "—"
-    if isinstance(value, bool):
-        return "Yes" if value else "No"
-    try:
-        numeric_value = float(value)
-    except (TypeError, ValueError):
-        return str(value)
-    if not math.isfinite(numeric_value):
-        return "∞" if numeric_value > 0 else "—"
-    return f"{numeric_value:.4g}"
 
 
 def build_status_alert(

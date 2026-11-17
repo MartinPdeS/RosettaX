@@ -211,16 +211,22 @@ class ReferenceTable:
                     style={"flex": "1 1 0", "minWidth": "0"},
                 ),
                 dash.html.Div(
-                    dash.dcc.Loading(
-                        dash.dcc.Graph(
-                            id=self.ids.graph_diameter_peak_position,
-                            style=graph_style,
-                            config=styling.PLOTLY_GRAPH_CONFIG,
+                    [
+                        dash.dcc.Loading(
+                            dash.dcc.Graph(
+                                id=self.ids.graph_diameter_peak_position,
+                                style=graph_style,
+                                config=styling.PLOTLY_GRAPH_CONFIG,
+                            ),
+                            type="circle",
+                            color="#0d6efd",
+                            delay_show=150,
                         ),
-                        type="circle",
-                        color="#0d6efd",
-                        delay_show=150,
-                    ),
+                        PlotOptions.build_component(
+                            component_id=self.ids.diameter_peak_position_plot_options,
+                            value=[],
+                        ),
+                    ],
                     style={"flex": "1 1 0", "minWidth": "0"},
                 ),
             ],

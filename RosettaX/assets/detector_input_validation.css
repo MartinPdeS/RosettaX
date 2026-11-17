@@ -1,0 +1,6 @@
+/* Keep invalid detector inputs visible even while they have keyboard focus. */
+.custom-detector-input-invalid,
+.custom-detector-input-invalid:focus {
+    border: 2px solid #c92a2a !important;
+    outline-color: #c92a2a;
+}

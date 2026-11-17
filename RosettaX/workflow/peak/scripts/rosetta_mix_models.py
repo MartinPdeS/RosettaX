@@ -8,9 +8,29 @@ from .rosetta_mix_support import (
     resolve_integer,
 )
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, TypedDict
 
 DEFAULT_BASELINE_SIGMA_MULTIPLIER = 3.0
+
+
+class RosettaPeakPoint(TypedDict, total=False):
+    """Scatter and fluorescence coordinates in detector arbitrary units."""
+
+    x: float
+    y: float
+    kind: str
+    label: str
+
+
+class MarkerScatterDiagnostic(TypedDict, total=False):
+    """Fit outcome for the scatter events gated by a fluorescence marker."""
+
+    marker_role: str
+    fluorescence_position: float
+    gated_event_count: int
+    validated: bool
+    selected_peak: dict[str, Any]
+    rejected_peaks: list[dict[str, Any]]
 
 
 @dataclass(frozen=True)
@@ -154,15 +174,15 @@ class RosettaFluorescenceAnalysis:
 
 @dataclass(frozen=True)
 class RosettaMarkerScatter:
-    points: list[dict[str, Any]]
+    points: list[RosettaPeakPoint]
     guide_positions: list[float]
-    diagnostics: list[dict[str, Any]] = field(default_factory=list)
+    diagnostics: list[MarkerScatterDiagnostic] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
 class RosettaScatterAnalysis:
     analysis: dict[str, Any]
-    points: list[dict[str, Any]]
+    points: list[RosettaPeakPoint]
     positions: list[float]
     diagnostic: str
     stop_status: str | None = None
