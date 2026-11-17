@@ -80,7 +80,7 @@ class RosettaMixSizeAssignmentProcess(FluorescenceGuidedScatterPeakProcess):
 
         if not result.table_prefill_rows:
             if result.status:
-                warning_payload = _mark_size_assignment_warning(
+                warning_payload = _build_warning_graph_payload(
                     peak_lines_payload=result.peak_lines_payload,
                 )
                 return replace(
@@ -94,7 +94,7 @@ class RosettaMixSizeAssignmentProcess(FluorescenceGuidedScatterPeakProcess):
             result=result,
         )
         if not resolved_rows and result.status:
-            warning_payload = _mark_size_assignment_warning(
+            warning_payload = _build_warning_graph_payload(
                 peak_lines_payload=result.peak_lines_payload,
             )
             return replace(
@@ -112,7 +112,7 @@ class RosettaMixSizeAssignmentProcess(FluorescenceGuidedScatterPeakProcess):
                 if "Rosetta Mix size range" in status_suffix
                 else build_marker_anchor_warning(result=result)
             )
-            warning_payload = _mark_size_assignment_warning(
+            warning_payload = _build_warning_graph_payload(
                 peak_lines_payload=result.peak_lines_payload,
             )
             return replace(
@@ -293,8 +293,8 @@ def build_marker_anchor_warning(*, result: PeakProcessResult) -> str:
     )
 
 
-def _mark_size_assignment_warning(*, peak_lines_payload: Any) -> dict[str, Any]:
-    """Retain marker guides and flag them for display after size assignment fails.
+def _build_warning_graph_payload(*, peak_lines_payload: Any) -> dict[str, Any]:
+    """Keep the event cloud and baseline gate while removing peak diagnostics.
 
     Parameters
     ----------
@@ -304,8 +304,20 @@ def _mark_size_assignment_warning(*, peak_lines_payload: Any) -> dict[str, Any]:
     Returns
     -------
     dict[str, Any]
-        A copy of the payload marked for failure diagnostics.
+        A reduced graph payload without candidate positions or debug overlays.
     """
-    payload = dict(peak_lines_payload) if isinstance(peak_lines_payload, dict) else {}
-    payload["rosetta_size_assignment_warning"] = True
-    return payload
+    if not isinstance(peak_lines_payload, dict):
+        return {}
+
+    retained_payload_keys = (
+        "plot_x_values",
+        "plot_y_values",
+        "baseline_cutoff",
+        "y_lower_gate",
+        "y_upper_gate",
+    )
+    return {
+        key: peak_lines_payload[key]
+        for key in retained_payload_keys
+        if key in peak_lines_payload
+    }
