@@ -12,9 +12,9 @@
 | RosettaX/pages/p03\_scattering/sections/s02\_quality/services.py            |       37 |        7 |       14 |        3 |     76.47% |34-36, 54, 69-71 |
 | RosettaX/pages/p03\_scattering/sections/s03\_model/detector\_callbacks.py   |      108 |       49 |       32 |        2 |     46.43% |88-93, 136-141, 205-286, 313, 335-341, 474-493, 509-522 |
 | RosettaX/pages/p03\_scattering/sections/s03\_model/preview\_callbacks.py    |       40 |       21 |        8 |        0 |     39.58% |   124-179 |
-| RosettaX/pages/p03\_scattering/sections/s03\_model/profile\_callbacks.py    |       25 |       16 |        2 |        0 |     33.33% |20-55, 63-179 |
+| RosettaX/pages/p03\_scattering/sections/s03\_model/profile\_callbacks.py    |       27 |       18 |        4 |        0 |     29.03% |20-55, 63-184 |
 | RosettaX/pages/p03\_scattering/sections/s03\_model/services.py              |       68 |       22 |       18 |        3 |     61.63% |64-87, 149-153, 165-173, 182-190, 208, 211, 243-255, 260-262 |
-| RosettaX/pages/p03\_scattering/sections/s04\_table/services.py              |        5 |        2 |        0 |        0 |     60.00% |     35-37 |
+| RosettaX/pages/p03\_scattering/sections/s04\_table/services.py              |       34 |        2 |       12 |        0 |     95.65% |     75-77 |
 | RosettaX/pages/p03\_scattering/sections/s05\_calibration/services.py        |      258 |       66 |       80 |       30 |     69.82% |33, 36, 49, 53-\>21, 82, 128, 145, 157-\>167, 191, 194, 200, 203, 252, 255, 258, 265, 268, 279, 342, 344-\>357, 357-\>372, 426-456, 469, 473-474, 477, 497-502, 511-514, 539, 546-550, 645, 648, 655-659, 786, 789, 851-855, 871-873 |
 | RosettaX/pages/p03\_scattering/sections/s06\_save/services.py               |        3 |        3 |        0 |        0 |      0.00% |       2-9 |
 | RosettaX/pages/p04\_calibrate/sections/s01\_header.py                       |       25 |       13 |        8 |        1 |     39.39% |20-22, 45-59 |
@@ -80,7 +80,7 @@
 | RosettaX/workflow/page\_session/scattering.py                               |       45 |        8 |       10 |        5 |     76.36% |71, 85-90, 93, 96, 134-135 |
 | RosettaX/workflow/parameters/model.py                                       |      134 |       25 |       32 |        6 |     81.33% |140-144, 288-292, 311-313, 316-318, 333-334, 371-375, 485-489, 604, 628, 632-633, 636 |
 | RosettaX/workflow/parameters/refractive\_index.py                           |       71 |       12 |       30 |       10 |     78.22% |20, 27, 56, 61, 67, 75, 88, 104, 107, 115, 142-143 |
-| RosettaX/workflow/parameters/table.py                                       |      139 |       37 |       38 |        7 |     70.62% |171, 201-208, 252-260, 424, 427, 451-467, 482-494, 539, 581-590, 605, 614, 633-634, 636-\>625, 661, 679-731 |
+| RosettaX/workflow/parameters/table.py                                       |      139 |       23 |       38 |        8 |     81.36% |201-208, 253, 256, 424, 427, 581-590, 605, 614, 633-634, 636-\>625, 661, 679-731 |
 | RosettaX/workflow/peak/adapters/base.py                                     |      286 |      170 |      180 |       21 |     34.98% |123-\>126, 127, 139, 151-161, 171-179, 190-196, 208-217, 235, 246, 262, 281-333, 352, 354-\>361, 371-428, 438-444, 454-464, 476-503, 517-\>516, 518-\>517, 521, 532, 538, 571-590, 603-652, 664-668, 679, 682, 692, 696-747, 761, 765-\>768, 827, 830, 836, 840-855 |
 | RosettaX/workflow/peak/adapters/fluorescence.py                             |      203 |       91 |      124 |       29 |     47.40% |91, 112, 123-128, 150-155, 188, 201-238, 257, 269-\>263, 272, 309, 324, 330-350, 356-372, 378, 410-445, 458-466, 476-488, 508, 518, 539-542, 566-573, 581-593, 599, 607-610, 624, 636-654, 676, 687, 693, 717, 725, 728, 737-\>742, 742-\>747 |
 | RosettaX/workflow/peak/adapters/main.py                                     |       22 |       22 |        4 |        0 |      0.00% |      2-87 |
@@ -129,19 +129,19 @@
 | RosettaX/workflow/scattering/calibration\_models.py                         |      131 |       21 |       24 |        8 |     81.29% |48, 55, 241, 345-354, 367-397, 454, 464, 476, 497-502, 520-\>523, 587-612 |
 | RosettaX/workflow/scattering/fitting.py                                     |       57 |       13 |       18 |        8 |     72.00% |75, 80-84, 86-\>98, 99-103, 118-121, 133-143, 155, 228-231 |
 | RosettaX/workflow/scattering/mie\_relation.py                               |      130 |       59 |       44 |       12 |     47.70% |42-90, 105-144, 169, 268, 297, 300, 303, 331, 334, 337, 352, 372-420, 442, 477, 511, 575-590, 609 |
-| RosettaX/workflow/scattering/model.py                                       |      213 |       25 |       48 |       10 |     85.06% |68, 126-\>83, 162, 323, 348, 361, 373, 384, 409-\>418, 464, 476, 575, 609-626, 633-\>647, 705-\>704, 708-\>714, 720-724, 741, 788-789, 906-917, 930 |
+| RosettaX/workflow/scattering/model.py                                       |      213 |       24 |       48 |        9 |     85.82% |68, 126-\>83, 162, 323, 348, 361, 373, 384, 409-\>418, 464, 476, 609-626, 633-\>647, 705-\>704, 708-\>714, 720-724, 741, 788-789, 906-917, 930 |
 | RosettaX/workflow/scattering/numerical\_arrays.py                           |       32 |       10 |        4 |        2 |     66.67% |23-29, 66-74, 93-99, 108-116 |
 | RosettaX/workflow/scattering/standard\_rows.py                              |      141 |       50 |       38 |       14 |     64.25% |30-36, 48-53, 56-61, 71-78, 81-87, 90-96, 164-170, 186-191, 194-199, 202-207, 221-228, 231-237, 240-246, 249-255, 370-375, 406-408, 431-436 |
 | RosettaX/workflow/scattering/validation.py                                  |       26 |        5 |       22 |        5 |     79.17% |28, 41, 47, 62, 74 |
 | RosettaX/workflow/sidebar/services.py                                       |       53 |       35 |        4 |        0 |     31.58% |25, 35-45, 55-93, 102-113, 120-121, 130-134, 141, 145, 149 |
-| RosettaX/workflow/table/fluorescence.py                                     |      145 |       13 |       42 |        9 |     88.24% |54, 79-\>69, 193, 202, 243, 285, 288, 294, 311, 390, 405, 424, 441, 457 |
-| RosettaX/workflow/table/scattering.py                                       |       95 |       25 |       12 |        3 |     71.96% |47-\>54, 82, 127-\>130, 161-165, 181, 198-202, 223-227, 267-271, 288, 320, 348-352, 391-401, 432, 443, 457, 472, 486, 514, 552 |
-| RosettaX/workflow/table/services.py                                         |      115 |       74 |       62 |        2 |     31.07% |12-28, 38-57, 74, 121-129, 140-157, 167, 185-188, 236-247, 258, 287-\>286, 305-339, 350-365, 380 |
+| RosettaX/workflow/table/fluorescence.py                                     |      159 |       15 |       48 |       12 |     86.96% |55, 80-\>70, 206, 215, 256, 280, 298, 301, 307, 317, 324, 367, 405, 439, 456, 472 |
+| RosettaX/workflow/table/scattering.py                                       |       99 |       19 |       16 |        2 |     80.00% |47-\>54, 126-\>129, 225-229, 269-273, 290, 322, 350-354, 393-403, 434, 445, 459, 474, 488, 516, 554 |
+| RosettaX/workflow/table/services.py                                         |      115 |       51 |       62 |        7 |     53.67% |13, 19, 24, 38-57, 74, 148, 186, 236-247, 258, 287-\>286, 305-339, 350-365, 380 |
 | RosettaX/workflow/table/validation.py                                       |       47 |        4 |       22 |        1 |     92.75% | 48, 81-90 |
 | RosettaX/workflow/upload/adapters.py                                        |       34 |       14 |        0 |        0 |     58.82% |62, 73, 82, 94, 130, 141, 150, 162-191 |
 | RosettaX/workflow/upload/models.py                                          |       25 |        2 |        0 |        0 |     92.00% |    65, 86 |
 | RosettaX/workflow/upload/services.py                                        |      222 |       57 |       84 |       13 |     71.24% |71-86, 127, 137, 292, 295, 310, 312, 361, 388, 409, 415-\>418, 448, 508, 534-535, 542-545, 561-586, 605-672 |
-| **TOTAL**                                                                   | **17147** | **5914** | **5814** | **1150** | **61.11%** |           |
+| **TOTAL**                                                                   | **17196** | **5874** | **5838** | **1157** | **61.49%** |           |
 
 20 files skipped due to complete coverage.
 
