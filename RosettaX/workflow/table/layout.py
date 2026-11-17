@@ -24,6 +24,9 @@ class ReferenceTableConfig:
     add_row_button_outline: bool = True
     body_style_key: str = "body_scroll"
     show_table_title: bool = False
+    show_add_row_button: bool = True
+    show_all_rows: bool = False
+    allow_row_deletion: bool = True
 
 
 @dataclass(frozen=True)
@@ -166,9 +169,11 @@ class ReferenceTableLayout:
                     className="rosettax-table-validation",
                     **{"aria-live": "polite"},
                 ),
-                self._build_add_row_button_row(),
             ]
         )
+
+        if self.config.show_add_row_button:
+            children.append(self._build_add_row_button_row())
 
         return dash.html.Div(
             children,
@@ -281,9 +286,16 @@ class ReferenceTableLayout:
         """
         Build DataTable options.
         """
-        return {
-            **styling.DATATABLE,
-        }
+        options = {**styling.DATATABLE}
+        options["row_deletable"] = self.config.allow_row_deletion
+        if self.config.show_all_rows:
+            options.update(
+                page_action="none",
+                fixed_rows={"headers": False},
+                style_table={"width": "100%", "overflow": "visible"},
+                style_cell={**styling.DATATABLE["style_cell"], "minWidth": "0", "width": "auto", "maxWidth": "none", "overflowWrap": "anywhere"},
+            )
+        return options
 
     def _get_body_style(self) -> dict[str, Any]:
         """

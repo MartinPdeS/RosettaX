@@ -307,6 +307,27 @@ class Test_ScatteringModelConfigurationScattererPresets:
 class Test_ScatteringCalibrationStandardTable:
     """Regression checks for scattering calibration standard table."""
 
+    def test_default_profile_without_preset_starts_with_empty_table(self):
+        """Start with no rows when the default profile selects no preset."""
+        _columns, rows = ScatteringCalibrationStandardTable.build_state_from_runtime_config(
+            runtime_config=RuntimeConfig.from_default_profile()
+        )
+        assert rows == []
+
+    def test_custom_preset_without_geometry_starts_with_empty_table(self):
+        """Start with no rows for a custom preset without configured geometry."""
+        _columns, rows = ScatteringCalibrationStandardTable.build_state_from_runtime_config(
+            runtime_config=RuntimeConfig.from_dict({"particle_model": {"scatterer_preset": CUSTOM_SCATTERER_PRESET_NAME}})
+        )
+        assert rows == []
+
+    def test_model_selection_preserves_empty_table_without_preset(self):
+        """Keep an explicitly cleared table empty when the model changes."""
+        _columns, rows = ScatteringCalibrationStandardTable.build_state_for_model_selection(
+            mie_model="Solid Sphere", scatterer_preset="", current_rows=[]
+        )
+        assert rows == []
+
     def test_runtime_config_uses_scatterer_preset_when_geometry_lists_are_empty(self):
         """Check runtime config uses scatterer preset when geometry lists are empty."""
         columns, rows = (
@@ -438,17 +459,17 @@ class Test_ScatteringCalibrationStandardTable:
             "particle_diameter_nm": "994",
             "particle_refractive_index": "Polystyrene(1.59796)",
             "medium_refractive_index": "Water(1.33698)",
-            "measured_peak_position": "12.3",
-            "expected_coupling": "45.6",
-            "expected_cross_section_nm2": "45.6",
+            "measured_peak_position": "",
+            "expected_coupling": "",
+            "expected_cross_section_nm2": "",
         }
         assert rows[1] == {
             "particle_diameter_nm": "799",
             "particle_refractive_index": "Polystyrene(1.59796)",
             "medium_refractive_index": "Water(1.33698)",
-            "measured_peak_position": "78.9",
-            "expected_coupling": "10.11",
-            "expected_cross_section_nm2": "10.11",
+            "measured_peak_position": "",
+            "expected_coupling": "",
+            "expected_cross_section_nm2": "",
         }
 
     def test_model_selection_remaps_current_rows_for_custom_preset(self):

@@ -62,6 +62,9 @@ class ScatteringCalibrationStandardTable:
             resolved_mie_model,
         )
 
+        if not resolved_scatterer_preset:
+            return columns, []
+
         rows = parameters.table.populate_table_from_runtime_defaults(
             mie_model=resolved_mie_model,
             runtime_particle_diameters_nm=runtime_config.get_path(
@@ -78,11 +81,8 @@ class ScatteringCalibrationStandardTable:
             ),
         )
 
-        if not rows:
-            rows = parameters.table.build_empty_rows_for_model(
-                resolved_mie_model,
-                row_count=3,
-            )
+        if cls.table_is_effectively_empty(mie_model=resolved_mie_model, rows=rows):
+            rows = []
 
         logger.debug(
             "Built scattering calibration standard table state from runtime config. resolved_mie_model=%r columns=%r rows=%r",
@@ -121,7 +121,6 @@ class ScatteringCalibrationStandardTable:
         ):
             preset_table_state = scattering.ModelConfiguration.build_table_state_from_scatterer_preset(
                 preset_name=resolved_scatterer_preset,
-                current_rows=current_rows,
             )
 
             if preset_table_state is not None:
@@ -130,6 +129,9 @@ class ScatteringCalibrationStandardTable:
         next_columns = cls.get_columns_for_model(
             resolved_mie_model,
         )
+
+        if current_rows == []:
+            return next_columns, []
 
         next_rows = cls.remap_rows_to_model(
             mie_model=resolved_mie_model,

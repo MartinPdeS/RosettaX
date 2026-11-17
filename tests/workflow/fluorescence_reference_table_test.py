@@ -7,6 +7,7 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 
+import pytest
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.table.fluorescence import (
     CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME,
@@ -21,6 +22,24 @@ from RosettaX.workflow.table.fluorescence import (
 
 class Test_FluorescenceReferencePresets:
     """Regression checks for fluorescence reference presets."""
+
+    def test_empty_default_profile_starts_without_rows_or_preset(self):
+        """Start with an empty table when no standard values are configured."""
+        runtime_config = RuntimeConfig.from_default_profile()
+        assert FluorescenceReferenceTable.build_rows_from_runtime_config(runtime_config=runtime_config) == []
+        assert FluorescenceReferenceTable.resolve_runtime_preset_name(runtime_config=runtime_config) == ""
+
+    def test_append_custom_values_preserves_rows(self):
+        """Append the entered standard intensities to existing rows."""
+        rows = FluorescenceReferenceTable.append_custom_values(value="123, 456", rows=[{"col1": "12", "col2": "34"}])
+        assert [row["col1"] for row in rows] == ["12", "123", "456"]
+        assert rows[0]["col2"] == "34"
+
+    @pytest.mark.parametrize("value", ["", "1,", "-2", "nan", "inf", "abc"])
+    def test_append_custom_values_rejects_invalid_values(self, value):
+        """Reject missing, invalid, negative and non-finite intensities."""
+        with pytest.raises(ValueError):
+            FluorescenceReferenceTable.append_custom_values(value=value, rows=[])
 
     def test_build_rows_from_named_preset_populates_calibrated_intensity_column(self):
         """Check build rows from named preset populates calibrated intensity column."""

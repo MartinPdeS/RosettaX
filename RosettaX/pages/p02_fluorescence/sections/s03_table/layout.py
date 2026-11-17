@@ -16,6 +16,16 @@ def get_layout(section) -> dbc.Card:
     body.children = [
         build_preset_controls(section),
         dash.html.Div(
+            [
+                dash.html.Label("Standard intensity values", htmlFor=section.ids.custom_values),
+                dbc.Input(id=section.ids.custom_values, type="text", placeholder="e.g. 1000, 10000, 100000"),
+                dbc.Button("Add to table", id=section.ids.custom_values_add, n_clicks=0, color="primary", style={"marginTop": "10px"}),
+                dbc.Alert(id=section.ids.custom_values_error, color="warning", is_open=False, style={"marginTop": "8px"}),
+            ],
+            id=section.ids.custom_values_container,
+            style={"display": "none"},
+        ),
+        dash.html.Div(
             style={
                 "height": "14px",
             },
@@ -62,7 +72,7 @@ def build_preset_controls(section) -> dash.html.Div:
                 dbc.Tooltip(
                     (
                         "Select a built-in fluorescence bead ladder to populate the "
-                        "calibrated-intensity column. Choose Custom to keep manual MESF edits."
+                        "calibrated-intensity column. Choose Custom to enter your own values."
                     ),
                     id=section.reference_table_preset_tooltip_id,
                     target=section.reference_table_preset_tooltip_target_id,

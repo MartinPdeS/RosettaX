@@ -122,9 +122,9 @@ def build_optical_configuration_controls(section: Model) -> dash.html.Div:
                     "marginBottom": styling.get_spacing_token("xs"),
                 },
             ),
-            dbc.Card(
+            dash.html.Div(
                 [
-                    dbc.CardHeader(
+                    dash.html.Div(
                         ui_forms.build_title_with_info(
                             title="Detector",
                             tooltip_target_id=section.detector_preset_tooltip_target_id,
@@ -137,11 +137,9 @@ def build_optical_configuration_controls(section: Model) -> dash.html.Div:
                             ),
                             title_style_overrides={"fontSize": "1rem"},
                         ),
-                        style=ui_forms.build_workflow_subpanel_header_style(
-                            color_name=section.card_color,
-                        ),
+                        style={"marginBottom": "8px"},
                     ),
-                    dbc.CardBody(
+                    dash.html.Div(
                         dash.html.Div(
                             [
                                 dash.dcc.Dropdown(
@@ -220,18 +218,14 @@ def build_optical_configuration_controls(section: Model) -> dash.html.Div:
                                 "overflow": "visible",
                             },
                         ),
-                        style=ui_forms.build_workflow_panel_body_style(),
                     ),
                 ],
-                style=ui_forms.build_workflow_subpanel_card_style(
-                    color_name=section.card_color,
-                ),
             ),
             dash.html.Div(
-                dbc.Card(
+                dash.html.Div(
                     [
-                        dbc.CardHeader("Custom detector settings"),
-                        dbc.CardBody(
+                        dash.html.Div("Custom detector settings", style={"fontWeight": "600", "marginBottom": "8px"}),
+                        dash.html.Div(
                             dash.html.Div(
                                 [
                                     build_numeric_input_row(
@@ -375,9 +369,6 @@ def build_optical_configuration_controls(section: Model) -> dash.html.Div:
                             ),
                         ),
                     ],
-                    style=ui_forms.build_workflow_subpanel_card_style(
-                        color_name=section.card_color,
-                    ),
                 ),
                 id=section.ids.detector_configuration_custom_values_container,
                 style=services.build_parameter_group_style(is_visible=False),
@@ -407,13 +398,13 @@ def build_optical_configuration_controls(section: Model) -> dash.html.Div:
     )
 
 
-def build_optical_configuration_visualization(section: Model) -> dbc.Card:
+def build_optical_configuration_visualization(section: Model) -> dash.html.Div:
     """
     Build optical configuration preview graph.
     """
-    return dbc.Card(
+    return dash.html.Div(
         [
-            dbc.CardHeader(
+            dash.html.Div(
                 ui_forms.build_title_with_info(
                     title="Optical preview",
                     tooltip_target_id=section.optical_preview_tooltip_target_id,
@@ -430,14 +421,10 @@ def build_optical_configuration_visualization(section: Model) -> dbc.Card:
                     },
                 ),
                 style={
-                    "background": "rgba(128, 128, 128, 0.08)",
-                    "borderBottom": "1px solid rgba(128, 128, 128, 0.18)",
-                    "padding": "10px 14px",
-                    "borderTopLeftRadius": "10px",
-                    "borderTopRightRadius": "10px",
+                    "marginBottom": "8px",
                 },
             ),
-            dbc.CardBody(
+            dash.html.Div(
                 [
                     dash.dcc.Store(
                         id=section.ids.optical_configuration_preview_signature_store,
@@ -471,7 +458,6 @@ def build_optical_configuration_visualization(section: Model) -> dbc.Card:
         style={
             "flex": "0 1 430px",
             "minWidth": "340px",
-            "borderRadius": "10px",
             "overflow": "visible",
         },
     )
@@ -742,7 +728,7 @@ def refractive_index_picker(
         value=default_value,
         min=1.0,
         max=2.5,
-        step=0.001,
+        step="any",
         debounce=True,
         persistence=True,
         persistence_type="session",

@@ -5,7 +5,6 @@ from . import callbacks, layout
 from RosettaX.ui import WorkflowStep
 from RosettaX.utils import RuntimeConfig
 from RosettaX.workflow.table.fluorescence import (
-    CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME,
     FluorescenceReferenceTable,
 )
 from RosettaX.workflow.table.layout import ReferenceTableConfig, ReferenceTableLayout
@@ -24,7 +23,6 @@ class ReferenceTable:
     - Populate the table from the default runtime profile at layout creation.
     - Rebuild the table from runtime profile values when a sidebar profile is loaded.
     - Preserve user edited rows during ordinary runtime store updates.
-    - Own the add row callback.
     - Keep the existing table ID used by peak detection and calibration callbacks.
 
     Ownership rule
@@ -78,8 +76,10 @@ class ReferenceTable:
             card_title=layout.build_card_title(self),
             table_title=None,
             description=None,
-            add_row_button_label="Add row",
-            body_style_key="body_scroll",
+            show_add_row_button=False,
+            show_all_rows=True,
+            allow_row_deletion=False,
+            body_style_key="",
             show_table_title=False,
         )
 
@@ -107,9 +107,7 @@ class ReferenceTable:
             runtime_config=runtime_config,
         )
 
-        return str(
-            preset_name or CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME,
-        )
+        return str(preset_name or "")
 
     def get_layout(self) -> dbc.Card:
         """

@@ -3,6 +3,7 @@ import dash_bootstrap_components as dbc
 import logging
 from ..s03_model.main import Model as ScatteringModelSection
 from ..s05_calibration import services as calibration_services
+from . import services as table_section_services
 from .services import ScatteringCalibrationStandardTable
 from RosettaX.pages.p00_sidebar.ids import SidebarIds
 from RosettaX.pages.p03_scattering.sections.s03_model import layout as model_layout
@@ -82,10 +83,6 @@ class ReferenceTable:
             f"{self.ids.bead_table}-description-tooltip-target"
         )
 
-        self.compute_model_tooltip_id = f"{self.ids.compute_model_btn}-info-tooltip"
-        self.compute_model_tooltip_target_id = (
-            f"{self.ids.compute_model_btn}-info-target"
-        )
         self.model_section = ScatteringModelSection(
             page=page,
             section_number=section_number,
@@ -98,7 +95,9 @@ class ReferenceTable:
             card_title=self._build_card_title(),
             table_title=None,
             description=None,
-            add_row_button_label="Add row",
+            show_add_row_button=False,
+            show_all_rows=True,
+            allow_row_deletion=False,
             body_style_key="",
             show_table_title=True,
         )
@@ -106,7 +105,7 @@ class ReferenceTable:
         self.action_config = ReferenceTableActionConfig(
             button_id=self.ids.compute_model_btn,
             button_label="Compute model",
-            description=self._build_compute_model_description(),
+            description=None,
             button_color="primary",
             button_style={
                 "marginTop": "12px",
@@ -142,6 +141,25 @@ class ReferenceTable:
                 },
             ),
             dash.html.Div(
+                [
+                    dash.html.Label("Particle diameters (nm)", id=self.ids.custom_diameters_label, htmlFor=self.ids.custom_diameters),
+                    dbc.Input(id=self.ids.custom_diameters, type="text", placeholder="e.g. 100, 200, 500"),
+                    dash.html.Div(
+                        [
+                            dash.html.Label("Shell thicknesses (nm)", htmlFor=self.ids.custom_shell_thicknesses),
+                            dbc.Input(id=self.ids.custom_shell_thicknesses, type="text", placeholder="e.g. 20, or 10, 20, 30"),
+                            dbc.FormText("Enter one thickness for all particles, or one per core diameter."),
+                        ],
+                        id=self.ids.custom_shell_container,
+                        style={"marginTop": "8px"},
+                    ),
+                    dbc.Button("Add to table", id=self.ids.custom_diameters_add, n_clicks=0, color="primary", style={"marginTop": "10px"}),
+                    dbc.Alert(id=self.ids.custom_diameters_error, color="warning", is_open=False, style={"marginTop": "8px"}),
+                ],
+                id=self.ids.custom_diameters_container,
+                style={"display": "none"},
+            ),
+            dash.html.Div(
                 style={
                     "height": "18px",
                 },
@@ -166,33 +184,6 @@ class ReferenceTable:
             tooltip_target_id=self.description_tooltip_target_id,
             tooltip_id=self.description_tooltip_id,
             tooltip_text=self.workflow_step.tooltip_text,
-        )
-
-    def _build_compute_model_description(self) -> dash.html.Div:
-        """
-        Build the compute model action help as a compact hover tooltip.
-        """
-        return dash.html.Div(
-            [
-                ui_forms.build_info_badge(
-                    tooltip_target_id=self.compute_model_tooltip_target_id,
-                ),
-                dbc.Tooltip(
-                    (
-                        "This step fills the modeled coupling column for the "
-                        "calibration standard using the current optical and particle "
-                        "parameters."
-                    ),
-                    id=self.compute_model_tooltip_id,
-                    target=self.compute_model_tooltip_target_id,
-                    placement="right",
-                ),
-            ],
-            style={
-                "display": "inline-flex",
-                "alignItems": "center",
-                "marginLeft": "8px",
-            },
         )
 
     def _build_default_table_state(
@@ -250,8 +241,53 @@ class ReferenceTable:
         self._register_table_default_population_callback()
         self._register_table_callbacks()
         self._register_scatterer_preset_table_callback()
+        self._register_custom_diameter_callbacks()
         self._register_compute_model_callback()
         self._register_post_compute_cleanup_callback()
+
+    def _register_custom_diameter_callbacks(self) -> None:
+        """Show custom entry controls and append validated dimensions."""
+
+        @dash.callback(
+            dash.Output(self.ids.custom_diameters_container, "style"),
+            dash.Output(self.ids.custom_shell_container, "style"),
+            dash.Output(self.ids.custom_diameters_label, "children"),
+            dash.Input(self.page.ids.Parameters.scatterer_preset, "value"),
+            dash.Input(self.page.ids.Parameters.mie_model, "value"),
+        )
+        def show_custom_diameters(preset_name: Any, mie_model: Any) -> tuple[Any, Any, str]:
+            is_custom = preset_name == scattering.CUSTOM_SCATTERER_PRESET_NAME
+            is_core_shell = parameters.table.resolve_mie_model(mie_model) == parameters.table.MIE_MODEL_CORE_SHELL_SPHERE
+            return (
+                {"display": "block" if is_custom else "none", "marginTop": "16px", "maxWidth": "520px"},
+                {"display": "block" if is_core_shell else "none", "marginTop": "8px"},
+                "Core diameters (nm)" if is_core_shell else "Particle diameters (nm)",
+            )
+
+        @dash.callback(
+            dash.Output(self.ids.bead_table, "data", allow_duplicate=True),
+            dash.Output(self.ids.custom_diameters_error, "children"),
+            dash.Output(self.ids.custom_diameters_error, "is_open"),
+            dash.Output(self.ids.custom_diameters, "value"),
+            dash.Output(self.ids.custom_shell_thicknesses, "value"),
+            dash.Input(self.ids.custom_diameters_add, "n_clicks"),
+            dash.State(self.page.ids.Parameters.mie_model, "value"),
+            dash.State(self.ids.custom_diameters, "value"),
+            dash.State(self.ids.custom_shell_thicknesses, "value"),
+            dash.State(self.ids.bead_table, "data"),
+            prevent_initial_call=True,
+        )
+        def add_custom_diameters(n_clicks: Any, mie_model: Any, diameters: Any, shell_thicknesses: Any, rows: Any) -> tuple[Any, ...]:
+            if not n_clicks:
+                raise dash.exceptions.PreventUpdate
+            try:
+                next_rows = table_section_services.add_custom_diameter_rows(
+                    mie_model=mie_model, diameters=diameters,
+                    shell_thicknesses=shell_thicknesses, current_rows=rows,
+                )
+            except ValueError as error:
+                return dash.no_update, str(error), True, dash.no_update, dash.no_update
+            return next_rows, "", False, "", ""
 
     def _register_scatterer_preset_table_callback(self) -> None:
         """
@@ -279,10 +315,23 @@ class ReferenceTable:
             wavelength_nm: Any,
             current_rows: Any,
         ) -> tuple[Any, Any]:
+            preset_changed = (
+                self.page.ids.Parameters.scatterer_preset
+                in dash.ctx.triggered_prop_ids.values()
+            )
+            if preset_changed and str(scatterer_preset or "").strip() in (
+                "", scattering.CUSTOM_SCATTERER_PRESET_NAME,
+            ):
+                return dash.no_update, []
+
             preset_table_state = (
                 scattering.ModelConfiguration.build_table_state_from_scatterer_preset(
                     preset_name=scatterer_preset,
-                    current_rows=current_rows,
+                    current_rows=(
+                        None
+                        if preset_changed
+                        else current_rows
+                    ),
                     wavelength_nm=wavelength_nm,
                 )
             )
@@ -395,7 +444,7 @@ class ReferenceTable:
 
     def _register_table_callbacks(self) -> None:
         """
-        Register schema synchronization, add row, and edit normalization callbacks.
+        Register schema synchronization and edit normalization callbacks.
         """
 
         @dash.callback(
@@ -439,46 +488,6 @@ class ReferenceTable:
             )
 
             return next_columns, next_rows
-
-        @dash.callback(
-            dash.Output(
-                self.ids.bead_table,
-                "data",
-                allow_duplicate=True,
-            ),
-            dash.Input(self.ids.add_row_btn, "n_clicks"),
-            dash.State(self.page.ids.Parameters.mie_model, "value"),
-            dash.State(self.ids.bead_table, "data"),
-            prevent_initial_call=True,
-        )
-        def add_row(
-            n_clicks: int,
-            mie_model: Any,
-            rows: list[dict[str, Any]] | None,
-        ) -> list[dict[str, Any]]:
-            logger.debug(
-                "add_row called with n_clicks=%r mie_model=%r row_count=%r",
-                n_clicks,
-                mie_model,
-                None if rows is None else len(rows),
-            )
-
-            resolved_mie_model = parameters.table.resolve_mie_model(
-                mie_model,
-            )
-
-            next_rows = ScatteringCalibrationStandardTable.add_empty_row(
-                mie_model=resolved_mie_model,
-                rows=rows,
-            )
-
-            logger.debug(
-                "add_row returning resolved_mie_model=%r new_row_count=%d",
-                resolved_mie_model,
-                len(next_rows),
-            )
-
-            return next_rows
 
         @dash.callback(
             dash.Output(

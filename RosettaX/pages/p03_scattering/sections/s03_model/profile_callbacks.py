@@ -112,6 +112,11 @@ def register_scatterer_preset_callbacks(section: Model) -> None:
         current_shell_refractive_index: Any,
         wavelength_nm: Any,
     ) -> tuple[Any, ...]:
+        if str(preset_name or "").strip() in (
+            "", section.model_configuration.custom_scatterer_preset_name,
+        ):
+            return (dash.no_update,) * 9
+
         logger.debug(
             "apply_scatterer_preset called with triggered_id=%r preset_name=%r",
             dash.ctx.triggered_id,

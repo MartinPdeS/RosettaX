@@ -1,5 +1,6 @@
 
 import json
+import math
 from . import services as table_services
 from dataclasses import dataclass
 from functools import lru_cache
@@ -87,6 +88,7 @@ def build_fluorescence_reference_preset_options() -> list[dict[str, str]]:
     Build dropdown options for fluorescence reference presets.
     """
     options = [
+        {"label": "No preset", "value": ""},
         {
             "label": CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME,
             "value": CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME,
@@ -144,6 +146,17 @@ class FluorescenceReferenceTable:
     ]
 
     @classmethod
+    def append_custom_values(cls, *, value: Any, rows: list[dict[str, Any]] | None) -> list[dict[str, Any]]:
+        """Append comma-separated standard intensities, rejecting invalid values."""
+        try:
+            values = [float(item.strip()) for item in (value or "").split(",")]
+            if any(not math.isfinite(item) or item < 0 for item in values):
+                raise ValueError
+        except (ValueError, AttributeError):
+            raise ValueError("Enter comma-separated, non-negative finite numbers.") from None
+        return [*(rows or []), *cls.build_rows_from_mesf_values(values)]
+
+    @classmethod
     def build_default_rows(
         cls,
         *,
@@ -171,9 +184,9 @@ class FluorescenceReferenceTable:
             default=[],
         )
 
-        return cls.build_rows_from_mesf_values(
-            mesf_values,
-        )
+        if not cls.parse_mesf_values(mesf_values):
+            return []
+        return cls.build_rows_from_mesf_values(mesf_values)
 
     @classmethod
     def build_rows_from_preset_name(
@@ -372,6 +385,8 @@ class FluorescenceReferenceTable:
         """
         Resolve the fluorescence preset that matches the runtime MESF values.
         """
+        if not cls.parse_mesf_values(runtime_config.get_path("calibration.mesf_values", default=[])):
+            return ""
         return cls.resolve_matching_preset_name(
             rows=cls.build_rows_from_runtime_config(
                 runtime_config=runtime_config,

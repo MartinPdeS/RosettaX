@@ -133,14 +133,22 @@ A typical RosettaX session follows these steps:
 The exact procedure depends on the selected workflow, but the application is
 organized so that each step remains visible and traceable.
 
+For a custom scattering standard, enter comma-separated particle diameters and
+select ``Add to table``. For core/shell particles, enter core diameters and
+either one shell thickness for all particles or one thickness per diameter.
+All dimensions are in nanometers.
+
+For a custom fluorescence standard, enter comma-separated standard intensity
+values and select ``Add to table``.
+
 Rosetta peak detection uses a baseline fluorescence gate of three standard
 deviations when no gate-width setting is provided. Explicit gate widths stored
 in existing profiles retain their selected value.
 
 On smaller screens, open ``Menu`` to access navigation and saved profiles.
 Graphs use a viewport-aware default height; an explicit graph height in your
-profile remains in effect. Calibration reference tables keep headers visible
-while scrolling and show cell-specific feedback for invalid numeric entries.
+profile remains in effect. Calibration reference tables show cell-specific
+feedback for invalid numeric entries. The scattering table expands to show all rows.
 Blank cells remain available for completing a table in stages.
 
 

@@ -39,6 +39,22 @@ class CalibrationSectionIds:
         return f"{self.prefix}-calibration-bead-table-preset-dropdown"
 
     @property
+    def custom_values_container(self) -> str:
+        return f"{self.prefix}-custom-values-container"
+
+    @property
+    def custom_values(self) -> str:
+        return f"{self.prefix}-custom-values"
+
+    @property
+    def custom_values_add(self) -> str:
+        return f"{self.prefix}-custom-values-add"
+
+    @property
+    def custom_values_error(self) -> str:
+        return f"{self.prefix}-custom-values-error"
+
+    @property
     def add_row_btn(self) -> str:
         return f"{self.prefix}-calibration-add-row-button"
 
