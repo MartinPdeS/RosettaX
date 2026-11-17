@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "RosettaX"
-version = "0.13.0"
+version = "0.13.1"
 description = "Interactive fluorescence and scattering calibration workflows for flow cytometry."
 license = "AGPL-3.0-or-later"
 readme = "README.rst"
