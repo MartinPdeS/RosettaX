@@ -21,14 +21,12 @@ class DetectorGeometryValues:
 @dataclass(frozen=True)
 class ProfileParameterState:
     detector_preset: str
-    scatterer_preset: str
     values: ScatteringModelDefaults
 
     def to_callback_values(self) -> tuple[Any, ...]:
         """Translate named profile state into the registered Dash output order."""
         return (
             self.detector_preset,
-            self.scatterer_preset,
             *self.values.to_callback_values(),
         )
 

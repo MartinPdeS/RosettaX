@@ -19,7 +19,6 @@ def register_callbacks(section: Model) -> None:
     logger.debug("Registering Parameters callbacks.")
 
     register_visibility_callbacks(section)
-    profile_callbacks.register_scatterer_preset_callbacks(section)
     register_refractive_index_callbacks(section)
     detector_callbacks.register_detector_configuration_callbacks(section)
     register_detector_numerical_aperture_warning_callback(section)
@@ -41,28 +40,20 @@ def register_visibility_callbacks(section: Model) -> None:
         dash.Output(section.ids.core_shell_container, "style"),
         dash.Input("runtime-config-store", "data"),
         dash.Input(section.ids.mie_model, "value"),
-        dash.Input(section.ids.scatterer_preset, "value"),
         prevent_initial_call=False,
     )
     def toggle_parameter_blocks(
         runtime_config_data: Any,
         mie_model_value: str | None,
-        scatterer_preset: Any,
     ) -> tuple[dict[str, str], dict[str, str], dict[str, str]]:
-        resolved_mie_model = section.model_configuration.resolve_mie_model(
-            mie_model_value,
-        )
+        resolved_mie_model = section.model_configuration.resolve_mie_model(mie_model_value)
         show_preset_configuration = services.resolve_show_preset_configuration(
             runtime_config_data,
         )
 
         resolved_styles = (
             services.build_parameter_group_style(
-                is_visible=services.should_show_scatterer_preset_configuration(
-                    section,
-                    preset_name=scatterer_preset,
-                    show_preset_configuration=show_preset_configuration,
-                ),
+                is_visible=show_preset_configuration,
             ),
             services.build_parameter_group_style(
                 is_visible=resolved_mie_model != "Core/Shell Sphere",
@@ -73,9 +64,8 @@ def register_visibility_callbacks(section: Model) -> None:
         )
 
         logger.debug(
-            "toggle_parameter_blocks called with mie_model_value=%r scatterer_preset=%r show_preset_configuration=%r styles=%r",
+            "toggle_parameter_blocks called with mie_model_value=%r show_preset_configuration=%r styles=%r",
             mie_model_value,
-            scatterer_preset,
             show_preset_configuration,
             resolved_styles,
         )

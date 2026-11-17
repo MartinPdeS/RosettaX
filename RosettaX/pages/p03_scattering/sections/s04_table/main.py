@@ -54,10 +54,10 @@ class ReferenceTable:
         ),
         hover_description=(
             "This section defines the calibration standard used to infer the instrument "
-            "response. Set the particle model and refractive indices above, then edit "
-            "the standard particle geometry in the table. Measured peak positions are "
-            "optional at this stage. First click Compute model to fill the modeled "
-            "coupling column. Then fit the instrument response in the next section."
+            "response. Set the particle model and medium refractive index above, then "
+            "add standards with the form below the table. You can edit their measured "
+            "peak positions in the table. Click Compute model to fill the modeled "
+            "coupling column, then fit the instrument response in the next section."
         ),
     )
 
@@ -95,9 +95,9 @@ class ReferenceTable:
             card_title=self._build_card_title(),
             table_title=None,
             description=None,
-            show_add_row_button=False,
+            show_add_row_button=True,
             show_all_rows=True,
-            allow_row_deletion=False,
+            allow_row_deletion=True,
             body_style_key="",
             show_table_title=True,
         )
@@ -133,6 +133,7 @@ class ReferenceTable:
 
         card = self.layout_builder.get_layout()
         body = card.children[1]
+        table_body_children = list(body.children)
         body.children = [
             dash.html.Div(
                 model_layout.build_particle_configuration_section(self.model_section),
@@ -141,30 +142,11 @@ class ReferenceTable:
                 },
             ),
             dash.html.Div(
-                [
-                    dash.html.Label("Particle diameters (nm)", id=self.ids.custom_diameters_label, htmlFor=self.ids.custom_diameters),
-                    dbc.Input(id=self.ids.custom_diameters, type="text", placeholder="e.g. 100, 200, 500"),
-                    dash.html.Div(
-                        [
-                            dash.html.Label("Shell thicknesses (nm)", htmlFor=self.ids.custom_shell_thicknesses),
-                            dbc.Input(id=self.ids.custom_shell_thicknesses, type="text", placeholder="e.g. 20, or 10, 20, 30"),
-                            dbc.FormText("Enter one thickness for all particles, or one per core diameter."),
-                        ],
-                        id=self.ids.custom_shell_container,
-                        style={"marginTop": "8px"},
-                    ),
-                    dbc.Button("Add to table", id=self.ids.custom_diameters_add, n_clicks=0, color="primary", style={"marginTop": "10px"}),
-                    dbc.Alert(id=self.ids.custom_diameters_error, color="warning", is_open=False, style={"marginTop": "8px"}),
-                ],
-                id=self.ids.custom_diameters_container,
-                style={"display": "none"},
-            ),
-            dash.html.Div(
                 style={
                     "height": "18px",
                 },
             ),
-            *list(body.children),
+            *table_body_children,
             dash.html.Div(
                 style={
                     "height": "18px",
@@ -240,106 +222,31 @@ class ReferenceTable:
         register_reference_table_validation(self.ids)
         self._register_table_default_population_callback()
         self._register_table_callbacks()
-        self._register_scatterer_preset_table_callback()
-        self._register_custom_diameter_callbacks()
+        self._register_add_row_callback()
         self._register_compute_model_callback()
         self._register_post_compute_cleanup_callback()
 
-    def _register_custom_diameter_callbacks(self) -> None:
-        """Show custom entry controls and append validated dimensions."""
-
-        @dash.callback(
-            dash.Output(self.ids.custom_diameters_container, "style"),
-            dash.Output(self.ids.custom_shell_container, "style"),
-            dash.Output(self.ids.custom_diameters_label, "children"),
-            dash.Input(self.page.ids.Parameters.scatterer_preset, "value"),
-            dash.Input(self.page.ids.Parameters.mie_model, "value"),
-        )
-        def show_custom_diameters(preset_name: Any, mie_model: Any) -> tuple[Any, Any, str]:
-            is_custom = preset_name == scattering.CUSTOM_SCATTERER_PRESET_NAME
-            is_core_shell = parameters.table.resolve_mie_model(mie_model) == parameters.table.MIE_MODEL_CORE_SHELL_SPHERE
-            return (
-                {"display": "block" if is_custom else "none", "marginTop": "16px", "maxWidth": "520px"},
-                {"display": "block" if is_core_shell else "none", "marginTop": "8px"},
-                "Core diameters (nm)" if is_core_shell else "Particle diameters (nm)",
-            )
+    def _register_add_row_callback(self) -> None:
+        """Append a blank row using the current particle model."""
 
         @dash.callback(
             dash.Output(self.ids.bead_table, "data", allow_duplicate=True),
-            dash.Output(self.ids.custom_diameters_error, "children"),
-            dash.Output(self.ids.custom_diameters_error, "is_open"),
-            dash.Output(self.ids.custom_diameters, "value"),
-            dash.Output(self.ids.custom_shell_thicknesses, "value"),
-            dash.Input(self.ids.custom_diameters_add, "n_clicks"),
+            dash.Input(self.ids.add_row_btn, "n_clicks"),
             dash.State(self.page.ids.Parameters.mie_model, "value"),
-            dash.State(self.ids.custom_diameters, "value"),
-            dash.State(self.ids.custom_shell_thicknesses, "value"),
             dash.State(self.ids.bead_table, "data"),
             prevent_initial_call=True,
         )
-        def add_custom_diameters(n_clicks: Any, mie_model: Any, diameters: Any, shell_thicknesses: Any, rows: Any) -> tuple[Any, ...]:
+        def add_row(
+            n_clicks: Any,
+            mie_model: Any,
+            current_rows: Any,
+        ) -> list[dict[str, Any]]:
             if not n_clicks:
                 raise dash.exceptions.PreventUpdate
-            try:
-                next_rows = table_section_services.add_custom_diameter_rows(
-                    mie_model=mie_model, diameters=diameters,
-                    shell_thicknesses=shell_thicknesses, current_rows=rows,
-                )
-            except ValueError as error:
-                return dash.no_update, str(error), True, dash.no_update, dash.no_update
-            return next_rows, "", False, "", ""
-
-    def _register_scatterer_preset_table_callback(self) -> None:
-        """
-        Populate the calibration standard table from the selected scatterer preset.
-        """
-
-        @dash.callback(
-            dash.Output(
-                self.ids.bead_table,
-                "columns",
-                allow_duplicate=True,
-            ),
-            dash.Output(
-                self.ids.bead_table,
-                "data",
-                allow_duplicate=True,
-            ),
-            dash.Input(self.page.ids.Parameters.scatterer_preset, "value"),
-            dash.Input(self.page.ids.Parameters.wavelength_nm, "value"),
-            dash.State(self.ids.bead_table, "data"),
-            prevent_initial_call=True,
-        )
-        def populate_table_from_scatterer_preset(
-            scatterer_preset: Any,
-            wavelength_nm: Any,
-            current_rows: Any,
-        ) -> tuple[Any, Any]:
-            preset_changed = (
-                self.page.ids.Parameters.scatterer_preset
-                in dash.ctx.triggered_prop_ids.values()
+            return ScatteringCalibrationStandardTable.add_empty_row(
+                mie_model=mie_model,
+                rows=current_rows,
             )
-            if preset_changed and str(scatterer_preset or "").strip() in (
-                "", scattering.CUSTOM_SCATTERER_PRESET_NAME,
-            ):
-                return dash.no_update, []
-
-            preset_table_state = (
-                scattering.ModelConfiguration.build_table_state_from_scatterer_preset(
-                    preset_name=scatterer_preset,
-                    current_rows=(
-                        None
-                        if preset_changed
-                        else current_rows
-                    ),
-                    wavelength_nm=wavelength_nm,
-                )
-            )
-
-            if preset_table_state is None:
-                return dash.no_update, dash.no_update
-
-            return preset_table_state
 
     def _register_table_default_population_callback(self) -> None:
         """
@@ -459,30 +366,29 @@ class ReferenceTable:
                 allow_duplicate=True,
             ),
             dash.Input(self.page.ids.Parameters.mie_model, "value"),
-            dash.State(self.page.ids.Parameters.scatterer_preset, "value"),
             dash.State(self.ids.bead_table, "data"),
+            dash.State(self.page.ids.Parameters.wavelength_nm, "value"),
             prevent_initial_call=True,
         )
         def sync_table_schema_from_model(
             mie_model: Any,
-            scatterer_preset: Any,
             current_rows: list[dict[str, Any]] | None,
+            wavelength_nm: Any,
         ) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
             resolved_mie_model = parameters.table.resolve_mie_model(mie_model)
 
             next_columns, next_rows = (
                 ScatteringCalibrationStandardTable.build_state_for_model_selection(
                     mie_model=resolved_mie_model,
-                    scatterer_preset=scatterer_preset,
                     current_rows=current_rows,
+                    wavelength_nm=wavelength_nm,
                 )
             )
 
             logger.debug(
-                "sync_table_schema_from_model returning resolved_mie_model=%r scatterer_preset=%r "
+                "sync_table_schema_from_model returning resolved_mie_model=%r "
                 "column_count=%d row_count=%d",
                 resolved_mie_model,
-                scatterer_preset,
                 len(next_columns),
                 len(next_rows),
             )
@@ -498,12 +404,14 @@ class ReferenceTable:
             dash.Input(self.ids.bead_table, "data_timestamp"),
             dash.State(self.page.ids.Parameters.mie_model, "value"),
             dash.State(self.ids.bead_table, "data"),
+            dash.State(self.page.ids.Parameters.wavelength_nm, "value"),
             prevent_initial_call=True,
         )
         def normalize_table_after_user_edit(
             data_timestamp: Any,
             mie_model: Any,
             current_rows: list[dict[str, Any]] | None,
+            wavelength_nm: Any,
         ) -> list[dict[str, Any]]:
             logger.debug(
                 "normalize_table_after_user_edit called with data_timestamp=%r "
@@ -520,6 +428,7 @@ class ReferenceTable:
             normalized_rows = ScatteringCalibrationStandardTable.normalize_rows(
                 mie_model=resolved_mie_model,
                 rows=current_rows,
+                wavelength_nm=wavelength_nm,
             )
 
             logger.debug(
@@ -606,13 +515,38 @@ class ReferenceTable:
                 mie_model,
             )
 
+            resolved_medium_refractive_index = calibration_services.resolve_table_refractive_index(
+                current_rows or [],
+                column_name=parameters.table.COLUMN_MEDIUM_REFRACTIVE_INDEX,
+                fallback_value=medium_refractive_index,
+                wavelength_nm=wavelength_nm,
+            )
+            resolved_particle_refractive_index = calibration_services.resolve_table_refractive_index(
+                current_rows or [],
+                column_name=parameters.table.COLUMN_PARTICLE_REFRACTIVE_INDEX,
+                fallback_value=particle_refractive_index,
+                wavelength_nm=wavelength_nm,
+            )
+            resolved_core_refractive_index = calibration_services.resolve_table_refractive_index(
+                current_rows or [],
+                column_name=parameters.table.COLUMN_CORE_REFRACTIVE_INDEX,
+                fallback_value=core_refractive_index,
+                wavelength_nm=wavelength_nm,
+            )
+            resolved_shell_refractive_index = calibration_services.resolve_table_refractive_index(
+                current_rows or [],
+                column_name=parameters.table.COLUMN_SHELL_REFRACTIVE_INDEX,
+                fallback_value=shell_refractive_index,
+                wavelength_nm=wavelength_nm,
+            )
+
             calibration_standard_parameters_payload = (
                 ScatteringCalibrationStandardTable.build_parameters_payload(
                     mie_model=resolved_mie_model,
-                    medium_refractive_index=medium_refractive_index,
-                    particle_refractive_index=particle_refractive_index,
-                    core_refractive_index=core_refractive_index,
-                    shell_refractive_index=shell_refractive_index,
+                    medium_refractive_index=resolved_medium_refractive_index,
+                    particle_refractive_index=resolved_particle_refractive_index,
+                    core_refractive_index=resolved_core_refractive_index,
+                    shell_refractive_index=resolved_shell_refractive_index,
                     wavelength_nm=wavelength_nm,
                     detector_numerical_aperture=detector_numerical_aperture,
                     detector_cache_numerical_aperture=detector_cache_numerical_aperture,
@@ -651,10 +585,10 @@ class ReferenceTable:
                 calibration_model_graph_payload=calibration_services.build_calibration_standard_mie_relation_figure_store(
                     mie_model=resolved_mie_model,
                     current_table_rows=computed_rows,
-                    medium_refractive_index=medium_refractive_index,
-                    particle_refractive_index=particle_refractive_index,
-                    core_refractive_index=core_refractive_index,
-                    shell_refractive_index=shell_refractive_index,
+                    medium_refractive_index=resolved_medium_refractive_index,
+                    particle_refractive_index=resolved_particle_refractive_index,
+                    core_refractive_index=resolved_core_refractive_index,
+                    shell_refractive_index=resolved_shell_refractive_index,
                     wavelength_nm=wavelength_nm,
                     detector_numerical_aperture=detector_numerical_aperture,
                     detector_cache_numerical_aperture=detector_cache_numerical_aperture,

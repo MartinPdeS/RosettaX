@@ -1,6 +1,12 @@
 
 import numpy as np
 from dash.dash_table.Format import Format, Scheme
+from RosettaX.utils import casting
+from RosettaX.workflow.parameters.refractive_index import (
+    calculate_sellmeier_refractive_index,
+    format_refractive_index_display,
+    is_sellmeier_material,
+)
 from RosettaX.workflow.table import services as table_services
 from typing import Any
 
@@ -32,16 +38,19 @@ sphere_table_columns = [
         "name": "Particle diameter [nm]",
         "id": COLUMN_PARTICLE_DIAMETER_NM,
         "editable": True,
+        "type": "numeric",
     },
     {
         "name": "Refractive index",
         "id": COLUMN_PARTICLE_REFRACTIVE_INDEX,
         "editable": True,
+        "type": "text",
     },
     {
         "name": "Medium refractive index",
         "id": COLUMN_MEDIUM_REFRACTIVE_INDEX,
         "editable": True,
+        "type": "text",
     },
     {
         "name": "Coupling [W]",
@@ -67,11 +76,13 @@ core_shell_table_columns = [
         "name": "Core diameter [nm]",
         "id": COLUMN_CORE_DIAMETER_NM,
         "editable": True,
+        "type": "numeric",
     },
     {
         "name": "Shell thickness [nm]",
         "id": COLUMN_SHELL_THICKNESS_NM,
         "editable": True,
+        "type": "numeric",
     },
     {
         "name": "Outer diameter [nm]",
@@ -82,16 +93,19 @@ core_shell_table_columns = [
         "name": "Medium refractive index",
         "id": COLUMN_MEDIUM_REFRACTIVE_INDEX,
         "editable": True,
+        "type": "text",
     },
     {
         "name": "Core refractive index",
         "id": COLUMN_CORE_REFRACTIVE_INDEX,
         "editable": True,
+        "type": "text",
     },
     {
         "name": "Shell refractive index",
         "id": COLUMN_SHELL_REFRACTIVE_INDEX,
         "editable": True,
+        "type": "text",
     },
     {
         "name": "Coupling [W]",
@@ -229,6 +243,44 @@ def normalize_cell_value(
     ).strip()
 
 
+def normalize_refractive_index_value(
+    value: Any,
+    *,
+    wavelength_nm: Any = None,
+) -> str:
+    """Format recognized material names with their index at the chosen wavelength."""
+    normalized_value = normalize_cell_value(value)
+    parsed_value = casting.labeled_refractive_index(value=normalized_value)
+    if parsed_value is not None:
+        material_name = normalized_value.split("(", maxsplit=1)[0].strip()
+        if is_sellmeier_material(material_name) and wavelength_nm not in (None, ""):
+            resolved_value = calculate_sellmeier_refractive_index(
+                material_name,
+                wavelength_nm=wavelength_nm,
+            )
+            return format_refractive_index_display(
+                resolved_value,
+                source_value=material_name,
+            )
+        if is_sellmeier_material(material_name):
+            return normalized_value
+        return normalized_value
+
+    if is_sellmeier_material(normalized_value):
+        if wavelength_nm in (None, ""):
+            return normalized_value
+        resolved_value = calculate_sellmeier_refractive_index(
+            normalized_value,
+            wavelength_nm=wavelength_nm,
+        )
+        return format_refractive_index_display(
+            resolved_value,
+            source_value=normalized_value,
+        )
+
+    return normalized_value
+
+
 def compute_outer_diameter_string(
     *,
     core_diameter_nm: Any,
@@ -360,15 +412,9 @@ def remap_row_to_core_shell_model(
             core_diameter_nm=core_diameter_nm,
             shell_thickness_nm=shell_thickness_nm,
         ),
-        COLUMN_MEDIUM_REFRACTIVE_INDEX: normalize_cell_value(
-            row.get(COLUMN_MEDIUM_REFRACTIVE_INDEX)
-        ),
-        COLUMN_CORE_REFRACTIVE_INDEX: normalize_cell_value(
-            row.get(COLUMN_CORE_REFRACTIVE_INDEX)
-        ),
-        COLUMN_SHELL_REFRACTIVE_INDEX: normalize_cell_value(
-            row.get(COLUMN_SHELL_REFRACTIVE_INDEX)
-        ),
+        COLUMN_MEDIUM_REFRACTIVE_INDEX: normalize_refractive_index_value(row.get(COLUMN_MEDIUM_REFRACTIVE_INDEX)),
+        COLUMN_CORE_REFRACTIVE_INDEX: normalize_refractive_index_value(row.get(COLUMN_CORE_REFRACTIVE_INDEX)),
+        COLUMN_SHELL_REFRACTIVE_INDEX: normalize_refractive_index_value(row.get(COLUMN_SHELL_REFRACTIVE_INDEX)),
         COLUMN_MEASURED_PEAK_POSITION: measured_peak_position,
         COLUMN_EXPECTED_COUPLING: expected_coupling,
         COLUMN_EXPECTED_CROSS_SECTION_NM2: expected_cross_section_nm2,
@@ -428,12 +474,8 @@ def remap_row_to_solid_sphere_model(
 
     return {
         COLUMN_PARTICLE_DIAMETER_NM: particle_diameter_nm,
-        COLUMN_PARTICLE_REFRACTIVE_INDEX: normalize_cell_value(
-            row.get(COLUMN_PARTICLE_REFRACTIVE_INDEX)
-        ),
-        COLUMN_MEDIUM_REFRACTIVE_INDEX: normalize_cell_value(
-            row.get(COLUMN_MEDIUM_REFRACTIVE_INDEX)
-        ),
+        COLUMN_PARTICLE_REFRACTIVE_INDEX: normalize_refractive_index_value(row.get(COLUMN_PARTICLE_REFRACTIVE_INDEX)),
+        COLUMN_MEDIUM_REFRACTIVE_INDEX: normalize_refractive_index_value(row.get(COLUMN_MEDIUM_REFRACTIVE_INDEX)),
         COLUMN_MEASURED_PEAK_POSITION: measured_peak_position,
         COLUMN_EXPECTED_COUPLING: expected_coupling,
         COLUMN_EXPECTED_CROSS_SECTION_NM2: expected_cross_section_nm2,
@@ -444,6 +486,7 @@ def normalize_table_rows(
     *,
     mie_model: Any,
     current_rows: list[dict[str, Any]] | None,
+    wavelength_nm: Any = None,
 ) -> list[dict[str, str]]:
     """
     Normalize table rows according to the selected Mie model schema.
@@ -457,19 +500,36 @@ def normalize_table_rows(
     )
 
     if resolved_mie_model == MIE_MODEL_CORE_SHELL_SPHERE:
-        return [
+        normalized_rows = [
             normalize_core_shell_row(
                 row=row,
             )
             for row in source_rows
         ]
 
-    return [
-        normalize_solid_sphere_row(
-            row=row,
-        )
-        for row in source_rows
+    else:
+        normalized_rows = [
+            normalize_solid_sphere_row(
+                row=row,
+            )
+            for row in source_rows
+        ]
+
+    refractive_index_column_ids = [
+        COLUMN_MEDIUM_REFRACTIVE_INDEX,
+        COLUMN_PARTICLE_REFRACTIVE_INDEX,
+        COLUMN_CORE_REFRACTIVE_INDEX,
+        COLUMN_SHELL_REFRACTIVE_INDEX,
     ]
+    for row in normalized_rows:
+        for column_id in refractive_index_column_ids:
+            if column_id in row:
+                row[column_id] = normalize_refractive_index_value(
+                    row[column_id],
+                    wavelength_nm=wavelength_nm,
+                )
+
+    return normalized_rows
 
 
 def normalize_core_shell_row(
@@ -498,15 +558,9 @@ def normalize_core_shell_row(
             core_diameter_nm=core_diameter_nm,
             shell_thickness_nm=shell_thickness_nm,
         ),
-        COLUMN_MEDIUM_REFRACTIVE_INDEX: normalize_cell_value(
-            row.get(COLUMN_MEDIUM_REFRACTIVE_INDEX)
-        ),
-        COLUMN_CORE_REFRACTIVE_INDEX: normalize_cell_value(
-            row.get(COLUMN_CORE_REFRACTIVE_INDEX)
-        ),
-        COLUMN_SHELL_REFRACTIVE_INDEX: normalize_cell_value(
-            row.get(COLUMN_SHELL_REFRACTIVE_INDEX)
-        ),
+        COLUMN_MEDIUM_REFRACTIVE_INDEX: normalize_refractive_index_value(row.get(COLUMN_MEDIUM_REFRACTIVE_INDEX)),
+        COLUMN_CORE_REFRACTIVE_INDEX: normalize_refractive_index_value(row.get(COLUMN_CORE_REFRACTIVE_INDEX)),
+        COLUMN_SHELL_REFRACTIVE_INDEX: normalize_refractive_index_value(row.get(COLUMN_SHELL_REFRACTIVE_INDEX)),
         COLUMN_MEASURED_PEAK_POSITION: normalize_cell_value(
             row.get(
                 COLUMN_MEASURED_PEAK_POSITION,
@@ -542,12 +596,8 @@ def normalize_solid_sphere_row(
                 COLUMN_PARTICLE_DIAMETER_NM,
             )
         ),
-        COLUMN_PARTICLE_REFRACTIVE_INDEX: normalize_cell_value(
-            row.get(COLUMN_PARTICLE_REFRACTIVE_INDEX)
-        ),
-        COLUMN_MEDIUM_REFRACTIVE_INDEX: normalize_cell_value(
-            row.get(COLUMN_MEDIUM_REFRACTIVE_INDEX)
-        ),
+        COLUMN_PARTICLE_REFRACTIVE_INDEX: normalize_refractive_index_value(row.get(COLUMN_PARTICLE_REFRACTIVE_INDEX)),
+        COLUMN_MEDIUM_REFRACTIVE_INDEX: normalize_refractive_index_value(row.get(COLUMN_MEDIUM_REFRACTIVE_INDEX)),
         COLUMN_MEASURED_PEAK_POSITION: normalize_cell_value(
             row.get(
                 COLUMN_MEASURED_PEAK_POSITION,

@@ -3,6 +3,7 @@
 import dash
 from dataclasses import dataclass
 from RosettaX.utils import casting, styling
+from RosettaX.workflow.parameters.refractive_index import is_sellmeier_material
 from RosettaX.workflow.table.services import value_is_not_empty
 from typing import Any
 
@@ -25,22 +26,35 @@ def validate_reference_table_cells(
         for column in columns or []:
             if not column.get("editable", False):
                 continue
+            if column.get("presentation") == "dropdown":
+                continue
             column_id = column["id"]
             value = row.get(column_id)
             if not value_is_not_empty(value):
                 continue
             parsed = casting.as_float(value)
-            if parsed is None and column_id in (
+            is_refractive_index = column_id in (
                 "particle_refractive_index",
                 "medium_refractive_index",
                 "core_refractive_index",
                 "shell_refractive_index",
-            ):
+            )
+            if parsed is None and is_refractive_index:
                 parsed = casting.labeled_refractive_index(value=value)
+                if parsed is not None:
+                    material_name = str(value).split("(", maxsplit=1)[0].strip()
+                    if not is_sellmeier_material(material_name):
+                        parsed = None
+                elif is_sellmeier_material(value):
+                    continue
             if isinstance(value, bool) or parsed is None:
-                message = "Enter a finite number."
-            elif parsed <= 0:
-                message = "Enter a value greater than zero."
+                message = (
+                    "Enter a number or recognized material name."
+                    if is_refractive_index
+                    else "Enter a finite number."
+                )
+            elif parsed < 0:
+                message = "Enter a non-negative number."
             else:
                 continue
             label = column.get("name", column_id)

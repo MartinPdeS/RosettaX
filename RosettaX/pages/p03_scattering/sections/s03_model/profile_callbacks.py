@@ -19,7 +19,6 @@ def register_runtime_sync_callbacks(section: Model) -> None:
 
     @dash.callback(
         dash.Output(section.ids.detector_configuration_preset, "value"),
-        dash.Output(section.ids.scatterer_preset, "value"),
         dash.Output(section.ids.mie_model, "value"),
         dash.Output(section.ids.medium_refractive_index_custom, "value"),
         dash.Output(section.ids.particle_refractive_index_custom, "value"),
@@ -41,7 +40,7 @@ def register_runtime_sync_callbacks(section: Model) -> None:
         _profile_load_event_data: Any,
     ) -> tuple[Any, ...]:
         if dash.ctx.triggered_id == "runtime-config-store":
-            return tuple(dash.no_update for _ in range(14))
+            return tuple(dash.no_update for _ in range(13))
 
         logger.debug(
             "sync_parameters_from_runtime_config called with runtime_config_data=%r",
@@ -53,142 +52,3 @@ def register_runtime_sync_callbacks(section: Model) -> None:
             configuration=section.model_configuration,
         )
         return state.to_callback_values()
-
-
-def register_scatterer_preset_callbacks(section: Model) -> None:
-    """
-    Register scatterer preset callbacks.
-    """
-
-    @dash.callback(
-        dash.Output(section.ids.mie_model, "value", allow_duplicate=True),
-        dash.Output(
-            section.ids.medium_refractive_index_source, "value", allow_duplicate=True
-        ),
-        dash.Output(
-            section.ids.medium_refractive_index_custom, "value", allow_duplicate=True
-        ),
-        dash.Output(
-            section.ids.particle_refractive_index_source, "value", allow_duplicate=True
-        ),
-        dash.Output(
-            section.ids.particle_refractive_index_custom, "value", allow_duplicate=True
-        ),
-        dash.Output(
-            section.ids.core_refractive_index_source, "value", allow_duplicate=True
-        ),
-        dash.Output(
-            section.ids.core_refractive_index_custom, "value", allow_duplicate=True
-        ),
-        dash.Output(
-            section.ids.shell_refractive_index_source, "value", allow_duplicate=True
-        ),
-        dash.Output(
-            section.ids.shell_refractive_index_custom, "value", allow_duplicate=True
-        ),
-        dash.Input(section.ids.scatterer_preset, "value"),
-        dash.State(section.ids.mie_model, "value"),
-        dash.State(section.ids.medium_refractive_index_source, "value"),
-        dash.State(section.ids.medium_refractive_index_custom, "value"),
-        dash.State(section.ids.particle_refractive_index_source, "value"),
-        dash.State(section.ids.particle_refractive_index_custom, "value"),
-        dash.State(section.ids.core_refractive_index_source, "value"),
-        dash.State(section.ids.core_refractive_index_custom, "value"),
-        dash.State(section.ids.shell_refractive_index_source, "value"),
-        dash.State(section.ids.shell_refractive_index_custom, "value"),
-        dash.State(section.ids.wavelength_nm, "value"),
-        prevent_initial_call=True,
-    )
-    def apply_scatterer_preset(
-        preset_name: Any,
-        current_mie_model: Any,
-        current_medium_refractive_index_source: Any,
-        current_medium_refractive_index: Any,
-        current_particle_refractive_index_source: Any,
-        current_particle_refractive_index: Any,
-        current_core_refractive_index_source: Any,
-        current_core_refractive_index: Any,
-        current_shell_refractive_index_source: Any,
-        current_shell_refractive_index: Any,
-        wavelength_nm: Any,
-    ) -> tuple[Any, ...]:
-        if str(preset_name or "").strip() in (
-            "", section.model_configuration.custom_scatterer_preset_name,
-        ):
-            return (dash.no_update,) * 9
-
-        logger.debug(
-            "apply_scatterer_preset called with triggered_id=%r preset_name=%r",
-            dash.ctx.triggered_id,
-            preset_name,
-        )
-
-        (
-            resolved_mie_model,
-            resolved_medium_refractive_index_source,
-            resolved_medium_refractive_index,
-            resolved_particle_refractive_index_source,
-            resolved_particle_refractive_index,
-            resolved_core_refractive_index_source,
-            resolved_core_refractive_index,
-            resolved_shell_refractive_index_source,
-            resolved_shell_refractive_index,
-        ) = section.model_configuration.resolve_scatterer_preset_values(
-            preset_name=preset_name,
-            current_mie_model=current_mie_model,
-            current_medium_refractive_index_source=current_medium_refractive_index_source,
-            current_medium_refractive_index=current_medium_refractive_index,
-            current_particle_refractive_index_source=current_particle_refractive_index_source,
-            current_particle_refractive_index=current_particle_refractive_index,
-            current_core_refractive_index_source=current_core_refractive_index_source,
-            current_core_refractive_index=current_core_refractive_index,
-            current_shell_refractive_index_source=current_shell_refractive_index_source,
-            current_shell_refractive_index=current_shell_refractive_index,
-            wavelength_nm=wavelength_nm,
-        )
-
-        return (
-            resolved_mie_model,
-            resolved_medium_refractive_index_source,
-            resolved_medium_refractive_index,
-            resolved_particle_refractive_index_source,
-            resolved_particle_refractive_index,
-            resolved_core_refractive_index_source,
-            resolved_core_refractive_index,
-            resolved_shell_refractive_index_source,
-            resolved_shell_refractive_index,
-        )
-
-    @dash.callback(
-        dash.Output(section.ids.mie_model, "disabled"),
-        dash.Output(section.ids.medium_refractive_index_source, "disabled"),
-        dash.Output(section.ids.medium_refractive_index_custom, "disabled"),
-        dash.Output(section.ids.particle_refractive_index_source, "disabled"),
-        dash.Output(section.ids.particle_refractive_index_custom, "disabled"),
-        dash.Output(section.ids.core_refractive_index_source, "disabled"),
-        dash.Output(section.ids.core_refractive_index_custom, "disabled"),
-        dash.Output(section.ids.shell_refractive_index_source, "disabled"),
-        dash.Output(section.ids.shell_refractive_index_custom, "disabled"),
-        dash.Input(section.ids.scatterer_preset, "value"),
-        prevent_initial_call=False,
-    )
-    def sync_scatterer_preset_disabled_state(
-        preset_name: Any,
-    ) -> tuple[bool, ...]:
-        is_locked = (
-            section.model_configuration.scatterer_preset_disables_manual_controls(
-                preset_name=preset_name,
-            )
-        )
-
-        return (
-            is_locked,
-            is_locked,
-            is_locked,
-            is_locked,
-            is_locked,
-            is_locked,
-            is_locked,
-            is_locked,
-            is_locked,
-        )

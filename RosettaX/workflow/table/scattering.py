@@ -49,7 +49,20 @@ class ScatteringCalibrationStandardTable:
                     "Built scattering calibration standard table state from scatterer preset stored in runtime config. resolved_scatterer_preset=%r",
                     resolved_scatterer_preset,
                 )
-                return preset_table_state
+                preset_columns, preset_rows = preset_table_state
+                return preset_columns, cls.normalize_rows(
+                    mie_model=parameters.table.resolve_mie_model(
+                        runtime_config.get_str(
+                            "particle_model.mie_model",
+                            default=parameters.table.MIE_MODEL_SOLID_SPHERE,
+                        )
+                    ),
+                    rows=preset_rows,
+                    wavelength_nm=runtime_config.get_float(
+                        "optics.wavelength_nm",
+                        default=488.0,
+                    ),
+                )
 
         resolved_mie_model = parameters.table.resolve_mie_model(
             runtime_config.get_str(
@@ -91,40 +104,31 @@ class ScatteringCalibrationStandardTable:
             rows,
         )
 
-        return columns, rows
+        return columns, cls.normalize_rows(
+            mie_model=resolved_mie_model,
+            rows=rows,
+            wavelength_nm=runtime_config.get_float(
+                "optics.wavelength_nm",
+                default=488.0,
+            ),
+        )
 
     @classmethod
     def build_state_for_model_selection(
         cls,
         *,
         mie_model: Any,
-        scatterer_preset: Any,
         current_rows: list[dict[str, Any]] | None,
+        wavelength_nm: Any = None,
     ) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
         """
         Build the table state for a Mie model change.
 
-        When a non-custom scatterer preset is active, the preset remains the
-        source of truth for geometry rows. This avoids a later model-sync
-        callback remapping stale rows back over preset geometry.
+        Preserve compatible table values while switching the particle model.
         """
         resolved_mie_model = parameters.table.resolve_mie_model(
             mie_model,
         )
-
-        resolved_scatterer_preset = scattering.ModelConfiguration.resolve_runtime_scatterer_preset(
-            scatterer_preset,
-        )
-
-        if scattering.ModelConfiguration.scatterer_preset_disables_manual_controls(
-            preset_name=resolved_scatterer_preset,
-        ):
-            preset_table_state = scattering.ModelConfiguration.build_table_state_from_scatterer_preset(
-                preset_name=resolved_scatterer_preset,
-            )
-
-            if preset_table_state is not None:
-                return preset_table_state
 
         next_columns = cls.get_columns_for_model(
             resolved_mie_model,
@@ -138,7 +142,11 @@ class ScatteringCalibrationStandardTable:
             current_rows=current_rows,
         )
 
-        return next_columns, next_rows
+        return next_columns, cls.normalize_rows(
+            mie_model=resolved_mie_model,
+            rows=next_rows,
+            wavelength_nm=wavelength_nm,
+        )
 
     @classmethod
     def get_columns_for_model(
@@ -176,6 +184,7 @@ class ScatteringCalibrationStandardTable:
         *,
         mie_model: Any,
         rows: list[dict[str, Any]] | None,
+        wavelength_nm: Any = None,
     ) -> list[dict[str, Any]]:
         """
         Normalize scattering table rows for a Mie model.
@@ -185,6 +194,7 @@ class ScatteringCalibrationStandardTable:
                 mie_model,
             ),
             current_rows=rows,
+            wavelength_nm=wavelength_nm,
         )
 
     @classmethod

@@ -507,49 +507,6 @@ def build_particle_configuration_section(section: Model) -> dash.html.Div:
     """
     return dash.html.Div(
         [
-            ui_forms.build_inline_row(
-                label="Scatterer preset:",
-                control=dash.html.Div(
-                    [
-                        dash.dcc.Dropdown(
-                            id=section.ids.scatterer_preset,
-                            options=section.model_configuration.build_scatterer_preset_options(),
-                            value="",
-                            clearable=False,
-                            searchable=False,
-                            persistence=True,
-                            persistence_type="session",
-                            style={
-                                "width": "320px",
-                            },
-                        ),
-                        ui_forms.build_info_badge(
-                            tooltip_target_id=section.scatterer_preset_tooltip_target_id,
-                        ),
-                        dbc.Tooltip(
-                            (
-                                "Use a scatterer preset to load a predefined bead set and "
-                                "matching refractive index defaults for calibration setup."
-                            ),
-                            id=section.scatterer_preset_tooltip_id,
-                            target=section.scatterer_preset_tooltip_target_id,
-                            placement="right",
-                        ),
-                    ],
-                    style={
-                        "display": "flex",
-                        "alignItems": "center",
-                        "overflow": "visible",
-                    },
-                ),
-                margin_top=False,
-                row_style_overrides={
-                    "overflow": "visible",
-                },
-                control_wrapper_style_overrides={
-                    "overflow": "visible",
-                },
-            ),
             dash.html.Div(
                 [
                     ui_forms.build_inline_row(

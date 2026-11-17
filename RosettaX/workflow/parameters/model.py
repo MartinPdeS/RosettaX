@@ -2,6 +2,8 @@
 import logging
 import numpy as np
 from . import table
+from .refractive_index import resolve_refractive_index_value
+from RosettaX.utils import casting
 from RosettaX.utils.casting import as_optional_float, as_required_float, as_required_int
 from RosettaX.workflow.detector import (
     resolve_detector_angular_weights,
@@ -105,11 +107,34 @@ def compute_model_for_rows(
         return []
 
     resolved_mie_model = _normalize_mie_model(mie_model)
+    resolved_rows = table.normalize_table_rows(
+        mie_model=resolved_mie_model,
+        current_rows=resolved_rows,
+        wavelength_nm=wavelength_nm,
+    )
+
+    def resolve_row_material(*, column_id: str, fallback_value: Any) -> float:
+        """Resolve the latest entered row index or use the section default."""
+        for row in reversed(resolved_rows):
+            raw_value = row.get(column_id)
+            if raw_value in (None, ""):
+                continue
+            labeled_value = casting.labeled_refractive_index(value=raw_value)
+            if labeled_value is not None:
+                return labeled_value
+            try:
+                return resolve_refractive_index_value(
+                    raw_value,
+                    wavelength_nm=wavelength_nm,
+                )
+            except (KeyError, TypeError, ValueError):
+                continue
+        return as_required_float(fallback_value, column_id)
 
     try:
-        resolved_medium_refractive_index = as_required_float(
-            medium_refractive_index,
-            "medium_refractive_index",
+        resolved_medium_refractive_index = resolve_row_material(
+            column_id=table.COLUMN_MEDIUM_REFRACTIVE_INDEX,
+            fallback_value=medium_refractive_index,
         )
         resolved_wavelength_nm = as_required_float(
             wavelength_nm,
@@ -168,8 +193,14 @@ def compute_model_for_rows(
             current_rows=resolved_rows,
             mie_model=resolved_mie_model,
             medium_refractive_index=resolved_medium_refractive_index,
-            core_refractive_index=core_refractive_index,
-            shell_refractive_index=shell_refractive_index,
+            core_refractive_index=resolve_row_material(
+                column_id=table.COLUMN_CORE_REFRACTIVE_INDEX,
+                fallback_value=core_refractive_index,
+            ),
+            shell_refractive_index=resolve_row_material(
+                column_id=table.COLUMN_SHELL_REFRACTIVE_INDEX,
+                fallback_value=shell_refractive_index,
+            ),
             wavelength_nm=resolved_wavelength_nm,
             detector_numerical_aperture=resolved_detector_numerical_aperture,
             detector_cache_numerical_aperture=resolved_detector_cache_numerical_aperture,
@@ -186,7 +217,10 @@ def compute_model_for_rows(
         current_rows=resolved_rows,
         mie_model=resolved_mie_model,
         medium_refractive_index=resolved_medium_refractive_index,
-        particle_refractive_index=particle_refractive_index,
+        particle_refractive_index=resolve_row_material(
+            column_id=table.COLUMN_PARTICLE_REFRACTIVE_INDEX,
+            fallback_value=particle_refractive_index,
+        ),
         wavelength_nm=resolved_wavelength_nm,
         detector_numerical_aperture=resolved_detector_numerical_aperture,
         detector_cache_numerical_aperture=resolved_detector_cache_numerical_aperture,

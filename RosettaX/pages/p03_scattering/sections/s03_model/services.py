@@ -55,43 +55,6 @@ def resolve_profile_parameter_state(
         ),
         **asdict(geometry),
     )
-    scatterer_preset = configuration.resolve_runtime_scatterer_preset(
-        runtime_config.get_str("particle_model.scatterer_preset", default=""),
-    )
-    if configuration.scatterer_preset_disables_manual_controls(
-        preset_name=scatterer_preset
-    ):
-        (
-            mie_model,
-            _medium_source,
-            medium_refractive_index,
-            _particle_source,
-            particle_refractive_index,
-            _core_source,
-            core_refractive_index,
-            _shell_source,
-            shell_refractive_index,
-        ) = configuration.resolve_scatterer_preset_values(
-            preset_name=scatterer_preset,
-            current_mie_model=values.mie_model,
-            current_medium_refractive_index_source=None,
-            current_medium_refractive_index=values.medium_refractive_index,
-            current_particle_refractive_index_source=None,
-            current_particle_refractive_index=values.particle_refractive_index,
-            current_core_refractive_index_source=None,
-            current_core_refractive_index=values.core_refractive_index,
-            current_shell_refractive_index_source=None,
-            current_shell_refractive_index=values.shell_refractive_index,
-            wavelength_nm=values.wavelength_nm,
-        )
-        values = replace(
-            values,
-            mie_model=mie_model,
-            medium_refractive_index=medium_refractive_index,
-            particle_refractive_index=particle_refractive_index,
-            core_refractive_index=core_refractive_index,
-            shell_refractive_index=shell_refractive_index,
-        )
     values = replace(
         values,
         detector_cache_numerical_aperture=clamp_detector_cache_numerical_aperture(
@@ -99,7 +62,7 @@ def resolve_profile_parameter_state(
             values.detector_cache_numerical_aperture,
         ),
     )
-    return ProfileParameterState(detector_preset or "", scatterer_preset, values)
+    return ProfileParameterState(detector_preset or "", values)
 
 
 def build_optical_preview_update(

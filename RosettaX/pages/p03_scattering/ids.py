@@ -231,34 +231,6 @@ class CalibrationSectionIds:
         return f"{self.prefix}-calibration-standard-table-add-row-button"
 
     @property
-    def custom_diameters_container(self) -> str:
-        return f"{self.prefix}-custom-diameters-container"
-
-    @property
-    def custom_diameters(self) -> str:
-        return f"{self.prefix}-custom-diameters"
-
-    @property
-    def custom_diameters_label(self) -> str:
-        return f"{self.prefix}-custom-diameters-label"
-
-    @property
-    def custom_shell_container(self) -> str:
-        return f"{self.prefix}-custom-shell-container"
-
-    @property
-    def custom_shell_thicknesses(self) -> str:
-        return f"{self.prefix}-custom-shell-thicknesses"
-
-    @property
-    def custom_diameters_add(self) -> str:
-        return f"{self.prefix}-custom-diameters-add"
-
-    @property
-    def custom_diameters_error(self) -> str:
-        return f"{self.prefix}-custom-diameters-error"
-
-    @property
     def compute_model_btn(self) -> str:
         return f"{self.prefix}-calibration-standard-table-compute-model-button"
 

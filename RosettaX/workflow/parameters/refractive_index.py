@@ -92,6 +92,14 @@ def calculate_sellmeier_refractive_index(
     return math.sqrt(refractive_index_squared)
 
 
+def is_sellmeier_material(material_id: Any) -> bool:
+    """Return whether a material identifier exists in the packaged bank."""
+    material_key = (
+        str(material_id or "").strip().lower().replace(" ", "_").replace("-", "_")
+    )
+    return material_key in _load_sellmeier_bank().get("materials", {})
+
+
 def resolve_refractive_index_value(
     preset_value: Any,
     *,
@@ -118,7 +126,7 @@ def resolve_refractive_index_value(
         return float(preset_value_text)
     except ValueError:
         return calculate_sellmeier_refractive_index(
-            preset_value_text,
+            preset_value_text.lower().replace(" ", "_").replace("-", "_"),
             wavelength_nm=wavelength_nm,
         )
 
@@ -152,10 +160,15 @@ def format_refractive_index_display(
 ) -> str:
     """Format a resolved index, including its Sellmeier material when known."""
     formatted_value = f"{float(value):.6g}"
-    material_key = str(source_value or "").strip().lower()
+    material_key = (
+        str(source_value or "").strip().lower().replace(" ", "_").replace("-", "_")
+    )
 
     if material_key and material_key in _load_sellmeier_bank().get("materials", {}):
-        material_label = material_key.replace("_", " ").replace("-", " ").title()
+        material_label = _load_sellmeier_bank()["materials"][material_key].get(
+            "label",
+            material_key.replace("_", " ").replace("-", " ").title(),
+        )
         return f"{material_label}({formatted_value})"
 
     return formatted_value

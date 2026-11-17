@@ -133,10 +133,13 @@ A typical RosettaX session follows these steps:
 The exact procedure depends on the selected workflow, but the application is
 organized so that each step remains visible and traceable.
 
-For a custom scattering standard, enter comma-separated particle diameters and
-select ``Add to table``. For core/shell particles, enter core diameters and
-either one shell thickness for all particles or one thickness per diameter.
-All dimensions are in nanometers.
+For a custom scattering standard, select ``Add row`` and enter non-negative
+values directly in the table. Refractive-index cells accept a number or a
+recognized material name such as ``polystyrene`` or ``water``; a recognized
+name is displayed with its resolved index at the selected wavelength. Solid
+spheres use a particle diameter; core/shell particles use a core diameter and
+shell thickness. Use the row ``x`` to remove a standard. All dimensions are in
+nanometers.
 
 For a custom fluorescence standard, enter comma-separated standard intensity
 values and select ``Add to table``.
