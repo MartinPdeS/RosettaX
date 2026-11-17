@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from .graphing import PeakWorkflowGraphBuilder
 
 from . import graph_payload
+from .rosetta_annotations import ROSETTA_PEAK_MARKER_STYLES
 
 logger = logging.getLogger(__name__)
 
@@ -197,14 +198,15 @@ def add_y_axis_gate_overlay(
     if y_lower_gate is None and y_upper_gate is None:
         return figure
 
-    add_out_of_y_interval_gate_shading(
-        builder,
-        figure=figure,
-        lower_gate=y_lower_gate,
-        upper_gate=y_upper_gate,
-    )
+    if not builder._is_rosetta_script_process():
+        add_out_of_y_interval_gate_shading(
+            builder,
+            figure=figure,
+            lower_gate=y_lower_gate,
+            upper_gate=y_upper_gate,
+        )
 
-    if y_lower_gate is not None:
+    if y_lower_gate is not None and not builder._is_rosetta_script_process():
         add_horizontal_shape_line(
             builder,
             figure=figure,
@@ -219,7 +221,7 @@ def add_y_axis_gate_overlay(
             figure=figure,
             y=y_upper_gate,
             line_width=2,
-            line_dash="dash",
+            line_dash="solid" if builder._is_rosetta_script_process() else "dash",
         )
 
     if builder._is_rosetta_script_process():
@@ -282,14 +284,16 @@ def add_selected_peak_markers(
                 ]
             )
 
+        classified_points = [point for point in points if point.get("kind") in ("marker", "non_fluorescent")]
         for scatter_position in scatter_guide_positions:
+            is_marker = any(point.get("kind") == "marker" and np.isclose(point["x"], scatter_position, rtol=1e-6) for point in classified_points)
             add_vertical_shape_line(
                 builder,
                 figure=figure,
                 x=scatter_position,
                 line_width=2,
-                line_dash="dash",
-                line_color="#1f9d55",
+                line_dash="dot" if is_marker else "dash",
+                line_color="#7c3aed" if is_marker else ("#008c80" if classified_points else "#1f9d55"),
             )
 
         if builder._advanced_mode_is_enabled():
@@ -313,6 +317,26 @@ def add_selected_peak_markers(
                 line_dash="dot",
                 line_color=None,
             )
+
+    if builder._is_rosetta_script_process() and any(point.get("kind") in ("marker", "non_fluorescent") for point in points):
+        for kind, name in (
+            ("non_fluorescent", "Non-fluorescent peak"),
+            ("marker", "Fluorescent marker"),
+        ):
+            selected = [(point, labels[index]) for index, point in enumerate(points) if point.get("kind") == kind]
+            if not selected:
+                continue
+            marker_style = ROSETTA_PEAK_MARKER_STYLES[kind]
+            figure.add_trace(go.Scattergl(
+                x=[point["x"] for point, _label in selected],
+                y=[point["y"] for point, _label in selected],
+                mode="markers", name=name, showlegend=True,
+                meta={"rosetta_peak_kind": kind},
+                customdata=[[label, point["x"], point["y"]] for point, label in selected],
+                hovertemplate="%{customdata[0]}<br>x=%{customdata[1]:.6g}<br>y=%{customdata[2]:.6g}<extra></extra>",
+                marker={"size": 18, "symbol": marker_style["symbol"], "color": "white", "line": {"color": marker_style["color"], "width": 3}},
+            ))
+        return figure
 
     figure.add_trace(
         go.Scatter(
@@ -593,11 +617,7 @@ def add_rosetta_y_gate_helper(
 
     visible_lower_y, visible_upper_y = visible_y_range
 
-    accepted_lower_y = (
-        float(y_lower_gate)
-        if y_lower_gate is not None and np.isfinite(y_lower_gate)
-        else float(visible_lower_y)
-    )
+    accepted_lower_y = float(visible_lower_y)
     accepted_upper_y = (
         float(y_upper_gate)
         if y_upper_gate is not None and np.isfinite(y_upper_gate)

@@ -217,6 +217,7 @@ def extract_points_from_peak_lines_payload(
                 {
                     "x": x_value,
                     "y": y_value,
+                    "kind": str(point.get("kind") or ""),
                 }
             )
 

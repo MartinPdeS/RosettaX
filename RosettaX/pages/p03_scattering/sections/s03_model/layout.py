@@ -662,7 +662,7 @@ def build_numeric_input_row(
     min_value: float | None = None,
     max_value: float | None = None,
     step: float | None = None,
-    input_mode: str = "decimal",
+    input_mode: str | None = None,
     width_px: int = 220,
 ) -> dash.html.Div:
     """

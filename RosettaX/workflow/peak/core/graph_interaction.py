@@ -6,6 +6,7 @@ from .. import registry
 from .rosetta_annotations import (
     add_rosetta_scatter_guide_annotations,
     extract_rosetta_scatter_guide_annotations,
+    include_rosetta_peak_markers_in_view,
 )
 from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
 from typing import Any
@@ -180,9 +181,26 @@ def add_peak_workflow_post_layout_overlays(
     if not annotation_entries:
         return figure
 
+    has_classified_peaks = any(entry.get("kind") in ("marker", "non_fluorescent") for entry in annotation_entries)
+    baseline_gate = None
+    if has_classified_peaks and isinstance(peak_lines_payload, dict):
+        include_rosetta_peak_markers_in_view(figure=figure, peak_lines_payload=peak_lines_payload)
+        try:
+            baseline_gate = float(peak_lines_payload.get("baseline_cutoff"))
+            if not np.isfinite(baseline_gate):
+                baseline_gate = None
+        except (TypeError, ValueError):
+            pass
+        for trace in figure.data:
+            trace.showlegend = trace.name in ("Fluorescent marker", "Non-fluorescent peak")
+        figure.update_layout(showlegend=True, legend={"x": 0.01, "y": 0.99, "xanchor": "left", "yanchor": "top", "bgcolor": "rgba(255,255,255,0.9)"})
+        if baseline_gate is not None and (figure.layout.yaxis.type != "log" or baseline_gate > 0):
+            figure.add_annotation(x=0.01, xref="paper", y=np.log10(baseline_gate) if figure.layout.yaxis.type == "log" else baseline_gate, yref="y", text="Fluorescence baseline gate", showarrow=False, xanchor="left", yanchor="bottom", bgcolor="rgba(255,255,255,0.9)", font={"size": 15})
+
     return add_rosetta_scatter_guide_annotations(
         figure=figure,
         annotation_entries=annotation_entries,
+        baseline_gate=baseline_gate,
     )
 
 

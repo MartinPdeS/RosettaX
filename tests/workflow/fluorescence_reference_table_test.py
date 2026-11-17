@@ -141,8 +141,8 @@ class Test_FluorescenceReferencePresets:
             == CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME
         )
 
-    def test_resolve_runtime_preset_name_matches_known_mesf_values(self):
-        """Check resolve runtime preset name matches known MESF values."""
+    def test_legacy_generic_values_resolve_to_custom(self):
+        """Keep existing Generic values as a custom standard."""
         runtime_config = RuntimeConfig.from_dict(
             {
                 "calibration": {
@@ -155,8 +155,15 @@ class Test_FluorescenceReferencePresets:
             FluorescenceReferenceTable.resolve_runtime_preset_name(
                 runtime_config=runtime_config,
             )
-            == GENERIC_FLUORESCENCE_REFERENCE_PRESET_NAME
+            == CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME
         )
+        assert [row["col1"] for row in FluorescenceReferenceTable.build_rows_from_runtime_config(runtime_config=runtime_config)] == ["1000", "10000", "100000", "1e+06"]
+
+    def test_generic_preset_is_not_a_selectable_option(self):
+        """Hide the legacy Generic preset from reference preset selectors."""
+        assert GENERIC_FLUORESCENCE_REFERENCE_PRESET_NAME not in [
+            option["value"] for option in build_fluorescence_reference_preset_options()
+        ]
 
     def test_build_rows_from_summer_school_apogee_apc_preset_uses_expected_mesf_values(self):
         """Check build rows from summer school apogee apc preset uses expected MESF values."""

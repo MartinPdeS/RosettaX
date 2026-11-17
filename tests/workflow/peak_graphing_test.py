@@ -11,7 +11,12 @@ import plotly.graph_objs as go
 import pytest
 import sys
 import types
-from RosettaX.workflow.peak.core import graph_histogram, graph_overlays, graph_scatter
+from RosettaX.workflow.peak.core import (
+    graph_histogram,
+    graph_overlays,
+    graph_scatter,
+    graph_settings,
+)
 
 
 class _DashBootstrapComponentsSentinel:
@@ -601,6 +606,63 @@ class Test_PeakWorkflowInteractionRevision:
 
 class Test_PeakWorkflowGraphBuilderRosettaOverlays:
     """Regression checks for peak workflow graph builder Rosetta overlays."""
+
+    def test_rosetta_classifies_peak_symbols_and_labels(self):
+        """Show distinct marker types and place labels at the fluorescence gate."""
+        builder = PeakWorkflowGraphBuilder.__new__(PeakWorkflowGraphBuilder)
+        builder.resolved_process_name = "Rosetta Script V1"
+        builder.advanced_mode_value = []
+        builder.peak_lines_payload = {
+            "points": [
+                {"x": 100.0, "y": 10000.0, "kind": "marker"},
+                {"x": 200.0, "y": 300.0, "kind": "non_fluorescent"},
+            ],
+            "labels": ["Dim marker", "Non-fluorescent peak 1"],
+            "scatter_guide_positions": [100.0, 200.0],
+            "baseline_cutoff": 1000.0,
+            "scatter_guide_annotations": [
+                {"x": 100.0, "label": "140 nm", "kind": "marker"},
+                {"x": 200.0, "label": "147 nm", "kind": "non_fluorescent"},
+            ],
+        }
+        figure = go.Figure()
+        figure.update_xaxes(type="log")
+        figure.update_yaxes(type="log")
+        graph_overlays.add_selected_peak_markers(builder, figure=figure)
+        graph_settings.apply_runtime_visualization_settings(
+            types.SimpleNamespace(marker_size=5, marker_opacity=0.4, runtime_config_data={}),
+            figure=figure,
+        )
+        figure = add_peak_workflow_post_layout_overlays(
+            figure=figure, process_name="Rosetta Script V1", peak_lines_payload=builder.peak_lines_payload,
+        )
+        traces = {trace.name: trace for trace in figure.data}
+        assert traces["Fluorescent marker"].marker.symbol == "diamond"
+        assert traces["Non-fluorescent peak"].marker.symbol == "circle"
+        assert traces["Fluorescent marker"].marker.size == 18
+        assert traces["Fluorescent marker"].marker.line.color == "#7c3aed"
+        assert traces["Non-fluorescent peak"].marker.line.color == "#008c80"
+        assert traces["Fluorescent marker"].marker.opacity == 1
+        assert figure.layout.showlegend is True
+        annotations = {annotation.text: annotation for annotation in figure.layout.annotations}
+        assert annotations["140 nm marker"].yref == "paper"
+        assert annotations["147 nm"].yref == "y"
+        assert annotations["147 nm"].y == pytest.approx(3.0)
+        assert annotations["Fluorescence baseline gate"].y == pytest.approx(3.0)
+
+    def test_rosetta_plot_keeps_edge_markers_inside_axis_limits(self):
+        """Pad log axis limits around detected markers at the plot edge."""
+        figure = go.Figure()
+        figure.update_xaxes(type="log", range=[1, 3])
+        figure.update_yaxes(type="log", range=[1, 5])
+        payload = {
+            "points": [{"x": 1000, "y": 100000, "kind": "marker"}],
+            "scatter_guide_annotations": [{"x": 1000, "label": "380 nm", "kind": "marker"}],
+        }
+        add_peak_workflow_post_layout_overlays(figure=figure, process_name="Rosetta Script V1", peak_lines_payload=payload)
+        assert figure.layout.xaxis.range[1] > 3
+        assert figure.layout.yaxis.range[1] > 5
+        assert figure.layout.annotations[0].y > 1
 
     def test_rosetta_y_gate_overlay_adds_helper_bands_without_in_plot_labels(self):
         """Check Rosetta y gate overlay adds helper bands without in plot labels."""

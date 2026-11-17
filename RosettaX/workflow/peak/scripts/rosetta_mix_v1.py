@@ -311,7 +311,7 @@ def build_scatter_guide_annotations(
     resolved_annotations: list[dict[str, Any]] = []
     used_positions: list[float] = []
 
-    def append_annotation(*, x_value: Any, label: str) -> None:
+    def append_annotation(*, x_value: Any, label: str, kind: str) -> None:
         resolved_x_value = _as_positive_float(
             x_value,
         )
@@ -337,6 +337,7 @@ def build_scatter_guide_annotations(
             {
                 "x": float(resolved_x_value),
                 "label": resolved_label,
+                "kind": kind,
             }
         )
         used_positions.append(
@@ -370,6 +371,7 @@ def build_scatter_guide_annotations(
         append_annotation(
             x_value=x_value,
             label=label,
+            kind=str(metadata.get("kind") or ""),
         )
 
     for metadata in peak_metadata:
@@ -385,6 +387,7 @@ def build_scatter_guide_annotations(
             label=format_size_annotation_label(
                 marker_diameter_nm,
             ),
+            kind="marker",
         )
 
     return sorted(

@@ -95,12 +95,14 @@ def build_fluorescence_reference_preset_options() -> list[dict[str, str]]:
         }
     ]
 
+    # Keep the legacy preset available to callers while removing it from selectors.
     options.extend(
         {
             "label": preset.name,
             "value": preset.name,
         }
         for preset in build_fluorescence_reference_presets().values()
+        if preset.name != GENERIC_FLUORESCENCE_REFERENCE_PRESET_NAME
     )
 
     return options
@@ -367,6 +369,8 @@ class FluorescenceReferenceTable:
             return CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME
 
         for preset in build_fluorescence_reference_presets().values():
+            if preset.name == GENERIC_FLUORESCENCE_REFERENCE_PRESET_NAME:
+                continue
             preset_values = cls.parse_mesf_values(
                 preset.mesf_values,
             )

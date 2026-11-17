@@ -182,6 +182,11 @@ fluorescent marker anchors. If either anchor is unavailable or unreliable, or
 not all detected peaks can be assigned, it shows a warning and leaves the
 existing graph and calibration table unchanged.
 
+On the plot, purple diamonds and dotted guides identify fluorescent markers;
+teal circles and dashed guides identify non-fluorescent peaks. The horizontal
+line marks the fluorescence baseline gate. Size labels above that line identify
+the non-fluorescent peaks, while marker labels appear at the top of the plot.
+
 For Rosetta Script V1, use *Auto-select detectors* to select uniquely named
 side-scattering and green-fluorescence channels. It prefers peak measurements and a green channel with the same encoded
 wavelength as the selected scattering channel; if that is unavailable, it uses

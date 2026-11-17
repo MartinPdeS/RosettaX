@@ -233,6 +233,16 @@ class Test_ScatteringModelLayout:
         assert detector_sampling_input is not None
         assert detector_sampling_input.type == "text"
         assert detector_sampling_input.inputMode == "numeric"
+        for component_id in (
+            section.ids.detector_numerical_aperture,
+            section.ids.detector_cache_numerical_aperture,
+            section.ids.blocker_bar_numerical_aperture,
+            section.ids.detector_phi_angle_degree,
+            section.ids.detector_gamma_angle_degree,
+        ):
+            decimal_input = _find_component_by_id(custom_values_container, component_id)
+            assert decimal_input.type == "text"
+            assert decimal_input.inputMode is None
 
 
 class Test_ScatteringCalibrationCallbackOutputs:

@@ -634,7 +634,6 @@ class CalibrationPickerLayout:
                 min=(min_value if input_type == "number" else None),
                 max=(max_value if input_type == "number" else None),
                 step=(step if input_type == "number" else None),
-                inputMode="decimal",
                 debounce=True,
                 style={
                     "width": "180px",

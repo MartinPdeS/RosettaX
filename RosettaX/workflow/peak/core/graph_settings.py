@@ -9,6 +9,7 @@ from .graph_interaction import (
     axis_scale_selection_is_log,
     scale_selection_is_log,
 )
+from .rosetta_annotations import ROSETTA_PEAK_MARKER_STYLES
 from RosettaX.utils import casting, plottings
 from typing import TYPE_CHECKING, Any
 
@@ -86,7 +87,12 @@ def apply_runtime_visualization_settings(
 
     for shape in figure.layout.shapes or []:
         if hasattr(shape, "line"):
-            shape.line.width = default_line_width
+            is_rosetta_gate_band = (
+                shape.type == "rect"
+                and getattr(builder, "_is_rosetta_script_process", lambda: False)()
+                and shape.fillcolor in (builder.accepted_y_fill_color, builder.fluorescence_helper_fill_color)
+            )
+            shape.line.width = 0 if is_rosetta_gate_band else default_line_width
 
 
 def apply_trace_visualization_settings(
@@ -105,6 +111,13 @@ def apply_trace_visualization_settings(
         "type",
         "",
     )
+
+    metadata = getattr(trace, "meta", None)
+    peak_kind = metadata.get("rosetta_peak_kind") if isinstance(metadata, dict) else None
+    if peak_kind in ROSETTA_PEAK_MARKER_STYLES:
+        marker_style = ROSETTA_PEAK_MARKER_STYLES[peak_kind]
+        trace.marker.update(size=18, symbol=marker_style["symbol"], color="white", opacity=1, line={"color": marker_style["color"], "width": 3})
+        return
 
     if trace_type in (
         "scatter",
