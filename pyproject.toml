@@ -34,6 +34,8 @@ keywords = [
 dependencies = [
     "PyMieSim ==6.0.4",
     "numpy >=2.2.6",
+    "scipy >=1.15",
+    "scikit-learn >=1.6",
     "pandas >=2.2",
     "typing_extensions >=4.10",
     "flask >=3.0",

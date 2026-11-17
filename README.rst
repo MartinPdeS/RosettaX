@@ -148,6 +148,19 @@ Rosetta peak detection uses a baseline fluorescence gate of three standard
 deviations when no gate-width setting is provided. Explicit gate widths stored
 in existing profiles retain their selected value.
 
+The scattering peak selector also offers ``Rosetta — Mixture (Experimental)``.
+It keeps the fluorescence marker gates and estimates bead sizes from the 140 nm
+and 380 nm markers. Scatter populations are fitted jointly in log intensity,
+with the component count selected by BIC and an optional broad background
+component. Sensitive candidate detection uses 1% relative prominence with a local
+counting-noise check. Bootstrap fits reuse the fitted centers, widths and weights.
+Acceptance requires an observed peak, adequate separation and event count, and
+stable centers in three bootstrap fits;
+scatter histogram R² is not used. Compare its results with known standards:
+these criteria have synthetic regression coverage but have not been validated
+against representative measured datasets. The existing Rosetta modes remain
+available for comparison.
+
 On smaller screens, open ``Menu`` to access navigation and saved profiles.
 Graphs use a viewport-aware default height; an explicit graph height in your
 profile remains in effect. Calibration reference tables show cell-specific

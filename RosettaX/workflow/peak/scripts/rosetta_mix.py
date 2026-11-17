@@ -47,6 +47,7 @@ from .rosetta_mix_models import (
     RosettaRunSettings,
     RosettaScatterAnalysis,
 )
+from collections.abc import Callable
 from RosettaX.utils.io import column_copy
 from typing import Any
 
@@ -336,11 +337,13 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
             events=events,
             fluorescence=fluorescence,
             settings=settings,
+            fit_function=getattr(self, "scatter_fit_function", None),
         )
         scatter = analyze_non_fluorescent_scatter(
             events=events,
             fluorescence=fluorescence,
             settings=settings,
+            fit_function=getattr(self, "scatter_fit_function", None),
         )
         if scatter.stop_status is not None:
             return self._build_stop_result(
@@ -844,8 +847,28 @@ def find_marker_scatter_points(
     events: RosettaEventData,
     fluorescence: RosettaFluorescenceAnalysis,
     settings: RosettaRunSettings,
+    fit_function: Callable[..., dict[str, Any]] | None = None,
 ) -> RosettaMarkerScatter:
-    """Fit scatter peaks inside the accepted fluorescent marker gates."""
+    """Fit scatter peaks inside the accepted fluorescent marker gates.
+
+    Parameters
+    ----------
+    events : RosettaEventData
+        Paired scatter and fluorescence intensities in arbitrary units.
+    fluorescence : RosettaFluorescenceAnalysis
+        Accepted marker populations and baseline gate.
+    settings : RosettaRunSettings
+        Detection thresholds and gate widths.
+    fit_function : Callable or None, optional
+        Alternative fitter using the existing peak-analysis dictionary contract.
+        ``None`` preserves the original histogram fitter.
+
+    Returns
+    -------
+    RosettaMarkerScatter
+        Validated marker positions and fit diagnostics.
+    """
+    resolve_fit_function = fit_function or find_fit_validate_peaks_1d
     marker_classification = classify_marker_peaks(
         marker_peaks=fluorescence.marker_peaks
     )
@@ -865,7 +888,10 @@ def find_marker_scatter_points(
                 np.isfinite(gated_scatter_values) & (gated_scatter_values > 0.0)
             )
         )
-        scatter_peak = select_primary_validated_peak(
+        select_peak = select_primary_validated_peak if fit_function is None else _select_primary_validated_peak
+        fit_arguments = {} if fit_function is None else {"fit_function": resolve_fit_function}
+        scatter_peak = select_peak(
+            **fit_arguments,
             values=gated_scatter_values,
             peak_count=1,
             minimum_peak_fraction=settings.minimum_peak_fraction,
@@ -874,7 +900,7 @@ def find_marker_scatter_points(
             fit_cv_threshold=settings.scatter_fit_cv_threshold,
         )
         if scatter_peak is None:
-            scatter_analysis = find_fit_validate_peaks_1d(
+            scatter_analysis = resolve_fit_function(
                 values=gated_scatter_values,
                 peak_count=1,
                 minimum_peak_fraction=settings.minimum_peak_fraction,
@@ -941,8 +967,27 @@ def analyze_non_fluorescent_scatter(
     events: RosettaEventData,
     fluorescence: RosettaFluorescenceAnalysis,
     settings: RosettaRunSettings,
+    fit_function: Callable[..., dict[str, Any]] | None = None,
 ) -> RosettaScatterAnalysis:
-    """Fit baseline-gated scatter populations and build their display points."""
+    """Fit baseline-gated scatter populations and build their display points.
+
+    Parameters
+    ----------
+    events : RosettaEventData
+        Paired scatter and fluorescence intensities in arbitrary units.
+    fluorescence : RosettaFluorescenceAnalysis
+        Accepted baseline fluorescence gate.
+    settings : RosettaRunSettings
+        Detection thresholds and maximum peak count.
+    fit_function : Callable or None, optional
+        Alternative fitter using the existing peak-analysis dictionary contract.
+        ``None`` preserves the original histogram fitter.
+
+    Returns
+    -------
+    RosettaScatterAnalysis
+        Accepted scatter positions, display points and validation outcomes.
+    """
     non_fluorescent_points = []
     non_fluorescent_scatter_positions = []
     non_fluorescent_mask = (
@@ -955,7 +1000,8 @@ def analyze_non_fluorescent_scatter(
     non_fluorescent_fluorescence_values = events.fluorescence_values[
         non_fluorescent_mask
     ]
-    non_fluorescent_analysis = find_fit_validate_peaks_1d(
+    resolve_fit_function = fit_function or find_fit_validate_peaks_1d
+    non_fluorescent_analysis = resolve_fit_function(
         values=non_fluorescent_scattering_values,
         peak_count=settings.peak_count,
         minimum_peak_fraction=settings.minimum_peak_fraction,

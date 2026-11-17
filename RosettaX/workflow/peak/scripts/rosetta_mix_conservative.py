@@ -15,7 +15,7 @@ class ConservativeRosettaScatterPeakProcess(RosettaMixSizeAssignmentProcess):
     """Use conservative scatter-fit thresholds with marker-based size assignment."""
 
     process_name = "Rosetta Script Conservative"
-    process_label = "Rosetta Script — Conservative"
+    process_label = "Rosetta — Strict"
     description = (
         "Uses stricter scatter-peak fit criteria and estimates bead sizes from "
         "the 140 nm and 380 nm fluorescent markers."

@@ -21,6 +21,7 @@ SCATTERING_ALLOWED_PEAK_PROCESS_NAMES = [
     "Rosetta Script V1",
     "Rosetta Script Conservative",
     "Rosetta Script Sensitive",
+    "Rosetta Script Mixture",
 ]
 
 

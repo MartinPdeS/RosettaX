@@ -15,7 +15,7 @@ class SensitiveRosettaScatterPeakProcess(RosettaMixSizeAssignmentProcess):
     """Use permissive scatter-fit thresholds with marker-based size assignment."""
 
     process_name = "Rosetta Script Sensitive"
-    process_label = "Rosetta Script — Sensitive"
+    process_label = "Rosetta — Sensitive"
     description = (
         "Accepts broader scatter-peak fits, so noisier or overlapping peaks may "
         "be included. Bead sizes are estimated from the 140 nm and 380 nm markers."

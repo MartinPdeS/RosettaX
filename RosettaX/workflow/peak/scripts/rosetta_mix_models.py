@@ -7,7 +7,7 @@ from .rosetta_mix_algorithms import (
     resolve_float,
     resolve_integer,
 )
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 DEFAULT_BASELINE_SIGMA_MULTIPLIER = 3.0
@@ -156,7 +156,7 @@ class RosettaFluorescenceAnalysis:
 class RosettaMarkerScatter:
     points: list[dict[str, Any]]
     guide_positions: list[float]
-    diagnostics: list[dict[str, Any]]
+    diagnostics: list[dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass(frozen=True)

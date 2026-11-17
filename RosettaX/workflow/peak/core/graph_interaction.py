@@ -245,9 +245,4 @@ def _is_rosetta_script_process_name(
     """
     normalized_name = str(process_name or "").strip().lower()
 
-    return normalized_name in {
-        "rosetta script",
-        "rosetta script v1",
-        "rosetta script conservative",
-        "rosetta script sensitive",
-    }
+    return normalized_name == "rosetta script" or normalized_name.startswith("rosetta script ")

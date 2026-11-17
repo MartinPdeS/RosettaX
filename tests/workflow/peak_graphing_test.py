@@ -607,10 +607,15 @@ class Test_PeakWorkflowInteractionRevision:
 class Test_PeakWorkflowGraphBuilderRosettaOverlays:
     """Regression checks for peak workflow graph builder Rosetta overlays."""
 
-    def test_rosetta_classifies_peak_symbols_and_labels(self):
+    @pytest.mark.parametrize("process_name", [
+        "Rosetta Script V1", "Rosetta Script Conservative",
+        "Rosetta Script Sensitive", "Rosetta Script Mixture",
+    ])
+    def test_rosetta_classifies_peak_symbols_and_labels(self, process_name):
         """Show distinct marker types and place labels at the fluorescence gate."""
         builder = PeakWorkflowGraphBuilder.__new__(PeakWorkflowGraphBuilder)
-        builder.resolved_process_name = "Rosetta Script V1"
+        builder.resolved_process_name = process_name
+        builder.process = types.SimpleNamespace(supports_advanced_mode=False)
         builder.advanced_mode_value = []
         builder.peak_lines_payload = {
             "points": [
@@ -634,7 +639,7 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
             figure=figure,
         )
         figure = add_peak_workflow_post_layout_overlays(
-            figure=figure, process_name="Rosetta Script V1", peak_lines_payload=builder.peak_lines_payload,
+            figure=figure, process_name=process_name, peak_lines_payload=builder.peak_lines_payload,
         )
         traces = {trace.name: trace for trace in figure.data}
         assert traces["Fluorescent marker"].marker.symbol == "diamond"
@@ -644,6 +649,10 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
         assert traces["Non-fluorescent peak"].marker.line.color == "#008c80"
         assert traces["Fluorescent marker"].marker.opacity == 1
         assert figure.layout.showlegend is True
+        assert figure.layout.legend.x == pytest.approx(0.01)
+        assert figure.layout.legend.y == pytest.approx(0.99)
+        assert figure.layout.legend.xanchor == "left"
+        assert figure.layout.legend.yanchor == "top"
         annotations = {annotation.text: annotation for annotation in figure.layout.annotations}
         assert annotations["140 nm marker"].yref == "paper"
         assert annotations["147 nm"].yref == "y"

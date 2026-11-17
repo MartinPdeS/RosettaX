@@ -45,12 +45,12 @@ class FluorescenceGuidedScatterPeakProcessV1(FluorescenceGuidedScatterPeakProces
     """
 
     process_name = "Rosetta Script V1"
-    process_label = "Rosetta Script — Debug"
+    process_label = "Rosetta — Custom & Diagnostics"
     description = (
         "Custom Rosetta Script with editable detection settings and marker-based "
         "bead sizing from the 140 nm and 380 nm fluorescent markers."
     )
-    sort_order = 3
+    sort_order = 4
     supports_advanced_mode = False
     always_advanced_mode = True
     always_show_process_settings = True
