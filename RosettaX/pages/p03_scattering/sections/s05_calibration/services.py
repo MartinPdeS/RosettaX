@@ -17,7 +17,7 @@ def resolve_table_refractive_index(
     *,
     column_name: str,
     fallback_value: Any,
-    wavelength_nm: Any,
+    wavelength_nm: Any = 488.0,
 ) -> Any:
     """Resolve a numeric index or material name entered in the table."""
     for row in reversed(rows):

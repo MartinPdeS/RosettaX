@@ -107,12 +107,6 @@ def compute_model_for_rows(
         return []
 
     resolved_mie_model = _normalize_mie_model(mie_model)
-    resolved_rows = table.normalize_table_rows(
-        mie_model=resolved_mie_model,
-        current_rows=resolved_rows,
-        wavelength_nm=wavelength_nm,
-    )
-
     def resolve_row_material(*, column_id: str, fallback_value: Any) -> float:
         """Resolve the latest entered row index or use the section default."""
         for row in reversed(resolved_rows):

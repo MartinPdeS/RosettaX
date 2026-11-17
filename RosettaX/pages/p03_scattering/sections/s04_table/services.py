@@ -13,7 +13,6 @@ from RosettaX.workflow.table.scattering import (
     table_is_effectively_empty,
 )
 
-
 __all__ = [
     "ScatteringCalibrationStandardTable",
     "add_empty_row_for_model",

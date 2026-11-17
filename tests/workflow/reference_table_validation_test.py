@@ -18,7 +18,7 @@ COLUMNS = [
 ]
 
 
-@pytest.mark.parametrize("value", ["bad", "NaN", "inf", True, 0, -1])
+@pytest.mark.parametrize("value", ["bad", "NaN", "inf", True, -1])
 def test_invalid_editable_values_are_reported_without_changing_rows(value):
     """Check invalid editable values are reported without changing rows."""
     rows = [{"diameter": value, "coupling": "not yet computed"}]
@@ -29,7 +29,7 @@ def test_invalid_editable_values_are_reported_without_changing_rows(value):
     assert rows[0]["diameter"] == value
 
 
-@pytest.mark.parametrize("value", [None, "", " ", "1,45", "1e3", 100.0])
+@pytest.mark.parametrize("value", [None, "", " ", "1,45", "1e3", 0, 100.0])
 def test_partial_rows_and_valid_numeric_formats_remain_unmarked(value):
     """Check partial rows and valid numeric formats remain unmarked."""
     assert validate_reference_table_cells([{"diameter": value}], COLUMNS) == []
@@ -38,7 +38,7 @@ def test_partial_rows_and_valid_numeric_formats_remain_unmarked(value):
 def test_feedback_clears_after_correction_and_column_changes():
     """Check feedback clears after correction and column changes."""
     styles, tooltips, messages = build_reference_table_feedback([{"diameter": -1}], COLUMNS)
-    assert tooltips[0]["diameter"]["value"] == "Enter a value greater than zero."
+    assert tooltips[0]["diameter"]["value"] == "Enter a non-negative number."
     assert messages[0].children.startswith("Row 1 · Diameter [nm]")
     assert styles[-1]["if"] == {"row_index": 0, "column_id": "diameter"}
     corrected_styles, corrected_tooltips, corrected_messages = build_reference_table_feedback(

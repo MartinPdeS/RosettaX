@@ -3,14 +3,13 @@ import dash_bootstrap_components as dbc
 import logging
 from ..s03_model.main import Model as ScatteringModelSection
 from ..s05_calibration import services as calibration_services
-from . import services as table_section_services
 from .services import ScatteringCalibrationStandardTable
 from RosettaX.pages.p00_sidebar.ids import SidebarIds
 from RosettaX.pages.p03_scattering.sections.s03_model import layout as model_layout
 from RosettaX.pages.p03_scattering.state import ScatteringPageState
 from RosettaX.ui import WorkflowStep
 from RosettaX.utils import RuntimeConfig, styling, ui_forms
-from RosettaX.workflow import parameters, scattering
+from RosettaX.workflow import parameters
 from RosettaX.workflow.plotting import PlotOptions
 from RosettaX.workflow.table.layout import (
     ReferenceTableActionConfig,

@@ -1,9 +1,11 @@
 
 import dash
+import dash_bootstrap_components as dbc
 import logging
 from . import services
 from .adapters import SaveAdapter
 from .models import SaveConfig
+from dash import html
 from typing import Any
 
 
@@ -28,6 +30,51 @@ def save_button_should_be_disabled(
     return (
         not isinstance(calibration_payload, dict)
         or not calibration_payload
+    )
+
+
+def _build_save_review_summary(
+    *,
+    file_name: Any,
+    output_channel_name: Any,
+    calibration_payload: dict | None,
+    config: SaveConfig,
+) -> dbc.Alert:
+    """Build a save readiness summary for compatibility with existing callers."""
+    checks = [
+        (
+            "Calibration fit is available",
+            isinstance(calibration_payload, dict) and bool(calibration_payload),
+        ),
+        ("Calibration name is entered", bool(str(file_name or "").strip())),
+    ]
+    if config.require_output_channel_name:
+        checks.append(
+            (
+                "Applied output channel is entered",
+                bool(str(output_channel_name or "").strip()),
+            )
+        )
+    ready = all(is_complete for _, is_complete in checks)
+    context = (
+        f"{len(calibration_payload)} calibration fields are ready for review."
+        if calibration_payload
+        else "Create a calibration to review its context and fit."
+    )
+    return dbc.Alert(
+        [
+            html.Strong("Ready to save" if ready else "Needs attention"),
+            html.Div(context, style={"fontSize": "0.9rem", "marginTop": "4px"}),
+            html.Ul(
+                [
+                    html.Li(f"{'Complete' if is_complete else 'Required'}: {label}")
+                    for label, is_complete in checks
+                ],
+                style={"marginBottom": "0", "marginTop": "6px", "fontSize": "0.88rem"},
+            ),
+        ],
+        color="success" if ready else "warning",
+        style={"marginBottom": "12px"},
     )
 
 

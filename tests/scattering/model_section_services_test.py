@@ -41,7 +41,6 @@ def test_custom_profile_preserves_values_and_clamps_cache_aperture():
     assert state.values.detector_cache_numerical_aperture == pytest.approx(0.399999)
     assert state.to_callback_values() == (
         "Generic detector",
-        "Custom",
         "Solid Sphere",
         1.4,
         1.6,

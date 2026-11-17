@@ -324,7 +324,7 @@ class Test_ScatteringCalibrationStandardTable:
     def test_model_selection_preserves_empty_table_without_preset(self):
         """Keep an explicitly cleared table empty when the model changes."""
         _columns, rows = ScatteringCalibrationStandardTable.build_state_for_model_selection(
-            mie_model="Solid Sphere", scatterer_preset="", current_rows=[]
+            mie_model="Solid Sphere", current_rows=[]
         )
         assert rows == []
 
@@ -426,12 +426,11 @@ class Test_ScatteringCalibrationStandardTable:
             "",
         ]
 
-    def test_model_selection_uses_preset_geometry_when_preset_is_active(self):
-        """Check model selection uses preset geometry when preset is active."""
+    def test_model_selection_preserves_user_rows_without_scatterer_preset(self):
+        """Keep user entered standards when switching the particle model."""
         columns, rows = (
             ScatteringCalibrationStandardTable.build_state_for_model_selection(
                 mie_model="Solid Sphere",
-                scatterer_preset=ROSETTA_MIX_PRESET_NAME,
                 current_rows=[
                     {
                         "particle_diameter_nm": "111",
@@ -455,29 +454,14 @@ class Test_ScatteringCalibrationStandardTable:
             "expected_coupling",
             "expected_cross_section_nm2",
         ]
-        assert rows[0] == {
-            "particle_diameter_nm": "994",
-            "particle_refractive_index": "Polystyrene(1.59796)",
-            "medium_refractive_index": "Water(1.33698)",
-            "measured_peak_position": "",
-            "expected_coupling": "",
-            "expected_cross_section_nm2": "",
-        }
-        assert rows[1] == {
-            "particle_diameter_nm": "799",
-            "particle_refractive_index": "Polystyrene(1.59796)",
-            "medium_refractive_index": "Water(1.33698)",
-            "measured_peak_position": "",
-            "expected_coupling": "",
-            "expected_cross_section_nm2": "",
-        }
+        assert [row["particle_diameter_nm"] for row in rows[:2]] == ["111", "222"]
+        assert [row["measured_peak_position"] for row in rows[:2]] == ["12.3", "78.9"]
 
     def test_model_selection_remaps_current_rows_for_custom_preset(self):
         """Check model selection remaps current rows for custom preset."""
         columns, rows = (
             ScatteringCalibrationStandardTable.build_state_for_model_selection(
                 mie_model="Core/Shell Sphere",
-                scatterer_preset=CUSTOM_SCATTERER_PRESET_NAME,
                 current_rows=[
                     {
                         "particle_diameter_nm": "111",

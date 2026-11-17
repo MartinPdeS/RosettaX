@@ -177,10 +177,7 @@ class Test_ScatteringCalibrationPreviewGraph:
             )
         )
 
-        assert (
-            figure_store["layout"]["title"]["text"]
-            == "Calibration standard Mie relation"
-        )
+        assert not figure_store["layout"].get("title", {}).get("text")
         assert [trace["name"] for trace in figure_store["data"]] == [
             "Mie relation (200 points)",
             "Calibration standards",
@@ -254,11 +251,13 @@ class Test_ScatteringCalibrationCallbackOutputs:
             [{"particle_refractive_index": 1.51}],
             column_name="particle_refractive_index",
             fallback_value=1.59,
+            wavelength_nm=488.0,
         ) == pytest.approx(1.51)
         assert scattering_services.resolve_table_refractive_index(
             [{"medium_refractive_index": "1.345"}],
             column_name="medium_refractive_index",
             fallback_value=1.333,
+            wavelength_nm=488.0,
         ) == pytest.approx(1.345)
 
     def test_table_refractive_index_still_accepts_material_label(self) -> None:
@@ -267,6 +266,7 @@ class Test_ScatteringCalibrationCallbackOutputs:
             [{"medium_refractive_index": "Water(1.33698)"}],
             column_name="medium_refractive_index",
             fallback_value=1.333,
+            wavelength_nm=488.0,
         ) == pytest.approx(1.33698)
 
     def test_missing_table_update_keeps_existing_rows(self) -> None:

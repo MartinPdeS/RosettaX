@@ -53,6 +53,8 @@ def validate_reference_table_cells(
                     if is_refractive_index
                     else "Enter a finite number."
                 )
+            elif is_refractive_index and parsed <= 0:
+                message = "Enter a positive refractive index."
             elif parsed < 0:
                 message = "Enter a non-negative number."
             else:
