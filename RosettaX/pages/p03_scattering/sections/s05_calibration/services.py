@@ -176,7 +176,7 @@ def build_instrument_response_figure(
 
     figure.update_layout(
         title="Instrument response calibration",
-        xaxis_title="Measured standard peak intensity [a.u.]",
+        xaxis_title="Measured peak position [a.u.]",
         yaxis_title="Coupling [W]",
         separators=".,",
         hovermode="closest",
