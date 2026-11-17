@@ -613,6 +613,7 @@ class Calibration:
         self._register_fit_calibration_callback()
         self._register_left_graph_callback()
         self._register_right_graph_callback()
+        self._register_diameter_peak_position_graph_callback()
 
     def _register_graph_style_callback(self) -> None:
         """
@@ -622,17 +623,18 @@ class Calibration:
         @dash.callback(
             dash.Output(self.ids.graph_calibration, "style"),
             dash.Output(self.ids.graph_model, "style"),
+            dash.Output(self.ids.graph_diameter_peak_position, "style"),
             dash.Input("runtime-config-store", "data"),
             prevent_initial_call=False,
         )
         def update_graph_styles(
             runtime_config_data: Any,
-        ) -> tuple[dict[str, Any], dict[str, Any]]:
+        ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
             graph_style = self._build_graph_style(
                 runtime_config_data,
             )
 
-            return graph_style, dict(graph_style)
+            return graph_style, dict(graph_style), dict(graph_style)
 
     def _register_fit_calibration_callback(self) -> None:
         """
@@ -893,7 +895,7 @@ class Calibration:
 
             if not stored_figure:
                 figure = plottings._make_info_figure(
-                    "Click Compute model to generate the calibration standard Mie relation graph."
+                    "No data yet."
                 )
 
             else:
@@ -910,13 +912,51 @@ class Calibration:
                     )
 
                     figure = plottings._make_info_figure(
-                        "Failed to render calibration standard Mie relation graph."
+                        "Could not render graph."
                     )
 
             figure = self._apply_plot_options_axis_scales(
                 figure=figure,
                 plot_options=plot_options,
             )
+
+            return self._finalize_figure_size(
+                figure,
+                runtime_config_data=runtime_config_data,
+            )
+
+    def _register_diameter_peak_position_graph_callback(self) -> None:
+        """Register measured peak position versus diameter graph rendering."""
+
+        @dash.callback(
+            dash.Output(self.ids.graph_diameter_peak_position, "figure"),
+            dash.Input(self.page.ids.State.page_state_store, "data"),
+            dash.State("runtime-config-store", "data"),
+            prevent_initial_call=False,
+        )
+        def update_diameter_peak_position_graph(
+            page_state_payload: Any,
+            runtime_config_data: Any,
+        ) -> go.Figure:
+            page_state = ScatteringPageState.from_dict(
+                page_state_payload if isinstance(page_state_payload, dict) else None
+            )
+            stored_figure = page_state.calibration_diameter_peak_graph_payload
+
+            if not stored_figure:
+                figure = plottings._make_info_figure(
+                    "No data yet."
+                )
+            else:
+                try:
+                    figure = go.Figure(stored_figure)
+                except Exception:
+                    logger.exception(
+                        "Failed to render standard diameter versus measured peak position graph."
+                    )
+                    figure = plottings._make_info_figure(
+                        "Could not render graph."
+                    )
 
             return self._finalize_figure_size(
                 figure,

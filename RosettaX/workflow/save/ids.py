@@ -34,10 +34,6 @@ class SaveIds:
         return f"{self.prefix}-save-out"
 
     @property
-    def review_summary(self) -> str:
-        return f"{self.prefix}-save-review-summary"
-
-    @property
     def review_acknowledgment(self) -> str:
         return f"{self.prefix}-save-review-acknowledgment"
 

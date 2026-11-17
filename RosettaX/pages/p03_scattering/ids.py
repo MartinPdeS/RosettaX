@@ -195,6 +195,10 @@ class CalibrationSectionIds:
         return f"{self.prefix}-calibration-standard-mie-relation-graph"
 
     @property
+    def graph_diameter_peak_position(self) -> str:
+        return f"{self.prefix}-calibration-standard-diameter-peak-position-graph"
+
+    @property
     def instrument_response_plot_options(self) -> str:
         return f"{self.prefix}-instrument-response-plot-options"
 

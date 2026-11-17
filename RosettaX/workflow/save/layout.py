@@ -80,7 +80,6 @@ class SaveLayout:
                         "marginBottom": "8px",
                     },
                 ),
-                dash.html.Div(id=self.ids.review_summary),
                 self._build_save_row(),
                 dash.html.Hr(),
                 self._build_status_output(),

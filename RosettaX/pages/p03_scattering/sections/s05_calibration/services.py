@@ -350,7 +350,7 @@ def build_calibration_standard_mie_relation_figure(
     line_y_values = line_y_values[line_mask]
 
     if point_x_values.size == 0 and line_x_values.size == 0:
-        return plottings._make_info_figure("No calibration standard Mie relation data available.")
+        return plottings._make_info_figure("No valid standards to plot.")
 
     if line_x_values.size > 0:
         line_order = np.argsort(line_x_values)
@@ -381,7 +381,6 @@ def build_calibration_standard_mie_relation_figure(
         )
 
     figure.update_layout(
-        title="Calibration standard Mie relation",
         xaxis_title=diameter_axis_title,
         yaxis_title="Coupling [W]",
         separators=".,",
@@ -389,6 +388,69 @@ def build_calibration_standard_mie_relation_figure(
         uirevision="scattering_standard_mie_relation_graph",
     )
 
+    return figure
+
+
+def build_calibration_standard_diameter_peak_position_figure(
+    *,
+    current_table_rows: list[dict[str, Any]] | None,
+    mie_model: Any,
+) -> go.Figure:
+    """Build the measured peak position versus standard diameter figure."""
+    resolved_mie_model = scattering.resolve_mie_model(mie_model)
+    diameter_column = (
+        "outer_diameter_nm"
+        if resolved_mie_model == "Core/Shell Sphere"
+        else "particle_diameter_nm"
+    )
+    diameter_values: list[float] = []
+    measured_peak_values: list[float] = []
+
+    for row in current_table_rows or []:
+        if not isinstance(row, dict):
+            continue
+        try:
+            measured_peak_position = float(row.get("measured_peak_position"))
+            diameter_nm = float(row.get(diameter_column))
+        except (TypeError, ValueError):
+            continue
+        if not np.isfinite(measured_peak_position) or not np.isfinite(diameter_nm):
+            continue
+        if measured_peak_position <= 0.0 or diameter_nm <= 0.0:
+            continue
+        diameter_values.append(diameter_nm)
+        measured_peak_values.append(measured_peak_position)
+
+    if not diameter_values:
+        return plottings._make_info_figure(
+            "No valid standards to plot."
+        )
+
+    point_order = np.argsort(np.asarray(diameter_values, dtype=float))
+    ordered_diameter_values = np.asarray(diameter_values, dtype=float)[point_order]
+    ordered_measured_peak_values = np.asarray(measured_peak_values, dtype=float)[point_order]
+    figure = go.Figure(
+        go.Scatter(
+            x=ordered_diameter_values,
+            y=ordered_measured_peak_values,
+            mode="lines+markers+text",
+            name="Calibration standards",
+            line={"shape": "linear"},
+            text=[f"{diameter:.6g} nm" for diameter in ordered_diameter_values],
+            textposition="top center",
+        )
+    )
+    figure.update_layout(
+        xaxis_title=(
+            "Outer diameter [nm]"
+            if resolved_mie_model == "Core/Shell Sphere"
+            else "Diameter [nm]"
+        ),
+        yaxis_title="Measured peak position [a.u.]",
+        separators=".,",
+        hovermode="closest",
+        uirevision="scattering_standard_diameter_peak_position_graph",
+    )
     return figure
 
 

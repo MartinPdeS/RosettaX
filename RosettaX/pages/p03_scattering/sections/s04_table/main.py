@@ -192,22 +192,42 @@ class ReferenceTable:
 
         return dash.html.Div(
             [
-                dash.dcc.Loading(
-                    dash.dcc.Graph(
-                        id=self.ids.graph_model,
-                        style=graph_style,
-                        config=styling.PLOTLY_GRAPH_CONFIG,
-                    ),
-                    type="circle",
-                    color="#0d6efd",
-                    delay_show=150,
+                dash.html.Div(
+                    [
+                        dash.dcc.Loading(
+                            dash.dcc.Graph(
+                                id=self.ids.graph_model,
+                                style=graph_style,
+                                config=styling.PLOTLY_GRAPH_CONFIG,
+                            ),
+                            type="circle",
+                            color="#0d6efd",
+                            delay_show=150,
+                        ),
+                        PlotOptions.build_component(
+                            component_id=self.ids.mie_relation_plot_options,
+                            value=[PlotOptions.y_log_value],
+                        ),
+                    ],
+                    style={"flex": "1 1 0", "minWidth": "0"},
                 ),
-                PlotOptions.build_component(
-                    component_id=self.ids.mie_relation_plot_options,
-                    value=[PlotOptions.y_log_value],
+                dash.html.Div(
+                    dash.dcc.Loading(
+                        dash.dcc.Graph(
+                            id=self.ids.graph_diameter_peak_position,
+                            style=graph_style,
+                            config=styling.PLOTLY_GRAPH_CONFIG,
+                        ),
+                        type="circle",
+                        color="#0d6efd",
+                        delay_show=150,
+                    ),
+                    style={"flex": "1 1 0", "minWidth": "0"},
                 ),
             ],
             style={
+                "display": "flex",
+                "gap": "16px",
                 "overflow": "visible",
                 "width": "100%",
             },
@@ -601,6 +621,10 @@ class ReferenceTable:
                     simulated_curve_point_count=self.simulated_curve_point_count,
                     logger=logger,
                 ),
+                calibration_diameter_peak_graph_payload=calibration_services.build_calibration_standard_diameter_peak_position_figure(
+                    current_table_rows=computed_rows,
+                    mie_model=resolved_mie_model,
+                ).to_dict(),
             )
 
             logger.debug(

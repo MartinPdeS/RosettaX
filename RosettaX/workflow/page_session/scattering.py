@@ -22,6 +22,7 @@ class ScatteringPageState:
 
     calibration_graph_payload: dict[str, Any] | None = None
     calibration_model_graph_payload: dict[str, Any] | None = None
+    calibration_diameter_peak_graph_payload: dict[str, Any] | None = None
     calibration_payload: dict[str, Any] | None = None
     calibration_saved: bool = False
 
