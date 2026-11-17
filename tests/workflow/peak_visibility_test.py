@@ -135,14 +135,14 @@ class Test_PeakProcessSelectionVisibility:
             "display": "block",
         }
 
-    def test_rosetta_v1_advanced_only_helpers_match_rosetta_behavior(self) -> None:
-        """Check Rosetta v1 advanced only helpers match Rosetta behavior."""
+    def test_rosetta_v1_helpers_are_visible_without_advanced_mode(self) -> None:
+        """Custom Rosetta mode exposes its controls without an advanced toggle."""
         assert visibility.build_rosetta_advanced_only_style(
             process_name="Rosetta Script V1",
             graph_toggle_value=["enabled"],
             advanced_mode_value=[],
         ) == {
-            "display": "none",
+            "display": "block",
         }
 
         assert visibility.build_rosetta_advanced_only_style(

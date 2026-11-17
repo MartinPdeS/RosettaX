@@ -240,7 +240,8 @@ def build_rosetta_advanced_only_style(
         }
 
     if (
-        not getattr(selected_process, "always_advanced_mode", False)
+        getattr(selected_process, "supports_advanced_mode", True)
+        and not getattr(selected_process, "always_advanced_mode", False)
         and not graph_toggle_is_enabled(advanced_mode_value)
     ):
         return {

@@ -149,8 +149,16 @@ deviations when no gate-width setting is provided. Explicit gate widths stored
 in existing profiles retain their selected value.
 
 The scattering peak selector also offers ``Rosetta — Mixture (Experimental)``.
-It keeps the fluorescence marker gates and estimates bead sizes from the 140 nm
-and 380 nm markers. Scatter populations are fitted jointly in log intensity,
+It keeps the fluorescence marker gates and assigns the known CAL003 sizes in
+scatter order around the 140 nm and 380 nm markers. It requires exactly three
+validated non-fluorescent populations between the anchors (147, 203, 296 nm).
+An incomplete or extra middle population stops size assignment and clears the
+preceding results. Outer populations are optional: expand downward from 140 nm
+as 125, 100, 70 nm and upward from 380 nm as 400, 600, 799, 994 nm. This assumes
+missing outer populations are at the extremes, and scatter intensity increases
+with bead diameter for the selected detector. More outer populations than known
+sizes produce a warning rather than invented labels.
+Scatter populations are fitted jointly in log intensity,
 with the component count selected by BIC and an optional broad background
 component. Sensitive candidate detection uses 1% relative prominence with a local
 counting-noise check. Bootstrap fits reuse the fitted centers, widths and weights.

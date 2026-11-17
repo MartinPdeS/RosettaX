@@ -833,7 +833,7 @@ def handle_run_action(
             )
             return (
                 page_state.to_dict(),
-                dash.no_update,
+                cleared_table_result if getattr(process, "clear_table_on_warning", False) else dash.no_update,
                 build_status_children(
                     status_component_ids=status_component_ids,
                     target_process_name=target_process_name,

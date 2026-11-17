@@ -90,28 +90,11 @@ class RosettaMixSizeAssignmentProcess(FluorescenceGuidedScatterPeakProcess):
                 )
             return result
 
-        resolved_rows, status_suffix = build_rosetta_mix_v1_table_prefill_rows(
-            result=result,
-        )
-        if not resolved_rows and result.status:
-            warning_payload = _build_warning_graph_payload(
-                peak_lines_payload=result.peak_lines_payload,
-            )
-            return replace(
-                result,
-                peak_lines_payload=warning_payload,
-                status=f"Warning: {result.status}",
-                warning=True,
-            )
-
-        if status_suffix.startswith("Warning:") or any(
+        resolved_rows, status_suffix = self.assign_particle_sizes(result=result)
+        if not resolved_rows or status_suffix.startswith("Warning:") or any(
             not row.get("particle_diameter_nm") for row in resolved_rows
         ):
-            warning_status = (
-                status_suffix
-                if "Rosetta Mix size range" in status_suffix
-                else build_marker_anchor_warning(result=result)
-            )
+            warning_status = status_suffix or build_marker_anchor_warning(result=result)
             warning_payload = _build_warning_graph_payload(
                 peak_lines_payload=result.peak_lines_payload,
             )
@@ -143,6 +126,27 @@ class RosettaMixSizeAssignmentProcess(FluorescenceGuidedScatterPeakProcess):
             peak_lines_payload=updated_peak_lines_payload,
             status=updated_status,
         )
+
+
+    def assign_particle_sizes(
+        self, *, result: PeakProcessResult,
+    ) -> tuple[list[dict[str, Any]], str]:
+        """Assign sizes using the existing two-marker estimation method.
+
+        Parameters
+        ----------
+        result : PeakProcessResult
+            Detected peaks, marker anchors and table rows.
+
+        Returns
+        -------
+        tuple[list[dict[str, Any]], str]
+            Assigned rows and a status message, including any failure details.
+        """
+        rows, status = build_rosetta_mix_v1_table_prefill_rows(result=result)
+        if status.startswith("Warning:") and "Rosetta Mix size range" not in status:
+            status = build_marker_anchor_warning(result=result)
+        return rows, status
 
 
 def build_marker_anchor_warning(*, result: PeakProcessResult) -> str:

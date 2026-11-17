@@ -700,6 +700,7 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
         """Check Rosetta selected peak markers add vertical and horizontal guides."""
         builder = PeakWorkflowGraphBuilder.__new__(PeakWorkflowGraphBuilder)
         builder.resolved_process_name = "Rosetta Script"
+        builder.process = None
         builder.advanced_mode_value = ["enabled"]
         builder.peak_lines_payload = {
             "points": [
@@ -749,6 +750,7 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
         """Check Rosetta selected peak markers hide horizontal guides without advanced mode."""
         builder = PeakWorkflowGraphBuilder.__new__(PeakWorkflowGraphBuilder)
         builder.resolved_process_name = "Rosetta Script"
+        builder.process = None
         builder.advanced_mode_value = []
         builder.peak_lines_payload = {
             "points": [
@@ -784,6 +786,7 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
         """Check Rosetta v1 selected peak markers use Rosetta guides."""
         builder = PeakWorkflowGraphBuilder.__new__(PeakWorkflowGraphBuilder)
         builder.resolved_process_name = "Rosetta Script V1"
+        builder.process = None
         builder.advanced_mode_value = ["enabled"]
         builder.yscale_selection = []
         builder.peak_lines_payload = {
@@ -910,6 +913,7 @@ def test_scatter_graphs_use_configured_grid(show_grid, monkeypatch):
         yscale_selection=None,
         _edge_artifact_filter_is_enabled=lambda: False,
         _advanced_mode_is_enabled=lambda: False,
+        _is_rosetta_script_process=lambda: False,
         _call_with_supported_arguments=lambda method, **kwargs: method(),
     )
     monkeypatch.setattr(

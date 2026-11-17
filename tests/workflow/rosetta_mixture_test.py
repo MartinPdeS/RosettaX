@@ -7,7 +7,9 @@ if __name__ == "__main__":
 
 import numpy as np
 import pytest
+from dataclasses import replace
 from RosettaX.workflow.peak.scripts import rosetta_mix
+from RosettaX.workflow.peak.scripts.base import PeakProcessResult
 from RosettaX.workflow.peak.scripts.rosetta_mix_mixture import (
     MixtureRosettaScatterPeakProcess,
 )
@@ -96,8 +98,10 @@ def test_mixture_script_routes_both_scatter_stages_through_new_fitter(monkeypatc
     )
     assert len(calls) == 3
     assert result is not None
-    assert not result.warning, result.status
-    assert len(result.table_prefill_rows) == 2
+    assert result.warning
+    assert result.table_prefill_rows == []
+    assert "found 1 validated non-fluorescent populations between" in result.status
+    assert "expected exactly 3 (147, 203, 296 nm)" in result.status
 
 
 def test_overlapping_populations_recover_distinct_observed_modes():
@@ -170,3 +174,110 @@ def test_marker_core_and_broad_tails_are_one_observed_population():
     assert len(result["all_peaks"]) == 2
     rejected = [peak for peak in result["all_peaks"] if not peak["validated"]]
     assert any("same observed mode" in reason for reason in rejected[0]["rejection_reasons"])
+
+
+@pytest.fixture
+def complete_mixture_detection():
+    """Provide a complete ordered mixture without assuming any intensity law."""
+    positions = [100, 200, 300, 1100, 3000, 9000, 11000, 15000, 20000, 30000]
+    scatter = [{"x": x, "y": 50, "kind": "non_fluorescent"} for x in positions]
+    markers = [
+        {"x": 1000, "y": 1000, "kind": "marker"},
+        {"x": 10000, "y": 2000, "kind": "marker"},
+    ]
+    return PeakProcessResult(
+        peak_positions=scatter,
+        new_peak_positions=positions,
+        peak_lines_payload={
+            "points": [*scatter, *markers],
+            "labels": [*[f"Scatter {index}" for index in range(len(scatter))], "Dim marker", "Bright marker"],
+            "baseline_cutoff": 100,
+        },
+        status="Detected populations.",
+        table_prefill_rows=[{"measured_peak_position": x} for x in positions],
+    )
+
+
+def test_complete_mixture_is_assigned_by_region_and_order(complete_mixture_detection):
+    """Assign all known sizes without moving a 400 nm label below its anchor."""
+    rows, warning = MixtureRosettaScatterPeakProcess().assign_particle_sizes(result=complete_mixture_detection)
+    assert warning == ""
+    assert [row["particle_diameter_nm"] for row in rows] == [70, 100, 125, 147, 203, 296, 400, 600, 799, 994]
+    assert rows[6]["measured_peak_position"] > 10000
+
+
+@pytest.mark.parametrize("middle", [[], [1100], [1100, 9000], [1100, 3000, 5000, 9000]])
+def test_incomplete_or_extra_middle_populations_fail(complete_mixture_detection, middle):
+    """Any count other than three between the markers must produce no assignments."""
+    payload = dict(complete_mixture_detection.peak_lines_payload)
+    points = payload["points"]
+    labels = payload["labels"]
+    retained = [(point, label) for point, label in zip(points, labels, strict=True)
+                if point["kind"] == "marker" or not 1000 < point["x"] < 10000]
+    payload["points"] = [point for point, _label in retained] + [
+        {"x": x, "y": 50, "kind": "non_fluorescent"} for x in middle
+    ]
+    payload["labels"] = [label for _point, label in retained] + ["Scatter"] * len(middle)
+    result = replace(complete_mixture_detection, peak_lines_payload=payload)
+    rows, warning = MixtureRosettaScatterPeakProcess().assign_particle_sizes(result=result)
+    assert rows == []
+    assert f"found {len(middle)} validated non-fluorescent populations between" in warning
+    assert "expected exactly 3 (147, 203, 296 nm)" in warning
+
+
+@pytest.mark.parametrize("below_count,above_count", [(0, 0), (1, 0), (0, 1), (2, 1), (3, 4)])
+def test_optional_outer_populations_expand_from_anchors(complete_mixture_detection, below_count, above_count):
+    """Missing outer populations must not fail an otherwise complete middle group."""
+    below = [100, 200, 300][-below_count:] if below_count else []
+    above = [11000, 15000, 20000, 30000][:above_count]
+    positions = [*below, 1100, 3000, 9000, *above]
+    payload = dict(complete_mixture_detection.peak_lines_payload)
+    retained = [(point, label) for point, label in zip(payload["points"], payload["labels"], strict=True)
+                if point["kind"] == "marker" or point["x"] in positions]
+    payload["points"] = [point for point, _label in retained]
+    payload["labels"] = [label for _point, label in retained]
+    result = replace(
+        complete_mixture_detection, peak_lines_payload=payload,
+        peak_positions=[point for point in payload["points"] if point["kind"] == "non_fluorescent"],
+        table_prefill_rows=[{"measured_peak_position": x} for x in positions],
+    )
+    rows, warning = MixtureRosettaScatterPeakProcess().assign_particle_sizes(result=result)
+    assert warning == ""
+    expected_below = [70, 100, 125][-below_count:] if below_count else []
+    assert [row["particle_diameter_nm"] for row in rows] == [
+        *expected_below, 147, 203, 296, *[400, 600, 799, 994][:above_count],
+    ]
+
+
+def test_failed_assignment_clears_results_and_annotations(monkeypatch, complete_mixture_detection):
+    """An incomplete mixture must not publish table rows or inferred size labels."""
+    payload = dict(complete_mixture_detection.peak_lines_payload)
+    # Remove the middle 203 nm population from otherwise complete detections.
+    payload["points"] = [point for point in payload["points"] if point["x"] != 3000]
+    payload["labels"] = [label for index, label in enumerate(payload["labels"]) if index != 4]
+    detection = replace(complete_mixture_detection, peak_lines_payload=payload)
+    monkeypatch.setattr(rosetta_mix.FluorescenceGuidedScatterPeakProcess, "run_automatic_action", lambda *args, **kwargs: detection)
+    result = MixtureRosettaScatterPeakProcess().run_automatic_action(
+        backend=object(), detector_channels={}, peak_count=10,
+        max_events_for_analysis=10000, process_settings={},
+    )
+    assert result.warning
+    assert result.table_prefill_rows == []
+    assert result.peak_positions == []
+    assert result.new_peak_positions == []
+    assert "scatter_guide_annotations" not in result.peak_lines_payload
+    assert "found 2" in result.status
+
+
+def test_complete_assignment_publishes_expected_size_annotations(monkeypatch, complete_mixture_detection):
+    """Successful complete detections publish all rows and marker-aware labels."""
+    monkeypatch.setattr(rosetta_mix.FluorescenceGuidedScatterPeakProcess, "run_automatic_action", lambda *args, **kwargs: complete_mixture_detection)
+    result = MixtureRosettaScatterPeakProcess().run_automatic_action(
+        backend=object(), detector_channels={}, peak_count=10,
+        max_events_for_analysis=10000, process_settings={},
+    )
+    assert not result.warning
+    assert len(result.table_prefill_rows) == 10
+    annotations = result.peak_lines_payload["scatter_guide_annotations"]
+    assert [entry["label"] for entry in annotations if 1000 < entry["x"] < 10000] == ["147 nm", "203 nm", "296 nm"]
+    assert all(entry["x"] > 10000 for entry in annotations if entry["label"] == "400 nm")

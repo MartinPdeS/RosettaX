@@ -378,4 +378,32 @@ def test_warning_does_not_replace_existing_results(monkeypatch):
 
     assert state is dash.no_update
     assert table is dash.no_update
-    assert status[0].color == "warning"
+    warning = status[0].children[0]
+    assert warning.children == "Warning: Review the markers."
+    assert warning.role == "status"
+
+
+def test_failed_mixture_clears_previous_table_and_graph_annotations(monkeypatch):
+    """Do not leave earlier size assignments visible after a strict mixture failure."""
+    adapter = _StubAdapter()
+    process = SimpleNamespace(
+        supports_automatic_action=True, process_name="Rosetta Script Mixture",
+        preserve_graph_payload_on_warning=True, clear_table_on_warning=True,
+    )
+    monkeypatch.setattr(mutation, "context_is_valid_for_process", lambda **kwargs: True)
+    monkeypatch.setattr(
+        mutation, "call_run_automatic_action_with_supported_arguments",
+        lambda **kwargs: SimpleNamespace(warning=True, status="Warning: Expected exactly 3 populations.", peak_lines_payload={}),
+    )
+    monkeypatch.setattr(mutation, "build_status_children", lambda **kwargs: [kwargs["status"]])
+    state, table, status = mutation.handle_run_action(
+        page=SimpleNamespace(), adapter=adapter, process=process,
+        target_process_name=process.process_name, page_state=_StubPageState(),
+        uploaded_fcs_path="example.fcs", detector_channels={"scattering": "LALS"},
+        process_setting_ids=[], process_setting_values=[], max_events_for_plots=1000,
+        table_data=[{"measured_peak_position": 9.9}], mie_model="Solid Sphere",
+        runtime_config_data={}, status_component_ids=[{"process": process.process_name}],
+    )
+    assert state is not dash.no_update
+    assert table == [{"measured_peak_position": ""}]
+    assert "Expected exactly 3" in status[0]
