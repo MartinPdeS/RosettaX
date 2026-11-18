@@ -5,8 +5,7 @@ from dash import html
 from RosettaX.pages.p07_documentation.components import (
     build_documentation_card,
     build_documentation_container,
-    build_documentation_hero,
-    build_documentation_link_chip,
+    build_documentation_guide_header,
 )
 
 
@@ -24,44 +23,15 @@ class SystemModelDocumentationPage:
     def layout(self, **_kwargs) -> dbc.Container:
         return build_documentation_container(
             [
-                build_documentation_hero(
+                build_documentation_guide_header(
                     hero_id=self._id("hero"),
                     title="System Model and Optics",
-                    description=(
-                        "This page explains what kind of instrument output RosettaX assumes, where the software sits in the "
-                        "workflow after acquisition, and how the scattering backend models optical collection geometry."
-                    ),
-                ),
-                html.Div(style={"height": "18px"}),
-                build_documentation_card(
-                    title="Related pages",
-                    subtitle="Use the documentation hub to move between system assumptions and downstream calibration behavior.",
-                    body=[
-                        html.Div(
-                            [
-                                build_documentation_link_chip(
-                                    label="Back to documentation hub",
-                                    href="/documentation",
-                                ),
-                                build_documentation_link_chip(
-                                    label="Regression models",
-                                    href="/documentation/regression-models",
-                                ),
-                                build_documentation_link_chip(
-                                    label="Supported cytometers",
-                                    href="/documentation/supported-cytometers",
-                                ),
-                            ],
-                            style={
-                                "display": "flex",
-                                "flexWrap": "wrap",
-                                "gap": "10px",
-                            },
-                        ),
+                    description="Understand the FCS inputs and optical assumptions behind the scattering model.",
+                    related=[
+                        ("Regression models", "/documentation/regression-models"),
+                        ("Supported cytometers", "/documentation/supported-cytometers"),
                     ],
-                    min_height="unset",
                 ),
-                html.Div(style={"height": "18px"}),
                 dbc.Row(
                     [
                         dbc.Col(self._fcs_system_card(), lg=6),
@@ -77,7 +47,8 @@ class SystemModelDocumentationPage:
                     ],
                     className="g-3",
                 ),
-            ]
+            ],
+            class_name="rosettax-docs-guide",
         )
 
     def _fcs_system_card(self) -> dbc.Card:
@@ -131,10 +102,15 @@ class SystemModelDocumentationPage:
             title="Practical validation checklist",
             subtitle="A compact set of checks before trusting fitted scattering coefficients.",
             body=[
-                html.Div("Check that peak positions are stable under small script parameter changes and not driven by one ambiguous peak."),
-                html.Div("Confirm detector preset and channel mapping match expected FSC/SSC semantics for the instrument family."),
-                html.Div("Verify refractive index inputs and wavelength are physically reasonable for the actual sample and buffer."),
-                html.Div("Inspect the fitted line and residual behavior before exporting; do not rely only on one scalar metric."),
+                html.Ul(
+                    [
+                        html.Li("Check that peak positions are stable under small script parameter changes and not driven by one ambiguous peak."),
+                        html.Li("Confirm detector preset and channel mapping match expected FSC/SSC semantics for the instrument family."),
+                        html.Li("Verify refractive index inputs and wavelength are physically reasonable for the actual sample and buffer."),
+                        html.Li("Inspect the fitted line and residual behavior before exporting; do not rely only on one scalar metric."),
+                    ],
+                    className="rosettax-docs-list",
+                ),
             ],
             min_height="unset",
         )

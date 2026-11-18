@@ -7,8 +7,7 @@ from pathlib import Path
 from RosettaX.pages.p07_documentation.components import (
     build_documentation_card,
     build_documentation_container,
-    build_documentation_hero,
-    build_documentation_link_chip,
+    build_documentation_guide_header,
 )
 
 
@@ -73,44 +72,15 @@ class RefractiveIndexDocumentationPage:
     def layout(self, **_kwargs) -> dbc.Container:
         return build_documentation_container(
             [
-                build_documentation_hero(
+                build_documentation_guide_header(
                     hero_id=self._id("hero"),
                     title="Material Refractive Index Resolution",
-                    description=(
-                        "This page explains how RosettaX resolves material presets into numeric refractive indices "
-                        "at the selected wavelength and how that propagates into scattering calibration modeling."
-                    ),
-                ),
-                html.Div(style={"height": "18px"}),
-                build_documentation_card(
-                    title="Related pages",
-                    subtitle="Use these pages to connect refractive-index handling to full calibration behavior.",
-                    body=[
-                        html.Div(
-                            [
-                                build_documentation_link_chip(
-                                    label="Back to documentation hub",
-                                    href="/documentation",
-                                ),
-                                build_documentation_link_chip(
-                                    label="System model and optics",
-                                    href="/documentation/system-model",
-                                ),
-                                build_documentation_link_chip(
-                                    label="Regression models",
-                                    href="/documentation/regression-models",
-                                ),
-                            ],
-                            style={
-                                "display": "flex",
-                                "flexWrap": "wrap",
-                                "gap": "10px",
-                            },
-                        ),
+                    description="Find material presets and see how RosettaX calculates refractive index at the selected wavelength.",
+                    related=[
+                        ("System model and optics", "/documentation/system-model"),
+                        ("Regression models", "/documentation/regression-models"),
                     ],
-                    min_height="unset",
                 ),
-                html.Div(style={"height": "18px"}),
                 dbc.Row(
                     [
                         dbc.Col(self._resolution_card(), lg=7),
@@ -119,10 +89,11 @@ class RefractiveIndexDocumentationPage:
                     className="g-3",
                 ),
                 html.Div(style={"height": "18px"}),
-                self._quality_checks_card(),
-                html.Div(style={"height": "18px"}),
                 self._sellmeier_catalog_card(),
-            ]
+                html.Div(style={"height": "18px"}),
+                self._quality_checks_card(),
+            ],
+            class_name="rosettax-docs-guide",
         )
 
     def _math_block(self, expression: str) -> dcc.Markdown:
@@ -212,11 +183,10 @@ class RefractiveIndexDocumentationPage:
                 html.Thead(
                     html.Tr(
                         [
-                            html.Th("Material ID", style={"width": "11%"}),
-                            html.Th("Label", style={"width": "16%"}),
+                            html.Th("Material", style={"width": "20%"}),
                             html.Th("a", style={"width": "7%"}),
-                            html.Th("b coefficients", style={"width": "20%"}),
-                            html.Th("c coefficients", style={"width": "20%"}),
+                            html.Th("B coefficients", style={"width": "20%"}),
+                            html.Th("C coefficients", style={"width": "20%"}),
                             html.Th("Notes", style={"width": "16%"}),
                             html.Th("Source", style={"width": "10%"}),
                         ]
@@ -226,41 +196,38 @@ class RefractiveIndexDocumentationPage:
                     [
                         html.Tr(
                             [
-                                html.Td(row["id"], style={"fontFamily": "monospace", "fontSize": "0.82rem"}),
-                                html.Td(row["label"], style={"fontWeight": "700"}),
+                                html.Th(
+                                    [html.Div(row["label"]), html.Code(row["id"], className="rosettax-docs-material-id")],
+                                    scope="row",
+                                ),
                                 html.Td(row["a"], style={"fontFamily": "monospace", "fontSize": "0.82rem"}),
                                 html.Td(row["b"], style={"fontFamily": "monospace", "fontSize": "0.8rem"}),
                                 html.Td(row["c"], style={"fontFamily": "monospace", "fontSize": "0.8rem"}),
                                 html.Td(row["notes"], style={"fontSize": "0.82rem", "opacity": 0.9}),
                                 html.Td(
-                                    html.A("link", href=row["source"], target="_blank", style={"textDecoration": "none"})
+                                    html.A("Source ↗", href=row["source"], target="_blank", rel="noopener")
                                     if row["source"]
                                     else "",
                                     style={"fontSize": "0.82rem"},
                                 ),
                             ]
                         )
-                        for row in material_rows
+                        for row in sorted(material_rows, key=lambda material: material["label"].casefold())
                     ]
                 ),
             ],
             bordered=False,
-            hover=False,
+            hover=True,
             responsive=True,
+            className="rosettax-docs-table rosettax-docs-material-table",
             size="sm",
             style={"marginBottom": "0px"},
         )
 
         return build_documentation_card(
             title="Sellmeier model catalog and coefficients",
-            subtitle="Packaged refractive index models in RosettaX. Formula used: n^2 = a + sum(B_i * lambda^2 / (lambda^2 - C_i)), with wavelength in um.",
-            body=[
-                html.Div(
-                    "The table below is loaded directly from RosettaX/assets/sellmeier/ so documentation stays aligned with runtime behavior.",
-                    style={"marginBottom": "10px"},
-                ),
-                table,
-            ],
+            subtitle="Built-in material models and their coefficients. The Sellmeier formula uses wavelength in micrometers.",
+            body=[table],
             min_height="unset",
         )
 

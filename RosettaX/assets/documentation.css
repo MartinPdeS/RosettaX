@@ -85,3 +85,128 @@
     grid-area: 1 / 2 / span 2;
     align-self: center;
 }
+
+.rosettax-docs-back {
+    display: inline-block;
+    margin-bottom: 0.65rem;
+    font-weight: 650;
+}
+
+.rosettax-docs-related-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.65rem;
+    margin-top: 0.85rem;
+}
+
+.rosettax-docs-related-links a {
+    border: 1px solid var(--rosettax-border-color);
+    border-radius: 0.45rem;
+    padding: 0.3rem 0.6rem;
+    color: var(--rosettax-text-color);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 650;
+}
+
+.rosettax-docs-related-links a:hover,
+.rosettax-docs-related-links a:focus-visible {
+    background: var(--rosettax-control-background);
+    text-decoration: underline;
+}
+
+.rosettax-docs-guide .card-body {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.rosettax-docs-guide .card-body > div + div {
+    margin-top: 0.45rem;
+}
+
+.rosettax-docs-guide .card-body pre,
+.rosettax-docs-guide .card-body > :has(mjx-container) {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.rosettax-docs-guide .rosettax-docs-table :is(th, td) {
+    padding: 0.55rem 0.65rem;
+    vertical-align: top;
+}
+
+.rosettax-docs-table thead th {
+    background: var(--rosettax-control-background);
+    font-weight: 700;
+}
+
+.rosettax-docs-detector-table {
+    min-width: 32rem;
+}
+
+.rosettax-docs-material-table {
+    min-width: 43rem;
+}
+
+.rosettax-docs-preset-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.rosettax-docs-material-id {
+    color: var(--bs-secondary-color, var(--rosettax-text-color));
+    font-weight: 400;
+}
+
+.rosettax-docs-figures {
+    align-items: flex-start;
+
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+#page-content .rosettax-docs-figure-button {
+    width: 5rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--rosettax-text-color);
+}
+
+.rosettax-docs-figure-button:hover img,
+.rosettax-docs-figure-button:focus-visible img {
+    outline: 2px solid var(--bs-primary, currentColor);
+    outline-offset: 1px;
+}
+
+.rosettax-docs-comparison-table {
+    min-width: 38rem;
+}
+
+.rosettax-docs-list {
+    margin: 0;
+    padding-inline-start: 1.35rem;
+}
+
+.rosettax-docs-list li + li {
+    margin-top: 0.45rem;
+}
+
+.rosettax-docs-definition-list {
+    margin: 0;
+}
+
+.rosettax-docs-definition-list dd + dt {
+    margin-top: 0.8rem;
+}
+
+.rosettax-docs-definition-list dd:last-child {
+    margin-bottom: 0;
+}
+
+.rosettax-docs-disclosure summary {
+    padding: 0.65rem 0;
+    font-weight: 650;
+}

@@ -7,8 +7,7 @@ from pathlib import Path
 from RosettaX.pages.p07_documentation.components import (
     build_documentation_card,
     build_documentation_container,
-    build_documentation_hero,
-    build_documentation_link_chip,
+    build_documentation_guide_header,
 )
 from typing import Any
 
@@ -138,56 +137,19 @@ class CalibrationPayloadDocumentationPage:
     def layout(self, **_kwargs) -> dbc.Container:
         return build_documentation_container(
             [
-                build_documentation_hero(
+                build_documentation_guide_header(
                     hero_id=self._id("hero"),
                     title="Calibration File Wrapper and Payload",
-                    description=(
-                        "This page explains the shared outer calibration record and the inner payload blocks for "
-                        "fluorescence and scattering calibrations."
-                    ),
-                ),
-                html.Div(style={"height": "18px"}),
-                build_documentation_card(
-                    title="Related pages",
-                    subtitle="Use these pages to connect payload structure to modeling and apply behavior.",
-                    body=[
-                        html.Div(
-                            [
-                                build_documentation_link_chip(
-                                    label="Back to documentation hub",
-                                    href="/documentation",
-                                ),
-                                build_documentation_link_chip(
-                                    label="Regression models",
-                                    href="/documentation/regression-models",
-                                ),
-                                build_documentation_link_chip(
-                                    label="Apply checks",
-                                    href="/documentation/apply-checks",
-                                ),
-                            ],
-                            style={
-                                "display": "flex",
-                                "flexWrap": "wrap",
-                                "gap": "10px",
-                            },
-                        ),
+                    description="Look up the JSON fields shared by fluorescence and scattering calibrations and the fields specific to each.",
+                    related=[
+                        ("Regression models", "/documentation/regression-models"),
+                        ("Apply checks", "/documentation/apply-checks"),
                     ],
-                    min_height="unset",
                 ),
-                html.Div(style={"height": "18px"}),
                 dbc.Row(
                     [
                         dbc.Col(self._wrapper_card(), lg=6),
                         dbc.Col(self._payload_card(), lg=6),
-                    ],
-                    className="g-3",
-                ),
-                html.Div(style={"height": "18px"}),
-                dbc.Row(
-                    [
-                        dbc.Col(self._field_semantics_card(), lg=6),
-                        dbc.Col(self._compatibility_card(), lg=6),
                     ],
                     className="g-3",
                 ),
@@ -199,7 +161,16 @@ class CalibrationPayloadDocumentationPage:
                     ],
                     className="g-3",
                 ),
-            ]
+                html.Div(style={"height": "18px"}),
+                dbc.Row(
+                    [
+                        dbc.Col(self._field_semantics_card(), lg=6),
+                        dbc.Col(self._compatibility_card(), lg=6),
+                    ],
+                    className="g-3",
+                ),
+            ],
+            class_name="rosettax-docs-guide",
         )
 
     def _wrapper_card(self) -> dbc.Card:
@@ -278,7 +249,7 @@ class CalibrationPayloadDocumentationPage:
 
         return build_documentation_card(
             title="Fluorescence JSON keys (sample file)",
-            subtitle="Key map extracted from RosettaX/assets/sample-files/fluorescence_calibration_sample.json.",
+            subtitle="Fields from the bundled fluorescence calibration example.",
             body=[
                 html.Div(
                     "This list shows nested wrapper and payload fields exactly as represented in the packaged fluorescence sample calibration.",
@@ -302,7 +273,7 @@ class CalibrationPayloadDocumentationPage:
 
         return build_documentation_card(
             title="Scattering JSON keys (sample file)",
-            subtitle="Key map extracted from RosettaX/assets/sample-files/scattering_calibration_sample.json.",
+            subtitle="Fields from the bundled scattering calibration example.",
             body=[
                 html.Div(
                     "This list highlights instrument_response, calibration_standard_mie_relation, metadata, reference_table, and wrapper fields used in the packaged scattering sample calibration.",

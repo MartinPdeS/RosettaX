@@ -5,8 +5,7 @@ from dash import html
 from RosettaX.pages.p07_documentation.components import (
     build_documentation_card,
     build_documentation_container,
-    build_documentation_hero,
-    build_documentation_link_chip,
+    build_documentation_guide_header,
 )
 
 
@@ -24,44 +23,15 @@ class ApplyChecksDocumentationPage:
     def layout(self, **_kwargs) -> dbc.Container:
         return build_documentation_container(
             [
-                build_documentation_hero(
+                build_documentation_guide_header(
                     hero_id=self._id("hero"),
                     title="Checks Performed While Applying a Calibration",
-                    description=(
-                        "Apply is not a blind export step. This page documents the request and model checks RosettaX "
-                        "runs before writing calibrated output files."
-                    ),
-                ),
-                html.Div(style={"height": "18px"}),
-                build_documentation_card(
-                    title="Related pages",
-                    subtitle="Use these pages to connect apply checks to calibration payloads and reports.",
-                    body=[
-                        html.Div(
-                            [
-                                build_documentation_link_chip(
-                                    label="Back to documentation hub",
-                                    href="/documentation",
-                                ),
-                                build_documentation_link_chip(
-                                    label="Calibration payload",
-                                    href="/documentation/calibration-payload",
-                                ),
-                                build_documentation_link_chip(
-                                    label="Reports and provenance",
-                                    href="/documentation/reports",
-                                ),
-                            ],
-                            style={
-                                "display": "flex",
-                                "flexWrap": "wrap",
-                                "gap": "10px",
-                            },
-                        ),
+                    description="Review the checks RosettaX runs before export and learn how to interpret their warnings.",
+                    related=[
+                        ("Calibration payload", "/documentation/calibration-payload"),
+                        ("Reports and provenance", "/documentation/reports"),
                     ],
-                    min_height="unset",
                 ),
-                html.Div(style={"height": "18px"}),
                 dbc.Row(
                     [
                         dbc.Col(self._checks_card(), lg=7),
@@ -69,7 +39,8 @@ class ApplyChecksDocumentationPage:
                     ],
                     className="g-3",
                 ),
-            ]
+            ],
+            class_name="rosettax-docs-guide",
         )
 
     def _checks_card(self) -> dbc.Card:
@@ -96,12 +67,19 @@ class ApplyChecksDocumentationPage:
     def _warning_interpretation_card(self) -> dbc.Card:
         return build_documentation_card(
             title="How to interpret apply warnings",
-            subtitle="Warnings indicate reduced confidence or constrained model behavior, not always a hard failure.",
+            subtitle="Check the issue type before sharing an export.",
             body=[
-                html.Div("Warnings about non-monotonic target relations mean inversion used a restricted monotonic branch."),
-                html.Div("Channel-missing or payload-structure errors should be treated as blocking issues and resolved before export."),
-                html.Div("Repeated warnings across runs are usually a model/input mismatch signal rather than random runtime noise."),
-                html.Div("Always cross-check warning context in the generated report before sharing calibrated outputs."),
+                html.Dl(
+                    [
+                        html.Dt("Blocking error"),
+                        html.Dd("Fix the missing channel or incomplete calibration payload before exporting."),
+                        html.Dt("Restricted inversion"),
+                        html.Dd("A non-monotonic target relation can limit inversion to the left-most monotonic branch. Check the warning in the report."),
+                        html.Dt("Recurring warning"),
+                        html.Dd("Review the inputs and target model when the same warning appears across multiple runs."),
+                    ],
+                    className="rosettax-docs-definition-list",
+                ),
             ],
             min_height="unset",
         )

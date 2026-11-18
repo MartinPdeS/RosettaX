@@ -1,12 +1,12 @@
 
+from collections import Counter
 import dash
 import dash_bootstrap_components as dbc
 from dash import Input, Output, State, callback, ctx, html, no_update
 from RosettaX.pages.p07_documentation.components import (
     build_documentation_card,
     build_documentation_container,
-    build_documentation_hero,
-    build_documentation_link_chip,
+    build_documentation_guide_header,
 )
 from RosettaX.workflow.detector.loader import load_detector_configuration_preset_catalog
 
@@ -85,74 +85,50 @@ class SupportedCytometersDocumentationPage:
     def layout(self, **_kwargs) -> dbc.Container:
         return build_documentation_container(
             [
-                build_documentation_hero(
+                build_documentation_guide_header(
                     hero_id=self._id("hero"),
                     title="Supported Flow Cytometers",
-                    description=(
-                        "This page documents the detector preset catalog used by RosettaX for scattering workflows. "
-                        "It explains what “support” means in practice, what assumptions each preset family carries, "
-                        "and what information is needed to add a new cytometer family responsibly."
-                    ),
-                ),
-                html.Div(style={"height": "18px"}),
-                build_documentation_card(
-                    title="Related pages",
-                    subtitle="The documentation hub ties detector support back to the broader calibration model.",
-                    body=[
-                        html.Div(
-                            [
-                                build_documentation_link_chip(
-                                    label="Back to documentation hub",
-                                    href="/documentation",
-                                ),
-                                build_documentation_link_chip(
-                                    label="Peak scripts",
-                                    href="/documentation/peak-scripts",
-                                ),
-                                build_documentation_link_chip(
-                                    label="Regression models",
-                                    href="/documentation/regression-models",
-                                ),
-                            ],
-                            style={
-                                "display": "flex",
-                                "flexWrap": "wrap",
-                                "gap": "10px",
-                            },
-                        ),
+                    description="Find the packaged scattering presets for your instrument and inspect the detector geometry.",
+                    related=[
+                        ("Peak scripts", "/documentation/peak-scripts"),
+                        ("Regression models", "/documentation/regression-models"),
                     ],
-                    min_height="unset",
                 ),
-                html.Div(style={"height": "18px"}),
-                dbc.Row(
-                    [
-                        dbc.Col(self._catalog_card(), lg=7),
-                        dbc.Col(self._support_meaning_card(), lg=5),
-                    ],
-                    className="g-3",
-                ),
+                self._catalog_card(),
                 html.Div(style={"height": "18px"}),
                 dbc.Row(
                     [
                         dbc.Col(self._selection_guidance_card(), lg=6),
-                        dbc.Col(self._review_checklist_card(), lg=6),
+                        dbc.Col(self._support_meaning_card(), lg=6),
                     ],
                     className="g-3",
                 ),
                 html.Div(style={"height": "18px"}),
-                self._request_support_card(),
+                dbc.Row(
+                    [
+                        dbc.Col(self._review_checklist_card(), lg=6),
+                        dbc.Col(self._request_support_card(), lg=6),
+                    ],
+                    className="g-3",
+                ),
                 self._figure_preview_modal(),
-            ]
+            ],
+            class_name="rosettax-docs-guide",
         )
 
     def _catalog_card(self) -> dbc.Card:
         catalog = load_detector_configuration_preset_catalog()
         grouped_rows: dict[str, list[str]] = {}
+        label_counts = Counter((item["brand"], item["label"]) for item in catalog)
 
         for item in catalog:
             if item["brand"] == "Custom":
                 continue
-            grouped_rows.setdefault(item["brand"], []).append(item["label"])
+            brand = item["brand"]
+            label = item["label"]
+            if label_counts[brand, label] > 1:
+                label = f"{label} ({item['detector_type']})"
+            grouped_rows.setdefault(brand, []).append(label)
 
         table = dbc.Table(
             [
@@ -160,8 +136,8 @@ class SupportedCytometersDocumentationPage:
                     html.Tr(
                         [
                             html.Th("Brand", style={"width": "22%"}),
-                            html.Th("Supported models / detector presets", style={"width": "36%"}),
-                            html.Th("Detector geometry figures"),
+                            html.Th("Detector presets"),
+                            html.Th("Geometry previews"),
                         ]
                     )
                 ),
@@ -169,32 +145,27 @@ class SupportedCytometersDocumentationPage:
                     [
                         html.Tr(
                             [
-                                html.Td(brand_name, style={"fontWeight": "700"}),
-                                html.Td(", ".join(model_labels), style={"opacity": 0.84}),
+                                html.Th(brand_name, scope="row"),
+                                html.Td(html.Ul([html.Li(label) for label in model_labels], className="rosettax-docs-preset-list")),
                                 html.Td(self._build_brand_figure_cell(brand_name)),
                             ]
                         )
-                        for brand_name, model_labels in grouped_rows.items()
+                        for brand_name, model_labels in sorted(grouped_rows.items(), key=lambda entry: entry[0].casefold())
                     ]
                 ),
             ],
             bordered=False,
-            hover=False,
+            hover=True,
             responsive=True,
+            className="rosettax-docs-table rosettax-docs-detector-table",
             size="sm",
             style={"marginBottom": "0px"},
         )
 
         return build_documentation_card(
             title="Packaged detector preset catalog",
-            subtitle="These are the preset groups RosettaX can currently recognize or use as documented scattering geometries.",
-            body=[
-                html.Div(
-                    f"RosettaX currently ships {len(catalog)} packaged detector presets across {len(grouped_rows)} brand groups.",
-                    style={"marginBottom": "10px"},
-                ),
-                table,
-            ],
+            subtitle=f"{sum(len(labels) for labels in grouped_rows.values())} presets across {len(grouped_rows)} brands. Select a figure to enlarge it.",
+            body=[table],
         )
 
     def _build_brand_figure_cell(self, brand_name: str) -> html.Div:
@@ -202,7 +173,7 @@ class SupportedCytometersDocumentationPage:
 
         if not figure_entries:
             return html.Div(
-                "Placeholder: detector figures not added yet.",
+                "No preview available",
                 style={
                     "fontStyle": "italic",
                     "opacity": 0.72,
@@ -235,21 +206,12 @@ class SupportedCytometersDocumentationPage:
                         ),
                     ],
                     id=_build_figure_button_id(brand_name, figure_label),
-                    style={
-                        "width": "128px",
-                        "padding": "0px",
-                        "border": "0px",
-                        "background": "transparent",
-                    },
+                    className="rosettax-docs-figure-button",
                     n_clicks=0,
                 )
                 for figure_src, figure_label in figure_entries
             ],
-            style={
-                "display": "flex",
-                "gap": "8px",
-                "flexWrap": "wrap",
-            },
+            className="rosettax-docs-figures",
         )
 
     def _figure_preview_modal(self) -> dbc.Modal:

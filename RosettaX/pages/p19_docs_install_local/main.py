@@ -5,8 +5,7 @@ from dash import html
 from RosettaX.pages.p07_documentation.components import (
     build_documentation_card,
     build_documentation_container,
-    build_documentation_hero,
-    build_documentation_link_chip,
+    build_documentation_guide_header,
 )
 
 
@@ -37,40 +36,14 @@ class InstallLocalDocumentationPage:
     def layout(self, **_kwargs) -> dbc.Container:
         return build_documentation_container(
             [
-                build_documentation_hero(
+                build_documentation_guide_header(
                     hero_id=self._id("hero"),
                     title="Install RosettaX Locally",
-                    description=(
-                        "This page explains how to download and run the prebuilt RosettaX bundles from GitHub Releases "
-                        "without building from source."
-                    ),
-                ),
-                html.Div(style={"height": "18px"}),
-                build_documentation_card(
-                    title="Related pages",
-                    subtitle="Use the documentation hub for workflow and model details after installation.",
-                    body=[
-                        html.Div(
-                            [
-                                build_documentation_link_chip(
-                                    label="Back to documentation hub",
-                                    href="/documentation",
-                                ),
-                                build_documentation_link_chip(
-                                    label="Quick start",
-                                    href="/documentation",
-                                ),
-                            ],
-                            style={
-                                "display": "flex",
-                                "flexWrap": "wrap",
-                                "gap": "10px",
-                            },
-                        ),
+                    description="Download a prebuilt RosettaX release and run it on your computer.",
+                    related=[
+                        ("Tutorials", "/tutorials"),
                     ],
-                    min_height="unset",
                 ),
-                html.Div(style={"height": "18px"}),
                 dbc.Row(
                     [
                         dbc.Col(self._download_buttons_card(), lg=6),
@@ -80,7 +53,8 @@ class InstallLocalDocumentationPage:
                 ),
                 html.Div(style={"height": "18px"}),
                 self._validation_notes_card(),
-            ]
+            ],
+            class_name="rosettax-docs-guide",
         )
 
     def _download_buttons_card(self) -> dbc.Card:
@@ -149,15 +123,12 @@ class InstallLocalDocumentationPage:
                     [
                         html.Li("Download the ZIP archive for your OS."),
                         html.Li("Extract it to a folder where you have write permission."),
-                        html.Li("Open the extracted rosettax folder."),
-                        html.Li("Run rosettax (macOS/Linux) or rosettax.exe (Windows)."),
+                        html.Li(["Open the extracted ", html.Code("rosettax"), " folder."]),
+                        html.Li(
+                            ["Run ", html.Code("rosettax"), " on macOS or Linux, or ", html.Code("rosettax.exe"), " on Windows."]
+                        ),
                     ],
-                    style={
-                        "marginBottom": "0px",
-                        "paddingLeft": "20px",
-                        "display": "grid",
-                        "rowGap": "7px",
-                    },
+                    className="rosettax-docs-list",
                 ),
             ],
             min_height="unset",
@@ -168,9 +139,14 @@ class InstallLocalDocumentationPage:
             title="Validation and provenance",
             subtitle="Recommended checks before distributing binaries internally.",
             body=[
-                html.Div("Confirm you downloaded the expected version tag from the release page."),
-                html.Div("Verify release checksums and provenance metadata when required by your lab or organization."),
-                html.Div("Keep exported reports together with calibrated files for traceability."),
+                html.Ul(
+                    [
+                        html.Li("Confirm you downloaded the expected version tag from the release page."),
+                        html.Li("Verify release checksums and provenance metadata when required by your lab or organization."),
+                        html.Li("Keep exported reports together with calibrated files for traceability."),
+                    ],
+                    className="rosettax-docs-list",
+                ),
             ],
             min_height="unset",
         )

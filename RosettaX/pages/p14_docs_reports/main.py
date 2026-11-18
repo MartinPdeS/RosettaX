@@ -5,8 +5,7 @@ from dash import html
 from RosettaX.pages.p07_documentation.components import (
     build_documentation_card,
     build_documentation_container,
-    build_documentation_hero,
-    build_documentation_link_chip,
+    build_documentation_guide_header,
 )
 
 
@@ -24,44 +23,15 @@ class ReportsDocumentationPage:
     def layout(self, **_kwargs) -> dbc.Container:
         return build_documentation_container(
             [
-                build_documentation_hero(
+                build_documentation_guide_header(
                     hero_id=self._id("hero"),
                     title="Reports and Provenance",
-                    description=(
-                        "This page explains what RosettaX PDF reports are for, which details they preserve from an apply run, "
-                        "and how they complement calibration JSON rather than replacing it."
-                    ),
-                ),
-                html.Div(style={"height": "18px"}),
-                build_documentation_card(
-                    title="Related pages",
-                    subtitle="Use the documentation hub to move between report behavior and the underlying calibration model.",
-                    body=[
-                        html.Div(
-                            [
-                                build_documentation_link_chip(
-                                    label="Back to documentation hub",
-                                    href="/documentation",
-                                ),
-                                build_documentation_link_chip(
-                                    label="Regression models",
-                                    href="/documentation/regression-models",
-                                ),
-                                build_documentation_link_chip(
-                                    label="Supported cytometers",
-                                    href="/documentation/supported-cytometers",
-                                ),
-                            ],
-                            style={
-                                "display": "flex",
-                                "flexWrap": "wrap",
-                                "gap": "10px",
-                            },
-                        ),
+                    description="See what the PDF report records and how to review it alongside the calibration JSON.",
+                    related=[
+                        ("Regression models", "/documentation/regression-models"),
+                        ("Supported cytometers", "/documentation/supported-cytometers"),
                     ],
-                    min_height="unset",
                 ),
-                html.Div(style={"height": "18px"}),
                 dbc.Row(
                     [
                         dbc.Col(self._report_contents_card(), lg=6),
@@ -77,7 +47,8 @@ class ReportsDocumentationPage:
                     ],
                     className="g-3",
                 ),
-            ]
+            ],
+            class_name="rosettax-docs-guide",
         )
 
     def _report_contents_card(self) -> dbc.Card:
@@ -97,13 +68,16 @@ class ReportsDocumentationPage:
     def _json_vs_pdf_card(self) -> dbc.Card:
         return build_documentation_card(
             title="How the report differs from calibration JSON",
-            subtitle="The JSON and the PDF answer different questions.",
+            subtitle="Use both files to trace the calibration and the run that applied it.",
             body=[
-                html.Div(
-                    "Use the calibration JSON to answer what the calibration is: the fitted relation, source channel, reference table, and model assumptions that define the calibration itself.",
-                ),
-                html.Div(
-                    "Use the PDF to answer what happened during a specific apply run: which files were processed, which warnings appeared, and what export choices were made at that moment.",
+                html.Dl(
+                    [
+                        html.Dt("Calibration JSON"),
+                        html.Dd("Defines the fitted relation, source channel, reference table, and model assumptions."),
+                        html.Dt("PDF report"),
+                        html.Dd("Records the input files, export choices, and warnings for a specific apply run."),
+                    ],
+                    className="rosettax-docs-definition-list",
                 ),
             ],
         )
@@ -128,10 +102,15 @@ class ReportsDocumentationPage:
             title="Recommended review workflow",
             subtitle="A lightweight audit path after each apply run.",
             body=[
-                html.Div("Open the report first and verify source files, selected calibration, and warning summary."),
-                html.Div("Cross-check report context against calibration JSON when coefficients or assumptions look unusual."),
-                html.Div("Archive calibrated outputs and report together; avoid separating files from provenance metadata."),
-                html.Div("If JSON and PDF disagree, treat it as a documentation inconsistency and re-run apply."),
+                html.Ol(
+                    [
+                        html.Li("Open the report first and verify source files, selected calibration, and warning summary."),
+                        html.Li("Cross-check report context against calibration JSON when coefficients or assumptions look unusual."),
+                        html.Li("Archive calibrated outputs and report together; avoid separating files from provenance metadata."),
+                        html.Li("If JSON and PDF disagree, treat it as a documentation inconsistency and re-run apply."),
+                    ],
+                    className="rosettax-docs-list",
+                ),
             ],
             min_height="unset",
         )

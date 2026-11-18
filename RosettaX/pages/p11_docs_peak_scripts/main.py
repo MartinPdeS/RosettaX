@@ -5,8 +5,7 @@ from dash import html
 from RosettaX.pages.p07_documentation.components import (
     build_documentation_card,
     build_documentation_container,
-    build_documentation_hero,
-    build_documentation_link_chip,
+    build_documentation_guide_header,
 )
 
 
@@ -24,44 +23,16 @@ class PeakScriptsDocumentationPage:
     def layout(self, **_kwargs) -> dbc.Container:
         return build_documentation_container(
             [
-                build_documentation_hero(
+                build_documentation_guide_header(
                     hero_id=self._id("hero"),
                     title="Peak Process Scripts",
-                    description=(
-                        "This page goes deeper into RosettaX peak identification processes: what each script sees, "
-                        "which graph mode it uses, when it is a good fit, and what to adjust when the first result "
-                        "does not match the populations you expect."
-                    ),
-                ),
-                html.Div(style={"height": "18px"}),
-                build_documentation_card(
-                    title="Related pages",
-                    subtitle="Use the documentation hub to jump across topics.",
-                    body=[
-                        html.Div(
-                            [
-                                build_documentation_link_chip(
-                                    label="Back to documentation hub",
-                                    href="/documentation",
-                                ),
-                                build_documentation_link_chip(
-                                    label="Regression models",
-                                    href="/documentation/regression-models",
-                                ),
-                                build_documentation_link_chip(
-                                    label="Supported cytometers",
-                                    href="/documentation/supported-cytometers",
-                                ),
-                            ],
-                            style={
-                                "display": "flex",
-                                "flexWrap": "wrap",
-                                "gap": "10px",
-                            },
-                        ),
+                    description="Choose a peak detection method for your bead data and troubleshoot missed or merged populations.",
+                    related=[
+                        ("Regression models", "/documentation/regression-models"),
+                        ("Supported cytometers", "/documentation/supported-cytometers"),
                     ],
-                    min_height="unset",
                 ),
+                self._comparison_matrix_card(),
                 html.Div(style={"height": "18px"}),
                 dbc.Row(
                     [
@@ -79,12 +50,11 @@ class PeakScriptsDocumentationPage:
                     className="g-3",
                 ),
                 html.Div(style={"height": "18px"}),
-                self._comparison_matrix_card(),
-                html.Div(style={"height": "18px"}),
                 self._workflow_advice_card(),
                 html.Div(style={"height": "18px"}),
                 self._troubleshooting_card(),
-            ]
+            ],
+            class_name="rosettax-docs-guide",
         )
 
     def _manual_scripts_card(self) -> dbc.Card:
@@ -160,10 +130,15 @@ class PeakScriptsDocumentationPage:
             title="How to choose quickly",
             subtitle="A practical decision rule for day-to-day calibration work.",
             body=[
-                html.Div("Start with Automatic 1D or Prominence 1D when one detector clearly carries the separation you need."),
-                html.Div("Move to Manual 2D or Prominence 2D when a second channel makes the populations visually obvious."),
-                html.Div("Use K-means when the number of populations is known but their shapes are broad or uneven."),
-                html.Div("Use the Rosetta script when you are specifically working with the Rosetta bead mixture and want marker-guided interpretation."),
+                html.Ul(
+                    [
+                        html.Li("Start with Automatic 1D or Prominence 1D when one detector clearly carries the separation you need."),
+                        html.Li("Move to Manual 2D or Prominence 2D when a second channel makes the populations visually obvious."),
+                        html.Li("Use K-means when the number of populations is known but their shapes are broad or uneven."),
+                        html.Li("Use the Rosetta script when you are specifically working with the Rosetta bead mixture and want marker-guided interpretation."),
+                    ],
+                    className="rosettax-docs-list",
+                ),
             ],
             min_height="unset",
         )
@@ -185,7 +160,7 @@ class PeakScriptsDocumentationPage:
                     [
                         html.Tr(
                             [
-                                html.Td("Manual 1D / 2D", style={"fontWeight": "700"}),
+                                html.Th("Manual 1D / 2D", scope="row"),
                                 html.Td("Peaks are visually clear but automation is unstable."),
                                 html.Td("User clicks and axis scaling."),
                                 html.Td("Inconsistent click placement across repeats."),
@@ -193,7 +168,7 @@ class PeakScriptsDocumentationPage:
                         ),
                         html.Tr(
                             [
-                                html.Td("Automatic / Prominence", style={"fontWeight": "700"}),
+                                html.Th("Automatic / Prominence", scope="row"),
                                 html.Td("Histogram or density ridges are distinct."),
                                 html.Td("Prominence, width, and minimum distance thresholds."),
                                 html.Td("Over-splitting shoulders or missing weak peaks."),
@@ -201,7 +176,7 @@ class PeakScriptsDocumentationPage:
                         ),
                         html.Tr(
                             [
-                                html.Td("K-means", style={"fontWeight": "700"}),
+                                html.Th("K-means", scope="row"),
                                 html.Td("Population count is known but peaks are broad."),
                                 html.Td("Number of clusters and selected channel(s)."),
                                 html.Td("Forced clusters for weak or absent populations."),
@@ -209,7 +184,7 @@ class PeakScriptsDocumentationPage:
                         ),
                         html.Tr(
                             [
-                                html.Td("Rosetta script", style={"fontWeight": "700"}),
+                                html.Th("Rosetta script", scope="row"),
                                 html.Td("Rosetta mixture with marker-guided structure."),
                                 html.Td("Correct fluorescence marker channel."),
                                 html.Td("Marker mismatch when fluorescence channel selection is wrong."),
@@ -219,8 +194,9 @@ class PeakScriptsDocumentationPage:
                 ),
             ],
             bordered=False,
-            hover=False,
+            hover=True,
             responsive=True,
+            className="rosettax-docs-table rosettax-docs-comparison-table",
             size="sm",
             style={"marginBottom": "0px"},
         )
@@ -237,10 +213,15 @@ class PeakScriptsDocumentationPage:
             title="Troubleshooting pattern",
             subtitle="A repeatable escalation path when first-pass peak selection is poor.",
             body=[
-                html.Div("Step 1: verify detector channel selection and axis scale before changing script parameters."),
-                html.Div("Step 2: tighten or loosen one parameter at a time, then compare resulting peak tables."),
-                html.Div("Step 3: switch script family only after confirming the data topology does not suit the current method."),
-                html.Div("Step 4: if ambiguity remains, keep manual picks and document why automation was rejected for that run."),
+                html.Ol(
+                    [
+                        html.Li("Verify detector channel selection and axis scale before changing script parameters."),
+                        html.Li("Tighten or loosen one parameter at a time, then compare resulting peak tables."),
+                        html.Li("Switch script family only after confirming the data topology does not suit the current method."),
+                        html.Li("If ambiguity remains, keep manual picks and document why automation was rejected for that run."),
+                    ],
+                    className="rosettax-docs-list",
+                ),
             ],
             min_height="unset",
         )

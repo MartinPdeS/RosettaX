@@ -7,6 +7,8 @@ from RosettaX.utils import ui_forms
 
 def build_documentation_container(
     children: list,
+    *,
+    class_name: str | None = None,
 ) -> dbc.Container:
     """
     Build the shared page container used by documentation pages.
@@ -14,6 +16,7 @@ def build_documentation_container(
     return dbc.Container(
         children,
         fluid=True,
+        className=class_name,
         style={
             "paddingLeft": "0px",
             "paddingRight": "0px",
@@ -166,4 +169,42 @@ def build_documentation_cta_card(
             ),
         ],
         min_height="180px",
+    )
+
+
+def build_documentation_guide_header(
+    *,
+    hero_id: str,
+    title: str,
+    description: str,
+    related: list[tuple[str, str]],
+) -> html.Header:
+    """Build a compact guide header with a return link and related topics.
+
+    Parameters
+    ----------
+    hero_id : str
+        ID for the page heading.
+    title, description : str
+        Heading and short description of the guide.
+    related : list of tuple
+        Labels and URLs for related guides.
+
+    Returns
+    -------
+    html.Header
+        Guide introduction and navigation.
+    """
+    return html.Header(
+        [
+            html.A("← Documentation", href="/documentation", className="rosettax-docs-back"),
+            html.H1(title, id=hero_id),
+            html.P(description),
+            html.Nav(
+                [html.A(label, href=href) for label, href in related],
+                className="rosettax-docs-related-links",
+                **{"aria-label": "Related guides"},
+            ),
+        ],
+        className="rosettax-docs-intro",
     )

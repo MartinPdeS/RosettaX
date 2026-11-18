@@ -8,8 +8,7 @@ from plotly.subplots import make_subplots
 from RosettaX.pages.p07_documentation.components import (
     build_documentation_card,
     build_documentation_container,
-    build_documentation_hero,
-    build_documentation_link_chip,
+    build_documentation_guide_header,
 )
 
 
@@ -27,45 +26,15 @@ class RegressionModelsDocumentationPage:
     def layout(self, **_kwargs) -> dbc.Container:
         return build_documentation_container(
             [
-                build_documentation_hero(
+                build_documentation_guide_header(
                     hero_id=self._id("hero"),
                     title="Regression Models",
-                    description=(
-                        "This page explains the fitted relations behind RosettaX fluorescence and scattering calibrations: "
-                        "which quantities are paired, which transforms are applied before fitting, and what assumptions "
-                        "you should keep in mind when reading or comparing calibration records."
-                    ),
-                ),
-                html.Div(style={"height": "18px"}),
-                build_documentation_card(
-                    title="Related pages",
-                    subtitle="Use the hub for the broader technical overview.",
-                    body=[
-                        html.Div(
-                            [
-                                build_documentation_link_chip(
-                                    label="Back to documentation hub",
-                                    href="/documentation",
-                                ),
-                                build_documentation_link_chip(
-                                    label="Peak scripts",
-                                    href="/documentation/peak-scripts",
-                                ),
-                                build_documentation_link_chip(
-                                    label="Supported cytometers",
-                                    href="/documentation/supported-cytometers",
-                                ),
-                            ],
-                            style={
-                                "display": "flex",
-                                "flexWrap": "wrap",
-                                "gap": "10px",
-                            },
-                        ),
+                    description="See how RosettaX fits fluorescence and scattering calibration curves and how to interpret the results.",
+                    related=[
+                        ("Peak scripts", "/documentation/peak-scripts"),
+                        ("Supported cytometers", "/documentation/supported-cytometers"),
                     ],
-                    min_height="unset",
                 ),
-                html.Div(style={"height": "18px"}),
                 dbc.Row(
                     [
                         dbc.Col(self._fluorescence_card(), lg=6),
@@ -73,6 +42,8 @@ class RegressionModelsDocumentationPage:
                     ],
                     className="g-3",
                 ),
+                html.Div(style={"height": "18px"}),
+                self._example_graph_card(),
                 html.Div(style={"height": "18px"}),
                 dbc.Row(
                     [
@@ -82,8 +53,6 @@ class RegressionModelsDocumentationPage:
                     className="g-3",
                 ),
                 html.Div(style={"height": "18px"}),
-                self._example_graph_card(),
-                html.Div(style={"height": "18px"}),
                 dbc.Row(
                     [
                         dbc.Col(self._interpretation_card(), lg=7),
@@ -91,7 +60,8 @@ class RegressionModelsDocumentationPage:
                     ],
                     className="g-3",
                 ),
-            ]
+            ],
+            class_name="rosettax-docs-guide",
         )
 
     def _math_block(self, expression: str) -> dcc.Markdown:
@@ -317,9 +287,9 @@ class RegressionModelsDocumentationPage:
                     config={"displayModeBar": False},
                     style={"height": "540px", "width": "100%"},
                 ),
-                dcc.Markdown(
-                    code_snippet,
-                    style={"marginTop": "8px", "marginBottom": "0px"},
+                html.Details(
+                    [html.Summary("Python example"), dcc.Markdown(code_snippet)],
+                    className="rosettax-docs-disclosure",
                 ),
             ],
             min_height="unset",
@@ -348,10 +318,15 @@ class RegressionModelsDocumentationPage:
             title="Fit diagnostics checklist",
             subtitle="Use this checklist before accepting a calibration for export workflows.",
             body=[
-                html.Div("Verify fit points span the intended dynamic range; narrow ranges can make coefficients unstable."),
-                html.Div("Inspect residual directionality; systematic curvature often means model mismatch rather than random noise."),
-                html.Div("Compare repeated runs with the same standards to estimate practical coefficient variability."),
-                html.Div("Do not compare coefficients across incompatible payload contexts even if R² appears high."),
+                html.Ul(
+                    [
+                        html.Li("Verify fit points span the intended dynamic range; narrow ranges can make coefficients unstable."),
+                        html.Li("Inspect residual directionality; systematic curvature often means model mismatch rather than random noise."),
+                        html.Li("Compare repeated runs with the same standards to estimate practical coefficient variability."),
+                        html.Li("Do not compare coefficients across incompatible payload contexts even if R² appears high."),
+                    ],
+                    className="rosettax-docs-list",
+                ),
             ],
             min_height="unset",
         )
