@@ -64,21 +64,14 @@ class ReferenceTable:
 
         self.reference_table_tooltip_target_id = f"{self.ids.bead_table}-reference-table-info-target"
         self.reference_table_tooltip_id = f"{self.ids.bead_table}-reference-table-info-tooltip"
-        self.reference_table_preset_tooltip_target_id = (
-            f"{self.ids.bead_table_preset_dropdown}-reference-preset-info-target"
-        )
-        self.reference_table_preset_tooltip_id = (
-            f"{self.ids.bead_table_preset_dropdown}-reference-preset-info-tooltip"
-        )
-        self.default_reference_preset_name = self._build_default_reference_preset_name()
 
         self.config = ReferenceTableConfig(
             card_title=layout.build_card_title(self),
             table_title=None,
             description=None,
-            show_add_row_button=False,
+            show_add_row_button=True,
             show_all_rows=True,
-            allow_row_deletion=False,
+            allow_row_deletion=True,
             body_style_key="",
             show_table_title=False,
         )
@@ -97,23 +90,11 @@ class ReferenceTable:
             page,
         )
 
-    def _build_default_reference_preset_name(self) -> str:
-        """
-        Resolve the default preset selection from the default runtime profile.
-        """
-        runtime_config = RuntimeConfig.from_default_profile()
-
-        preset_name = FluorescenceReferenceTable.resolve_runtime_preset_name(
-            runtime_config=runtime_config,
-        )
-
-        return str(preset_name or "")
-
     def get_layout(self) -> dbc.Card:
         """
         Build the fluorescence reference table layout.
         """
-        return layout.get_layout(self)
+        return self.layout_builder.get_layout()
 
     def register_callbacks(self) -> None:
         """

@@ -141,8 +141,8 @@ spheres use a particle diameter; core/shell particles use a core diameter and
 shell thickness. Use the row ``x`` to remove a standard. All dimensions are in
 nanometers.
 
-For a custom fluorescence standard, enter comma-separated standard intensity
-values and select ``Add to table``.
+For a custom fluorescence standard, select ``Add row`` and enter the standard
+intensity directly in the table. Use the row ``x`` to remove a standard.
 
 Rosetta peak detection uses a baseline fluorescence gate of three standard
 deviations when no gate-width setting is provided. Explicit gate widths stored

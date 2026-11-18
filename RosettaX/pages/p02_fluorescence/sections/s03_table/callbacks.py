@@ -4,10 +4,7 @@ import logging
 from RosettaX.pages.p00_sidebar.ids import SidebarIds
 from RosettaX.pages.p02_fluorescence.state import FluorescencePageState
 from RosettaX.utils import RuntimeConfig
-from RosettaX.workflow.table.fluorescence import (
-    CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME,
-    FluorescenceReferenceTable,
-)
+from RosettaX.workflow.table.fluorescence import FluorescenceReferenceTable
 from RosettaX.workflow.table.validation import register_reference_table_validation
 from typing import Any
 
@@ -72,7 +69,7 @@ def register_callbacks(section) -> None:
     register_reference_table_validation(section.ids)
 
     _register_runtime_table_sync_callback(section)
-    _register_custom_values_callbacks(section)
+    _register_add_row_callback(section)
     _register_detector_change_reset_callback(section)
     _register_page_state_table_persistence_callback(section)
     _register_table_hydration_from_page_state_callback(section)
@@ -89,35 +86,23 @@ def _register_runtime_table_sync_callback(section) -> None:
             "data",
             allow_duplicate=True,
         ),
-        dash.Output(
-            section.ids.bead_table_preset_dropdown,
-            "value",
-            allow_duplicate=True,
-        ),
         dash.Input("runtime-config-store", "data"),
         dash.Input(SidebarIds.profile_load_event_store, "data"),
-        dash.Input(section.ids.bead_table_preset_dropdown, "value"),
         dash.State(section.ids.bead_table, "data"),
         prevent_initial_call=True,
     )
     def sync_bead_table_from_runtime_store(
         runtime_config_data: Any,
         profile_load_event_data: Any,
-        preset_name: Any,
         current_rows: list[dict[str, Any]] | None,
     ) -> Any:
-        if dash.ctx.triggered_id == section.ids.bead_table_preset_dropdown:
-            if preset_name in ("", None, CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME):
-                return [], dash.no_update
-            return FluorescenceReferenceTable.build_rows_from_preset_name(preset_name=preset_name), dash.no_update
-
         if not isinstance(runtime_config_data, dict):
             logger.debug(
                 "sync_bead_table_from_runtime_store received no runtime config. "
                 "Keeping current table data."
             )
 
-            return dash.no_update, dash.no_update
+            return dash.no_update
 
         should_rebuild_table = FluorescenceReferenceTable.should_rebuild_from_runtime_config(
             profile_load_event_data=profile_load_event_data,
@@ -143,58 +128,34 @@ def _register_runtime_table_sync_callback(section) -> None:
                 "and no profile load was requested. Leaving it unchanged."
             )
 
-            return dash.no_update, dash.no_update
+            return dash.no_update
 
         runtime_config = RuntimeConfig.from_dict(
             runtime_config_data,
         )
 
-        resolved_rows = FluorescenceReferenceTable.build_rows_from_runtime_config(
-            runtime_config=runtime_config,
-        )
-        resolved_preset_name = FluorescenceReferenceTable.resolve_runtime_preset_name(
+        return FluorescenceReferenceTable.build_rows_from_runtime_config(
             runtime_config=runtime_config,
         )
 
-        logger.debug(
-            "Rebuilt fluorescence reference table from runtime config. "
-            "preset=%r row_count=%r rows=%r",
-            resolved_preset_name,
-            len(resolved_rows),
-            resolved_rows,
-        )
 
-        return resolved_rows, resolved_preset_name
-
-
-def _register_custom_values_callbacks(section) -> None:
-    """Show custom standard entry and add validated values to the table."""
-
-    @dash.callback(
-        dash.Output(section.ids.custom_values_container, "style"),
-        dash.Input(section.ids.bead_table_preset_dropdown, "value"),
-    )
-    def show_custom_values(preset_name: Any) -> dict[str, str]:
-        return {"display": "block" if preset_name == CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME else "none", "marginTop": "16px", "maxWidth": "520px"}
+def _register_add_row_callback(section) -> None:
+    """Register the button that appends a blank reference row."""
 
     @dash.callback(
         dash.Output(section.ids.bead_table, "data", allow_duplicate=True),
-        dash.Output(section.ids.custom_values_error, "children"),
-        dash.Output(section.ids.custom_values_error, "is_open"),
-        dash.Output(section.ids.custom_values, "value"),
-        dash.Input(section.ids.custom_values_add, "n_clicks"),
-        dash.State(section.ids.custom_values, "value"),
+        dash.Input(section.ids.add_row_btn, "n_clicks"),
         dash.State(section.ids.bead_table, "data"),
         prevent_initial_call=True,
     )
-    def add_custom_values(n_clicks: Any, value: Any, rows: Any) -> tuple[Any, ...]:
+    def add_row(
+        n_clicks: int | None,
+        current_rows: list[dict[str, Any]] | None,
+    ) -> list[dict[str, Any]]:
+        """Append a blank row to the current fluorescence reference rows."""
         if not n_clicks:
             raise dash.exceptions.PreventUpdate
-        try:
-            next_rows = FluorescenceReferenceTable.append_custom_values(value=value, rows=rows)
-        except ValueError as error:
-            return dash.no_update, str(error), True, dash.no_update
-        return next_rows, "", False, ""
+        return FluorescenceReferenceTable.add_empty_row(rows=current_rows)
 
 
 def _register_detector_change_reset_callback(section) -> None:

@@ -27,7 +27,8 @@ from RosettaX.pages.p03_scattering.sections.s05_calibration.main import (
     Calibration as ScatteringCalibration,
 )
 from RosettaX.pages.p04_calibrate.sections.s04_apply import services as apply_services
-from RosettaX.utils.upload_limits import get_max_upload_bytes
+from RosettaX.utils.reader import FCSFile
+from RosettaX.utils.upload_limits import format_upload_size, get_max_upload_bytes
 from RosettaX.workflow.parameters.refractive_index import (
     calculate_sellmeier_refractive_index,
 )
@@ -551,25 +552,57 @@ class Test_DocumentationDeepDivePages:
     def test_sample_files_page_lists_cross_device_rosetta_acquisitions(
         self, monkeypatch
     ) -> None:
-        """Cross-device downloads include the added instruments and extraction guidance."""
+        """Cross-device downloads list the three retained channels and file sizes."""
         monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
+        monkeypatch.setattr(dash, "get_asset_url", lambda path: f"/assets/{path}")
         sample_files_main = importlib.import_module("RosettaX.pages.p09_sample_files.main")
-        layout = sample_files_main.SampleFilesPage().layout()
-        text_nodes = _collect_text(layout)
-        hrefs = _collect_component_hrefs(layout)
+        page = sample_files_main.SampleFilesPage()
+        tabs = page._build_tabs()
+        assert [tab.kwargs["label"] for tab in tabs.children] == ["Cross-device validation", "Summer school"]
+        assert tabs.kwargs["active_tab"] == tabs.children[0].kwargs["tab_id"]
+        validation_layout, summer_school_layout = (tab.children for tab in tabs.children)
+        text_nodes = _collect_text(validation_layout)
+        hrefs = _collect_component_hrefs(validation_layout)
         for instrument in (
             "BD FACSCanto I", "BD LSR II", "BD FACSCalibur", "BD FACSymphony A1",
             "Beckman Coulter CytoFLEX S", "Miltenyi MACSQuant Analyzer 16", "Stratedigm S1313EX",
         ):
             assert instrument in text_nodes
-        for filename in (
-            "bd_facscanto_i_rosetta_beads.fcs", "bd_lsrii_rosetta_beads.fcs",
-            "bd_facscalibur_rosetta_beads.fcs", "bd_facsymphony_a1_rosetta_beads.fcs",
-            "beckman_cytoflex_s_rosetta_beads.fcs.gz",
+        filenames = (
+            "apogee_rosetta_beads_1min_sliced.fcs", "northern_lights_rosetta_beads_2min_sliced.fcs",
+            "bd_facslyric_rosetta_3um_beads.fcs", "bd_facscanto_i_rosetta_beads.fcs",
+            "bd_lsrii_rosetta_beads.fcs", "bd_facscalibur_rosetta_beads.fcs",
+            "bd_facsymphony_a1_rosetta_beads.fcs", "beckman_cytoflex_s_rosetta_beads.fcs",
             "miltenyi_macsquant_analyzer_16_rosetta_beads.fcs", "stratedigm_s1313ex_rosetta_beads.fcs",
-        ):
-            assert f"{sample_files_main.SAMPLE_FILES_BASE_URL}/{filename}" in hrefs
-        assert "Compressed FCS file; extract it before uploading to RosettaX." in text_nodes
+        )
+        assert hrefs == {f"/assets/sample-files/{filename}" for filename in filenames}
+        for filename in filenames:
+            sample_path = sample_files_main.SAMPLE_FILES_DIRECTORY / filename
+            metadata = sample_files_main.SAMPLE_FILE_METADATA[filename]
+            with FCSFile(sample_path, writable=False) as sample:
+                channels = sample.get_column_names()
+            assert len(channels) == len(metadata["detectors"]) == 3
+            for channel, label in zip(channels, metadata["detectors"], strict=True):
+                assert label == channel or label.startswith(f"{channel} (")
+            assert metadata["size_bytes"] == sample_path.stat().st_size
+            assert format_upload_size(metadata["size_bytes"]) in text_nodes
+            assert ", ".join(metadata["detectors"]) in text_nodes
+        assert "15 May 2015" not in text_nodes
+        assert "1 minute" not in text_nodes
+
+        assert "Rosetta beads" not in text_nodes
+        assert "Rosetta beads + 3 µm beads" not in text_nodes
+        assert "FSC and SSC at 350 V" not in text_nodes
+
+        summer_school_text = _collect_text(summer_school_layout)
+        summer_school_hrefs = _collect_component_hrefs(summer_school_layout)
+        for href in summer_school_hrefs:
+            filename = href.rsplit("/", 1)[-1]
+            metadata = sample_files_main.SAMPLE_FILE_METADATA[filename]
+            assert format_upload_size(metadata["size_bytes"]) in summer_school_text
+            assert ", ".join(metadata["detectors"]) not in summer_school_text
+        assert "/assets/sample-files/apogee_rosetta_beads_1min.fcs" in summer_school_hrefs
+        assert "/assets/sample-files/northern_lights_rosetta_beads_2min.fcs" in summer_school_hrefs
 
     def test_supported_cytometers_page_layout_contains_catalog_and_contact(
         self, monkeypatch
