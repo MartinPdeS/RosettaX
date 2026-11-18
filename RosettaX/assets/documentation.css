@@ -1,0 +1,87 @@
+.rosettax-docs-intro {
+    padding: clamp(0.5rem, 2vw, 1.5rem) 0 1.5rem;
+}
+
+.rosettax-docs-intro h1 {
+    font-size: clamp(2rem, 4vw, 2.65rem);
+    font-weight: 750;
+    letter-spacing: -0.025em;
+    margin-bottom: 0.35rem;
+}
+
+.rosettax-docs-intro p,
+.rosettax-docs-link-description {
+    color: var(--bs-secondary-color, var(--rosettax-text-color));
+}
+
+.rosettax-docs-intro p {
+    margin: 0;
+}
+
+.rosettax-docs-topics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 23rem), 1fr));
+    gap: 1rem;
+}
+
+.rosettax-docs-topics section {
+    min-width: 0;
+    border: 1px solid var(--rosettax-border-color);
+    border-radius: 0.75rem;
+    background: var(--rosettax-surface-background);
+}
+
+#page-content nav.rosettax-docs-topics h2 {
+    font-size: 1rem;
+    font-weight: 750;
+    margin: 0;
+    padding: 0.85rem 1rem;
+    background: var(--rosettax-control-background);
+    border-radius: 0.7rem 0.7rem 0 0;
+}
+
+.rosettax-docs-topics ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.rosettax-docs-topics li + li {
+    border-top: 1px solid var(--rosettax-border-color);
+}
+
+.rosettax-docs-topics a {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.15rem 0.75rem;
+    padding: 0.75rem 1rem;
+    text-decoration: none;
+}
+
+.rosettax-docs-topics li:last-child a {
+    border-radius: 0 0 0.7rem 0.7rem;
+}
+
+.rosettax-docs-topics a:hover,
+.rosettax-docs-topics a:focus-visible {
+    background: var(--rosettax-control-background);
+}
+
+.rosettax-docs-topics a:hover .rosettax-docs-link-title,
+.rosettax-docs-topics a:focus-visible .rosettax-docs-link-title {
+    text-decoration: underline;
+}
+
+.rosettax-docs-link-title {
+    font-weight: 650;
+}
+
+.rosettax-docs-link-description {
+    grid-row: 2;
+    font-size: 0.875rem;
+}
+
+.rosettax-docs-link-arrow {
+    grid-area: 1 / 2 / span 2;
+    align-self: center;
+}
