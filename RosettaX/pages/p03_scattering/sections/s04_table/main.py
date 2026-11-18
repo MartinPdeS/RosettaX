@@ -107,7 +107,7 @@ class ReferenceTable:
             description=None,
             button_color="primary",
             button_style={
-                "marginTop": "12px",
+                "marginTop": "0px",
                 "marginBottom": "20px",
             },
             position="before",
@@ -136,17 +136,7 @@ class ReferenceTable:
         body = card.children[1]
         table_body_children = list(body.children)
         body.children = [
-            dash.html.Div(
-                model_layout.build_particle_configuration_section(self.model_section),
-                style={
-                    "marginBottom": "18px",
-                },
-            ),
-            dash.html.Div(
-                style={
-                    "height": "18px",
-                },
-            ),
+            model_layout.build_particle_configuration_section(self.model_section),
             *table_body_children,
             dash.html.Div(
                 style={

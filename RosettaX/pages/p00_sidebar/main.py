@@ -64,20 +64,6 @@ class Sidebar:
             self.logo_src,
         )
 
-    calibration_paths = {
-        "/fluorescence",
-        "/scattering",
-        "/cross-calibration",
-        "/calibrate",
-    }
-    tools_paths = {
-        "/visualization",
-        "/fcs-slicer",
-        "/fcs-inspector",
-        "/fcs-merge",
-    }
-    resources_paths = {"/sample-files", "/documentation", "/help"}
-
     def _get_default_profile_name(
         self,
         profile_options: list[dict[str, Any]],
@@ -268,134 +254,6 @@ class Sidebar:
 
             return f"Selected profile: {profile_label}"
 
-        @dash.callback(
-            dash.Output(SidebarIds.calibration_collapse, "is_open"),
-            dash.Output(SidebarIds.calibration_toggle_button, "children"),
-            dash.Input(SidebarIds.calibration_toggle_button, "n_clicks"),
-            dash.Input("url", "pathname"),
-            dash.State(SidebarIds.calibration_collapse, "is_open"),
-            prevent_initial_call=False,
-        )
-        def toggle_calibration_navigation(
-            n_clicks: int | None,
-            pathname: str | None,
-            is_open: bool | None,
-        ):
-            logger.debug(
-                "toggle_calibration_navigation called with n_clicks=%r pathname=%r is_open=%r",
-                n_clicks,
-                pathname,
-                is_open,
-            )
-
-            triggered_id = dash.callback_context.triggered_id
-
-            if triggered_id == SidebarIds.calibration_toggle_button:
-                next_is_open = not bool(is_open)
-                return next_is_open, self._nav_toggle_button_children(
-                    label="Calibration",
-                    is_open=next_is_open,
-                )
-
-            if pathname in self.calibration_paths:
-                return True, self._nav_toggle_button_children(
-                    label="Calibration",
-                    is_open=True,
-                )
-
-            return False, self._nav_toggle_button_children(
-                label="Calibration",
-                is_open=False,
-            )
-
-        @dash.callback(
-            dash.Output(SidebarIds.tools_collapse, "is_open"),
-            dash.Output(SidebarIds.tools_toggle_button, "children"),
-            dash.Input(SidebarIds.tools_toggle_button, "n_clicks"),
-            dash.Input("url", "pathname"),
-            dash.State(SidebarIds.tools_collapse, "is_open"),
-            prevent_initial_call=False,
-        )
-        def toggle_tools_navigation(
-            n_clicks: int | None,
-            pathname: str | None,
-            is_open: bool | None,
-        ):
-            logger.debug(
-                "toggle_tools_navigation called with n_clicks=%r pathname=%r is_open=%r",
-                n_clicks,
-                pathname,
-                is_open,
-            )
-
-            triggered_id = dash.callback_context.triggered_id
-
-            if triggered_id == SidebarIds.tools_toggle_button:
-                next_is_open = not bool(is_open)
-                return next_is_open, self._nav_toggle_button_children(
-                    label="FCS data tools",
-                    is_open=next_is_open,
-                )
-
-            if pathname in self.tools_paths:
-                return True, self._nav_toggle_button_children(
-                    label="FCS data tools",
-                    is_open=True,
-                )
-
-            return False, self._nav_toggle_button_children(
-                label="FCS data tools",
-                is_open=False,
-            )
-
-        self._register_navigation_toggle(
-            button_id=SidebarIds.resources_toggle_button,
-            collapse_id=SidebarIds.resources_collapse,
-            label="Guides & examples",
-            paths=self.resources_paths,
-        )
-
-    def _register_navigation_toggle(
-        self,
-        *,
-        button_id: str,
-        collapse_id: str,
-        label: str,
-        paths: set[str],
-    ) -> None:
-        """Register route-aware behavior for one collapsible navigation tab."""
-
-        @dash.callback(
-            dash.Output(collapse_id, "is_open"),
-            dash.Output(button_id, "children"),
-            dash.Input(button_id, "n_clicks"),
-            dash.Input("url", "pathname"),
-            dash.State(collapse_id, "is_open"),
-            prevent_initial_call=False,
-        )
-        def toggle_navigation_group(
-            _n_clicks: int | None,
-            pathname: str | None,
-            is_open: bool | None,
-        ):
-            if dash.callback_context.triggered_id == button_id:
-                next_is_open = not bool(is_open)
-                return next_is_open, self._nav_toggle_button_children(
-                    label=label,
-                    is_open=next_is_open,
-                )
-
-            if pathname in paths:
-                return True, self._nav_toggle_button_children(
-                    label=label,
-                    is_open=True,
-                )
-
-            return False, self._nav_toggle_button_children(
-                label=label,
-                is_open=False,
-            )
-
     def layout(
         self,
         sidebar: dict[str, list[str]] | None = None,
@@ -490,220 +348,70 @@ class Sidebar:
             },
         )
 
-    def _build_navigation_section(self) -> html.Div:
-        """
-        Build the main navigation section.
-        """
-        return html.Div(
+    def _build_navigation_section(self) -> html.Nav:
+        """Build permanently visible navigation grouped into section panels."""
+        return html.Nav(
             [
-                dbc.Nav(
-                    [
-                        self._nav_link("Home", "/", tier="top"),
-                        html.Div(
-                            [
-                                self._nav_toggle_button(
-                                    self._nav_toggle_button_children(
-                                        label="Calibration",
-                                        is_open=False,
-                                    ),
-                                    button_id=SidebarIds.calibration_toggle_button,
-                                ),
-                                dbc.Collapse(
-                                    html.Div(
-                                        dbc.Nav(
-                                            [
-                                                self._nav_link(
-                                                    "Fluorescence",
-                                                    "/fluorescence",
-                                                    tier="child",
-                                                ),
-                                                self._nav_link(
-                                                    "Scattering",
-                                                    "/scattering",
-                                                    tier="child",
-                                                ),
-                                                self._nav_link(
-                                                    "Cross-calibration",
-                                                    "/cross-calibration",
-                                                    tier="child",
-                                                ),
-                                                self._nav_link(
-                                                    "Apply calibration",
-                                                    "/calibrate",
-                                                    tier="child",
-                                                ),
-                                            ],
-                                            vertical=True,
-                                            pills=True,
-                                        ),
-                                        style={
-                                            "marginLeft": "1.45rem",
-                                            "paddingLeft": "0.6rem",
-                                            "marginTop": "0.1rem",
-                                        },
-                                    ),
-                                    id=SidebarIds.calibration_collapse,
-                                    is_open=False,
-                                ),
-                            ]
-                        ),
-                        html.Div(
-                            [
-                                self._nav_toggle_button(
-                                    self._nav_toggle_button_children(
-                                        label="FCS data tools",
-                                        is_open=False,
-                                    ),
-                                    button_id=SidebarIds.tools_toggle_button,
-                                ),
-                                dbc.Collapse(
-                                    html.Div(
-                                        dbc.Nav(
-                                            [
-                                                self._nav_link(
-                                                    "FCS Inspector",
-                                                    "/fcs-inspector",
-                                                    tier="child",
-                                                ),
-                                                self._nav_link(
-                                                    "Visualize data",
-                                                    "/visualization",
-                                                    tier="child",
-                                                ),
-                                                self._nav_link(
-                                                    "Slice FCS files",
-                                                    "/fcs-slicer",
-                                                    tier="child",
-                                                ),
-                                                self._nav_link(
-                                                    "Merge FCS files",
-                                                    "/fcs-merge",
-                                                    tier="child",
-                                                ),
-                                            ],
-                                            vertical=True,
-                                            pills=True,
-                                        ),
-                                        style={
-                                            "marginLeft": "1.45rem",
-                                            "paddingLeft": "0.6rem",
-                                            "marginTop": "0.1rem",
-                                        },
-                                    ),
-                                    id=SidebarIds.tools_collapse,
-                                    is_open=False,
-                                ),
-                            ]
-                        ),
-                        self._build_navigation_tab(
-                            label="Guides & examples",
-                            button_id=SidebarIds.resources_toggle_button,
-                            collapse_id=SidebarIds.resources_collapse,
-                            links=[
-                                self._nav_link(
-                                    "Sample files", "/sample-files", tier="child"
-                                ),
-                                self._nav_link("Tutorials", "/tutorials", tier="child"),
-                                self._nav_link(
-                                    "Documentation", "/documentation", tier="child"
-                                ),
-                                self._nav_link("Help", "/help", tier="child"),
-                            ],
-                        ),
+                dbc.Nav(self._nav_link("Home", "/"), vertical=True, pills=True),
+                self._build_navigation_group(
+                    label="Calibration",
+                    links=[
+                        self._nav_link("Fluorescence", "/fluorescence", tier="child"),
+                        self._nav_link("Scattering", "/scattering", tier="child"),
+                        self._nav_link("Cross-calibration", "/cross-calibration", tier="child"),
+                        self._nav_link("Apply calibration", "/calibrate", tier="child"),
                     ],
-                    vertical=True,
-                    pills=True,
-                    style={
-                        "gap": "0.2rem",
-                        "--bs-nav-link-color": "#111827",
-                        "--bs-nav-pills-link-active-color": "#111827",
-                        "--bs-nav-pills-link-active-bg": "#e2e8f0",
-                    },
                 ),
-            ]
-        )
-
-    def _build_navigation_tab(
-        self,
-        *,
-        label: str,
-        button_id: str,
-        collapse_id: str,
-        links: list[dbc.NavLink],
-    ) -> html.Div:
-        """Build one task-oriented collapsible navigation tab."""
-        return html.Div(
-            [
-                self._nav_toggle_button(
-                    self._nav_toggle_button_children(label=label, is_open=False),
-                    button_id=button_id,
+                self._build_navigation_group(
+                    label="FCS data tools",
+                    links=[
+                        self._nav_link("FCS Inspector", "/fcs-inspector", tier="child"),
+                        self._nav_link("Visualize data", "/visualization", tier="child"),
+                        self._nav_link("Slice FCS files", "/fcs-slicer", tier="child"),
+                        self._nav_link("Merge FCS files", "/fcs-merge", tier="child"),
+                    ],
                 ),
-                dbc.Collapse(
-                    html.Div(
-                        dbc.Nav(links, vertical=True, pills=True),
-                        style={
-                            "marginLeft": "1.45rem",
-                            "paddingLeft": "0.6rem",
-                            "marginTop": "0.1rem",
-                        },
-                    ),
-                    id=collapse_id,
-                    is_open=False,
+                self._build_navigation_group(
+                    label="Guides & examples",
+                    links=[
+                        self._nav_link("Sample files", "/sample-files", tier="child"),
+                        self._nav_link("Tutorials", "/tutorials", tier="child"),
+                        self._nav_link("Documentation", "/documentation", tier="child"),
+                        self._nav_link("Help", "/help", tier="child"),
+                    ],
                 ),
             ],
+            className="rosettax-sidebar-navigation",
+            **{"aria-label": "Main navigation"},
         )
 
-    def _nav_toggle_button_children(
+    def _build_navigation_group(
         self,
         *,
         label: str,
-        is_open: bool,
-    ) -> list[html.Span]:
-        """
-        Build the toggle button label and chevron.
-        """
-        return [
-            html.Span(label),
-            html.Span(
-                "v" if is_open else ">",
-                style={
-                    "fontSize": "0.82rem",
-                    "opacity": 0.7,
-                },
-            ),
-        ]
+        links: list[dbc.NavLink],
+    ) -> html.Section:
+        """Build a labeled panel containing all links for one workflow group.
 
-    def _nav_toggle_button(
-        self,
-        children: Any,
-        *,
-        button_id: str = SidebarIds.calibration_toggle_button,
-    ) -> dbc.Button:
+        Parameters
+        ----------
+        label : str
+            Visible section heading and accessible section name.
+        links : list[dbc.NavLink]
+            Navigation links shown in their supplied order.
+
+        Returns
+        -------
+        html.Section
+            Always visible navigation panel.
         """
-        Build a sidebar submenu toggle button.
-        """
-        return dbc.Button(
-            children,
-            id=button_id,
-            color="link",
-            style={
-                "width": "100%",
-                "display": "flex",
-                "alignItems": "center",
-                "justifyContent": "space-between",
-                "textAlign": "left",
-                "textDecoration": "none",
-                "fontWeight": 500,
-                "fontSize": "1.08rem",
-                "lineHeight": "1.2",
-                "padding": "0.78rem 1rem",
-                "color": "#111827",
-                "border": "0",
-                "boxShadow": "none",
-                "borderRadius": "0.9rem",
-                "background": "transparent",
-                "margin": "0",
-            },
+        return html.Section(
+            [
+                html.H2(label, className="rosettax-sidebar-group-title"),
+                dbc.Nav(links, vertical=True, pills=True),
+            ],
+            className="rosettax-sidebar-group",
+            **{"aria-label": label},
         )
 
     def _nav_link(
@@ -723,7 +431,7 @@ class Sidebar:
                 "fontSize": "0.96rem",
                 "lineHeight": "1.25",
                 "borderRadius": "0.65rem",
-                "color": "#111827",
+                "color": "var(--rosettax-text-color)",
             }
         else:
             link_style = {
@@ -732,7 +440,7 @@ class Sidebar:
                 "fontSize": "1.08rem",
                 "lineHeight": "1.2",
                 "borderRadius": "0.9rem",
-                "color": "#111827",
+                "color": "var(--rosettax-text-color)",
             }
 
         icon = NAVIGATION_ICONS.get(href)
@@ -758,6 +466,7 @@ class Sidebar:
             children,
             href=href,
             active="exact",
+            className="rosettax-sidebar-link",
             style={**link_style, "display": "flex", "alignItems": "center", "gap": "0.7rem"},
         )
 

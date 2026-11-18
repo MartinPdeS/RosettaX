@@ -87,12 +87,7 @@ def apply_runtime_visualization_settings(
 
     for shape in figure.layout.shapes or []:
         if hasattr(shape, "line"):
-            is_rosetta_gate_band = (
-                shape.type == "rect"
-                and getattr(builder, "_is_rosetta_script_process", lambda: False)()
-                and shape.fillcolor in (builder.accepted_y_fill_color, builder.fluorescence_helper_fill_color)
-            )
-            shape.line.width = 0 if is_rosetta_gate_band else default_line_width
+            shape.line.width = default_line_width
 
 
 def apply_trace_visualization_settings(

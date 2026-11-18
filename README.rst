@@ -163,13 +163,26 @@ with the component count selected by BIC and an optional broad background
 component. Sensitive candidate detection uses 1% relative prominence with a local
 counting-noise check. Bootstrap fits reuse the fitted centers, widths and weights.
 Acceptance requires an observed peak, adequate separation and event count, and
-stable centers in three bootstrap fits;
+stable centers in three bootstrap fits. A fitted center in a resolved valley
+between observed populations is rejected when both neighboring modes exceed
+the center by 2.5 estimated counting-noise standard deviations.
+This check requires distinct observed modes.
 scatter histogram R² is not used. Compare its results with known standards:
 these criteria have synthetic regression coverage but have not been validated
 against representative measured datasets. The existing Rosetta modes remain
 available for comparison.
 
-On smaller screens, open ``Menu`` to access navigation and saved profiles.
+Peaks excluded from the calibration table by the saturation guard remain visible
+as amber crosses identified in the legend. The saturation guard cutoff and
+fluorescence baseline gate are identified by their line styles in the legend.
+Rosetta uses an unshaded plot with a bright pink baseline gate beneath the markers.
+The default cutoff is 90% of the detector range; explicitly saved fractions are
+retained. Successful size assignment retains the saturation exclusion message
+below the controls.
+
+Sidebar links are always visible within Calibration, FCS data tools, and Guides
+& examples panels. On smaller screens, open ``Menu`` to access navigation and saved
+profiles.
 Graphs use a viewport-aware default height; an explicit graph height in your
 profile remains in effect. Calibration reference tables show cell-specific
 feedback for invalid numeric entries. The scattering table expands to show all rows.

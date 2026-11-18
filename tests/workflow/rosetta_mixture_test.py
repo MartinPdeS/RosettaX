@@ -14,6 +14,7 @@ from RosettaX.workflow.peak.scripts.rosetta_mix_mixture import (
     MixtureRosettaScatterPeakProcess,
 )
 from RosettaX.workflow.peak.scripts.rosetta_mix_mixture_fitting import (
+    centers_in_observed_valleys,
     find_mixture_scatter_peaks,
 )
 from RosettaX.workflow.peak.scripts.rosetta_mix_models import RosettaEventData
@@ -51,6 +52,31 @@ def test_single_population_is_not_split_and_result_is_deterministic():
     result = fit_populations(values=values)
     assert len(result["validated_peaks"]) == 1
     assert result == fit_populations(values=values)
+
+
+def test_resolved_valley_rejects_a_midpoint_but_preserves_population_centers():
+    """Use known asymmetric Gaussian densities to distinguish peaks from a blend."""
+    centers = np.linspace(3, 5, 401)
+    counts = (
+        1000 * np.exp(-0.5 * ((centers - 3.7) / 0.14)**2)
+        + 700 * np.exp(-0.5 * ((centers - 4.3) / 0.14)**2)
+    )
+    result = centers_in_observed_valleys(
+        fitted_centers=np.array([3.7, 4.0, 4.3, 3.0, 5.0]),
+        histogram_centers=centers, smoothed_counts=counts,
+        count_variance=counts, observed_modes=np.array([140, 260]),
+    )
+    assert result.tolist() == [False, True, False, False, False]
+
+
+def test_shallow_valley_with_counting_noise_does_not_establish_a_blend():
+    """Avoid rejecting a center when the dip has insufficient statistical support."""
+    result = centers_in_observed_valleys(
+        fitted_centers=np.array([4.0]), histogram_centers=np.array([3.7, 4.0, 4.3]),
+        smoothed_counts=np.array([100, 90, 100]), count_variance=np.array([100, 90, 100]),
+        observed_modes=np.array([0, 2]),
+    )
+    assert not result.any()
 
 
 @pytest.mark.parametrize("values", [np.array([]), np.array([0, -1, np.nan, np.inf]), np.ones(100)])
@@ -281,3 +307,29 @@ def test_complete_assignment_publishes_expected_size_annotations(monkeypatch, co
     annotations = result.peak_lines_payload["scatter_guide_annotations"]
     assert [entry["label"] for entry in annotations if 1000 < entry["x"] < 10000] == ["147 nm", "203 nm", "296 nm"]
     assert all(entry["x"] > 10000 for entry in annotations if entry["label"] == "400 nm")
+
+
+def test_successful_assignment_preserves_saturation_exclusion(monkeypatch, complete_mixture_detection):
+    """Retain the exclusion reason and positions after successful size assignment."""
+    payload = dict(complete_mixture_detection.peak_lines_payload)
+    payload.update(
+        saturation_guard_threshold=20000.0,
+        saturation_guard_excluded_positions=[30000.0],
+        saturation_guard_message="Saturation guard excluded 1 table peak.",
+    )
+    detection = replace(complete_mixture_detection, peak_lines_payload=payload)
+    monkeypatch.setattr(
+        rosetta_mix.FluorescenceGuidedScatterPeakProcess, "run_automatic_action",
+        lambda *args, **kwargs: detection,
+    )
+    result = MixtureRosettaScatterPeakProcess().run_automatic_action(
+        backend=object(), detector_channels={}, peak_count=10,
+        max_events_for_analysis=10000, process_settings={},
+    )
+    assert not result.warning
+    assert result.status == payload["saturation_guard_message"]
+    assert result.peak_lines_payload["saturation_guard_excluded_positions"] == [30000.0]
+    assert all(
+        entry["kind"] != "excluded"
+        for entry in result.peak_lines_payload["scatter_guide_annotations"]
+    )

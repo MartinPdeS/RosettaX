@@ -62,7 +62,10 @@ def test_script_outcome_and_table_match_baseline(script_run):
         assert not result.new_peak_positions
         assert not result.peak_positions
         return
-    assert not result.status
+    if expected["status_contains"]:
+        assert expected["status_contains"] in result.status
+    else:
+        assert not result.status
     rows = result.table_prefill_rows
     assert len(rows) == len(expected["rows"])
     np.testing.assert_allclose(

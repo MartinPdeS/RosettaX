@@ -4,10 +4,12 @@ import numpy as np
 import plotly.graph_objs as go
 from .. import registry
 from .rosetta_annotations import (
+    ROSETTA_BASELINE_GATE_COLOR,
     add_rosetta_scatter_guide_annotations,
     extract_rosetta_scatter_guide_annotations,
     include_rosetta_peak_markers_in_view,
 )
+from RosettaX.workflow.plotting.axis_ranges import compute_stable_axis_range
 from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
 from typing import Any
 
@@ -181,7 +183,7 @@ def add_peak_workflow_post_layout_overlays(
     if not annotation_entries:
         return figure
 
-    has_classified_peaks = any(entry.get("kind") in ("marker", "non_fluorescent") for entry in annotation_entries)
+    has_classified_peaks = any(entry.get("kind") in ("marker", "non_fluorescent", "excluded") for entry in annotation_entries)
     baseline_gate = None
     if has_classified_peaks and isinstance(peak_lines_payload, dict):
         include_rosetta_peak_markers_in_view(figure=figure, peak_lines_payload=peak_lines_payload)
@@ -192,11 +194,21 @@ def add_peak_workflow_post_layout_overlays(
         except (TypeError, ValueError):
             pass
         for trace in figure.data:
-            trace.showlegend = trace.name in ("Fluorescent marker", "Non-fluorescent peak")
+            trace.showlegend = trace.name in ("Fluorescent marker", "Non-fluorescent peak", "Excluded by saturation guard")
         figure.update_layout(showlegend=True, legend={"x": 0.01, "y": 0.99, "xanchor": "left", "yanchor": "top", "bgcolor": "rgba(255,255,255,0.9)"})
         if baseline_gate is not None and (figure.layout.yaxis.type != "log" or baseline_gate > 0):
-            figure.add_annotation(x=0.01, xref="paper", y=np.log10(baseline_gate) if figure.layout.yaxis.type == "log" else baseline_gate, yref="y", text="Fluorescence baseline gate", showarrow=False, xanchor="left", yanchor="bottom", bgcolor="rgba(255,255,255,0.9)", font={"size": 15})
+            add_rosetta_baseline_trace(
+                figure=figure, baseline_gate=baseline_gate,
+                peak_lines_payload=peak_lines_payload,
+            )
 
+    if isinstance(peak_lines_payload, dict) and peak_lines_payload.get("saturation_guard_threshold"):
+        figure.add_vline(
+            x=float(peak_lines_payload["saturation_guard_threshold"]),
+            line_color="#b45309", line_dash="dashdot", line_width=2,
+            name="Saturation guard cutoff", showlegend=True,
+            layer="below",
+        )
     return add_rosetta_scatter_guide_annotations(
         figure=figure,
         annotation_entries=annotation_entries,
@@ -246,3 +258,57 @@ def _is_rosetta_script_process_name(
     normalized_name = str(process_name or "").strip().lower()
 
     return normalized_name == "rosetta script" or normalized_name.startswith("rosetta script ")
+
+
+
+def add_rosetta_baseline_trace(
+    *,
+    figure: go.Figure,
+    baseline_gate: float,
+    peak_lines_payload: dict[str, Any],
+) -> None:
+    """Render the baseline after events and before classified peak markers.
+
+    Parameters
+    ----------
+    figure : go.Figure
+        Scatter figure with event traces and optional peak overlays.
+    baseline_gate : float
+        Fluorescence gate in raw channel intensity units.
+    peak_lines_payload : dict[str, Any]
+        Detection payload containing plotted scatter intensities.
+    """
+    log_scale = figure.layout.xaxis.type == "log"
+    axis_range = figure.layout.xaxis.range
+    if axis_range is None:
+        positions = peak_lines_payload.get("plot_x_values") or peak_lines_payload.get("x_positions")
+        if not positions:
+            positions = [point["x"] for point in peak_lines_payload.get("points", [])]
+        if len(positions) == 1:
+            positions = positions * 2
+        axis_range = compute_stable_axis_range(
+            values=positions or [1.0, 10.0],
+            log_scale=log_scale,
+        )
+    if axis_range is None:
+        return
+    x_limits = np.power(10.0, axis_range) if log_scale else axis_range
+    figure.layout.shapes = tuple(
+        shape for shape in figure.layout.shapes
+        if not (shape.type == "line" and shape.yref == "y"
+                and shape.y0 == baseline_gate and shape.y1 == baseline_gate)
+    )
+    figure.add_trace(go.Scattergl(
+        x=x_limits, y=[baseline_gate, baseline_gate], mode="lines",
+        name="Fluorescence baseline gate", showlegend=True, hoverinfo="skip",
+        line={"color": ROSETTA_BASELINE_GATE_COLOR, "width": 2},
+    ))
+    baseline_trace = figure.data[-1]
+    background = []
+    peak_markers = []
+    for trace in figure.data[:-1]:
+        if isinstance(trace.meta, dict) and trace.meta.get("rosetta_peak_kind"):
+            peak_markers.append(trace)
+        else:
+            background.append(trace)
+    figure.data = (*background, baseline_trace, *peak_markers)

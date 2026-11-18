@@ -26,22 +26,6 @@
       "status_contains": "marker anchors"
     },
     {
-      "process_name": "Rosetta Script Sensitive",
-      "process_settings": {
-        "peak_count": 10,
-        "baseline_sigma_multiplier": 3.0,
-        "table_non_fluorescent_only": true,
-        "saturation_guard_enabled": true,
-        "saturation_guard_fraction": 0.5
-      },
-      "warning": true,
-      "rows": [],
-      "payload": {
-        "baseline_cutoff": 2710.8816535546434
-      },
-      "status_contains": "marker anchors"
-    },
-    {
       "process_name": "Rosetta Script Mixture",
       "process_settings": {
         "peak_count": 10,
@@ -183,7 +167,7 @@
           }
         ]
       },
-      "status_contains": ""
+      "status_contains": "Saturation guard excluded 1 table peak(s)"
     },
     {
       "process_name": "Rosetta Script V1",

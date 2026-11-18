@@ -48,6 +48,37 @@
     flex-shrink: 0;
 }
 
+.rosettax-sidebar-navigation {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.rosettax-sidebar-group {
+    padding: 12px 8px 8px;
+    border-radius: 10px;
+    background: var(--rosettax-control-background);
+}
+
+.rosettax-sidebar-group-title {
+    margin: 0 10px 8px;
+    color: var(--rosettax-text-color);
+    font-size: 0.88rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.rosettax-sidebar-link:hover {
+    background: color-mix(in srgb, var(--rosettax-text-color) 5%, var(--rosettax-surface-background));
+}
+
+.rosettax-sidebar-navigation .nav .nav-link.active,
+.rosettax-sidebar-footer .nav .nav-link.active {
+    color: var(--rosettax-text-color);
+    background: var(--rosettax-surface-background);
+    box-shadow: 0 1px 4px color-mix(in srgb, var(--rosettax-text-color) 12%, transparent);
+}
+
 .rosettax-reference-table .dash-cell,
 .rosettax-reference-table .dash-header {
     vertical-align: middle !important;

@@ -129,7 +129,7 @@ class Test_RosettaPeakScript:
         assert saturation_guard_enabled_setting["kind"] == "boolean"
         assert saturation_guard_enabled_setting["default_value"] is True
         assert saturation_guard_setting["kind"] == "float"
-        assert saturation_guard_setting["default_value"] == 0.5
+        assert saturation_guard_setting["default_value"] == 0.9
 
     def test_run_automatic_action_uses_configured_fluorescence_cv_threshold(self, monkeypatch) -> None:
         """Check run automatic action uses configured fluorescence CV threshold."""

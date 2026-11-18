@@ -101,8 +101,6 @@ class PeakWorkflowGraphBuilder:
 
     rejected_x_fill_color = "rgba(20, 20, 20, 0.16)"
     rejected_y_fill_color = "rgba(20, 20, 20, 0.22)"
-    accepted_y_fill_color = "rgba(38, 196, 78, 0.08)"
-    fluorescence_helper_fill_color = "rgba(64, 138, 255, 0.05)"
 
     def __init__(
         self,

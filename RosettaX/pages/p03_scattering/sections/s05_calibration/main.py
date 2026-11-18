@@ -30,22 +30,22 @@ def build_scattering_graph_panel_card(
     """
     Build the graph and its controls within the calibration section.
     """
-    card_children = [
-        dash.html.Div(
-            [
+    card_children = []
+    if title:
+        card_children.append(
+            dash.html.Div(
                 ui_forms.build_title_with_info(
                     title=title,
                     tooltip_target_id=tooltip_target_id,
                     tooltip_id=tooltip_id,
                     tooltip_text=tooltip_text,
                     subtitle=subtitle,
-                    title_style_overrides={
-                        "fontSize": "0.98rem",
-                    },
+                    title_style_overrides={"fontSize": "0.98rem"},
                 ),
-            ],
-            style={"marginBottom": "8px"},
-        ),
+                style={"marginBottom": "8px"},
+            )
+        )
+    card_children.append(
         dash.html.Div(
             [
                 dash.dcc.Loading(
@@ -67,8 +67,8 @@ def build_scattering_graph_panel_card(
             style={
                 "overflow": "visible",
             },
-        ),
-    ]
+        )
+    )
 
     if footer_content is not None:
         card_children.append(
@@ -294,7 +294,7 @@ class Calibration:
         return dash.html.Div(
             [
                 self._build_graph_panel_card(
-                    title="Instrument response calibration",
+                    title="",
                     subtitle="Measured standard signal mapped to coupling [W].",
                     tooltip_target_id=self.instrument_response_tooltip_target_id,
                     tooltip_id=self.instrument_response_tooltip_id,

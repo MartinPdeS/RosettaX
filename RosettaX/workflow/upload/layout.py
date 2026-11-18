@@ -1,7 +1,7 @@
 
 import dash_bootstrap_components as dbc
 import logging
-from dash import dcc
+from dash import dcc, html
 from pathlib import Path
 from RosettaX.utils import styling, ui_forms
 from RosettaX.utils.runtime_config import RuntimeConfig
@@ -69,11 +69,14 @@ class UploadLayout:
                             multiple=False,
                         ),
                         dcc.Loading(
-                            ui_forms.build_upload_status(
-                                status_id=self.ids.upload_filename,
-                                initial_text=services.build_loaded_filename_text(
+                            html.Div(
+                                services.build_loaded_filename_text(
                                     initial_filename,
                                 ),
+                                id=self.ids.upload_filename,
+                                className="mt-3",
+                                role="status",
+                                **{"aria-live": "polite"},
                             ),
                             type="default",
                         ),

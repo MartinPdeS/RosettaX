@@ -144,9 +144,6 @@ def main() -> None:
 
         def measure_navigation(label: str, path: str) -> None:
             link = page.locator(f'#sidebar-content a[href="{path}"]').first
-            if not link.is_visible():
-                page.locator("#sidebar-calibration-toggle-button").click()
-                settle()
             measure(label, link.click)
 
         measure("initial home", lambda: page.goto(arguments.url))

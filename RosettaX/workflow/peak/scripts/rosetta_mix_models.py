@@ -124,7 +124,7 @@ class RosettaRunSettings:
         )
         saturation_guard_fraction = resolve_float(
             value=process_settings.get("saturation_guard_fraction"),
-            default=0.5,
+            default=0.9,
             minimum=0.0,
             maximum=1.0,
         )

@@ -607,6 +607,94 @@ class Test_PeakWorkflowInteractionRevision:
 class Test_PeakWorkflowGraphBuilderRosettaOverlays:
     """Regression checks for peak workflow graph builder Rosetta overlays."""
 
+    def test_baseline_is_drawn_between_events_and_peak_markers(self):
+        """Draw the gate over events while leaving the peak centers on top."""
+        figure = go.Figure(go.Scattergl(x=[100, 200], y=[1000, 1000], mode="markers", name="Events"))
+        figure.add_trace(go.Scattergl(
+            x=[150], y=[1000], mode="markers", name="Non-fluorescent peak",
+            meta={"rosetta_peak_kind": "non_fluorescent"},
+        ))
+        figure.update_xaxes(type="log", range=[1, 3])
+        add_peak_workflow_post_layout_overlays(
+            figure=figure, process_name="Rosetta Script Mixture",
+            peak_lines_payload={
+                "baseline_cutoff": 1000.0,
+                "scatter_guide_annotations": [{"x": 150, "label": "147 nm", "kind": "non_fluorescent"}],
+            },
+        )
+        assert [trace.name for trace in figure.data] == [
+            "Events", "Fluorescence baseline gate", "Non-fluorescent peak",
+        ]
+        assert list(figure.data[1].x) == [10.0, 1000.0]
+
+    @pytest.mark.parametrize("payload", [None, {}])
+    def test_rosetta_preview_before_detection_keeps_event_trace(self, payload):
+        """Render the empty detection state reached on selection or after Clear."""
+        builder = PeakWorkflowGraphBuilder.__new__(PeakWorkflowGraphBuilder)
+        builder.resolved_process_name = "Rosetta Script Mixture"
+        builder.process = types.SimpleNamespace(supports_advanced_mode=False)
+        builder.advanced_mode_value = []
+        builder.peak_lines_payload = payload
+        figure = go.Figure(go.Scattergl(x=[100.0], y=[200.0], mode="markers"))
+
+        graph_overlays.add_selected_peak_markers(builder, figure=figure)
+        add_peak_workflow_post_layout_overlays(
+            figure=figure, process_name=builder.resolved_process_name,
+            peak_lines_payload=payload,
+        )
+
+        assert len(figure.data) == 1
+        assert list(figure.data[0].x) == [100.0]
+        assert not figure.layout.annotations
+
+    def test_saturation_guard_marks_excluded_peak_and_cutoff(self):
+        """Keep excluded centers visible with a reason and the configured cutoff."""
+        builder = PeakWorkflowGraphBuilder.__new__(PeakWorkflowGraphBuilder)
+        builder.resolved_process_name = "Rosetta Script Mixture"
+        builder.process = types.SimpleNamespace(supports_advanced_mode=False)
+        builder.advanced_mode_value = []
+        builder.peak_lines_payload = {
+            "points": [{"x": 3500000.0, "y": 500.0, "kind": "non_fluorescent"}],
+            "labels": ["Non-fluorescent peak 7"],
+            "saturation_guard_threshold": 2000000.0,
+            "saturation_guard_excluded_positions": [3500000.0],
+            "baseline_cutoff": 1000.0,
+            "y_lower_gate": 0.0,
+            "y_upper_gate": 1000.0,
+            "scatter_guide_annotations": [
+                {"x": 3500000.0, "label": "Excluded by saturation guard", "kind": "excluded"},
+            ],
+        }
+        figure = go.Figure()
+        figure.update_xaxes(type="log")
+        figure.update_yaxes(type="log")
+        graph_overlays.add_y_axis_gate_overlay(builder, figure=figure)
+        graph_overlays.add_selected_peak_markers(builder, figure=figure)
+        add_peak_workflow_post_layout_overlays(
+            figure=figure, process_name=builder.resolved_process_name,
+            peak_lines_payload=builder.peak_lines_payload,
+        )
+        trace = next(trace for trace in figure.data if trace.name == "Excluded by saturation guard")
+        assert trace.name == "Excluded by saturation guard"
+        assert trace.marker.symbol == "x"
+        assert trace.showlegend
+        assert list(trace.x) == [3500000.0]
+        assert any(shape.x0 == 2000000.0 for shape in figure.layout.shapes)
+        annotations = {item.text: item for item in figure.layout.annotations}
+        assert "Excluded by saturation guard" not in annotations
+        assert "Saturation guard cutoff" not in annotations
+        assert "Fluorescence baseline gate" not in annotations
+        legend_shapes = {shape.name: shape for shape in figure.layout.shapes if shape.showlegend}
+        assert legend_shapes["Saturation guard cutoff"].x0 == 2000000.0
+        baseline = next(trace for trace in figure.data if trace.name == "Fluorescence baseline gate")
+        assert list(baseline.y) == [1000.0, 1000.0]
+        assert baseline.line.color == "#f43f5e"
+        assert baseline.type == "scattergl"
+        assert figure.data.index(baseline) < figure.data.index(trace)
+        assert legend_shapes["Saturation guard cutoff"].layer == "below"
+        assert all(shape.type != "rect" for shape in figure.layout.shapes)
+        assert not any(shape.y0 == shape.y1 == 1000.0 for shape in figure.layout.shapes)
+
     @pytest.mark.parametrize("process_name", [
         "Rosetta Script V1", "Rosetta Script Conservative",
         "Rosetta Script Sensitive", "Rosetta Script Mixture",
@@ -657,7 +745,8 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
         assert annotations["140 nm marker"].yref == "paper"
         assert annotations["147 nm"].yref == "y"
         assert annotations["147 nm"].y == pytest.approx(3.0)
-        assert annotations["Fluorescence baseline gate"].y == pytest.approx(3.0)
+        assert "Fluorescence baseline gate" not in annotations
+        assert traces["Fluorescence baseline gate"].showlegend
 
     def test_rosetta_plot_keeps_edge_markers_inside_axis_limits(self):
         """Pad log axis limits around detected markers at the plot edge."""
@@ -673,8 +762,8 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
         assert figure.layout.yaxis.range[1] > 5
         assert figure.layout.annotations[0].y > 1
 
-    def test_rosetta_y_gate_overlay_adds_helper_bands_without_in_plot_labels(self):
-        """Check Rosetta y gate overlay adds helper bands without in plot labels."""
+    def test_rosetta_y_gate_overlay_uses_bright_line_without_shading(self):
+        """Show a bright gate beneath markers without colored background bands."""
         builder = PeakWorkflowGraphBuilder.__new__(PeakWorkflowGraphBuilder)
         builder.resolved_process_name = "Rosetta Script"
         builder.yscale_selection = "log"
@@ -693,7 +782,10 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
 
         shapes = list(figure.layout.shapes or [])
 
-        assert len(shapes) >= 2
+        assert len(shapes) == 1
+        assert shapes[0].type == "line"
+        assert shapes[0].line.color == "#f43f5e"
+        assert shapes[0].layer == "below"
         assert not list(figure.layout.annotations or [])
 
     def test_rosetta_selected_peak_markers_add_vertical_and_horizontal_guides(self):

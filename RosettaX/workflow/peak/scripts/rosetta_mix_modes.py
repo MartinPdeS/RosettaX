@@ -132,7 +132,7 @@ class RosettaMixSizeAssignmentProcess(FluorescenceGuidedScatterPeakProcess):
             result,
             table_prefill_rows=resolved_rows,
             peak_lines_payload=updated_peak_lines_payload,
-            status="",
+            status=updated_peak_lines_payload.get("saturation_guard_message", ""),
         )
 
     def assign_particle_sizes(

@@ -259,10 +259,10 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
                     "Exclude table peaks above detector_saturation * this fraction "
                     "for the selected scatter channel when metadata includes "
                     "detector range values. This guard does not change detected "
-                    "peaks or plotted events. Example: 0.5 means 4,000,000 "
-                    "saturation becomes a 2,000,000 table threshold."
+                    "peaks or plotted events. Example: 0.9 means 4,000,000 "
+                    "saturation becomes a 3,600,000 table threshold."
                 ),
-                "default_value": 0.5,
+                "default_value": 0.9,
                 "min_value": 0.0,
                 "max_value": 1.0,
                 "step": 0.01,
@@ -987,6 +987,14 @@ def build_rosetta_detection_result(
             f"Saturation guard excluded {removed_saturation_guard_peak_count} table peak(s) "
             f"above {saturation_guard_threshold:.6g}{saturation_context_suffix}"
         )
+        peak_lines_payload["saturation_guard_message"] = status_lines[-1]
+    if saturation_guard_threshold is not None:
+        peak_lines_payload["saturation_guard_threshold"] = saturation_guard_threshold
+        peak_lines_payload["saturation_guard_excluded_positions"] = [
+            float(point["x"]) for point in (
+                scatter.points if settings.table_non_fluorescent_only else all_points
+            ) if point["x"] > saturation_guard_threshold
+        ]
     status = "\n".join(line for line in status_lines if str(line or "").strip())
     return PeakProcessResult(
         peak_positions=[

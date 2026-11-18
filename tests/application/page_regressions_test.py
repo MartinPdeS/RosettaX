@@ -7,12 +7,12 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 import dash
+import dash_bootstrap_components as dbc
 import importlib
 import logging
 import numpy as np
 import pytest
 from RosettaX.application import layout as application_layout
-from RosettaX.pages.p00_sidebar.ids import SidebarIds
 from RosettaX.pages.p00_sidebar.main import Sidebar
 from RosettaX.pages.p02_fluorescence.ids import Ids as FluorescenceIds
 from RosettaX.pages.p02_fluorescence.sections.s04_calibration.main import Calibration
@@ -767,77 +767,30 @@ class Test_HelpPage:
 class Test_SidebarNavigation:
     """Regression checks for sidebar navigation."""
 
-    def test_navigation_includes_documentation_link(self) -> None:
-        """Check navigation includes documentation link."""
-        sidebar = Sidebar()
-
-        navigation = sidebar._build_navigation_section()
+    def test_navigation_shows_all_links_in_labeled_section_panels(self) -> None:
+        """Keep each workflow group visible with its links in the correct panel."""
+        navigation = Sidebar()._build_navigation_section()
         text_nodes = _collect_text(navigation)
-        component_ids = _collect_component_ids(navigation)
-
-        assert "Calibration" in text_nodes
-        assert "FCS data tools" in text_nodes
-        assert "Guides & examples" in text_nodes
-        assert "Apply calibration" in text_nodes
-        assert ">" in text_nodes
-        assert "Fluorescence" in text_nodes
-        assert "Scattering" in text_nodes
-        assert "Apply calibration" in text_nodes
-        assert SidebarIds.calibration_toggle_button in component_ids
-        assert SidebarIds.calibration_collapse in component_ids
-        assert SidebarIds.tools_toggle_button in component_ids
-        assert SidebarIds.tools_collapse in component_ids
-        assert SidebarIds.resources_toggle_button in component_ids
-        assert SidebarIds.resources_collapse in component_ids
+        groups = {
+            group.to_plotly_json()["props"]["aria-label"]: group
+            for group in navigation.children[1:]
+        }
+        assert set(groups) == {"Calibration", "FCS data tools", "Guides & examples"}
+        expected_links = {
+            "Calibration": {"/fluorescence", "/scattering", "/cross-calibration", "/calibrate"},
+            "FCS data tools": {"/fcs-inspector", "/visualization", "/fcs-slicer", "/fcs-merge"},
+            "Guides & examples": {"/sample-files", "/tutorials", "/documentation", "/help"},
+        }
+        for label, group in groups.items():
+            assert group.className == "rosettax-sidebar-group"
+            assert group.children[0].children == label
+            assert isinstance(group.children[1], dbc.Nav)
+            assert _collect_component_hrefs(group) == expected_links[label]
+        assert ">" not in text_nodes
+        assert not _collect_component_ids(navigation)
         assert "/settings" not in _collect_component_hrefs(navigation)
-        assert "/documentation" in _collect_component_hrefs(navigation)
-        assert "/cross-calibration" in _collect_component_hrefs(navigation)
-        assert "/visualization" in _collect_component_hrefs(navigation)
-        assert "/sample-files" in _collect_component_hrefs(navigation)
-        assert "/fcs-slicer" in _collect_component_hrefs(navigation)
-        assert "/fcs-merge" in _collect_component_hrefs(navigation)
-        assert "Visualize data" in text_nodes
-        assert "Slice FCS files" in text_nodes
-
-        tools_collapse = _find_component_by_id(
-            navigation,
-            SidebarIds.tools_collapse,
-        )
-        assert tools_collapse is not None
-        assert "/fcs-slicer" in _collect_component_hrefs(tools_collapse)
-        assert "/fcs-merge" in _collect_component_hrefs(tools_collapse)
-        assert "/fcs-inspector" in _collect_component_hrefs(tools_collapse)
-        assert "/sample-files" not in _collect_component_hrefs(tools_collapse)
-        assert "Slice FCS files" in _collect_text(tools_collapse)
-        assert "Merge FCS files" in _collect_text(tools_collapse)
-        assert "Visualize data" in _collect_text(tools_collapse)
-
-        calibration_collapse = _find_component_by_id(
-            navigation,
-            SidebarIds.calibration_collapse,
-        )
-        assert calibration_collapse is not None
-        assert "/cross-calibration" in _collect_component_hrefs(calibration_collapse)
-        assert "/calibrate" in _collect_component_hrefs(calibration_collapse)
-        assert "/fcs-inspector" not in _collect_component_hrefs(calibration_collapse)
-        resources_collapse = _find_component_by_id(
-            navigation,
-            SidebarIds.resources_collapse,
-        )
-        assert resources_collapse is not None
-        assert "/settings" not in _collect_component_hrefs(resources_collapse)
-        assert "/sample-files" in _collect_component_hrefs(resources_collapse)
-
-        assert "/documentation" in _collect_component_hrefs(resources_collapse)
-        assert "/help" in _collect_component_hrefs(resources_collapse)
-
         assert text_nodes.index("Guides & examples") < text_nodes.index("Documentation")
         assert text_nodes.index("Documentation") < text_nodes.index("Help")
-        assert navigation.children[0].style["--bs-nav-link-color"] == "#111827"
-        assert (
-            navigation.children[0].style["--bs-nav-pills-link-active-color"]
-            == "#111827"
-        )
 
     def test_navigation_icons_and_settings_footer(self) -> None:
         """Show decorative navigation icons and put settings at the sidebar end."""

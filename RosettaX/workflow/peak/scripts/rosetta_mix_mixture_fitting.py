@@ -81,6 +81,7 @@ def find_mixture_scatter_peaks(
     prominences = properties["prominences"][significant]
     if not candidates.size:
         return empty
+    observed_modes = np.sort(candidates)
     strongest = np.argsort(prominences)[::-1][:max(1, int(peak_count))]
     candidates, widths = candidates[strongest], widths[strongest]
     generator = np.random.default_rng(1729)
@@ -134,9 +135,16 @@ def find_mixture_scatter_peaks(
     mode_indices = np.argmin(mode_distances, axis=1)
     mode_tolerances = np.maximum(widths[mode_indices] / 2, edges[1] - edges[0])
     component_cvs = np.sinh(deviations * np.log(10))
+    # A broad component can fit two populations with its center in their valley.
+    # Require evidence above counting noise before treating that center as a blend.
+    valley_centers = centers_in_observed_valleys(
+        fitted_centers=means, histogram_centers=centers,
+        smoothed_counts=smoothed, count_variance=count_variance,
+        observed_modes=observed_modes,
+    )
     supported = (mode_distances[np.arange(means.size), mode_indices] <= mode_tolerances) & (
         component_cvs <= fit_cv_threshold
-    )
+    ) & ~valley_centers
     # A mixture may use several components to describe one non-Gaussian mode.
     # Only the component contributing the highest modal density represents that
     # observed peak; its tail components cannot veto peak separation.
@@ -154,6 +162,8 @@ def find_mixture_scatter_peaks(
         mode_index = int(np.argmin(np.abs(centers[candidates] - center)))
         mode_distance = abs(centers[candidates[mode_index]] - center)
         reasons = []
+        if valley_centers[index]:
+            reasons.append("Fitted center lies in a resolved valley between observed populations")
         if mode_distance > max(widths[mode_index] / 2, edges[1] - edges[0]):
             reasons.append("No prominent observed mode near component center")
         if supported[index] and not representatives[index]:
@@ -186,3 +196,49 @@ def find_mixture_scatter_peaks(
         "method": "log_gaussian_mixture", "bic": float(model.bic(sample)),
         "fit_sample_count": int(sample.size),
     }
+
+
+def centers_in_observed_valleys(
+    *,
+    fitted_centers: np.ndarray,
+    histogram_centers: np.ndarray,
+    smoothed_counts: np.ndarray,
+    count_variance: np.ndarray,
+    observed_modes: np.ndarray,
+) -> np.ndarray:
+    """Identify fitted log-intensity centers in statistically resolved valleys.
+
+    Parameters
+    ----------
+    fitted_centers : ndarray, shape (k,)
+        Component centers in log10 intensity.
+    histogram_centers : ndarray, shape (n,)
+        Increasing bin centers in log10 intensity.
+    smoothed_counts : ndarray, shape (n,)
+        Smoothed event counts per bin.
+    count_variance : ndarray, shape (n,)
+        Poisson variance propagated through the smoothing kernel.
+    observed_modes : ndarray, shape (m,)
+        Increasing histogram indices of significant observed maxima.
+
+    Returns
+    -------
+    ndarray of bool, shape (k,)
+        True where both bracketing modes exceed the center by 2.5 estimated
+        standard deviations. This empirical check requires resolved modes.
+        A single unresolved mode cannot establish that two populations exist.
+    """
+    if observed_modes.size < 2:
+        return np.zeros(fitted_centers.size, dtype=bool)
+    mode_centers = histogram_centers[observed_modes]
+    right_indices = np.searchsorted(mode_centers, fitted_centers)
+    bracketed = (right_indices > 0) & (right_indices < observed_modes.size)
+    right = observed_modes[np.clip(right_indices, 1, observed_modes.size - 1)]
+    left = observed_modes[np.clip(right_indices - 1, 0, observed_modes.size - 2)]
+    center_counts = np.interp(fitted_centers, histogram_centers, smoothed_counts)
+    center_variance = np.interp(fitted_centers, histogram_centers, count_variance)
+    left_noise = np.sqrt(np.maximum(count_variance[left] + center_variance, 1.0))
+    right_noise = np.sqrt(np.maximum(count_variance[right] + center_variance, 1.0))
+    return bracketed & (
+        smoothed_counts[left] - center_counts >= 2.5 * left_noise
+    ) & (smoothed_counts[right] - center_counts >= 2.5 * right_noise)
