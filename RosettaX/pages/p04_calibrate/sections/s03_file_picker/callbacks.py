@@ -113,11 +113,6 @@ class FilePickerCallbacks:
                 ).to_tuple()
 
             try:
-                services.validate_upload_payload(
-                    contents_list=contents_list,
-                    filenames=filenames,
-                )
-
                 saved_paths = services.save_uploaded_files(
                     upload_directory=self.upload_directory,
                     contents_list=contents_list,

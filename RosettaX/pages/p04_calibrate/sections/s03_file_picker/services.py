@@ -1,10 +1,8 @@
 
-import base64
 import logging
 import numpy as np
 import plotly.graph_objects as go
 import re
-from datetime import datetime
 from pathlib import Path
 from RosettaX.pages.p04_calibrate.sections.s02_calibration_picker import (
     services as calibration_picker_services,
@@ -12,17 +10,14 @@ from RosettaX.pages.p04_calibrate.sections.s02_calibration_picker import (
 from RosettaX.utils import checks, plottings
 from RosettaX.utils.reader import FCSFile
 from RosettaX.utils.runtime_config import RuntimeConfig
-from RosettaX.utils.streamed_uploads import (
-    is_streamed_upload_token,
-    raise_for_streamed_upload_error,
-    resolve_streamed_upload,
-)
-from RosettaX.utils.upload_limits import format_upload_size, get_max_upload_bytes
+from RosettaX.utils.upload_limits import format_upload_size
 from RosettaX.workflow.apply_calibration.fluorescence import (
     apply_legacy_calibration_to_series,
 )
 from RosettaX.workflow.apply_calibration.io import resolve_uploaded_fcs_paths
+from RosettaX.workflow.file_selection import UploadedFileBatch
 from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
+from RosettaX.workflow.upload import services as upload_services
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -47,7 +42,7 @@ def build_upload_directory() -> Path:
     Path
         Local upload directory used by the apply calibration file picker.
     """
-    upload_directory = Path.home() / ".rosettax" / "uploads"
+    upload_directory = upload_services.DEFAULT_UPLOAD_DIRECTORY
 
     upload_directory.mkdir(
         parents=True,
@@ -166,26 +161,12 @@ def save_uploaded_files(
     list[Path]
         Saved local file paths.
     """
-    saved_paths: list[Path] = []
-
-    for contents, filename in zip(
-        contents_list,
-        filenames,
-        strict=False,
-    ):
-        saved_path = save_single_uploaded_file(
-            upload_directory=upload_directory,
-            contents=contents,
-            filename=filename,
-        )
-
-        saved_paths.append(
-            saved_path,
-        )
-
-    if not saved_paths:
-        raise RuntimeError("No uploaded FCS files were saved.")
-
+    validate_upload_payload(contents_list=contents_list, filenames=filenames)
+    saved_paths, _ = upload_services.save_uploaded_batch(
+        contents=contents_list,
+        filenames=filenames,
+        upload_directory=upload_directory,
+    )
     return saved_paths
 
 
@@ -195,78 +176,12 @@ def save_single_uploaded_file(
     contents: str,
     filename: str,
 ) -> Path:
-    """
-    Save one uploaded file to the local upload directory.
-    """
-    logger.debug(
-        "save_single_uploaded_file called with filename=%r upload_directory=%r",
-        filename,
-        str(upload_directory),
+    """Save one FCS upload and return its stored path."""
+    return upload_services.save_uploaded_file(
+        contents=contents,
+        filename=filename,
+        upload_directory=upload_directory,
     )
-
-    raise_for_streamed_upload_error(contents)
-
-    if is_streamed_upload_token(contents):
-        streamed_upload = resolve_streamed_upload(contents)
-        if streamed_upload.file_path.suffix.lower() != ".fcs":
-            raise ValueError("Uploaded input file must be an .fcs file.")
-        return streamed_upload.file_path
-
-    if "," not in contents:
-        raise ValueError(
-            f"Uploaded file {filename!r} has malformed Dash contents payload."
-        )
-
-    _, encoded_payload = contents.split(
-        ",",
-        1,
-    )
-
-    raw_bytes = base64.b64decode(
-        encoded_payload,
-        validate=True,
-    )
-
-    if len(raw_bytes) > get_max_upload_bytes():
-        raise ValueError(
-            "Uploaded file exceeds the maximum supported size of "
-            f"{format_upload_size()}."
-        )
-
-    original_path = Path(
-        str(filename),
-    )
-
-    safe_stem = original_path.stem.strip() or "uploaded_file"
-    safe_suffix = original_path.suffix if original_path.suffix else ".fcs"
-
-    timestamp = datetime.now().strftime(
-        "%Y%m%d_%H%M%S_%f",
-    )
-
-    output_path = upload_directory / f"{safe_stem}_{timestamp}{safe_suffix}"
-
-    output_path.write_bytes(
-        raw_bytes,
-    )
-
-    if not output_path.exists():
-        raise FileNotFoundError(
-            f"Uploaded file was not written successfully: {output_path}"
-        )
-
-    if output_path.stat().st_size == 0:
-        raise ValueError(
-            f"Uploaded file was written but is empty: {output_path}"
-        )
-
-    logger.debug(
-        "Saved uploaded file successfully to output_path=%r byte_count=%r",
-        str(output_path),
-        len(raw_bytes),
-    )
-
-    return output_path
 
 
 def check_saved_files_consistency(
@@ -351,9 +266,18 @@ def build_preview_file_selection(
 ) -> tuple[list[dict[str, str]], str | None]:
     """Build stable file options for one or many uploaded FCS paths."""
     paths = resolve_uploaded_fcs_paths(uploaded_fcs_paths)
+    filenames_by_path = (
+        {
+            file.path: Path(file.filename).name
+            for file in UploadedFileBatch.from_value(uploaded_fcs_paths).files
+        }
+        if isinstance(uploaded_fcs_paths, (dict, UploadedFileBatch))
+        else {}
+    )
     options = [
         {
-            "label": _SAVED_UPLOAD_TIMESTAMP.sub("", Path(path).stem) + Path(path).suffix,
+            "label": filenames_by_path.get(path)
+            or _SAVED_UPLOAD_TIMESTAMP.sub("", Path(path).stem) + Path(path).suffix,
             "value": path,
         }
         for path in paths

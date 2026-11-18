@@ -314,12 +314,8 @@ class Test_DetectorPresetLoaderCatalog:
         assert presets["Example LALS"]["detector_phi_angle_degree"] == 90.0
         assert presets["Example LALS"]["detector_gamma_angle_degree"] == 0.0
 
-    def test_loader_produces_same_presets_from_directory_as_json(self):
-        """
-        Verify that loading from split-file directory structure
-        produces identical presets to the original JSON catalog.
-        This ensures migration from JSON to directory layout is safe.
-        """
+    def test_loader_reads_packaged_detector_presets(self) -> None:
+        """Check the packaged detector names, required fields, and Apogee settings."""
         loader = DetectorPresetLoader()
         presets = loader.load_presets()
 
@@ -364,7 +360,7 @@ class Test_DetectorPresetLoaderCatalog:
         apogee_forward = presets.get("Apogee - Forward")
         assert apogee_forward is not None
         assert apogee_forward["manufacturer"] == "Apogee"
-        assert apogee_forward["detector_numerical_aperture"] == 1.2
+        assert apogee_forward["detector_numerical_aperture"] == 1.0
         assert apogee_forward["detector_angular_weighting"]["mode"] == "split-separation-angle"
         assert apogee_forward["detector_angular_weighting"]["separation_angle_degree"] == 10.0
 

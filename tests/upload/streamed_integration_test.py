@@ -8,6 +8,7 @@ if __name__ == "__main__":
 
 
 import json
+import pytest
 from io import BytesIO
 from RosettaX.pages.p04_calibrate.sections.s02_calibration_picker import (
     services as calibration_picker_services,
@@ -105,7 +106,7 @@ def test_apply_file_picker_accepts_streamed_fcs_token(
         staging_directory=tmp_path / "staged",
     )
     monkeypatch.setattr(
-        file_picker_services,
+        upload_services,
         "resolve_streamed_upload",
         _resolve_from_directory(tmp_path / "staged"),
     )
@@ -118,3 +119,27 @@ def test_apply_file_picker_accepts_streamed_fcs_token(
 
     assert result == staged.file_path
     assert not (tmp_path / "legacy-destination").exists()
+
+
+def test_failed_apply_upload_batch_removes_only_its_legacy_files(tmp_path, monkeypatch) -> None:
+    """Keep a staged file available when a later upload in the batch fails."""
+    staging_directory = tmp_path / "staged"
+    staged = stage_streamed_upload(
+        stream=BytesIO(b"FCS3.0 payload"),
+        filename="sample.fcs",
+        staging_directory=staging_directory,
+    )
+    monkeypatch.setattr(
+        upload_services, "resolve_streamed_upload", _resolve_from_directory(staging_directory)
+    )
+    legacy_directory = tmp_path / "legacy"
+
+    with pytest.raises(ValueError, match="malformed"):
+        file_picker_services.save_uploaded_files(
+            contents_list=[staged.token, "data:;base64,YQ==", "malformed"],
+            filenames=["sample.fcs", "sample.fcs", "invalid.fcs"],
+            upload_directory=legacy_directory,
+        )
+
+    assert list(legacy_directory.iterdir()) == []
+    assert staged.file_path.read_bytes() == b"FCS3.0 payload"

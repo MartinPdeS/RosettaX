@@ -9,6 +9,7 @@ if __name__ == "__main__":
 
 import io
 import zipfile
+from RosettaX.workflow.apply_calibration import io as calibration_io
 from RosettaX.workflow.apply_calibration.io import (
     append_files_to_zip_bytes,
     build_export_filename,
@@ -35,6 +36,29 @@ class Test_ApplyCalibrationIO:
         )
 
         assert filename == "input-a_RosettaX.fcs"
+
+    def test_export_zip_preserves_files_with_the_same_basename(self, monkeypatch) -> None:
+        """Give same-named inputs distinct archive entries with their own bytes."""
+        first = "first/sample.fcs"
+        second = "second/sample.fcs"
+        monkeypatch.setattr(
+            calibration_io,
+            "build_exported_fcs_bytes",
+            lambda **kwargs: kwargs["uploaded_fcs_path"].encode(),
+        )
+
+        zip_bytes = calibration_io.build_zip_of_exported_fcs_files(
+            uploaded_fcs_paths=[first, second],
+            input_export_columns=[],
+            output_channels=[],
+            dataframe_transformer_factory=lambda _path: lambda dataframe: dataframe,
+        )
+
+        with zipfile.ZipFile(io.BytesIO(zip_bytes)) as archive:
+            assert archive.namelist() == ["sample_RosettaX.fcs", "sample_RosettaX_2.fcs"]
+            assert [archive.read(name) for name in archive.namelist()] == [
+                first.encode(), second.encode(),
+            ]
 
     def test_append_files_to_zip_bytes_preserves_existing_members_and_adds_report(self) -> None:
         """Check append files to ZIP bytes preserves existing members and adds report."""

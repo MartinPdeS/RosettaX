@@ -1,8 +1,8 @@
 
 import base64
-import binascii
 import logging
 import re
+import shutil
 from collections.abc import Iterable
 from pathlib import Path
 from RosettaX.utils.checks import FCSMultiFileConsistencyChecker
@@ -19,8 +19,8 @@ from RosettaX.workflow.upload.models import (
     UploadConfig,
     UploadState,
 )
+from tempfile import mkdtemp
 from typing import Any
-from uuid import uuid4
 
 DEFAULT_UPLOAD_DIRECTORY = Path.home() / ".rosettax" / "uploads"
 DEFAULT_ALLOWED_UPLOAD_EXTENSIONS = frozenset({".fcs"})
@@ -178,20 +178,26 @@ def decode_dash_upload_contents(
         get_max_upload_bytes() if max_upload_bytes is None else int(max_upload_bytes)
     )
 
-    if "," not in contents:
+    separator = contents.find(",")
+    if separator < 0:
         raise ValueError("Upload contents are malformed.")
 
-    _metadata, encoded_payload = contents.split(
-        ",",
-        1,
-    )
+    encoded_start = separator + 1
+    # Each four-character group can represent up to three decoded bytes.
+    # Check the actual size after decoding because the last group can be padded.
+    max_encoded_length = 4 * ((resolved_max_upload_bytes + 2) // 3)
+    if len(contents) - encoded_start > max_encoded_length:
+        raise ValueError(
+            "Upload exceeds the maximum supported size of "
+            f"{format_upload_size(resolved_max_upload_bytes)}."
+        )
 
     try:
         decoded_bytes = base64.b64decode(
-            encoded_payload,
+            contents[encoded_start:],
             validate=True,
         )
-    except binascii.Error as error:
+    except ValueError as error:
         raise ValueError("Upload contents could not be decoded.") from error
 
     if len(decoded_bytes) > resolved_max_upload_bytes:
@@ -247,7 +253,12 @@ def save_uploaded_file(
     max_upload_bytes: int | None = None,
 ) -> Path:
     """
-    Save one uploaded file and return its path.
+    Save a legacy upload in its own directory or reuse a streamed upload.
+
+    Returns
+    -------
+    Path
+        Path to the stored file, whose basename is the sanitized filename.
     """
     safe_filename = validate_upload_filename(
         filename,
@@ -267,21 +278,21 @@ def save_uploaded_file(
         )
         return streamed_upload.file_path
 
-    upload_directory.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
-
-    file_path = upload_directory / safe_filename
-
-    file_bytes = read_uploaded_file_bytes(
+    file_bytes = decode_dash_upload_contents(
         contents,
         max_upload_bytes=max_upload_bytes,
     )
+    if not file_bytes:
+        raise ValueError("Uploaded file is empty.")
 
-    file_path.write_bytes(
-        file_bytes,
-    )
+    upload_directory.mkdir(parents=True, exist_ok=True)
+    file_directory = Path(mkdtemp(dir=upload_directory))
+    file_path = file_directory / safe_filename
+    try:
+        file_path.write_bytes(file_bytes)
+    except OSError:
+        shutil.rmtree(file_directory, ignore_errors=True)
+        raise
 
     return file_path
 
@@ -302,7 +313,15 @@ def save_uploaded_batch(
     upload_directory: Path = DEFAULT_UPLOAD_DIRECTORY,
     max_upload_bytes: int | None = None,
 ) -> tuple[list[Path], list[str]]:
-    """Save one Dash multi-file upload in an isolated batch directory."""
+    """Save a Dash upload batch in input order, reusing staged files.
+
+    Legacy files written by this call are removed if any file fails to save.
+
+    Returns
+    -------
+    tuple[list[Path], list[str]]
+        Stored paths and sanitized display filenames in upload order.
+    """
     contents_list = normalize_multiple_upload_values(contents)
     filename_list = normalize_multiple_upload_values(filenames)
 
@@ -311,35 +330,32 @@ def save_uploaded_batch(
     if len(contents_list) != len(filename_list):
         raise ValueError("The uploaded file payload is malformed.")
 
-    batch_directory = Path(upload_directory) / uuid4().hex
+    batch_directory = Path(upload_directory)
     saved_paths: list[Path] = []
     safe_filenames: list[str] = []
-    used_storage_filenames: set[str] = set()
+    has_legacy_uploads = any(not is_streamed_upload_token(item) for item in contents_list)
+    if has_legacy_uploads:
+        batch_directory.mkdir(parents=True, exist_ok=True)
+        batch_directory = Path(mkdtemp(dir=batch_directory))
 
-    for index, (file_contents, filename) in enumerate(
-        zip(contents_list, filename_list, strict=True),
-        start=1,
-    ):
-        safe_filename = validate_upload_filename(
-            filename or f"uploaded_file_{index}.fcs",
-            allowed_extensions=DEFAULT_ALLOWED_UPLOAD_EXTENSIONS,
-        )
-        storage_filename = safe_filename
-        if storage_filename in used_storage_filenames:
-            safe_path = Path(safe_filename)
-            storage_filename = f"{safe_path.stem}_{index}{safe_path.suffix}"
-        used_storage_filenames.add(storage_filename)
-
-        saved_paths.append(
-            save_uploaded_file(
-                contents=file_contents,
-                filename=storage_filename,
-                upload_directory=batch_directory,
-                allowed_extensions=DEFAULT_ALLOWED_UPLOAD_EXTENSIONS,
-                max_upload_bytes=max_upload_bytes,
+    try:
+        for index, (file_contents, filename) in enumerate(
+            zip(contents_list, filename_list, strict=True), start=1
+        ):
+            filename = filename or f"uploaded_file_{index}.fcs"
+            saved_paths.append(
+                save_uploaded_file(
+                    contents=file_contents,
+                    filename=filename,
+                    upload_directory=batch_directory,
+                    max_upload_bytes=max_upload_bytes,
+                )
             )
-        )
-        safe_filenames.append(safe_filename)
+            safe_filenames.append(sanitize_filename(filename))
+    except Exception:
+        if has_legacy_uploads:
+            shutil.rmtree(batch_directory, ignore_errors=True)
+        raise
 
     return saved_paths, safe_filenames
 
@@ -652,8 +668,13 @@ def build_upload_state(
         allowed_extensions=allowed_extensions,
     )
 
-    if ".fcs" in allowed_extensions:
-        validate_fcs_metadata(saved_file_path)
+    if saved_file_path.suffix.lower() == ".fcs":
+        try:
+            validate_fcs_metadata(saved_file_path)
+        except Exception:
+            if not is_streamed_upload_token(clean_contents):
+                shutil.rmtree(saved_file_path.parent, ignore_errors=True)
+            raise
 
     next_uploaded_filename = clean_filename or saved_file_path.name
 

@@ -194,6 +194,7 @@ def build_zip_of_exported_fcs_files(
     Build a ZIP file containing exported FCS files.
     """
     zip_buffer = io.BytesIO()
+    existing_names: set[str] = set()
 
     with zipfile.ZipFile(
         zip_buffer,
@@ -214,10 +215,12 @@ def build_zip_of_exported_fcs_files(
                 output_channels=output_channels,
             )
 
-            zip_file.writestr(
-                member_filename,
-                exported_bytes,
+            member_filename = _resolve_zip_member_name(
+                member_name=member_filename,
+                existing_names=existing_names,
             )
+            zip_file.writestr(member_filename, exported_bytes)
+            existing_names.add(member_filename)
 
     zip_buffer.seek(
         0,
@@ -251,11 +254,11 @@ def append_files_to_zip_bytes(
             )
             output_zip.writestr(
                 zip_info,
-                source_zip.read(zip_info.filename),
+                source_zip.read(zip_info),
             )
 
         for member_name, member_bytes in extra_files.items():
-            resolved_member_name = _resolve_extra_zip_member_name(
+            resolved_member_name = _resolve_zip_member_name(
                 member_name=str(member_name),
                 existing_names=existing_names,
             )
@@ -326,11 +329,12 @@ def safe_filename_fragment(
     )
 
 
-def _resolve_extra_zip_member_name(
+def _resolve_zip_member_name(
     *,
     member_name: str,
     existing_names: set[str],
 ) -> str:
+    """Return a unique archive member basename, defaulting to a report filename."""
     candidate = str(member_name).strip() or "report.pdf"
     path = Path(
         candidate,
