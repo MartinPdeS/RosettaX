@@ -35,7 +35,7 @@ class VisualizationPage:
                 "Upload compatible FCS files, choose one to inspect, and view it "
                 "with a 1D histogram or a 2D scatter colored by local event density."
             ),
-            steps=[self.upload_step, self.settings_step, self.plot_step],
+            steps=[self.upload_step, self.plot_step],
             column_kwargs={"xl": True},
         )
 
@@ -52,25 +52,10 @@ class VisualizationPage:
         ),
     )
 
-    settings_step = WorkflowStep(
-        title="Choose plot settings",
-        description=(
-            "Pick histogram or 2D scatter, then configure the plotted axes, scaling, "
-            "and event limit."
-        ),
-        hover_description=(
-            "Choose a file and plot type, then adjust the channels and display options."
-        ),
-    )
-
     plot_step = WorkflowStep(
-        title="Inspect the data",
-        description=(
-            "Explore the plotted events to validate channels and distributions."
-        ),
-        hover_description=(
-            "Explore the selected data using the Plotly zoom, pan, and export controls."
-        ),
+        title="Show data",
+        description="Choose a file and channels, then adjust the plot axes and display settings.",
+        hover_description="View a histogram or scatter plot and adjust its axes and display parameters.",
     )
 
     def layout(self) -> html.Div:
@@ -108,7 +93,7 @@ class VisualizationPage:
             ]
         )
 
-    def _build_plot_workspace(self, *, default_controls: dict[str, Any]) -> html.Div:
+    def _build_plot_workspace(self, *, default_controls: dict[str, Any]) -> dbc.Card:
         field_label_style = {
             "display": "block",
             "marginBottom": styling.get_spacing_token("xs"),
@@ -129,7 +114,7 @@ class VisualizationPage:
                                     placeholder="Upload compatible FCS files",
                                 ),
                             ],
-                            style={"minWidth": "260px", "flex": "1"},
+                            style={"minWidth": "min(100%, 260px)", "flex": "1"},
                         ),
                         html.Div(
                             [
@@ -154,7 +139,7 @@ class VisualizationPage:
                                     clearable=False,
                                 ),
                             ],
-                            style={"minWidth": "220px", "flex": "1"},
+                            style={"minWidth": "min(100%, 220px)", "flex": "1"},
                         ),
                         html.Div(
                             [
@@ -167,7 +152,7 @@ class VisualizationPage:
                                     placeholder="Select X channel",
                                 ),
                             ],
-                            style={"minWidth": "260px", "flex": "1"},
+                            style={"minWidth": "min(100%, 260px)", "flex": "1"},
                         ),
                         html.Div(
                             [
@@ -181,7 +166,7 @@ class VisualizationPage:
                                 ),
                             ],
                             id=self.ids.y_channel_container,
-                            style={"minWidth": "260px", "flex": "1"},
+                            style={"minWidth": "min(100%, 260px)", "flex": "1"},
                         ),
                     ],
                     style={
@@ -190,23 +175,25 @@ class VisualizationPage:
                         "flexWrap": "wrap",
                     },
                 ),
-                plotting_layout.build_plot_control_panel(
-                    [
-                        plotting_layout.build_plot_axis_checklist(
-                            component_id=self.ids.x_log,
-                            options=[{"label": "Log X", "value": "enabled"}],
-                            value=default_controls["x_log_values"],
-                        ),
-                        plotting_layout.build_plot_axis_checklist(
-                            component_id=self.ids.y_log,
-                            options=[{"label": "Log Y", "value": "enabled"}],
-                            value=default_controls["y_log_values"],
-                        ),
-                        plotting_layout.build_plot_axis_checklist(
-                            component_id=self.ids.colormap_log,
-                            options=[{"label": "Log colormap", "value": "enabled"}],
-                            value=default_controls["colormap_log_values"],
-                        ),
+                html.Div(
+                    id=self.ids.plot_status,
+                    style={"opacity": 0.8},
+                ),
+                dcc.Graph(
+                    responsive=True,
+                    id=self.ids.graph,
+                    figure=services.build_empty_figure(
+                        message="Upload an FCS file to start visualizing events.",
+                        runtime_config_data=None,
+                    ),
+                    config=styling.PLOTLY_GRAPH_CONFIG,
+                    style=default_controls["graph_style"],
+                ),
+                plotting_layout.PlotOptions.build_component(
+                    component_id=self.ids.axis_scale_toggle,
+                    value=default_controls["axis_scale_toggle_values"],
+                    color_log_enabled=True,
+                    display_controls=[
                         plotting_layout.build_plot_number_control(
                             container_id=None,
                             input_id=self.ids.max_events,
@@ -240,21 +227,6 @@ class VisualizationPage:
                             visible=False,
                         ),
                     ],
-                    component_id=self.ids.scatter_controls_container,
-                ),
-                html.Div(
-                    id=self.ids.plot_status,
-                    style={"opacity": 0.8},
-                ),
-                dcc.Graph(
-                    responsive=True,
-                    id=self.ids.graph,
-                    figure=services.build_empty_figure(
-                        message="Upload an FCS file to start visualizing events.",
-                        runtime_config_data=None,
-                    ),
-                    config=styling.PLOTLY_GRAPH_CONFIG,
-                    style=default_controls["graph_style"],
                 ),
             ],
             style={
@@ -264,21 +236,9 @@ class VisualizationPage:
                 "minWidth": 0,
             },
         )
-        return build_fcs_tool_card_stack(
-            [
-                self._build_section_card(
-                    workflow_step=self.workflow_header.get_workflow_step(workflow_step=self.settings_step),
-                    body_children=[
-                        html.Div(workspace.children[:2], style=workspace.style)
-                    ],
-                ),
-                self._build_section_card(
-                    workflow_step=self.workflow_header.get_workflow_step(workflow_step=self.plot_step),
-                    body_children=[
-                        html.Div(workspace.children[2:], style=workspace.style)
-                    ],
-                ),
-            ],
+        return self._build_section_card(
+            workflow_step=self.workflow_header.get_workflow_step(workflow_step=self.plot_step),
+            body_children=[workspace],
         )
 
     def _build_header_card(self) -> dbc.Card:
@@ -402,7 +362,6 @@ class VisualizationPage:
             dash.Output(self.ids.y_channel_container, "style"),
             dash.Output(self.ids.marker_size_container, "style"),
             dash.Output(self.ids.marker_opacity_container, "style"),
-            dash.Output(self.ids.colormap_log, "style"),
             dash.Output(self.ids.histogram_smoothing_container, "style"),
             dash.Input(self.ids.plot_type, "value"),
             prevent_initial_call=False,
@@ -414,7 +373,6 @@ class VisualizationPage:
             dict[str, Any],
             dict[str, Any],
             dict[str, Any],
-            dict[str, Any],
         ]:
             plot_type_string = str(plot_type or "")
             is_histogram = plot_type_string in {
@@ -422,7 +380,7 @@ class VisualizationPage:
                 services.PLOT_TYPE_SMOOTHED_HISTOGRAM,
             }
             y_channel_style = {
-                "minWidth": "260px",
+                "minWidth": "min(100%, 260px)",
                 "flex": "1",
                 "display": "none" if is_histogram else "flex",
                 "flexDirection": "column",
@@ -433,10 +391,6 @@ class VisualizationPage:
                 "flexDirection": "column",
                 "gap": "4px",
                 "minWidth": "160px",
-            }
-            colormap_toggle_style = {
-                "display": "none" if is_histogram else "block",
-                "width": "fit-content",
             }
             smoothing_style = {
                 "display": "flex"
@@ -450,15 +404,12 @@ class VisualizationPage:
                 y_channel_style,
                 marker_field_style,
                 marker_field_style,
-                colormap_toggle_style,
                 smoothing_style,
             )
 
         @dash.callback(
             dash.Output(self.ids.max_events, "value"),
-            dash.Output(self.ids.x_log, "value"),
-            dash.Output(self.ids.y_log, "value"),
-            dash.Output(self.ids.colormap_log, "value"),
+            dash.Output(self.ids.axis_scale_toggle, "value"),
             dash.Output(self.ids.marker_size, "value"),
             dash.Output(self.ids.marker_opacity, "value"),
             dash.Output(self.ids.graph, "style"),
@@ -467,15 +418,13 @@ class VisualizationPage:
         )
         def sync_visualization_defaults_from_runtime_store(
             runtime_config_data: Any,
-        ) -> tuple[Any, Any, Any, Any, Any, Any, dict[str, Any]]:
+        ) -> tuple[Any, list[str], Any, Any, dict[str, Any]]:
             defaults = services.resolve_visualization_control_defaults(
                 runtime_config_data,
             )
             return (
                 defaults["max_events"],
-                defaults["x_log_values"],
-                defaults["y_log_values"],
-                defaults["colormap_log_values"],
+                defaults["axis_scale_toggle_values"],
                 defaults["marker_size"],
                 defaults["marker_opacity"],
                 defaults["graph_style"],
@@ -489,9 +438,7 @@ class VisualizationPage:
             dash.Input(self.ids.plot_type, "value"),
             dash.Input(self.ids.x_channel, "value"),
             dash.Input(self.ids.y_channel, "value"),
-            dash.Input(self.ids.x_log, "value"),
-            dash.Input(self.ids.y_log, "value"),
-            dash.Input(self.ids.colormap_log, "value"),
+            dash.Input(self.ids.axis_scale_toggle, "value"),
             dash.Input(self.ids.marker_size, "value"),
             dash.Input(self.ids.marker_opacity, "value"),
             dash.Input(self.ids.histogram_smoothing_sigma, "value"),
@@ -505,24 +452,23 @@ class VisualizationPage:
             plot_type: Any,
             x_channel: Any,
             y_channel: Any,
-            x_log_values: Any,
-            y_log_values: Any,
-            colormap_log_values: Any,
+            axis_scale_toggle_values: list[str] | None,
             marker_size: Any,
             marker_opacity: Any,
             smoothing_sigma_points: Any,
             max_events: Any,
             runtime_config_data: Any,
         ) -> tuple[Any, str]:
+            selected_axes = axis_scale_toggle_values or []
             return services.render_visualization_plot(
                 file_store=file_store,
                 selected_file_path=selected_file_path,
                 plot_type=plot_type,
                 x_channel=x_channel,
                 y_channel=y_channel,
-                x_log_values=x_log_values,
-                y_log_values=y_log_values,
-                colormap_log_values=colormap_log_values,
+                x_log_values=["enabled"] if plotting_layout.PlotOptions.x_log_value in selected_axes else [],
+                y_log_values=["enabled"] if plotting_layout.PlotOptions.y_log_value in selected_axes else [],
+                colormap_log_values=["enabled"] if plotting_layout.PlotOptions.color_log_value in selected_axes else [],
                 marker_size=marker_size,
                 marker_opacity=marker_opacity,
                 smoothing_sigma_points=smoothing_sigma_points,

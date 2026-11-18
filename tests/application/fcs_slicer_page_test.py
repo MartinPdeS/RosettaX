@@ -47,7 +47,7 @@ def _collect_text(component) -> list[str]:
 
 
 def test_header_includes_three_workflow_overview_cards(monkeypatch) -> None:
-    """Check header includes three workflow overview cards."""
+    """Check the header presents the two workflow steps."""
     monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
     slicer_main = importlib.import_module("RosettaX.pages.p21_fcs_slicer.main")
 
@@ -55,11 +55,9 @@ def test_header_includes_three_workflow_overview_cards(monkeypatch) -> None:
     text_nodes = _collect_text(header)
 
     assert "Upload compatible files" in text_nodes
-    assert "Choose channels" in text_nodes
-    assert "Download sliced files" in text_nodes
+    assert "Choose channels and download" in text_nodes
     assert "1" in text_nodes
     assert "2" in text_nodes
-    assert "3" in text_nodes
 
 
 def test_upload_uses_configured_file_size_limit(monkeypatch) -> None:
@@ -85,7 +83,6 @@ def test_workflow_cards_start_collapsed(monkeypatch) -> None:
     cards = [
         page._build_upload_card(),
         page._build_selection_card(),
-        page._build_export_card(),
     ]
 
     for section_number, card in enumerate(cards, start=1):
@@ -97,3 +94,14 @@ def test_workflow_cards_start_collapsed(monkeypatch) -> None:
             "page": page.ids.page_prefix,
             "section": str(section_number),
         }
+
+def test_slicing_card_groups_channel_selection_and_download(monkeypatch) -> None:
+    """Check that selecting channels and exporting are in the same card."""
+    monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
+    slicer_main = importlib.import_module("RosettaX.pages.p21_fcs_slicer.main")
+    page = slicer_main.FCSSlicerPage()
+
+    slicing_card = page._build_selection_card()
+    assert _find_component_by_id(slicing_card, page.ids.channels) is not None
+    assert _find_component_by_id(slicing_card, page.ids.export_button).kwargs["disabled"]
+    assert _find_component_by_id(slicing_card, page.ids.export_feedback) is not None

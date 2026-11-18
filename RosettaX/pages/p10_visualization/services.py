@@ -21,6 +21,7 @@ from RosettaX.workflow.file_selection.services import (
     resolve_selected_file,
 )
 from RosettaX.workflow.plotting.axis_ranges import apply_stable_2d_axis_ranges
+from RosettaX.workflow.plotting.layout import PlotOptions
 from RosettaX.workflow.plotting.models import (
     AxisOptions,
     HistogramOptions,
@@ -163,6 +164,19 @@ def resolve_visualization_control_defaults(
         runtime_config,
     )
 
+    colormap_log_enabled = runtime_config.get_bool(
+        "calibration.peak_graph_colormap_log", default=False,
+    )
+    axis_scale_toggle_values = [
+        option
+        for option, enabled in (
+            (PlotOptions.x_log_value, histogram_xscale == "log"),
+            (PlotOptions.y_log_value, histogram_yscale == "log"),
+            (PlotOptions.color_log_value, colormap_log_enabled),
+        )
+        if enabled
+    ]
+
     return {
         "graph_height": runtime_config.get_graph_height(
             default=f"{VISUALIZATION_FIGURE_HEIGHT_PX}px",
@@ -173,14 +187,8 @@ def resolve_visualization_control_defaults(
         ),
         "x_log_values": ["enabled"] if histogram_xscale == "log" else [],
         "y_log_values": ["enabled"] if histogram_yscale == "log" else [],
-        "colormap_log_values": (
-            ["enabled"]
-            if runtime_config.get_bool(
-                "calibration.peak_graph_colormap_log",
-                default=False,
-            )
-            else []
-        ),
+        "colormap_log_values": ["enabled"] if colormap_log_enabled else [],
+        "axis_scale_toggle_values": axis_scale_toggle_values,
         "marker_size": visualization_settings["default_marker_size"],
         "marker_opacity": visualization_settings["default_marker_opacity"],
         "graph_style": {

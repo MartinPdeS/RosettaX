@@ -3,13 +3,8 @@ import dash_bootstrap_components as dbc
 import pandas as pd
 from dash import html
 from pathlib import Path
-from RosettaX.ui import WorkflowHeader, WorkflowStep
 from RosettaX.utils import styling, ui_forms
 from RosettaX.utils.reader import FCSFile
-from RosettaX.workflow.calibration_cards import (
-    build_calibration_workflow_section_card,
-    build_fcs_tool_card_stack,
-)
 from RosettaX.workflow.upload import services as upload_services
 from typing import Any
 
@@ -19,64 +14,31 @@ class FCSInspectorPage:
 
     prefix = "fcs-inspector"
 
-    def __init__(self) -> None:
-        self.workflow_header = WorkflowHeader(
-            title="FCS Inspector",
-            description=(
-                "Review file metadata, acquisition details, and channel definitions "
-                "before downstream work."
-            ),
-            steps=[self.upload_step, self.details_step],
-            column_kwargs={"xl": True},
-        )
-
-    upload_step = WorkflowStep(
-        title="Upload FCS file",
-        description="Select one FCS file to inspect.",
-        hover_description=(
-            "The inspector reads metadata only; event measurements remain unloaded."
-        ),
-    )
-
-    details_step = WorkflowStep(
-        title="Review metadata",
-        description="Check file details and channel definitions.",
-        hover_description="Upload an FCS file to view its metadata.",
-    )
-
     def layout(self) -> dbc.Container:
-        return dbc.Container(
+        """Build the upload and metadata view in one card."""
+        card = dbc.Card(
             [
-                build_fcs_tool_card_stack(
+                dbc.CardHeader(html.H1("FCS Inspector", className="h4 mb-0")),
+                dbc.CardBody(
                     [
-                        self.workflow_header.build_header(
-                            step_target_page_name=self.prefix,
-                            style_overrides={"marginBottom": "0px"},
+                        html.P("Upload an FCS file to review its metadata and detector channels."),
+                        ui_forms.build_upload_widget(
+                            upload_id=f"{self.prefix}-upload",
+                            prompt_text="Select an FCS file",
+                            accepted_file_extensions=".fcs",
+                            multiple=False,
                         ),
-                        build_calibration_workflow_section_card(
-                            page_name=self.prefix,
-                            workflow_step=self.workflow_header.get_workflow_step(workflow_step=self.upload_step),
-                            body_children=[
-                                ui_forms.build_upload_widget(
-                                    upload_id=f"{self.prefix}-upload",
-                                    prompt_text="Select an FCS file",
-                                    accepted_file_extensions=".fcs",
-                                    multiple=False,
-                                ),
-                                ui_forms.build_upload_status(
-                                    status_id=f"{self.prefix}-status",
-                                    initial_text="No file loaded.",
-                                ),
-                            ],
+                        ui_forms.build_upload_status(
+                            status_id=f"{self.prefix}-status",
+                            initial_text="No file loaded.",
                         ),
-                        build_calibration_workflow_section_card(
-                            page_name=self.prefix,
-                            workflow_step=self.workflow_header.get_workflow_step(workflow_step=self.details_step),
-                            body_children=[html.Div(id=f"{self.prefix}-report")],
-                        ),
+                        html.Div(id=f"{self.prefix}-report"),
                     ],
                 ),
             ],
+        )
+        return dbc.Container(
+            [ui_forms.apply_workflow_section_card_style(card)],
             fluid=True,
             style={
                 **styling.PAGE,
@@ -136,6 +98,7 @@ class FCSInspectorPage:
                                     )
                                 ],
                                 bordered=True,
+                                responsive=True,
                                 size="sm",
                             ),
                             html.H6("Channels", style={"marginTop": "18px"}),
@@ -144,6 +107,7 @@ class FCSInspectorPage:
                                 striped=True,
                                 bordered=True,
                                 hover=True,
+                                responsive=True,
                                 size="sm",
                             ),
                         ]

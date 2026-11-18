@@ -27,7 +27,7 @@ class FCSSlicerPage:
                 "Upload a compatible batch, choose the detector channels to keep, "
                 "and download sliced FCS copies with every event preserved."
             ),
-            steps=[self.upload_step, self.selection_step, self.export_step],
+            steps=[self.upload_step, self.selection_step],
             column_kwargs={"xl": True},
         )
 
@@ -43,23 +43,9 @@ class FCSSlicerPage:
     )
 
     selection_step = WorkflowStep(
-        title="Choose channels",
-        description=(
-            "Select the detector channels to retain. The original channel order and "
-            "every recorded event are preserved."
-        ),
-        hover_description="The selected channel order follows the original FCS files.",
-    )
-
-    export_step = WorkflowStep(
-        title="Download sliced files",
-        description=(
-            "Export the sliced FCS copies together in one ZIP package while keeping the "
-            "selected channel metadata."
-        ),
-        hover_description=(
-            "RosettaX packages the sliced FCS copies in one ZIP download."
-        ),
+        title="Choose channels and download",
+        description="Select the detector channels to keep and download the sliced files in one ZIP.",
+        hover_description="Sliced files preserve every event, the selected channel metadata, and the original channel order.",
     )
 
     def layout(self) -> dbc.Container:
@@ -74,7 +60,6 @@ class FCSSlicerPage:
                         self._build_header_card(),
                         self._build_upload_card(),
                         self._build_selection_card(),
-                        self._build_export_card(),
                     ]
                 ),
             ],
@@ -130,18 +115,12 @@ class FCSSlicerPage:
                     id=self.ids.selection_feedback,
                     style={"marginTop": "10px", "opacity": 0.76},
                 ),
-            ],
-        )
-
-    def _build_export_card(self) -> dbc.Card:
-        return self._build_section_card(
-            workflow_step=self.workflow_header.get_workflow_step(workflow_step=self.export_step),
-            children=[
                 dbc.Button(
                     "Download sliced FCS files",
                     id=self.ids.export_button,
                     color="primary",
                     disabled=True,
+                    className="mt-3",
                 ),
                 html.Div(
                     id=self.ids.export_feedback,

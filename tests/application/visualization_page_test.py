@@ -100,7 +100,7 @@ class Test_VisualizationPage:
         assert page.ids.y_channel in component_ids
         assert page.ids.plot_type in component_ids
         assert page.ids.max_events in component_ids
-        assert page.ids.colormap_log in component_ids
+        assert page.ids.axis_scale_toggle in component_ids
         assert page.ids.marker_size in component_ids
         assert page.ids.marker_opacity in component_ids
         assert page.ids.graph in component_ids
@@ -125,10 +125,13 @@ class Test_VisualizationPage:
         text_nodes = _collect_text(layout)
 
         assert "Upload FCS file" in text_nodes
-        assert "Choose plot settings" in text_nodes
-        assert "Inspect the data" in text_nodes
-        assert "2. Choose plot settings" in text_nodes
-        assert "3. Inspect the data" in text_nodes
+        assert "Show data" in text_nodes
+        assert "2. Show data" in text_nodes
+        show_data = _find_component_by_id(layout, "visualization-workflow-section-2")
+        show_data_ids = _collect_component_ids(show_data)
+        assert {page.ids.plot_type, page.ids.graph, page.ids.axis_scale_toggle, page.ids.max_events} <= show_data_ids
+        axis_control = _find_component_by_id(show_data, page.ids.axis_scale_toggle)
+        assert [option["label"] for option in axis_control.kwargs["options"]] == ["x log", "y log", "color log"]
         assert "Configure plot" not in text_nodes
         assert "Inspect metadata and plot" not in text_nodes
         assert "File summary" not in text_nodes
