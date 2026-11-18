@@ -23,14 +23,14 @@ class MixtureRosettaScatterPeakProcess(RosettaMixSizeAssignmentProcess):
     stability; histogram R² is not an acceptance criterion.
     """
 
-    process_name = "Rosetta Script Mixture"
-    process_label = "Rosetta — Mixture (Experimental)"
+    process_name = "Rosetta Script"
+    process_label = "Rosetta"
     description = (
         "Uses fluorescence gates and a joint mixture fit of log scatter intensity. "
         "Requires three populations between the 140 and 380 nm markers; outer populations are optional. "
         "Experimental: compare against known standards before using calibration results."
     )
-    sort_order = 3
+    sort_order = 1
     scatter_fit_function = staticmethod(find_mixture_scatter_peaks)
     clear_table_on_warning = True
 

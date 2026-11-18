@@ -14,14 +14,13 @@ logger = logging.getLogger(__name__)
 
 
 SCATTERING_ALLOWED_PEAK_PROCESS_NAMES = [
+    "Rosetta Script",
+    "Rosetta Script Legacy",
+    "Rosetta Script V1",
     "Manual 1D",
     "Manual 2D",
     "Automatic 1D",
     "Automatic 2D",
-    "Rosetta Script V1",
-    "Rosetta Script Conservative",
-    "Rosetta Script Sensitive",
-    "Rosetta Script Mixture",
 ]
 
 
