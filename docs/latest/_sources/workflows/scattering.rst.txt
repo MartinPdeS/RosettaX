@@ -33,7 +33,7 @@ RosettaX currently ships detector presets for these grouped instrument families:
 * BD Biosciences: FACSCanto II - FSC, FACSCanto II - SSC
 * Beckman Coulter Life Sciences: CytoFLEX - Fluorescence, CytoFLEX - SSC
 * Custom: Generic detector
-* Apogee: Forward, Side
+* Apogee A60 Micro: Forward, Side; A60 MicroPLUS with Kairos: SALS, MALS, LALS
 
 In the scattering workflow, the optical preset selector is split into brand and
 model. Choose a brand first, then choose the supported model under that brand.

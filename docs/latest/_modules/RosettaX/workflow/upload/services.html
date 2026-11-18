@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>RosettaX.workflow.upload.services &#8212; RosettaX 0.13.1 documentation</title>
+    <title>RosettaX.workflow.upload.services &#8212; RosettaX 0.14.0 documentation</title>
   
   
   
@@ -44,7 +44,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=7a44cac5"></script>
+    <script src="../../../../_static/documentation_options.js?v=361a893e"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/sg-tags.js?v=d80f6fa4"></script>
@@ -53,7 +53,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/MartinPdeS/RosettaX/documentation_page/version_switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.13.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.14.0';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -64,7 +64,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.13.1" />
+  <meta name="docsearch:version" content="0.14.0" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -134,8 +134,8 @@
     
     
     
-    <img src="../../../../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.13.1 documentation - Home"/>
-    <img src="../../../../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.13.1 documentation - Home"/>
+    <img src="../../../../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.14.0 documentation - Home"/>
+    <img src="../../../../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.14.0 documentation - Home"/>
   
   
 </a></div>
@@ -511,9 +511,9 @@
   <h1>Source code for RosettaX.workflow.upload.services</h1><div class="highlight"><pre>
 <span></span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">base64</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">binascii</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.utils.checks</span><span class="w"> </span><span class="kn">import</span> <span class="n">FCSMultiFileConsistencyChecker</span>
@@ -530,8 +530,8 @@
     <span class="n">UploadConfig</span><span class="p">,</span>
     <span class="n">UploadState</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tempfile</span><span class="w"> </span><span class="kn">import</span> <span class="n">mkdtemp</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">uuid4</span>
 
 <span class="n">DEFAULT_UPLOAD_DIRECTORY</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">home</span><span class="p">()</span> <span class="o">/</span> <span class="s2">".rosettax"</span> <span class="o">/</span> <span class="s2">"uploads"</span>
 <span class="n">DEFAULT_ALLOWED_UPLOAD_EXTENSIONS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">".fcs"</span><span class="p">})</span>
@@ -709,20 +709,26 @@
         <span class="n">get_max_upload_bytes</span><span class="p">()</span> <span class="k">if</span> <span class="n">max_upload_bytes</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">int</span><span class="p">(</span><span class="n">max_upload_bytes</span><span class="p">)</span>
     <span class="p">)</span>
 
-    <span class="k">if</span> <span class="s2">","</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">contents</span><span class="p">:</span>
+    <span class="n">separator</span> <span class="o">=</span> <span class="n">contents</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">","</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">separator</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Upload contents are malformed."</span><span class="p">)</span>
 
-    <span class="n">_metadata</span><span class="p">,</span> <span class="n">encoded_payload</span> <span class="o">=</span> <span class="n">contents</span><span class="o">.</span><span class="n">split</span><span class="p">(</span>
-        <span class="s2">","</span><span class="p">,</span>
-        <span class="mi">1</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="n">encoded_start</span> <span class="o">=</span> <span class="n">separator</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="c1"># Each four-character group can represent up to three decoded bytes.</span>
+    <span class="c1"># Check the actual size after decoding because the last group can be padded.</span>
+    <span class="n">max_encoded_length</span> <span class="o">=</span> <span class="mi">4</span> <span class="o">*</span> <span class="p">((</span><span class="n">resolved_max_upload_bytes</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span> <span class="o">//</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">contents</span><span class="p">)</span> <span class="o">-</span> <span class="n">encoded_start</span> <span class="o">&gt;</span> <span class="n">max_encoded_length</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"Upload exceeds the maximum supported size of "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">format_upload_size</span><span class="p">(</span><span class="n">resolved_max_upload_bytes</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
+        <span class="p">)</span>
 
     <span class="k">try</span><span class="p">:</span>
         <span class="n">decoded_bytes</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64decode</span><span class="p">(</span>
-            <span class="n">encoded_payload</span><span class="p">,</span>
+            <span class="n">contents</span><span class="p">[</span><span class="n">encoded_start</span><span class="p">:],</span>
             <span class="n">validate</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span>
-    <span class="k">except</span> <span class="n">binascii</span><span class="o">.</span><span class="n">Error</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Upload contents could not be decoded."</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
 
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">decoded_bytes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">resolved_max_upload_bytes</span><span class="p">:</span>
@@ -787,7 +793,12 @@
     <span class="n">max_upload_bytes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Save one uploaded file and return its path.</span>
+<span class="sd">    Save a legacy upload in its own directory or reuse a streamed upload.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Path</span>
+<span class="sd">        Path to the stored file, whose basename is the sanitized filename.</span>
 <span class="sd">    """</span>
     <span class="n">safe_filename</span> <span class="o">=</span> <span class="n">validate_upload_filename</span><span class="p">(</span>
         <span class="n">filename</span><span class="p">,</span>
@@ -807,21 +818,21 @@
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">streamed_upload</span><span class="o">.</span><span class="n">file_path</span>
 
-    <span class="n">upload_directory</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span>
-        <span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="n">file_path</span> <span class="o">=</span> <span class="n">upload_directory</span> <span class="o">/</span> <span class="n">safe_filename</span>
-
-    <span class="n">file_bytes</span> <span class="o">=</span> <span class="n">read_uploaded_file_bytes</span><span class="p">(</span>
+    <span class="n">file_bytes</span> <span class="o">=</span> <span class="n">decode_dash_upload_contents</span><span class="p">(</span>
         <span class="n">contents</span><span class="p">,</span>
         <span class="n">max_upload_bytes</span><span class="o">=</span><span class="n">max_upload_bytes</span><span class="p">,</span>
     <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">file_bytes</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Uploaded file is empty."</span><span class="p">)</span>
 
-    <span class="n">file_path</span><span class="o">.</span><span class="n">write_bytes</span><span class="p">(</span>
-        <span class="n">file_bytes</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="n">upload_directory</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">file_directory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">mkdtemp</span><span class="p">(</span><span class="nb">dir</span><span class="o">=</span><span class="n">upload_directory</span><span class="p">))</span>
+    <span class="n">file_path</span> <span class="o">=</span> <span class="n">file_directory</span> <span class="o">/</span> <span class="n">safe_filename</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">file_path</span><span class="o">.</span><span class="n">write_bytes</span><span class="p">(</span><span class="n">file_bytes</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">file_directory</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">raise</span>
 
     <span class="k">return</span> <span class="n">file_path</span></div>
 
@@ -848,7 +859,15 @@
     <span class="n">upload_directory</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">DEFAULT_UPLOAD_DIRECTORY</span><span class="p">,</span>
     <span class="n">max_upload_bytes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
-<span class="w">    </span><span class="sd">"""Save one Dash multi-file upload in an isolated batch directory."""</span>
+<span class="w">    </span><span class="sd">"""Save a Dash upload batch in input order, reusing staged files.</span>
+
+<span class="sd">    Legacy files written by this call are removed if any file fails to save.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple[list[Path], list[str]]</span>
+<span class="sd">        Stored paths and sanitized display filenames in upload order.</span>
+<span class="sd">    """</span>
     <span class="n">contents_list</span> <span class="o">=</span> <span class="n">normalize_multiple_upload_values</span><span class="p">(</span><span class="n">contents</span><span class="p">)</span>
     <span class="n">filename_list</span> <span class="o">=</span> <span class="n">normalize_multiple_upload_values</span><span class="p">(</span><span class="n">filenames</span><span class="p">)</span>
 
@@ -857,35 +876,32 @@
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">contents_list</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">filename_list</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"The uploaded file payload is malformed."</span><span class="p">)</span>
 
-    <span class="n">batch_directory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">upload_directory</span><span class="p">)</span> <span class="o">/</span> <span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span>
+    <span class="n">batch_directory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">upload_directory</span><span class="p">)</span>
     <span class="n">saved_paths</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">safe_filenames</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">used_storage_filenames</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">has_legacy_uploads</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="ow">not</span> <span class="n">is_streamed_upload_token</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">contents_list</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">has_legacy_uploads</span><span class="p">:</span>
+        <span class="n">batch_directory</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">batch_directory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">mkdtemp</span><span class="p">(</span><span class="nb">dir</span><span class="o">=</span><span class="n">batch_directory</span><span class="p">))</span>
 
-    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="p">(</span><span class="n">file_contents</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
-        <span class="nb">zip</span><span class="p">(</span><span class="n">contents_list</span><span class="p">,</span> <span class="n">filename_list</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-        <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-    <span class="p">):</span>
-        <span class="n">safe_filename</span> <span class="o">=</span> <span class="n">validate_upload_filename</span><span class="p">(</span>
-            <span class="n">filename</span> <span class="ow">or</span> <span class="sa">f</span><span class="s2">"uploaded_file_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">.fcs"</span><span class="p">,</span>
-            <span class="n">allowed_extensions</span><span class="o">=</span><span class="n">DEFAULT_ALLOWED_UPLOAD_EXTENSIONS</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">storage_filename</span> <span class="o">=</span> <span class="n">safe_filename</span>
-        <span class="k">if</span> <span class="n">storage_filename</span> <span class="ow">in</span> <span class="n">used_storage_filenames</span><span class="p">:</span>
-            <span class="n">safe_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">safe_filename</span><span class="p">)</span>
-            <span class="n">storage_filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">safe_path</span><span class="o">.</span><span class="n">stem</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">index</span><span class="si">}{</span><span class="n">safe_path</span><span class="o">.</span><span class="n">suffix</span><span class="si">}</span><span class="s2">"</span>
-        <span class="n">used_storage_filenames</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">storage_filename</span><span class="p">)</span>
-
-        <span class="n">saved_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="n">save_uploaded_file</span><span class="p">(</span>
-                <span class="n">contents</span><span class="o">=</span><span class="n">file_contents</span><span class="p">,</span>
-                <span class="n">filename</span><span class="o">=</span><span class="n">storage_filename</span><span class="p">,</span>
-                <span class="n">upload_directory</span><span class="o">=</span><span class="n">batch_directory</span><span class="p">,</span>
-                <span class="n">allowed_extensions</span><span class="o">=</span><span class="n">DEFAULT_ALLOWED_UPLOAD_EXTENSIONS</span><span class="p">,</span>
-                <span class="n">max_upload_bytes</span><span class="o">=</span><span class="n">max_upload_bytes</span><span class="p">,</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="p">(</span><span class="n">file_contents</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+            <span class="nb">zip</span><span class="p">(</span><span class="n">contents_list</span><span class="p">,</span> <span class="n">filename_list</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span>
+        <span class="p">):</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span> <span class="ow">or</span> <span class="sa">f</span><span class="s2">"uploaded_file_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">.fcs"</span>
+            <span class="n">saved_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">save_uploaded_file</span><span class="p">(</span>
+                    <span class="n">contents</span><span class="o">=</span><span class="n">file_contents</span><span class="p">,</span>
+                    <span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span>
+                    <span class="n">upload_directory</span><span class="o">=</span><span class="n">batch_directory</span><span class="p">,</span>
+                    <span class="n">max_upload_bytes</span><span class="o">=</span><span class="n">max_upload_bytes</span><span class="p">,</span>
+                <span class="p">)</span>
             <span class="p">)</span>
-        <span class="p">)</span>
-        <span class="n">safe_filenames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">safe_filename</span><span class="p">)</span>
+            <span class="n">safe_filenames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sanitize_filename</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">has_legacy_uploads</span><span class="p">:</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">batch_directory</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">raise</span>
 
     <span class="k">return</span> <span class="n">saved_paths</span><span class="p">,</span> <span class="n">safe_filenames</span></div>
 
@@ -1228,8 +1244,13 @@
         <span class="n">allowed_extensions</span><span class="o">=</span><span class="n">allowed_extensions</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="k">if</span> <span class="s2">".fcs"</span> <span class="ow">in</span> <span class="n">allowed_extensions</span><span class="p">:</span>
-        <span class="n">validate_fcs_metadata</span><span class="p">(</span><span class="n">saved_file_path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">saved_file_path</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">".fcs"</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">validate_fcs_metadata</span><span class="p">(</span><span class="n">saved_file_path</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_streamed_upload_token</span><span class="p">(</span><span class="n">clean_contents</span><span class="p">):</span>
+                <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">saved_file_path</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">raise</span>
 
     <span class="n">next_uploaded_filename</span> <span class="o">=</span> <span class="n">clean_filename</span> <span class="ow">or</span> <span class="n">saved_file_path</span><span class="o">.</span><span class="n">name</span>
 

@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Workflow API &#8212; RosettaX 0.13.1 documentation</title>
+    <title>Workflow API &#8212; RosettaX 0.14.0 documentation</title>
   
   
   
@@ -45,7 +45,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=7a44cac5"></script>
+    <script src="../_static/documentation_options.js?v=361a893e"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/sg-tags.js?v=d80f6fa4"></script>
@@ -54,7 +54,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/MartinPdeS/RosettaX/documentation_page/version_switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.13.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.14.0';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -67,7 +67,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.13.1" />
+  <meta name="docsearch:version" content="0.14.0" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -137,8 +137,8 @@
     
     
     
-    <img src="../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.13.1 documentation - Home"/>
-    <img src="../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.13.1 documentation - Home"/>
+    <img src="../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.14.0 documentation - Home"/>
+    <img src="../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.14.0 documentation - Home"/>
   
   
 </a></div>
@@ -1006,8 +1006,15 @@ Malformed upload payloads and unreadable FCS metadata retain their existing
 <dl class="py function">
 <dt class="sig sig-object py" id="RosettaX.workflow.upload.services.save_uploaded_batch">
 <span class="sig-name descname"><span class="pre">save_uploaded_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">contents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filenames</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upload_directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">PosixPath('/home/runner/.rosettax/uploads')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_upload_bytes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/upload/services.html#save_uploaded_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.workflow.upload.services.save_uploaded_batch" title="Link to this definition">#</a></dt>
-<dd><p>Save one Dash multi-file upload in an isolated batch directory.</p>
+<dd><p>Save a Dash upload batch in input order, reusing staged files.</p>
+<p>Legacy files written by this call are removed if any file fails to save.</p>
 <dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Stored paths and sanitized display filenames in upload order.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple[list[Path], list[str]]</p>
+</dd>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>contents</strong> (<em>Any</em>)</p></li>
@@ -1016,17 +1023,20 @@ Malformed upload payloads and unreadable FCS metadata retain their existing
 <li><p><strong>max_upload_bytes</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>tuple[list[<em>Path</em>], list[str]]</p>
-</dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="RosettaX.workflow.upload.services.save_uploaded_file">
 <span class="sig-name descname"><span class="pre">save_uploaded_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">contents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upload_directory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowed_extensions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">frozenset({'.fcs'})</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_upload_bytes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/upload/services.html#save_uploaded_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.workflow.upload.services.save_uploaded_file" title="Link to this definition">#</a></dt>
-<dd><p>Save one uploaded file and return its path.</p>
+<dd><p>Save a legacy upload in its own directory or reuse a streamed upload.</p>
 <dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Path to the stored file, whose basename is the sanitized filename.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Path</p>
+</dd>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>contents</strong> (<em>str</em>)</p></li>
@@ -1035,9 +1045,6 @@ Malformed upload payloads and unreadable FCS metadata retain their existing
 <li><p><strong>allowed_extensions</strong> (<em>frozenset</em><em>[</em><em>str</em><em>]</em>)</p></li>
 <li><p><strong>max_upload_bytes</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
 </ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>Path</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -5406,11 +5413,6 @@ details. This builder retains the process context and public graph API.</p>
 </ul>
 </dd>
 </dl>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="RosettaX.workflow.peak.core.graphing.PeakWorkflowGraphBuilder.accepted_y_fill_color">
-<span class="sig-name descname"><span class="pre">accepted_y_fill_color</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'rgba(38,</span> <span class="pre">196,</span> <span class="pre">78,</span> <span class="pre">0.08)'</span></span><a class="headerlink" href="#RosettaX.workflow.peak.core.graphing.PeakWorkflowGraphBuilder.accepted_y_fill_color" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="RosettaX.workflow.peak.core.graphing.PeakWorkflowGraphBuilder.build">
 <span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/peak/core/graphing.html#PeakWorkflowGraphBuilder.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.workflow.peak.core.graphing.PeakWorkflowGraphBuilder.build" title="Link to this definition">#</a></dt>
@@ -5425,11 +5427,6 @@ details. This builder retains the process context and public graph API.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="RosettaX.workflow.peak.core.graphing.PeakWorkflowGraphBuilder.default_margin">
 <span class="sig-name descname"><span class="pre">default_margin</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'b':</span> <span class="pre">70,</span> <span class="pre">'l':</span> <span class="pre">80,</span> <span class="pre">'r':</span> <span class="pre">30,</span> <span class="pre">'t':</span> <span class="pre">55}</span></span><a class="headerlink" href="#RosettaX.workflow.peak.core.graphing.PeakWorkflowGraphBuilder.default_margin" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="RosettaX.workflow.peak.core.graphing.PeakWorkflowGraphBuilder.fluorescence_helper_fill_color">
-<span class="sig-name descname"><span class="pre">fluorescence_helper_fill_color</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'rgba(64,</span> <span class="pre">138,</span> <span class="pre">255,</span> <span class="pre">0.05)'</span></span><a class="headerlink" href="#RosettaX.workflow.peak.core.graphing.PeakWorkflowGraphBuilder.fluorescence_helper_fill_color" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -5475,25 +5472,6 @@ is delegated to PeakWorkflowGraphBuilder.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>Figure</em></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="RosettaX.workflow.peak.core.graphing.build_process_settings">
-<span class="sig-name descname"><span class="pre">build_process_settings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">process_setting_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">process_setting_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">process_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/peak/core/graphing.html#build_process_settings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.workflow.peak.core.graphing.build_process_settings" title="Link to this definition">#</a></dt>
-<dd><p>Build a dictionary of process setting values for the selected process.</p>
-<p>Kept as a module level helper for compatibility with older imports.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>process_setting_ids</strong> (<em>list</em><em>[</em><em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>)</p></li>
-<li><p><strong>process_setting_values</strong> (<em>list</em><em>[</em><em>Any</em><em>]</em>)</p></li>
-<li><p><strong>process_name</strong> (<em>str</em>)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>dict[str, <em>Any</em>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -6867,16 +6845,13 @@ that has:
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.peak.core.graphing.PeakWorkflowGraphBuilder"><code class="docutils literal notranslate"><span class="pre">PeakWorkflowGraphBuilder</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.peak.core.graphing.PeakWorkflowGraphBuilder.accepted_y_fill_color"><code class="docutils literal notranslate"><span class="pre">PeakWorkflowGraphBuilder.accepted_y_fill_color</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.peak.core.graphing.PeakWorkflowGraphBuilder.build"><code class="docutils literal notranslate"><span class="pre">PeakWorkflowGraphBuilder.build()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.peak.core.graphing.PeakWorkflowGraphBuilder.default_margin"><code class="docutils literal notranslate"><span class="pre">PeakWorkflowGraphBuilder.default_margin</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.peak.core.graphing.PeakWorkflowGraphBuilder.fluorescence_helper_fill_color"><code class="docutils literal notranslate"><span class="pre">PeakWorkflowGraphBuilder.fluorescence_helper_fill_color</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.peak.core.graphing.PeakWorkflowGraphBuilder.rejected_x_fill_color"><code class="docutils literal notranslate"><span class="pre">PeakWorkflowGraphBuilder.rejected_x_fill_color</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.peak.core.graphing.PeakWorkflowGraphBuilder.rejected_y_fill_color"><code class="docutils literal notranslate"><span class="pre">PeakWorkflowGraphBuilder.rejected_y_fill_color</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.peak.core.graphing.build_peak_workflow_graph_figure"><code class="docutils literal notranslate"><span class="pre">build_peak_workflow_graph_figure()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.peak.core.graphing.build_process_settings"><code class="docutils literal notranslate"><span class="pre">build_process_settings()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.peak.core.detectors.clean_optional_string"><code class="docutils literal notranslate"><span class="pre">clean_optional_string()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.peak.core.detectors.extract_channel_wavelength_nm"><code class="docutils literal notranslate"><span class="pre">extract_channel_wavelength_nm()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.peak.core.detectors.extract_instrument_name_from_metadata"><code class="docutils literal notranslate"><span class="pre">extract_instrument_name_from_metadata()</span></code></a></li>
@@ -6954,7 +6929,7 @@ that has:
 
   
   <div class="tocsection editthispage">
-    <a href="https://github.com/MartinPdeS/RosettaX/edit/v0.13.1/docs/source/api/workflows.rst">
+    <a href="https://github.com/MartinPdeS/RosettaX/edit/v0.14.0/docs/source/api/workflows.rst">
       <i class="fa-solid fa-pencil"></i>
       
       

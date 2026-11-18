@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>RosettaX.workflow.scattering.backend &#8212; RosettaX 0.13.1 documentation</title>
+    <title>RosettaX.workflow.scattering.backend &#8212; RosettaX 0.14.0 documentation</title>
   
   
   
@@ -44,7 +44,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=7a44cac5"></script>
+    <script src="../../../../_static/documentation_options.js?v=361a893e"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/sg-tags.js?v=d80f6fa4"></script>
@@ -53,7 +53,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/MartinPdeS/RosettaX/documentation_page/version_switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.13.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.14.0';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -64,7 +64,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.13.1" />
+  <meta name="docsearch:version" content="0.14.0" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -134,8 +134,8 @@
     
     
     
-    <img src="../../../../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.13.1 documentation - Home"/>
-    <img src="../../../../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.13.1 documentation - Home"/>
+    <img src="../../../../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.14.0 documentation - Home"/>
+    <img src="../../../../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.14.0 documentation - Home"/>
   
   
 </a></div>
@@ -513,8 +513,8 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.results</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModeledCouplingResult</span><span class="p">,</span> <span class="n">ScatteringCalibrationFitResult</span>  <span class="c1"># noqa: F401</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">lru_cache</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">PyMieSim</span><span class="w"> </span><span class="kn">import</span> <span class="n">experiment</span> <span class="k">as</span> <span class="n">PyMieSim</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">PyMieSim.units</span><span class="w"> </span><span class="kn">import</span> <span class="n">ureg</span>
@@ -525,76 +525,6 @@
 
 <span class="n">SOLID_SPHERE_MODEL_NAME</span> <span class="o">=</span> <span class="s2">"Solid Sphere"</span>
 <span class="n">CORE_SHELL_SPHERE_MODEL_NAME</span> <span class="o">=</span> <span class="s2">"Core/Shell Sphere"</span>
-
-
-<div class="viewcode-block" id="ModeledCouplingResult">
-<a class="viewcode-back" href="../../../../api/pages.html#RosettaX.pages.p03_scattering.backend.ModeledCouplingResult">[docs]</a>
-<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">ModeledCouplingResult</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Container for modeled scattering coupling values.</span>
-<span class="sd">    """</span>
-
-    <span class="n">particle_diameters_nm</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
-    <span class="n">expected_coupling_values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
-    <span class="n">expected_cross_section_nm2_values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
-    <span class="n">model_metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
-
-<div class="viewcode-block" id="ModeledCouplingResult.to_dict">
-<a class="viewcode-back" href="../../../../api/pages.html#RosettaX.pages.p03_scattering.backend.ModeledCouplingResult.to_dict">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Convert the modeled coupling result to a JSON safe dictionary.</span>
-<span class="sd">        """</span>
-        <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">"particle_diameters_nm"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">particle_diameters_nm</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
-            <span class="s2">"expected_coupling_values"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">expected_coupling_values</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
-            <span class="s2">"expected_cross_section_nm2_values"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">expected_cross_section_nm2_values</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
-            <span class="s2">"model_metadata"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_metadata</span><span class="p">,</span>
-        <span class="p">}</span></div>
-</div>
-
-
-
-<div class="viewcode-block" id="ScatteringCalibrationFitResult">
-<a class="viewcode-back" href="../../../../api/pages.html#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult">[docs]</a>
-<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">ScatteringCalibrationFitResult</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Container for the scattering calibration fit.</span>
-<span class="sd">    """</span>
-
-    <span class="n">slope</span><span class="p">:</span> <span class="nb">float</span>
-    <span class="n">intercept</span><span class="p">:</span> <span class="nb">float</span>
-    <span class="n">prefactor</span><span class="p">:</span> <span class="nb">float</span>
-    <span class="n">r_squared</span><span class="p">:</span> <span class="nb">float</span>
-    <span class="n">measured_peak_positions</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
-    <span class="n">particle_diameters_nm</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
-    <span class="n">expected_coupling_values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
-    <span class="n">measured_peak_positions_log10</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
-    <span class="n">expected_coupling_values_log10</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
-    <span class="n">fitted_expected_coupling_values_log10</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
-
-<div class="viewcode-block" id="ScatteringCalibrationFitResult.to_dict">
-<a class="viewcode-back" href="../../../../api/pages.html#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.to_dict">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Convert the fit result to a JSON safe dictionary.</span>
-<span class="sd">        """</span>
-        <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">"slope"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">slope</span><span class="p">),</span>
-            <span class="s2">"intercept"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intercept</span><span class="p">),</span>
-            <span class="s2">"prefactor"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prefactor</span><span class="p">),</span>
-            <span class="s2">"r_squared"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">r_squared</span><span class="p">),</span>
-            <span class="s2">"measured_peak_positions"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">measured_peak_positions</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
-            <span class="s2">"particle_diameters_nm"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">particle_diameters_nm</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
-            <span class="s2">"expected_coupling_values"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">expected_coupling_values</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
-            <span class="s2">"measured_peak_positions_log10"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">measured_peak_positions_log10</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
-            <span class="s2">"expected_coupling_values_log10"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">expected_coupling_values_log10</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
-            <span class="s2">"fitted_expected_coupling_values_log10"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitted_expected_coupling_values_log10</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
-        <span class="p">}</span></div>
-</div>
-
 
 
 <div class="viewcode-block" id="BackEnd">

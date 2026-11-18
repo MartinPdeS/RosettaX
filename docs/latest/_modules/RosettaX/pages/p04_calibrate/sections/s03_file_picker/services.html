@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>RosettaX.pages.p04_calibrate.sections.s03_file_picker.services &#8212; RosettaX 0.13.1 documentation</title>
+    <title>RosettaX.pages.p04_calibrate.sections.s03_file_picker.services &#8212; RosettaX 0.14.0 documentation</title>
   
   
   
@@ -44,7 +44,7 @@
   <link rel="preload" as="script" href="../../../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../../../_static/documentation_options.js?v=7a44cac5"></script>
+    <script src="../../../../../../_static/documentation_options.js?v=361a893e"></script>
     <script src="../../../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../../../_static/sg-tags.js?v=d80f6fa4"></script>
@@ -53,7 +53,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/MartinPdeS/RosettaX/documentation_page/version_switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.13.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.14.0';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -64,7 +64,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.13.1" />
+  <meta name="docsearch:version" content="0.14.0" />
   
     
     <script src="../../../../../../_static/searchtools.js"></script>
@@ -134,8 +134,8 @@
     
     
     
-    <img src="../../../../../../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.13.1 documentation - Home"/>
-    <img src="../../../../../../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.13.1 documentation - Home"/>
+    <img src="../../../../../../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.14.0 documentation - Home"/>
+    <img src="../../../../../../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.14.0 documentation - Home"/>
   
   
 </a></div>
@@ -510,12 +510,10 @@
                   
   <h1>Source code for RosettaX.pages.p04_calibrate.sections.s03_file_picker.services</h1><div class="highlight"><pre>
 <span></span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">base64</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">plotly.graph_objects</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">go</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.pages.p04_calibrate.sections.s02_calibration_picker</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">services</span> <span class="k">as</span> <span class="n">calibration_picker_services</span><span class="p">,</span>
@@ -523,17 +521,14 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">checks</span><span class="p">,</span> <span class="n">plottings</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.utils.reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">FCSFile</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.utils.runtime_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">RuntimeConfig</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.utils.streamed_uploads</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">is_streamed_upload_token</span><span class="p">,</span>
-    <span class="n">raise_for_streamed_upload_error</span><span class="p">,</span>
-    <span class="n">resolve_streamed_upload</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.utils.upload_limits</span><span class="w"> </span><span class="kn">import</span> <span class="n">format_upload_size</span><span class="p">,</span> <span class="n">get_max_upload_bytes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.utils.upload_limits</span><span class="w"> </span><span class="kn">import</span> <span class="n">format_upload_size</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.workflow.apply_calibration.fluorescence</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">apply_legacy_calibration_to_series</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.workflow.apply_calibration.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_uploaded_fcs_paths</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.workflow.file_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">UploadedFileBatch</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.workflow.plotting.scatter2d</span><span class="w"> </span><span class="kn">import</span> <span class="n">Scatter2DGraph</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.workflow.upload</span><span class="w"> </span><span class="kn">import</span> <span class="n">services</span> <span class="k">as</span> <span class="n">upload_services</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -563,7 +558,7 @@
 <span class="sd">    Path</span>
 <span class="sd">        Local upload directory used by the apply calibration file picker.</span>
 <span class="sd">    """</span>
-    <span class="n">upload_directory</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">home</span><span class="p">()</span> <span class="o">/</span> <span class="s2">".rosettax"</span> <span class="o">/</span> <span class="s2">"uploads"</span>
+    <span class="n">upload_directory</span> <span class="o">=</span> <span class="n">upload_services</span><span class="o">.</span><span class="n">DEFAULT_UPLOAD_DIRECTORY</span>
 
     <span class="n">upload_directory</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span>
         <span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -694,26 +689,12 @@
 <span class="sd">    list[Path]</span>
 <span class="sd">        Saved local file paths.</span>
 <span class="sd">    """</span>
-    <span class="n">saved_paths</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="k">for</span> <span class="n">contents</span><span class="p">,</span> <span class="n">filename</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
-        <span class="n">contents_list</span><span class="p">,</span>
-        <span class="n">filenames</span><span class="p">,</span>
-        <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="p">):</span>
-        <span class="n">saved_path</span> <span class="o">=</span> <span class="n">save_single_uploaded_file</span><span class="p">(</span>
-            <span class="n">upload_directory</span><span class="o">=</span><span class="n">upload_directory</span><span class="p">,</span>
-            <span class="n">contents</span><span class="o">=</span><span class="n">contents</span><span class="p">,</span>
-            <span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="n">saved_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="n">saved_path</span><span class="p">,</span>
-        <span class="p">)</span>
-
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">saved_paths</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"No uploaded FCS files were saved."</span><span class="p">)</span>
-
+    <span class="n">validate_upload_payload</span><span class="p">(</span><span class="n">contents_list</span><span class="o">=</span><span class="n">contents_list</span><span class="p">,</span> <span class="n">filenames</span><span class="o">=</span><span class="n">filenames</span><span class="p">)</span>
+    <span class="n">saved_paths</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">upload_services</span><span class="o">.</span><span class="n">save_uploaded_batch</span><span class="p">(</span>
+        <span class="n">contents</span><span class="o">=</span><span class="n">contents_list</span><span class="p">,</span>
+        <span class="n">filenames</span><span class="o">=</span><span class="n">filenames</span><span class="p">,</span>
+        <span class="n">upload_directory</span><span class="o">=</span><span class="n">upload_directory</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="k">return</span> <span class="n">saved_paths</span></div>
 
 
@@ -726,78 +707,12 @@
     <span class="n">contents</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Save one uploaded file to the local upload directory.</span>
-<span class="sd">    """</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-        <span class="s2">"save_single_uploaded_file called with filename=</span><span class="si">%r</span><span class="s2"> upload_directory=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
-        <span class="n">filename</span><span class="p">,</span>
-        <span class="nb">str</span><span class="p">(</span><span class="n">upload_directory</span><span class="p">),</span>
-    <span class="p">)</span>
-
-    <span class="n">raise_for_streamed_upload_error</span><span class="p">(</span><span class="n">contents</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">is_streamed_upload_token</span><span class="p">(</span><span class="n">contents</span><span class="p">):</span>
-        <span class="n">streamed_upload</span> <span class="o">=</span> <span class="n">resolve_streamed_upload</span><span class="p">(</span><span class="n">contents</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">streamed_upload</span><span class="o">.</span><span class="n">file_path</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">".fcs"</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Uploaded input file must be an .fcs file."</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">streamed_upload</span><span class="o">.</span><span class="n">file_path</span>
-
-    <span class="k">if</span> <span class="s2">","</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">contents</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"Uploaded file </span><span class="si">{</span><span class="n">filename</span><span class="si">!r}</span><span class="s2"> has malformed Dash contents payload."</span>
-        <span class="p">)</span>
-
-    <span class="n">_</span><span class="p">,</span> <span class="n">encoded_payload</span> <span class="o">=</span> <span class="n">contents</span><span class="o">.</span><span class="n">split</span><span class="p">(</span>
-        <span class="s2">","</span><span class="p">,</span>
-        <span class="mi">1</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="n">raw_bytes</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64decode</span><span class="p">(</span>
-        <span class="n">encoded_payload</span><span class="p">,</span>
-        <span class="n">validate</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">raw_bytes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">get_max_upload_bytes</span><span class="p">():</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="s2">"Uploaded file exceeds the maximum supported size of "</span>
-            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">format_upload_size</span><span class="p">()</span><span class="si">}</span><span class="s2">."</span>
-        <span class="p">)</span>
-
-    <span class="n">original_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span>
-        <span class="nb">str</span><span class="p">(</span><span class="n">filename</span><span class="p">),</span>
-    <span class="p">)</span>
-
-    <span class="n">safe_stem</span> <span class="o">=</span> <span class="n">original_path</span><span class="o">.</span><span class="n">stem</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">"uploaded_file"</span>
-    <span class="n">safe_suffix</span> <span class="o">=</span> <span class="n">original_path</span><span class="o">.</span><span class="n">suffix</span> <span class="k">if</span> <span class="n">original_path</span><span class="o">.</span><span class="n">suffix</span> <span class="k">else</span> <span class="s2">".fcs"</span>
-
-    <span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span>
-        <span class="s2">"%Y%m</span><span class="si">%d</span><span class="s2">_%H%M%S_</span><span class="si">%f</span><span class="s2">"</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="n">output_path</span> <span class="o">=</span> <span class="n">upload_directory</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">safe_stem</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">timestamp</span><span class="si">}{</span><span class="n">safe_suffix</span><span class="si">}</span><span class="s2">"</span>
-
-    <span class="n">output_path</span><span class="o">.</span><span class="n">write_bytes</span><span class="p">(</span>
-        <span class="n">raw_bytes</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">output_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"Uploaded file was not written successfully: </span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s2">"</span>
-        <span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">output_path</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"Uploaded file was written but is empty: </span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s2">"</span>
-        <span class="p">)</span>
-
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-        <span class="s2">"Saved uploaded file successfully to output_path=</span><span class="si">%r</span><span class="s2"> byte_count=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
-        <span class="nb">str</span><span class="p">(</span><span class="n">output_path</span><span class="p">),</span>
-        <span class="nb">len</span><span class="p">(</span><span class="n">raw_bytes</span><span class="p">),</span>
-    <span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">output_path</span></div>
+<span class="w">    </span><span class="sd">"""Save one FCS upload and return its stored path."""</span>
+    <span class="k">return</span> <span class="n">upload_services</span><span class="o">.</span><span class="n">save_uploaded_file</span><span class="p">(</span>
+        <span class="n">contents</span><span class="o">=</span><span class="n">contents</span><span class="p">,</span>
+        <span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span>
+        <span class="n">upload_directory</span><span class="o">=</span><span class="n">upload_directory</span><span class="p">,</span>
+    <span class="p">)</span></div>
 
 
 
@@ -891,9 +806,18 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""Build stable file options for one or many uploaded FCS paths."""</span>
     <span class="n">paths</span> <span class="o">=</span> <span class="n">resolve_uploaded_fcs_paths</span><span class="p">(</span><span class="n">uploaded_fcs_paths</span><span class="p">)</span>
+    <span class="n">filenames_by_path</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">{</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span><span class="o">.</span><span class="n">name</span>
+            <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">UploadedFileBatch</span><span class="o">.</span><span class="n">from_value</span><span class="p">(</span><span class="n">uploaded_fcs_paths</span><span class="p">)</span><span class="o">.</span><span class="n">files</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">uploaded_fcs_paths</span><span class="p">,</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="n">UploadedFileBatch</span><span class="p">))</span>
+        <span class="k">else</span> <span class="p">{}</span>
+    <span class="p">)</span>
     <span class="n">options</span> <span class="o">=</span> <span class="p">[</span>
         <span class="p">{</span>
-            <span class="s2">"label"</span><span class="p">:</span> <span class="n">_SAVED_UPLOAD_TIMESTAMP</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">""</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span><span class="p">)</span> <span class="o">+</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span><span class="p">,</span>
+            <span class="s2">"label"</span><span class="p">:</span> <span class="n">filenames_by_path</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">_SAVED_UPLOAD_TIMESTAMP</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">""</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span><span class="p">)</span> <span class="o">+</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span><span class="p">,</span>
             <span class="s2">"value"</span><span class="p">:</span> <span class="n">path</span><span class="p">,</span>
         <span class="p">}</span>
         <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span>

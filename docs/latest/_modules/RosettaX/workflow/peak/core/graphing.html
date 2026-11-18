@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>RosettaX.workflow.peak.core.graphing &#8212; RosettaX 0.13.1 documentation</title>
+    <title>RosettaX.workflow.peak.core.graphing &#8212; RosettaX 0.14.0 documentation</title>
   
   
   
@@ -44,7 +44,7 @@
   <link rel="preload" as="script" href="../../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../../_static/documentation_options.js?v=7a44cac5"></script>
+    <script src="../../../../../_static/documentation_options.js?v=361a893e"></script>
     <script src="../../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../../_static/sg-tags.js?v=d80f6fa4"></script>
@@ -53,7 +53,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/MartinPdeS/RosettaX/documentation_page/version_switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.13.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.14.0';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -64,7 +64,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.13.1" />
+  <meta name="docsearch:version" content="0.14.0" />
   
     
     <script src="../../../../../_static/searchtools.js"></script>
@@ -134,8 +134,8 @@
     
     
     
-    <img src="../../../../../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.13.1 documentation - Home"/>
-    <img src="../../../../../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.13.1 documentation - Home"/>
+    <img src="../../../../../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.14.0 documentation - Home"/>
+    <img src="../../../../../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.14.0 documentation - Home"/>
   
   
 </a></div>
@@ -534,6 +534,7 @@
     <span class="n">scale_selection_is_log</span><span class="p">,</span>  <span class="c1"># noqa: F401</span>
     <span class="n">unique_finite_preserving_order</span><span class="p">,</span>  <span class="c1"># noqa: F401</span>
 <span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.process_settings</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_process_settings</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">plottings</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.utils.runtime_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">RuntimeConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.workflow.plotting.axis_ranges</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
@@ -616,8 +617,6 @@
 
     <span class="n">rejected_x_fill_color</span> <span class="o">=</span> <span class="s2">"rgba(20, 20, 20, 0.16)"</span>
     <span class="n">rejected_y_fill_color</span> <span class="o">=</span> <span class="s2">"rgba(20, 20, 20, 0.22)"</span>
-    <span class="n">accepted_y_fill_color</span> <span class="o">=</span> <span class="s2">"rgba(38, 196, 78, 0.08)"</span>
-    <span class="n">fluorescence_helper_fill_color</span> <span class="o">=</span> <span class="s2">"rgba(64, 138, 255, 0.05)"</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -979,49 +978,6 @@
         <span class="k">return</span> <span class="n">callable_object</span><span class="p">(</span>
             <span class="o">**</span><span class="n">accepted_arguments</span><span class="p">,</span>
         <span class="p">)</span></div>
-
-
-
-<div class="viewcode-block" id="build_process_settings">
-<a class="viewcode-back" href="../../../../../api/workflows.html#RosettaX.workflow.peak.core.graphing.build_process_settings">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">build_process_settings</span><span class="p">(</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">process_setting_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
-    <span class="n">process_setting_values</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
-    <span class="n">process_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Build a dictionary of process setting values for the selected process.</span>
-
-<span class="sd">    Kept as a module level helper for compatibility with older imports.</span>
-<span class="sd">    """</span>
-    <span class="n">resolved_process_name</span> <span class="o">=</span> <span class="n">registry</span><span class="o">.</span><span class="n">resolve_process_name</span><span class="p">(</span>
-        <span class="n">process_name</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="n">process_settings</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-
-    <span class="k">for</span> <span class="n">process_setting_id</span><span class="p">,</span> <span class="n">process_setting_value</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
-        <span class="n">process_setting_ids</span> <span class="ow">or</span> <span class="p">[],</span>
-        <span class="n">process_setting_values</span> <span class="ow">or</span> <span class="p">[],</span>
-        <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">process_setting_id</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-            <span class="k">continue</span>
-
-        <span class="k">if</span> <span class="n">process_setting_id</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"process"</span><span class="p">)</span> <span class="o">!=</span> <span class="n">resolved_process_name</span><span class="p">:</span>
-            <span class="k">continue</span>
-
-        <span class="n">setting_name</span> <span class="o">=</span> <span class="n">process_setting_id</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-            <span class="s2">"setting"</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">setting_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="k">continue</span>
-
-        <span class="n">process_settings</span><span class="p">[</span><span class="n">setting_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">process_setting_value</span>
-
-    <span class="k">return</span> <span class="n">process_settings</span></div>
 
 </pre></div>
 
