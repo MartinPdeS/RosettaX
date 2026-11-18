@@ -148,7 +148,7 @@ Rosetta peak detection uses a baseline fluorescence gate of three standard
 deviations when no gate-width setting is provided. Explicit gate widths stored
 in existing profiles retain their selected value.
 
-The scattering peak selector also offers ``Rosetta — Mixture (Experimental)``.
+The scattering peak selector also offers ``Rosetta``.
 It keeps the fluorescence marker gates and assigns the known CAL003 sizes in
 scatter order around the 140 nm and 380 nm markers. It requires exactly three
 validated non-fluorescent populations between the anchors (147, 203, 296 nm).

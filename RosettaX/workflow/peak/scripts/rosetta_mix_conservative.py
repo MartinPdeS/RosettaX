@@ -6,8 +6,8 @@ from .rosetta_mix_modes import RosettaMixSizeAssignmentProcess
 class ConservativeRosettaScatterPeakProcess(RosettaMixSizeAssignmentProcess):
     """Use conservative scatter-fit thresholds with marker-based size assignment."""
 
-    process_name = "Rosetta Script Legacy"
-    process_label = "Rosetta — Legacy"
+    process_name = "Rosetta Script Conservative"
+    process_label = "Rosetta Legacy"
     description = (
         "Uses stricter scatter-peak fit criteria and estimates bead sizes from "
         "the 140 nm and 380 nm fluorescent markers."

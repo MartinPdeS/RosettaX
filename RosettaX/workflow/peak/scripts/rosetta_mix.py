@@ -116,13 +116,13 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
     """
 
     process_name = "Rosetta Script"
-    process_label = "Rosetta"
+    process_label = "Rosetta Script"
     description = (
         "Fluorescence-guided scatter peak identification with per-peak "
         "validation for Rosetta bead mixtures."
     )
     graph_type = "2d_scatter"
-    sort_order = 1
+    sort_order = 20
 
     supports_manual_click = False
     supports_clear = True

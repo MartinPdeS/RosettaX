@@ -23,7 +23,7 @@ class MixtureRosettaScatterPeakProcess(RosettaMixSizeAssignmentProcess):
     stability; histogram R² is not an acceptance criterion.
     """
 
-    process_name = "Rosetta Script"
+    process_name = "Rosetta Script Mixture"
     process_label = "Rosetta"
     description = (
         "Uses fluorescence gates and a joint mixture fit of log scatter intensity. "

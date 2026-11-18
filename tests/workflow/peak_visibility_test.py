@@ -217,6 +217,29 @@ class Test_PeakProcessSelectionVisibility:
 class Test_PeakProcessFiltering:
     """Regression checks for peak process filtering."""
 
+    def test_scattering_rosetta_selection_has_unique_process_ids(self) -> None:
+        """Select the mixture implementation once, with distinct control IDs."""
+        from RosettaX.pages.p03_scattering.sections.s02_peaks.main import (
+            SCATTERING_ALLOWED_PEAK_PROCESS_NAMES,
+        )
+        from RosettaX.workflow.peak.scripts.rosetta_mix_mixture import (
+            MixtureRosettaScatterPeakProcess,
+        )
+
+        scripts = registry.filter_peak_processes(
+            scripts=registry.get_peak_process_instances(),
+            allowed_process_names=SCATTERING_ALLOWED_PEAK_PROCESS_NAMES,
+        )
+        names = [script.process_name for script in scripts]
+        labels = [script.get_process_option()["label"] for script in scripts]
+
+        assert len(names) == len(set(names))
+        assert labels.count("Rosetta") == 1
+        assert labels[0] == "Rosetta"
+        assert "Rosetta Legacy" in labels
+        assert isinstance(scripts[0], MixtureRosettaScatterPeakProcess)
+        assert all("Sensitive" not in label for label in labels)
+
     def test_filter_peak_processes_keeps_only_allowed_names(self) -> None:
         """Check filter peak processes keeps only allowed names."""
         scripts = registry.get_peak_process_instances()
