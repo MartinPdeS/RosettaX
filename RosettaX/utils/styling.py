@@ -209,6 +209,7 @@ DATATABLE = {
 
 PLOTLY_GRAPH_CONFIG = {
     "displayModeBar": True,
+    "displaylogo": False,
     "scrollZoom": False,
     "doubleClick": "reset",
     "responsive": True,
