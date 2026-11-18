@@ -141,9 +141,7 @@ class PlotOptions:
             "alignItems": "center",
             "gap": "16px",
             "flexWrap": "wrap",
-            "padding": "8px 10px",
-            "border": "1px solid var(--rosettax-border-color)",
-            "borderRadius": "8px",
+            "padding": "0",
         }
         rows: list[Any] = [
             html.Div(

@@ -406,6 +406,12 @@ class Test_DetectorAutoDetect:
             }
         ) == "ssc"
 
+    @pytest.mark.parametrize(("channel", "expected"), [("405SALS(Area)", "Apogee Kairos SALS"), ("405MALS(Area)", "Apogee Kairos MALS"), ("405LALS(Area)", "Apogee Kairos LALS"), ("SSC-A", None)])
+    def test_kairos_detects_individual_scatter_regions(self, channel, expected) -> None:
+        """Each Kairos channel resolves to its own lens region."""
+        metadata = build_metadata(instrument_name="Apogee Kairos", column_names=[channel])
+        assert detector_configuration.infer_detector_preset_from_metadata(metadata=metadata, selected_detector_channel=channel) == expected
+
     def test_resolve_detector_angular_weights_uses_preset_sampling_when_missing(
         self,
     ) -> None:

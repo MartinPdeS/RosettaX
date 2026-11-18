@@ -40,6 +40,7 @@ class ReferenceTableActionConfig:
     description: Any | None
     button_color: str = "primary"
     button_style: dict[str, Any] | None = None
+    position: str = "after"
 
 
 class ReferenceTableLayout:
@@ -101,21 +102,16 @@ class ReferenceTableLayout:
         """
         Build the section body.
         """
-        children: list[Any] = [
-            self._build_reference_table_block(),
-        ]
-
+        action_children: list[Any] = []
         if self.action_config is not None:
-            children.extend(
-                [
-                    dash.html.Div(
-                        style={
-                            "height": "12px",
-                        },
-                    ),
-                    self._build_action_block(),
-                ]
-            )
+            action_children = [
+                dash.html.Div(style={"height": "12px"}),
+                self._build_action_block(),
+            ]
+        if self.action_config is not None and self.action_config.position == "before":
+            children = [*action_children, self._build_reference_table_block()]
+        else:
+            children = [self._build_reference_table_block(), *action_children]
 
         return dbc.CardBody(
             children,

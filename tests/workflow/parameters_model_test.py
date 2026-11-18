@@ -48,6 +48,33 @@ class Test_ModelConstants:
         assert CORE_SHELL_SPHERE_MODEL_NAME == "Core/Shell Sphere"
 
 
+def test_three_separation_angle_regions_partition_visible_lens():
+    """Three ordered regions cover the unmasked lens without overlap."""
+    common = dict(preset_name="Generic detector", detector_sampling=1000, current_detector_numerical_aperture=1.0, current_blocker_bar_numerical_aperture=0.1, current_detector_phi_angle_degree=28.0, current_medium_refractive_index=1.333)
+    def weights(*, weighting):
+        """Resolve the custom detector weights for one lens region."""
+        return resolve_detector_angular_weights(**common, current_detector_angular_weighting=weighting).real
+
+    low = weights(weighting={"mode": "split-separation-angle", "metric": "local-top-bottom", "keep": "negative", "separation_angle_degree": 10})
+    middle = weights(weighting={"mode": "separation-angle-range", "metric": "local-top-bottom", "minimum_angle_degree": 10, "maximum_angle_degree": 30})
+    high = weights(weighting={"mode": "split-separation-angle", "metric": "local-top-bottom", "keep": "positive", "separation_angle_degree": 30})
+    visible = resolve_detector_angular_weights(**common).real
+    assert np.all((low + middle + high) == visible)
+    assert all(np.count_nonzero(region) > 0 for region in (low, middle, high))
+
+
+def test_kairos_presets_partition_shared_a60_lens():
+    """Kairos channels share the A60 aperture and cover its visible mesh."""
+    loader = DetectorPresetLoader()
+    presets = [loader.load_preset(f"Apogee Kairos {channel}") for channel in ("SALS", "MALS", "LALS")]
+    assert loader.load_preset("Apogee - Side")["detector_numerical_aperture"] == 1.0
+    assert all(preset["detector_numerical_aperture"] == 1.0 and preset["detector_phi_angle_degree"] == 28 for preset in presets)
+    regions = [resolve_detector_angular_weights(preset_name=preset["name"], detector_sampling=1000).real for preset in presets]
+    visible = resolve_detector_angular_weights(preset_name="Generic detector", detector_sampling=1000, current_detector_numerical_aperture=1.0, current_blocker_bar_numerical_aperture=0.1, current_detector_phi_angle_degree=28.0).real
+    assert np.array_equal(sum(regions), visible)
+    assert all(np.count_nonzero(region) > 0 for region in regions)
+
+
 class Test_DetectorPresetLoaderCatalog:
     """Regression checks for detector preset loader catalog."""
 
@@ -134,6 +161,10 @@ class Test_DetectorPresetLoaderCatalog:
             {
                 "label": "A60 - Micro",
                 "value": "A60 - Micro",
+            },
+            {
+                "label": "A60 MicroPLUS - Kairos",
+                "value": "A60 MicroPLUS - Kairos",
             },
         ]
 
@@ -298,6 +329,9 @@ class Test_DetectorPresetLoaderCatalog:
             "Agilent NovoCyte SSC",
             "Apogee - Forward",
             "Apogee - Side",
+            "Apogee Kairos SALS",
+            "Apogee Kairos MALS",
+            "Apogee Kairos LALS",
             "BD FACSCanto II FSC",
             "BD FACSCanto II SSC",
             "BD FACSLyric FSC",

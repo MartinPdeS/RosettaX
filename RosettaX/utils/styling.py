@@ -219,7 +219,7 @@ PLOTLY_GRAPH_CONFIG = {
         "titleText": False,
         "legendText": False,
     },
-    "modeBarButtonsToRemove": [],
+    "modeBarButtonsToRemove": ["select2d", "lasso2d"],
 }
 
 

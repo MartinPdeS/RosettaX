@@ -9,7 +9,7 @@
   "description": "Apogee forward detector modeled as a proportional forward partition of a large phi=28 degree collection lens.",
   "detector_type": "photodiode",
   "wavelength_nm": 405.0,
-  "detector_numerical_aperture": 1.2,
+  "detector_numerical_aperture": 1.0,
   "detector_cache_numerical_aperture": 0.0,
   "detector_sampling": 1000,
   "blocker_bar_numerical_aperture": 0.1,

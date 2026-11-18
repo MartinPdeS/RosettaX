@@ -483,6 +483,13 @@ def _normalize_standard_scatter_angles(
         "LALS": "SSC",
     }.get(channel_name, channel_name)
 
+    # Kairos scatter channels are partitions of one lens, so their channel names
+    # must not trigger the generic 0°/90° FSC/SSC orientation defaults.
+    if "kairos" in _clean_preset_text(
+        normalized_detector_preset.get("instrument"),
+    ).lower():
+        return normalized_detector_preset
+
     if normalized_scatter_channel_name == "FSC":
         normalized_detector_preset["detector_phi_angle_degree"] = 0.0
         normalized_detector_preset["detector_gamma_angle_degree"] = 0.0

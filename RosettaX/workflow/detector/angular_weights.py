@@ -468,6 +468,13 @@ def _resolve_detector_angular_weighting(
             sampling_size=sampling_size,
         )
 
+    if weighting_mode == "separation-angle-range":
+        return _resolve_separation_angle_range_angular_weighting(
+            preset=preset,
+            angular_weighting=angular_weighting,
+            sampling_size=sampling_size,
+        )
+
     if weighting_mode == "index-split":
         return _resolve_index_split_angular_weighting(
             angular_weighting=angular_weighting,
@@ -657,6 +664,46 @@ def _resolve_split_separation_angle_angular_weighting(
         preset=preset,
         angular_weighting=weighting_with_fraction,
         sampling_size=sampling_size,
+    )
+
+
+def _resolve_separation_angle_range_angular_weighting(
+    *,
+    preset: dict[str, Any],
+    angular_weighting: dict[str, Any],
+    sampling_size: int,
+) -> np.ndarray:
+    """Keep the approximate lens region between two separation angles.
+
+    Parameters
+    ----------
+    preset : dict
+        Detector geometry, including its numerical aperture and orientation.
+    angular_weighting : dict
+        Split metric and lower and upper separation angles, in degrees.
+    sampling_size : int
+        Number of detector mesh points.
+
+    Returns
+    -------
+    numpy.ndarray
+        Complex-valued mask of shape ``(sampling_size,)``. The region follows
+        the existing fraction-based split approximation, not a direct angular cut.
+    """
+    try:
+        lower_angle = float(angular_weighting["minimum_angle_degree"])
+        upper_angle = float(angular_weighting["maximum_angle_degree"])
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ValueError("A separation-angle range requires numeric minimum_angle_degree and maximum_angle_degree.") from exc
+    if not np.isfinite(lower_angle) or not np.isfinite(upper_angle) or lower_angle >= upper_angle:
+        raise ValueError("Separation angles must be finite and minimum_angle_degree must be less than maximum_angle_degree.")
+
+    lower_weighting = {**angular_weighting, "keep": "positive", "separation_angle_degree": lower_angle}
+    upper_weighting = {**angular_weighting, "keep": "negative", "separation_angle_degree": upper_angle}
+    return _resolve_split_separation_angle_angular_weighting(
+        preset=preset, angular_weighting=lower_weighting, sampling_size=sampling_size,
+    ) * _resolve_split_separation_angle_angular_weighting(
+        preset=preset, angular_weighting=upper_weighting, sampling_size=sampling_size,
     )
 
 

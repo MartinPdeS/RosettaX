@@ -307,6 +307,19 @@ def infer_detector_preset_from_metadata(
     if not instrument_name or not selected_detector_channel_string:
         return None
 
+    # The three Kairos channels must not share the generic side-scatter family.
+    if "kairos" in normalize_lookup_token(instrument_name):
+        normalized_channel = normalize_lookup_token(selected_detector_channel_string)
+        for channel_name, channel_aliases in (
+            ("SALS", ("sals", "smallangle")),
+            ("MALS", ("mals", "mediumangle")),
+            ("LALS", ("lals", "largeangle")),
+        ):
+            if any(alias in normalized_channel for alias in channel_aliases):
+                preset_name = f"Apogee Kairos {channel_name}"
+                return preset_name if _DETECTOR_PRESET_LOADER.load_preset(preset_name) else None
+        return None
+
     best_preset_name: str | None = None
     best_score = 0
 

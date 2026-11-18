@@ -108,7 +108,9 @@ class ReferenceTable:
             button_color="primary",
             button_style={
                 "marginTop": "12px",
+                "marginBottom": "20px",
             },
+            position="before",
         )
 
         self.layout_builder = ReferenceTableLayout(
