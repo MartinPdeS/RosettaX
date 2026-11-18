@@ -1,0 +1,59 @@
+# Project Guidelines
+
+## Scope
+These instructions apply to the whole RosettaX repository. Keep changes narrow, preserve existing public APIs unless the task requires otherwise, and prefer extending existing modules over adding parallel abstractions.
+
+## What This Repo Is
+- RosettaX is a local Dash application for flow-cytometry fluorescence and scattering calibration workflows.
+- The main package lives under `RosettaX/`; the CLI entry point is `rosettax`, implemented in `RosettaX.__main__`.
+- Follow the repo's existing build commands with Python 3.13, while keeping code compatible with the declared minimum Python 3.11.
+
+## Repo Map
+- `RosettaX/application/`: app shell, top-level layout, and route wiring.
+- `RosettaX/pages/`: page composition. Pages and sections mostly wire layout, ids, and callbacks together.
+- `RosettaX/workflow/`: reusable workflow logic. Prefer changing code here when behavior is shared or stateful.
+- `RosettaX/workflow/detector/`: detector presets, geometry resolution, and angular-weight behavior.
+- `RosettaX/profiles/`, `RosettaX/calibrations/`, `RosettaX/data/`: packaged JSON/data assets. Do not break relative resource loading.
+- `tests/`: behavior-first regression coverage for workflows, runtime config, application routing, and scattering modeling.
+
+## How To Route Changes
+- If a page section only assembles UI pieces, keep it thin and move reusable logic into `RosettaX.workflow` or that section's `services.py`.
+- In page sections, follow the existing split: `main.py` owns assembly, `layout.py` builds components, `callbacks.py` wires Dash callbacks, `services.py` holds local behavior, `ids.py` centralizes ids, and `models.py` or `adapters.py` hold structured data or translation logic.
+- If the same behavior exists in both fluorescence and scattering flows, look for a workflow module before duplicating page-local logic.
+- Preserve the fluorescence and scattering separation unless the task explicitly requires shared behavior.
+- Keep runtime-config key paths stable unless the task is specifically about migrating config structure.
+- When working on detector presets, cache geometry, blocker bar geometry, or angular weights, use the detector workflow abstractions that already encode those rules instead of reintroducing compatibility wrappers.
+
+## Implementation Conventions
+- Match surrounding style: explicit names, small methods, concise docstrings where the module already uses them.
+- Apply these Python conventions to new and edited code; leave unrelated existing code unchanged.
+- Use keyword-only parameters by default for new functions and methods, apart from implicit `self` and `cls`. Preserve existing public calling conventions unless an API change is part of the task.
+- Use NumPy-style docstrings for classes, functions, methods, and properties. Document parameters, return values, units, array shapes, and limitations where they apply.
+- Avoid redundant self-alias imports such as `from package.module import Name as Name`; import the name directly unless the alias changes or clarifies its meaning.
+- Keep imports at module scope when practical. Use function-local imports only when needed, such as to avoid circular dependencies or defer optional or expensive dependencies.
+- Keep import statements in one contiguous block without blank lines between standard-library, third-party, and project imports.
+- Keep simple, single-purpose UI component calls on one line when practical, even when a text string is long. Use multiline formatting when several arguments or nested components make the call easier to read.
+- Keep domain names explicit. Do not shorten calibration, detector, runtime-config, upload, coupling, or refractive-index terminology.
+- Prefer descriptive variable and parameter names over abbreviations, including for local values and callback parameters.
+- Avoid extracting a helper that is used only once unless it improves clarity or separates behavior that belongs in another layer.
+- Keep callbacks focused on reading inputs, calling a service or workflow, and returning outputs. Move domain decisions and complicated data conversion into the appropriate service or workflow module.
+- Write comments to explain non-obvious reasoning, scientific assumptions, or compatibility constraints; do not use them to narrate code that is already clear.
+- Prefer `pathlib.Path` semantics in code and tests; do not assert hard-coded `/` suffixes.
+- Avoid embedding one-off scientific rules inside callbacks when a workflow or service module can own them.
+- Keep ids centralized in `ids.py` rather than reconstructing string literals across callbacks and layouts.
+
+## Build And Test
+- Give test modules, classes, fixtures, helpers, and test functions concise docstrings.
+- Give every test module an `if __name__ == "__main__":` entry point that runs pytest for that file. Place it before application imports so pytest loads the suite's `conftest.py` before dependencies, and propagate pytest's exit status.
+- Install development dependencies with `pip install -e .[testing,dev]`.
+- Use `make editable` for editable local installs and `make quick` when compiled/build-system behavior matters.
+- Run the smallest relevant test slice first:
+	- upload workflow: `pytest tests/upload/services_test.py tests/upload/services_guardrails_test.py`
+	- runtime config or profiles: `pytest tests/runtime/config_test.py tests/runtime/profile_contract_test.py`
+	- application shell, routes, or page composition: `pytest tests/application/main_test.py tests/application/routes_test.py tests/application/page_regressions_test.py`
+	- scattering modeling or detector behavior: `pytest tests/scattering/calibration_services_test.py tests/scattering/model_configuration_test.py tests/scattering/backend_cache_test.py tests/apply_calibration/scattering_mie_relation_builder_test.py`
+- Use full `pytest` only when a change crosses multiple workflows or shared infrastructure.
+
+## Documentation
+- Update `README.rst` or docs only when behavior, workflow steps, or user-visible commands change.
+- Keep documentation concrete and workflow-oriented. Avoid generic product language.

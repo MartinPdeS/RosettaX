@@ -1,0 +1,227 @@
+"""Regression tests for application calibration workflow cards."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
+
+import dash
+import dash_bootstrap_components as dbc
+import importlib
+import pytest
+from RosettaX.application.callbacks import (
+    register_application_callbacks,
+    resolve_active_profile_runtime_config,
+)
+from RosettaX.workflow import calibration_cards
+from typing import Any
+
+
+def _find_component_by_id(component: Any, component_id: Any) -> Any | None:
+    """Find a component by its identifier in the test layout."""
+    if getattr(component, "id", None) == component_id:
+        return component
+
+    children = getattr(component, "children", None)
+    if isinstance(children, (list, tuple)):
+        for child in children:
+            found = _find_component_by_id(child, component_id)
+            if found is not None:
+                return found
+    elif children is not None:
+        return _find_component_by_id(children, component_id)
+    return None
+
+
+def _find_component_by_type(component: Any, component_type: type) -> Any | None:
+    """Find the first component of a given type in the layout tree."""
+    if isinstance(component, component_type):
+        return component
+
+    children = getattr(component, "children", None)
+    if isinstance(children, (list, tuple)):
+        for child in children:
+            found = _find_component_by_type(child, component_type)
+            if found is not None:
+                return found
+    elif children is not None:
+        return _find_component_by_type(children, component_type)
+    return None
+
+
+def _collect_text(component: Any) -> list[str]:
+    """Collect text recursively from the test component tree."""
+    if isinstance(component, str):
+        return [component]
+
+    children = getattr(component, "children", None)
+    if isinstance(children, (list, tuple)):
+        return [text for child in children for text in _collect_text(child)]
+    return _collect_text(children) if children is not None else []
+
+
+@pytest.mark.parametrize(
+    ("module_name", "page_class_name", "page_name", "section_keys"),
+    [
+        (
+            "RosettaX.pages.p02_fluorescence.main",
+            "FluorescencePage",
+            "fluorescent_calibration",
+            ("1", "2", "3", "4", "5"),
+        ),
+        (
+            "RosettaX.pages.p03_scattering.main",
+            "ScatterCalibrationPage",
+            "scattering_calibration",
+            ("1", "2", "3", "4", "5", "6"),
+        ),
+        (
+            "RosettaX.pages.p04_calibrate.main",
+            "ApplyCalibrationPage",
+            "apply_calibration",
+            ("1", "2", "3"),
+        ),
+        (
+            "RosettaX.pages.p08_cross_calibration.main",
+            "CrossCalibrationPage",
+            "cross-calibration",
+            ("1", "2", "3"),
+        ),
+    ],
+)
+def test_calibration_workflow_cards_start_collapsed_with_description_tooltips(
+    monkeypatch,
+    module_name: str,
+    page_class_name: str,
+    page_name: str,
+    section_keys: tuple[str, ...],
+) -> None:
+    """Check calibration workflow cards start collapsed with descriptions in tooltips."""
+    monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
+    sections_callback_module_name = module_name.rsplit(".", 1)[0] + ".sections.callbacks"
+    if page_name != "cross-calibration":
+        sections_callbacks = importlib.import_module(sections_callback_module_name)
+        monkeypatch.setattr(
+            sections_callbacks,
+            "register_callbacks",
+            lambda _sections: None,
+        )
+    page_module = importlib.import_module(module_name)
+    page = getattr(page_module, page_class_name)()
+    layout = page.layout()
+    workflow_header = (
+        page.workflow_header if page_name == "cross-calibration"
+        else page.sections[0].workflow_header
+    )
+    overview_text = _collect_text(workflow_header.build_header())
+
+    for section_key, step in zip(section_keys, workflow_header.steps, strict=True):
+        card = _find_component_by_id(
+            layout,
+            calibration_cards.workflow_section_dom_id(
+                page_name=page_name,
+                section_key=section_key,
+            ),
+        )
+
+        assert isinstance(card, dbc.Card)
+        assert isinstance(card.children[1], dbc.Collapse)
+        assert card.children[1].kwargs["is_open"] is False
+        assert calibration_cards.collapse_label(is_open=False) in _collect_text(
+            card.children[0]
+        )
+        tooltip = _find_component_by_type(card.children[0], dbc.Tooltip)
+        assert tooltip is not None
+        assert step.tooltip_text in _collect_text(tooltip)
+        assert f"{section_key}. {step.title}" in _collect_text(card.children[0])
+        assert step.number == section_key
+        assert step.title in overview_text
+        assert step.description in overview_text
+        if page_name != "cross-calibration":
+            section = page.sections[int(section_key)]
+            assert workflow_header.get_workflow_step(workflow_step=section.workflow_step) == step
+
+
+def test_settings_profile_card_uses_its_workflow_step(monkeypatch) -> None:
+    """Use the profile section metadata in both the settings header and card."""
+    monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
+    page_module = importlib.import_module("RosettaX.pages.p05_settings.main")
+    page = page_module.SettingsPage()
+    section = page.sections[0]
+    step = page.workflow_header.get_workflow_step(workflow_step=section.workflow_step)
+    card = section._build_profile_controls_card()
+    tooltip = _find_component_by_type(card.children[0], dbc.Tooltip)
+
+    assert f"{step.number}. {step.title}" in _collect_text(card.children[0])
+    assert tooltip is not None
+    assert step.tooltip_text in _collect_text(tooltip)
+    assert step.description in _collect_text(page.workflow_header.build_header())
+
+
+def test_calibration_card_callback_does_not_hydrate_card_state() -> None:
+    """Check calibration card callback does not hydrate card state."""
+    app = dash.Dash(__name__, suppress_callback_exceptions=True)
+    register_application_callbacks(app)
+
+    card_callbacks = [
+        callback
+        for callback in app._callback_list
+        if calibration_cards.COLLAPSE_ID_TYPE in str(callback["output"])
+    ]
+
+    assert len(card_callbacks) == 1
+    assert card_callbacks[0]["clientside_function"] == {
+        "namespace": "rosettax",
+        "function_name": "toggleCalibrationCard",
+    }
+    assert card_callbacks[0]["prevent_initial_call"] is True
+
+
+def test_card_callback_owns_header_and_workflow_step_actions() -> None:
+    """Check card callback owns header and workflow step actions."""
+    app = dash.Dash(__name__, suppress_callback_exceptions=True)
+    register_application_callbacks(app)
+
+    card_callback = next(
+        callback
+        for callback in app._callback_list
+        if calibration_cards.COLLAPSE_ID_TYPE in str(callback["output"])
+    )
+    input_ids = {str(input_spec["id"]) for input_spec in card_callback["inputs"]}
+
+    assert any(calibration_cards.TOGGLE_ID_TYPE in input_id for input_id in input_ids)
+    assert any(
+        calibration_cards.WORKFLOW_STEP_CARD_ID_TYPE in input_id
+        for input_id in input_ids
+    )
+    workflow_step_input = next(
+        input_spec for input_spec in card_callback["inputs"]
+        if calibration_cards.WORKFLOW_STEP_CARD_ID_TYPE in str(input_spec["id"])
+    )
+    assert workflow_step_input["allow_optional"] is True
+
+
+def test_active_browser_profile_keeps_workflow_cards_collapsed() -> None:
+    """Check active browser profile keeps workflow cards collapsed."""
+    active_profile_config = resolve_active_profile_runtime_config(
+        {
+            "profiles": {
+                "collapsed.json": {
+                    "ui": {"collapse_calibration_cards": True},
+                }
+            },
+            "selected_profile": "collapsed.json",
+        },
+        selected_profile_name="collapsed.json",
+    )
+
+    is_open, label = calibration_cards.resolve_card_toggle(
+        triggered_id="browser-profiles-store",
+        is_open=True,
+        runtime_config_data=active_profile_config,
+    )
+
+    assert is_open is False
+    assert label == "Show"

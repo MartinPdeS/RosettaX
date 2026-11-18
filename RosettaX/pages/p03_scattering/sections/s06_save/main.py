@@ -1,0 +1,91 @@
+
+import dash_bootstrap_components as dbc
+import logging
+from RosettaX.pages.p03_scattering.state import ScatteringPageState
+from RosettaX.ui import WorkflowStep
+from RosettaX.workflow.save.adapters import PageStateSaveAdapter
+from RosettaX.workflow.save.callbacks import register_save_callbacks
+from RosettaX.workflow.save.layout import SaveLayout
+from RosettaX.workflow.save.models import SaveConfig
+from typing import Any
+
+logger = logging.getLogger(__name__)
+
+
+class Save:
+    """
+    Scattering calibration save section.
+    """
+
+    workflow_step = WorkflowStep(
+        title="Save calibration",
+        description=(
+            "Save the fitted calibration so it can be reused later when applying "
+            "calibration to experimental FCS files."
+        ),
+        hover_description=(
+            "Choose a file name and output channel label, then download the completed "
+            "scattering calibration as a reusable JSON file."
+        ),
+    )
+
+    def __init__(
+        self,
+        page: Any,
+        section_number: int,
+        card_color: str = "blue",
+    ) -> None:
+        self.page = page
+        self.ids = page.ids.Save
+        self.section_number = section_number
+        self.card_color = card_color
+
+        self.config = SaveConfig(
+            calibration_kind="scattering",
+            header_title=f"{self.section_number}. {self.workflow_step.title}",
+            description_tooltip_text=self.workflow_step.tooltip_text,
+            description_tooltip_target_id=self.ids.description_target,
+            description_tooltip_id=self.ids.description_tooltip,
+            button_text="Download calibration.json",
+            file_name_placeholder="file name",
+            output_channel_name_placeholder="e.g. Diameter (nm)",
+            require_output_channel_name=True,
+            saved_message_prefix="Prepared calibration download",
+            failure_message="Failed to prepare calibration download. See terminal logs for details.",
+            page_state_saved_field="calibration_saved",
+        )
+
+        self.adapter = PageStateSaveAdapter(
+            state_class=ScatteringPageState,
+            calibration_payload_attribute="calibration_payload",
+        )
+
+        self.layout_builder = SaveLayout(
+            ids=self.ids,
+            config=self.config,
+        )
+
+        logger.debug(
+            "Initialized Scattering Save section with page=%r",
+            page,
+        )
+
+    def get_layout(self) -> dbc.Card:
+        """
+        Create the scattering save section layout.
+        """
+        return self.layout_builder.get_layout()
+
+    def register_callbacks(self) -> None:
+        """
+        Register callbacks for the scattering save section.
+        """
+        register_save_callbacks(
+            page=self.page,
+            ids=self.ids,
+            adapter=self.adapter,
+            config=self.config,
+            logger=logger,
+            calibration_store_id=None,
+            page_state_store_id=self.page.ids.State.page_state_store,
+        )

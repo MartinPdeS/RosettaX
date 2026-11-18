@@ -1,0 +1,524 @@
+"""Shared headers used by multi-step RosettaX workflow pages."""
+
+import dash_bootstrap_components as dbc
+import re
+from collections.abc import Sequence
+from dash import html
+from dataclasses import dataclass, field
+from RosettaX.utils import styling, ui_forms
+from RosettaX.workflow.calibration_cards import (
+    WORKFLOW_STEP_CARD_ID_TYPE,
+    workflow_section_dom_id,
+)
+from typing import Any
+
+
+@dataclass(frozen=True)
+class WorkflowStep:
+    """Content for a workflow step.
+
+    Parameters
+    ----------
+    number : str, optional
+        Assigned step number.
+    title : str
+        Title used in the overview and the section card.
+    description : str
+        Description shown in the overview and used as the default hover text.
+    color_name : str, optional
+        Assigned accent color.
+    hover_description : str, optional
+        More detailed section hover text.
+    """
+
+    number: str | None = None
+    title: str = ""
+    description: str = ""
+    color_name: str | None = None
+    hover_description: str | None = None
+
+    @property
+    def tooltip_text(self) -> str:
+        """Return the section hover description, falling back to its summary."""
+        return self.hover_description or self.description
+
+
+@dataclass
+class WorkflowHeader:
+    """Shared configuration and renderer for multi-step workflow headers.
+
+    Parameters
+    ----------
+    title : str
+        Workflow title shown in the page header.
+    description : str
+        Explanatory text shown from the header info hover.
+    steps : Sequence[WorkflowStep]
+        Ordered step cards shown in the header and progress updates.
+    card_color : str, optional
+        Header card accent color.
+    column_kwargs : dict[str, Any], optional
+        Responsive column settings used to lay out the step cards.
+    """
+
+    title: str
+    description: str
+    steps: list[WorkflowStep] = field(default_factory=list)
+    card_color: str | None = None
+    column_kwargs: dict[str, Any] | None = None
+    _source_steps: list[WorkflowStep] = field(default_factory=list, init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        initial_steps = list(self.steps)
+        self.steps = []
+        for step in initial_steps:
+            self.add_workflow_step(step)
+
+    def add_workflow_step(self, workflow_step: WorkflowStep) -> None:
+        """Append a step and assign its number and accent color by order."""
+        step_number = len(self.steps) + 1
+        self._source_steps.append(workflow_step)
+        self.steps.append(
+            WorkflowStep(
+                number=str(step_number),
+                title=workflow_step.title,
+                description=workflow_step.description,
+                color_name=styling.get_workflow_section_color(step_number),
+                hover_description=workflow_step.hover_description,
+            )
+        )
+
+    def get_workflow_step(self, *, workflow_step: WorkflowStep) -> WorkflowStep:
+        """Return the numbered step corresponding to a section's metadata.
+
+        Parameters
+        ----------
+        workflow_step : WorkflowStep
+            Original step registered with this header.
+
+        Returns
+        -------
+        WorkflowStep
+            Step with the number and color assigned by the header.
+
+        Raises
+        ------
+        ValueError
+            If the step was not registered with this header.
+        """
+        for source, numbered in zip(self._source_steps, self.steps, strict=True):
+            if source is workflow_step:
+                return numbered
+        raise ValueError("The workflow step is not registered with this header")
+
+    def build_header(
+        self,
+        *,
+        progress_id: Any | None = None,
+        step_target_page_name: str | None = None,
+        component_id: Any | None = None,
+        card_color: str | None = None,
+        style_overrides: dict[str, Any] | None = None,
+        description_tooltip_target_id: str | None = None,
+        description_tooltip_id: str | None = None,
+        alert: Any | None = None,
+    ) -> dbc.Card:
+        """Render the workflow title, description hover, and step cards."""
+        return build_workflow_page_header(
+            title=self.title,
+            description=self.description,
+            steps=self.steps,
+            card_color=card_color or self.card_color,
+            alert=alert,
+            column_kwargs=self.column_kwargs,
+            component_id=component_id,
+            style_overrides=style_overrides,
+            progress_id=progress_id,
+            step_target_page_name=step_target_page_name,
+            compact_steps=False,
+            description_tooltip_target_id=description_tooltip_target_id,
+            description_tooltip_id=description_tooltip_id,
+        )
+
+    def build_progress(
+        self,
+        *,
+        completed_count: int,
+        page_name: str | None = None,
+        column_kwargs: dict[str, Any] | None = None,
+    ) -> html.Div:
+        """Render this workflow's steps with the current completion state."""
+        return build_workflow_step_cards(
+            steps=self.steps,
+            completed_count=completed_count,
+            page_name=page_name,
+            column_kwargs=(column_kwargs or self.column_kwargs),
+            compact=False,
+        )
+
+
+def build_workflow_page_header(
+    *,
+    title: str,
+    description: str,
+    steps: Sequence[WorkflowStep],
+    card_color: str | None = None,
+    alert: Any | None = None,
+    column_kwargs: dict[str, Any] | None = None,
+    component_id: Any | None = None,
+    style_overrides: dict[str, Any] | None = None,
+    progress_id: Any | None = None,
+    step_target_page_name: str | None = None,
+    compact_steps: bool = False,
+    description_tooltip_target_id: str | None = None,
+    description_tooltip_id: str | None = None,
+) -> dbc.Card:
+    """Build the standard explanatory header for a workflow page."""
+    tooltip_prefix = str(
+        step_target_page_name
+        or (component_id if isinstance(component_id, str) else "")
+        or re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
+    )
+    resolved_tooltip_target_id = (
+        description_tooltip_target_id or f"{tooltip_prefix}-description-tooltip-target"
+    )
+    resolved_tooltip_id = (
+        description_tooltip_id or f"{tooltip_prefix}-description-tooltip"
+    )
+    resolved_column_kwargs = {
+        "xs": 12,
+        "md": 6,
+        "lg": 4,
+        "style": {"marginBottom": "10px"},
+    }
+    if column_kwargs:
+        resolved_column_kwargs.update(column_kwargs)
+
+    children: list[Any] = [
+        ui_forms.build_section_intro(
+            title=title,
+            title_component="H2",
+            description=None,
+            title_tooltip_target_id=resolved_tooltip_target_id,
+            title_tooltip_id=resolved_tooltip_id,
+            title_tooltip_text=description,
+        ),
+    ]
+    if alert is not None:
+        children.append(alert)
+
+    resolved_steps = _resolve_workflow_steps(steps)
+
+    if progress_id is not None:
+        children.append(
+            html.Div(
+                build_workflow_step_cards(
+                    steps=resolved_steps,
+                    completed_count=0,
+                    page_name=step_target_page_name,
+                    column_kwargs=resolved_column_kwargs,
+                    compact=compact_steps,
+                ),
+                id=progress_id,
+            )
+        )
+    else:
+        children.append(
+            dbc.Row(
+                [
+                    dbc.Col(
+                        _build_step_card(
+                            step,
+                            page_name=step_target_page_name,
+                        ),
+                        **resolved_column_kwargs,
+                    )
+                    for step in resolved_steps
+                ],
+                className="g-2",
+            )
+        )
+
+    card_kwargs: dict[str, Any] = {
+        "style": styling.merge_style(
+            ui_forms.build_workflow_section_card_style(
+                color_name=card_color or styling.get_workflow_page_header_color(),
+            ),
+            {"marginBottom": "16px"},
+            style_overrides,
+        ),
+    }
+    if component_id is not None:
+        card_kwargs["id"] = component_id
+
+    return dbc.Card(
+        dbc.CardBody(
+            children,
+            style=ui_forms.build_workflow_section_body_style(),
+        ),
+        **card_kwargs,
+    )
+
+
+def build_workflow_progress_content(
+    *,
+    steps: Sequence[WorkflowStep],
+    completed_count: int,
+) -> html.Div:
+    """Build the compact, state-aware workflow progress indicator."""
+    step_list = _resolve_workflow_steps(steps)
+    step_count = len(step_list)
+    bounded_completed_count = max(0, min(int(completed_count), step_count))
+    active_index = min(bounded_completed_count, max(step_count - 1, 0))
+    active_step = step_list[active_index] if step_list else None
+    progress_value = (100 * bounded_completed_count / step_count) if step_count else 0
+
+    if active_step is None:
+        status_text = "Workflow ready"
+    elif bounded_completed_count >= step_count:
+        status_text = "Workflow complete"
+    else:
+        status_text = f"Step {active_index + 1} of {step_count}: {active_step.title}"
+
+    return html.Div(
+        [
+            html.Div(
+                [
+                    html.Strong("Workflow progress"),
+                    html.Span(
+                        f" · {bounded_completed_count}/{step_count} completed",
+                        style={"opacity": 0.72},
+                    ),
+                    html.Span(
+                        f" · {status_text}",
+                        style={"marginLeft": "8px", "opacity": 0.86},
+                    ),
+                ],
+                style={"fontSize": "0.88rem", "marginBottom": "6px"},
+            ),
+            dbc.Progress(
+                value=progress_value,
+                color="success" if bounded_completed_count >= step_count else "primary",
+                striped=bounded_completed_count < step_count,
+                animated=bounded_completed_count < step_count,
+                style={"height": "12px", "borderRadius": "8px"},
+            ),
+            html.Div(
+                [
+                    dbc.Badge(
+                        (
+                            f"{step.number}. {step.title}: "
+                            f"{'Complete' if index < bounded_completed_count else 'Current' if index == active_index else 'Blocked'}"
+                        ),
+                        color=(
+                            "success"
+                            if index < bounded_completed_count
+                            else "primary"
+                            if index == active_index
+                            else "secondary"
+                        ),
+                        pill=True,
+                        class_name="me-1 mb-1",
+                    )
+                    for index, step in enumerate(step_list)
+                ],
+                style={"marginTop": "8px"},
+            ),
+        ],
+        style={
+            "marginBottom": "14px",
+            "position": "sticky",
+            "top": "8px",
+            "zIndex": 10,
+            "padding": "10px 12px",
+            "borderRadius": "8px",
+            "background": "rgba(255, 255, 255, 0.96)",
+            "boxShadow": "0 2px 8px rgba(0, 0, 0, 0.08)",
+        },
+    )
+
+
+def build_workflow_step_cards(
+    *,
+    steps: Sequence[WorkflowStep],
+    completed_count: int,
+    page_name: str | None,
+    column_kwargs: dict[str, Any],
+    compact: bool = False,
+) -> dbc.Row | html.Div:
+    """Build state-aware workflow cards that navigate to their sections."""
+    step_list = _resolve_workflow_steps(steps)
+    bounded_completed_count = max(0, min(int(completed_count), len(step_list)))
+    active_index = min(bounded_completed_count, max(len(step_list) - 1, 0))
+    if compact:
+        return html.Div(
+            [
+                html.Div(
+                    _build_step_card(
+                        step,
+                        state=(
+                            "complete"
+                            if index < bounded_completed_count
+                            else "current"
+                            if index == active_index
+                            else "blocked"
+                        ),
+                        page_name=page_name,
+                    ),
+                    style={"flex": "0 0 212px", "minWidth": "0"},
+                )
+                for index, step in enumerate(step_list)
+            ],
+            style={
+                "display": "flex",
+                "flexWrap": "nowrap",
+                "gap": "8px",
+                "overflowX": "auto",
+                "paddingBottom": "8px",
+                "scrollbarWidth": "thin",
+                "width": "100%",
+            },
+        )
+    return dbc.Row(
+        [
+            dbc.Col(
+                _build_step_card(
+                    step,
+                    state=(
+                        "complete"
+                        if index < bounded_completed_count
+                        else "current"
+                        if index == active_index
+                        else "blocked"
+                    ),
+                    page_name=page_name,
+                ),
+                **column_kwargs,
+            )
+            for index, step in enumerate(step_list)
+        ],
+        className="g-2",
+    )
+
+
+def _build_step_card(
+    step: WorkflowStep,
+    *,
+    state: str | None = None,
+    page_name: str | None = None,
+) -> dbc.Card | html.Button:
+    state_labels = {
+        "complete": ("Complete", "success"),
+        "current": ("Current", "primary"),
+        "blocked": ("Not ready", "secondary"),
+    }
+    state_label, state_color = state_labels.get(state, ("", "secondary"))
+    card = dbc.Card(
+        dbc.CardBody(
+            [
+                html.Div(
+                    [
+                        html.Div(
+                            step.number,
+                            style={
+                                "width": "28px",
+                                "height": "28px",
+                                "borderRadius": "50%",
+                                "display": "flex",
+                                "alignItems": "center",
+                                "justifyContent": "center",
+                                "fontWeight": "700",
+                                "fontSize": "0.9rem",
+                                "backgroundColor": styling.build_rgba(
+                                    step.color_name, 0.12
+                                ),
+                                "border": f"1px solid {styling.build_rgba(step.color_name, 0.35)}",
+                            },
+                        ),
+                        dbc.Badge(
+                            state_label,
+                            color=state_color,
+                            pill=True,
+                            style={"visibility": "visible" if state else "hidden"},
+                        ),
+                    ],
+                    style={
+                        "display": "flex",
+                        "alignItems": "center",
+                        "justifyContent": "space-between",
+                        "marginBottom": "10px",
+                    },
+                ),
+                html.H6(step.title, style={"marginBottom": "6px"}),
+                html.P(
+                    step.description,
+                    style={
+                        "marginBottom": "0px",
+                        "fontSize": "0.86rem",
+                        "opacity": 0.78,
+                    },
+                ),
+            ],
+            style={"height": "100%", "padding": "14px"},
+        ),
+        style=ui_forms.build_workflow_subpanel_card_style(
+            color_name=step.color_name,
+            style_overrides={
+                "height": "100%",
+                "background": ui_forms.build_workflow_section_header_style(
+                    color_name=step.color_name,
+                )["background"],
+            },
+        ),
+    )
+
+    if page_name is None:
+        return card
+
+    section_key = str(step.number)
+    return html.Button(
+        card,
+        id={
+            "type": WORKFLOW_STEP_CARD_ID_TYPE,
+            "page": page_name,
+            "section": section_key,
+        },
+        n_clicks=0,
+        type="button",
+        style={
+            "border": "0",
+            "background": "transparent",
+            "padding": "0",
+            "width": "100%",
+            "height": "100%",
+            "textAlign": "left",
+            "cursor": "pointer",
+        },
+        **{
+            "data-target-section": workflow_section_dom_id(
+                page_name=page_name,
+                section_key=section_key,
+            ),
+            "aria-label": f"Toggle step {step.number}: {step.title}",
+        },
+    )
+
+
+def _resolve_workflow_steps(
+    steps: Sequence[WorkflowStep],
+) -> list[WorkflowStep]:
+    """Fill omitted step numbers and colors using their list positions."""
+    resolved_steps: list[WorkflowStep] = []
+    for index, step in enumerate(steps, start=1):
+        resolved_steps.append(
+            WorkflowStep(
+                number=str(step.number or index),
+                title=step.title,
+                description=step.description,
+                hover_description=step.hover_description,
+                color_name=(
+                    step.color_name or styling.get_workflow_section_color(index)
+                ),
+            )
+        )
+    return resolved_steps

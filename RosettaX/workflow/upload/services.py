@@ -1,0 +1,697 @@
+
+import base64
+import logging
+import re
+import shutil
+from collections.abc import Iterable
+from pathlib import Path
+from RosettaX.utils.checks import FCSMultiFileConsistencyChecker
+from RosettaX.utils.streamed_uploads import (
+    is_streamed_upload_token,
+    raise_for_streamed_upload_error,
+    resolve_streamed_upload,
+)
+from RosettaX.utils.upload_limits import format_upload_size, get_max_upload_bytes
+from RosettaX.workflow.file_selection.models import UploadedFile, UploadedFileBatch
+from RosettaX.workflow.page_session import FeedbackState
+from RosettaX.workflow.upload.models import (
+    FCSBatchOperationResult,
+    UploadConfig,
+    UploadState,
+)
+from tempfile import mkdtemp
+from typing import Any
+
+DEFAULT_UPLOAD_DIRECTORY = Path.home() / ".rosettax" / "uploads"
+DEFAULT_ALLOWED_UPLOAD_EXTENSIONS = frozenset({".fcs"})
+
+
+def clean_optional_string(
+    value: Any,
+) -> str | None:
+    """
+    Convert a value to a stripped string or None.
+    """
+    if value is None:
+        return None
+
+    clean_value = str(value).strip()
+
+    if not clean_value:
+        return None
+
+    if clean_value.lower() == "none":
+        return None
+
+    return clean_value
+
+
+def build_loaded_filename_text(
+    filename: str | None,
+) -> str:
+    """
+    Build the displayed uploaded filename text.
+    """
+    clean_filename = clean_optional_string(
+        filename,
+    )
+
+    if clean_filename is None:
+        return "No file loaded."
+
+    return f"Loaded file: {clean_filename}"
+
+
+def build_upload_error_text(
+    error: Exception,
+) -> str:
+    """
+    Build a user visible upload error message.
+    """
+    error_text = str(error).strip()
+    lowered_error_text = error_text.lower()
+
+    if "maximum supported size" in lowered_error_text or "exceeds" in lowered_error_text:
+        return f"Upload rejected: {error_text}"
+
+    if "unsupported uploaded file type" in lowered_error_text:
+        return f"Upload rejected: {error_text}"
+
+    if "could not read" in lowered_error_text or "metadata" in lowered_error_text:
+        return (
+            "Upload rejected because the file does not contain readable FCS metadata. "
+            f"Details: {error_text}"
+        )
+
+    return f"Upload failed: {error_text or type(error).__name__}"
+
+
+def sanitize_filename(
+    filename: str | None,
+    *,
+    fallback_filename: str = "uploaded_file.fcs",
+) -> str:
+    """
+    Sanitize a filename before writing it to disk.
+    """
+    clean_filename = clean_optional_string(
+        filename,
+    )
+
+    if clean_filename is None:
+        return fallback_filename
+
+    filename_only = Path(clean_filename).name
+
+    safe_filename = re.sub(
+        r"[^A-Za-z0-9._-]+",
+        "_",
+        filename_only,
+    )
+
+    safe_filename = safe_filename.strip("._")
+
+    if not safe_filename:
+        return fallback_filename
+
+    return safe_filename
+
+
+def parse_allowed_upload_extensions(
+    allowed_extensions: str | None,
+) -> frozenset[str]:
+    """
+    Parse a comma-separated extension string into a normalized set.
+    """
+    if allowed_extensions is None:
+        return DEFAULT_ALLOWED_UPLOAD_EXTENSIONS
+
+    extensions = {
+        f".{part.lower().lstrip('.')}"
+        for chunk in str(allowed_extensions).split(",")
+        for part in [chunk.strip()]
+        if part
+    }
+
+    if not extensions:
+        return DEFAULT_ALLOWED_UPLOAD_EXTENSIONS
+
+    return frozenset(extensions)
+
+
+def validate_upload_filename(
+    filename: str | None,
+    *,
+    allowed_extensions: frozenset[str],
+) -> str:
+    """
+    Validate and sanitize an uploaded filename.
+    """
+    safe_filename = sanitize_filename(
+        filename,
+    )
+
+    suffix = Path(safe_filename).suffix.lower()
+
+    if suffix not in allowed_extensions:
+        allowed_extensions_text = ", ".join(sorted(allowed_extensions))
+        raise ValueError(
+            f"Unsupported uploaded file type {suffix or '<none>'}. "
+            f"Allowed file types: {allowed_extensions_text}."
+        )
+
+    return safe_filename
+
+
+def decode_dash_upload_contents(
+    contents: str,
+    *,
+    max_upload_bytes: int | None = None,
+) -> bytes:
+    """
+    Decode Dash upload contents.
+
+    Dash upload payloads have the form:
+        data:<mime>;base64,<payload>
+    """
+    resolved_max_upload_bytes = (
+        get_max_upload_bytes() if max_upload_bytes is None else int(max_upload_bytes)
+    )
+
+    separator = contents.find(",")
+    if separator < 0:
+        raise ValueError("Upload contents are malformed.")
+
+    encoded_start = separator + 1
+    # Each four-character group can represent up to three decoded bytes.
+    # Check the actual size after decoding because the last group can be padded.
+    max_encoded_length = 4 * ((resolved_max_upload_bytes + 2) // 3)
+    if len(contents) - encoded_start > max_encoded_length:
+        raise ValueError(
+            "Upload exceeds the maximum supported size of "
+            f"{format_upload_size(resolved_max_upload_bytes)}."
+        )
+
+    try:
+        decoded_bytes = base64.b64decode(
+            contents[encoded_start:],
+            validate=True,
+        )
+    except ValueError as error:
+        raise ValueError("Upload contents could not be decoded.") from error
+
+    if len(decoded_bytes) > resolved_max_upload_bytes:
+        raise ValueError(
+            "Upload exceeds the maximum supported size of "
+            f"{format_upload_size(resolved_max_upload_bytes)}."
+        )
+
+    return decoded_bytes
+
+
+def read_uploaded_file_bytes(
+    contents: str,
+    *,
+    max_upload_bytes: int | None = None,
+) -> bytes:
+    """Read a streamed upload token or decode a legacy Dash upload payload."""
+    raise_for_streamed_upload_error(contents)
+
+    if is_streamed_upload_token(contents):
+        streamed_upload = resolve_streamed_upload(
+            contents,
+            max_upload_bytes=max_upload_bytes,
+        )
+        return streamed_upload.file_path.read_bytes()
+
+    return decode_dash_upload_contents(
+        contents,
+        max_upload_bytes=max_upload_bytes,
+    )
+
+
+def resolve_upload_directory(
+    config: UploadConfig,
+) -> Path:
+    """
+    Resolve the upload directory for one upload workflow.
+    """
+    if config.upload_directory is not None:
+        return Path(
+            config.upload_directory,
+        ).expanduser()
+
+    return DEFAULT_UPLOAD_DIRECTORY
+
+
+def save_uploaded_file(
+    *,
+    contents: str,
+    filename: str | None,
+    upload_directory: Path,
+    allowed_extensions: frozenset[str] = DEFAULT_ALLOWED_UPLOAD_EXTENSIONS,
+    max_upload_bytes: int | None = None,
+) -> Path:
+    """
+    Save a legacy upload in its own directory or reuse a streamed upload.
+
+    Returns
+    -------
+    Path
+        Path to the stored file, whose basename is the sanitized filename.
+    """
+    safe_filename = validate_upload_filename(
+        filename,
+        allowed_extensions=allowed_extensions,
+    )
+
+    raise_for_streamed_upload_error(contents)
+
+    if is_streamed_upload_token(contents):
+        streamed_upload = resolve_streamed_upload(
+            contents,
+            max_upload_bytes=max_upload_bytes,
+        )
+        validate_upload_filename(
+            streamed_upload.filename,
+            allowed_extensions=allowed_extensions,
+        )
+        return streamed_upload.file_path
+
+    file_bytes = decode_dash_upload_contents(
+        contents,
+        max_upload_bytes=max_upload_bytes,
+    )
+    if not file_bytes:
+        raise ValueError("Uploaded file is empty.")
+
+    upload_directory.mkdir(parents=True, exist_ok=True)
+    file_directory = Path(mkdtemp(dir=upload_directory))
+    file_path = file_directory / safe_filename
+    try:
+        file_path.write_bytes(file_bytes)
+    except OSError:
+        shutil.rmtree(file_directory, ignore_errors=True)
+        raise
+
+    return file_path
+
+
+def normalize_multiple_upload_values(value: Any) -> list[str]:
+    """Normalize a scalar or multi-file Dash upload value to a string list."""
+    if value is None:
+        return []
+    if isinstance(value, (list, tuple)):
+        return [str(item) for item in value]
+    return [str(value)]
+
+
+def save_uploaded_batch(
+    *,
+    contents: Any,
+    filenames: Any,
+    upload_directory: Path = DEFAULT_UPLOAD_DIRECTORY,
+    max_upload_bytes: int | None = None,
+) -> tuple[list[Path], list[str]]:
+    """Save a Dash upload batch in input order, reusing staged files.
+
+    Legacy files written by this call are removed if any file fails to save.
+
+    Returns
+    -------
+    tuple[list[Path], list[str]]
+        Stored paths and sanitized display filenames in upload order.
+    """
+    contents_list = normalize_multiple_upload_values(contents)
+    filename_list = normalize_multiple_upload_values(filenames)
+
+    if not contents_list:
+        raise ValueError("Select at least one FCS file.")
+    if len(contents_list) != len(filename_list):
+        raise ValueError("The uploaded file payload is malformed.")
+
+    batch_directory = Path(upload_directory)
+    saved_paths: list[Path] = []
+    safe_filenames: list[str] = []
+    has_legacy_uploads = any(not is_streamed_upload_token(item) for item in contents_list)
+    if has_legacy_uploads:
+        batch_directory.mkdir(parents=True, exist_ok=True)
+        batch_directory = Path(mkdtemp(dir=batch_directory))
+
+    try:
+        for index, (file_contents, filename) in enumerate(
+            zip(contents_list, filename_list, strict=True), start=1
+        ):
+            filename = filename or f"uploaded_file_{index}.fcs"
+            saved_paths.append(
+                save_uploaded_file(
+                    contents=file_contents,
+                    filename=filename,
+                    upload_directory=batch_directory,
+                    max_upload_bytes=max_upload_bytes,
+                )
+            )
+            safe_filenames.append(sanitize_filename(filename))
+    except Exception:
+        if has_legacy_uploads:
+            shutil.rmtree(batch_directory, ignore_errors=True)
+        raise
+
+    return saved_paths, safe_filenames
+
+
+def build_uploaded_fcs_batch(
+    *,
+    file_paths: Iterable[str | Path],
+    filenames: Iterable[str],
+    consistency_report: dict[str, Any],
+) -> UploadedFileBatch:
+    """Build an ordered compatible FCS batch from saved paths and filenames."""
+    normalized_paths = [
+        Path(file_path)
+        for file_path in file_paths
+        if str(file_path).strip()
+    ]
+    normalized_filenames = [str(filename).strip() for filename in filenames]
+    if len(normalized_paths) != len(normalized_filenames):
+        raise ValueError("Saved FCS paths and filenames do not match.")
+
+    reference_column_names = tuple(
+        str(name)
+        for name in consistency_report.get("reference_column_names") or ()
+    )
+    return UploadedFileBatch(
+        files=tuple(
+            UploadedFile(
+                path=str(path),
+                filename=filename or path.name,
+                column_names=reference_column_names,
+            )
+            for path, filename in zip(
+                normalized_paths,
+                normalized_filenames,
+                strict=True,
+            )
+        ),
+        reference_column_names=reference_column_names,
+    )
+
+
+def inspect_compatible_fcs_batch(file_paths: Iterable[str | Path]) -> dict[str, Any]:
+    """Return the full consistency report for a batch of FCS files."""
+    normalized_paths = [str(Path(file_path)) for file_path in file_paths]
+    if not normalized_paths:
+        raise ValueError("Select at least one FCS file.")
+
+    return FCSMultiFileConsistencyChecker(
+        file_paths=normalized_paths,
+    ).check_multifiles_consistency()
+
+
+def build_fcs_batch_feedback(
+    *,
+    filenames: list[str],
+    consistency_report: dict[str, Any],
+) -> FeedbackState:
+    """Build structured feedback for FCS batch compatibility validation."""
+    if not consistency_report.get("are_all_files_consistent", False):
+        return FeedbackState.danger(build_consistency_error_text(consistency_report))
+
+    file_count = len(filenames)
+    channel_count = len(consistency_report.get("reference_column_names") or [])
+    version = clean_optional_string(consistency_report.get("reference_fcs_version"))
+    file_text = ", ".join(str(filename) for filename in filenames[:4])
+    if len(filenames) > 4:
+        file_text = f"{file_text}, and {len(filenames) - 4} more"
+
+    summary = (
+        f"Loaded {file_count} compatible FCS file{'s' if file_count != 1 else ''} "
+        f"with {channel_count} channel{'s' if channel_count != 1 else ''}"
+    )
+    if version:
+        summary = f"{summary} ({version})"
+
+    return FeedbackState.success(f"{summary}. Files: {file_text}.")
+
+
+def build_upload_feedback(
+    *,
+    filenames: list[str],
+    consistency_report: dict[str, Any],
+) -> tuple[str, str]:
+    """Build legacy tuple feedback for an FCS batch validation result."""
+    return build_fcs_batch_feedback(
+        filenames=filenames,
+        consistency_report=consistency_report,
+    ).to_display_tuple()
+
+
+def load_fcs_batch(
+    *,
+    contents: Any,
+    filenames: Any,
+    upload_directory: Path = DEFAULT_UPLOAD_DIRECTORY,
+    minimum_file_count: int = 1,
+    max_upload_bytes: int | None = None,
+) -> FCSBatchOperationResult:
+    """Persist, validate, and normalize one uploaded FCS batch.
+
+    Incompatible batches return danger feedback without an ``UploadedFileBatch``.
+    Malformed upload payloads and unreadable FCS metadata retain their existing
+    ``ValueError`` behavior so callers can apply their own callback policy.
+    """
+    if minimum_file_count < 1:
+        raise ValueError("minimum_file_count must be at least 1.")
+
+    saved_paths, safe_filenames = save_uploaded_batch(
+        contents=contents,
+        filenames=filenames,
+        upload_directory=upload_directory,
+        max_upload_bytes=max_upload_bytes,
+    )
+    if len(saved_paths) < minimum_file_count:
+        return FCSBatchOperationResult(
+            batch=None,
+            feedback=FeedbackState.danger(
+                "Select at least "
+                f"{minimum_file_count} FCS file"
+                f"{'s' if minimum_file_count != 1 else ''}."
+            ),
+            consistency_report={},
+        )
+
+    consistency_report = inspect_compatible_fcs_batch(saved_paths)
+    feedback = build_fcs_batch_feedback(
+        filenames=safe_filenames,
+        consistency_report=consistency_report,
+    )
+    if not consistency_report.get("are_all_files_consistent", False):
+        return FCSBatchOperationResult(
+            batch=None,
+            feedback=feedback,
+            consistency_report=consistency_report,
+        )
+
+    return FCSBatchOperationResult(
+        batch=build_uploaded_fcs_batch(
+            file_paths=saved_paths,
+            filenames=safe_filenames,
+            consistency_report=consistency_report,
+        ),
+        feedback=feedback,
+        consistency_report=consistency_report,
+    )
+
+
+def load_compatible_fcs_batch(
+    *,
+    contents: Any,
+    filenames: Any,
+    upload_directory: Path = DEFAULT_UPLOAD_DIRECTORY,
+    minimum_file_count: int = 1,
+    max_upload_bytes: int | None = None,
+) -> UploadedFileBatch:
+    """Persist and return a compatible FCS batch or raise its feedback message."""
+    result = load_fcs_batch(
+        contents=contents,
+        filenames=filenames,
+        upload_directory=upload_directory,
+        minimum_file_count=minimum_file_count,
+        max_upload_bytes=max_upload_bytes,
+    )
+    if result.batch is None:
+        raise ValueError(result.feedback.message)
+    return result.batch
+
+
+def build_consistency_error_text(
+    consistency_report: dict[str, Any],
+) -> str:
+    """Build an actionable message for an invalid FCS batch."""
+    messages: list[str] = ["The uploaded FCS files cannot be used together."]
+    category_labels = (
+        ("column_name_consistency", "Invalid channels or missing channel metadata"),
+        ("version_consistency", "Incompatible FCS versions or missing version metadata"),
+        ("detector_voltage_consistency", "Incompatible detector settings or missing detector metadata"),
+    )
+
+    for report_key, label in category_labels:
+        category_report = consistency_report.get(report_key)
+        if not isinstance(category_report, dict):
+            continue
+        if category_report.get("are_all_files_consistent", True):
+            continue
+
+        details = category_report.get("mismatch_details") or []
+        detail_text = " ".join(str(detail) for detail in details[:3])
+        messages.append(f"{label}: {detail_text or 'check the uploaded file metadata.'}")
+
+    if len(messages) == 1:
+        details = consistency_report.get("mismatch_details") or []
+        messages.append(" ".join(str(detail) for detail in details[:3]))
+
+    return " ".join(message for message in messages if message.strip())
+
+
+def validate_fcs_metadata(file_path: str | Path) -> dict[str, Any]:
+    """Validate one saved FCS file and return its metadata consistency report."""
+    consistency_report = inspect_compatible_fcs_batch([file_path])
+    if not consistency_report.get("are_all_files_consistent", False):
+        raise ValueError(build_consistency_error_text(consistency_report))
+    return consistency_report
+
+
+def set_nested_dict_value(
+    *,
+    data: dict[str, Any],
+    dotted_path: str,
+    value: Any,
+) -> dict[str, Any]:
+    """
+    Return a copy of data with one dotted path updated.
+
+    Example
+    -------
+    files.fluorescence_fcs_file_path
+    """
+    next_data = dict(data or {})
+
+    path_parts = [part.strip() for part in dotted_path.split(".") if part.strip()]
+
+    if not path_parts:
+        return next_data
+
+    current_data = next_data
+
+    for path_part in path_parts[:-1]:
+        existing_value = current_data.get(
+            path_part,
+        )
+
+        if not isinstance(existing_value, dict):
+            existing_value = {}
+
+        current_data[path_part] = dict(
+            existing_value,
+        )
+
+        current_data = current_data[path_part]
+
+    current_data[path_parts[-1]] = value
+
+    return next_data
+
+
+def build_upload_state(
+    *,
+    config: UploadConfig,
+    contents: str | None,
+    filename: str | None,
+    stored_fcs_path: str | None,
+    stored_filename: str | None,
+    runtime_config_data: dict[str, Any] | None,
+    logger: logging.Logger,
+) -> UploadState:
+    """
+    Build the next upload state.
+
+    If a new upload payload is present, it is saved to disk.
+    Otherwise, the previous stored values are reused.
+    """
+    runtime_config_payload = (
+        dict(runtime_config_data) if isinstance(runtime_config_data, dict) else {}
+    )
+
+    clean_contents = clean_optional_string(
+        contents,
+    )
+    clean_filename = clean_optional_string(
+        filename,
+    )
+    clean_stored_fcs_path = clean_optional_string(
+        stored_fcs_path,
+    )
+    clean_stored_filename = clean_optional_string(
+        stored_filename,
+    )
+
+    if clean_contents is None:
+        logger.debug(
+            "No new upload contents. Reusing stored_fcs_path=%r stored_filename=%r",
+            clean_stored_fcs_path,
+            clean_stored_filename,
+        )
+
+        next_runtime_config_payload = set_nested_dict_value(
+            data=runtime_config_payload,
+            dotted_path=config.runtime_config_output_path,
+            value=clean_stored_fcs_path,
+        )
+
+        return UploadState(
+            uploaded_fcs_path=clean_stored_fcs_path,
+            uploaded_filename=clean_stored_filename,
+            runtime_config_data=next_runtime_config_payload,
+        )
+
+    upload_directory = resolve_upload_directory(
+        config,
+    )
+    allowed_extensions = parse_allowed_upload_extensions(
+        config.accepted_file_extensions,
+    )
+
+    saved_file_path = save_uploaded_file(
+        contents=clean_contents,
+        filename=clean_filename,
+        upload_directory=upload_directory,
+        allowed_extensions=allowed_extensions,
+    )
+
+    if saved_file_path.suffix.lower() == ".fcs":
+        try:
+            validate_fcs_metadata(saved_file_path)
+        except Exception:
+            if not is_streamed_upload_token(clean_contents):
+                shutil.rmtree(saved_file_path.parent, ignore_errors=True)
+            raise
+
+    next_uploaded_filename = clean_filename or saved_file_path.name
+
+    logger.debug(
+        "Saved uploaded file to path=%r filename=%r",
+        str(saved_file_path),
+        next_uploaded_filename,
+    )
+
+    next_runtime_config_payload = set_nested_dict_value(
+        data=runtime_config_payload,
+        dotted_path=config.runtime_config_output_path,
+        value=str(saved_file_path),
+    )
+
+    return UploadState(
+        uploaded_fcs_path=str(saved_file_path),
+        uploaded_filename=next_uploaded_filename,
+        runtime_config_data=next_runtime_config_payload,
+    )

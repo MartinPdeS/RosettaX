@@ -1,0 +1,196 @@
+.app-typography-hierarchy {
+    --rosettax-surface-background: var(--bs-body-bg, #fff);
+    --rosettax-control-background: color-mix(in srgb, var(--bs-body-color, #212529) 6%, var(--bs-body-bg, #fff));
+    --rosettax-text-color: var(--bs-body-color, #212529);
+    --rosettax-border-color: color-mix(in srgb, var(--bs-body-color, #212529) 22%, var(--bs-body-bg, #fff));
+}
+
+.rosettax-navigation {
+    width: 352px;
+    min-width: 352px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+}
+
+.rosettax-navigation-toggle {
+    display: none;
+    padding: 12px 16px;
+    cursor: pointer;
+    font-weight: 600;
+    background: var(--rosettax-control-background);
+    border-bottom: 1px solid var(--rosettax-border-color);
+}
+
+.rosettax-navigation-toggle:focus-visible {
+    outline: 2px solid var(--bs-primary);
+    outline-offset: -3px;
+}
+
+.rosettax-navigation-icon {
+    display: inline-block;
+    flex: 0 0 1.25rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    background-color: currentColor;
+    mask-size: contain;
+    mask-position: center;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: contain;
+    -webkit-mask-position: center;
+    -webkit-mask-repeat: no-repeat;
+}
+
+.rosettax-sidebar-footer {
+    margin-top: auto;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--rosettax-border-color);
+    flex-shrink: 0;
+}
+
+.rosettax-sidebar-navigation {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.rosettax-sidebar-group {
+    padding: 12px 8px 8px;
+    border-radius: 10px;
+    background: var(--rosettax-control-background);
+}
+
+.rosettax-sidebar-group-title {
+    margin: 0 10px 8px;
+    color: var(--rosettax-text-color);
+    font-size: 0.88rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.rosettax-sidebar-link:hover {
+    background: color-mix(in srgb, var(--rosettax-text-color) 5%, var(--rosettax-surface-background));
+}
+
+.rosettax-sidebar-navigation .nav .nav-link.active,
+.rosettax-sidebar-footer .nav .nav-link.active {
+    color: var(--rosettax-text-color);
+    background: var(--rosettax-surface-background);
+    box-shadow: 0 1px 4px color-mix(in srgb, var(--rosettax-text-color) 12%, transparent);
+}
+
+.peak-process-card--rosetta {
+    background-color: var(--rosettax-control-background, #f5f6f8);
+}
+
+.rosettax-reference-table .dash-cell,
+.rosettax-reference-table .dash-header {
+    vertical-align: middle !important;
+}
+
+.rosettax-table-validation {
+    color: var(--bs-danger);
+    margin-top: 8px;
+    font-size: 0.88rem;
+}
+
+.rosettax-table-validation:empty {
+    display: none;
+}
+
+.rosettax-workflow-card-title {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: var(--rosettax-workflow-card-title-size, 1.02rem);
+    font-weight: var(--rosettax-workflow-card-title-weight, 750);
+    line-height: 1.25;
+}
+
+.peak-action-button {
+    border-width: 1px;
+    font-weight: 600;
+    transition: background-color 140ms ease, border-color 140ms ease,
+        box-shadow 140ms ease, transform 100ms ease;
+}
+
+.peak-action-button--run {
+    color: #fff !important;
+    background-color: #176b66 !important;
+    border-color: #176b66 !important;
+}
+
+.peak-action-button--run:hover {
+    color: #fff !important;
+    background-color: #105852 !important;
+    border-color: #105852 !important;
+}
+
+.peak-action-button--auto {
+    color: #155a55 !important;
+    background-color: #e7f2f1 !important;
+    border-color: #b6d4d1 !important;
+}
+
+.peak-action-button--auto:hover {
+    color: #104a46 !important;
+    background-color: #d2e8e5 !important;
+    border-color: #8abbb5 !important;
+}
+
+.peak-action-button--clear {
+    color: #8a3f37 !important;
+    background-color: #fff4f2 !important;
+    border-color: #e8c1bc !important;
+}
+
+.peak-action-button--clear:hover {
+    color: #71312b !important;
+    background-color: #fde5e1 !important;
+    border-color: #d99a92 !important;
+}
+
+.peak-action-button:active {
+    transform: translateY(1px);
+}
+
+.peak-action-button:focus-visible {
+    outline: 3px solid rgba(23, 107, 102, 0.32);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px var(--bs-body-bg, #fff);
+}
+
+.peak-action-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.58;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .peak-action-button {
+        transition: none;
+    }
+}
+
+@media (max-width: 991px) {
+    .rosettax-application-shell {
+        flex-direction: column;
+        align-items: stretch !important;
+    }
+
+    .rosettax-navigation {
+        width: 100%;
+        min-width: 0;
+        position: static;
+        --rosettax-sidebar-height: min(70dvh, 640px);
+    }
+
+    .rosettax-navigation-toggle {
+        display: list-item;
+        list-style-position: inside;
+    }
+
+    #page-content {
+        width: 100%;
+        padding: 12px;
+    }
+}

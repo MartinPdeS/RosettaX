@@ -1,0 +1,91 @@
+
+import dash_bootstrap_components as dbc
+import logging
+from . import callbacks as _callbacks
+from . import layout as _layout
+from RosettaX.ui import WorkflowStep
+from RosettaX.workflow.save.adapters import CalibrationStoreSaveAdapter
+from RosettaX.workflow.save.layout import SaveLayout
+from RosettaX.workflow.save.models import SaveConfig
+from typing import Any
+
+logger = logging.getLogger(__name__)
+
+
+class Save:
+    """
+    Fluorescence calibration save section.
+
+    Responsibilities
+    ----------------
+    - Provide the fluorescence save layout.
+    - Register the reusable save workflow callbacks.
+
+    Notes
+    -----
+    The fluorescence calibration payload is read from the calibration store.
+    Saving, validation, file creation, and sidebar refresh signaling are
+    delegated to RosettaX.workflow.save.
+    """
+
+    workflow_step = WorkflowStep(
+        title="Save calibration",
+        description=(
+            "Save the calibration for later reuse when applying it to uncalibrated FCS "
+            "files."
+        ),
+        hover_description=(
+            "Choose a file name and output channel label, then download the completed "
+            "fluorescence calibration as a reusable JSON file."
+        ),
+    )
+
+    def __init__(
+        self,
+        page: Any,
+        section_number: int,
+        card_color: str = "pink",
+    ) -> None:
+        self.page = page
+        self.ids = page.ids.Save
+        self.section_number = section_number
+        self.card_color = card_color
+
+        self.config = SaveConfig(
+            calibration_kind="fluorescence",
+            header_title=f"{self.section_number}. {self.workflow_step.title}",
+            description_tooltip_text=self.workflow_step.tooltip_text,
+            description_tooltip_target_id=self.ids.description_target,
+            description_tooltip_id=self.ids.description_tooltip,
+            button_text="Download calibration.json",
+            file_name_placeholder="file name",
+            output_channel_name_placeholder="e.g. FITC (MESF)",
+            require_output_channel_name=True,
+            saved_message_prefix="Prepared calibration download",
+            failure_message="Failed to prepare calibration download. See terminal logs for details.",
+            page_state_saved_field="calibration_saved",
+        )
+
+        self.adapter = CalibrationStoreSaveAdapter()
+
+        self.layout_builder = SaveLayout(
+            ids=self.ids,
+            config=self.config,
+        )
+
+        logger.debug(
+            "Initialized Fluorescence Save section with page=%r",
+            page,
+        )
+
+    def get_layout(self) -> dbc.Card:
+        """
+        Create the fluorescence save section layout.
+        """
+        return _layout.get_layout(self)
+
+    def register_callbacks(self) -> None:
+        """
+        Register callbacks for the fluorescence save section.
+        """
+        _callbacks.register_callbacks(self)

@@ -1,0 +1,19 @@
+{
+  "id": "fused_silica",
+  "label": "Fused silica (SiO2, Malitson)",
+  "coefficients": {
+    "a": 1.0,
+    "b": [
+      0.6961663,
+      0.4079426,
+      0.8974794
+    ],
+    "c": [
+      0.00467914825849,
+      0.01351206312196,
+      97.934002537921
+    ]
+  },
+  "notes": "Three-term Sellmeier fit for fused silica at 20 C. Converted from refractiveindex.info Formula 1 coefficients by squaring resonance wavelengths in um.",
+  "source": "https://refractiveindex.info/database/data/main/SiO2/nk/Malitson.yml"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "water",
+  "label": "Water",
+  "coefficients": {
+    "a": 1.0,
+    "b": [
+      0.757
+    ],
+    "c": [
+      0.00923
+    ]
+  },
+  "notes": "Visible-range one-term Sellmeier fit for aqueous water."
+}

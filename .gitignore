@@ -1,0 +1,62 @@
+
+# Ignore all
+/*
+
+# Except ...
+!.github
+!conda.recipe
+!conda.recipe/meta.yaml
+!.gitmodules
+!extern
+!RosettaX
+!development
+!docs
+!tests
+!presentation
+!integration_tests
+!tools
+!tools/*.py
+!.flake8
+!.gitignore
+!.pre-commit-config.yaml
+!LICENSE
+!meta.yaml
+!pyproject.toml
+!README.rst
+!AGENTS.md
+!notebook.ipynb
+!CMakeLists.txt
+!pytest.ini
+!.coveragerc
+!makefile
+!rosettax.spec
+!CONTRIBUTING.md
+!Dockerfile
+!compose.yaml
+!.dockerignore
+
+# But ignore docs/build inside docs and code
+docs/build/
+docs/source/gallery/
+
+# Compiled files in the project
+*__pycache__*
+*.DS_Store*
+*.so*
+*.a*
+*.cmake
+*CMakeFiles*
+# *Makefile*
+
+# Package specifics
+
+# Generated SoftwareX manuscript files
+docs/manuscript/softwareX/*.aux
+docs/manuscript/softwareX/*.bbl
+docs/manuscript/softwareX/*.blg
+docs/manuscript/softwareX/*.fdb_latexmk
+docs/manuscript/softwareX/*.fls
+docs/manuscript/softwareX/*.log
+docs/manuscript/softwareX/*.out
+docs/manuscript/softwareX/*.pdf
+docs/manuscript/softwareX/*.spl

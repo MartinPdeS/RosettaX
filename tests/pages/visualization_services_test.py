@@ -1,0 +1,345 @@
+"""Regression tests for pages visualization services."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
+
+import pandas as pd
+from RosettaX.pages.p10_visualization import services
+from RosettaX.utils.runtime_config import DEFAULT_GRAPH_HEIGHT
+
+
+class Test_VisualizationServices:
+    """Regression checks for visualization services."""
+
+    def test_build_file_options_exposes_each_uploaded_file(self) -> None:
+        """Check build file options exposes each uploaded file."""
+        file_store = {
+            "files": [
+                {
+                    "uploaded_fcs_path": "/tmp/first.fcs",
+                    "uploaded_filename": "first.fcs",
+                },
+                {
+                    "uploaded_fcs_path": "/tmp/second.fcs",
+                    "uploaded_filename": "second.fcs",
+                },
+            ]
+        }
+
+        assert services.build_file_options(file_store) == [
+            {"label": "first.fcs", "value": "/tmp/first.fcs"},
+            {"label": "second.fcs", "value": "/tmp/second.fcs"},
+        ]
+        assert services.resolve_default_file(
+            file_store,
+            current_value="/tmp/second.fcs",
+        ) == "/tmp/second.fcs"
+
+    def test_build_visualization_uirevision_changes_with_graph_identity(self) -> None:
+        """Check build visualization uirevision changes with graph identity."""
+        first_revision = services.build_visualization_uirevision(
+            uploaded_fcs_path="/tmp/one.fcs",
+            plot_type=services.PLOT_TYPE_SCATTER,
+            x_channel="FSC-A",
+            y_channel="SSC-A",
+            log_x=True,
+            log_y=False,
+        )
+
+        second_revision = services.build_visualization_uirevision(
+            uploaded_fcs_path="/tmp/two.fcs",
+            plot_type=services.PLOT_TYPE_SCATTER,
+            x_channel="FSC-A",
+            y_channel="SSC-A",
+            log_x=True,
+            log_y=False,
+        )
+
+        assert first_revision != second_revision
+
+    def test_build_channel_options_returns_named_dropdown_entries(self) -> None:
+        """Check build channel options returns named dropdown entries."""
+        options = services.build_channel_options(["FSC-A", "SSC-A"])
+
+        assert options == [
+            {"label": "FSC-A", "value": "FSC-A"},
+            {"label": "SSC-A", "value": "SSC-A"},
+        ]
+
+    def test_render_visualization_plot_uses_service_pipeline(self, monkeypatch) -> None:
+        """Pass normalized controls through file loading, filtering, and plotting."""
+        file_store = {
+            "files": [
+                {
+                    "uploaded_fcs_path": "/tmp/sample.fcs",
+                    "uploaded_filename": "sample.fcs",
+                }
+            ]
+        }
+        dataframe = pd.DataFrame({"FSC-A": [1.0, 2.0], "SSC-A": [3.0, 4.0]})
+        captured: dict[str, object] = {}
+
+        def load_plot_dataframe(**kwargs):
+            captured.update(kwargs)
+            return dataframe
+
+        def filter_dataframe_for_plot(dataframe_arg, **kwargs):
+            captured["filter_options"] = kwargs
+            return dataframe_arg, 0
+
+        def build_visualization_figure(**kwargs):
+            captured["figure_options"] = kwargs
+            return services.go.Figure()
+
+        monkeypatch.setattr(services, "load_plot_dataframe", load_plot_dataframe)
+        monkeypatch.setattr(services, "filter_dataframe_for_plot", filter_dataframe_for_plot)
+        monkeypatch.setattr(services, "build_visualization_figure", build_visualization_figure)
+
+        figure, status = services.render_visualization_plot(
+            file_store=file_store,
+            selected_file_path="/tmp/sample.fcs",
+            plot_type=services.PLOT_TYPE_SCATTER,
+            x_channel=" FSC-A ",
+            y_channel=" SSC-A ",
+            x_log_values=["enabled"],
+            y_log_values=[],
+            colormap_log_values=["enabled"],
+            marker_size=8,
+            marker_opacity=0.5,
+            smoothing_sigma_points=2,
+            max_events="1000",
+            runtime_config_data=None,
+        )
+
+        assert isinstance(figure, services.go.Figure)
+        assert status == "Showing 2 event(s)."
+        assert captured["uploaded_fcs_path"] == "/tmp/sample.fcs"
+        assert captured["x_channel"] == "FSC-A"
+        assert captured["max_events"] == 1_000
+        assert captured["filter_options"] == {
+            "x_channel": "FSC-A",
+            "y_channel": "SSC-A",
+            "log_x": True,
+            "log_y": False,
+        }
+        assert captured["figure_options"]["colormap_log_scale"] is True
+
+    def test_build_upload_batch_summary_keeps_shared_channel_names(self) -> None:
+        """Check build upload batch summary keeps shared channel names."""
+        summary = services.build_upload_batch_summary(
+            uploaded_fcs_paths=["/tmp/sample.fcs"],
+            uploaded_filenames=["sample.fcs"],
+            consistency_report={
+                "reference_column_names": ["FSC-A", "SSC-A", "FITC-A"],
+            },
+        )
+
+        assert summary["reference_column_names"] == ["FSC-A", "SSC-A", "FITC-A"]
+
+    def test_filter_dataframe_for_plot_filters_non_positive_log_values(self) -> None:
+        """Check filter dataframe for plot filters non positive log values."""
+        dataframe = pd.DataFrame(
+            {
+                "FSC-A": [10.0, 0.0, 5.0],
+                "SSC-A": [1.0, 2.0, -1.0],
+            }
+        )
+
+        filtered_dataframe, skipped_events = services.filter_dataframe_for_plot(
+            dataframe,
+            x_channel="FSC-A",
+            y_channel="SSC-A",
+            log_x=True,
+            log_y=True,
+        )
+
+        assert len(filtered_dataframe) == 1
+        assert skipped_events == 2
+
+    def test_build_visualization_figure_returns_histogram_for_histogram_mode(self) -> None:
+        """Check build visualization figure returns histogram for histogram mode."""
+        dataframe = pd.DataFrame(
+            {
+                "FSC-A": [1.0, 2.0, 3.0],
+            }
+        )
+
+        figure = services.build_visualization_figure(
+            dataframe=dataframe,
+            uploaded_fcs_path="/tmp/histogram.fcs",
+            plot_type=services.PLOT_TYPE_HISTOGRAM,
+            x_channel="FSC-A",
+            y_channel=None,
+            log_x=False,
+            log_y=False,
+        )
+
+        assert len(figure.data) == 1
+        assert figure.data[0].type == "bar"
+        assert figure.layout.height == services.resolve_visualization_control_defaults()["figure_height_px"]
+        assert isinstance(figure.layout.uirevision, str)
+
+    def test_build_visualization_figure_supports_log_histogram_x_axis(self) -> None:
+        """Check build visualization figure supports log histogram x axis."""
+        dataframe = pd.DataFrame(
+            {
+                "FSC-A": [1.0, 10.0, 100.0, 1000.0],
+            }
+        )
+
+        figure = services.build_visualization_figure(
+            dataframe=dataframe,
+            uploaded_fcs_path="/tmp/loghist.fcs",
+            plot_type=services.PLOT_TYPE_HISTOGRAM,
+            x_channel="FSC-A",
+            y_channel=None,
+            log_x=True,
+            log_y=False,
+        )
+
+        assert len(figure.data) == 1
+        assert figure.data[0].type == "bar"
+        assert figure.layout.xaxis.type == "log"
+
+    def test_build_visualization_figure_returns_filled_histogram(self) -> None:
+        """Check build visualization figure returns filled histogram."""
+        dataframe = pd.DataFrame(
+            {
+                "FSC-A": [1.0, 2.0, 3.0, 4.0, 5.0],
+            }
+        )
+
+        figure = services.build_visualization_figure(
+            dataframe=dataframe,
+            uploaded_fcs_path="/tmp/example.fcs",
+            plot_type=services.PLOT_TYPE_SMOOTHED_HISTOGRAM,
+            x_channel="FSC-A",
+            y_channel=None,
+            log_x=False,
+            log_y=False,
+        )
+
+        assert len(figure.data) == 1
+        assert figure.data[0].type == "scatter"
+        assert figure.data[0].fill == "tozeroy"
+        assert figure.data[0].mode == "lines"
+        assert figure.layout.title.text == "example.fcs"
+
+    def test_smooth_histogram_counts_uses_sigma_points(self) -> None:
+        """Check smooth histogram counts uses sigma points."""
+        smoothed_counts = services.smooth_histogram_counts(
+            [0.0, 0.0, 10.0, 0.0, 0.0],
+            sigma_points=1.0,
+        )
+
+        assert smoothed_counts[1] > 0.0
+        assert smoothed_counts[2] < 10.0
+        assert smoothed_counts[3] > 0.0
+
+    def test_build_visualization_figure_supports_log_histogram_y_axis(self) -> None:
+        """Check build visualization figure supports log histogram y axis."""
+        dataframe = pd.DataFrame(
+            {
+                "FSC-A": [1.0, 1.0, 1.0, 2.0, 3.0, 4.0],
+            }
+        )
+
+        figure = services.build_visualization_figure(
+            dataframe=dataframe,
+            uploaded_fcs_path="/tmp/log-y-histogram.fcs",
+            plot_type=services.PLOT_TYPE_HISTOGRAM,
+            x_channel="FSC-A",
+            y_channel=None,
+            log_x=False,
+            log_y=True,
+        )
+
+        assert figure.layout.yaxis.type == "log"
+        assert figure.layout.yaxis.title.text == "Count"
+
+    def test_build_visualization_figure_returns_density_colored_scatter(self) -> None:
+        """Check build visualization figure returns density colored scatter."""
+        dataframe = pd.DataFrame(
+            {
+                "FSC-A": [1.0, 2.0, 10.0, 20.0, 100.0],
+                "SSC-A": [5.0, 6.0, 7.0, 30.0, 40.0],
+            }
+        )
+
+        figure = services.build_visualization_figure(
+            dataframe=dataframe,
+            uploaded_fcs_path="/tmp/example.fcs",
+            plot_type=services.PLOT_TYPE_SCATTER,
+            x_channel="FSC-A",
+            y_channel="SSC-A",
+            log_x=True,
+            log_y=True,
+            colormap_log_scale=True,
+            marker_size=7,
+            marker_opacity=0.8,
+        )
+
+        assert len(figure.data) == 1
+        assert figure.data[0].type == "scattergl"
+        assert figure.layout.xaxis.type == "log"
+        assert figure.layout.yaxis.type == "log"
+        assert figure.data[0].marker.colorscale[0][1] == "#30123b"
+        assert figure.data[0].marker.size == 7
+        assert figure.data[0].marker.opacity == 0.8
+        assert figure.layout.showlegend is False
+        assert figure.layout.xaxis.title.text == "FSC-A [a.u.]"
+        assert figure.layout.yaxis.title.text == "SSC-A [a.u.]"
+        assert isinstance(figure.layout.uirevision, str)
+        assert "/tmp/example.fcs" in figure.layout.uirevision
+
+    def test_build_visualization_figure_uirevision_ignores_marker_styling(self) -> None:
+        """Check build visualization figure uirevision ignores marker styling."""
+        dataframe = pd.DataFrame(
+            {
+                "FSC-A": [1.0, 2.0, 10.0, 20.0, 100.0],
+                "SSC-A": [5.0, 6.0, 7.0, 30.0, 40.0],
+            }
+        )
+
+        first_figure = services.build_visualization_figure(
+            dataframe=dataframe,
+            uploaded_fcs_path="/tmp/example.fcs",
+            plot_type=services.PLOT_TYPE_SCATTER,
+            x_channel="FSC-A",
+            y_channel="SSC-A",
+            log_x=True,
+            log_y=True,
+            marker_size=5,
+            marker_opacity=0.6,
+        )
+
+        second_figure = services.build_visualization_figure(
+            dataframe=dataframe,
+            uploaded_fcs_path="/tmp/example.fcs",
+            plot_type=services.PLOT_TYPE_SCATTER,
+            x_channel="FSC-A",
+            y_channel="SSC-A",
+            log_x=True,
+            log_y=True,
+            marker_size=9,
+            marker_opacity=1.0,
+        )
+
+        assert first_figure.layout.uirevision == second_figure.layout.uirevision
+
+    def test_resolve_visualization_control_defaults_uses_default_profile(self) -> None:
+        """Check resolve visualization control defaults uses default profile."""
+        defaults = services.resolve_visualization_control_defaults()
+
+        assert defaults["max_events"] == 100000
+        assert defaults["x_log_values"] == ["enabled"]
+        assert defaults["y_log_values"] == ["enabled"]
+        assert defaults["colormap_log_values"] == ["enabled"]
+        assert defaults["marker_size"] == 7.0
+        assert defaults["marker_opacity"] == 1.0
+        assert defaults["graph_style"] == {"height": DEFAULT_GRAPH_HEIGHT}
+        assert defaults["figure_height_px"] == services.VISUALIZATION_FIGURE_HEIGHT_PX

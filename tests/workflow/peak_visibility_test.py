@@ -1,0 +1,281 @@
+"""Regression tests for workflow peak visibility."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
+
+from RosettaX.workflow.peak import registry
+from RosettaX.workflow.peak.callbacks import visibility
+
+
+class Test_PeakProcessSelectionVisibility:
+    """Regression checks for peak process selection visibility."""
+
+    def test_build_peak_process_options_starts_with_select_option(self) -> None:
+        """Check build peak process options starts with select option."""
+        options = registry.build_peak_process_options(
+            include_empty_option=True,
+        )
+
+        assert options[0] == {
+            "label": "Select",
+            "value": "",
+        }
+
+    def test_empty_selection_hides_graph_toggle_and_graph_container(self) -> None:
+        """Check empty selection hides graph toggle and graph container."""
+        assert visibility.build_graph_toggle_control_style("") == {
+            "display": "none",
+        }
+        assert visibility.build_advanced_mode_control_style("") == {
+            "display": "none",
+        }
+        assert visibility.build_data_filter_control_style(
+            process_name="",
+            advanced_mode_value=["enabled"],
+        ) == {"display": "none"}
+        assert visibility.build_graph_toggle_control_style("") == {
+            "display": "none",
+        }
+        assert visibility.build_process_settings_container_style(
+            process_name="",
+            advanced_mode_value=["enabled"],
+        ) == {
+            "display": "none",
+        }
+        assert visibility.build_graph_container_style(
+            process_name="",
+            graph_toggle_value=["enabled"],
+        ) == {
+            "display": "none",
+        }
+
+    def test_selected_process_shows_graph_toggle_and_respects_toggle_value(self) -> None:
+        """Check selected process shows graph toggle and respects toggle value."""
+        assert visibility.build_graph_toggle_control_style("Automatic 1D") == {
+            "display": "inline-flex",
+        }
+        assert visibility.build_advanced_mode_control_style("Automatic 1D") == {
+            "display": "inline-flex",
+        }
+        assert visibility.build_data_filter_control_style(
+            process_name="Automatic 1D",
+            advanced_mode_value=[],
+        ) == {"display": "none"}
+        assert visibility.build_data_filter_control_style(
+            process_name="Automatic 1D",
+            advanced_mode_value=["enabled"],
+        ) == {"display": "inline-flex"}
+        assert visibility.build_graph_toggle_control_style("Automatic 1D") == {
+            "display": "inline-flex",
+        }
+        assert visibility.build_process_settings_container_style(
+            process_name="Automatic 1D",
+            advanced_mode_value=["enabled"],
+        ) == {
+            "display": "flex",
+            "alignItems": "end",
+            "gap": "12px",
+            "flexWrap": "wrap",
+            "marginTop": "10px",
+        }
+        assert visibility.build_process_settings_container_style(
+            process_name="Automatic 1D",
+            advanced_mode_value=[],
+        ) == {
+            "display": "none",
+        }
+        assert visibility.build_graph_container_style(
+            process_name="Automatic 1D",
+            graph_toggle_value=["enabled"],
+        ) == {
+            "display": "block",
+        }
+        assert visibility.build_graph_container_style(
+            process_name="Automatic 1D",
+            graph_toggle_value=[],
+        ) == {
+            "display": "none",
+        }
+
+    def test_rosetta_advanced_only_helpers_hide_without_advanced_mode(self) -> None:
+        """Check Rosetta advanced only helpers hide without advanced mode."""
+        children, guide_style = visibility.build_graph_helper_panel(
+            process_name="Rosetta Script",
+            graph_toggle_value=["enabled"],
+            advanced_mode_value=[],
+        )
+        assert children == []
+        assert guide_style["display"] == "none"
+
+        assert visibility.build_rosetta_advanced_only_style(
+            process_name="Rosetta Script",
+            graph_toggle_value=["enabled"],
+            advanced_mode_value=[],
+        ) == {
+            "display": "none",
+        }
+
+        assert visibility.build_rosetta_advanced_only_style(
+            process_name="Rosetta Script",
+            graph_toggle_value=["enabled"],
+            advanced_mode_value=["enabled"],
+        ) == {
+            "display": "block",
+        }
+
+        assert visibility.build_rosetta_advanced_only_style(
+            process_name="Automatic 1D",
+            graph_toggle_value=["enabled"],
+            advanced_mode_value=[],
+        ) == {
+            "display": "block",
+        }
+
+    def test_rosetta_v1_helpers_are_visible_without_advanced_mode(self) -> None:
+        """Custom Rosetta mode exposes its controls without an advanced toggle."""
+        assert visibility.build_rosetta_advanced_only_style(
+            process_name="Rosetta Script V1",
+            graph_toggle_value=["enabled"],
+            advanced_mode_value=[],
+        ) == {
+            "display": "block",
+        }
+
+        assert visibility.build_rosetta_advanced_only_style(
+            process_name="Rosetta Script V1",
+            graph_toggle_value=["enabled"],
+            advanced_mode_value=["enabled"],
+        ) == {
+            "display": "block",
+        }
+
+    def test_graph_helper_panel_guides_user_before_process_selection(self) -> None:
+        """Check graph helper panel guides user before process selection."""
+        children, style = visibility.build_graph_helper_panel(
+            process_name="",
+            graph_toggle_value=[],
+            advanced_mode_value=[],
+        )
+
+        assert children == []
+        assert style["display"] == "none"
+
+        children, style = visibility.build_graph_helper_panel(
+            process_name="",
+            graph_toggle_value=[],
+            advanced_mode_value=["enabled"],
+        )
+        rendered_text = " ".join(str(getattr(child, "children", "")) for child in children)
+        assert style["display"] == "block"
+        assert "Select a peak process" in rendered_text
+        assert "Choose the required detector channels" in rendered_text
+
+    def test_graph_helper_panel_shows_manual_2d_instruction(self) -> None:
+        """Check graph helper panel shows manual 2D instruction."""
+        children, _ = visibility.build_graph_helper_panel(
+            process_name="Manual 2D",
+            graph_toggle_value=["enabled"],
+            advanced_mode_value=[],
+        )
+
+        assert children == []
+
+        children, _ = visibility.build_graph_helper_panel(
+            process_name="Manual 2D",
+            graph_toggle_value=["enabled"],
+            advanced_mode_value=["enabled"],
+        )
+
+        rendered_text = " ".join(
+            str(getattr(child, "children", ""))
+            for child in children
+        )
+
+        assert "Drag a selection box around a cluster" in rendered_text
+
+    def test_graph_helper_panel_shows_rosetta_legend_in_advanced_mode(self) -> None:
+        """Check graph helper panel shows Rosetta legend in advanced mode."""
+        children, _ = visibility.build_graph_helper_panel(
+            process_name="Rosetta Script V1",
+            graph_toggle_value=["enabled"],
+            advanced_mode_value=["enabled"],
+        )
+
+        rendered_text = " ".join(
+            str(getattr(child, "children", ""))
+            for child in children
+        )
+
+        assert "Rosetta graph legend" in rendered_text
+        assert "Green dashed vertical lines" in rendered_text
+
+
+class Test_PeakProcessFiltering:
+    """Regression checks for peak process filtering."""
+
+    def test_scattering_rosetta_selection_has_unique_process_ids(self) -> None:
+        """Select the mixture implementation once, with distinct control IDs."""
+        from RosettaX.pages.p03_scattering.sections.s02_peaks.main import (
+            SCATTERING_ALLOWED_PEAK_PROCESS_NAMES,
+        )
+        from RosettaX.workflow.peak.scripts.rosetta_mix_mixture import (
+            MixtureRosettaScatterPeakProcess,
+        )
+
+        scripts = registry.filter_peak_processes(
+            scripts=registry.get_peak_process_instances(),
+            allowed_process_names=SCATTERING_ALLOWED_PEAK_PROCESS_NAMES,
+        )
+        names = [script.process_name for script in scripts]
+        labels = [script.get_process_option()["label"] for script in scripts]
+
+        assert len(names) == len(set(names))
+        assert labels.count("Rosetta") == 1
+        assert labels[0] == "Rosetta"
+        assert "Rosetta Legacy" in labels
+        assert isinstance(scripts[0], MixtureRosettaScatterPeakProcess)
+        assert all("Sensitive" not in label for label in labels)
+
+    def test_filter_peak_processes_keeps_only_allowed_names(self) -> None:
+        """Check filter peak processes keeps only allowed names."""
+        scripts = registry.get_peak_process_instances()
+
+        filtered = registry.filter_peak_processes(
+            scripts=scripts,
+            allowed_process_names=[
+                "Manual 1D",
+                "Automatic 2D",
+            ],
+        )
+
+        filtered_names = [
+            getattr(script, "process_name", "")
+            for script in filtered
+        ]
+
+        assert filtered_names
+        assert set(filtered_names).issubset(
+            {
+                "Manual 1D",
+                "Automatic 2D",
+            }
+        )
+        assert "Automatic 2D" in filtered_names
+
+    def test_filter_peak_processes_returns_all_when_allowed_is_empty(self) -> None:
+        """Check filter peak processes returns all when allowed is empty."""
+        scripts = registry.get_peak_process_instances()
+
+        filtered = registry.filter_peak_processes(
+            scripts=scripts,
+            allowed_process_names=[],
+        )
+
+        assert [getattr(script, "process_name", "") for script in filtered] == [
+            getattr(script, "process_name", "")
+            for script in scripts
+        ]

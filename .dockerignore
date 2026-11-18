@@ -1,0 +1,14 @@
+# Send only package sources and build metadata to Docker.
+**
+!Dockerfile
+!pyproject.toml
+!README.rst
+!LICENSE
+!MANIFEST.in
+!RosettaX/
+!RosettaX/**
+RosettaX/**/__pycache__/
+RosettaX/**/*.pyc
+RosettaX/**/*.so
+RosettaX/**/.DS_Store
+RosettaX/assets/sample-files/*.fcs

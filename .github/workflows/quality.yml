@@ -1,0 +1,22 @@
+name: Static quality checks
+on:
+  push:
+    branches: ["master"]
+    paths-ignore:
+      # `make release` commits only the generated package version before tagging.
+      - "RosettaX/_version.py"
+  pull_request:
+    branches: ["master"]
+permissions:
+  contents: read
+jobs:
+  ruff:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Python and CI dependencies
+        uses: MartinPdeS/MPSActions/actions/setup-python@v2
+        with:
+          python-version: "3.13"
+          install-command: >-
+            python -m pip install "ruff>=0.6,<1"
+      - run: make lint PYTHON=python

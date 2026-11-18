@@ -1,0 +1,211 @@
+"""Regression tests for application routes."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
+
+import dash
+import sys
+import types
+from dash import html
+from pathlib import Path
+
+
+class _DashBootstrapComponentsSentinel:
+    """Callable component sentinel for lightweight Dash Bootstrap test setup."""
+
+    def __call__(self, *args, **kwargs):
+        """Provide the callable behavior required by this test double."""
+        return None
+
+    def __getattr__(self, name):
+        """Handle dynamic attribute lookup for this test double."""
+        return self
+
+
+class _DashBootstrapComponentsStub(types.ModuleType):
+    """Minimal Dash Bootstrap components used by the unit tests."""
+
+    def __getattr__(self, name):
+        """Handle dynamic attribute lookup for this test double."""
+        return _DashBootstrapComponentsSentinel()
+
+
+sys.modules.setdefault(
+    "dash_bootstrap_components",
+    _DashBootstrapComponentsStub("dash_bootstrap_components"),
+)
+
+from RosettaX.application import routes
+from RosettaX.application.routes import (
+    CALIBRATION_OPEN_ERROR_MESSAGE,
+    UPLOAD_STORAGE_ERROR_MESSAGE,
+    register_server_routes,
+)
+from RosettaX.utils.streamed_uploads import resolve_streamed_upload
+
+
+class Test_ApplicationRoutes:
+    """Regression checks for application routes."""
+
+    def test_streamed_upload_route_writes_request_body_and_returns_token(
+        self,
+        tmp_path,
+    ) -> None:
+        """Check streamed upload route writes request body and returns token."""
+        app = dash.Dash(__name__)
+        app.layout = html.Div()
+        app.server.config["ROSETTAX_STREAMED_UPLOAD_DIRECTORY"] = str(tmp_path)
+        app.server.config["ROSETTAX_MAX_UPLOAD_BYTES"] = 1024
+        app.server.config["MAX_CONTENT_LENGTH"] = 1024
+        register_server_routes(app)
+
+        response = app.server.test_client().post(
+            "/api/uploads/stream",
+            data=b"streamed FCS data",
+            headers={
+                "Content-Type": "application/octet-stream",
+                "X-RosettaX-Filename": "sample%20one.fcs",
+            },
+        )
+
+        assert response.status_code == 200
+        payload = response.get_json()
+        assert payload["filename"] == "sample_one.fcs"
+        assert payload["size_bytes"] == len(b"streamed FCS data")
+
+        upload = resolve_streamed_upload(
+            payload["token"],
+            staging_directory=Path(tmp_path),
+            max_upload_bytes=1024,
+        )
+        assert upload.file_path.read_bytes() == b"streamed FCS data"
+
+    def test_streamed_upload_route_rejects_request_above_configured_limit(
+        self,
+        tmp_path,
+    ) -> None:
+        """Check streamed upload route rejects request above configured limit."""
+        app = dash.Dash(__name__)
+        app.layout = html.Div()
+        app.server.config["ROSETTAX_STREAMED_UPLOAD_DIRECTORY"] = str(tmp_path)
+        app.server.config["ROSETTAX_MAX_UPLOAD_BYTES"] = 3
+        app.server.config["MAX_CONTENT_LENGTH"] = 3
+        register_server_routes(app)
+
+        response = app.server.test_client().post(
+            "/api/uploads/stream",
+            data=b"too large",
+            headers={"X-RosettaX-Filename": "sample.fcs"},
+        )
+
+        assert response.status_code == 413
+        assert "maximum file size" in response.get_json()["error"]
+
+    def test_streamed_upload_route_returns_stable_error_for_storage_failure(
+        self,
+        tmp_path,
+        monkeypatch,
+    ) -> None:
+        """Check streamed upload route returns stable error for storage failure."""
+        app = dash.Dash(__name__)
+        app.layout = html.Div()
+        app.server.config["ROSETTAX_STREAMED_UPLOAD_DIRECTORY"] = str(tmp_path)
+        register_server_routes(app)
+        monkeypatch.setattr(
+            routes,
+            "stage_streamed_upload",
+            lambda **_kwargs: (_ for _ in ()).throw(OSError("disk full")),
+        )
+
+        response = app.server.test_client().post(
+            "/api/uploads/stream",
+            data=b"streamed FCS data",
+            headers={"X-RosettaX-Filename": "sample.fcs"},
+        )
+
+        assert response.status_code == 500
+        assert response.get_json() == {"error": UPLOAD_STORAGE_ERROR_MESSAGE}
+
+    def test_calibration_json_route_rejects_path_traversal(
+        self,
+        tmp_path,
+        monkeypatch,
+    ) -> None:
+        """Check calibration JSON route rejects path traversal."""
+        monkeypatch.setattr(
+            "RosettaX.utils.directories.fluorescence_calibration",
+            tmp_path / "fluorescence",
+        )
+        monkeypatch.setattr(
+            "RosettaX.utils.directories.scattering_calibration",
+            tmp_path / "scattering",
+        )
+
+        app = dash.Dash(__name__)
+        app.layout = html.Div()
+        register_server_routes(app)
+
+        client = app.server.test_client()
+        response = client.get(
+            "/calibration-json/fluorescence/%2E%2E/%2E%2E/secret.json"
+        )
+
+        assert response.status_code == 400
+        assert "could not be opened" in response.get_data(as_text=True)
+
+    def test_calibration_json_route_returns_error_document_for_malformed_json(
+        self,
+        tmp_path,
+        monkeypatch,
+    ) -> None:
+        """Check calibration JSON route returns error document for malformed JSON."""
+        fluorescence_directory = tmp_path / "fluorescence"
+        fluorescence_directory.mkdir()
+        (fluorescence_directory / "broken.json").write_text(
+            "{not valid json", encoding="utf-8"
+        )
+
+        monkeypatch.setattr(
+            "RosettaX.utils.directories.fluorescence_calibration",
+            fluorescence_directory,
+        )
+        monkeypatch.setattr(
+            "RosettaX.utils.directories.scattering_calibration",
+            tmp_path / "scattering",
+        )
+
+        app = dash.Dash(__name__)
+        app.layout = html.Div()
+        register_server_routes(app)
+
+        client = app.server.test_client()
+        response = client.get("/calibration-json/fluorescence/broken.json")
+
+        assert response.status_code == 400
+        assert "Could not open calibration" in response.get_data(as_text=True)
+        assert "could not be opened" in response.get_data(as_text=True)
+
+    def test_calibration_json_route_returns_stable_error_for_storage_failure(
+        self,
+        monkeypatch,
+    ) -> None:
+        """Check calibration JSON route returns stable error for storage failure."""
+        app = dash.Dash(__name__)
+        app.layout = html.Div()
+        register_server_routes(app)
+        monkeypatch.setattr(
+            routes,
+            "resolve_calibration_file_path",
+            lambda *_args: (_ for _ in ()).throw(OSError("permission denied")),
+        )
+
+        response = app.server.test_client().get(
+            "/calibration-json/fluorescence/example.json"
+        )
+
+        assert response.status_code == 500
+        assert CALIBRATION_OPEN_ERROR_MESSAGE in response.get_data(as_text=True)

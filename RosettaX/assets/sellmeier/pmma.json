@@ -1,0 +1,14 @@
+{
+  "id": "pmma",
+  "label": "PMMA",
+  "coefficients": {
+    "a": 1.0,
+    "b": [
+      1.189
+    ],
+    "c": [
+      0.00982
+    ]
+  },
+  "notes": "Visible-range one-term Sellmeier fit for PMMA particles."
+}

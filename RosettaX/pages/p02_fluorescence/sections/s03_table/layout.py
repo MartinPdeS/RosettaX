@@ -1,0 +1,95 @@
+
+import dash
+import dash_bootstrap_components as dbc
+from RosettaX.utils import ui_forms
+from RosettaX.workflow.table.fluorescence import (
+    build_fluorescence_reference_preset_options,
+)
+
+
+def get_layout(section) -> dbc.Card:
+    """
+    Build the fluorescence reference table layout.
+    """
+    card = section.layout_builder.get_layout()
+    body = card.children[1]
+    body.children = [
+        build_preset_controls(section),
+        dash.html.Div(
+            [
+                dash.html.Label("Standard intensity values", htmlFor=section.ids.custom_values),
+                dbc.Input(id=section.ids.custom_values, type="text", placeholder="e.g. 1000, 10000, 100000"),
+                dbc.Button("Add to table", id=section.ids.custom_values_add, n_clicks=0, color="primary", style={"marginTop": "10px"}),
+                dbc.Alert(id=section.ids.custom_values_error, color="warning", is_open=False, style={"marginTop": "8px"}),
+            ],
+            id=section.ids.custom_values_container,
+            style={"display": "none"},
+        ),
+        dash.html.Div(
+            style={
+                "height": "14px",
+            },
+        ),
+        *list(body.children),
+    ]
+
+    return card
+
+
+def build_card_title(section) -> dash.html.Div:
+    """
+    Build the card title with compact hover help.
+    """
+    return ui_forms.build_title_with_info(
+        title=f"{section.section_number}. {section.workflow_step.title}",
+        tooltip_target_id=section.reference_table_tooltip_target_id,
+        tooltip_id=section.reference_table_tooltip_id,
+        tooltip_text=section.workflow_step.tooltip_text,
+    )
+
+
+def build_preset_controls(section) -> dash.html.Div:
+    """
+    Build fluorescence reference preset controls displayed above the table.
+    """
+    return ui_forms.build_inline_row(
+        label="Reference preset:",
+        control=dash.html.Div(
+            [
+                ui_forms.persistent_dropdown(
+                    id=section.ids.bead_table_preset_dropdown,
+                    options=build_fluorescence_reference_preset_options(),
+                    value=section.default_reference_preset_name,
+                    clearable=False,
+                    searchable=False,
+                    style={
+                        "width": "320px",
+                    },
+                ),
+                ui_forms.build_info_badge(
+                    tooltip_target_id=section.reference_table_preset_tooltip_target_id,
+                ),
+                dbc.Tooltip(
+                    (
+                        "Select a built-in fluorescence bead ladder to populate the "
+                        "calibrated-intensity column. Choose Custom to enter your own values."
+                    ),
+                    id=section.reference_table_preset_tooltip_id,
+                    target=section.reference_table_preset_tooltip_target_id,
+                    placement="right",
+                ),
+            ],
+            style={
+                "display": "flex",
+                "alignItems": "center",
+                "overflow": "visible",
+            },
+        ),
+        margin_top=False,
+        row_style_overrides={
+            "overflow": "visible",
+        },
+        control_wrapper_style_overrides={
+            "overflow": "visible",
+        },
+    )

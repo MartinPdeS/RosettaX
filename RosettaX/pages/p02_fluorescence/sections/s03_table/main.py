@@ -1,0 +1,122 @@
+
+import dash_bootstrap_components as dbc
+import logging
+from . import callbacks, layout
+from RosettaX.ui import WorkflowStep
+from RosettaX.utils import RuntimeConfig
+from RosettaX.workflow.table.fluorescence import (
+    FluorescenceReferenceTable,
+)
+from RosettaX.workflow.table.layout import ReferenceTableConfig, ReferenceTableLayout
+from typing import Any
+
+logger = logging.getLogger(__name__)
+
+
+class ReferenceTable:
+    """
+    Fluorescence calibration reference table section.
+
+    Responsibilities
+    ----------------
+    - Configure the fluorescence reference table layout.
+    - Populate the table from the default runtime profile at layout creation.
+    - Rebuild the table from runtime profile values when a sidebar profile is loaded.
+    - Preserve user edited rows during ordinary runtime store updates.
+    - Keep the existing table ID used by peak detection and calibration callbacks.
+
+    Ownership rule
+    --------------
+    This section owns fluorescence reference table behavior. Generic table
+    rendering is delegated to ``ReferenceTableLayout``.
+    """
+
+    workflow_step = WorkflowStep(
+        title="Add standard units to calibration table",
+        description=(
+            "Add standard units (ABC, ERF, MESF) to the calibration table. The provided "
+            "values define the calibrated fluorescence scale."
+        ),
+        hover_description=(
+            "Enter the known MESF values for the fluorescence calibration beads and use "
+            "the fluorescence peak detection section to fill the measured peak "
+            "positions. This table is the source of truth for the fluorescence "
+            "calibration fit."
+        ),
+    )
+
+    calibrated_intensity_column_name = FluorescenceReferenceTable.column_calibrated_intensity
+    measured_intensity_column_name = FluorescenceReferenceTable.column_measured_intensity
+
+    bead_table_columns = FluorescenceReferenceTable.columns
+    user_data_column_ids = FluorescenceReferenceTable.user_data_column_ids
+
+    def __init__(
+        self,
+        page: Any,
+        section_number: int,
+        card_color: str = "pink",
+    ) -> None:
+        self.page = page
+        self.ids = page.ids.Calibration
+        self.section_number = section_number
+        self.card_color = card_color
+
+        self.reference_table_tooltip_target_id = f"{self.ids.bead_table}-reference-table-info-target"
+        self.reference_table_tooltip_id = f"{self.ids.bead_table}-reference-table-info-tooltip"
+        self.reference_table_preset_tooltip_target_id = (
+            f"{self.ids.bead_table_preset_dropdown}-reference-preset-info-target"
+        )
+        self.reference_table_preset_tooltip_id = (
+            f"{self.ids.bead_table_preset_dropdown}-reference-preset-info-tooltip"
+        )
+        self.default_reference_preset_name = self._build_default_reference_preset_name()
+
+        self.config = ReferenceTableConfig(
+            card_title=layout.build_card_title(self),
+            table_title=None,
+            description=None,
+            show_add_row_button=False,
+            show_all_rows=True,
+            allow_row_deletion=False,
+            body_style_key="",
+            show_table_title=False,
+        )
+
+        self.layout_builder = ReferenceTableLayout(
+            ids=self.ids,
+            config=self.config,
+            table_columns=self.bead_table_columns,
+            table_data=FluorescenceReferenceTable.build_rows_from_runtime_config(
+                runtime_config=RuntimeConfig.from_default_profile(),
+            ),
+        )
+
+        logger.debug(
+            "Initialized Fluorescence ReferenceTable section with page=%r",
+            page,
+        )
+
+    def _build_default_reference_preset_name(self) -> str:
+        """
+        Resolve the default preset selection from the default runtime profile.
+        """
+        runtime_config = RuntimeConfig.from_default_profile()
+
+        preset_name = FluorescenceReferenceTable.resolve_runtime_preset_name(
+            runtime_config=runtime_config,
+        )
+
+        return str(preset_name or "")
+
+    def get_layout(self) -> dbc.Card:
+        """
+        Build the fluorescence reference table layout.
+        """
+        return layout.get_layout(self)
+
+    def register_callbacks(self) -> None:
+        """
+        Register reference table callbacks.
+        """
+        callbacks.register_callbacks(self)

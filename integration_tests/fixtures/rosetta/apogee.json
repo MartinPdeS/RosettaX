@@ -1,0 +1,193 @@
+{
+  "fcs_file": "RosettaX/assets/sample-files/apogee_rosetta_beads_1min.fcs",
+  "sha256": "e71f9f35811e04169e00de0aa2a7d9555582283e59015fb7840c5a637895bbb1",
+  "expected_event_count": 168447,
+  "detector_channels": {
+    "scattering": "405LALS(Peak)",
+    "green_fluorescence": "488Grn(Peak)"
+  },
+  "max_events_for_analysis": 100000,
+  "peak_count": 10,
+  "runs": [
+    {
+      "process_name": "Rosetta Script Conservative",
+      "process_settings": {
+        "peak_count": 10,
+        "baseline_sigma_multiplier": 3.0,
+        "table_non_fluorescent_only": true,
+        "saturation_guard_enabled": true,
+        "saturation_guard_fraction": 0.5
+      },
+      "warning": true,
+      "rows": [],
+      "payload": {
+        "baseline_cutoff": 11606.957914582135
+      },
+      "status_contains": "marker anchors"
+    },
+    {
+      "process_name": "Rosetta Script Mixture",
+      "process_settings": {
+        "peak_count": 10,
+        "fit_r2_threshold": 0.7,
+        "baseline_sigma_multiplier": 3.0,
+        "fit_cv_threshold": 0.6,
+        "scatter_fit_cv_threshold": 1.0,
+        "table_non_fluorescent_only": true,
+        "saturation_guard_enabled": true,
+        "saturation_guard_fraction": 0.5
+      },
+      "warning": false,
+      "rows": [
+        {
+          "measured_peak_position": 2301.0954321777417,
+          "particle_diameter_nm": 70.0
+        },
+        {
+          "measured_peak_position": 5314.361033568357,
+          "particle_diameter_nm": 100.0
+        },
+        {
+          "measured_peak_position": 17415.253844454117,
+          "particle_diameter_nm": 125.0
+        },
+        {
+          "measured_peak_position": 45555.74244497976,
+          "particle_diameter_nm": 147.0
+        },
+        {
+          "measured_peak_position": 263982.85694438237,
+          "particle_diameter_nm": 203.0
+        },
+        {
+          "measured_peak_position": 1504946.9039208617,
+          "particle_diameter_nm": 296.0
+        }
+      ],
+      "payload": {
+        "points": [
+          {
+            "x": 2301.0954321777417,
+            "y": 612.0,
+            "kind": "non_fluorescent"
+          },
+          {
+            "x": 5314.361033568357,
+            "y": 756.0,
+            "kind": "non_fluorescent"
+          },
+          {
+            "x": 17415.253844454117,
+            "y": 855.0,
+            "kind": "non_fluorescent"
+          },
+          {
+            "x": 45555.74244497976,
+            "y": 929.0,
+            "kind": "non_fluorescent"
+          },
+          {
+            "x": 263982.85694438237,
+            "y": 1040.0,
+            "kind": "non_fluorescent"
+          },
+          {
+            "x": 1504946.9039208617,
+            "y": 1168.0,
+            "kind": "non_fluorescent"
+          },
+          {
+            "x": 3566387.0302922465,
+            "y": 1392.0,
+            "kind": "non_fluorescent"
+          },
+          {
+            "x": 32972.4367586976,
+            "y": 6693.318049001788,
+            "kind": "marker"
+          },
+          {
+            "x": 2879194.9841856575,
+            "y": 267765.7575947225,
+            "kind": "marker"
+          }
+        ],
+        "labels": [
+          "Non-fluorescent peak 1",
+          "Non-fluorescent peak 2",
+          "Non-fluorescent peak 3",
+          "Non-fluorescent peak 4",
+          "Non-fluorescent peak 5",
+          "Non-fluorescent peak 6",
+          "Non-fluorescent peak 7",
+          "Dim marker",
+          "Bright marker"
+        ],
+        "baseline_cutoff": 2710.8816535546434,
+        "scatter_guide_annotations": [
+          {
+            "x": 2301.0954321777417,
+            "label": "70 nm",
+            "kind": "non_fluorescent"
+          },
+          {
+            "x": 5314.361033568357,
+            "label": "100 nm",
+            "kind": "non_fluorescent"
+          },
+          {
+            "x": 17415.253844454117,
+            "label": "125 nm",
+            "kind": "non_fluorescent"
+          },
+          {
+            "x": 32972.4367586976,
+            "label": "140 nm",
+            "kind": "marker"
+          },
+          {
+            "x": 45555.74244497976,
+            "label": "147 nm",
+            "kind": "non_fluorescent"
+          },
+          {
+            "x": 263982.85694438237,
+            "label": "203 nm",
+            "kind": "non_fluorescent"
+          },
+          {
+            "x": 1504946.9039208617,
+            "label": "296 nm",
+            "kind": "non_fluorescent"
+          },
+          {
+            "x": 2879194.9841856575,
+            "label": "380 nm",
+            "kind": "marker"
+          }
+        ]
+      },
+      "status_contains": "Saturation guard excluded 1 table peak(s)"
+    },
+    {
+      "process_name": "Rosetta Script V1",
+      "process_settings": {
+        "peak_count": 10,
+        "fit_r2_threshold": 0.85,
+        "baseline_sigma_multiplier": 3.0,
+        "fit_cv_threshold": 0.6,
+        "scatter_fit_r2_threshold": 0.7,
+        "scatter_fit_cv_threshold": 1.0,
+        "table_non_fluorescent_only": true,
+        "saturation_guard_enabled": true,
+        "saturation_guard_fraction": 0.5
+      },
+      "warning": true,
+      "rows": [],
+      "payload": {},
+      "status_contains": "marker anchors"
+    }
+  ],
+  "description": "Recorded current behavior before the script refactor; bead identities are not independently verified.",
+  "position_relative_tolerance": 0.01
+}

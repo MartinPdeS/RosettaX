@@ -1,0 +1,16 @@
+{
+  "name": "Custom",
+  "mie_model": "Solid Sphere",
+  "medium_refractive_index": 1.333,
+  "particle_refractive_index": 1.39,
+  "particle_diameter_min_nm": 30.0,
+  "particle_diameter_max_nm": 1000.0,
+  "particle_diameter_count": 500,
+  "core_refractive_index": 1.37,
+  "shell_refractive_index": 1.46,
+  "shell_thickness_nm": 5.0,
+  "core_diameter_min_nm": 30.0,
+  "core_diameter_max_nm": 1000.0,
+  "core_diameter_count": 500,
+  "description": "Manual target model configuration."
+}

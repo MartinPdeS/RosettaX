@@ -1,0 +1,121 @@
+"""Regression tests for application workflow page styling."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
+
+from RosettaX.pages.p02_fluorescence.sections.s00_header import (
+    layout as fluorescence_header_layout,
+)
+from RosettaX.pages.p03_scattering.sections.s00_header import Header as ScatteringHeader
+from RosettaX.ui import WorkflowHeader, WorkflowStep, build_workflow_progress_content
+from RosettaX.utils import styling
+from types import SimpleNamespace
+
+
+class Test_WorkflowPageStyling:
+    """Regression checks for workflow page styling."""
+
+    def test_section_step_uses_its_position_for_number_and_color(self) -> None:
+        """Look up a section's step after the workflow order changes."""
+        first = WorkflowStep(
+            title="First",
+            description="First description",
+        )
+        second = WorkflowStep(
+            title="Second",
+            description="Second description",
+        )
+        header = WorkflowHeader(title="Example", description="Example", steps=[second, first])
+
+        numbered_first = header.get_workflow_step(workflow_step=first)
+        assert numbered_first.number == "2"
+        assert numbered_first.color_name == styling.get_workflow_section_color(2)
+        assert numbered_first.tooltip_text == first.description
+
+    def test_workflow_page_color_scheme_uses_shared_sequence(self) -> None:
+        """Check workflow page color scheme uses shared sequence."""
+        assert styling.get_workflow_page_header_color() == "green"
+        assert [
+            styling.get_workflow_section_color(section_number)
+            for section_number in range(1, 7)
+        ] == [
+            "yellow",
+            "blue",
+            "orange",
+            "cyan",
+            "purple",
+            "gray",
+        ]
+
+    def test_fluorescence_header_uses_shared_header_card_and_step_colors(self) -> None:
+        """Check fluorescence header uses shared header card and step colors."""
+        section = SimpleNamespace(
+            card_color=styling.get_workflow_page_header_color(),
+        )
+
+        card = fluorescence_header_layout.get_layout(section)
+
+        assert styling.build_rgba("green", 0.75) in card.style["borderLeft"]
+
+        step_row = card.children.children[1]
+        first_step_card = step_row.children[0].children
+        second_step_card = step_row.children[1].children
+
+        first_step_badge_style = first_step_card.children.children[0].children[0].style
+        second_step_badge_style = second_step_card.children.children[0].children[0].style
+
+        assert first_step_badge_style["backgroundColor"] == styling.build_rgba(
+            "yellow",
+            0.12,
+        )
+        assert second_step_badge_style["backgroundColor"] == styling.build_rgba(
+            "blue",
+            0.12,
+        )
+
+    def test_scattering_header_uses_shared_header_card_and_step_colors(self) -> None:
+        """Check scattering header uses shared header card and step colors."""
+        header = ScatteringHeader(
+            page=SimpleNamespace(),
+            card_color=styling.get_workflow_page_header_color(),
+        )
+
+        card = header.get_layout()
+
+        assert styling.build_rgba("green", 0.75) in card.style["borderLeft"]
+
+        step_row = card.children.children[1]
+        first_step_card = step_row.children[0].children
+        fifth_step_card = step_row.children[4].children
+
+        first_step_badge_style = first_step_card.children.children[0].children[0].style
+        fifth_step_badge_style = fifth_step_card.children.children[0].children[0].style
+
+        assert first_step_badge_style["backgroundColor"] == styling.build_rgba(
+            "yellow",
+            0.12,
+        )
+        assert fifth_step_badge_style["backgroundColor"] == styling.build_rgba(
+            "purple",
+            0.12,
+        )
+
+    def test_workflow_progress_identifies_complete_current_and_blocked_steps(self) -> None:
+        """Check workflow progress identifies complete current and blocked steps."""
+        progress = build_workflow_progress_content(
+            steps=[
+                WorkflowStep("1", "Upload", "", "yellow"),
+                WorkflowStep("2", "Review", "", "blue"),
+                WorkflowStep("3", "Save", "", "gray"),
+            ],
+            completed_count=1,
+        )
+
+        status_badges = progress.children[2].children
+        assert status_badges[0].children == "1. Upload: Complete"
+        assert status_badges[1].children == "2. Review: Current"
+        assert status_badges[2].children == "3. Save: Blocked"

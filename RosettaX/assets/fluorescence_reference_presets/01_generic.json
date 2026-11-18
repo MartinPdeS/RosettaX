@@ -1,0 +1,10 @@
+{
+  "name": "Generic",
+  "mesf_values": [
+    1000.0,
+    10000.0,
+    100000.0,
+    1000000.0
+  ],
+  "description": "Generic four-point MESF ladder."
+}

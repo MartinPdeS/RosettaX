@@ -1,0 +1,20 @@
+{
+  "name": "Sony ID7000 SSC",
+  "manufacturer": "Sony Biosciences",
+  "instrument": "ID7000",
+  "channel": "SSC",
+  "alias": [
+    "sony id7000",
+    "id7000",
+    "sony spectral analyzer"
+  ],
+  "description": "Side scatter detector preset for Sony ID7000 style modeling. These parameters are packaged as effective RosettaX assumptions so the instrument family can be selected and documented consistently.",
+  "detector_type": "PMT",
+  "wavelength_nm": 488.0,
+  "detector_numerical_aperture": 1.0,
+  "detector_cache_numerical_aperture": 0.0,
+  "detector_sampling": 900,
+  "blocker_bar_numerical_aperture": 0.0,
+  "detector_phi_angle_degree": 90.0,
+  "detector_gamma_angle_degree": 0.0
+}

@@ -1,0 +1,86 @@
+{
+  "description": "Current numerical regression baseline; calibration anchors are illustrative, not verified bead identities.",
+  "fcs_file": "RosettaX/assets/sample-files/apogee_rosetta_beads_1min.fcs",
+  "sha256": "e71f9f35811e04169e00de0aa2a7d9555582283e59015fb7840c5a637895bbb1",
+  "expected_event_count": 168447,
+  "detector_channels": {
+    "scattering": "405LALS(Peak)",
+    "green_fluorescence": "488Grn(Peak)"
+  },
+  "peak_detection": {
+    "peak_count": 10,
+    "max_events_for_analysis": 100000,
+    "process_settings": {
+      "fit_r2_threshold": 0.85,
+      "baseline_sigma_multiplier": 3.0,
+      "fit_cv_threshold": 0.6,
+      "scatter_fit_r2_threshold": 0.8,
+      "scatter_fit_cv_threshold": 1.0,
+      "table_non_fluorescent_only": true,
+      "saturation_guard_enabled": true,
+      "saturation_guard_fraction": 0.5,
+      "filter_edge_artifacts": true
+    }
+  },
+  "calibration": {
+    "mie_model": "Solid Sphere",
+    "medium_refractive_index": 1.333,
+    "particle_refractive_index": 1.59,
+    "core_refractive_index": null,
+    "shell_refractive_index": null,
+    "wavelength_nm": 405.0,
+    "detector_numerical_aperture": 1.0,
+    "detector_cache_numerical_aperture": 0.0,
+    "blocker_bar_numerical_aperture": 0.1,
+    "detector_sampling": 256,
+    "detector_phi_angle_degree": 28.0,
+    "detector_gamma_angle_degree": 0.0,
+    "detector_configuration_preset": "Apogee - Side",
+    "force_zero_intercept": true,
+    "simulated_curve_point_count": 128
+  },
+  "trial_standard_diameters_nm": [
+    400.0,
+    799.0
+  ],
+  "expected": {
+    "raw_peak_positions": [
+      261763.2047,
+      1492769.7195
+    ],
+    "raw_peak_relative_tolerance": 0.01,
+    "coupling_peak_positions": [
+      7.24394992e-05,
+      0.000413104244
+    ],
+    "coupling_peak_relative_tolerance": 0.015,
+    "equivalent_diameter_peak_positions_nm": [
+      415.1155,
+      797.4329
+    ],
+    "equivalent_diameter_absolute_tolerance_nm": 2.0,
+    "instrument_response_slope": 2.7673675243e-10,
+    "instrument_response_relative_tolerance": 0.01,
+    "minimum_fit_r_squared": 0.99,
+    "calibrated_event_histograms": [
+      {
+        "coupling_range": [
+          6e-05,
+          8.5e-05
+        ],
+        "bin_count": 32,
+        "peak_position": 7.3671875e-05,
+        "minimum_population": 5000
+      },
+      {
+        "coupling_range": [
+          0.00036,
+          0.00047
+        ],
+        "bin_count": 32,
+        "peak_position": 0.00041328125,
+        "minimum_population": 3000
+      }
+    ]
+  }
+}

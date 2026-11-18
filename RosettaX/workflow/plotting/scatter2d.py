@@ -1,0 +1,444 @@
+import dash
+import numpy as np
+import plotly.graph_objs as go
+from dataclasses import dataclass
+from RosettaX.utils import plottings, styling
+from RosettaX.workflow.plotting.layout import PlotOptions
+from RosettaX.workflow.plotting.models import ScatterOptions
+from typing import Any
+
+
+@dataclass(frozen=True)
+class Scatter2DGraphIds:
+    """
+    Component IDs used by a reusable 2D scatter graph block.
+    """
+
+    graph: str
+    axis_scale_toggle: str
+
+
+@dataclass(frozen=True)
+class Scatter2DTrace:
+    """
+    Input data for one 2D scatter trace.
+    """
+
+    x_values: Any
+    y_values: Any
+    name: str = ""
+    text_values: Any | None = None
+    customdata: Any | None = None
+    marker_size: float | None = None
+    marker_opacity: float | None = None
+    mode: str = "markers"
+    color: str | None = None
+    line_width: float | None = None
+    line_dash: str | None = None
+
+
+class Scatter2DGraph:
+    """
+    Shared 2D scatter graph builder.
+
+    Responsibilities
+    ----------------
+    - Apply consistent Plotly formatting to all 2D scatter plots.
+    - Never render a graph title inside the Plotly canvas.
+    - Put the legend inside the graph when traces have names.
+    - Provide a compact x log and y log toggle box below the graph.
+    - Optionally expose a log-colormap toggle for density-colored 2D plots.
+    - Optionally render graph specific controls in the same bottom control row.
+    - Convert Dash toggle values into Plotly axis scale settings.
+
+    Intended usage
+    --------------
+    Use ``build_component`` in page layouts.
+
+    Use ``build_figure`` inside callbacks that construct the scatter plot.
+    """
+
+    x_log_value = PlotOptions.x_log_value
+    y_log_value = PlotOptions.y_log_value
+    colormap_log_value = PlotOptions.color_log_value
+
+    default_height = "52vh"
+    default_marker_size = ScatterOptions().marker_size
+    default_font_size = 14
+    default_tick_size = 12
+
+    @classmethod
+    def build_component(
+        cls,
+        *,
+        component_ids: Scatter2DGraphIds,
+        figure: go.Figure | None = None,
+        x_log_enabled: bool = False,
+        y_log_enabled: bool = False,
+        colormap_log_toggle_enabled: bool = False,
+        colormap_log_enabled: bool = False,
+        graph_style: dict[str, Any] | None = None,
+        bottom_controls: list[Any] | None = None,
+    ) -> dash.html.Div:
+        """
+        Build a reusable graph block with axis scale controls below it.
+
+        Optional bottom controls are rendered in the same control row as the
+        x and y log toggles. This is intended for graph specific controls such
+        as histogram bin count.
+        """
+        toggle_values: list[str] = []
+
+        if x_log_enabled:
+            toggle_values.append(
+                cls.x_log_value,
+            )
+
+        if y_log_enabled:
+            toggle_values.append(
+                cls.y_log_value,
+            )
+
+        if colormap_log_toggle_enabled and colormap_log_enabled:
+            toggle_values.append(
+                cls.colormap_log_value,
+            )
+
+        resolved_graph_style = {
+            **styling.PLOTLY_GRAPH_STYLE,
+            "height": cls.default_height,
+        }
+
+        if isinstance(graph_style, dict):
+            resolved_graph_style.update(
+                graph_style,
+            )
+
+        return dash.html.Div(
+            [
+                dash.dcc.Graph(
+                    responsive=True,
+                    id=component_ids.graph,
+                    figure=figure if figure is not None else cls.build_empty_figure(),
+                    style=resolved_graph_style,
+                    config=styling.PLOTLY_GRAPH_CONFIG,
+                ),
+                cls.build_axis_scale_control(
+                    component_id=component_ids.axis_scale_toggle,
+                    value=toggle_values,
+                    colormap_log_toggle_enabled=colormap_log_toggle_enabled,
+                    bottom_controls=bottom_controls,
+                ),
+            ]
+        )
+
+    @classmethod
+    def build_axis_scale_control(
+        cls,
+        *,
+        component_id: str,
+        value: list[str] | None = None,
+        colormap_log_toggle_enabled: bool = False,
+        bottom_controls: list[Any] | None = None,
+    ) -> dash.html.Div:
+        """
+        Build the compact x log and y log toggle box below the graph.
+        """
+        return PlotOptions.build_component(
+            component_id=component_id,
+            value=value,
+            color_log_enabled=colormap_log_toggle_enabled,
+            display_controls=(
+                [control for control in bottom_controls if control is not None]
+                if isinstance(bottom_controls, list)
+                else None
+            ),
+        )
+
+    @classmethod
+    def axis_scale_from_toggle_values(
+        cls,
+        toggle_values: Any,
+    ) -> tuple[str, str]:
+        """
+        Convert checklist values into x and y axis scale strings.
+        """
+        resolved_toggle_values = (
+            toggle_values if isinstance(toggle_values, list) else []
+        )
+
+        x_axis_type = "log" if cls.x_log_value in resolved_toggle_values else "linear"
+
+        y_axis_type = "log" if cls.y_log_value in resolved_toggle_values else "linear"
+
+        return x_axis_type, y_axis_type
+
+    @classmethod
+    def build_figure(
+        cls,
+        *,
+        traces: list[Scatter2DTrace],
+        title: str = "",
+        x_axis_title: str,
+        y_axis_title: str,
+        axis_scale_toggle_values: Any = None,
+        options: ScatterOptions | None = None,
+        show_grid: bool = True,
+        hovermode: str = "closest",
+        uirevision: str = "shared_scatter_2d",
+    ) -> go.Figure:
+        """
+        Build a consistently formatted 2D scatter figure.
+
+        The title argument is intentionally ignored to keep graph canvases title free.
+        """
+        plot_options = options or ScatterOptions()
+        if axis_scale_toggle_values is None:
+            x_axis_type = "log" if plot_options.axes.x_log else "linear"
+            y_axis_type = "log" if plot_options.axes.y_log else "linear"
+        else:
+            x_axis_type, y_axis_type = cls.axis_scale_from_toggle_values(
+                axis_scale_toggle_values,
+            )
+
+        figure = go.Figure()
+
+        for trace in traces:
+            x_values = np.asarray(
+                trace.x_values,
+                dtype=float,
+            ).reshape(-1)
+
+            y_values = np.asarray(
+                trace.y_values,
+                dtype=float,
+            ).reshape(-1)
+
+            if x_values.size != y_values.size:
+                raise ValueError(
+                    f'Scatter trace "{trace.name}" has different x and y lengths.'
+                )
+
+            finite_mask = np.isfinite(x_values) & np.isfinite(y_values)
+
+            if x_axis_type == "log":
+                finite_mask &= x_values > 0.0
+
+            if y_axis_type == "log":
+                finite_mask &= y_values > 0.0
+
+            x_values = x_values[finite_mask]
+            y_values = y_values[finite_mask]
+
+            event_limit = (
+                int(plot_options.max_events)
+                if plot_options.max_events is not None
+                else None
+            )
+            if event_limit is not None:
+                x_values = x_values[:event_limit]
+                y_values = y_values[:event_limit]
+
+            text_values = None
+
+            if trace.text_values is not None:
+                text_values_array = np.asarray(
+                    trace.text_values,
+                    dtype=object,
+                ).reshape(-1)
+
+                if text_values_array.size == finite_mask.size:
+                    text_values = text_values_array[finite_mask]
+                    if event_limit is not None:
+                        text_values = text_values[:event_limit]
+
+            customdata = None
+
+            if trace.customdata is not None:
+                customdata_array = np.asarray(
+                    trace.customdata,
+                    dtype=object,
+                )
+
+                if customdata_array.shape[0] == finite_mask.size:
+                    customdata = customdata_array[finite_mask]
+                    if event_limit is not None:
+                        customdata = customdata[:event_limit]
+
+            marker = {
+                "size": (
+                    plot_options.marker_size
+                    if trace.marker_size is None
+                    else float(trace.marker_size)
+                ),
+                "opacity": float(
+                    plot_options.marker_opacity
+                    if trace.marker_opacity is None
+                    else trace.marker_opacity,
+                ),
+            }
+
+            if trace.color is not None:
+                marker["color"] = trace.color
+
+            figure.add_trace(
+                go.Scattergl(
+                    x=x_values,
+                    y=y_values,
+                    mode=trace.mode,
+                    name=trace.name,
+                    text=text_values,
+                    customdata=customdata,
+                    line=(
+                        {
+                            "color": trace.color,
+                            "width": (
+                                float(trace.line_width)
+                                if trace.line_width is not None
+                                else None
+                            ),
+                            "dash": trace.line_dash,
+                        }
+                        if trace.color is not None
+                        else None
+                    ),
+                    marker=marker,
+                )
+            )
+
+        cls.apply_formatting(
+            figure=figure,
+            title=title,
+            x_axis_title=x_axis_title,
+            y_axis_title=y_axis_title,
+            x_axis_type=x_axis_type,
+            y_axis_type=y_axis_type,
+            show_grid=show_grid,
+            hovermode=hovermode,
+            uirevision=uirevision,
+        )
+
+        return figure
+
+    @classmethod
+    def apply_formatting(
+        cls,
+        *,
+        figure: go.Figure,
+        title: str = "",
+        x_axis_title: str,
+        y_axis_title: str,
+        x_axis_type: str = "linear",
+        y_axis_type: str = "linear",
+        show_grid: bool = True,
+        hovermode: str = "closest",
+        uirevision: str = "shared_scatter_2d",
+    ) -> go.Figure:
+        """
+        Apply shared 2D scatter formatting to an existing Plotly figure.
+
+        The title argument is intentionally ignored. This method always removes
+        any Plotly title.
+        """
+        trace_names = [
+            str(trace.name).strip() for trace in figure.data if str(trace.name).strip()
+        ]
+
+        show_legend = len(trace_names) > 0
+
+        figure.update_layout(
+            title={
+                "text": "",
+            },
+            xaxis_title=x_axis_title,
+            yaxis_title=y_axis_title,
+            hovermode=hovermode,
+            uirevision=uirevision,
+            separators=".,",
+            showlegend=show_legend,
+            margin={
+                "l": 70,
+                "r": 20,
+                "t": 20,
+                "b": 65,
+            },
+            font={
+                "size": cls.default_font_size,
+            },
+            legend={
+                "x": 0.99,
+                "y": 0.99,
+                "xanchor": "right",
+                "yanchor": "top",
+                "bgcolor": "rgba(255, 255, 255, 0.72)",
+                "bordercolor": "rgba(0, 0, 0, 0.18)",
+                "borderwidth": 1,
+            },
+        )
+
+        figure.update_xaxes(
+            type=x_axis_type,
+            showgrid=show_grid,
+            zeroline=False,
+            tickfont={
+                "size": cls.default_tick_size,
+            },
+        )
+
+        figure.update_yaxes(
+            type=y_axis_type,
+            showgrid=show_grid,
+            zeroline=False,
+            tickfont={
+                "size": cls.default_tick_size,
+            },
+        )
+
+        plottings.apply_default_visual_style(
+            figure,
+            marker_size=cls.default_marker_size,
+            line_width=2.0,
+            font_size=float(cls.default_font_size),
+            tick_size=float(cls.default_tick_size),
+            show_grid=show_grid,
+        )
+
+        return figure
+
+    @classmethod
+    def build_empty_figure(
+        cls,
+        *,
+        message: str = "No 2D scatter data available.",
+    ) -> go.Figure:
+        """
+        Build an empty formatted scatter figure.
+        """
+        figure = go.Figure()
+
+        figure.add_annotation(
+            text=message,
+            xref="paper",
+            yref="paper",
+            x=0.5,
+            y=0.5,
+            showarrow=False,
+        )
+
+        cls.apply_formatting(
+            figure=figure,
+            title="",
+            x_axis_title="x",
+            y_axis_title="y",
+            x_axis_type="linear",
+            y_axis_type="linear",
+            show_grid=True,
+            hovermode="closest",
+            uirevision="empty_shared_scatter_2d",
+        )
+
+        figure.update_layout(
+            showlegend=False,
+        )
+
+        return figure

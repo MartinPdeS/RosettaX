@@ -1,0 +1,238 @@
+"""Regression tests for apply calibration services."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
+
+import numpy as np
+import pandas as pd
+import sys
+import types
+from types import SimpleNamespace
+
+
+class _PyMieSimStub(types.ModuleType):
+    """Minimal PyMieSim module used by the unit tests."""
+
+    experiment = types.SimpleNamespace()
+
+
+class _PyMieSimUnitsStub(types.ModuleType):
+    """Minimal PyMieSim units module used by the unit tests."""
+
+    ureg = types.SimpleNamespace()
+
+
+sys.modules.setdefault(
+    "PyMieSim",
+    _PyMieSimStub("PyMieSim"),
+)
+sys.modules.setdefault(
+    "PyMieSim.units",
+    _PyMieSimUnitsStub("PyMieSim.units"),
+)
+
+from RosettaX.pages.p04_calibrate.sections.s02_calibration_picker import (
+    services as calibration_picker_services,
+)
+from RosettaX.workflow.apply_calibration import services
+
+
+class Test_ApplyCalibrationServices:
+    """Regression checks for apply calibration services."""
+
+    def test_build_legacy_dataframe_transformer_adds_new_calibrated_output_column(self, monkeypatch) -> None:
+        """Check build legacy dataframe transformer adds new calibrated output column."""
+        monkeypatch.setattr(
+            services,
+            "apply_legacy_calibration_to_series",
+            lambda values, calibration_payload, warning_messages=None, source_channel=None: values * 10.0,
+        )
+
+        transformer_factory = services.build_legacy_dataframe_transformer_factory(
+            source_channel="FITC-A",
+            output_channel_name="FITC (MESF)",
+            calibration_payload={
+                "source_channel": "FITC-A",
+                "applied_output_channel_name": "FITC (MESF)",
+            },
+        )
+
+        transformer = transformer_factory("/tmp/input.fcs")
+        dataframe = pd.DataFrame(
+            {
+                "FITC-A": [1.0, 2.0, 3.0],
+                "Time": [10.0, 11.0, 12.0],
+            }
+        )
+
+        result = transformer(dataframe)
+
+        assert list(result.columns) == ["FITC-A", "Time", "FITC (MESF)"]
+        assert result["FITC-A"].tolist() == [1.0, 2.0, 3.0]
+        assert result["FITC (MESF)"].tolist() == [10.0, 20.0, 30.0]
+        assert result.attrs["fcs_detector_metadata_overrides"]["FITC (MESF)"]["S"] == (
+            "RosettaX based on FITC-A"
+        )
+
+    def test_build_legacy_dataframe_transformer_clamps_negative_values_with_warning(self) -> None:
+        """Check build legacy dataframe transformer clamps negative values with warning."""
+        transformer_factory = services.build_legacy_dataframe_transformer_factory(
+            source_channel="FITC-A",
+            output_channel_name="FITC (MESF)",
+            calibration_payload={
+                "source_channel": "FITC-A",
+                "fit_model": "log10(y)=slope*log10(x)+intercept",
+                "parameters": {
+                    "slope": 1.0,
+                    "intercept": 0.0,
+                },
+            },
+            warnings=[],
+        )
+
+        transformer = transformer_factory("/tmp/input.fcs")
+        dataframe = pd.DataFrame(
+            {
+                "FITC-A": [-1.0, 0.0, 10.0],
+            }
+        )
+
+        result = transformer(dataframe)
+
+        assert result["FITC (MESF)"].tolist() == [0.0, 0.0, 10.0]
+
+    def test_build_success_message_appends_warning_text(self) -> None:
+        """Check build success message appends warning text."""
+        message = services.build_success_message(
+            selected_calibrations=['fitc.json -> "FITC (MESF)"'],
+            source_channels=["FITC-A"],
+            file_count=1,
+            output_channels=["FITC (MESF)"],
+            warnings=['Clamped 3 negative event(s) to 0 before applying log calibration to "FITC-A".'],
+        )
+
+        assert "Applied calibration(s)" in message
+        assert "Warning:" in message
+        assert 'Clamped 3 negative event(s) to 0 before applying log calibration to "FITC-A".' in message
+
+    def test_resolve_unique_output_channel_name_appends_suffix_when_name_is_reserved(self) -> None:
+        """Check resolve unique output channel name appends suffix when name is reserved."""
+        resolved_name = services.resolve_unique_output_channel_name(
+            preferred_name="FITC (MESF)",
+            reserved_names={"FITC-A", "FITC (MESF)", "FITC (MESF) 2"},
+        )
+
+        assert resolved_name == "FITC (MESF) 3"
+
+    def test_apply_calibration_to_fcs_files_uses_saved_scattering_output_channel_name(self, monkeypatch) -> None:
+        """Check apply calibration to FCS files uses saved scattering output channel name."""
+        monkeypatch.setattr(
+            services.io,
+            "build_input_export_columns",
+            lambda source_channels, export_columns: list(export_columns),
+        )
+        monkeypatch.setattr(
+            services.io,
+            "build_exported_fcs_bytes",
+            lambda uploaded_fcs_path, input_export_columns, dataframe_transformer: b"payload",
+        )
+        monkeypatch.setattr(
+            services.io,
+            "build_export_filename",
+            lambda uploaded_fcs_path, output_channels: "export.fcs",
+        )
+
+        result = services.apply_calibration_to_fcs_files(
+            request=services.ApplyCalibrationRequest(
+                uploaded_fcs_paths=["/tmp/input.fcs"],
+                export_columns=["Time"],
+                calibrations=[
+                    services.CalibrationApplication(
+                        selected_calibration="scatter.json",
+                        calibration_payload={
+                            "calibration_type": "scattering",
+                            "version": 2,
+                            "source_channel": "SSC-A",
+                            "applied_output_channel_name": "Diameter (nm)",
+                        },
+                        scattering_target_model_parameters=object(),
+                    ),
+                ],
+            ),
+        )
+
+        assert result.output_channels == ["Diameter (nm)"]
+        assert '"Diameter (nm)"' in result.status
+
+    def test_build_scattering_dataframe_transformer_factory_passes_resolved_output_channel_names(self, monkeypatch) -> None:
+        """Check build scattering dataframe transformer factory passes resolved output channel names."""
+        captured_arguments = {}
+
+        def _fake_apply_scattering_calibration_to_dataframe(**kwargs):
+            """Simulate apply scattering calibration to dataframe for this test."""
+            captured_arguments.update(kwargs)
+            return SimpleNamespace(
+                dataframe=kwargs["dataframe"],
+                output_columns=list(kwargs["output_channel_names"]),
+                warnings=[],
+                target_mie_relation=None,
+            )
+
+        monkeypatch.setattr(
+            services,
+            "apply_scattering_calibration_to_dataframe",
+            _fake_apply_scattering_calibration_to_dataframe,
+        )
+
+        transformer_factory = services.build_scattering_dataframe_transformer_factory(
+            source_channel="SSC-A",
+            output_channel_names=["Diameter (nm)"],
+            calibration_payload={
+                "source_channel": "SSC-A",
+                "applied_output_channel_name": "Diameter (nm)",
+            },
+            target_model_parameters=object(),
+        )
+
+        transformer = transformer_factory("/tmp/input.fcs")
+        dataframe = pd.DataFrame({"SSC-A": [1.0, 2.0]})
+
+        result = transformer(dataframe)
+
+        assert result.equals(dataframe)
+        assert captured_arguments["output_channel_names"] == ["Diameter (nm)"]
+
+    def test_build_target_mie_relation_figure_uses_custom_uirevision(self, monkeypatch) -> None:
+        """Check build target Mie relation figure uses custom uirevision."""
+        class FakeFigure:
+            """Test double for fake figure."""
+
+            def __init__(self, uirevision: str) -> None:
+                """Initialize the state required by this test double."""
+                self.layout = SimpleNamespace(uirevision=uirevision)
+
+            def update_layout(self, **kwargs):
+                """Update layout for this test."""
+                return None
+
+        monkeypatch.setattr(
+            calibration_picker_services.plotting.scatter2d.Scatter2DGraph,
+            "build_figure",
+            lambda **kwargs: FakeFigure(kwargs["uirevision"]),
+        )
+
+        figure = calibration_picker_services.build_target_mie_relation_figure(
+            full_diameter_values_nm=np.asarray([100.0, 200.0]),
+            full_coupling_values=np.asarray([1.0, 2.0]),
+            monotone_diameter_values_nm=np.asarray([100.0, 200.0]),
+            monotone_coupling_values=np.asarray([1.0, 2.0]),
+            axis_scale_toggle_values=[],
+            x_axis_title="Target particle diameter [nm]",
+            uirevision="custom-revision-token",
+        )
+
+        assert figure.layout.uirevision == "custom-revision-token"

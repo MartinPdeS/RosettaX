@@ -1,0 +1,208 @@
+"""Regression tests for application home page."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
+
+import dash
+import importlib
+import pytest
+from RosettaX.utils.usage_metrics import UsageMetrics
+
+
+def _collect_text(component) -> list[str]:
+    """Collect text recursively from the test component tree."""
+    if component is None:
+        return []
+
+    if isinstance(component, str):
+        return [component]
+
+    children = getattr(component, "children", None)
+
+    if children is None:
+        return []
+
+    if isinstance(children, (list, tuple)):
+        collected: list[str] = []
+        for child in children:
+            collected.extend(_collect_text(child))
+        return collected
+
+    return _collect_text(children)
+
+
+def _collect_components(component) -> list[object]:
+    """Collect components recursively from the test layout."""
+    if component is None or isinstance(component, str):
+        return []
+
+    collected = [component]
+    children = getattr(component, "children", None)
+
+    if isinstance(children, (list, tuple)):
+        for child in children:
+            collected.extend(_collect_components(child))
+    else:
+        collected.extend(_collect_components(children))
+
+    return collected
+
+
+class Test_HomePage:
+    """Regression checks for home page."""
+
+    def test_layout_shows_only_calibrated_file_total_in_welcome_card(
+        self,
+        monkeypatch,
+    ) -> None:
+        """Check layout shows only calibrated file total in welcome card."""
+        monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
+
+        home_main = importlib.import_module("RosettaX.pages.p01_home.main")
+        home_main = importlib.reload(home_main)
+
+        monkeypatch.setattr(
+            home_main.usage_metrics,
+            "record_home_page_visit",
+            lambda: UsageMetrics(
+                apply_button_click_count=12,
+                total_calibrated_files=34,
+                home_page_visit_count=56,
+            ),
+        )
+        layout = home_main.HomePage().layout()
+        text_nodes = _collect_text(layout)
+
+        assert "Version:" in text_nodes
+        expected_version = home_main.resolve_software_version_label()
+        assert expected_version in text_nodes
+        assert "Support Developer" in text_nodes
+        assert "Project resources" not in text_nodes
+        assert "What you can do" in text_nodes
+        assert "Calibration" in text_nodes
+        assert "FCS data tools" in text_nodes
+        assert "Guides & examples" in text_nodes
+        assert "Profile" in text_nodes
+        assert "RosettaX usage metrics." not in text_nodes
+        assert "Home page visits" not in text_nodes
+        assert "Apply button clicks" not in text_nodes
+        assert "Total calibrated files" in text_nodes
+        assert "56" not in text_nodes
+        assert "12" not in text_nodes
+        assert "34" in text_nodes
+        welcome_card_text = _collect_text(layout.children[2])
+        assert "RosettaX" in welcome_card_text
+        assert "Total calibrated files" in welcome_card_text
+        assert "34" in welcome_card_text
+
+        citation_buttons = [
+            component
+            for component in _collect_components(layout)
+            if getattr(component, "children", None) == "Citing this work"
+        ]
+        assert len(citation_buttons) == 1
+        assert citation_buttons[0].href == "/citation"
+
+
+@pytest.mark.parametrize(
+    "installed_version, generated_version, expected",
+    [
+        ("1.2.3", "0.0", "v1.2.3"),
+        ("1.2.3", "0.9.0", "v1.2.3"),
+        ("0.0", "0.9.0", "v0.9.0"),
+        (None, "0.9.0", "v0.9.0"),
+        ("v0.9.0", "0.0", "v0.9.0"),
+        ("0.0.1", "0.0", "v0.0.1"),
+        ("0.0.dev2", "0.9.0", "v0.9.0"),
+        (None, "0.0.0", "Unavailable"),
+    ],
+)
+def test_home_version_resolves_installed_metadata_and_source_fallback(
+    monkeypatch,
+    installed_version,
+    generated_version,
+    expected,
+):
+    """Check home version resolves installed metadata and source fallback."""
+    monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
+    home_main = importlib.import_module("RosettaX.pages.p01_home.main")
+
+    def read_installed_version(_name):
+        """Read the version expected by the installed-package check."""
+        if installed_version is None:
+            raise home_main.importlib.metadata.PackageNotFoundError("RosettaX")
+        return installed_version
+
+    monkeypatch.setattr(home_main.importlib.metadata, "version", read_installed_version)
+    monkeypatch.setattr(home_main, "__version__", generated_version)
+    assert home_main.resolve_software_version_label() == expected
+    assert expected in _collect_text(home_main.HomePage()._github_tag_widget())
+
+
+class Test_GitHubTagResolution:
+    """Regression checks for git hub tag resolution."""
+
+    def test_resolve_latest_github_tag_label_uses_ttl_cache(
+        self,
+        monkeypatch,
+    ) -> None:
+        """Check resolve latest github tag label uses ttl cache."""
+        monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
+
+        home_main = importlib.import_module("RosettaX.pages.p01_home.main")
+        home_main = importlib.reload(home_main)
+
+        current_time = {"value": 100.0}
+        fetched_labels = iter(["v1.2.3", "v1.2.4"])
+
+        monkeypatch.setattr(
+            home_main.time,
+            "monotonic",
+            lambda: current_time["value"],
+        )
+        monkeypatch.setattr(
+            home_main,
+            "_fetch_latest_github_tag_label",
+            lambda: next(fetched_labels),
+        )
+
+        assert home_main.resolve_latest_github_tag_label() == "v1.2.3"
+
+        current_time["value"] += home_main.GITHUB_TAG_CACHE_TTL_SECONDS - 1.0
+        assert home_main.resolve_latest_github_tag_label() == "v1.2.3"
+
+        current_time["value"] += 2.0
+        assert home_main.resolve_latest_github_tag_label() == "v1.2.4"
+
+    def test_resolve_latest_github_tag_label_falls_back_to_last_known_tag(
+        self,
+        monkeypatch,
+    ) -> None:
+        """Check resolve latest github tag label falls back to last known tag."""
+        monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
+
+        home_main = importlib.import_module("RosettaX.pages.p01_home.main")
+        home_main = importlib.reload(home_main)
+
+        current_time = {"value": 100.0}
+        fetched_labels = iter(["v1.2.3", None])
+
+        monkeypatch.setattr(
+            home_main.time,
+            "monotonic",
+            lambda: current_time["value"],
+        )
+        monkeypatch.setattr(
+            home_main,
+            "_fetch_latest_github_tag_label",
+            lambda: next(fetched_labels),
+        )
+
+        assert home_main.resolve_latest_github_tag_label() == "v1.2.3"
+
+        current_time["value"] += home_main.GITHUB_TAG_CACHE_TTL_SECONDS + 1.0
+        assert home_main.resolve_latest_github_tag_label() == "v1.2.3"

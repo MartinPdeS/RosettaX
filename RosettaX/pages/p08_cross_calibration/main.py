@@ -1,0 +1,616 @@
+import dash
+import dash_bootstrap_components as dbc
+import json
+from .ids import Ids
+from dash import dash_table, dcc, html
+from RosettaX.ui import (
+    WorkflowHeader,
+    WorkflowStep,
+)
+from RosettaX.utils import styling, ui_forms
+from RosettaX.workflow.calibration_cards import build_calibration_workflow_section_card
+from RosettaX.workflow.cross_calibration import services
+from typing import Any
+
+
+class CrossCalibrationPage:
+    """
+    Cross-calibration workflow page.
+    """
+
+    def __init__(self) -> None:
+        self.ids = Ids()
+        self.style = styling.PAGE
+        self.workflow_header = WorkflowHeader(
+            title="Cross calibration",
+            description=(
+                "Create a transfer calibration from a primary reference bead set used less often to a cheaper routine bead set measured more often. "
+                "This workflow is experimental and may change as transfer-calibration support develops."
+            ),
+            steps=[self.upload_step, self.result_step, self.export_step],
+            column_kwargs={"xl": True},
+        )
+
+    upload_step = WorkflowStep(
+        title="Load primary and secondary calibrations",
+        description=(
+            "Upload the primary reference and routine-bead calibrations used to build "
+            "the transfer relation."
+        ),
+        hover_description=(
+            "Load the reference and routine-bead calibrations used to build the "
+            "transfer relation."
+        ),
+    )
+
+    result_step = WorkflowStep(
+        title="Review transfer relation",
+        description=(
+            "Inspect the fitted transfer relation between the routine bead and primary "
+            "calibration."
+        ),
+        hover_description=(
+            "Inspect the fitted relation before exporting it for routine-bead "
+            "calibration."
+        ),
+    )
+
+    export_step = WorkflowStep(
+        title="Export transfer relation",
+        description=(
+            "Download the transfer calibration for later use with the routine bead set."
+        ),
+        hover_description=(
+            "Download the transfer calibration for later use with the routine bead set."
+        ),
+    )
+
+    def layout(self) -> dbc.Container:
+        return dbc.Container(
+            [
+                dcc.Store(
+                    id=self.ids.primary_summary_store,
+                    data=None,
+                    storage_type="session",
+                ),
+                dcc.Store(
+                    id=self.ids.secondary_summary_store,
+                    data=None,
+                    storage_type="session",
+                ),
+                dcc.Store(
+                    id=self.ids.result_store,
+                    data=None,
+                    storage_type="session",
+                ),
+                dcc.Download(
+                    id=self.ids.export_download,
+                ),
+                html.Div(
+                    [
+                        self._build_header_card(),
+                        self._build_upload_card(),
+                        self._build_result_card(),
+                        self._build_export_card(),
+                    ],
+                    style={
+                        "display": "flex",
+                        "flexDirection": "column",
+                        "gap": "18px",
+                    },
+                ),
+            ],
+            fluid=True,
+            style={
+                **self.style,
+                "paddingLeft": "0px",
+                "paddingRight": "0px",
+                "paddingBottom": "48px",
+            },
+        )
+
+    def _build_header_card(self) -> dbc.Card:
+        return self.workflow_header.build_header(
+            progress_id=f"{self.ids.page_prefix}-workflow-progress",
+            step_target_page_name=self.ids.page_prefix,
+        )
+
+
+    def _build_upload_card(self) -> dbc.Card:
+        body_children = [
+            dbc.Row(
+                [
+                    dbc.Col(
+                        self._build_upload_panel(
+                            title="Primary reference calibration",
+                            upload_id=self.ids.primary_upload,
+                            feedback_id=self.ids.primary_feedback,
+                            summary_id=self.ids.primary_summary,
+                            button_text=services.build_upload_prompt_text(
+                                "primary reference",
+                            ),
+                            empty_summary_text="No primary calibration loaded.",
+                        ),
+                        xs=12,
+                        lg=6,
+                    ),
+                    dbc.Col(
+                        self._build_upload_panel(
+                            title="Secondary routine-bead calibration",
+                            upload_id=self.ids.secondary_upload,
+                            feedback_id=self.ids.secondary_feedback,
+                            summary_id=self.ids.secondary_summary,
+                            button_text=services.build_upload_prompt_text(
+                                "secondary routine-bead",
+                            ),
+                            empty_summary_text="No secondary calibration loaded.",
+                        ),
+                        xs=12,
+                        lg=6,
+                    ),
+                ],
+                className="g-3",
+            ),
+            html.Div(
+                [
+                    dbc.Button(
+                        "Create transfer calibration",
+                        id=self.ids.build_button,
+                        n_clicks=0,
+                        color="primary",
+                    ),
+                    html.Div(
+                        id=self.ids.status,
+                        style={
+                            "minHeight": "24px",
+                            "display": "flex",
+                            "alignItems": "center",
+                        },
+                    ),
+                ],
+                style={
+                    "display": "flex",
+                    "gap": "14px",
+                    "alignItems": "center",
+                    "marginTop": "16px",
+                    "flexWrap": "wrap",
+                },
+            ),
+        ]
+        return build_calibration_workflow_section_card(
+            page_name=self.ids.page_prefix,
+            workflow_step=self.workflow_header.get_workflow_step(workflow_step=self.upload_step),
+            body_children=body_children,
+        )
+
+    def _build_upload_panel(
+        self,
+        *,
+        title: str,
+        upload_id: str,
+        feedback_id: str,
+        summary_id: str,
+        button_text: str,
+        empty_summary_text: str,
+    ) -> dbc.Card:
+        return dbc.Card(
+            dbc.CardBody(
+                [
+                    html.H5(
+                        title,
+                        style={"marginBottom": "10px"},
+                    ),
+                    ui_forms.build_upload_widget(
+                        upload_id=upload_id,
+                        prompt_text=button_text,
+                        accepted_file_extensions=".json",
+                        multiple=False,
+                    ),
+                    dcc.Loading(
+                        ui_forms.build_upload_status(
+                            status_id=feedback_id,
+                            initial_text="No file loaded.",
+                        ),
+                        type="default",
+                    ),
+                    html.Hr(),
+                    html.Div(
+                        [
+                            html.Strong("Summary"),
+                            html.Div(
+                                self._build_summary_children([empty_summary_text]),
+                                id=summary_id,
+                                style={
+                                    "marginTop": "8px",
+                                    "display": "flex",
+                                    "flexDirection": "column",
+                                    "gap": "4px",
+                                    "opacity": 0.86,
+                                },
+                            ),
+                        ]
+                    ),
+                ]
+            ),
+            style=ui_forms.build_workflow_subpanel_card_style(
+                color_name=styling.get_workflow_section_color(1),
+            ),
+        )
+
+    def _build_summary_children(
+        self,
+        summary_rows: list[Any],
+    ) -> list[Any]:
+        if not summary_rows:
+            return []
+
+        first_row = summary_rows[0]
+
+        if isinstance(first_row, str):
+            return [html.Div(str(first_row))]
+
+        children: list[Any] = []
+
+        for row in summary_rows:
+            if not isinstance(row, dict):
+                continue
+
+            children.append(
+                html.Div(
+                    [
+                        html.Span(
+                            f"{row.get('label')}:",
+                            style={
+                                "fontWeight": "600",
+                                "minWidth": "120px",
+                                "display": "inline-block",
+                            },
+                        ),
+                        html.Span(str(row.get("value") or "n/a")),
+                    ],
+                    style={
+                        "display": "flex",
+                        "gap": "12px",
+                        "alignItems": "flex-start",
+                    },
+                )
+            )
+
+        return children
+
+    def _build_result_card(self) -> dbc.Card:
+        return build_calibration_workflow_section_card(
+            page_name=self.ids.page_prefix,
+            workflow_step=self.workflow_header.get_workflow_step(workflow_step=self.result_step),
+            body_children=[
+                dcc.Graph(
+                    responsive=True,
+                    id=self.ids.graph,
+                    figure=services.build_empty_result_figure(
+                        message="Upload a primary and a secondary calibration to build a transfer relation.",
+                    ),
+                    config=styling.PLOTLY_GRAPH_CONFIG,
+                    style=services.resolve_graph_style(),
+                ),
+                dash_table.DataTable(
+                    id=self.ids.table,
+                    columns=[
+                        {"name": "Bead", "id": "Bead"},
+                        {"name": "Secondary peak", "id": "Secondary peak"},
+                        {
+                            "name": "Primary calibrated value",
+                            "id": "Primary calibrated value",
+                        },
+                        {"name": "Primary peak", "id": "Primary peak"},
+                    ],
+                    data=[],
+                    page_size=8,
+                    fixed_rows=styling.DATATABLE["fixed_rows"],
+                    style_table=styling.DATATABLE["style_table"],
+                    style_cell=styling.DATATABLE["style_cell"],
+                    style_header=styling.DATATABLE["style_header"],
+                    style_data=styling.DATATABLE["style_data"],
+                ),
+            ],
+        )
+
+    def _build_export_card(self) -> dbc.Card:
+        return build_calibration_workflow_section_card(
+            page_name=self.ids.page_prefix,
+            workflow_step=self.workflow_header.get_workflow_step(workflow_step=self.export_step),
+            body_children=[
+                html.Div(
+                    "Provide a file name to export the generated transfer calibration JSON.",
+                    style={"marginBottom": "10px"},
+                ),
+                html.Div(
+                    [
+                        dcc.Input(
+                            id=self.ids.export_name,
+                            type="text",
+                            value=services.DEFAULT_EXPORT_FILE_NAME,
+                            placeholder="cross_calibration",
+                            style={"width": "280px"},
+                        ),
+                        dbc.Button(
+                            "Download transfer calibration JSON",
+                            id=self.ids.export_button,
+                            n_clicks=0,
+                            color="secondary",
+                        ),
+                    ],
+                    style={
+                        "display": "flex",
+                        "gap": "12px",
+                        "alignItems": "center",
+                        "flexWrap": "wrap",
+                    },
+                ),
+            ],
+        )
+
+    def register_callbacks(self) -> "CrossCalibrationPage":
+        @dash.callback(
+            dash.Output(f"{self.ids.page_prefix}-workflow-progress", "children"),
+            dash.Input(self.ids.primary_summary_store, "data"),
+            dash.Input(self.ids.secondary_summary_store, "data"),
+            dash.Input(self.ids.result_store, "data"),
+            prevent_initial_call=False,
+        )
+        def update_workflow_progress(primary: Any, secondary: Any, result: Any):
+            completed = 0
+            if isinstance(primary, dict) and isinstance(secondary, dict):
+                completed = 2
+            if completed == 2 and isinstance(result, dict):
+                completed = 3
+            return self.workflow_header.build_progress(
+                completed_count=completed,
+                page_name=self.ids.page_prefix,
+            )
+
+        @dash.callback(
+            dash.Output(self.ids.primary_summary_store, "data"),
+            dash.Output(self.ids.primary_feedback, "children"),
+            dash.Output(self.ids.primary_summary, "children"),
+            dash.Input(self.ids.primary_upload, "contents"),
+            dash.State(self.ids.primary_upload, "filename"),
+            prevent_initial_call=True,
+        )
+        def upload_primary_calibration(
+            contents: Any,
+            filename: Any,
+        ) -> tuple[Any, str, list[Any]]:
+            if not contents:
+                return (
+                    dash.no_update,
+                    "No file loaded.",
+                    ["No primary calibration loaded."],
+                )
+
+            try:
+                resolved_filename, payload = services.parse_uploaded_calibration(
+                    contents=contents,
+                    filename=filename,
+                )
+                summary = services.build_calibration_summary(
+                    filename=resolved_filename,
+                    calibration_payload=payload,
+                )
+            except Exception as exception:
+                return (
+                    dash.no_update,
+                    f"{type(exception).__name__}: {exception}",
+                    self._build_summary_children(["No primary calibration loaded."]),
+                )
+
+            return (
+                summary,
+                f"Loaded file: {resolved_filename}",
+                self._build_summary_children(
+                    services.build_calibration_summary_children(
+                        summary,
+                        empty_message="No primary calibration loaded.",
+                    )
+                ),
+            )
+
+        @dash.callback(
+            dash.Output(self.ids.secondary_summary_store, "data"),
+            dash.Output(self.ids.secondary_feedback, "children"),
+            dash.Output(self.ids.secondary_summary, "children"),
+            dash.Input(self.ids.secondary_upload, "contents"),
+            dash.State(self.ids.secondary_upload, "filename"),
+            prevent_initial_call=True,
+        )
+        def upload_secondary_calibration(
+            contents: Any,
+            filename: Any,
+        ) -> tuple[Any, str, list[Any]]:
+            if not contents:
+                return (
+                    dash.no_update,
+                    "No file loaded.",
+                    ["No secondary calibration loaded."],
+                )
+
+            try:
+                resolved_filename, payload = services.parse_uploaded_calibration(
+                    contents=contents,
+                    filename=filename,
+                )
+                summary = services.build_calibration_summary(
+                    filename=resolved_filename,
+                    calibration_payload=payload,
+                )
+            except Exception as exception:
+                return (
+                    dash.no_update,
+                    f"{type(exception).__name__}: {exception}",
+                    self._build_summary_children(["No secondary calibration loaded."]),
+                )
+
+            return (
+                summary,
+                f"Loaded file: {resolved_filename}",
+                self._build_summary_children(
+                    services.build_calibration_summary_children(
+                        summary,
+                        empty_message="No secondary calibration loaded.",
+                    )
+                ),
+            )
+
+        @dash.callback(
+            dash.Output(self.ids.result_store, "data"),
+            dash.Output(self.ids.status, "children"),
+            dash.Output(self.ids.graph, "figure"),
+            dash.Output(self.ids.table, "data"),
+            dash.Input(self.ids.build_button, "n_clicks"),
+            dash.State(self.ids.primary_summary_store, "data"),
+            dash.State(self.ids.secondary_summary_store, "data"),
+            dash.State("runtime-config-store", "data"),
+            prevent_initial_call=True,
+        )
+        def build_cross_calibration(
+            n_clicks: Any,
+            primary_summary: Any,
+            secondary_summary: Any,
+            runtime_config_data: Any,
+        ) -> tuple[Any, str, Any, list[dict[str, Any]]]:
+            if not n_clicks:
+                return (
+                    dash.no_update,
+                    "No transfer calibration generated yet.",
+                    services.build_empty_result_figure(
+                        message="Upload a primary and a secondary calibration to build a transfer relation.",
+                        runtime_config_data=runtime_config_data,
+                    ),
+                    [],
+                )
+
+            if not isinstance(primary_summary, dict) or not isinstance(
+                secondary_summary, dict
+            ):
+                empty_figure = services.build_empty_result_figure(
+                    message="Load a primary and a secondary calibration first.",
+                    runtime_config_data=runtime_config_data,
+                )
+                return (
+                    dash.no_update,
+                    "Load a primary and a secondary calibration first.",
+                    empty_figure,
+                    [],
+                )
+
+            try:
+                result = services.build_cross_calibration_result(
+                    primary_summary=primary_summary,
+                    secondary_summary=secondary_summary,
+                )
+                result_dict = result.to_dict()
+            except Exception as exception:
+                empty_figure = services.build_empty_result_figure(
+                    message=f"Failed to build transfer calibration: {type(exception).__name__}: {exception}",
+                    runtime_config_data=runtime_config_data,
+                )
+                return (
+                    dash.no_update,
+                    f"Failed to build transfer calibration: {type(exception).__name__}: {exception}",
+                    empty_figure,
+                    [],
+                )
+
+            return (
+                result_dict,
+                services.build_result_status_text(result_dict),
+                services.build_result_figure(
+                    result_dict,
+                    runtime_config_data=runtime_config_data,
+                ),
+                services.build_result_table_data(result_dict),
+            )
+
+        @dash.callback(
+            dash.Output(self.ids.graph, "style"),
+            dash.Input("runtime-config-store", "data"),
+            prevent_initial_call=False,
+        )
+        def sync_graph_style(
+            runtime_config_data: Any,
+        ) -> dict[str, Any]:
+            return services.resolve_graph_style(runtime_config_data)
+
+        @dash.callback(
+            dash.Output(self.ids.graph, "figure", allow_duplicate=True),
+            dash.Input("runtime-config-store", "data"),
+            dash.State(self.ids.result_store, "data"),
+            prevent_initial_call=True,
+        )
+        def sync_graph_figure_style_from_profile(
+            runtime_config_data: Any,
+            result: Any,
+        ) -> Any:
+            if isinstance(result, dict):
+                return services.build_result_figure(
+                    result,
+                    runtime_config_data=runtime_config_data,
+                )
+
+            return services.build_empty_result_figure(
+                message="Upload a primary and a secondary calibration to build a transfer relation.",
+                runtime_config_data=runtime_config_data,
+            )
+
+        @dash.callback(
+            dash.Output(self.ids.export_button, "disabled"),
+            dash.Input(self.ids.result_store, "data"),
+            dash.Input(self.ids.export_name, "value"),
+            prevent_initial_call=False,
+        )
+        def toggle_export_button(
+            result: Any,
+            export_name: Any,
+        ) -> bool:
+            return not isinstance(result, dict) or not bool(
+                str(export_name or "").strip()
+            )
+
+        @dash.callback(
+            dash.Output(self.ids.export_download, "data"),
+            dash.Input(self.ids.export_button, "n_clicks"),
+            dash.State(self.ids.result_store, "data"),
+            dash.State(self.ids.export_name, "value"),
+            prevent_initial_call=True,
+        )
+        def download_cross_calibration(
+            n_clicks: Any,
+            result: Any,
+            export_name: Any,
+        ) -> Any:
+            if not n_clicks or not isinstance(result, dict):
+                return dash.no_update
+
+            payload = services.build_export_payload(
+                result=result,
+                export_name=str(export_name or services.DEFAULT_EXPORT_FILE_NAME),
+            )
+
+            return dcc.send_string(
+                json.dumps(payload, indent=2),
+                services.build_export_filename(export_name),
+            )
+
+        return self
+
+
+_page = CrossCalibrationPage().register_callbacks()
+layout = _page.layout
+
+
+dash.register_page(
+    __name__,
+    path="/cross-calibration",
+    name="Cross Calibration",
+    order=3,
+    layout=layout,
+)

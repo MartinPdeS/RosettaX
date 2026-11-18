@@ -1,0 +1,545 @@
+import dash
+import dash_bootstrap_components as dbc
+from . import services
+from .ids import Ids
+from dash import dcc, html
+from RosettaX.ui import (
+    WorkflowHeader,
+    WorkflowStep,
+)
+from RosettaX.utils import styling, ui_forms
+from RosettaX.workflow.calibration_cards import (
+    build_calibration_workflow_section_card,
+    build_fcs_tool_card_stack,
+)
+from RosettaX.workflow.file_selection import UploadedFileBatch
+from RosettaX.workflow.file_selection.services import (
+    build_file_options,
+    resolve_selected_file,
+)
+from RosettaX.workflow.plotting import layout as plotting_layout
+from RosettaX.workflow.upload import services as upload_services
+from typing import Any
+
+
+class VisualizationPage:
+    """
+    Floreada-style FCS visualization page.
+    """
+
+    def __init__(self) -> None:
+        self.ids = Ids()
+        self.workflow_header = WorkflowHeader(
+            title="Visualization",
+            description=(
+                "Upload compatible FCS files, choose one to inspect, and view it "
+                "with a 1D histogram or a 2D scatter colored by local event density."
+            ),
+            steps=[self.upload_step, self.settings_step, self.plot_step],
+            column_kwargs={"xl": True},
+        )
+
+    upload_step = WorkflowStep(
+        title="Upload FCS file",
+        description=(
+            "Load one or more compatible FCS files so RosettaX can read their channels "
+            "and metadata for plotting."
+        ),
+        hover_description=(
+            "Upload one or more FCS files with matching channels, FCS versions, and "
+            "detector voltages. The file selector in the plot settings lets you choose "
+            "which compatible file to inspect."
+        ),
+    )
+
+    settings_step = WorkflowStep(
+        title="Choose plot settings",
+        description=(
+            "Pick histogram or 2D scatter, then configure the plotted axes, scaling, "
+            "and event limit."
+        ),
+        hover_description=(
+            "Choose a file and plot type, then adjust the channels and display options."
+        ),
+    )
+
+    plot_step = WorkflowStep(
+        title="Inspect the data",
+        description=(
+            "Explore the plotted events to validate channels and distributions."
+        ),
+        hover_description=(
+            "Explore the selected data using the Plotly zoom, pan, and export controls."
+        ),
+    )
+
+    def layout(self) -> html.Div:
+        default_controls = services.resolve_visualization_control_defaults()
+
+        return build_fcs_tool_card_stack(
+            [
+                dcc.Store(
+                    id=self.ids.file_store,
+                    data=None,
+                    storage_type="session",
+                ),
+                self._build_header_card(),
+                self._build_section_card(
+                    workflow_step=self.workflow_header.get_workflow_step(workflow_step=self.upload_step),
+                    body_children=[
+                        ui_forms.build_upload_widget(
+                            upload_id=self.ids.upload,
+                            prompt_text="Select one or more compatible FCS files",
+                            accepted_file_extensions=".fcs",
+                            multiple=True,
+                        ),
+                        dcc.Loading(
+                            ui_forms.build_upload_status(
+                                status_id=self.ids.upload_feedback,
+                                initial_text="No file loaded.",
+                            ),
+                            type="default",
+                        ),
+                    ],
+                ),
+                self._build_plot_workspace(
+                    default_controls=default_controls,
+                ),
+            ]
+        )
+
+    def _build_plot_workspace(self, *, default_controls: dict[str, Any]) -> html.Div:
+        field_label_style = {
+            "display": "block",
+            "marginBottom": styling.get_spacing_token("xs"),
+        }
+
+        workspace = html.Div(
+            [
+                html.Div(
+                    [
+                        html.Div(
+                            [
+                                html.Label("FCS file", style=field_label_style),
+                                dcc.Dropdown(
+                                    id=self.ids.file_selection,
+                                    options=[],
+                                    value=None,
+                                    clearable=False,
+                                    placeholder="Upload compatible FCS files",
+                                ),
+                            ],
+                            style={"minWidth": "260px", "flex": "1"},
+                        ),
+                        html.Div(
+                            [
+                                html.Label("Plot type", style=field_label_style),
+                                dcc.Dropdown(
+                                    id=self.ids.plot_type,
+                                    options=[
+                                        {
+                                            "label": "1D histogram",
+                                            "value": services.PLOT_TYPE_HISTOGRAM,
+                                        },
+                                        {
+                                            "label": "Smoothed histogram",
+                                            "value": services.PLOT_TYPE_SMOOTHED_HISTOGRAM,
+                                        },
+                                        {
+                                            "label": "2D scatter",
+                                            "value": services.PLOT_TYPE_SCATTER,
+                                        },
+                                    ],
+                                    value=services.PLOT_TYPE_HISTOGRAM,
+                                    clearable=False,
+                                ),
+                            ],
+                            style={"minWidth": "220px", "flex": "1"},
+                        ),
+                        html.Div(
+                            [
+                                html.Label("X channel", style=field_label_style),
+                                dcc.Dropdown(
+                                    id=self.ids.x_channel,
+                                    options=[],
+                                    value=None,
+                                    clearable=False,
+                                    placeholder="Select X channel",
+                                ),
+                            ],
+                            style={"minWidth": "260px", "flex": "1"},
+                        ),
+                        html.Div(
+                            [
+                                html.Label("Y channel", style=field_label_style),
+                                dcc.Dropdown(
+                                    id=self.ids.y_channel,
+                                    options=[],
+                                    value=None,
+                                    clearable=False,
+                                    placeholder="Select Y channel",
+                                ),
+                            ],
+                            id=self.ids.y_channel_container,
+                            style={"minWidth": "260px", "flex": "1"},
+                        ),
+                    ],
+                    style={
+                        "display": "flex",
+                        "gap": styling.get_spacing_token("md"),
+                        "flexWrap": "wrap",
+                    },
+                ),
+                plotting_layout.build_plot_control_panel(
+                    [
+                        plotting_layout.build_plot_axis_checklist(
+                            component_id=self.ids.x_log,
+                            options=[{"label": "Log X", "value": "enabled"}],
+                            value=default_controls["x_log_values"],
+                        ),
+                        plotting_layout.build_plot_axis_checklist(
+                            component_id=self.ids.y_log,
+                            options=[{"label": "Log Y", "value": "enabled"}],
+                            value=default_controls["y_log_values"],
+                        ),
+                        plotting_layout.build_plot_axis_checklist(
+                            component_id=self.ids.colormap_log,
+                            options=[{"label": "Log colormap", "value": "enabled"}],
+                            value=default_controls["colormap_log_values"],
+                        ),
+                        plotting_layout.build_plot_number_control(
+                            container_id=None,
+                            input_id=self.ids.max_events,
+                            label="Maximum events",
+                            value=default_controls["max_events"],
+                            input_mode="numeric",
+                            width="160px",
+                        ),
+                        plotting_layout.build_plot_number_control(
+                            container_id=self.ids.marker_size_container,
+                            input_id=self.ids.marker_size,
+                            label="Marker size",
+                            value=default_controls["marker_size"],
+                            width="160px",
+                            visible=False,
+                        ),
+                        plotting_layout.build_plot_number_control(
+                            container_id=self.ids.marker_opacity_container,
+                            input_id=self.ids.marker_opacity,
+                            label="Marker opacity",
+                            value=default_controls["marker_opacity"],
+                            width="160px",
+                            visible=False,
+                        ),
+                        plotting_layout.build_plot_number_control(
+                            container_id=self.ids.histogram_smoothing_container,
+                            input_id=self.ids.histogram_smoothing_sigma,
+                            label="Smoothing strength (sigma points)",
+                            value=2.0,
+                            width="180px",
+                            visible=False,
+                        ),
+                    ],
+                    component_id=self.ids.scatter_controls_container,
+                ),
+                html.Div(
+                    id=self.ids.plot_status,
+                    style={"opacity": 0.8},
+                ),
+                dcc.Graph(
+                    responsive=True,
+                    id=self.ids.graph,
+                    figure=services.build_empty_figure(
+                        message="Upload an FCS file to start visualizing events.",
+                        runtime_config_data=None,
+                    ),
+                    config=styling.PLOTLY_GRAPH_CONFIG,
+                    style=default_controls["graph_style"],
+                ),
+            ],
+            style={
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": styling.get_spacing_token("md"),
+                "minWidth": 0,
+            },
+        )
+        return build_fcs_tool_card_stack(
+            [
+                self._build_section_card(
+                    workflow_step=self.workflow_header.get_workflow_step(workflow_step=self.settings_step),
+                    body_children=[
+                        html.Div(workspace.children[:2], style=workspace.style)
+                    ],
+                ),
+                self._build_section_card(
+                    workflow_step=self.workflow_header.get_workflow_step(workflow_step=self.plot_step),
+                    body_children=[
+                        html.Div(workspace.children[2:], style=workspace.style)
+                    ],
+                ),
+            ],
+        )
+
+    def _build_header_card(self) -> dbc.Card:
+        return self.workflow_header.build_header(
+            step_target_page_name=self.ids.page_prefix,
+            style_overrides={"marginBottom": "0px"},
+        )
+
+    def _build_section_card(
+        self,
+        *,
+        workflow_step: WorkflowStep,
+        body_children: list[Any],
+    ) -> dbc.Card:
+        return build_calibration_workflow_section_card(
+            page_name=self.ids.page_prefix,
+            workflow_step=workflow_step,
+            body_children=body_children,
+        )
+
+
+    def register_callbacks(self) -> "VisualizationPage":
+        @dash.callback(
+            dash.Output(self.ids.file_store, "data"),
+            dash.Output(self.ids.upload_feedback, "children"),
+            dash.Output(self.ids.upload_feedback, "color"),
+            dash.Input(self.ids.upload, "contents"),
+            dash.State(self.ids.upload, "filename"),
+            prevent_initial_call=True,
+        )
+        def upload_visualization_file(
+            contents: Any,
+            filename: Any,
+        ) -> tuple[Any, str, str]:
+            if not contents:
+                return dash.no_update, "No file loaded.", "secondary"
+
+            try:
+                saved_file_paths, safe_filenames = upload_services.save_uploaded_batch(
+                    contents=contents,
+                    filenames=filename,
+                    upload_directory=services.VISUALIZATION_UPLOAD_DIRECTORY,
+                )
+                consistency_report = upload_services.inspect_compatible_fcs_batch(
+                    saved_file_paths,
+                )
+                feedback_text, feedback_color = upload_services.build_upload_feedback(
+                    filenames=safe_filenames,
+                    consistency_report=consistency_report,
+                )
+                if not consistency_report.get("are_all_files_consistent", False):
+                    return dash.no_update, feedback_text, feedback_color
+
+                summary = services.build_upload_batch_summary(
+                    uploaded_fcs_paths=saved_file_paths,
+                    uploaded_filenames=safe_filenames,
+                    consistency_report=consistency_report,
+                )
+            except Exception as exception:
+                return (
+                    dash.no_update,
+                    upload_services.build_upload_error_text(exception),
+                    "danger",
+                )
+
+            return summary, feedback_text, feedback_color
+
+        @dash.callback(
+            dash.Output(self.ids.x_channel, "options"),
+            dash.Output(self.ids.x_channel, "value"),
+            dash.Output(self.ids.y_channel, "options"),
+            dash.Output(self.ids.y_channel, "value"),
+            dash.Output(self.ids.file_selection, "options"),
+            dash.Output(self.ids.file_selection, "value"),
+            dash.Input(self.ids.file_store, "data"),
+            dash.State(self.ids.x_channel, "value"),
+            dash.State(self.ids.y_channel, "value"),
+            dash.State(self.ids.file_selection, "value"),
+            prevent_initial_call=False,
+        )
+        def sync_visualization_controls(
+            file_store: Any,
+            current_x_channel: Any,
+            current_y_channel: Any,
+            current_file_path: Any,
+        ) -> tuple[
+            list[dict[str, str]],
+            Any,
+            list[dict[str, str]],
+            Any,
+            list[dict[str, str]],
+            Any,
+        ]:
+            if not isinstance(file_store, dict):
+                return [], None, [], None, [], None
+
+            column_names = list(
+                UploadedFileBatch.from_dict(file_store).reference_column_names
+            )
+            options = services.build_channel_options(column_names)
+            x_channel = services.resolve_default_channel(
+                column_names,
+                current_value=current_x_channel,
+                fallback_index=0,
+            )
+            y_channel = services.resolve_default_channel(
+                column_names,
+                current_value=current_y_channel,
+                fallback_index=1,
+            )
+            file_options = build_file_options(file_store)
+            selected_file = resolve_selected_file(
+                file_store,
+                current_path=current_file_path,
+            )
+            file_path = selected_file.path if selected_file is not None else None
+
+            return options, x_channel, options, y_channel, file_options, file_path
+
+        @dash.callback(
+            dash.Output(self.ids.y_channel_container, "style"),
+            dash.Output(self.ids.marker_size_container, "style"),
+            dash.Output(self.ids.marker_opacity_container, "style"),
+            dash.Output(self.ids.colormap_log, "style"),
+            dash.Output(self.ids.histogram_smoothing_container, "style"),
+            dash.Input(self.ids.plot_type, "value"),
+            prevent_initial_call=False,
+        )
+        def toggle_scatter_control_visibility(
+            plot_type: Any,
+        ) -> tuple[
+            dict[str, Any],
+            dict[str, Any],
+            dict[str, Any],
+            dict[str, Any],
+            dict[str, Any],
+        ]:
+            plot_type_string = str(plot_type or "")
+            is_histogram = plot_type_string in {
+                services.PLOT_TYPE_HISTOGRAM,
+                services.PLOT_TYPE_SMOOTHED_HISTOGRAM,
+            }
+            y_channel_style = {
+                "minWidth": "260px",
+                "flex": "1",
+                "display": "none" if is_histogram else "flex",
+                "flexDirection": "column",
+                "gap": styling.get_spacing_token("xs"),
+            }
+            marker_field_style = {
+                "display": "none" if is_histogram else "block",
+                "flexDirection": "column",
+                "gap": "4px",
+                "minWidth": "160px",
+            }
+            colormap_toggle_style = {
+                "display": "none" if is_histogram else "block",
+                "width": "fit-content",
+            }
+            smoothing_style = {
+                "display": "flex"
+                if plot_type_string == services.PLOT_TYPE_SMOOTHED_HISTOGRAM
+                else "none",
+                "flexDirection": "column",
+                "gap": "4px",
+                "minWidth": "180px",
+            }
+            return (
+                y_channel_style,
+                marker_field_style,
+                marker_field_style,
+                colormap_toggle_style,
+                smoothing_style,
+            )
+
+        @dash.callback(
+            dash.Output(self.ids.max_events, "value"),
+            dash.Output(self.ids.x_log, "value"),
+            dash.Output(self.ids.y_log, "value"),
+            dash.Output(self.ids.colormap_log, "value"),
+            dash.Output(self.ids.marker_size, "value"),
+            dash.Output(self.ids.marker_opacity, "value"),
+            dash.Output(self.ids.graph, "style"),
+            dash.Input("runtime-config-store", "data"),
+            prevent_initial_call=False,
+        )
+        def sync_visualization_defaults_from_runtime_store(
+            runtime_config_data: Any,
+        ) -> tuple[Any, Any, Any, Any, Any, Any, dict[str, Any]]:
+            defaults = services.resolve_visualization_control_defaults(
+                runtime_config_data,
+            )
+            return (
+                defaults["max_events"],
+                defaults["x_log_values"],
+                defaults["y_log_values"],
+                defaults["colormap_log_values"],
+                defaults["marker_size"],
+                defaults["marker_opacity"],
+                defaults["graph_style"],
+            )
+
+        @dash.callback(
+            dash.Output(self.ids.graph, "figure"),
+            dash.Output(self.ids.plot_status, "children"),
+            dash.Input(self.ids.file_store, "data"),
+            dash.Input(self.ids.file_selection, "value"),
+            dash.Input(self.ids.plot_type, "value"),
+            dash.Input(self.ids.x_channel, "value"),
+            dash.Input(self.ids.y_channel, "value"),
+            dash.Input(self.ids.x_log, "value"),
+            dash.Input(self.ids.y_log, "value"),
+            dash.Input(self.ids.colormap_log, "value"),
+            dash.Input(self.ids.marker_size, "value"),
+            dash.Input(self.ids.marker_opacity, "value"),
+            dash.Input(self.ids.histogram_smoothing_sigma, "value"),
+            dash.Input(self.ids.max_events, "value"),
+            dash.Input("runtime-config-store", "data"),
+            prevent_initial_call=False,
+        )
+        def update_visualization_plot(
+            file_store: Any,
+            selected_file_path: Any,
+            plot_type: Any,
+            x_channel: Any,
+            y_channel: Any,
+            x_log_values: Any,
+            y_log_values: Any,
+            colormap_log_values: Any,
+            marker_size: Any,
+            marker_opacity: Any,
+            smoothing_sigma_points: Any,
+            max_events: Any,
+            runtime_config_data: Any,
+        ) -> tuple[Any, str]:
+            return services.render_visualization_plot(
+                file_store=file_store,
+                selected_file_path=selected_file_path,
+                plot_type=plot_type,
+                x_channel=x_channel,
+                y_channel=y_channel,
+                x_log_values=x_log_values,
+                y_log_values=y_log_values,
+                colormap_log_values=colormap_log_values,
+                marker_size=marker_size,
+                marker_opacity=marker_opacity,
+                smoothing_sigma_points=smoothing_sigma_points,
+                max_events=max_events,
+                runtime_config_data=runtime_config_data,
+            )
+
+        return self
+
+
+_page = VisualizationPage().register_callbacks()
+layout = _page.layout
+
+dash.register_page(
+    __name__,
+    path="/visualization",
+    name="Visualization",
+    order=7,
+    layout=layout,
+)

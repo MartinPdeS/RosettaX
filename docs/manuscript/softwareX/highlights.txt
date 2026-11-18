@@ -1,0 +1,4 @@
+RosettaX calibrates exported FCS data through local, guided workflows.
+Fluorescence calibration stores a reviewable power-law fit and reference pairs.
+Scattering calibration connects measured peaks to a configured Mie model.
+JSON records and co-exported PDF reports preserve calibration provenance.

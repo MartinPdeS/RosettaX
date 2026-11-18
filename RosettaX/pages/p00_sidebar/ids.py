@@ -1,0 +1,32 @@
+from RosettaX.workflow.page_session.ids import PROFILE_LOAD_EVENT_STORE_ID
+
+
+class SidebarIds:
+    prefix = "sidebar"
+    calibration_toggle_button = f"{prefix}-calibration-toggle-button"
+    calibration_collapse = f"{prefix}-calibration-collapse"
+    tools_toggle_button = f"{prefix}-tools-toggle-button"
+    tools_collapse = f"{prefix}-tools-collapse"
+    resources_toggle_button = f"{prefix}-resources-toggle-button"
+    resources_collapse = f"{prefix}-resources-collapse"
+    profile_toggle_button = f"{prefix}-profile-toggle-button"
+    profile_collapse = f"{prefix}-profile-collapse"
+
+    saved_calibrations_refresh_button = f"{prefix}-saved-calibrations-refresh-button"
+    saved_calibrations_open_folder_button = (
+        f"{prefix}-saved-calibrations-open-folder-button"
+    )
+    saved_calibrations_open_folder_status = (
+        f"{prefix}-saved-calibrations-open-folder-status"
+    )
+    saved_calibrations_body_container = f"{prefix}-saved-calibrations-body-container"
+    saved_calibrations_refresh_store = f"{prefix}-saved-calibrations-refresh-store"
+
+    saved_profiles_refresh_button = f"{prefix}-saved-profiles-refresh-button"
+    saved_profiles_open_folder_button = f"{prefix}-saved-profiles-open-folder-button"
+    saved_profiles_open_folder_status = f"{prefix}-saved-profiles-open-folder-status"
+    saved_profiles_dropdown = f"{prefix}-saved-profiles-dropdown"
+    saved_profiles_load_status = f"{prefix}-saved-profiles-load-status"
+    selected_profile_store = f"{prefix}-selected-profile-store"
+    saved_profiles_load_button = f"{prefix}-saved-profiles-load-button"
+    profile_load_event_store: str = PROFILE_LOAD_EVENT_STORE_ID

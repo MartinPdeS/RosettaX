@@ -1,0 +1,500 @@
+"""Regression tests for apply calibration report."""
+
+# Run pytest before application imports so the suite loads its own dependency setup.
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
+
+
+import sys
+import types
+
+
+class _DashBootstrapComponentsSentinel:
+    """Callable component sentinel for lightweight Dash Bootstrap test setup."""
+
+    def __call__(self, *args, **kwargs):
+        """Provide the callable behavior required by this test double."""
+        return None
+
+    def __getattr__(self, name):
+        """Handle dynamic attribute lookup for this test double."""
+        return self
+
+
+class _DashBootstrapComponentsStub(types.ModuleType):
+    """Minimal Dash Bootstrap components used by the unit tests."""
+
+    def __getattr__(self, name):
+        """Handle dynamic attribute lookup for this test double."""
+        return _DashBootstrapComponentsSentinel()
+
+
+class _PyMieSimStub(types.ModuleType):
+    """Minimal PyMieSim module used by the unit tests."""
+
+    experiment = types.SimpleNamespace()
+
+
+class _PyMieSimUnitsStub(types.ModuleType):
+    """Minimal PyMieSim units module used by the unit tests."""
+
+    ureg = types.SimpleNamespace()
+
+
+sys.modules.setdefault(
+    "dash_bootstrap_components",
+    _DashBootstrapComponentsStub("dash_bootstrap_components"),
+)
+sys.modules.setdefault(
+    "PyMieSim",
+    _PyMieSimStub("PyMieSim"),
+)
+sys.modules.setdefault(
+    "PyMieSim.units",
+    _PyMieSimUnitsStub("PyMieSim.units"),
+)
+
+from RosettaX.workflow.apply_calibration.report import (
+    apply_report_matches_request,
+    build_apply_report_download_filename,
+    build_apply_report_payload,
+    build_apply_report_pdf_bytes,
+)
+from RosettaX.workflow.apply_calibration.scattering.models import (
+    ScatteringTargetModelParameters,
+)
+from RosettaX.workflow.apply_calibration.services import (
+    ApplyCalibrationFilesResult,
+    ApplyCalibrationRequest,
+    CalibrationApplication,
+)
+
+
+class Test_ApplyCalibrationReport:
+    """Regression checks for apply calibration report."""
+
+    def test_build_apply_report_payload_serializes_request_result_and_summary(self) -> None:
+        """Check build apply report payload serializes request result and summary."""
+        request = ApplyCalibrationRequest(
+            uploaded_fcs_paths=[
+                "/tmp/input-a.fcs",
+                "/tmp/input-b.fcs",
+            ],
+            export_columns=[
+                "FSC-A",
+                "Time",
+            ],
+            calibrations=[
+                CalibrationApplication(
+                    selected_calibration="scatter-calibration.json",
+                    calibration_payload={
+                        "calibration_type": "scattering",
+                        "source_channel": "SSC-A",
+                        "output_quantity": "particle_diameter_nm",
+                        "instrument_response": {
+                            "measured_channel": "SSC-A",
+                            "slope": 1.23,
+                            "intercept": 4.56,
+                            "r_squared": 0.998,
+                            "force_zero_intercept": False,
+                            "input_quantity": "measured_peak_position",
+                            "output_quantity": "particle_diameter_nm",
+                            "model_name": "Linear",
+                        },
+                        "reference_table": [
+                            {
+                                "measured_peak_position": 1200.0,
+                                "particle_diameter_nm": 180.0,
+                            },
+                            {
+                                "measured_peak_position": 2100.0,
+                                "particle_diameter_nm": 240.0,
+                            },
+                        ],
+                        "metadata": {
+                            "detector_configuration_preset_name": "Side scatter preset",
+                            "wavelength_nm": 488,
+                            "notes": "Silica standards",
+                        },
+                    },
+                    scattering_target_model_parameters=ScatteringTargetModelParameters.from_raw_values(
+                        target_mie_model="Solid Sphere",
+                        target_medium_refractive_index=1.335,
+                        target_particle_refractive_index=1.59,
+                        target_diameter_min_nm=100,
+                        target_diameter_max_nm=500,
+                        target_diameter_count=41,
+                    ),
+                ),
+            ],
+        )
+
+        result = ApplyCalibrationFilesResult(
+            payload_bytes=b"zip-bytes",
+            download_filename="scattering_calibrated_2_files_RosettaX.zip",
+            source_channel="SSC-A",
+            output_channels=[
+                "SSC-A",
+                "particle_diameter_nm",
+            ],
+            file_count=2,
+            warnings=[
+                "Monotonic branch fallback used.",
+            ],
+            status="Applied scattering calibration to 2 files.",
+        )
+
+        calibration_summary = {
+            "file_name": "scatter-calibration.json",
+            "file_path": "/tmp/scatter-calibration.json",
+            "calibration_type": "scattering",
+            "source_channel": "SSC-A",
+            "output_quantity": "particle_diameter_nm",
+            "version": 2,
+            "requires_target_model": True,
+        }
+
+        payload = build_apply_report_payload(
+            request=request,
+            result=result,
+            calibration_summary=calibration_summary,
+        )
+
+        assert payload["selected_calibration"] == "scatter-calibration.json"
+        assert payload["uploaded_fcs_paths"] == [
+            "/tmp/input-a.fcs",
+            "/tmp/input-b.fcs",
+        ]
+        assert payload["export_columns"] == [
+            "FSC-A",
+            "Time",
+        ]
+        assert payload["calibration_summary"]["calibration_type"] == "scattering"
+        assert payload["scattering_target_model_parameters"]["mie_model"] == "Solid Sphere"
+        assert payload["result"]["download_filename"] == "scattering_calibrated_2_files_RosettaX.zip"
+        assert payload["result"]["warnings"] == [
+            "Monotonic branch fallback used.",
+        ]
+        assert payload["result"]["includes_embedded_report"] is True
+        assert payload["request_signature"]["uploaded_fcs_paths"] == [
+            "/tmp/input-a.fcs",
+            "/tmp/input-b.fcs",
+        ]
+        assert payload["calibration_details"]["calibration_type"] == "scattering"
+        assert payload["calibration_details"]["instrument_response"]["slope"] == 1.23
+        assert payload["calibration_details"]["reference_table"][0]["particle_diameter_nm"] == 180.0
+        assert payload["saved_calibration_payload"]["metadata"]["detector_configuration_preset_name"] == "Side scatter preset"
+        assert payload["saved_calibration_payload"]["instrument_response"]["model_name"] == "Linear"
+
+    def test_apply_report_matches_request_detects_request_changes(self) -> None:
+        """Check apply report matches request detects request changes."""
+        request = ApplyCalibrationRequest(
+            uploaded_fcs_paths=["/tmp/input-a.fcs"],
+            export_columns=["Time"],
+            calibrations=[
+                CalibrationApplication(
+                    selected_calibration="fluorescence-calibration.json",
+                    calibration_payload={
+                        "source_channel": "FITC-A",
+                    },
+                ),
+            ],
+        )
+
+        result = ApplyCalibrationFilesResult(
+            payload_bytes=b"fcs-bytes",
+            download_filename="input-a_calibrated_RosettaX.fcs",
+            source_channel="FITC-A",
+            output_channels=["FITC-A"],
+            file_count=1,
+            warnings=[],
+            status="Applied fluorescence calibration to 1 file.",
+        )
+
+        payload = build_apply_report_payload(
+            request=request,
+            result=result,
+            calibration_summary={
+                "file_name": "fluorescence-calibration.json",
+                "calibration_type": "fluorescence",
+            },
+        )
+
+        changed_request = ApplyCalibrationRequest(
+            uploaded_fcs_paths=["/tmp/input-a.fcs"],
+            export_columns=["Time", "FSC-A"],
+            calibrations=[
+                CalibrationApplication(
+                    selected_calibration="fluorescence-calibration.json",
+                    calibration_payload={
+                        "source_channel": "FITC-A",
+                    },
+                ),
+            ],
+        )
+
+        assert apply_report_matches_request(
+            report_payload=payload,
+            request=request,
+        ) is True
+        assert apply_report_matches_request(
+            report_payload=payload,
+            request=changed_request,
+        ) is False
+
+    def test_build_apply_report_pdf_bytes_returns_pdf_with_expected_text(self) -> None:
+        """Check build apply report PDF bytes returns PDF with expected text."""
+        request = ApplyCalibrationRequest(
+            uploaded_fcs_paths=["/tmp/input-a.fcs"],
+            export_columns=[],
+            calibrations=[
+                CalibrationApplication(
+                    selected_calibration="fluorescence-calibration.json",
+                    calibration_payload={
+                        "schema_version": "1.0",
+                        "calibration_type": "fluorescence",
+                        "name": "FITC MESF calibration",
+                        "created_at": "2026-06-09T15:30:00Z",
+                        "source_file": "beads.fcs",
+                        "source_channel": "FITC-A",
+                        "gating_channel": "SSC-A",
+                        "gating_threshold": 1200.0,
+                        "fit_model": "power-law",
+                        "fit_metrics": {
+                            "r_squared": 0.999,
+                            "point_count": 3,
+                        },
+                        "parameters": {
+                            "slope": 0.98,
+                            "intercept": 0.12,
+                            "prefactor": 1.32,
+                        },
+                        "export_notes": "Generated from MESF bead batch 24A.",
+                        "payload": {
+                            "slope": 0.98,
+                            "intercept": 0.12,
+                            "prefactor": 1.32,
+                            "R_squared": 0.999,
+                            "model": "power-law",
+                            "x_definition": "Intensity [a.u.]",
+                            "y_definition": "Intensity [MESF]",
+                        },
+                        "reference_points": [
+                            {
+                                "reference_value": 1.0e3,
+                                "measured_value": 9.0e2,
+                            },
+                            {
+                                "reference_value": 1.0e4,
+                                "measured_value": 8.4e3,
+                            },
+                            {
+                                "reference_value": 1.0e5,
+                                "measured_value": 7.6e4,
+                            },
+                        ],
+                    },
+                ),
+            ],
+        )
+
+        result = ApplyCalibrationFilesResult(
+            payload_bytes=b"fcs-bytes",
+            download_filename="input-a_calibrated_RosettaX.fcs",
+            source_channel="FITC-A",
+            output_channels=["FITC-A"],
+            file_count=1,
+            warnings=[],
+            status="Applied fluorescence calibration to 1 file.",
+        )
+
+        payload = build_apply_report_payload(
+            request=request,
+            result=result,
+            calibration_summary={
+                "file_name": "fluorescence-calibration.json",
+                "calibration_type": "fluorescence",
+                "source_channel": "FITC-A",
+            },
+        )
+
+        pdf_bytes = build_apply_report_pdf_bytes(
+            report_payload=payload,
+        )
+        pdf_filename = build_apply_report_download_filename(
+            report_payload=payload,
+        )
+
+        assert pdf_bytes.startswith(b"%PDF-1.4")
+        assert b"Apply Calibration Report" in pdf_bytes
+        assert b"COMPLETED" in pdf_bytes
+        assert b"RosettaX" in pdf_bytes
+        assert b"Calibration application summary" in pdf_bytes
+        assert b"fluorescence-calibration.json" in pdf_bytes
+        assert b"Applied fluorescence calibration to 1 file." in pdf_bytes
+        assert b"MESF and peak positions" in pdf_bytes
+        assert b"Measured peak position" in pdf_bytes
+        assert b"Additional calibration fields" in pdf_bytes
+        assert b"Generated from MESF bead batch 24A." in pdf_bytes
+        assert b"Intensity [MESF]" in pdf_bytes
+        assert b"Observed" in pdf_bytes
+        assert b"Fit" in pdf_bytes
+        assert pdf_filename.startswith("rosettax_apply_report_fluorescence-calibration_")
+        assert pdf_filename.endswith(".pdf")
+
+    def test_build_apply_report_pdf_bytes_includes_saved_scattering_metadata(self) -> None:
+        """Check build apply report PDF bytes includes saved scattering metadata."""
+        request = ApplyCalibrationRequest(
+            uploaded_fcs_paths=["/tmp/input-a.fcs"],
+            export_columns=["Time"],
+            calibrations=[
+                CalibrationApplication(
+                    selected_calibration="scatter-calibration.json",
+                    calibration_payload={
+                        "calibration_type": "scattering",
+                        "version": 2,
+                        "source_channel": "SSC-A",
+                        "output_quantity": "particle_diameter_nm",
+                        "instrument_response": {
+                            "measured_channel": "SSC-A",
+                            "slope": 1.23,
+                            "intercept": 4.56,
+                            "r_squared": 0.998,
+                            "force_zero_intercept": False,
+                            "input_quantity": "measured_peak_position",
+                            "output_quantity": "particle_diameter_nm",
+                            "model_name": "Linear",
+                        },
+                        "metadata": {
+                            "detector_configuration_preset_name": "Small particle SSC",
+                            "wavelength_nm": 488,
+                            "notes": "Lot 42",
+                        },
+                        "reference_table": [
+                            {
+                                "measured_peak_position": 1200.0,
+                                "particle_diameter_nm": 180.0,
+                            },
+                            {
+                                "measured_peak_position": 2100.0,
+                                "particle_diameter_nm": 240.0,
+                            },
+                        ],
+                    },
+                ),
+            ],
+        )
+
+        result = ApplyCalibrationFilesResult(
+            payload_bytes=b"zip-bytes",
+            download_filename="scattering_calibrated_1_file_RosettaX.zip",
+            source_channel="SSC-A",
+            output_channels=["SSC-A", "particle_diameter_nm"],
+            file_count=1,
+            warnings=[],
+            status="Applied scattering calibration to 1 file.",
+        )
+
+        payload = build_apply_report_payload(
+            request=request,
+            result=result,
+            calibration_summary={
+                "file_name": "scatter-calibration.json",
+                "calibration_type": "scattering",
+                "source_channel": "SSC-A",
+                "output_quantity": "particle_diameter_nm",
+            },
+        )
+
+        pdf_bytes = build_apply_report_pdf_bytes(report_payload=payload)
+
+        assert b"Additional calibration fields: Metadata" in pdf_bytes
+        assert b"Small particle SSC" in pdf_bytes
+        assert b"Lot 42" in pdf_bytes
+
+    def test_build_apply_report_pdf_bytes_handles_multiple_selected_calibrations(self) -> None:
+        """Check build apply report PDF bytes handles multiple selected calibrations."""
+        request = ApplyCalibrationRequest(
+            uploaded_fcs_paths=["/tmp/input-a.fcs", "/tmp/input-b.fcs"],
+            export_columns=["Time"],
+            calibrations=[
+                CalibrationApplication(
+                    selected_calibration="fluor-a.json",
+                    calibration_payload={
+                        "calibration_type": "fluorescence",
+                        "source_channel": "FITC-A",
+                        "output_quantity": "MESF",
+                        "fit_metrics": {"r_squared": 0.997, "point_count": 3},
+                        "parameters": {"slope": 1.05, "intercept": -0.1},
+                        "reference_points": [
+                            {"reference_value": 1000.0, "measured_value": 800.0},
+                            {"reference_value": 10000.0, "measured_value": 7600.0},
+                        ],
+                    },
+                ),
+                CalibrationApplication(
+                    selected_calibration="scatter-b.json",
+                    calibration_payload={
+                        "calibration_type": "scattering",
+                        "source_channel": "SSC-A",
+                        "output_quantity": "particle_diameter_nm",
+                        "instrument_response": {
+                            "measured_channel": "SSC-A",
+                            "slope": 1.2,
+                            "intercept": 4.4,
+                            "r_squared": 0.99,
+                            "force_zero_intercept": False,
+                        },
+                        "reference_table": [
+                            {
+                                "measured_peak_position": 1500.0,
+                                "particle_diameter_nm": 180.0,
+                            },
+                            {
+                                "measured_peak_position": 2300.0,
+                                "particle_diameter_nm": 240.0,
+                            },
+                        ],
+                    },
+                ),
+            ],
+        )
+
+        result = ApplyCalibrationFilesResult(
+            payload_bytes=b"zip-bytes",
+            download_filename="calibrated_2_files_RosettaX.zip",
+            source_channel="FITC-A, SSC-A",
+            output_channels=["FITC-A", "SSC-A", "particle_diameter_nm"],
+            file_count=2,
+            warnings=[],
+            status="Applied calibration to 2 files.",
+        )
+
+        payload = build_apply_report_payload(
+            request=request,
+            result=result,
+            calibration_summary=[
+                {
+                    "file_name": "fluor-a.json",
+                    "calibration_type": "fluorescence",
+                    "source_channel": "FITC-A",
+                    "output_quantity": "MESF",
+                },
+                {
+                    "file_name": "scatter-b.json",
+                    "calibration_type": "scattering",
+                    "source_channel": "SSC-A",
+                    "output_quantity": "particle_diameter_nm",
+                },
+            ],
+        )
+
+        pdf_bytes = build_apply_report_pdf_bytes(report_payload=payload)
+        pdf_filename = build_apply_report_download_filename(report_payload=payload)
+
+        assert b"fluor-a.json" in pdf_bytes
+        assert b"scatter-b.json" in pdf_bytes
+        assert b"Calibration details" in pdf_bytes
+        assert pdf_filename.startswith("rosettax_apply_report_multi_calibration_")

@@ -1,0 +1,113 @@
+PYTHON ?= python3.13
+BUILD_DIR ?= build
+ROOT_DIR := $(CURDIR)
+.DEFAULT_GOAL := configure
+PYBIND11_DIR = $(shell $(PYTHON) -m pybind11 --cmakedir)
+DIST_DIR ?= dist
+BUNDLE_DIR ?= $(DIST_DIR)/rosettax
+RELEASE_KIND := $(filter major minor patch,$(MAKECMDGOALS))
+
+UNAME_S := $(shell uname -s 2>/dev/null || echo Unknown)
+
+ifeq ($(OS),Windows_NT)
+DETECTED_PLATFORM := windows
+else ifeq ($(UNAME_S),Darwin)
+DETECTED_PLATFORM := macos
+else ifeq ($(UNAME_S),Linux)
+DETECTED_PLATFORM := linux
+else
+DETECTED_PLATFORM := unknown
+endif
+
+.PHONY: configure build install quick rebuild editable bundle \
+	mac-bundle windows-bundle linux-bundle bundle-zip \
+	mac-release windows-release linux-release release tag major minor patch clean lint test test-scattering-fcs browser-smoke
+
+lint:
+	$(PYTHON) -m ruff check RosettaX tests
+
+test:
+	$(PYTHON) -m pytest
+
+test-scattering-fcs:
+	$(PYTHON) -m pytest integration_tests/scattering_fcs_test.py -o addopts='' -v
+
+browser-smoke:
+	$(PYTHON) tools/browser_smoke.py $(BROWSER_ARGS)
+
+configure:
+	cmake -S . -B $(BUILD_DIR) \
+		-Dpybind11_DIR="$(PYBIND11_DIR)" \
+		-DPython_EXECUTABLE="$$(which $(PYTHON))" \
+		-DCMAKE_INSTALL_PREFIX="$(ROOT_DIR)"
+
+build:
+	cmake --build $(BUILD_DIR) -j
+
+install:
+	cmake --install $(BUILD_DIR)
+
+uninstall:
+	$(PYTHON) -m pip uninstall -y PyMieSim
+
+quick: configure build install
+
+rebuild: configure build install
+
+editable:
+	$(PYTHON) -m pip install --no-build-isolation -Cbuild-dir=build -Ceditable.rebuild=false -Ceditable.mode=inplace -e .
+
+bundle:
+	$(PYTHON) -m pip install -e .[bundling]
+	$(PYTHON) -m PyInstaller rosettax.spec --clean
+
+mac-bundle:
+	@if [ "$(DETECTED_PLATFORM)" != "macos" ]; then \
+		echo "mac-bundle must be run on macOS. Detected platform: $(DETECTED_PLATFORM)"; \
+		exit 1; \
+	fi
+	$(MAKE) bundle
+
+windows-bundle:
+	@if [ "$(DETECTED_PLATFORM)" != "windows" ]; then \
+		echo "windows-bundle must be run on Windows. Detected platform: $(DETECTED_PLATFORM)"; \
+		exit 1; \
+	fi
+	$(MAKE) bundle
+
+linux-bundle:
+	@if [ "$(DETECTED_PLATFORM)" != "linux" ]; then \
+		echo "linux-bundle must be run on Linux. Detected platform: $(DETECTED_PLATFORM)"; \
+		exit 1; \
+	fi
+	$(MAKE) bundle
+
+bundle-zip:
+	@if [ ! -d "$(BUNDLE_DIR)" ]; then \
+		echo "Bundle directory $(BUNDLE_DIR) does not exist. Run a bundle target first."; \
+		exit 1; \
+	fi
+	$(PYTHON) -c "from pathlib import Path; import shutil; source = Path(r'$(BUNDLE_DIR)'); archive = shutil.make_archive(str(source), 'zip', root_dir=str(source.parent), base_dir=source.name); print(f'Created {archive}')"
+
+mac-release: mac-bundle bundle-zip
+
+windows-release: windows-bundle bundle-zip
+
+linux-release: linux-bundle bundle-zip
+
+tag:
+	$(PYTHON) -m martinpdes_maintenance.cli tag "$(VERSION)"
+
+release:
+	@test "$(words $(RELEASE_KIND))" -eq 1 || { echo "usage: make release [patch|minor|major]" >&2; exit 2; }
+	@set -eu; tag="$$($(PYTHON) -m martinpdes_maintenance.cli next $(RELEASE_KIND))"; $(PYTHON) -m martinpdes_maintenance.cli tag "$$tag"; git push origin HEAD "refs/tags/$$tag"
+
+major minor patch:
+	@:
+
+clean:
+	rm -rf $(BUILD_DIR)
+
+.PHONY: release-check
+release-check:
+	$(PYTHON) -m martinpdes_maintenance.cli check $(if $(VERSION),--version $(VERSION),)
