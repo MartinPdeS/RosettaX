@@ -79,7 +79,7 @@
     box-shadow: 0 1px 4px color-mix(in srgb, var(--rosettax-text-color) 12%, transparent);
 }
 
-.peak-process-card--rosetta {
+.app-typography-hierarchy .card.peak-process-card--rosetta {
     background-color: var(--rosettax-control-background, #f5f6f8);
 }
 
