@@ -109,9 +109,9 @@
   },
   "apogee_rosetta_beads_1min_sliced.fcs": {
     "detectors": [
-      "405SALS(Peak) (Small Angle Light Scatter)",
-      "405LALS(Peak) (Large Angle Light Scatter)",
-      "405Grn(Peak) (Green Fluorescence)"
+      "405SALS(Peak)",
+      "405LALS(Peak)",
+      "405Grn(Peak)"
     ],
     "size_bytes": 2022639
   },
@@ -158,8 +158,8 @@
   "beckman_cytoflex_s_rosetta_beads.fcs": {
     "detectors": [
       "FSC-H",
-      "SSC_1-H (Violet SSC-H)",
-      "FL1-H (FITC-H)"
+      "SSC_1-H",
+      "FL1-H"
     ],
     "size_bytes": 12007374
   },
@@ -167,7 +167,7 @@
     "detectors": [
       "FSC-H",
       "SSC-H",
-      "FL6-H (FITC-H)"
+      "FL6-H"
     ],
     "size_bytes": 6145367
   },
