@@ -111,7 +111,7 @@ instrument_aliases = ["micro-plus", "apogee microplus"]
 
 [instruments.apogee_microplus.rosetta_channels]
 scattering = ["LALS(Peak)", "405-LALS(Peak)"]
-green_fluorescence = ["405-Grn(Peak)", "405Grn(Peak)"]
+green_fluorescence = ["405-Grn(Peak)", "405Grn(Peak)", "488Grn(Peak)"]
 
 [instruments.apogee_kairos]
 manufacturer = "Apogee"
