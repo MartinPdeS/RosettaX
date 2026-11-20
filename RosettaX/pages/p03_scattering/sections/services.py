@@ -3,13 +3,12 @@ from .s01_upload import Upload
 from .s02_peaks import Peaks
 from .s03_model import Model
 from .s04_table import ReferenceTable
-from .rosetta_validation import RosettaValidation
 from .s05_calibration import Calibration
 from .s06_save import Save
 from RosettaX.utils import styling
 from RosettaX.workflow.calibration_cards import build_workflow_sections
 
-SECTION_TYPES = (Upload, Peaks, Model, ReferenceTable, RosettaValidation, Calibration, Save,)
+SECTION_TYPES = (Upload, Peaks, Model, ReferenceTable, Calibration, Save,)
 
 
 def build_sections(page) -> list:

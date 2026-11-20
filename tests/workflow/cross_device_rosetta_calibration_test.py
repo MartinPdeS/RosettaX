@@ -60,6 +60,9 @@ METVES_SAMPLES = [
     ('bd_facsymphony_a5_metves_08h1.fcs', 'SSC-H', 'BB515-H'),
 ]
 
+# This recording resolves a marker on 488 green. Auto-select still prefers 405.
+METVES_SIZING_FLUORESCENCE = {"apogee_microplus_metves_07g1.fcs": "488-Grn(Peak)"}
+
 CHECKED_METVES_OUTCOMES = {
     'beckman_coulter_cytoflex_s_metves_23w1.fcs': ([147, 203, 296, 400, 600], ''),
     'beckman_coulter_cytoflex_s_metves_16p1.fcs': (['', 147, 203, 296, 400, 600, 799, 994], ''),
@@ -73,7 +76,7 @@ CHECKED_METVES_OUTCOMES = {
     'cytek_aurora_metves_11k2.fcs': ([125, 147, 203, 296], ''),
     'apogee_microplus_metves_04d1.fcs': ([296, 400, 600, 799, 994], ''),
     'bd_facsymphony_a1_metves_25y2.fcs': ([100, 125, 147, 203, 296, 400, 600, 799, 994], ''),
-    'apogee_microplus_metves_07g1.fcs': ([], '0 fluorescent marker peaks'),
+    'apogee_microplus_metves_07g1.fcs': ([203, 296, 400], ''),
     'bd_facscelesta_sorp_metves_09i1.fcs': ([], '0 fluorescent marker peaks'),
     'beckman_coulter_cytoflex_s_metves_06f1.fcs': ([147, 203, 296, 400, 600, 799, 994], ''),
     'beckman_coulter_moflo_astrios_metves_21u1.fcs': ([147, 203, 296, 400, 600, 799, 994], ''),
@@ -267,7 +270,10 @@ def test_metves_rosetta_assignments_and_warnings(
 ) -> None:
     """Check provisional diameters or the reason sizing stops on each METVES recording."""
     result = run_sample_in_subprocess(
-        filename=filename, scatter=scatter, fluorescence=fluorescence, fit_calibration=False,
+        filename=filename,
+        scatter=scatter,
+        fluorescence=METVES_SIZING_FLUORESCENCE.get(filename, fluorescence),
+        fit_calibration=False,
     )
     expected_diameters, warning_fragment = CHECKED_METVES_OUTCOMES[filename]
     rows = result["rows"]

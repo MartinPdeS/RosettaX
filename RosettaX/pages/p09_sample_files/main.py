@@ -86,7 +86,7 @@ class SampleFilesPage:
                     [
                         html.P(
                             "These Rosetta bead acquisitions come from the CAL003 and METVES collections. "
-                            "Each download retains three channels for scatter and green fluorescence analysis. "
+                            "Downloads retain the channels used for scatter and green fluorescence analysis. "
                             "Acquisition settings can vary by instrument and run.",
                             className="mb-0",
                         ),

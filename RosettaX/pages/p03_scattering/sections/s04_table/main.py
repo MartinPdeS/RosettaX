@@ -59,7 +59,7 @@ class ReferenceTable:
             "response. Set the particle model and medium refractive index above, then "
             "add standards with the form below the table. You can edit their measured "
             "peak positions in the table. Click Compute model to fill the modeled "
-            "coupling column. Validate Rosetta bead assignments before fitting the instrument response."
+            "coupling column, then fit the instrument response."
         ),
     )
 

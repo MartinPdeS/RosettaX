@@ -1,6 +1,7 @@
 
 import dash
 from ..state import ScatteringPageState
+from .rosetta_validation import RosettaValidation
 from RosettaX.workflow.calibration_cards import build_collapsible_section_layout
 
 
@@ -14,6 +15,12 @@ def build_page_layout(page, sections) -> dash.html.Div:
                 id=page.ids.State.page_state_store,
                 data=ScatteringPageState.empty().to_dict(),
                 storage_type="session",
+            ),
+            # Compute model shares a callback with validation. Keep its
+            # dependencies mounted while the validation card is disabled.
+            dash.html.Div(
+                RosettaValidation(page=page, section_number=0, card_color="gray").get_layout(),
+                hidden=True,
             ),
             dash.html.Div(
                 [

@@ -538,11 +538,12 @@ class MixtureRosettaScatterPeakProcess(RosettaMixSizeAssignmentProcess):
                 entry["method"].startswith(("Estimated by rank", "One marker and all ten"))
                 for entry in assignments
             )
+            sized_rows = [row for row in rows if row.get("particle_diameter_nm")]
             if rows and needs_confirmation and payload.get("scatter_bootstrap_positions"):
                 result = replace(result, peak_lines_payload=dict(
                     payload,
                     rosetta_assignment_evidence={
-                        "rows": result.table_prefill_rows,
+                        "rows": sized_rows,
                         "scatter": payload["scatter_bootstrap_positions"],
                         "markers": payload.get("marker_scatter_diagnostics", []),
                     },

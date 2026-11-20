@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from .graphing import PeakWorkflowGraphBuilder
 
 from . import graph_payload
-from .rosetta_annotations import ROSETTA_BASELINE_GATE_COLOR, ROSETTA_PEAK_MARKER_STYLES
+from .rosetta_annotations import ROSETTA_BASELINE_GATE_COLOR, ROSETTA_PEAK_MARKER_STYLES, extract_rosetta_scatter_guide_annotations
 
 logger = logging.getLogger(__name__)
 
@@ -252,32 +252,33 @@ def add_selected_peak_markers(
     )
 
     if is_rosetta_script:
-        excluded_positions = (
-            builder.peak_lines_payload.get("saturation_guard_excluded_positions", [])
-            if isinstance(builder.peak_lines_payload, dict)
-            else []
+        payload = builder.peak_lines_payload or {}
+        size_assignments = {
+            entry["position"]: entry
+            for entry in payload.get("rosetta_size_assignments", [])
+            if entry.get("diameter_nm")
+        }
+        sized_positions = set(size_assignments)
+        sized_positions.update(
+            entry["x"]
+            for entry in extract_rosetta_scatter_guide_annotations(peak_lines_payload=payload)
+            if entry["kind"] == "non_fluorescent"
         )
-        points = [
-            {**point, "kind": "excluded"} if point["x"] in excluded_positions else point
-            for point in points
+        visible = [
+            (point, label)
+            for point, label in zip(points, labels, strict=True)
+            if point.get("kind") == "marker"
+            or (point.get("kind") == "non_fluorescent" and point["x"] in sized_positions)
         ]
-        scatter_guide_positions = (
-            graph_payload.extract_numeric_list_from_peak_lines_payload(
-                builder,
-                key="scatter_guide_positions",
-            )
-        )
+        points = [point for point, _ in visible]
+        labels = [label for _, label in visible]
+        scatter_guide_positions = unique_finite_preserving_order([point["x"] for point in points])
         fluorescence_guide_positions = (
             graph_payload.extract_numeric_list_from_peak_lines_payload(
                 builder,
                 key="fluorescence_guide_positions",
             )
         )
-
-        if not scatter_guide_positions:
-            scatter_guide_positions = unique_finite_preserving_order(
-                [point["x"] for point in points]
-            )
 
         if not fluorescence_guide_positions:
             fluorescence_guide_positions = unique_finite_preserving_order(
@@ -291,14 +292,13 @@ def add_selected_peak_markers(
         classified_points = [point for point in points if point.get("kind") in ROSETTA_PEAK_MARKER_STYLES]
         for scatter_position in scatter_guide_positions:
             is_marker = any(point.get("kind") == "marker" and np.isclose(point["x"], scatter_position, rtol=1e-6) for point in classified_points)
-            is_excluded = scatter_position in excluded_positions
             add_vertical_shape_line(
                 builder,
                 figure=figure,
                 x=scatter_position,
                 line_width=2,
                 line_dash="dot" if is_marker else "dash",
-                line_color="#b45309" if is_excluded else ("#7c3aed" if is_marker else ("#008c80" if classified_points else "#1f9d55")),
+                line_color="#7c3aed" if is_marker else "#008c80",
             )
 
         if builder._advanced_mode_is_enabled() or is_size_assignment_warning:
@@ -343,32 +343,20 @@ def add_selected_peak_markers(
         return figure
 
     if is_rosetta_script and any(point.get("kind") in ROSETTA_PEAK_MARKER_STYLES for point in points):
-        size_assignments = {
-            entry["position"]: entry
-            for entry in builder.peak_lines_payload.get("rosetta_size_assignments", [])
-        }
         for kind, name in (
             ("non_fluorescent", "Non-fluorescent peak"),
             ("marker", "Fluorescent marker"),
-            ("excluded", "Excluded by saturation guard"),
         ):
-            selected = [(point, labels[index]) for index, point in enumerate(points) if point.get("kind") == kind]
-            if not selected:
+            if not any(point.get("kind") == kind for point in points):
                 continue
-            marker_style = ROSETTA_PEAK_MARKER_STYLES[kind]
-            hover_data = []
-            for point, label in selected:
-                assignment = size_assignments.get(point["x"])
-                sizing = f"<br>{assignment['diameter_nm']:g} nm · {assignment['method']}" if assignment else ""
-                hover_data.append([label, point["x"], point["y"], sizing])
-            figure.add_trace(go.Scattergl(
-                x=[point["x"] for point, _label in selected],
-                y=[point["y"] for point, _label in selected],
-                mode="markers", name=name, showlegend=True,
-                meta={"rosetta_peak_kind": kind},
-                customdata=hover_data,
-                hovertemplate="%{customdata[0]}<br>x=%{customdata[1]:.6g}<br>y=%{customdata[2]:.6g}%{customdata[3]}<extra></extra>",
-                marker={"size": 18, "symbol": marker_style["symbol"], "color": "white", "line": {"color": marker_style["color"], "width": 3}},
+            figure.add_trace(go.Scatter(
+                x=[None],
+                y=[None],
+                mode="markers",
+                name=name,
+                showlegend=True,
+                hoverinfo="skip",
+                marker={"symbol": "square", "size": 12, "color": ROSETTA_PEAK_MARKER_STYLES[kind]["color"]},
             ))
         return figure
 

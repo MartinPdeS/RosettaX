@@ -172,6 +172,12 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
             result=result,
         )
 
+        is_rosetta = str(context.get("process_name") or "").startswith("Rosetta Script")
+        if is_rosetta:
+            table_prefill_rows = [
+                row for row in table_prefill_rows if row.get("particle_diameter_nm")
+            ]
+
         if table_prefill_rows:
             logger.debug(
                 "Applying scattering script table prefill rows: count=%d",
@@ -189,6 +195,9 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
                 runtime_config_data=context.get("runtime_config_data"),
                 process_name=context.get("process_name"),
             )
+
+        if is_rosetta:
+            return working_table_data if should_replace_existing_table_peaks else dash.no_update
 
         x_values_to_append = self.extract_x_values_to_append(
             result=result,

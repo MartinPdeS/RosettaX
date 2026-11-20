@@ -175,6 +175,11 @@ def add_peak_workflow_post_layout_overlays(
     if getattr(process, "graph_type", "2d_scatter") != "2d_scatter":
         return figure
 
+    figure.update_layout(
+        showlegend=True,
+        legend={"x": 0.01, "y": 0.99, "xanchor": "left", "yanchor": "top", "bgcolor": "rgba(255,255,255,0.9)"},
+    )
+
     annotation_entries = extract_rosetta_scatter_guide_annotations(
         peak_lines_payload=peak_lines_payload,
     )
@@ -202,7 +207,6 @@ def add_peak_workflow_post_layout_overlays(
             pass
         for trace in figure.data:
             trace.showlegend = trace.name in ("Fluorescent marker", "Non-fluorescent peak", "Excluded by saturation guard")
-        figure.update_layout(showlegend=True, legend={"x": 0.01, "y": 0.99, "xanchor": "left", "yanchor": "top", "bgcolor": "rgba(255,255,255,0.9)"})
         if baseline_gate is not None and (figure.layout.yaxis.type != "log" or baseline_gate > 0):
             add_rosetta_baseline_shape(figure=figure, baseline_gate=baseline_gate)
 

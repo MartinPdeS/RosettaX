@@ -212,16 +212,7 @@ The peak table can keep the measured positions while marker identity is
 unresolved.
 
 Select **Compute model** to calculate the expected coupling for the diameters
-in the table. Use the optional **Validate bead assignments** card to check provisional
-sizes against the CAL003 solid-sphere couplings and compare measured and
-predicted scatter. Review any proposed diameter changes before selecting
-**Apply suggested changes**. The comparison allows
-missing beads and extra peaks and can test either marker identity when the
-fluorescence evidence is ambiguous. A diameter is retained only if the
-plausible assignments agree across the original fit and three bootstrap fits.
-The selected response must predict each matched peak when that peak is held
-out. **Create calibration** uses the diameters currently in the table, regardless
-of whether validation was run or supported those assignments.
+in the table. **Create calibration** uses the diameters currently in the table.
 
 Rosetta Script V1 assigns Rosetta Mix sizes using both the 140 nm and 380 nm
 fluorescent marker anchors. If either anchor is unavailable or unreliable, or

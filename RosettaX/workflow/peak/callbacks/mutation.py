@@ -1,5 +1,6 @@
 
 import dash
+import dash_bootstrap_components as dbc
 import logging
 import time
 import uuid
@@ -738,7 +739,7 @@ def handle_clear_action(
     status_children = build_status_children(
         status_component_ids=status_component_ids,
         target_process_name=target_process_name,
-        status=result.status,
+        status="" if target_process_name.startswith("Rosetta Script") else result.status,
     )
 
     return PeakMutationOutput(
@@ -881,6 +882,7 @@ def handle_run_action(
                     f"Preview. Click Run to update the peak table. {result.status or ''}".strip()
                     if result.warning else ""
                 ),
+                debug_payload=result.peak_lines_payload if result.warning else None,
             ),
         )
 
@@ -908,6 +910,7 @@ def handle_run_action(
                     status_component_ids=status_component_ids,
                     target_process_name=target_process_name,
                     status=result.status,
+                    debug_payload=result.peak_lines_payload,
                 ),
             )
         return (
@@ -1141,6 +1144,17 @@ def build_status_children(
     for status_component_id in status_component_ids or []:
         if status_component_id.get("process") == target_process_name:
             status_component = build_status_alert(status=status)
+            if target_process_name.startswith("Rosetta Script") and status_component:
+                children.append(dbc.Offcanvas(
+                    [status_component, build_rosetta_debug_panel(peak_lines_payload=debug_payload)],
+                    title="Rosetta diagnostics",
+                    is_open=True,
+                    placement="end",
+                    backdrop=False,
+                    scrollable=True,
+                    style={"width": "min(620px, 100vw)"},
+                ))
+                continue
             process = registry.get_process_instance(
                 process_name=target_process_name,
             )
