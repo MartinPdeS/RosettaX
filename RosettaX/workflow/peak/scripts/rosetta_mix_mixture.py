@@ -92,8 +92,8 @@ class MixtureRosettaScatterPeakProcess(RosettaMixSizeAssignmentProcess):
         Returns
         -------
         tuple[list[dict[str, Any]], str]
-            Complete rows assigned by rank, or no rows and an explicit warning.
-            Exactly three populations are required between the anchors. Outer
+            Rows with assigned or unresolved diameters and any sizing notice.
+            Exactly three populations are required to size the middle region. Outer
             populations are optional and assigned outward from each anchor;
             this assumes missing outer sizes occur at the extremes.
         """
@@ -136,29 +136,27 @@ class MixtureRosettaScatterPeakProcess(RosettaMixSizeAssignmentProcess):
             ("below the 140 nm marker", sorted((x for x in scatter_positions if x < lower), reverse=True), (125, 100, 70)),
             ("above the 380 nm marker", [x for x in scatter_positions if x > upper], (400, 600, 799, 994)),
         )
+        assignments = {}
+        unresolved = []
+        assumed_missing_ends = []
         for region_index, (label, positions, diameters) in enumerate(regions):
-            if region_index == 0 and len(positions) != len(diameters):
+            middle = region_index == 0
+            if len(positions) > len(diameters) or (middle and len(positions) != len(diameters)):
                 expected = ", ".join(str(size) for size in diameters)
-                return [], (
-                    f"Warning: Mixture size assignment failed: found {len(positions)} validated "
-                    f"non-fluorescent populations {label}; expected exactly {len(diameters)} "
-                    f"({expected} nm). Validated positions: "
-                    f"{', '.join(f'{position:.4g}' for position in positions) or 'none'} a.u. "
-                    "Inspect the scatter histogram between the marker guides for merged, missing, or extra peaks."
+                unresolved.append(
+                    f"Found {len(positions)} validated scatter {'peak' if len(positions) == 1 else 'peaks'} {label}; "
+                    f"expected {'exactly' if middle else 'at most'} {len(diameters)} ({expected} nm)."
                 )
-            if region_index > 0 and len(positions) > len(diameters):
-                return [], (
-                    f"Warning: Mixture size assignment failed: found {len(positions)} populations "
-                    f"{label}, exceeding the {len(diameters)} known outer sizes. Inspect the scatter histogram for extra populations outside the marker guides."
-                )
-        if any(x == lower or x == upper for x in scatter_positions):
-            return [], "Warning: A non-fluorescent scatter peak coincides with a marker anchor. Inspect the gate and scatter histogram for two populations at the same intensity."
+                continue
+            if not middle and 0 < len(positions) < len(diameters):
+                assumed_missing_ends.append(label)
+            assignments.update(
+                (position, float(diameter)) for position, diameter in zip(positions, diameters)
+            )
 
-        assignments = {
-            position: float(diameter)
-            for _label, positions, diameters in regions
-            for position, diameter in zip(positions, diameters, strict=False)
-        }
+        if any(x == lower or x == upper for x in scatter_positions):
+            unresolved.append("A scatter peak coincides with a marker anchor and was left unsized.")
+
         row_metadata = match_table_points_to_peak_metadata(
             table_points=result.peak_positions, peak_metadata=metadata,
         )
@@ -169,16 +167,23 @@ class MixtureRosettaScatterPeakProcess(RosettaMixSizeAssignmentProcess):
             diameter = resolve_marker_row_diameter(metadata=item)
             if diameter is None:
                 diameter = assignments.get(_as_positive_float(row.get("measured_peak_position")))
-            if diameter is None:
-                return [], f"Warning: The table peak at {row.get('measured_peak_position')} a.u. could not be matched to a validated scatter population. Rerun peak detection before calibrating."
-            row["particle_diameter_nm"] = diameter
+            row["particle_diameter_nm"] = diameter if diameter is not None else ""
             rows.append(row)
-        if bounded_marker:
-            return rows, (
-                f"Assigned bead diameters using the {bounded_marker} marker at the scatter limit "
-                "as an ordering boundary. The clipped marker was excluded from calibration."
+
+        notices = []
+        if unresolved:
+            prefix = "Partial result:" if any(row["particle_diameter_nm"] for row in rows) else "No sizes assigned:"
+            notices.append(f"{prefix} {' '.join(unresolved)}")
+        if assumed_missing_ends:
+            notices.append(
+                f"Outer assignments {' and '.join(assumed_missing_ends)} are provisional and assume missing beads occur at the ends."
             )
-        return rows, ""
+        if bounded_marker:
+            notices.append(
+                f"Used the {bounded_marker} marker at the scatter limit as an ordering boundary. "
+                "The clipped marker was excluded from calibration."
+            )
+        return rows, " ".join(notices)
 
     def _record_size_assignments(
         self, *, result: PeakProcessResult, rows: list[dict[str, Any]], method: str,
@@ -272,7 +277,7 @@ class MixtureRosettaScatterPeakProcess(RosettaMixSizeAssignmentProcess):
                 method = "One measured marker and a clipped scatter boundary"
             elif any(item.get("recovered_from_clipped_fluorescence") for item in marker_diagnostics):
                 method = "Two measured scatter markers, one recovered from clipped fluorescence"
-                status = "Recovered the 380 nm marker from scatter events at the fluorescence ceiling."
+                status = " ".join(filter(None, (status, "Recovered the 380 nm marker from scatter events at the fluorescence ceiling.")))
             result = self._record_size_assignments(
                 result=result, rows=rows, method=method,
                 marker_diameters_nm=(DIM_MARKER_DIAMETER_NM, BRIGHT_MARKER_DIAMETER_NM),
@@ -521,8 +526,14 @@ class MixtureRosettaScatterPeakProcess(RosettaMixSizeAssignmentProcess):
                 )
                 warning = result.warning or not any(row.get("particle_diameter_nm") for row in rows)
                 status = result.status
-                if warning and not result.warning:
-                    status = "Warning: No assigned diameters remain after excluding the lowest non-fluorescent peak."
+                if not any(row.get("particle_diameter_nm") for row in rows) and (
+                    not result.warning or status.startswith("Partial result:")
+                ):
+                    details = status.removeprefix("Partial result:").strip()
+                    status = (
+                        "Warning: No assigned diameters remain after excluding the lowest non-fluorescent peak. "
+                        + details
+                    ).strip()
                 result = replace(
                     result,
                     table_prefill_rows=rows,
@@ -533,7 +544,9 @@ class MixtureRosettaScatterPeakProcess(RosettaMixSizeAssignmentProcess):
                     status=status,
                 )
             assignments = payload.get("rosetta_size_assignments", [])
-            needs_confirmation = any(not row.get("particle_diameter_nm") for row in result.table_prefill_rows)
+            needs_confirmation = result.status.startswith("Partial result:") or "are provisional" in result.status or any(
+                not row.get("particle_diameter_nm") for row in result.table_prefill_rows
+            )
             needs_confirmation |= any(
                 entry["method"].startswith(("Estimated by rank", "One marker and all ten"))
                 for entry in assignments

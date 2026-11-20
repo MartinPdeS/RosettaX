@@ -1223,7 +1223,7 @@ def classify_status_alert_color(
     if not normalized_status_text:
         return "secondary"
 
-    if normalized_status_text.startswith("warning:"):
+    if normalized_status_text.startswith(("warning:", "partial result:")):
         return "warning"
 
     error_markers = [

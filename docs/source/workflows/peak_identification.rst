@@ -146,7 +146,10 @@ The algorithm follows the MATLAB-described approach from the Exometry method:
    140 nm marker, between the markers, and above the 380 nm marker. Each fit
    includes a small margin at the marker boundaries to account for nearby peak
    tails. The middle fit must resolve three observed populations before Rosetta
-   assigns 147, 203 and 296 nm. With fewer than two usable scatter anchors,
+   assigns 147, 203 and 296 nm. If the middle region cannot be sized, Rosetta
+   still proposes sizes for usable peaks in the outer regions and reports the
+   partial result. Incomplete outer regions are sized outward from the nearest
+   marker, assuming the missing beads are at the extremes. With fewer than two usable scatter anchors,
    Rosetta fits the full gated distribution. The lowest detected non-fluorescent
    peak stays visible on the graph and is excluded from the calibration table
    because acquisition limits and overlapping populations can distort it.

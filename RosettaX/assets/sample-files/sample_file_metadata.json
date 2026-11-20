@@ -27,9 +27,10 @@
     "detectors": [
       "SALS(Peak)",
       "LALS(Peak)",
-      "405-Grn(Peak)"
+      "405-Grn(Peak)",
+      "488-Grn(Peak)"
     ],
-    "size_bytes": 1047417
+    "size_bytes": 1396317
   },
   "cross_device/apogee_microplus_metves_06f2.fcs": {
     "detectors": [

@@ -135,7 +135,7 @@ def test_mixture_script_routes_both_scatter_stages_through_new_fitter(monkeypatc
     assert result.warning
     assert [row["particle_diameter_nm"] for row in result.table_prefill_rows] == [""]
     assert result.peak_lines_payload["rosetta_assignment_evidence"]["scatter"]
-    assert "found 1 validated non-fluorescent populations between" in result.status
+    assert "Found 1 validated scatter peak between" in result.status
     assert "expected exactly 3 (147, 203, 296 nm)" in result.status
 
 
@@ -242,8 +242,8 @@ def test_complete_mixture_is_assigned_by_region_and_order(complete_mixture_detec
 
 
 @pytest.mark.parametrize("middle", [[], [1100], [1100, 9000], [1100, 3000, 5000, 9000]])
-def test_incomplete_or_extra_middle_populations_fail(complete_mixture_detection, middle):
-    """Any count other than three between the markers must produce no assignments."""
+def test_incomplete_or_extra_middle_populations_leave_outer_sizes(complete_mixture_detection, middle):
+    """An unresolved middle interval leaves the outer assignments available."""
     payload = dict(complete_mixture_detection.peak_lines_payload)
     points = payload["points"]
     labels = payload["labels"]
@@ -255,8 +255,8 @@ def test_incomplete_or_extra_middle_populations_fail(complete_mixture_detection,
     payload["labels"] = [label for _point, label in retained] + ["Scatter"] * len(middle)
     result = replace(complete_mixture_detection, peak_lines_payload=payload)
     rows, warning = MixtureRosettaScatterPeakProcess().assign_particle_sizes(result=result)
-    assert rows == []
-    assert f"found {len(middle)} validated non-fluorescent populations between" in warning
+    assert [row["particle_diameter_nm"] for row in rows] == [70, 100, 125, "", "", "", 400, 600, 799, 994]
+    assert warning.startswith(f"Partial result: Found {len(middle)} validated scatter peak")
     assert "expected exactly 3 (147, 203, 296 nm)" in warning
 
 
@@ -277,15 +277,15 @@ def test_optional_outer_populations_expand_from_anchors(complete_mixture_detecti
         table_prefill_rows=[{"measured_peak_position": x} for x in positions],
     )
     rows, warning = MixtureRosettaScatterPeakProcess().assign_particle_sizes(result=result)
-    assert warning == ""
+    assert ("are provisional" in warning) == (0 < below_count < 3 or 0 < above_count < 4)
     expected_below = [70, 100, 125][-below_count:] if below_count else []
     assert [row["particle_diameter_nm"] for row in rows] == [
         *expected_below, 147, 203, 296, *[400, 600, 799, 994][:above_count],
     ]
 
 
-def test_failed_assignment_clears_results_and_annotations(monkeypatch, complete_mixture_detection):
-    """An incomplete mixture must not publish table rows or inferred size labels."""
+def test_partial_assignment_preserves_outer_rows_and_annotations(monkeypatch, complete_mixture_detection):
+    """An unresolved middle interval retains only the outer size annotations."""
     payload = dict(complete_mixture_detection.peak_lines_payload)
     # Remove the middle 203 nm population from otherwise complete detections.
     payload["points"] = [point for point in payload["points"] if point["x"] != 3000]
@@ -297,11 +297,11 @@ def test_failed_assignment_clears_results_and_annotations(monkeypatch, complete_
         max_events_for_analysis=10000, process_settings={},
     )
     assert result.warning
-    assert result.table_prefill_rows == []
-    assert result.peak_positions == []
-    assert result.new_peak_positions == []
-    assert "scatter_guide_annotations" not in result.peak_lines_payload
-    assert "found 2" in result.status
+    assert [row["particle_diameter_nm"] for row in result.table_prefill_rows] == [100, 125, "", "", "", 400, 600, 799, 994]
+    annotations = result.peak_lines_payload["scatter_guide_annotations"]
+    assert all(entry["kind"] == "marker" or not 1000 < entry["x"] < 10000 for entry in annotations)
+    assert result.status.startswith("Partial result: Found 2")
+
 
 
 def test_complete_assignment_publishes_expected_size_annotations(monkeypatch, complete_mixture_detection):

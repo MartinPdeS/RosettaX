@@ -144,7 +144,7 @@ class RosettaMixSizeAssignmentProcess(FluorescenceGuidedScatterPeakProcess):
             result,
             table_prefill_rows=resolved_rows,
             peak_lines_payload=updated_peak_lines_payload,
-            warning=sizing_failed,
+            warning=sizing_failed or status_suffix.startswith("Partial result:"),
             status=" ".join(filter(None, (
                 status_suffix, updated_peak_lines_payload.get("saturation_guard_message", ""),
             ))),
