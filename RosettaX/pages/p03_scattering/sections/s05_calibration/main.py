@@ -819,7 +819,9 @@ class Calibration:
                 slope_text,
                 intercept_text,
                 r_squared_text,
-                apply_status,
+                ui_forms.build_diagnostics_message(
+                    message=apply_status, source="Create scattering calibration", severity="error",
+                ) if apply_status and calibration_payload is None else apply_status,
             )
 
     def _register_left_graph_callback(self) -> None:

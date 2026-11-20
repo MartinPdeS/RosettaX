@@ -356,6 +356,7 @@ def add_selected_peak_markers(
                 name=name,
                 showlegend=True,
                 hoverinfo="skip",
+                meta={"rosetta_peak_kind": kind},
                 marker={"symbol": "square", "size": 12, "color": ROSETTA_PEAK_MARKER_STYLES[kind]["color"]},
             ))
         return figure

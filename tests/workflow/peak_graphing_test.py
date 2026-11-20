@@ -646,8 +646,8 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
         assert list(figure.data[0].x) == [100.0]
         assert not figure.layout.annotations
 
-    def test_saturation_guard_marks_excluded_peak_and_cutoff(self):
-        """Keep excluded centers visible with a reason and the configured cutoff."""
+    def test_saturation_guard_shows_cutoff_without_excluded_peak(self):
+        """Show the cutoff without adding a symbol or guide for an excluded peak."""
         builder = PeakWorkflowGraphBuilder.__new__(PeakWorkflowGraphBuilder)
         builder.resolved_process_name = "Rosetta Script Mixture"
         builder.process = types.SimpleNamespace(supports_advanced_mode=False)
@@ -673,11 +673,8 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
             figure=figure, process_name=builder.resolved_process_name,
             peak_lines_payload=builder.peak_lines_payload,
         )
-        trace = next(trace for trace in figure.data if trace.name == "Excluded by saturation guard")
-        assert trace.name == "Excluded by saturation guard"
-        assert trace.marker.symbol == "x"
-        assert trace.showlegend
-        assert list(trace.x) == [3500000.0]
+        assert not figure.data
+        assert not any(shape.x0 == shape.x1 == 3500000.0 for shape in figure.layout.shapes)
         assert any(shape.x0 == 2000000.0 for shape in figure.layout.shapes)
         annotations = {item.text: item for item in figure.layout.annotations}
         assert "Excluded by saturation guard" not in annotations
@@ -696,7 +693,7 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
         "Rosetta Script Sensitive", "Rosetta Script Mixture",
     ])
     def test_rosetta_classifies_peak_symbols_and_labels(self, process_name):
-        """Show distinct marker types and place labels at the fluorescence gate."""
+        """Show colored squares in the legend only and place labels at the gate."""
         builder = PeakWorkflowGraphBuilder.__new__(PeakWorkflowGraphBuilder)
         builder.resolved_process_name = process_name
         builder.process = types.SimpleNamespace(supports_advanced_mode=False)
@@ -729,13 +726,12 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
             figure=figure, process_name=process_name, peak_lines_payload=builder.peak_lines_payload,
         )
         traces = {trace.name: trace for trace in figure.data}
-        assert traces["Fluorescent marker"].marker.symbol == "diamond"
-        assert "147 nm · Estimated by rank from one marker" in traces["Non-fluorescent peak"].customdata[0][3]
-        assert traces["Non-fluorescent peak"].marker.symbol == "circle"
-        assert traces["Fluorescent marker"].marker.size == 18
-        assert traces["Fluorescent marker"].marker.line.color == "#7c3aed"
-        assert traces["Non-fluorescent peak"].marker.line.color == "#008c80"
-        assert traces["Fluorescent marker"].marker.opacity == 1
+        for name, color in (("Fluorescent marker", "#7c3aed"), ("Non-fluorescent peak", "#008c80")):
+            trace = traces[name]
+            assert trace.marker.symbol == "square"
+            assert trace.marker.size == 12
+            assert trace.marker.color == color
+            assert list(trace.x) == list(trace.y) == [None]
         assert figure.layout.showlegend is True
         assert figure.layout.legend.x == pytest.approx(0.01)
         assert figure.layout.legend.y == pytest.approx(0.99)
@@ -796,9 +792,9 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
         builder.advanced_mode_value = ["enabled"]
         builder.peak_lines_payload = {
             "points": [
-                {"x": 100.0, "y": 200.0},
-                {"x": 300.0, "y": 400.0},
-                {"x": 500.0, "y": 400.0},
+                {"x": 100.0, "y": 200.0, "kind": "non_fluorescent"},
+                {"x": 300.0, "y": 400.0, "kind": "marker"},
+                {"x": 500.0, "y": 400.0, "kind": "non_fluorescent"},
             ],
             "scatter_guide_positions": [100.0, 300.0, 500.0],
             "fluorescence_guide_positions": [200.0, 400.0],
@@ -827,10 +823,11 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
             if shape.type == "line" and float(shape.y0) == float(shape.y1)
         ]
 
-        assert len(vertical_shapes) == 3
+        assert len(vertical_shapes) == 1
         assert len(horizontal_shapes) == 2
-        assert all(shape.line.dash == "dash" for shape in vertical_shapes)
-        assert all(shape.line.color == "#1f9d55" for shape in vertical_shapes)
+        assert vertical_shapes[0].x0 == 300.0
+        assert vertical_shapes[0].line.dash == "dot"
+        assert vertical_shapes[0].line.color == "#7c3aed"
         assert all(shape.line.dash == "dash" for shape in horizontal_shapes)
         assert all(shape.line.color == "#d64545" for shape in horizontal_shapes)
         assert len(figure.data) == 1
@@ -846,8 +843,8 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
         builder.advanced_mode_value = []
         builder.peak_lines_payload = {
             "points": [
-                {"x": 100.0, "y": 200.0},
-                {"x": 300.0, "y": 400.0},
+                {"x": 100.0, "y": 200.0, "kind": "non_fluorescent"},
+                {"x": 300.0, "y": 400.0, "kind": "marker"},
             ],
             "scatter_guide_positions": [100.0, 300.0],
             "fluorescence_guide_positions": [200.0, 400.0],
@@ -871,7 +868,7 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
             if shape.type == "line" and float(shape.y0) == float(shape.y1)
         ]
 
-        assert len(vertical_shapes) == 2
+        assert len(vertical_shapes) == 1
         assert horizontal_shapes == []
 
     def test_rosetta_v1_selected_peak_markers_use_rosetta_guides(self):
@@ -883,14 +880,14 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
         builder.yscale_selection = []
         builder.peak_lines_payload = {
             "points": [
-                {"x": 100.0, "y": 200.0},
-                {"x": 300.0, "y": 400.0},
+                {"x": 100.0, "y": 200.0, "kind": "non_fluorescent"},
+                {"x": 300.0, "y": 400.0, "kind": "marker"},
             ],
             "scatter_guide_positions": [100.0, 300.0],
             "fluorescence_guide_positions": [200.0, 400.0],
             "scatter_guide_annotations": [
-                {"x": 100.0, "label": "140 nm"},
-                {"x": 300.0, "label": "194 nm"},
+                {"x": 100.0, "label": "194 nm", "kind": "non_fluorescent"},
+                {"x": 300.0, "label": "140 nm", "kind": "marker"},
             ],
         }
 
@@ -919,7 +916,7 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
 
         assert len(vertical_shapes) == 2
         assert len(horizontal_shapes) == 2
-        assert len(figure.data) == 1
+        assert len(figure.data) == 2
         text_traces = [
             trace for trace in figure.data if getattr(trace, "mode", None) == "text"
         ]

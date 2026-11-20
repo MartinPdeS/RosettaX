@@ -8,6 +8,48 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 
+def find_separated_fluorescence_gate(
+    *, values: np.ndarray, minimum_events: int,
+) -> float | None:
+    """Return a cutoff in a wide, nearly empty gap between two populated bands.
+
+    Parameters
+    ----------
+    values : ndarray
+        Fluorescence intensities in arbitrary units.
+    minimum_events : int
+        Minimum event count on each side of the gap.
+
+    Returns
+    -------
+    float or None
+        Midpoint in log intensity, returned in original channel units.
+    """
+    positive = values[np.isfinite(values) & (values > 0)]
+    if positive.size < 2 * minimum_events:
+        return None
+    bin_count = min(256, max(64, int(np.sqrt(positive.size))))
+    counts, edges = np.histogram(np.log10(positive), bins=bin_count)
+    smoothed = smooth_counts(counts=counts.astype(float), window_size=7)
+    left_height = np.r_[0.0, np.maximum.accumulate(smoothed[:-1])]
+    right_height = np.r_[np.maximum.accumulate(smoothed[:0:-1])[::-1], 0.0]
+    sparse = smoothed <= 0.01 * np.minimum(left_height, right_height)
+    starts = np.flatnonzero(sparse & ~np.r_[False, sparse[:-1]])
+    stops = np.flatnonzero(sparse & ~np.r_[sparse[1:], False]) + 1
+    cumulative = np.r_[0, np.cumsum(counts)]
+    gaps = [
+        (edges[stop] - edges[start], start, stop)
+        for start, stop in zip(starts, stops, strict=True)
+        if edges[stop] - edges[start] >= 0.25
+        and cumulative[start] >= max(minimum_events, positive.size / 2)
+        and positive.size - cumulative[stop] >= minimum_events
+    ]
+    if not gaps:
+        return None
+    _, start, stop = max(gaps)
+    return float(10 ** ((edges[start] + edges[stop]) / 2))
+
+
 def build_peak_analysis_diagnostic_text(
     *,
     analysis: dict[str, Any] | None,

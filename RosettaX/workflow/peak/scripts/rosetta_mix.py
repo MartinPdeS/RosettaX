@@ -26,6 +26,7 @@ from .rosetta_mix_fitting import (  # noqa: F401
     find_left_valley_minimum,
     find_local_maxima_indices,
     find_right_valley_minimum,
+    find_separated_fluorescence_gate,
     fit_gaussian_from_values,
     resolve_baseline_peak,
     select_well_separated_peak_indices,
@@ -657,20 +658,51 @@ def analyze_rosetta_fluorescence(
         values=events.fluorescence_values,
         saturation_quantile=settings.fluorescence_saturation_quantile,
     )
-    fluorescence_analysis = find_fit_validate_peaks_1d(
-        values=events.fluorescence_values,
-        peak_count=3,
+    fit_options = dict(
         minimum_peak_fraction=settings.minimum_peak_fraction,
         minimum_events_per_peak=settings.minimum_events_per_peak,
         fit_r2_threshold=settings.fit_r2_threshold,
         fit_cv_threshold=settings.fit_cv_threshold,
         saturation_intensity=fluorescence_saturation_intensity,
     )
+    fluorescence_analysis = find_fit_validate_peaks_1d(
+        values=events.fluorescence_values, peak_count=3, **fit_options,
+    )
     fluorescence_validated_peaks = fluorescence_analysis["validated_peaks"]
     fluorescence_diagnostic = build_peak_analysis_diagnostic_text(
         analysis=fluorescence_analysis, label="fluorescence"
     )
     if not fluorescence_validated_peaks:
+        # Quantized baseline bins can fill every candidate slot. Recover only
+        # when a wide gap supports treating the dim band as one baseline.
+        cutoff = find_separated_fluorescence_gate(
+            values=events.fluorescence_values, minimum_events=settings.minimum_events_per_peak,
+        )
+        if cutoff is not None:
+            marker_fit = find_fit_validate_peaks_1d(
+                values=events.fluorescence_values[events.fluorescence_values > cutoff],
+                peak_count=3, **fit_options,
+            )
+            recovered_markers = marker_fit["validated_peaks"]
+            if 1 <= len(recovered_markers) <= 2:
+                values = events.fluorescence_values
+                baseline = values[np.isfinite(values) & (values > 0) & (values <= cutoff)]
+                baseline_peak = {
+                    "mean": float(np.median(baseline)),
+                    "count": int(baseline.size),
+                    "validated": True,
+                }
+                return RosettaFluorescenceAnalysis(
+                    analysis={
+                        "all_peaks": [baseline_peak, *marker_fit["all_peaks"]],
+                        "validated_peaks": [baseline_peak, *recovered_markers],
+                    },
+                    baseline_peak=baseline_peak,
+                    marker_peaks=recovered_markers,
+                    baseline_lower_gate=0.0,
+                    baseline_upper_gate=cutoff,
+                    saturation_intensity=fluorescence_saturation_intensity,
+                )
         return RosettaFluorescenceAnalysis(
             analysis=fluorescence_analysis,
             baseline_peak=baseline_peak,

@@ -111,7 +111,7 @@ def apply_trace_visualization_settings(
     peak_kind = metadata.get("rosetta_peak_kind") if isinstance(metadata, dict) else None
     if peak_kind in ROSETTA_PEAK_MARKER_STYLES:
         marker_style = ROSETTA_PEAK_MARKER_STYLES[peak_kind]
-        trace.marker.update(size=18, symbol=marker_style["symbol"], color="white", opacity=1, line={"color": marker_style["color"], "width": 3})
+        trace.marker.update(size=12, symbol="square", color=marker_style["color"], opacity=1)
         return
 
     if trace_type in (

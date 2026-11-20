@@ -130,7 +130,9 @@ The algorithm follows the MATLAB-described approach from the Exometry method:
    the fluorescent marker beads (140 nm and 380 nm in CAL003). When two are
    found, the lower-intensity peak is labeled *Dim marker* and the higher is
    labeled *Bright marker*. A lone usable marker can still guide inspection of
-   measured scatter peaks.
+   measured scatter peaks. If no fluorescence candidate passes the initial fit,
+   Rosetta can retry above a wide, sparsely populated gap. The brighter band
+   must still pass the usual marker fit checks.
 4. **Marker scatter peaks.** For each marker peak, events are gated by a
    symmetric sigma window around the fluorescence fit mean, and the scatter
    distribution of those gated events is fitted to find the marker scatter

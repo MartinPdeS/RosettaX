@@ -178,6 +178,11 @@ def build_upload_widget(
     )
 
 
+def build_diagnostics_message(*, message: str, source: str, severity: str) -> html.Div:
+    """Mark an action failure or warning for the application diagnostics drawer."""
+    return html.Div(message, **{"data-severity": severity, "data-diagnostics-source": source})
+
+
 def build_upload_status(
     *,
     status_id: Any,

@@ -194,3 +194,67 @@
         padding: 12px;
     }
 }
+
+.app-diagnostics {
+    position: fixed;
+    inset: 0.75rem 0 auto auto;
+    z-index: 1040;
+    max-width: calc(100vw - 1rem);
+    color: var(--rosettax-text-color, #212529);
+}
+
+.app-diagnostics > summary {
+    width: fit-content;
+    margin-left: auto;
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    border: 1px solid var(--bs-border-color);
+    border-right: 0;
+    border-radius: 0.5rem 0 0 0.5rem;
+    background: var(--bs-body-bg);
+    font-weight: 600;
+}
+
+.app-diagnostics-panel {
+    width: min(560px, calc(100vw - 1rem));
+    max-height: 65vh;
+    overflow: auto;
+    padding: 1rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.5rem 0 0 0.5rem;
+    background: var(--bs-body-bg);
+    box-shadow: var(--bs-box-shadow-sm);
+}
+
+[data-diagnostics-routed] {
+    display: none !important;
+}
+
+.app-diagnostics[data-severity="warning"] > summary {
+    background: #fff1d6;
+    color: #784000;
+    border-color: #d98220;
+}
+
+.app-diagnostics[data-severity="error"] > summary {
+    background: #fde8e8;
+    color: #8b1d25;
+    border-color: #c45056;
+}
+
+#app-diagnostics-badge {
+    margin-left: 0.5rem;
+    font-size: 0.75em;
+    font-weight: 700;
+}
+
+.app-diagnostics-message + .app-diagnostics-message {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--bs-border-color);
+}
+
+.app-diagnostics-message > h3 {
+    font-size: 0.95rem;
+    margin-bottom: 0.4rem;
+}

@@ -69,7 +69,7 @@ CHECKED_METVES_OUTCOMES = {
     'beckman_coulter_cytoflex_lx_metves_14n1.fcs': ([400, 600], ''),
     'beckman_coulter_cytoflex_lx_metves_05e1.fcs': ([147, 203, 296, 400, 600, 799, 994], ''),
     'cytek_aurora_metves_23w2.fcs': ([125, 147, 203, 296], ''),
-    'bd_facslyric_metves_20t1.fcs': ([], 'No validated fluorescence peaks'),
+    'bd_facslyric_metves_20t1.fcs': ([147, 203, 296, 400, 600, 799], ''),
     'apogee_microplus_metves_06f2.fcs': ([203, 296, 400, 600], ''),
     'beckman_coulter_cytoflex_s_metves_05e2.fcs': ([600, 799, 994], 'Found 0 validated scatter peaks'),
     'apogee_a50_micro_metves_19s1.fcs': ([125, '', '', 400, 600, 799, 994], 'Found 2 validated scatter peaks'),

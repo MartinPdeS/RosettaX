@@ -4,7 +4,7 @@ import logging
 import plotly.graph_objs as go
 from . import services
 from RosettaX.pages.p02_fluorescence.state import FluorescencePageState
-from RosettaX.utils import RuntimeConfig, plottings, styling
+from RosettaX.utils import RuntimeConfig, plottings, styling, ui_forms
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -270,4 +270,9 @@ def _register_calibration_workflow_callback(section) -> None:
             logger=logger,
         )
 
-        return result.to_tuple()
+        outputs = result.to_tuple()
+        if result.apply_status and not isinstance(result.calibration_store, dict):
+            return (*outputs[:-1], ui_forms.build_diagnostics_message(
+                message=result.apply_status, source="Create fluorescence calibration", severity="error",
+            ))
+        return outputs

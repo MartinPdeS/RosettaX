@@ -1,6 +1,5 @@
 
 import dash
-import dash_bootstrap_components as dbc
 import logging
 import time
 import uuid
@@ -880,9 +879,9 @@ def handle_run_action(
                 target_process_name=target_process_name,
                 status=(
                     f"Preview. Click Run to update the peak table. {result.status or ''}".strip()
-                    if result.warning else ""
+                    if getattr(result, "warning", False) else ""
                 ),
-                debug_payload=result.peak_lines_payload if result.warning else None,
+                debug_payload=result.peak_lines_payload if getattr(result, "warning", False) else None,
             ),
         )
 
@@ -1145,14 +1144,10 @@ def build_status_children(
         if status_component_id.get("process") == target_process_name:
             status_component = build_status_alert(status=status)
             if target_process_name.startswith("Rosetta Script") and status_component:
-                children.append(dbc.Offcanvas(
+                severity = classify_status_alert_color(status_text=status)
+                children.append(html.Div(
                     [status_component, build_rosetta_debug_panel(peak_lines_payload=debug_payload)],
-                    title="Rosetta diagnostics",
-                    is_open=True,
-                    placement="end",
-                    backdrop=False,
-                    scrollable=True,
-                    style={"width": "min(620px, 100vw)"},
+                    **{"data-severity": "error" if severity == "danger" else "warning", "data-diagnostics-source": "Rosetta"},
                 ))
                 continue
             process = registry.get_process_instance(
@@ -1201,6 +1196,7 @@ def build_status_alert(
     return html.Div(
         status_text,
         role="alert" if status_color == "danger" else "status",
+        **{"data-severity": "error" if status_color == "danger" else "warning"},
         style={
             "marginBottom": "0px",
             "whiteSpace": "pre-wrap",

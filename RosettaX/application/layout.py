@@ -180,6 +180,16 @@ def build_application_layout() -> html.Div:
             dcc.Location(id="url"),
             *stores,
             theme_link,
+            html.Details([
+                html.Summary([
+                    "Diagnostics",
+                    html.Span(id="app-diagnostics-badge", role="status", hidden=True),
+                ]),
+                html.Div([
+                    html.P("No warnings or errors.", id="app-diagnostics-empty", className="mb-0"),
+                    html.Div(id="app-diagnostics-messages"),
+                ], className="app-diagnostics-panel"),
+            ], id="app-diagnostics", className="app-diagnostics"),
             html.Div(
                 [
                     html.Details(
