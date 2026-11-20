@@ -150,7 +150,7 @@ in existing profiles retain their selected value.
 
 The scattering peak selector also offers ``Rosetta``.
 It keeps the fluorescence marker gates and assigns the known CAL003 sizes in
-scatter order around the 140 nm and 380 nm markers. It requires exactly three
+scatter order around the 140 nm and 380 nm markers. With both markers, it requires exactly three
 validated non-fluorescent populations between the anchors (147, 203, 296 nm).
 An incomplete or extra middle population stops size assignment and clears the
 preceding results. Outer populations are optional: expand downward from 140 nm
@@ -158,6 +158,18 @@ as 125, 100, 70 nm and upward from 380 nm as 400, 600, 799, 994 nm. This assumes
 missing outer populations are at the extremes, and scatter intensity increases
 with bead diameter for the selected detector. More outer populations than known
 sizes produce a warning rather than invented labels.
+
+If bright fluorescence clips, Rosetta can recover the 380 nm anchor from a
+single stable scatter population at the fluorescence ceiling. When a marker's
+scatter is clipped, Rosetta can use its fluorescence to identify an ordering
+boundary and excludes the clipped intensity from calibration. With one
+measurable marker and all ten non-fluorescent populations, it can also assign
+diameters if the marker's rank identifies it uniquely. If only one fluorescent
+marker is detected and its identity cannot be established by rank, Rosetta
+assumes it is the 380 nm marker and estimates nearby diameters in scatter order.
+These estimates stay provisional until checked against detector coupling. Peak
+detection uses the measured FCS channels before detector geometry is configured.
+
 Scatter populations are fitted jointly in log intensity,
 with the component count selected by BIC and an optional broad background
 component. Sensitive candidate detection uses 1% relative prominence with a local
@@ -176,7 +188,7 @@ Peaks excluded from the calibration table by the saturation guard remain visible
 as amber crosses identified in the legend. The saturation guard cutoff and
 fluorescence baseline gate are identified by their line styles in the legend.
 Rosetta uses an unshaded plot with a bright pink baseline gate beneath the markers.
-The default cutoff is 90% of the detector range; explicitly saved fractions are
+The default cutoff is 60% of the detector range; explicitly saved fractions are
 retained. Successful size assignment retains the saturation exclusion message
 below the controls.
 

@@ -240,6 +240,17 @@ class Test_PeakProcessFiltering:
         assert isinstance(scripts[0], MixtureRosettaScatterPeakProcess)
         assert all("Sensitive" not in label for label in labels)
 
+    def test_mixture_strictness_slider_is_visible_without_advanced_mode(self) -> None:
+        """Expose marker strictness as a slider when the Rosetta mode is selected."""
+        process_name = "Rosetta Script Mixture"
+        process = registry.get_process_instance(process_name=process_name)
+        assert visibility.build_process_settings_container_style(
+            process_name=process_name, advanced_mode_value=[],
+        )["display"] == "flex"
+        setting, = process.get_settings()
+        assert setting["kind"] == "slider"
+        assert setting["marks"] == {0.0: "Sensitive", 0.5: "Default", 1.0: "Strict"}
+
     def test_filter_peak_processes_keeps_only_allowed_names(self) -> None:
         """Check filter peak processes keeps only allowed names."""
         scripts = registry.get_peak_process_instances()

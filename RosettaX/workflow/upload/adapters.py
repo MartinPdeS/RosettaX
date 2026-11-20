@@ -168,6 +168,7 @@ class ScatteringUploadAdapter:
             "calibration_payload": None,
             "calibration_saved": False,
             "scattering_parameters_payload": None,
+            "rosetta_assignment_evidence": None,
         }
 
         empty_peak_payload = (

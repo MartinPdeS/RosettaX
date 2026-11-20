@@ -332,7 +332,10 @@ def build_marker_anchor_warning(*, result: PeakProcessResult) -> str:
         and marker_positions["Bright marker"] <= marker_positions["Dim marker"]
     ):
         details.append(
-            "Both markers were detected, but their scatter positions are reversed or equal."
+            f"Two marker candidates were fitted. The dim candidate is at "
+            f"{marker_positions['Dim marker']:.4g} a.u. scatter and the bright candidate "
+            f"is at {marker_positions['Bright marker']:.4g} a.u. "
+            "The 380 nm candidate must be to the right of the 140 nm candidate for two-marker sizing."
         )
 
     if not details:
@@ -346,18 +349,20 @@ def build_marker_anchor_warning(*, result: PeakProcessResult) -> str:
     )
 
 
-def _build_warning_graph_payload(*, peak_lines_payload: Any) -> dict[str, Any]:
-    """Keep the event cloud and baseline gate while removing peak diagnostics.
+def _build_warning_graph_payload(*, peak_lines_payload: Any, show_detected_peaks: bool = False) -> dict[str, Any]:
+    """Keep the event cloud and baseline gate, with detection guides for previews.
 
     Parameters
     ----------
     peak_lines_payload : Any
         Existing graph annotations and event samples, if available.
+    show_detected_peaks : bool, optional
+        Keep detected peak guides and fit diagnostics for review.
 
     Returns
     -------
     dict[str, Any]
-        A reduced graph payload without candidate positions or debug overlays.
+        Graph payload with optional detection guides and no size annotations.
     """
     if not isinstance(peak_lines_payload, dict):
         return {}
@@ -369,8 +374,13 @@ def _build_warning_graph_payload(*, peak_lines_payload: Any) -> dict[str, Any]:
         "y_lower_gate",
         "y_upper_gate",
     )
-    return {
-        key: peak_lines_payload[key]
-        for key in retained_payload_keys
-        if key in peak_lines_payload
-    }
+    if show_detected_peaks:
+        retained_payload_keys += (
+            "points", "labels", "scatter_guide_positions", "fluorescence_guide_positions",
+            "saturation_guard_excluded_positions",
+            "rosetta_debug_diagnostics",
+        )
+    payload = {key: peak_lines_payload[key] for key in retained_payload_keys if key in peak_lines_payload}
+    if show_detected_peaks:
+        payload["rosetta_size_assignment_warning"] = True
+    return payload

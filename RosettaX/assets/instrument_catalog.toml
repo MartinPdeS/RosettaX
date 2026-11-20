@@ -1,0 +1,631 @@
+# Device defaults, optical preset definitions, and figure paths relative to assets.
+# Omit an unverified Rosetta channel. Each list contains exact FCS column names.
+# Rosetta pairs below come from the bundled cross-device FCS samples.
+# Instruments with channel recommendations alone have no optical presets here.
+
+[instruments.agilent_novocyte]
+manufacturer = "Agilent"
+model = "NovoCyte"
+instrument_aliases = ["agilent novocyte", "novocyte", "novocyte advanteon", "novocyte quattro"]
+
+[instruments.agilent_novocyte.detector_channels]
+default = ["SSC-A", "SSC-H", "SSC Area", "SSC"]
+forward = ["FSC-A", "FSC-H", "FSC Area", "FSC"]
+
+[instruments.agilent_novocyte.detectors.fsc]
+preset_name = "Agilent NovoCyte FSC"
+detector_figure = "detector_figures/agilent_novocyte_fsc.png"
+detector_figure_label = "NovoCyte FSC"
+channel = "FSC"
+description = "Forward scatter detector preset for Agilent NovoCyte style modeling. The numerical aperture values here are effective modeling assumptions intended to give RosettaX a documented starting point rather than an instrument-certified optical reconstruction."
+detector_type = "photodiode"
+wavelength_nm = 488.0
+detector_numerical_aperture = 0.2
+detector_cache_numerical_aperture = 0.08
+detector_sampling = 700
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 0.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.agilent_novocyte.detectors.ssc]
+preset_name = "Agilent NovoCyte SSC"
+detector_figure = "detector_figures/agilent_novocyte_ssc.png"
+detector_figure_label = "NovoCyte SSC"
+channel = "SSC"
+description = "Side scatter detector preset for Agilent NovoCyte style modeling. The numerical aperture values here are effective modeling assumptions intended to support RosettaX detector selection and geometric calibration workflows."
+detector_type = "PMT"
+wavelength_nm = 405.0
+detector_numerical_aperture = 1.0
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 900
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 90.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.apogee_a60_micro]
+manufacturer = "Apogee"
+model = "A60 - Micro"
+instrument_aliases = ["apogee", "Apogee A60-Micro"]
+
+[instruments.apogee_a60_micro.rosetta_channels]
+scattering = ["405LALS(Peak)"]
+green_fluorescence = ["405Grn(Peak)"]
+
+[instruments.apogee_a60_micro.detectors.forward]
+preset_name = "Apogee - Forward"
+detector_figure = "detector_figures/apogee_a60_forward.png"
+detector_figure_label = "A60-Micro Forward"
+channel = "Weighted"
+alias = ["apogee"]
+description = "Apogee forward detector modeled as a proportional forward partition of a large phi=28 degree collection lens."
+detector_type = "photodiode"
+wavelength_nm = 405.0
+detector_numerical_aperture = 1.0
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 1000
+blocker_bar_numerical_aperture = 0.1
+detector_phi_angle_degree = 28.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.apogee_a60_micro.detectors.forward.detector_angular_weighting]
+mode = "split-separation-angle"
+metric = "local-top-bottom"
+keep = "negative"
+separation_angle_degree = 10.0
+
+[instruments.apogee_a60_micro.detectors.side]
+preset_name = "Apogee - Side"
+detector_figure = "detector_figures/apogee_a60_side.png"
+detector_figure_label = "A60-Micro Side"
+channel = "Weighted"
+alias = ["apogee"]
+description = "Apogee side detector modeled as a proportional side partition of a large phi=28 degree collection lens."
+detector_type = "photodiode"
+wavelength_nm = 405.0
+detector_numerical_aperture = 1.0
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 1000
+blocker_bar_numerical_aperture = 0.1
+detector_phi_angle_degree = 28
+detector_gamma_angle_degree = 0.0
+
+[instruments.apogee_a60_micro.detectors.side.detector_angular_weighting]
+mode = "split-separation-angle"
+metric = "local-top-bottom"
+keep = "positive"
+separation_angle_degree = 10.0
+
+[instruments.apogee_a50_micro]
+manufacturer = "Apogee"
+model = "A50-Micro"
+instrument_aliases = ["a50-micro"]
+
+[instruments.apogee_a50_micro.rosetta_channels]
+scattering = ["405-LALS(Peak)"]
+green_fluorescence = ["405-Grn(Peak)"]
+
+[instruments.apogee_microplus]
+manufacturer = "Apogee"
+model = "Micro-PLUS"
+instrument_aliases = ["micro-plus", "apogee microplus"]
+
+[instruments.apogee_microplus.rosetta_channels]
+scattering = ["LALS(Peak)", "405-LALS(Peak)"]
+green_fluorescence = ["405-Grn(Peak)", "405Grn(Peak)"]
+
+[instruments.apogee_kairos]
+manufacturer = "Apogee"
+model = "A60 MicroPLUS - Kairos"
+instrument_aliases = ["apogee kairos", "kairos", "Apogee A60 MicroPLUS - Kairos"]
+
+[instruments.apogee_kairos.detectors.lals]
+preset_name = "Apogee Kairos LALS"
+channel = "LALS"
+alias = ["apogee kairos", "kairos"]
+description = "Kairos LALS modeled as a region of the shared A60 lens, with separation angles at 10 and 41 degrees."
+detector_type = "photodiode"
+wavelength_nm = 405.0
+detector_numerical_aperture = 1.0
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 1000
+blocker_bar_numerical_aperture = 0.1
+detector_phi_angle_degree = 28.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.apogee_kairos.detectors.lals.detector_angular_weighting]
+mode = "split-separation-angle"
+metric = "local-top-bottom"
+keep = "positive"
+separation_angle_degree = 41.0
+
+[instruments.apogee_kairos.detectors.mals]
+preset_name = "Apogee Kairos MALS"
+channel = "MALS"
+alias = ["apogee kairos", "kairos"]
+description = "Kairos MALS modeled as a region of the shared A60 lens, with separation angles at 10 and 41 degrees."
+detector_type = "photodiode"
+wavelength_nm = 405.0
+detector_numerical_aperture = 1.0
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 1000
+blocker_bar_numerical_aperture = 0.1
+detector_phi_angle_degree = 28.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.apogee_kairos.detectors.mals.detector_angular_weighting]
+mode = "separation-angle-range"
+metric = "local-top-bottom"
+minimum_angle_degree = 10.0
+maximum_angle_degree = 41.0
+
+[instruments.apogee_kairos.detectors.sals]
+preset_name = "Apogee Kairos SALS"
+channel = "SALS"
+alias = ["apogee kairos", "kairos"]
+description = "Kairos SALS modeled as a region of the shared A60 lens, with separation angles at 10 and 41 degrees."
+detector_type = "photodiode"
+wavelength_nm = 405.0
+detector_numerical_aperture = 1.0
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 1000
+blocker_bar_numerical_aperture = 0.1
+detector_phi_angle_degree = 28.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.apogee_kairos.detectors.sals.detector_angular_weighting]
+mode = "split-separation-angle"
+metric = "local-top-bottom"
+keep = "negative"
+separation_angle_degree = 10.0
+
+[instruments.bd_facscalibur]
+manufacturer = "BD Biosciences"
+model = "FACSCalibur"
+instrument_aliases = ["facscalibur"]
+
+[instruments.bd_facscalibur.rosetta_channels]
+scattering = ["SSC-H"]
+green_fluorescence = ["FL1-H"]
+
+[instruments.bd_facscanto_i]
+manufacturer = "BD Biosciences"
+model = "FACSCanto I"
+instrument_aliases = ["FACSCanto I (FACSCanto)", "FACSCanto I"]
+
+[instruments.bd_facscanto_i.rosetta_channels]
+scattering = ["SSC-H"]
+green_fluorescence = ["FITC-H"]
+
+[instruments.bd_facscanto_ii]
+manufacturer = "BD Biosciences"
+model = "FACSCanto II"
+instrument_aliases = ["bd facscanto ii", "facscanto ii", "facs canto ii"]
+
+[instruments.bd_facscanto_ii.detectors.fsc]
+preset_name = "BD FACSCanto II FSC"
+detector_figure = "detector_figures/bd_facscanto2_fsc.png"
+detector_figure_label = "FACSCanto II FSC"
+channel = "FSC"
+description = "Forward scatter detector preset for BD FACSCanto II style modeling. Public documentation describes FSC as a photodiode with 488/10 BP filtering; the numerical aperture values here are modeling assumptions."
+detector_type = "photodiode"
+wavelength_nm = 488.0
+detector_numerical_aperture = 0.18
+detector_cache_numerical_aperture = 0.1
+detector_sampling = 600
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 0.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.bd_facscanto_ii.detectors.ssc]
+preset_name = "BD FACSCanto II SSC"
+detector_figure = "detector_figures/bd_facscanto2_ssc.png"
+detector_figure_label = "FACSCanto II SSC"
+channel = "SSC"
+description = "Side scatter detector preset for BD FACSCanto II style modeling. Public documentation describes SSC as a PMT with 488/10 BP filtering; the numerical aperture values here are modeling assumptions."
+detector_type = "PMT"
+wavelength_nm = 488.0
+detector_numerical_aperture = 1.2
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 800
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 90.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.bd_facslyric]
+manufacturer = "BD Biosciences"
+model = "FACSLyric"
+instrument_aliases = ["bd facslyric", "facslyric", "facs lyric"]
+
+[instruments.bd_facslyric.rosetta_channels]
+scattering = ["SSC-H"]
+green_fluorescence = ["FITC-A", "FITC-H"]
+
+[instruments.bd_facslyric.detectors.fsc]
+preset_name = "BD FACSLyric FSC"
+channel = "FSC"
+description = "FSC detector modeling preset for BD FACSLyric, assumed to use the same optical configuration as the BD FACSCanto II preset. Geometry and wavelength are modeling assumptions and have not been verified for this instrument."
+detector_type = "photodiode"
+wavelength_nm = 488.0
+detector_numerical_aperture = 0.18
+detector_cache_numerical_aperture = 0.1
+detector_sampling = 600
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 0.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.bd_facslyric.detectors.ssc]
+preset_name = "BD FACSLyric SSC"
+channel = "SSC"
+description = "SSC detector modeling preset for BD FACSLyric, assumed to use the same optical configuration as the BD FACSCanto II preset. Geometry and wavelength are modeling assumptions and have not been verified for this instrument."
+detector_type = "PMT"
+wavelength_nm = 488.0
+detector_numerical_aperture = 1.2
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 800
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 90.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.bd_facscelesta_sorp]
+manufacturer = "BD Biosciences"
+model = "FACSCelesta SORP"
+instrument_aliases = ["facscelesta"]
+
+[instruments.bd_facscelesta_sorp.rosetta_channels]
+scattering = ["SSC-H"]
+green_fluorescence = ["B530/30-A"]
+
+[instruments.bd_facsymphony_a1]
+manufacturer = "BD Biosciences"
+model = "FACSymphony A1"
+instrument_aliases = ["facsymphony a1"]
+
+[instruments.bd_facsymphony_a1.rosetta_channels]
+scattering = ["SSC-H"]
+green_fluorescence = ["BB515-H", "B530/30-A"]
+
+[instruments.bd_facsymphony_a1.detectors.ssc]
+preset_name = "BD FACSymphony A1 SSC"
+detector_figure = "detector_figures/bd_facscanto2_ssc.png"
+detector_figure_label = "FACSCanto II SSC reference geometry"
+channel = "SSC"
+description = "Assumed FACSymphony A1 SSC model using the FACSCanto II wavelength and collection geometry. The settings have not been independently measured on the FACSymphony A1."
+detector_type = "PMT"
+wavelength_nm = 488.0
+detector_numerical_aperture = 1.2
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 800
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 90.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.bd_lsrfortessa]
+manufacturer = "BD Biosciences"
+model = "LSRFortessa"
+instrument_aliases = ["lsrfortessa"]
+
+[instruments.bd_lsrfortessa.rosetta_channels]
+scattering = ["SSC-H"]
+green_fluorescence = ["BB515-H"]
+
+[instruments.bd_lsrii]
+manufacturer = "BD Biosciences"
+model = "LSR II"
+instrument_aliases = ["lsr ii"]
+
+[instruments.bd_lsrii.rosetta_channels]
+scattering = ["SSC-H"]
+green_fluorescence = ["B535/30-H"]
+
+[instruments.beckman_coulter_cytoflex]
+manufacturer = "Beckman Coulter Life Sciences"
+model = "CytoFLEX"
+instrument_aliases = ["beckman coulter cytoflex", "cytoflex"]
+
+[instruments.beckman_coulter_cytoflex.rosetta_channels]
+scattering = ["SSC_1-H"]
+green_fluorescence = ["FL1-H"]
+
+[instruments.beckman_coulter_cytoflex.detectors.fluorescence]
+preset_name = "Beckman Coulter CytoFLEX Fluorescence"
+detector_figure = "detector_figures/beckman_cyttofelx_flourescence.png"
+detector_figure_label = "CytoFLEX Fluorescence"
+channel = "Fluorescence"
+alias = ["beckman coulter cytoflex", "cytoflex", "cytoflex s"]
+description = "Generic fluorescence detector preset for CytoFLEX style modeling. CytoFLEX systems are available with up to 3 lasers and 13 color research configurations; the numerical aperture values here are effective modeling assumptions."
+detector_type = "avalanche_photodiode"
+wavelength_nm = 488.0
+detector_numerical_aperture = 0.5
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 1000
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 0.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.beckman_coulter_cytoflex.detectors.ssc]
+preset_name = "Beckman Coulter CytoFLEX SSC"
+detector_figure = "detector_figures/beckman_cyttofelx_ssc.png"
+detector_figure_label = "CytoFLEX SSC"
+channel = "SSC"
+alias = ["beckman coulter cytoflex", "cytoflex", "cytoflex s"]
+description = "Side scatter detector preset for CytoFLEX style modeling. CytoFLEX instruments emphasize high sensitivity optical collection; the numerical aperture values here are effective modeling assumptions."
+detector_type = "avalanche_photodiode"
+wavelength_nm = 488.0
+detector_numerical_aperture = 0.55
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 1000
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 90.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.beckman_coulter_cytoflex_s]
+manufacturer = "Beckman Coulter Life Sciences"
+model = "CytoFLEX S"
+instrument_aliases = ["cytoflex s"]
+
+[instruments.beckman_coulter_cytoflex_s.rosetta_channels]
+scattering = ["SSC_1-H"]
+green_fluorescence = ["FL1-H", "FL5-H"]
+
+[instruments.beckman_coulter_cytoflex_lx]
+manufacturer = "Beckman Coulter Life Sciences"
+model = "CytoFLEX LX"
+instrument_aliases = ["cytoflex lx"]
+
+[instruments.beckman_coulter_cytoflex_lx.rosetta_channels]
+scattering = ["SSC_1-H", "FL12-H"]
+green_fluorescence = ["FL1-H"]
+
+[instruments.beckman_coulter_moflo_astrios]
+manufacturer = "Beckman Coulter Life Sciences"
+model = "MoFlo Astrios"
+instrument_aliases = ["moflo astrios"]
+
+[instruments.beckman_coulter_moflo_astrios.rosetta_channels]
+scattering = ["SSC1-Height"]
+green_fluorescence = ["FL12-Height"]
+
+[instruments.cytek_aurora]
+manufacturer = "Cytek Biosciences"
+model = "Aurora"
+instrument_aliases = ["cytek aurora", "aurora", "aurora 3l", "aurora 5l", "northern lights"]
+
+[instruments.cytek_aurora.detector_channels]
+default = ["SSC-A", "SSC-H", "SSC Area", "SSC"]
+forward = ["FSC-A", "FSC-H", "FSC Area", "FSC"]
+
+# The bundled Northern Lights FCS exports identify the instrument as "Aurora".
+[instruments.cytek_aurora.rosetta_channels]
+scattering = ["SSC-H"]
+green_fluorescence = ["B2-H", "B2-A"]
+
+[instruments.cytek_aurora.detectors.fsc]
+alias = ["cytek aurora", "aurora", "aurora 3l", "aurora 5l"]
+preset_name = "Cytek Aurora FSC"
+detector_figure = "detector_figures/cytek_aurora_fsc.png"
+detector_figure_label = "Aurora FSC"
+channel = "FSC"
+description = "Forward scatter detector preset for Cytek Aurora style modeling. These values are effective geometry assumptions for RosettaX, not a claim that every Aurora configuration shares the same optics."
+detector_type = "photodiode"
+wavelength_nm = 405.0
+detector_numerical_aperture = 0.16
+detector_cache_numerical_aperture = 0.08
+detector_sampling = 700
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 0.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.cytek_aurora.detectors.ssc]
+alias = ["cytek aurora", "aurora", "aurora 3l", "aurora 5l"]
+preset_name = "Cytek Aurora SSC"
+detector_figure = "detector_figures/cytek_aurora_ssc.png"
+detector_figure_label = "Aurora SSC"
+channel = "SSC"
+description = "Side scatter detector preset for Cytek Aurora style modeling. These values are effective geometry assumptions for RosettaX, chosen to support consistent calibration workflows rather than exact vendor reconstruction."
+detector_type = "PMT"
+wavelength_nm = 405.0
+detector_numerical_aperture = 1.3
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 900
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 90.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.generic]
+instrument_aliases = []
+
+[instruments.generic.detectors.detector]
+preset_name = "Generic detector"
+wavelength_nm = 700.0
+detector_numerical_aperture = 0.4
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 600
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 0.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.miltenyi_macsquant_analyzer_16]
+manufacturer = "Miltenyi Biotec"
+model = "MACSQuant Analyzer 16"
+instrument_aliases = ["macsquant analyzer 16"]
+
+[instruments.miltenyi_macsquant_analyzer_16.rosetta_channels]
+scattering = ["SSC-H"]
+green_fluorescence = ["FL6-H"]
+
+[instruments.nanofcm_nanoanalyzer]
+manufacturer = "nanoFCM"
+model = "NanoAnalyzer"
+instrument_aliases = ["nanofcm", "nanoanalyzer", "nano analyzer"]
+
+[instruments.nanofcm_nanoanalyzer.detector_channels]
+x = ["405Blu(Area)", "405 Blu", "Blu", "Blue"]
+y = ["405LALS(Area)", "LALS", "SSC-A", "SSC-H"]
+default = ["405LALS(Area)", "LALS", "SSC-A", "SSC-H"]
+forward = ["405SALS(Area)", "SALS", "FSC-A", "FSC-H"]
+
+[instruments.nanofcm_nanoanalyzer.detectors.fsc]
+preset_name = "nanoFCM NanoAnalyzer FSC"
+detector_figure = "detector_figures/nanofcm_nanoanalyzer_fsc.png"
+detector_figure_label = "NanoAnalyzer FSC"
+channel = "FSC"
+alias = ["nanofcm", "nanofcm", "nanoanalyzer", "nano analyzer"]
+description = "Forward scatter detector preset for nanoFCM NanoAnalyzer style modeling. These values are effective RosettaX assumptions intended to support documented small-particle calibration workflows rather than reproduce one proprietary optical train exactly."
+detector_type = "photodiode"
+wavelength_nm = 488.0
+detector_numerical_aperture = 0.14
+detector_cache_numerical_aperture = 0.06
+detector_sampling = 800
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 0.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.nanofcm_nanoanalyzer.detectors.ssc]
+preset_name = "nanoFCM NanoAnalyzer SSC"
+detector_figure = "detector_figures/nanofcm_nanoanalyzer_ssc.png"
+detector_figure_label = "NanoAnalyzer SSC"
+channel = "SSC"
+alias = ["nanofcm", "nanofcm", "nanoanalyzer", "nano analyzer"]
+description = "Side scatter detector preset for nanoFCM NanoAnalyzer style modeling. These values are effective RosettaX assumptions intended to support documented small-particle calibration workflows rather than reproduce one proprietary optical train exactly."
+detector_type = "PMT"
+wavelength_nm = 488.0
+detector_numerical_aperture = 0.85
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 1000
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 90.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.sony_id7000]
+manufacturer = "Sony Biosciences"
+model = "ID7000"
+instrument_aliases = ["sony id7000", "id7000", "sony spectral analyzer"]
+
+[instruments.sony_id7000.detector_channels]
+default = ["SSC-A", "SSC-H", "SSC Area", "SSC"]
+forward = ["FSC-A", "FSC-H", "FSC Area", "FSC"]
+
+[instruments.sony_id7000.detectors.fsc]
+preset_name = "Sony ID7000 FSC"
+detector_figure = "detector_figures/sony_id7000_fsc.png"
+detector_figure_label = "ID7000 FSC"
+channel = "FSC"
+description = "Forward scatter detector preset for Sony ID7000 style modeling. These parameters are packaged as effective RosettaX assumptions so the instrument family can be selected and documented consistently."
+detector_type = "photodiode"
+wavelength_nm = 488.0
+detector_numerical_aperture = 0.18
+detector_cache_numerical_aperture = 0.08
+detector_sampling = 700
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 0.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.sony_id7000.detectors.ssc]
+preset_name = "Sony ID7000 SSC"
+detector_figure = "detector_figures/sony_id7000_ssc.png"
+detector_figure_label = "ID7000 SSC"
+channel = "SSC"
+description = "Side scatter detector preset for Sony ID7000 style modeling. These parameters are packaged as effective RosettaX assumptions so the instrument family can be selected and documented consistently."
+detector_type = "PMT"
+wavelength_nm = 488.0
+detector_numerical_aperture = 1.0
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 900
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 90.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.stratedigm_s1313ex]
+manufacturer = "Stratedigm"
+model = "S1313EX"
+instrument_aliases = ["s1313ex"]
+
+[instruments.stratedigm_s1313ex.rosetta_channels]
+scattering = ["SSC LogH"]
+green_fluorescence = ["FITC (530/30) LogH"]
+
+# Side-scatter settings from the S1313EX SSC LogH calibration in cbcf2e4a.
+[instruments.stratedigm_s1313ex.detectors.ssc_logh]
+preset_name = "Stratedigm S1313EX SSC LogH"
+channel = "SSC"
+fcs_channels = ["SSC LogH"]
+description = "488 nm side-scatter preset for the Stratedigm S1313EX SSC LogH channel."
+wavelength_nm = 488.0
+detector_numerical_aperture = 1.2
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 800
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 90.0
+detector_gamma_angle_degree = 0.0
+
+# Approximate the 1–8 degree forward collection reported for the S1000 family.
+# Convert the angular limits to numerical aperture with n = 1.333.
+# https://doi.org/10.1002/cyto.a.22793
+[instruments.stratedigm_s1313ex.detectors.fsc]
+preset_name = "Stratedigm S1313EX FSC"
+channel = "FSC"
+fcs_channels = ["FSC LinH", "FSC LogH"]
+description = "488 nm forward-scatter model based on the reported S1000 collection angles."
+wavelength_nm = 488.0
+detector_type = "photodiode"
+detector_numerical_aperture = 0.185518
+detector_cache_numerical_aperture = 0.023264
+detector_sampling = 800
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 0.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.thermo_fisher_attune_nxt]
+manufacturer = "Thermo Fisher Scientific"
+model = "Attune NxT"
+instrument_aliases = ["thermo fisher attune nxt", "attune nxt", "attune"]
+
+[instruments.thermo_fisher_attune_nxt.detector_channels]
+default = ["SSC-A", "SSC-H", "SSC Area", "SSC"]
+forward = ["FSC-A", "FSC-H", "FSC Area", "FSC"]
+
+[instruments.thermo_fisher_attune_nxt.detectors.fsc]
+preset_name = "Thermo Fisher Attune NxT FSC"
+detector_figure = "detector_figures/thermofisher_attune_fsc.png"
+detector_figure_label = "Attune NxT FSC"
+channel = "FSC"
+description = "Forward scatter detector preset for Thermo Fisher Attune NxT style modeling. These values are effective RosettaX modeling assumptions suitable for documenting and reproducing one chosen geometry in calibration work."
+detector_type = "photodiode"
+wavelength_nm = 488.0
+detector_numerical_aperture = 0.2
+detector_cache_numerical_aperture = 0.1
+detector_sampling = 700
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 0.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.thermo_fisher_attune_nxt.detectors.ssc]
+preset_name = "Thermo Fisher Attune NxT SSC"
+detector_figure = "detector_figures/thermofisher_attune_ssc.png"
+detector_figure_label = "Attune NxT SSC"
+channel = "SSC"
+description = "Side scatter detector preset for Thermo Fisher Attune NxT style modeling. These values are effective RosettaX modeling assumptions suitable for documenting and reproducing one chosen geometry in calibration work."
+detector_type = "PMT"
+wavelength_nm = 488.0
+detector_numerical_aperture = 1.0
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 900
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 90.0
+detector_gamma_angle_degree = 0.0
+
+[channel_names]
+fallback_keywords = ["ssc", "fsc", "scatter", "fl", "height", "area"]
+fluorescence_keywords = ["fitc", "fl1", "green", "fluor", "fluorescence", "gfp", "525", "530", "533", "bl1"]
+fluorescence_prefixes = ["fl"]
+
+[channel_names.role_aliases]
+primary = ["primary", "default"]
+scattering = ["scattering", "primary", "default", "x", "x_axis"]
+forward = ["forward", "fsc"]
+green_fluorescence = ["green_fluorescence", "fluorescence", "green", "fitc", "fl1", "y", "y_axis"]
+
+[channel_names.scattering_keywords]
+forward = ["fsc", "forward", "lals"]
+primary = ["ssc", "sals", "side", "scatter", "blu", "fsc"]
+scattering = ["ssc", "sals", "side", "scatter", "blu", "fsc"]

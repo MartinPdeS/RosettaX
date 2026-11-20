@@ -138,13 +138,13 @@ class PeakLayout:
                     processes=processes,
                 )
             ),
-            self._build_process_status_area(
-                processes=processes,
-            ),
             self._build_graph_container(
                 container_id=self.ids.graph_toggle_container,
                 graph_id=self.ids.graph_hist,
                 axis_scale_toggle_id=self._get_axis_scale_toggle_id(),
+            ),
+            self._build_process_status_area(
+                processes=processes,
             ),
         ]
 
@@ -312,6 +312,17 @@ class PeakLayout:
                 style={"marginBottom": "12px", "fontWeight": "700"},
             ),
             html.Div(
+                dbc.Button(
+                    "Auto-select detectors",
+                    id=self.ids.rosetta_auto_select_detectors(process_name=process_name),
+                    n_clicks=0,
+                    size="sm",
+                    color="light",
+                    className="peak-action-button peak-action-button--auto",
+                ),
+                style={"marginBottom": "8px"},
+            ) if process_name.startswith("Rosetta Script") else None,
+            html.Div(
                 self._build_detector_controls(
                     process=process,
                 ),
@@ -324,9 +335,7 @@ class PeakLayout:
             ),
             html.Div(
                 setting_controls,
-                id=self.ids.process_settings_container(
-                    process_name=process_name,
-                ),
+                id=self.ids.process_settings_container(process_name=process_name),
                 style={
                     "display": "none",
                     "alignItems": "end",
@@ -334,23 +343,9 @@ class PeakLayout:
                     "flexWrap": "wrap",
                     "marginTop": "10px",
                 },
-            )
-            if setting_controls
-            else None,
+            ) if setting_controls else None,
             html.Div(
-                ([
-                    dbc.Button(
-                        "Auto-select detectors",
-                        id=self.ids.rosetta_auto_select_detectors(
-                            process_name=process_name,
-                        ),
-                        n_clicks=0,
-                        size="sm",
-                        color="light",
-                        className="peak-action-button peak-action-button--auto",
-                    ),
-                ] if process_name.startswith("Rosetta Script") else [])
-                + self._build_process_action_buttons(
+                self._build_process_action_buttons(
                     process_name=process_name,
                     supports_automatic_action=bool(
                         getattr(
@@ -371,6 +366,7 @@ class PeakLayout:
                     "display": "flex",
                     "gap": "8px",
                     "flexWrap": "wrap",
+                    "alignItems": "center",
                     "marginTop": "12px",
                 },
             ),
@@ -403,7 +399,7 @@ class PeakLayout:
         processes: list[Any],
     ) -> html.Div:
         """
-        Build the shared process status area above the graph.
+        Build the shared process status area below the graph.
         """
         return dcc.Loading(
             html.Div(
@@ -595,6 +591,39 @@ class PeakLayout:
                             if setting_step is not None
                             else 1
                         ),
+                    )
+                )
+                continue
+
+            if setting_kind == "slider":
+                setting_controls.append(
+                    html.Div(
+                        [
+                            self._build_setting_label(
+                                label=setting_label,
+                                tooltip_text=setting_help,
+                                target_id=self._stringify_component_id(component_id=setting_id),
+                            ),
+                            dcc.Slider(
+                                id=setting_id,
+                                min=setting_minimum,
+                                max=setting_maximum,
+                                step=setting_step,
+                                value=setting_default_value,
+                                marks=self._get_setting_value(setting=setting, name="marks", default=None),
+                                tooltip={"placement": "top"},
+                                allow_direct_input=False,
+                                persistence=True,
+                                persistence_type="session",
+                            ),
+                        ],
+                        className="border rounded bg-white px-5 py-2" if setting_name == "marker_fit_strictness" else None,
+                        style={
+                            "width": "440px" if setting_name == "marker_fit_strictness" else "360px",
+                            "maxWidth": "100%",
+                            "minWidth": 0,
+                            "marginInline": "auto",
+                        },
                     )
                 )
                 continue
@@ -874,6 +903,7 @@ class PeakLayout:
                     type="circle",
                     color="#0d6efd",
                     delay_show=150,
+                    overlay_style={"visibility": "visible"},
                 )
             ],
             style={

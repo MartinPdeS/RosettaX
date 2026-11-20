@@ -1,6 +1,5 @@
 
 import dash
-import dash_bootstrap_components as dbc
 import logging
 import time
 import uuid
@@ -52,6 +51,7 @@ def register_mutation_callbacks(
         ),
         dash.Input(ids.graph_hist, "clickData"),
         dash.Input(ids.graph_hist, "selectedData"),
+        dash.Input(ids.process_setting_pattern(), "value"),
     ]
 
     state_components: list[Any] = [
@@ -67,10 +67,6 @@ def register_mutation_callbacks(
         dash.State(
             ids.process_setting_pattern(),
             "id",
-        ),
-        dash.State(
-            ids.process_setting_pattern(),
-            "value",
         ),
         dash.State(ids.advanced_mode_switch, "value"),
         dash.State(ids.data_filter_switch, "value"),
@@ -128,11 +124,11 @@ def register_mutation_callbacks(
         action_clicks: list[Any],
         click_data: Any,
         selected_data: Any,
+        process_setting_values: list[Any],
         page_state_payload: Any,
         detector_dropdown_ids: list[dict[str, Any]],
         action_ids: list[dict[str, Any]],
         process_setting_ids: list[dict[str, Any]],
-        process_setting_values: list[Any],
         advanced_mode_value: Any,
         data_filter_value: Any,
         axis_scale_toggle_values: Any,
@@ -171,11 +167,19 @@ def register_mutation_callbacks(
             ids=ids,
             triggered_id=triggered_id,
         ):
+            has_rosetta_evidence = (
+                isinstance(page_state_payload, dict)
+                and bool(page_state_payload.get("rosetta_assignment_evidence"))
+            )
             return clear_peak_context(
                 ids=ids,
                 adapter=adapter,
                 page_state=page_state,
                 process_name=process_name,
+                clear_table=has_rosetta_evidence,
+                table_data=unpacked_state["table_data"],
+                mie_model=unpacked_state["mie_model"],
+                runtime_config_data=unpacked_state["runtime_config_data"],
                 status_component_ids=unpacked_state["status_component_ids"],
             )
 
@@ -200,15 +204,20 @@ def register_mutation_callbacks(
                 status_component_ids=unpacked_state["status_component_ids"],
             )
 
-        if trigger_is_action_button(
-            ids=ids,
-            triggered_id=triggered_id,
-        ):
+        preview_only = (
+            process_name == "Rosetta Script Mixture"
+            and triggered_id == ids.process_setting(
+                process_name=process_name, setting_name="marker_fit_strictness",
+            )
+        )
+        if preview_only or trigger_is_action_button(ids=ids, triggered_id=triggered_id):
             return handle_process_action(
                 page=page,
                 ids=ids,
                 adapter=adapter,
-                triggered_action_id=triggered_id,
+                triggered_action_id=ids.process_action_button(process_name=process_name, action_name="run")
+                if preview_only else triggered_id,
+                preview_only=preview_only,
                 page_state=page_state,
                 detector_dropdown_ids=detector_dropdown_ids,
                 detector_dropdown_values=detector_dropdown_values,
@@ -227,6 +236,28 @@ def register_mutation_callbacks(
         return build_no_update_callback_result(
             status_component_ids=unpacked_state["status_component_ids"],
         )
+
+
+    dash.clientside_callback(
+        """
+        function(clicks, settings, statusIds, selectedProcess) {
+            const context = dash_clientside.callback_context;
+            const trigger = context.triggered_id;
+            const run = trigger && trigger.action === "run" && context.triggered[0].value > 0;
+            const preview = trigger && trigger.setting === "marker_fit_strictness" &&
+                trigger.process === selectedProcess;
+            return (statusIds || []).map(id => (
+                (run || preview) && id.process === trigger.process ? null : dash_clientside.no_update
+            ));
+        }
+        """,
+        dash.Output(ids.process_status_pattern(), "children", allow_duplicate=True),
+        dash.Input(ids.process_action_button_pattern(), "n_clicks"),
+        dash.Input(ids.process_setting_pattern(), "value"),
+        dash.State(ids.process_status_pattern(), "id"),
+        dash.State(ids.process_dropdown, "value"),
+        prevent_initial_call=True,
+    )
 
 
 def unpack_mutation_state_values(
@@ -582,6 +613,7 @@ def handle_process_action(
     mie_model: Any,
     runtime_config_data: Any,
     status_component_ids: list[dict[str, Any]],
+    preview_only: bool = False,
 ) -> tuple[Any, Any, list[Any]]:
     """
     Handle run and clear actions for peak processes.
@@ -633,6 +665,7 @@ def handle_process_action(
     if action_name == "run" and process.supports_automatic_action:
         return handle_run_action(
             page=page,
+            preview_only=preview_only,
             adapter=adapter,
             process=process,
             target_process_name=target_process_name,
@@ -734,11 +767,12 @@ def handle_run_action(
     mie_model: Any,
     runtime_config_data: Any,
     status_component_ids: list[dict[str, Any]],
+    preview_only: bool = False,
 ) -> tuple[Any, Any, list[Any]]:
     """
     Handle an automatic run action.
     """
-    cleared_table_result = adapter.apply_peak_process_result_to_table(
+    cleared_table_result = dash.no_update if preview_only else adapter.apply_peak_process_result_to_table(
         table_data=table_data,
         result=SimpleNamespace(clear_existing_table_peaks=True),
         context={
@@ -755,6 +789,8 @@ def handle_run_action(
         uploaded_fcs_path=uploaded_fcs_path,
         detector_channels=detector_channels,
     ):
+        if preview_only:
+            return build_no_update_callback_result(status_component_ids=status_component_ids)
         status = build_missing_context_message(
             process=process,
             uploaded_fcs_path=uploaded_fcs_path,
@@ -784,6 +820,9 @@ def handle_run_action(
     process_settings["advanced_mode"] = advanced_mode_value
     process_settings["filter_edge_artifacts"] = data_filter_value
     process_settings["axis_scale_toggle_values"] = axis_scale_toggle_values
+
+    if preview_only:
+        process_settings["preview_only"] = True
 
     resolved_peak_count = process_settings.get("peak_count")
 
@@ -823,7 +862,33 @@ def handle_run_action(
             ),
         )
 
-    if getattr(result, "warning", False):
+    if preview_only:
+        page_state = adapter.update_peak_lines_payload(
+            page_state=page_state,
+            peak_lines_payload=dict(result.peak_lines_payload, rosetta_settings_preview=True),
+        )
+        page_state = touch_peak_graph_revision(
+            adapter=adapter, page_state=page_state, reason="settings_preview",
+            process_name=target_process_name, process_settings=process_settings,
+        )
+        return PeakMutationOutput(
+            page_state=page_state.to_dict(),
+            table_data=dash.no_update,
+            status_children=build_status_children(
+                status_component_ids=status_component_ids,
+                target_process_name=target_process_name,
+                status=(
+                    f"Preview. Click Run to update the peak table. {result.status or ''}".strip()
+                    if result.warning else ""
+                ),
+            ),
+        )
+
+    preserve_measured_rows = (
+        getattr(process, "allow_unassigned_sizes", False)
+        and result.table_prefill_rows
+    )
+    if getattr(result, "warning", False) and not preserve_measured_rows:
         if getattr(process, "preserve_graph_payload_on_warning", False):
             page_state = adapter.update_peak_lines_payload(
                 page_state=page_state,
@@ -897,12 +962,15 @@ def handle_run_action(
         table_result=table_result,
     )
 
-    status_children = build_status_children(
-        status_component_ids=status_component_ids,
-        target_process_name=target_process_name,
-        status=result.status,
-        debug_payload=result.peak_lines_payload,
-    )
+    if target_process_name.startswith("Rosetta Script") and not getattr(result, "warning", False):
+        status_children = ["" for _ in (status_component_ids or [])]
+    else:
+        status_children = build_status_children(
+            status_component_ids=status_component_ids,
+            target_process_name=target_process_name,
+            status=result.status,
+            debug_payload=result.peak_lines_payload,
+        )
 
     logger.debug(
         "Completed run action for process=%r with peak_graph_revision=%r.",
@@ -1102,7 +1170,7 @@ def build_status_alert(
     status: Any,
 ) -> Any:
     """
-    Build one alert component for a status message.
+    Render errors, warnings, and preview messages as text.
     """
     status_text = str(status or "").strip()
 
@@ -1110,30 +1178,21 @@ def build_status_alert(
         return ""
 
     status_color = classify_status_alert_color(status_text=status_text)
-    if status_color == "warning":
-        return html.Div(
-            status_text,
-            role="status",
-            style={
-                "marginBottom": "0px",
-                "whiteSpace": "pre-wrap",
-                "lineHeight": "1.45",
-                "fontSize": "0.95rem",
-                "color": "#8a5a00",
-            },
-        )
-
-    return dbc.Alert(
+    if status_color == "success":
+        return ""
+    text_colors = {
+        "danger": "var(--bs-danger-text-emphasis)",
+        "warning": "#8a5a00",
+    }
+    return html.Div(
         status_text,
-        color=status_color,
-        is_open=True,
-        dismissable=False,
+        role="alert" if status_color == "danger" else "status",
         style={
             "marginBottom": "0px",
             "whiteSpace": "pre-wrap",
             "lineHeight": "1.45",
             "fontSize": "0.95rem",
-            "padding": "0.65rem 0.85rem",
+            "color": text_colors.get(status_color, "var(--bs-secondary-color)"),
         },
     )
 
@@ -1180,6 +1239,9 @@ def classify_status_alert_color(
         "cleared",
         "rejected:",
         "run completed with no detected peaks",
+        "remain unsized",
+        "two fluorescent candidates",
+        "saturation guard excluded",
     ]
 
     if any(marker in normalized_status_text for marker in warning_markers):

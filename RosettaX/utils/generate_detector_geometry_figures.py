@@ -34,37 +34,14 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_ASSETS_OUTPUT_DIR = REPO_ROOT / "RosettaX" / "assets" / "detector_figures"
 DEFAULT_DOCS_STATIC_OUTPUT_DIR = REPO_ROOT / "docs" / "source" / "_static" / "detector_figures"
 
-# Keep exact legacy file names used by the in-app docs page and Sphinx page.
-PRESET_FILENAME_OVERRIDES: dict[str, str] = {
-    "Agilent NovoCyte FSC": "agilent_novocyte_fsc.png",
-    "Agilent NovoCyte SSC": "agilent_novocyte_ssc.png",
-    "Apogee - Forward": "apogee_a60_forward.png",
-    "Apogee - Side": "apogee_a60_side.png",
-    "BD FACSCanto II FSC": "bd_facscanto2_fsc.png",
-    "BD FACSCanto II SSC": "bd_facscanto2_ssc.png",
-    "Beckman Coulter CytoFLEX Fluorescence": "beckman_cyttofelx_flourescence.png",
-    "Beckman Coulter CytoFLEX SSC": "beckman_cyttofelx_ssc.png",
-    "Cytek Aurora FSC": "cytek_aurora_fsc.png",
-    "Cytek Aurora SSC": "cytek_aurora_ssc.png",
-    "nanoFCM NanoAnalyzer FSC": "nanofcm_nanoanalyzer_fsc.png",
-    "nanoFCM NanoAnalyzer SSC": "nanofcm_nanoanalyzer_ssc.png",
-    "Sony ID7000 FSC": "sony_id7000_fsc.png",
-    "Sony ID7000 SSC": "sony_id7000_ssc.png",
-    "Thermo Fisher Attune NxT FSC": "thermofisher_attune_fsc.png",
-    "Thermo Fisher Attune NxT SSC": "thermofisher_attune_ssc.png",
-}
-
-
 def _slugify(text: str) -> str:
     slug = re.sub(r"[^a-z0-9]+", "_", text.lower()).strip("_")
     return re.sub(r"_+", "_", slug)
 
 
 def _resolve_default_filename(*, preset_name: str, preset: dict[str, Any]) -> str:
-    override = PRESET_FILENAME_OVERRIDES.get(preset_name)
-
-    if override:
-        return override
+    if figure_path := preset.get("detector_figure"):
+        return Path(figure_path).name
 
     manufacturer = str(preset.get("manufacturer", "")).strip()
     instrument = str(preset.get("instrument", "")).strip()

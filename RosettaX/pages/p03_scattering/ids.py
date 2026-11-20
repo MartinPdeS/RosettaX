@@ -239,6 +239,26 @@ class CalibrationSectionIds:
         return f"{self.prefix}-calibration-standard-table-add-row-button"
 
     @property
+    def rosetta_model_status(self) -> str:
+        return f"{self.prefix}-calibration-standard-rosetta-status"
+
+    @property
+    def rosetta_validate_btn(self) -> str:
+        return f"{self.prefix}-rosetta-validate"
+
+    @property
+    def rosetta_apply_btn(self) -> str:
+        return f"{self.prefix}-rosetta-apply"
+
+    @property
+    def rosetta_validation_review(self) -> str:
+        return f"{self.prefix}-rosetta-validation-review"
+
+    @property
+    def rosetta_validation_plot(self) -> str:
+        return f"{self.prefix}-rosetta-validation-plot"
+
+    @property
     def compute_model_btn(self) -> str:
         return f"{self.prefix}-calibration-standard-table-compute-model-button"
 

@@ -108,6 +108,26 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
         backend.fcs_file_path = uploaded_fcs_path
         return backend
 
+    def update_peak_lines_payload(self, *, page_state: Any, peak_lines_payload: Any) -> Any:
+        """Store automatic sizing evidence independently of the graph preview."""
+        updated_state = super().update_peak_lines_payload(
+            page_state=page_state, peak_lines_payload=peak_lines_payload,
+        )
+        graph_payload = peak_lines_payload if isinstance(peak_lines_payload, dict) else {}
+        if graph_payload.get("rosetta_settings_preview"):
+            return updated_state
+
+        state_payload = self.get_page_state_payload(page_state=updated_state)
+        state_payload["rosetta_assignment_evidence"] = graph_payload.get("rosetta_assignment_evidence")
+        return self.build_page_state(payload=state_payload)
+
+    def clear_peak_lines_payload(self, *, page_state: Any) -> Any:
+        """Discard sizing evidence when the peak context is cleared."""
+        updated_state = super().clear_peak_lines_payload(page_state=page_state)
+        state_payload = self.get_page_state_payload(page_state=updated_state)
+        state_payload["rosetta_assignment_evidence"] = None
+        return self.build_page_state(payload=state_payload)
+
     def apply_peak_process_result_to_table(
         self,
         *,

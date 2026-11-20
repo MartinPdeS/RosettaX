@@ -8,44 +8,19 @@ from RosettaX.pages.p07_documentation.components import (
     build_documentation_container,
     build_documentation_guide_header,
 )
-from RosettaX.workflow.detector.loader import load_detector_configuration_preset_catalog
+from RosettaX.workflow.detector.loader import (
+    load_detector_configuration_preset_catalog,
+    load_detector_configuration_presets,
+)
 
 PAGE_NAME = "documentation-supported-cytometers"
 
-FIGURE_ENTRIES_BY_BRAND: dict[str, list[tuple[str, str]]] = {
-    "Agilent": [
-        ("/assets/detector_figures/agilent_novocyte_fsc.png", "NovoCyte FSC"),
-        ("/assets/detector_figures/agilent_novocyte_ssc.png", "NovoCyte SSC"),
-    ],
-    "Apogee": [
-        ("/assets/detector_figures/apogee_a60_forward.png", "A60-Micro Forward"),
-        ("/assets/detector_figures/apogee_a60_side.png", "A60-Micro Side"),
-    ],
-    "BD Biosciences": [
-        ("/assets/detector_figures/bd_facscanto2_fsc.png", "FACSCanto II FSC"),
-        ("/assets/detector_figures/bd_facscanto2_ssc.png", "FACSCanto II SSC"),
-    ],
-    "Beckman Coulter Life Sciences": [
-        ("/assets/detector_figures/beckman_cyttofelx_flourescence.png", "CytoFLEX Fluorescence"),
-        ("/assets/detector_figures/beckman_cyttofelx_ssc.png", "CytoFLEX SSC"),
-    ],
-    "Cytek Biosciences": [
-        ("/assets/detector_figures/cytek_aurora_fsc.png", "Aurora FSC"),
-        ("/assets/detector_figures/cytek_aurora_ssc.png", "Aurora SSC"),
-    ],
-    "nanoFCM": [
-        ("/assets/detector_figures/nanofcm_nanoanalyzer_fsc.png", "NanoAnalyzer FSC"),
-        ("/assets/detector_figures/nanofcm_nanoanalyzer_ssc.png", "NanoAnalyzer SSC"),
-    ],
-    "Sony Biosciences": [
-        ("/assets/detector_figures/sony_id7000_fsc.png", "ID7000 FSC"),
-        ("/assets/detector_figures/sony_id7000_ssc.png", "ID7000 SSC"),
-    ],
-    "Thermo Fisher Scientific": [
-        ("/assets/detector_figures/thermofisher_attune_fsc.png", "Attune NxT FSC"),
-        ("/assets/detector_figures/thermofisher_attune_ssc.png", "Attune NxT SSC"),
-    ],
-}
+FIGURE_ENTRIES_BY_BRAND: dict[str, list[tuple[str, str]]] = {}
+for preset in load_detector_configuration_presets().values():
+    if figure_path := preset.get("detector_figure"):
+        FIGURE_ENTRIES_BY_BRAND.setdefault(preset["manufacturer"], []).append(
+            (f"/assets/{figure_path}", preset.get("detector_figure_label", preset["name"]))
+        )
 
 
 def _build_figure_button_id(brand_name: str, figure_label: str) -> str:

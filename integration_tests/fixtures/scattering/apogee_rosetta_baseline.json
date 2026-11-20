@@ -1,6 +1,6 @@
 {
   "description": "Current numerical regression baseline; calibration anchors are illustrative, not verified bead identities.",
-  "fcs_file": "RosettaX/assets/sample-files/apogee_rosetta_beads_1min.fcs",
+  "fcs_file": "RosettaX/assets/sample-files/summer_school/apogee_rosetta_beads_1_min.fcs",
   "sha256": "e71f9f35811e04169e00de0aa2a7d9555582283e59015fb7840c5a637895bbb1",
   "expected_event_count": 168447,
   "detector_channels": {

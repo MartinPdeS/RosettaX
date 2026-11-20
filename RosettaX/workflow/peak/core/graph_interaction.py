@@ -9,7 +9,6 @@ from .rosetta_annotations import (
     extract_rosetta_scatter_guide_annotations,
     include_rosetta_peak_markers_in_view,
 )
-from RosettaX.workflow.plotting.axis_ranges import compute_stable_axis_range
 from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
 from typing import Any
 
@@ -180,6 +179,14 @@ def add_peak_workflow_post_layout_overlays(
         peak_lines_payload=peak_lines_payload,
     )
 
+    if not annotation_entries and resolved_process_name == "Rosetta Script Mixture" and isinstance(peak_lines_payload, dict):
+        try:
+            gate = float(peak_lines_payload.get("baseline_cutoff"))
+        except (TypeError, ValueError):
+            gate = np.nan
+        if np.isfinite(gate) and gate > 0:
+            add_rosetta_baseline_shape(figure=figure, baseline_gate=gate)
+
     if not annotation_entries:
         return figure
 
@@ -197,10 +204,7 @@ def add_peak_workflow_post_layout_overlays(
             trace.showlegend = trace.name in ("Fluorescent marker", "Non-fluorescent peak", "Excluded by saturation guard")
         figure.update_layout(showlegend=True, legend={"x": 0.01, "y": 0.99, "xanchor": "left", "yanchor": "top", "bgcolor": "rgba(255,255,255,0.9)"})
         if baseline_gate is not None and (figure.layout.yaxis.type != "log" or baseline_gate > 0):
-            add_rosetta_baseline_trace(
-                figure=figure, baseline_gate=baseline_gate,
-                peak_lines_payload=peak_lines_payload,
-            )
+            add_rosetta_baseline_shape(figure=figure, baseline_gate=baseline_gate)
 
     if isinstance(peak_lines_payload, dict) and peak_lines_payload.get("saturation_guard_threshold"):
         figure.add_vline(
@@ -261,13 +265,9 @@ def _is_rosetta_script_process_name(
 
 
 
-def add_rosetta_baseline_trace(
-    *,
-    figure: go.Figure,
-    baseline_gate: float,
-    peak_lines_payload: dict[str, Any],
-) -> None:
-    """Render the baseline after events and before classified peak markers.
+def add_rosetta_baseline_shape(*, figure: go.Figure, baseline_gate: float) -> None:
+    """
+    Draw the fluorescence gate across the visible scatter axis.
 
     Parameters
     ----------
@@ -275,40 +275,15 @@ def add_rosetta_baseline_trace(
         Scatter figure with event traces and optional peak overlays.
     baseline_gate : float
         Fluorescence gate in raw channel intensity units.
-    peak_lines_payload : dict[str, Any]
-        Detection payload containing plotted scatter intensities.
     """
-    log_scale = figure.layout.xaxis.type == "log"
-    axis_range = figure.layout.xaxis.range
-    if axis_range is None:
-        positions = peak_lines_payload.get("plot_x_values") or peak_lines_payload.get("x_positions")
-        if not positions:
-            positions = [point["x"] for point in peak_lines_payload.get("points", [])]
-        if len(positions) == 1:
-            positions = positions * 2
-        axis_range = compute_stable_axis_range(
-            values=positions or [1.0, 10.0],
-            log_scale=log_scale,
-        )
-    if axis_range is None:
-        return
-    x_limits = np.power(10.0, axis_range) if log_scale else axis_range
     figure.layout.shapes = tuple(
         shape for shape in figure.layout.shapes
         if not (shape.type == "line" and shape.yref == "y"
                 and shape.y0 == baseline_gate and shape.y1 == baseline_gate)
     )
-    figure.add_trace(go.Scattergl(
-        x=x_limits, y=[baseline_gate, baseline_gate], mode="lines",
-        name="Fluorescence baseline gate", showlegend=True, hoverinfo="skip",
+    figure.add_shape(
+        type="line", xref="x domain", x0=0, x1=1,
+        yref="y", y0=baseline_gate, y1=baseline_gate,
+        name="Fluorescence baseline gate", showlegend=True, layer="below",
         line={"color": ROSETTA_BASELINE_GATE_COLOR, "width": 2},
-    ))
-    baseline_trace = figure.data[-1]
-    background = []
-    peak_markers = []
-    for trace in figure.data[:-1]:
-        if isinstance(trace.meta, dict) and trace.meta.get("rosetta_peak_kind"):
-            peak_markers.append(trace)
-        else:
-            background.append(trace)
-    figure.data = (*background, baseline_trace, *peak_markers)
+    )

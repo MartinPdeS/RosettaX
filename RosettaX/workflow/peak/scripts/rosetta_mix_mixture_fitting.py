@@ -5,6 +5,7 @@ from scipy.ndimage import gaussian_filter1d
 from scipy.optimize import linear_sum_assignment
 from scipy.signal import find_peaks, peak_widths
 from sklearn.mixture import GaussianMixture
+from collections.abc import Callable
 from typing import Any
 
 
@@ -18,6 +19,7 @@ def find_mixture_scatter_peaks(
     fit_cv_threshold: float,
     saturation_intensity: float,
     prominence_fraction: float = 0.01,
+    center_bounds: tuple[float, float] | None = None,
 ) -> dict[str, Any]:
     """Detect supported modes and fit their overlapping distributions together.
 
@@ -43,6 +45,9 @@ def find_mixture_scatter_peaks(
     prominence_fraction : float, optional
         Minimum prominence relative to the tallest smoothed bin. A separate
         local counting-noise check prevents weak histogram ripples from passing.
+    center_bounds : tuple of float or None, optional
+        Open scatter intensity interval for seed peaks. The histogram and fit
+        may include events outside that interval to account for nearby tails.
 
     Returns
     -------
@@ -82,6 +87,13 @@ def find_mixture_scatter_peaks(
     if not candidates.size:
         return empty
     observed_modes = np.sort(candidates)
+    if center_bounds is not None:
+        lower, upper = center_bounds
+        seed_positions = 10 ** centers[candidates]
+        inside = (seed_positions > lower) & (seed_positions < upper)
+        candidates, widths, prominences = candidates[inside], widths[inside], prominences[inside]
+        if not candidates.size:
+            return empty
     strongest = np.argsort(prominences)[::-1][:max(1, int(peak_count))]
     candidates, widths = candidates[strongest], widths[strongest]
     generator = np.random.default_rng(1729)
@@ -111,6 +123,7 @@ def find_mixture_scatter_peaks(
     means = model.means_[:, 0]
     deviations = np.sqrt(model.covariances_[:, 0, 0])
     drift = np.zeros(means.size)
+    bootstrap_means = np.empty((means.size, 3))
     for repeat in range(3):
         resample = sample[generator.integers(0, sample.shape[0], sample.shape[0])]
         replicate = GaussianMixture(
@@ -125,6 +138,7 @@ def find_mixture_scatter_peaks(
         center_distance = np.abs(means[:, None] - replicate.means_[:, 0]) / deviations[:, None]
         width_distance = np.abs(np.log(replicate_deviations[None, :] / deviations[:, None]))
         original_indices, replicate_indices = linear_sum_assignment(center_distance + width_distance)
+        bootstrap_means[original_indices, repeat] = replicate.means_[replicate_indices, 0]
         distances = center_distance[original_indices, replicate_indices]
         drift[original_indices] = np.maximum(
             drift[original_indices], distances if replicate.converged_ else np.inf,
@@ -188,6 +202,7 @@ def find_mixture_scatter_peaks(
             "mean": position, "std": position * cv, "cv": cv,
             "r2": None, "count": effective_count, "validated": not reasons,
             "rejection_reasons": reasons, "bootstrap_drift_sigma": float(drift[index]),
+            "bootstrap_positions": (10 ** bootstrap_means[index]).tolist(),
         })
     all_peaks.sort(key=lambda peak: peak["mean"])
     return {
@@ -195,6 +210,35 @@ def find_mixture_scatter_peaks(
         "validated_peaks": [peak for peak in all_peaks if peak["validated"]],
         "method": "log_gaussian_mixture", "bic": float(model.bic(sample)),
         "fit_sample_count": int(sample.size),
+    }
+
+
+def fit_marker_regions(
+    *,
+    values: np.ndarray,
+    lower: float,
+    upper: float,
+    peak_count: int,
+    fit: Callable[..., dict[str, Any]],
+    fit_options: dict[str, Any],
+) -> dict[str, Any]:
+    """Fit each scatter interval with overlap so anchor boundaries do not cut nearby tails."""
+    # Include about 20% beyond each marker. A fitted center belongs to only
+    # one interval, regardless of which events contributed to that fit.
+    margin_factor = 10**0.08
+    all_peaks = []
+    for start, stop, capacity in ((0.0, lower, 3), (lower, upper, 3), (upper, np.inf, 4)):
+        regional_events = values[(values > start / margin_factor) & (values < stop * margin_factor)]
+        analysis = fit(
+            values=regional_events, peak_count=min(peak_count, capacity),
+            center_bounds=(start, stop), **fit_options,
+        )
+        all_peaks.extend(peak for peak in analysis["all_peaks"] if start < peak["mean"] < stop)
+    all_peaks.sort(key=lambda peak: peak["mean"])
+    return {
+        "all_peaks": all_peaks,
+        "validated_peaks": [peak for peak in all_peaks if peak["validated"]],
+        "method": "marker_bounded_log_gaussian_mixture",
     }
 
 

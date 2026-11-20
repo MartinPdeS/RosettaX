@@ -433,12 +433,10 @@ class FCSFile:
             raw = handle.read(length)
 
         try:
-            text_section = raw.decode("ascii", errors="strict")
-        except UnicodeDecodeError as exc:
-            self._raise_file_error(
-                "is not a valid FCS file because TEXT cannot be decoded.",
-                exception=exc,
-            )
+            text_section = raw.decode("utf-8")
+        except UnicodeDecodeError:
+            # Legacy instruments can store single-byte characters in TEXT values.
+            text_section = raw.decode("latin-1")
 
         if not text_section:
             self._raise_file_error("is not a valid FCS file because TEXT is empty.")

@@ -156,13 +156,14 @@ def build_default_2d_scatter_figure(builder: PeakWorkflowGraphBuilder) -> go.Fig
         uirevision=f"peak_workflow_{builder.resolved_process_name}_2d_scatter",
     )
 
-    figure = apply_stable_2d_axis_ranges(
-        figure=figure,
-        x_values=filtered_x_values,
-        y_values=filtered_y_values,
-        x_log_scale=graph_settings.x_axis_is_log(builder),
-        y_log_scale=graph_settings.y_axis_is_log(builder),
-    )
+    if not builder._is_rosetta_script_process():
+        figure = apply_stable_2d_axis_ranges(
+            figure=figure,
+            x_values=filtered_x_values,
+            y_values=filtered_y_values,
+            x_log_scale=graph_settings.x_axis_is_log(builder),
+            y_log_scale=graph_settings.y_axis_is_log(builder),
+        )
 
     figure = graph_overlays.add_2d_overlays(
         builder,

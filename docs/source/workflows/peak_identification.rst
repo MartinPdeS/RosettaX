@@ -127,21 +127,29 @@ The algorithm follows the MATLAB-described approach from the Exometry method:
    is treated as the baseline noise population, which corresponds to the
    non-fluorescent beads leaking into the green-fluorescence channel.
 3. **Marker classification.** The remaining one or two fluorescence peaks are
-   the fluorescent marker beads (140 nm and 380 nm in CAL003). When only one
-   marker is found, the saturation state of the fluorescence detector
-   determines whether it is the dim or the bright marker. When two are found,
-   the lower-intensity peak is labeled *Dim marker* and the higher is labeled
-   *Bright marker*.
+   the fluorescent marker beads (140 nm and 380 nm in CAL003). When two are
+   found, the lower-intensity peak is labeled *Dim marker* and the higher is
+   labeled *Bright marker*. A lone usable marker can still guide inspection of
+   measured scatter peaks.
 4. **Marker scatter peaks.** For each marker peak, events are gated by a
    symmetric sigma window around the fluorescence fit mean, and the scatter
    distribution of those gated events is fitted to find the marker scatter
-   position.
+   position. If fluorescence clips above the dim marker gate, Rosetta can use
+   a dominant, validated scatter population at the fluorescence ceiling to
+   recover the bright anchor.
 5. **Non-fluorescent gate.** Events with fluorescence below the baseline mean
    plus *baseline gate width* × σ are selected. This gate removes all
    fluorescent marker beads from the scatter analysis.
-6. **Non-fluorescent scatter peaks.** The gated scatter distribution is
-   submitted to the same find-fit-validate pipeline used for fluorescence.
-   Validated peaks are inserted into the calibration-standard table.
+6. **Non-fluorescent scatter peaks.** Rosetta fits the gated scatter distribution
+   with a mixture model in log intensity. When both markers provide usable
+   scatter positions, Rosetta fits three regions independently: below the
+   140 nm marker, between the markers, and above the 380 nm marker. Each fit
+   includes a small margin at the marker boundaries to account for nearby peak
+   tails. The middle fit must resolve three observed populations before Rosetta
+   assigns 147, 203 and 296 nm. With fewer than two usable scatter anchors,
+   Rosetta fits the full gated distribution. The lowest detected non-fluorescent
+   peak stays visible on the graph and is excluded from the calibration table
+   because acquisition limits and overlapping populations can distort it.
 
 The script stops with an informative status message if:
 
@@ -160,22 +168,60 @@ The script stops with an informative status message if:
      - Default
      - Effect
    * - Maximum scatter peaks
-     - 8
+     - 10
      - Upper bound on the number of non-fluorescent bead populations to return.
-   * - Minimum fit R²
-     - 0.80
-     - Minimum Gaussian fit quality for a peak to be accepted. Applies to both
-       fluorescence and scatter fits. Lower values accept noisier peaks.
+   * - Marker fit strictness
+     - 0.5
+     - Controls the minimum Gaussian fit R² and maximum coefficient of variation
+       (CV) for fluorescence peaks. At 0 the limits are R² ≥ 0.35 and CV ≤ 1.50.
+       At 0.5 they are R² ≥ 0.70 and CV ≤ 0.60. At 1 they are R² ≥ 0.95
+       and CV ≤ 0.30. Scatter and calibration checks are independent of this setting.
    * - Baseline gate width (σ)
-     - 2.0
+     - 3.0
      - Non-fluorescent events are those with fluorescence ≤ baseline mean +
        this multiplier × baseline σ. Increasing this value widens the
        non-fluorescent gate and may include dim marker events; decreasing it
        tightens the gate at the risk of excluding small beads near the baseline.
 
-The workflow does not use marker positions to anchor bead-to-diameter
-assignments directly. That assignment is determined by the calibration-standard
-table preset (e.g. *Rosetta Mix*) in the scattering model section.
+Changing Marker fit strictness refreshes the peak graph. Select **Run** to
+apply the current settings to the peak table.
+
+With both scatter anchors, Rosetta assigns diameters in scatter order. A
+fluorescent marker isolated at the scatter floor or ceiling can supply an
+ordering boundary for the three intermediate populations. The clipped value
+is excluded from calibration. With one measurable marker and all ten
+non-fluorescent populations, Rosetta can also assign diameters if the marker
+rank identifies it uniquely. If a separate bright fluorescence gate confirms
+the dim marker but has no usable scatter position, Rosetta assigns 147, 203,
+and 296 nm to the nearest resolved peaks above the 140 nm marker, and 125,
+100, and 70 nm to the nearest resolved peaks below it. This assumes that no
+intermediate populations were missed. Around a confirmed bright marker, the
+same rule assigns 296, 203, and 147 nm toward lower scatter and 400, 600, 799,
+and 994 nm toward higher scatter. If only one fluorescent marker is detected
+and the full scatter ladder cannot identify it, Rosetta assumes it is the
+380 nm marker and applies the same rank rule provisionally. Other unresolved
+peaks remain in the graph
+and table without diameters. Hover over a sized peak to see whether its
+diameter was estimated from one marker or assigned with more evidence. Detector
+geometry is configured after peak detection and is used for coupling.
+
+Overlapping or reversed fluorescent candidates are shown with their measured
+scatter positions. A gate is retained as a sizing candidate only if it has
+substantially stronger scatter support and is separated from the other gate.
+The peak table can keep the measured positions while marker identity is
+unresolved.
+
+Select **Compute model** to calculate the expected coupling for the diameters
+in the table. Use the optional **Validate bead assignments** card to check provisional
+sizes against the CAL003 solid-sphere couplings and compare measured and
+predicted scatter. Review any proposed diameter changes before selecting
+**Apply suggested changes**. The comparison allows
+missing beads and extra peaks and can test either marker identity when the
+fluorescence evidence is ambiguous. A diameter is retained only if the
+plausible assignments agree across the original fit and three bootstrap fits.
+The selected response must predict each matched peak when that peak is held
+out. **Create calibration** uses the diameters currently in the table, regardless
+of whether validation was run or supported those assignments.
 
 Rosetta Script V1 assigns Rosetta Mix sizes using both the 140 nm and 380 nm
 fluorescent marker anchors. If either anchor is unavailable or unreliable, or
@@ -187,15 +233,9 @@ teal circles and dashed guides identify non-fluorescent peaks. The horizontal
 line marks the fluorescence baseline gate. Size labels above that line identify
 the non-fluorescent peaks, while marker labels appear at the top of the plot.
 
-For Rosetta Script V1, use *Auto-select detectors* to select uniquely named
-side-scattering and green-fluorescence channels. It prefers peak measurements and a green channel with the same encoded
-wavelength as the selected scattering channel; if that is unavailable, it uses
-a uniquely identifiable 488 nm green channel. If names are missing or multiple
-channels still match a role, select that channel manually. Verify that the
-selected channels match the instrument and measurement being analyzed.
-For blue-laser channels named by emission filter (for example,
-``B535/30-A``), auto-selection recognizes a single green-range filter and
-prefers its area measurement. Multiple matching filters remain unselected.
-The suggestion message explains the channel-name or instrument rule used and
-lists ambiguous matches. Channel names and instrument preferences are maintained
-in ``RosettaX/workflow/detector/detector_auto_detect_rules.json``.
+For the Rosetta scripts, *Auto-select detectors* uses the instrument's scatter
+and green fluorescence recommendations in
+``RosettaX/assets/instrument_catalog.toml``. A recommendation must
+match a column in the uploaded FCS file. If the instrument is unknown, a
+recommendation is unset, or its column is missing, select the channel manually.
+Any valid existing selection for that role is retained.

@@ -72,13 +72,19 @@ class Test_PeakMutationStatus:
 
         assert color == "danger"
 
-    def test_build_status_alert_returns_bootstrap_alert(self) -> None:
-        """Check build status alert returns bootstrap alert."""
-        alert = mutation.build_status_alert(
-            status="Cleared Rosetta fluorescence-guided scatter peaks.",
-        )
+    def test_build_status_alert_renders_error_as_plain_text(self) -> None:
+        """Expose the error as text without the Bootstrap alert box."""
+        message = "No validated fluorescence peaks found."
+        status = mutation.build_status_alert(status=message)
+        assert isinstance(status, mutation.html.Div)
+        assert status.children == message
+        assert status.role == "alert"
 
-        assert alert != ""
+    def test_completed_run_has_no_success_box(self) -> None:
+        """Suppress success alerts while retaining unresolved sizing and preview feedback."""
+        assert mutation.build_status_alert(status="Assigned 147 and 203 nm above the marker.") == ""
+        assert mutation.build_status_alert(status="Assigned 147 nm. 2 measured peaks remain unsized.") != ""
+        assert mutation.build_status_alert(status="Preview. Click Run to update the peak table.") == ""
 
     def test_build_status_children_only_populates_matching_process(self) -> None:
         """Check build status children only populates matching process."""
@@ -88,7 +94,7 @@ class Test_PeakMutationStatus:
                 {"process": "Manual 1D"},
             ],
             target_process_name="Rosetta Script",
-            status="Fluorescence peaks: 2 total.",
+            status="No validated fluorescence peaks found.",
         )
 
         assert children[0] != ""

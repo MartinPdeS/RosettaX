@@ -39,11 +39,11 @@ class Header:
         self.workflow_header = WorkflowHeader(
             title="Scattering calibration",
             description=(
-                "Create a scattering calibration from bead FCS data by detecting bead populations, configuring the Mie model, computing coupling values, fitting the response, and saving the result for reuse."
+                "Create a scattering calibration from bead FCS data by detecting bead populations, configuring the Mie model, computing coupling values, optionally validating Rosetta bead assignments, fitting the response, and saving the result for reuse."
             ),
             steps=workflow_steps,
             card_color=card_color,
-            column_kwargs={"xs": 12, "md": 6, "lg": 4, "xl": 2},
+            compact_steps=True,
         )
 
         logger.debug(
@@ -103,10 +103,13 @@ class Header:
             or state.get("calibration_graph_payload")
         ):
             completed_count = 4
-        if completed_count == 4 and state.get("calibration_payload"):
+        if completed_count == 4:
+            # The sequential progress display advances past optional validation.
             completed_count = 5
-        if completed_count == 5 and state.get("calibration_saved"):
+        if completed_count == 5 and state.get("calibration_payload"):
             completed_count = 6
+        if completed_count == 6 and state.get("calibration_saved"):
+            completed_count = 7
 
         return self.workflow_header.build_progress(
             completed_count=completed_count,

@@ -4,18 +4,17 @@ import json
 import logging
 from pathlib import Path
 from typing import Any
+from .catalog import INSTRUMENT_CATALOG_PATH, load_instrument_catalog
 
 logger = logging.getLogger(__name__)
-DEFAULT_DETECTOR_PRESET_PATH = (
-    Path(__file__).resolve().parents[2] / "assets" / "detector_definitions"
-)
-DEFAULT_DETECTOR_PRESET_DIRECTORY = DEFAULT_DETECTOR_PRESET_PATH
+DEFAULT_DETECTOR_PRESET_PATH = INSTRUMENT_CATALOG_PATH
+DEFAULT_DETECTOR_PRESET_DIRECTORY = DEFAULT_DETECTOR_PRESET_PATH.parent
 CUSTOM_DETECTOR_PRESET_NAME = "Generic detector"
 
 
 class DetectorPresetLoader:
     """
-    Load detector presets from a JSON catalog file.
+    Load detector presets from the instrument catalog or a legacy JSON source.
 
     The class boundary keeps preset discovery and light preset normalization in
     one place so detector definitions can evolve without spreading schema and
@@ -33,7 +32,7 @@ class DetectorPresetLoader:
 
     def load_presets(self) -> dict[str, dict[str, Any]]:
         """
-        Load detector configuration presets from the catalog JSON file.
+        Load detector configuration presets from the selected source.
         """
         detector_presets: dict[str, dict[str, Any]] = {}
         detector_preset_path = self.preset_path.resolve()
@@ -49,6 +48,9 @@ class DetectorPresetLoader:
             return self._load_presets_from_directory(
                 detector_preset_path,
             )
+
+        if detector_preset_path.suffix == ".toml":
+            return self._load_presets_from_instrument_catalog(path=detector_preset_path)
 
         detector_preset_document = self._load_detector_preset_document(
             detector_preset_path,
@@ -96,6 +98,30 @@ class DetectorPresetLoader:
         )
 
         return detector_presets
+
+    def _load_presets_from_instrument_catalog(self, *, path: Path) -> dict[str, dict[str, Any]]:
+        """Normalize optical presets embedded in the instrument catalog."""
+        presets = {}
+        for instrument in load_instrument_catalog(path=path)["instruments"].values():
+            defaults = {
+                preset_key: instrument[instrument_key]
+                for preset_key, instrument_key in (
+                    ("manufacturer", "manufacturer"),
+                    ("instrument", "model"),
+                    ("alias", "instrument_aliases"),
+                )
+                if instrument_key in instrument
+            }
+            for definition in instrument.get("detectors", {}).values():
+                name = definition["preset_name"]
+                if name in presets:
+                    raise ValueError(f"Duplicate detector preset name: {name}")
+                preset = {**defaults, **definition}
+                preset["name"] = preset.pop("preset_name")
+                presets[name] = self._normalize_detector_preset(
+                    detector_preset=preset, detector_preset_path=path,
+                )
+        return presets
 
     def _load_presets_from_directory(
         self,
@@ -624,7 +650,7 @@ def get_default_detector_preset_loader() -> DetectorPresetLoader:
 
 def load_detector_configuration_presets() -> dict[str, dict[str, Any]]:
     """
-    Load detector configuration presets from JSON files.
+    Load detector configuration presets from the packaged instrument catalog.
 
     This function reads from disk every time it is called so changes to JSON
     files are visible without restarting the Dash server.

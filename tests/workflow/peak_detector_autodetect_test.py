@@ -11,7 +11,6 @@ import json
 import pytest
 import sys
 import types
-from pathlib import Path
 from RosettaX.utils.fcs_metadata import FCSMetadata
 
 
@@ -629,31 +628,8 @@ class Test_DetectorAutoDetect:
         assert resolved_channel == "SSC-A"
 
 
-@pytest.mark.parametrize(
-    ("channels", "role", "expected"),
-    [
-        (["405SALS(Peak)", "405LALS(Peak)", "488Grn(Peak)"], "scattering", "405LALS(Peak)"),
-        (["405SALS(Peak)", "405LALS(Peak)", "488Grn(Peak)"], "green_fluorescence", "488Grn(Peak)"),
-        (["FSC-A", "SSC-A", "FITC-A"], "scattering", "SSC-A"),
-        (["FSC-A", "SSC-A", "FITC-A"], "green_fluorescence", "FITC-A"),
-        (["FSC-A", "Time"], "scattering", None),
-        (["FSC-A", "Time"], "green_fluorescence", None),
-        (["SSC-A", "SSC-H"], "scattering", "SSC-H"),
-        (["FITC-A", "FL1-A"], "green_fluorescence", None),
-        (["V525/50-A", "B535/30-A", "B535/30-H"], "green_fluorescence", "B535/30-H"),
-        (["B525/50-A", "B535/30-A"], "green_fluorescence", None),
-        (["B535/30-H", "B535/30-W"], "green_fluorescence", "B535/30-H"),
-        (["405LALS(Area)", "405LALS(Peak)"], "scattering", "405LALS(Peak)"),
-        (["405Grn(Peak)", "488Grn(Area)", "488Grn(Peak)"], "green_fluorescence", "488Grn(Peak)"),
-    ],
-)
-def test_rosetta_v1_selects_channels_using_h_preference(channels, role, expected):
-    """V1 avoids unrelated channels and prefers H measurements by default."""
-    assert detectors.infer_rosetta_v1_channel(column_names=channels, detector_role=role) == expected
-
-
 def test_rosetta_v1_dropdowns_autodetect_and_preserve_user_selection(monkeypatch):
-    """V1 selects channels only on request and otherwise retains user choices."""
+    """Keep manual choices and leave unknown instruments unset on auto-select."""
     metadata = build_metadata(
         instrument_name="unknown",
         column_names=["405SALS(Peak)", "405LALS(Peak)", "405Grn(Peak)", "488Grn(Peak)"],
@@ -688,51 +664,58 @@ def test_rosetta_v1_dropdowns_autodetect_and_preserve_user_selection(monkeypatch
 
     assert initial == [None, None]
     assert reset == [None, None]
-    assert detected == ["405LALS(Peak)", "405Grn(Peak)"]
+    assert detected == ["405SALS(Peak)", None]
     assert preserved == ["405SALS(Peak)", "488Grn(Peak)"]
 
 
-def test_rosetta_v1_prefers_green_channel_matching_scatter_wavelength():
-    """Prefer green fluorescence excited at the selected scatter wavelength."""
+def test_catalog_rosetta_channels_use_explicit_measurements(monkeypatch):
+    """Auto-select the FACSLyric pair from the columns available in the upload."""
+    metadata = build_metadata(
+        instrument_name="BD FACSLyric",
+        column_names=["SSC-A", "SSC-H", "FITC-H", "FITC-A"],
+    )
+    fake_file = FakeFCSFile(metadata)
+    fake_file.get_column_names = lambda: metadata.column_names
+    monkeypatch.setattr(detectors, "FCSFile", lambda path: fake_file)
+    dropdowns = [
+        {"process": "Rosetta Script V1", "channel": "scattering"},
+        {"process": "Rosetta Script V1", "channel": "green_fluorescence"},
+    ]
+
+    _, selected = detectors.populate_peak_script_detector_dropdowns(
+        uploaded_fcs_path="example.fcs",
+        detector_dropdown_ids=dropdowns,
+        current_detector_values=[None, None],
+        auto_select_rosetta_v1=True,
+        logger=detectors.logger,
+    )
+    assert selected == ["SSC-H", "FITC-A"]
+
+    rule = detectors.resolve_detector_auto_detect_rule(metadata=metadata)
     assert detectors.infer_rosetta_v1_channel(
-        column_names=["405Grn(Peak)", "488Grn(Peak)"],
-        detector_role="green_fluorescence",
-        preferred_wavelength_nm=405,
-    ) == "405Grn(Peak)"
+        column_names=["FITC-H"], detector_role="green_fluorescence", matched_rule=rule,
+    ) == "FITC-H"
+    assert detectors.infer_rosetta_v1_channel(
+        column_names=["FITC-W"], detector_role="green_fluorescence", matched_rule=rule,
+    ) is None
 
 
-def test_rosetta_v1_detects_green_filter_in_bundled_lsrii_sample():
-    """Identify the H green-filter and scatter measurements in the bundled sample."""
-    sample_path = Path(__file__).resolve().parents[2] / "RosettaX/assets/sample-files/bd_lsrii_rosetta_beads.fcs"
-    with detectors.FCSFile(sample_path) as fcs:
-        channels = fcs.get_column_names()
-    assert detectors.infer_rosetta_v1_channel(column_names=channels, detector_role="green_fluorescence") == "B535/30-H"
-    assert detectors.infer_rosetta_v1_channel(column_names=channels, detector_role="scattering") == "SSC-H"
-
-
-def test_rosetta_suggestions_explain_filter_and_h_preference():
-    """Explain green-filter suggestions and the default H channel preference."""
-    channel, explanation = detectors.resolve_rosetta_v1_suggestion(
-        column_names=["B535/30-A", "B535/30-H"], detector_role="green_fluorescence",
+def test_rosetta_ignores_general_rules_when_catalog_channels_are_unset():
+    """Leave both roles unset even when general rules and column names match."""
+    metadata = build_metadata(
+        instrument_name="Agilent NovoCyte", column_names=["SSC-H", "FITC-A"],
     )
-    assert channel == "B535/30-H"
-    assert "green emission filter" in explanation
-    channel, explanation = detectors.resolve_rosetta_v1_suggestion(
-        column_names=["SSC-A", "SSC-H"], detector_role="scattering",
-    )
-    assert channel == "SSC-H"
-    assert "SSC-H" in explanation
+    rule = detectors.resolve_detector_auto_detect_rule(metadata=metadata)
+    assert rule["detector_channels"]["default"]
+    for role in ("scattering", "green_fluorescence"):
+        assert detectors.infer_rosetta_v1_channel(
+            column_names=metadata.column_names, detector_role=role, matched_rule=rule,
+        ) is None
 
 
-def test_rosetta_uses_h_channel_instrument_preference():
-    """Prefer an instrument's H channel when both measurement types are present."""
-    rule = {"name": "Example", "detector_channels": {"scattering": ["SSC-A", "SSC-H"]}}
-    channel, explanation = detectors.resolve_rosetta_v1_suggestion(
-        column_names=["SSC-A"], detector_role="scattering", matched_rule=rule,
-    )
-    assert channel == "SSC-A"
-    assert "Example" in explanation
-    channel, _ = detectors.resolve_rosetta_v1_suggestion(
-        column_names=["SSC-A", "SSC-H"], detector_role="scattering", matched_rule=rule,
-    )
-    assert channel == "SSC-H"
+def test_catalog_distinguishes_apogee_kairos_from_a60():
+    """Prefer the specific instrument rule and expose omitted roles as unknown."""
+    metadata = build_metadata(instrument_name="Apogee A60 MicroPLUS - Kairos", column_names=[])
+    rule = detectors.resolve_detector_auto_detect_rule(metadata=metadata)
+    assert "Kairos" in rule["name"]
+    assert rule["rosetta_channels"] == {"scattering": None, "green_fluorescence": None}

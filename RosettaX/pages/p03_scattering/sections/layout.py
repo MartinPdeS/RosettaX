@@ -17,10 +17,7 @@ def build_page_layout(page, sections) -> dash.html.Div:
             ),
             dash.html.Div(
                 [
-                    build_collapsible_section_layout(
-                        section,
-                        page_name=page.ids.page_name,
-                    )
+                    build_collapsible_section_layout(section, page_name=page.ids.page_name)
                     for section in sections
                 ],
                 style={

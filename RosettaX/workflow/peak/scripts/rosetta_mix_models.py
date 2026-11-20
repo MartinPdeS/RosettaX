@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from typing import Any, TypedDict
 
 DEFAULT_BASELINE_SIGMA_MULTIPLIER = 3.0
+DEFAULT_SATURATION_GUARD_FRACTION = 0.8
 
 
 class RosettaPeakPoint(TypedDict, total=False):
@@ -29,6 +30,10 @@ class MarkerScatterDiagnostic(TypedDict, total=False):
     fluorescence_position: float
     gated_event_count: int
     validated: bool
+    recovered_from_clipped_fluorescence: bool
+    scatter_boundary: float
+    gate_overlap: float
+    above_baseline_fraction: float
     selected_peak: dict[str, Any]
     rejected_peaks: list[dict[str, Any]]
 
@@ -124,7 +129,7 @@ class RosettaRunSettings:
         )
         saturation_guard_fraction = resolve_float(
             value=process_settings.get("saturation_guard_fraction"),
-            default=0.9,
+            default=DEFAULT_SATURATION_GUARD_FRACTION,
             minimum=0.0,
             maximum=1.0,
         )
@@ -159,6 +164,9 @@ class RosettaEventData:
     scattering_values: np.ndarray
     fluorescence_values: np.ndarray
     removed_saturated_event_count: int
+    scatter_edge_values: dict[str, float] = field(default_factory=dict)
+    scatter_edge_fluorescence: dict[str, np.ndarray] = field(default_factory=dict)
+    fluorescence_with_scatter_edges: np.ndarray | None = None
 
 
 @dataclass(frozen=True)

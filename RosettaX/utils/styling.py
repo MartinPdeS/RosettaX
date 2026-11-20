@@ -285,6 +285,7 @@ WORKFLOW_PAGE_COLOR_SCHEME = {
         4: "cyan",
         5: "purple",
         6: "gray",
+        7: "pink",
     },
 }
 

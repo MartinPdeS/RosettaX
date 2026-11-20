@@ -2,6 +2,7 @@
 
 import logging
 import numpy as np
+from functools import partial
 from .base import (
     BasePeakProcess,
     PeakProcessResult,
@@ -35,6 +36,7 @@ from .rosetta_mix_fitting import (
 )
 from .rosetta_mix_models import (
     DEFAULT_BASELINE_SIGMA_MULTIPLIER,
+    DEFAULT_SATURATION_GUARD_FRACTION,
     MarkerScatterDiagnostic,
     RosettaEventData,
     RosettaFluorescenceAnalysis,
@@ -59,6 +61,7 @@ from .rosetta_mix_support import (
     resolve_scattering_saturation_value_for_guard as _resolve_scattering_saturation_value_for_guard,
 )
 from collections.abc import Callable
+from dataclasses import replace
 from RosettaX.utils.io import column_copy
 from typing import Any
 
@@ -259,10 +262,10 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
                     "Exclude table peaks above detector_saturation * this fraction "
                     "for the selected scatter channel when metadata includes "
                     "detector range values. This guard does not change detected "
-                    "peaks or plotted events. Example: 0.9 means 4,000,000 "
-                    "saturation becomes a 3,600,000 table threshold."
+                    "peaks or plotted events. Example: 0.6 means 4,000,000 "
+                    "saturation becomes a 2,400,000 table threshold."
                 ),
-                "default_value": 0.9,
+                "default_value": DEFAULT_SATURATION_GUARD_FRACTION,
                 "min_value": 0.0,
                 "max_value": 1.0,
                 "step": 0.01,
@@ -292,13 +295,13 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
 
         if not str(scattering_column or "").strip():
             return self._empty_result(
-                status="Select a scattering channel first.",
+                status="Select the scatter channel used to measure the Rosetta beads, then run peak detection again.",
                 clear_existing_table_peaks=False,
             )
 
         if not str(green_fluorescence_column or "").strip():
             return self._empty_result(
-                status="Select a green fluorescence channel first.",
+                status="Select the green fluorescence channel used to identify the Rosetta marker beads, then run peak detection again.",
                 clear_existing_table_peaks=False,
             )
 
@@ -307,21 +310,40 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
             max_events_for_analysis=max_events_for_analysis,
             process_settings=process_settings,
         )
+        recover_clipped_marker = getattr(self, "recover_clipped_marker", False)
         events = load_rosetta_events(
             backend=backend,
             scattering_column=str(scattering_column),
             green_fluorescence_column=str(green_fluorescence_column),
             settings=settings,
+            retain_scatter_edges=recover_clipped_marker,
         )
         if events.scattering_values.size == 0:
             return self._empty_result(
-                status="No finite events are available for automatic detection.",
+                status="The selected scatter and fluorescence channels have no usable paired events after filtering. Check the selected channels and inspect the raw event plot.",
                 clear_existing_table_peaks=False,
             )
         fluorescence = analyze_rosetta_fluorescence(events=events, settings=settings)
+        if (
+            recover_clipped_marker and len(fluorescence.marker_peaks) == 1
+            and events.fluorescence_with_scatter_edges is not None
+        ):
+            inclusive_fluorescence = analyze_rosetta_fluorescence(
+                events=replace(events, fluorescence_values=events.fluorescence_with_scatter_edges),
+                settings=settings,
+            )
+            original_marker = fluorescence.marker_peaks[0]
+            if len(inclusive_fluorescence.marker_peaks) == 2 and any(
+                abs(candidate["mean"] - original_marker["mean"]) <= original_marker["std"]
+                for candidate in inclusive_fluorescence.marker_peaks
+            ):
+                fluorescence = inclusive_fluorescence
         if fluorescence.stop_status is not None:
             return self._build_stop_result(
-                status=fluorescence.stop_status,
+                status=(
+                    f"{fluorescence.stop_status} Green channel: {green_fluorescence_column}. "
+                    "Inspect its histogram for separated peaks above the baseline and for events piled up at the fluorescence ceiling."
+                ),
                 fluorescence_analysis=fluorescence.analysis,
                 debug_diagnostics=build_rosetta_debug_diagnostics(
                     fluorescence_analysis=fluorescence.analysis,
@@ -349,16 +371,29 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
             fluorescence=fluorescence,
             settings=settings,
             fit_function=getattr(self, "scatter_fit_function", None),
+            recover_clipped_marker=recover_clipped_marker,
         )
+        scatter_fit_function = getattr(self, "scatter_fit_function", None)
+        regional_fit = getattr(self, "fit_marker_bounded_scatter", None)
+        if regional_fit is not None:
+            scatter_fit_function = partial(
+                regional_fit,
+                marker_diagnostics=markers.diagnostics,
+                fluorescence_saturation=fluorescence.saturation_intensity,
+            )
         scatter = analyze_non_fluorescent_scatter(
             events=events,
             fluorescence=fluorescence,
             settings=settings,
-            fit_function=getattr(self, "scatter_fit_function", None),
+            fit_function=scatter_fit_function,
         )
         if scatter.stop_status is not None:
             return self._build_stop_result(
-                status=scatter.stop_status,
+                status=(
+                    f"{scatter.stop_status} Scatter channel: {scattering_column}. "
+                    f"The fluorescence gate retained events at or below {fluorescence.baseline_upper_gate:.4g} a.u. "
+                    "Inspect the gated scatter histogram and check that the baseline gate includes the non-fluorescent beads."
+                ),
                 fluorescence_analysis=fluorescence.analysis,
                 debug_diagnostics=build_rosetta_debug_diagnostics(
                     fluorescence_analysis=fluorescence.analysis,
@@ -543,8 +578,9 @@ def load_rosetta_events(
     scattering_column: str,
     green_fluorescence_column: str,
     settings: RosettaRunSettings,
+    retain_scatter_edges: bool = False,
 ) -> RosettaEventData:
-    """Read paired signals and apply the configured saturated-event filter."""
+    """Read paired signals and retain clipped events separately for marker identification."""
     scattering_values = np.asarray(
         column_copy(
             fcs_file_path=backend.fcs_file_path,
@@ -568,6 +604,20 @@ def load_rosetta_events(
     )
     scattering_values = scattering_values[finite_mask]
     green_fluorescence_values = green_fluorescence_values[finite_mask]
+    scatter_edge_values = {}
+    scatter_edge_fluorescence = {}
+    if retain_scatter_edges and scattering_values.size:
+        for edge, resolve_extreme in (("min", np.min), ("max", np.max)):
+            edge_mask = build_edge_pileup_mask(values=scattering_values, edge=edge)
+            if np.any(edge_mask):
+                scatter_edge_values[edge] = float(resolve_extreme(scattering_values))
+                scatter_edge_fluorescence[edge] = green_fluorescence_values[edge_mask]
+
+    fluorescence_with_scatter_edges = None
+    if scatter_edge_fluorescence and settings.remove_saturated_events:
+        fluorescence_floor = build_edge_pileup_mask(values=green_fluorescence_values, edge="min")
+        fluorescence_with_scatter_edges = green_fluorescence_values[~fluorescence_floor]
+
     removed_saturated_event_count = 0
     if settings.remove_saturated_events:
         saturation_mask = build_saturated_event_mask(
@@ -580,7 +630,8 @@ def load_rosetta_events(
             scattering_values = scattering_values[keep_mask]
             green_fluorescence_values = green_fluorescence_values[keep_mask]
     return RosettaEventData(
-        scattering_values, green_fluorescence_values, removed_saturated_event_count
+        scattering_values, green_fluorescence_values, removed_saturated_event_count,
+        scatter_edge_values, scatter_edge_fluorescence, fluorescence_with_scatter_edges,
     )
 
 
@@ -595,7 +646,7 @@ def resolve_marker_stop_status(marker_count: int, diagnostic: str) -> str | None
 
 
 def analyze_rosetta_fluorescence(
-    *, events: RosettaEventData, settings: RosettaRunSettings
+    *, events: RosettaEventData, settings: RosettaRunSettings,
 ) -> RosettaFluorescenceAnalysis:
     """Fit fluorescence populations and resolve baseline and marker gates."""
     baseline_peak = None
@@ -677,6 +728,7 @@ def find_marker_scatter_points(
     fluorescence: RosettaFluorescenceAnalysis,
     settings: RosettaRunSettings,
     fit_function: Callable[..., dict[str, Any]] | None = None,
+    recover_clipped_marker: bool = False,
 ) -> RosettaMarkerScatter:
     """Fit scatter peaks inside the accepted fluorescent marker gates.
 
@@ -691,6 +743,8 @@ def find_marker_scatter_points(
     fit_function : Callable or None, optional
         Alternative fitter using the existing peak-analysis dictionary contract.
         ``None`` preserves the original histogram fitter.
+    recover_clipped_marker : bool, optional
+        Fit the scatter distribution of events at a separated fluorescence ceiling.
 
     Returns
     -------
@@ -704,32 +758,106 @@ def find_marker_scatter_points(
     marker_points: list[RosettaPeakPoint] = []
     marker_scatter_guide_positions: list[float] = []
     marker_scatter_diagnostics: list[MarkerScatterDiagnostic] = []
-    for marker_peak in marker_classification:
-        marker_gate_mask = build_sigma_gate_mask(
+    if recover_clipped_marker and marker_classification:
+        clipped = build_edge_pileup_mask(values=events.fluorescence_values, edge="max")
+        dim = marker_classification[0]
+        ceiling = float(events.fluorescence_values.max())
+        dim_upper_gate = dim["mean"] + settings.marker_gate_sigma_multiplier * dim["std"]
+        bright = marker_classification[1] if len(marker_classification) == 2 else None
+        bright_gate_reaches_ceiling = bright is None or (
+            bright["mean"] + settings.marker_gate_sigma_multiplier * bright["std"] >= ceiling
+        )
+        if (
+            bright_gate_reaches_ceiling
+            and np.count_nonzero(clipped) >= settings.minimum_events_per_peak
+            and ceiling > fluorescence.baseline_upper_gate
+            and np.all(events.fluorescence_values[clipped] > dim_upper_gate)
+        ):
+            marker_classification = [dim, {
+                "mean": ceiling, "std": 0.0, "marker_role": "Bright marker", "clipped_gate": clipped,
+            }]
+    marker_gates = [
+        marker["clipped_gate"] if "clipped_gate" in marker else build_sigma_gate_mask(
             values=events.fluorescence_values,
-            mean_value=marker_peak["mean"],
-            std_value=marker_peak["std"],
+            mean_value=marker["mean"],
+            std_value=marker["std"],
             sigma_multiplier=settings.marker_gate_sigma_multiplier,
         )
+        for marker in marker_classification
+    ]
+    gate_overlap = 0.0
+    if len(marker_gates) == 2:
+        first_gate, second_gate = marker_gates
+        gate_overlap = np.count_nonzero(first_gate & second_gate) / max(
+            1, min(np.count_nonzero(first_gate), np.count_nonzero(second_gate)),
+        )
+    for marker_peak, marker_gate_mask in zip(marker_classification, marker_gates, strict=True):
+        clipped_gate = marker_peak.get("clipped_gate")
         gated_scatter_values = events.scattering_values[marker_gate_mask]
         gated_event_count = int(
             np.count_nonzero(
                 np.isfinite(gated_scatter_values) & (gated_scatter_values > 0.0)
             )
         )
+        if (
+            recover_clipped_marker and settings.remove_saturated_events
+            and len(marker_classification) == 2 and clipped_gate is None
+        ):
+            edge = "min" if marker_peak["marker_role"] == "Dim marker" else "max"
+            edge_values = events.scatter_edge_fluorescence.get(edge)
+            if edge_values is not None:
+                edge_gate = build_sigma_gate_mask(
+                    values=edge_values,
+                    mean_value=marker_peak["mean"],
+                    std_value=marker_peak["std"],
+                    sigma_multiplier=settings.marker_gate_sigma_multiplier,
+                )
+                gated_edge_count = int(np.count_nonzero(edge_gate))
+                if (
+                    marker_peak["mean"] - settings.marker_gate_sigma_multiplier * marker_peak["std"]
+                    > fluorescence.baseline_upper_gate
+                    and gated_edge_count >= settings.minimum_events_per_peak
+                    and gated_edge_count >= 0.70 * edge_values.size
+                    and gated_edge_count >= 0.70 * (gated_event_count + gated_edge_count)
+                ):
+                    marker_scatter_diagnostics.append({
+                        "marker_role": str(marker_peak["marker_role"]),
+                        "fluorescence_position": float(marker_peak["mean"]),
+                        "gated_event_count": gated_edge_count,
+                        "validated": False,
+                        "scatter_boundary": events.scatter_edge_values[edge],
+                    })
+                    continue
         select_peak = select_primary_validated_peak if fit_function is None else _select_primary_validated_peak
         fit_arguments = {} if fit_function is None else {"fit_function": resolve_fit_function}
-        scatter_peak = select_peak(
-            **fit_arguments,
-            values=gated_scatter_values,
-            peak_count=1,
-            minimum_peak_fraction=settings.minimum_peak_fraction,
-            minimum_events_per_peak=settings.minimum_events_per_peak,
-            fit_r2_threshold=settings.scatter_fit_r2_threshold,
-            fit_cv_threshold=settings.scatter_fit_cv_threshold,
-        )
+        if clipped_gate is not None:
+            clipped_analysis = resolve_fit_function(
+                values=gated_scatter_values, peak_count=2,
+                minimum_peak_fraction=settings.minimum_peak_fraction,
+                minimum_events_per_peak=settings.minimum_events_per_peak,
+                fit_r2_threshold=settings.scatter_fit_r2_threshold,
+                fit_cv_threshold=settings.scatter_fit_cv_threshold,
+                saturation_intensity=float("inf"),
+            )
+            validated = clipped_analysis["validated_peaks"]
+            scatter_peak = (
+                validated[0] if len(validated) == 1
+                and validated[0]["count"] >= 0.70 * gated_event_count
+                and not build_edge_pileup_mask(values=gated_scatter_values, edge="max").any()
+                else None
+            )
+        else:
+            scatter_peak = select_peak(
+                **fit_arguments,
+                values=gated_scatter_values,
+                peak_count=1,
+                minimum_peak_fraction=settings.minimum_peak_fraction,
+                minimum_events_per_peak=settings.minimum_events_per_peak,
+                fit_r2_threshold=settings.scatter_fit_r2_threshold,
+                fit_cv_threshold=settings.scatter_fit_cv_threshold,
+            )
         if scatter_peak is None:
-            scatter_analysis = resolve_fit_function(
+            scatter_analysis = clipped_analysis if clipped_gate is not None else resolve_fit_function(
                 values=gated_scatter_values,
                 peak_count=1,
                 minimum_peak_fraction=settings.minimum_peak_fraction,
@@ -766,13 +894,19 @@ def find_marker_scatter_points(
                 "fluorescence_position": float(marker_peak["mean"]),
                 "gated_event_count": gated_event_count,
                 "validated": True,
+                "gate_overlap": float(gate_overlap),
+                "above_baseline_fraction": float(np.count_nonzero(
+                    marker_gate_mask & (events.fluorescence_values > fluorescence.baseline_upper_gate)
+                ) / max(1, np.count_nonzero(marker_gate_mask))),
                 "selected_peak": {
                     "mean": scatter_peak.get("mean"),
                     "count": scatter_peak.get("count"),
                     "r2": scatter_peak.get("r2"),
                     "cv": scatter_peak.get("cv"),
+                    "bootstrap_positions": scatter_peak.get("bootstrap_positions"),
                 },
                 "rejected_peaks": [],
+                "recovered_from_clipped_fluorescence": clipped_gate is not None,
             }
         )
         marker_scatter_guide_positions.append(float(scatter_peak["mean"]))
@@ -928,6 +1062,13 @@ def build_rosetta_detection_result(
         "y_upper_gate": fluorescence.baseline_upper_gate,
         "fluorescence_saturation_intensity": float(fluorescence.saturation_intensity),
     }
+    scatter_bootstrap = [
+        {"position": peak["mean"], "replicates": peak["bootstrap_positions"]}
+        for peak in scatter.analysis.get("validated_peaks", [])
+        if "bootstrap_positions" in peak
+    ]
+    if scatter_bootstrap:
+        peak_lines_payload["scatter_bootstrap_positions"] = scatter_bootstrap
     status_lines = [
         (
             f"Fluorescence peaks: {len(fluorescence.analysis['validated_peaks'])} total "

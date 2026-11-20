@@ -25,6 +25,7 @@ class RosettaMixSizeAssignmentProcess(FluorescenceGuidedScatterPeakProcess):
 
     preserve_graph_payload_on_warning = True
     supports_advanced_mode = False
+    allow_unassigned_sizes = False
     fit_thresholds: dict[str, float] = {}
 
     def get_settings(self) -> list[dict[str, Any]]:
@@ -95,6 +96,7 @@ class RosettaMixSizeAssignmentProcess(FluorescenceGuidedScatterPeakProcess):
             if result.status:
                 warning_payload = _build_warning_graph_payload(
                     peak_lines_payload=result.peak_lines_payload,
+                    show_detected_peaks=(self.allow_unassigned_sizes or bool(resolved_process_settings.get("preview_only"))),
                 )
                 return replace(
                     result,
@@ -103,13 +105,17 @@ class RosettaMixSizeAssignmentProcess(FluorescenceGuidedScatterPeakProcess):
                 )
             return result
 
-        resolved_rows, status_suffix = self.assign_particle_sizes(result=result)
-        if not resolved_rows or status_suffix.startswith("Warning:") or any(
-            not row.get("particle_diameter_nm") for row in resolved_rows
+        result, resolved_rows, status_suffix = self.resolve_particle_sizes(result=result)
+        if (
+            not resolved_rows or status_suffix.startswith("Warning:")
+            or (not self.allow_unassigned_sizes and any(
+                not row.get("particle_diameter_nm") for row in resolved_rows
+            ))
         ):
             warning_status = status_suffix or build_marker_anchor_warning(result=result)
             warning_payload = _build_warning_graph_payload(
                 peak_lines_payload=result.peak_lines_payload,
+                show_detected_peaks=(self.allow_unassigned_sizes or bool(resolved_process_settings.get("preview_only"))),
             )
             return replace(
                 result,
@@ -128,12 +134,28 @@ class RosettaMixSizeAssignmentProcess(FluorescenceGuidedScatterPeakProcess):
                 resolved_rows=resolved_rows,
             )
 
+        sizing_failed = not any(row.get("particle_diameter_nm") for row in resolved_rows)
+        if sizing_failed:
+            status_suffix = "Warning: " + (
+                status_suffix or "No diameters could be assigned to the detected non-fluorescent peaks."
+            )
+
         return replace(
             result,
             table_prefill_rows=resolved_rows,
             peak_lines_payload=updated_peak_lines_payload,
-            status=updated_peak_lines_payload.get("saturation_guard_message", ""),
+            warning=sizing_failed,
+            status=" ".join(filter(None, (
+                status_suffix, updated_peak_lines_payload.get("saturation_guard_message", ""),
+            ))),
         )
+
+    def resolve_particle_sizes(
+        self, *, result: PeakProcessResult,
+    ) -> tuple[PeakProcessResult, list[dict[str, Any]], str]:
+        """Return the source detection and assigned rows for the selected channels."""
+        rows, status = self.assign_particle_sizes(result=result)
+        return result, rows, status if status.startswith("Warning:") else ""
 
     def assign_particle_sizes(
         self, *, result: PeakProcessResult,

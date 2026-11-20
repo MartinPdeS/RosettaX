@@ -64,6 +64,7 @@ RosettaX = [
     "assets/*.css",
     "assets/*.js",
     "assets/*.json",
+    "assets/*.toml",
     "assets/*.png",
     "assets/*.svg",
     "assets/**/*.css",
@@ -74,11 +75,10 @@ RosettaX = [
     "presets/**/*.json",
     "calibrations/**/*.json",
     "data/**/*",
-    "workflow/detector/*.json",
 ]
 
 [tool.setuptools.exclude-package-data]
-RosettaX = ["assets/sample-files/*.fcs"]
+RosettaX = ["assets/sample-files/**/*.fcs"]
 
 [tool.setuptools.packages.find]
 include = ["RosettaX", "RosettaX.*"]

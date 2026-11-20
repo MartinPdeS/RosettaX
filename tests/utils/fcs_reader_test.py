@@ -23,7 +23,7 @@ def sample_fcs_file_path() -> Path:
     """
     candidate_directories = [
         directories.fcs_data,
-        directories.asset_directory / "sample-files",
+        directories.asset_directory / "sample-files" / "cross_device",
         directories.asset_directory,
     ]
 

@@ -18,6 +18,8 @@ class ScatteringPageState:
     peak_lines_payload: dict[str, Any] | None = None
     scattering_peak_lines_payload: dict[str, Any] | None = None
 
+    rosetta_assignment_evidence: dict[str, Any] | None = None
+
     scattering_parameters_payload: dict[str, Any] | None = None
 
     calibration_graph_payload: dict[str, Any] | None = None

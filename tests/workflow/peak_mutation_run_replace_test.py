@@ -407,3 +407,42 @@ def test_failed_mixture_clears_previous_table_and_graph_annotations(monkeypatch)
     assert state is not dash.no_update
     assert table == [{"measured_peak_position": ""}]
     assert "Expected exactly 3" in status[0]
+
+
+def test_strictness_preview_updates_graph_without_writing_table(*, monkeypatch):
+    """Preview an automatic detection result without clearing committed table rows."""
+    adapter = _StubAdapter()
+    captured_settings = {}
+
+    def simulate_preview(*, process_settings, **kwargs):
+        """Return a detection payload and record the settings used to produce it."""
+        captured_settings.update(process_settings)
+        return SimpleNamespace(peak_lines_payload={"positions": [123.0]}, status="Marker found")
+
+    monkeypatch.setattr(mutation, "context_is_valid_for_process", lambda **kwargs: True)
+    monkeypatch.setattr(mutation, "call_run_automatic_action_with_supported_arguments", simulate_preview)
+    process_name = "Rosetta Script Mixture"
+    page_state, table, _status = mutation.handle_run_action(
+        page=SimpleNamespace(),
+        adapter=adapter,
+        process=_StubProcess(),
+        target_process_name=process_name,
+        page_state=_StubPageState({"reference_table_rows": [{"measured_peak_position": 42.0}]}),
+        uploaded_fcs_path="/tmp/example.fcs",
+        detector_channels={"scattering": "SSC-H", "green_fluorescence": "FITC-A"},
+        process_setting_ids=[{"process": process_name, "setting": "marker_fit_strictness"}],
+        process_setting_values=[0.2],
+        max_events_for_plots=1000,
+        table_data=[{"measured_peak_position": 42.0}],
+        mie_model="Solid Sphere",
+        runtime_config_data={},
+        status_component_ids=[],
+        preview_only=True,
+    )
+
+    assert captured_settings["marker_fit_strictness"] == 0.2
+    assert captured_settings["preview_only"] is True
+    assert page_state["peak_graph_revision"]["reason"] == "settings_preview"
+    assert page_state["reference_table_rows"] == [{"measured_peak_position": 42.0}]
+    assert table is dash.no_update
+    assert adapter.calls == []

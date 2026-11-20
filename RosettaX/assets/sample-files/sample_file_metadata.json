@@ -1,5 +1,253 @@
 {
-  "apogee_mixed_reference_beads.fcs": {
+  "cross_device/apogee_a50_micro_metves_19s1.fcs": {
+    "detectors": [
+      "405-SALS(Peak)",
+      "405-LALS(Peak)",
+      "405-Grn(Peak)"
+    ],
+    "size_bytes": 2812038
+  },
+  "cross_device/apogee_a60_micro_cal003_2022-01-31.fcs": {
+    "detectors": [
+      "405SALS(Peak)",
+      "405LALS(Peak)",
+      "405Grn(Peak)"
+    ],
+    "size_bytes": 1915050
+  },
+  "cross_device/apogee_a60_micro_metves_22v1.fcs": {
+    "detectors": [
+      "405SALS(Peak)",
+      "405LALS(Peak)",
+      "405Grn(Peak)"
+    ],
+    "size_bytes": 1981704
+  },
+  "cross_device/apogee_microplus_metves_04d1.fcs": {
+    "detectors": [
+      "SALS(Peak)",
+      "LALS(Peak)",
+      "405-Grn(Peak)"
+    ],
+    "size_bytes": 1047417
+  },
+  "cross_device/apogee_microplus_metves_06f2.fcs": {
+    "detectors": [
+      "SALS(Peak)",
+      "LALS(Peak)",
+      "405-Grn(Peak)"
+    ],
+    "size_bytes": 1167049
+  },
+  "cross_device/apogee_microplus_metves_07g1.fcs": {
+    "detectors": [
+      "405 -SAL(Peak)",
+      "405-LALS(Peak)",
+      "405-Grn(Peak)"
+    ],
+    "size_bytes": 822367
+  },
+  "cross_device/apogee_microplus_metves_07g2.fcs": {
+    "detectors": [
+      "SALS(Peak)",
+      "LALS(Peak)",
+      "405Grn(Peak)"
+    ],
+    "size_bytes": 1041355
+  },
+  "cross_device/bd_facscalibur_cal003_2023-02-08.fcs": {
+    "detectors": [
+      "FSC-H",
+      "SSC-H",
+      "FL1-H"
+    ],
+    "size_bytes": 520692
+  },
+  "cross_device/bd_facscelesta_sorp_metves_09i1.fcs": {
+    "detectors": [
+      "FSC-H",
+      "SSC-H",
+      "B530/30-A"
+    ],
+    "size_bytes": 9487268
+  },
+  "cross_device/bd_facslyric_metves_20t1.fcs": {
+    "detectors": [
+      "FSC-H",
+      "SSC-H",
+      "FITC-H"
+    ],
+    "size_bytes": 5313113
+  },
+  "cross_device/bd_facsymphony_a1_cal003_2022-02-11.fcs": {
+    "detectors": [
+      "FSC-H",
+      "SSC-H",
+      "B530/30-A"
+    ],
+    "size_bytes": 361820
+  },
+  "cross_device/bd_facsymphony_a1_cal003_2022-02-18.fcs": {
+    "detectors": [
+      "FSC-H",
+      "SSC-H",
+      "B530/30-A"
+    ],
+    "size_bytes": 2545258
+  },
+  "cross_device/bd_facsymphony_a1_cal003_2022-11-16.fcs": {
+    "detectors": [
+      "FSC-H",
+      "SSC-H",
+      "BB515-H"
+    ],
+    "size_bytes": 11168861
+  },
+  "cross_device/bd_facsymphony_a1_metves_25y1.fcs": {
+    "detectors": [
+      "FSC-H",
+      "SSC-H",
+      "BB515-H"
+    ],
+    "size_bytes": 4196285
+  },
+  "cross_device/bd_facsymphony_a1_metves_25y2.fcs": {
+    "detectors": [
+      "FSC-H",
+      "SSC-H",
+      "BB515-H"
+    ],
+    "size_bytes": 11168861
+  },
+  "cross_device/bd_facsymphony_a5_metves_08h1.fcs": {
+    "detectors": [
+      "FSC-H",
+      "SSC-H",
+      "BB515-H"
+    ],
+    "size_bytes": 11684233
+  },
+  "cross_device/beckman_coulter_cytoflex_lx_metves_05e1.fcs": {
+    "detectors": [
+      "FSC-H",
+      "FL12-H",
+      "FL1-H"
+    ],
+    "size_bytes": 771324
+  },
+  "cross_device/beckman_coulter_cytoflex_lx_metves_14n1.fcs": {
+    "detectors": [
+      "FSC-H",
+      "SSC_1-H",
+      "FL1-H"
+    ],
+    "size_bytes": 19298034
+  },
+  "cross_device/beckman_coulter_cytoflex_lx_metves_16p2.fcs": {
+    "detectors": [
+      "FSC-H",
+      "SSC_1-H",
+      "FL1-H"
+    ],
+    "size_bytes": 12989048
+  },
+  "cross_device/beckman_coulter_cytoflex_s_cal003_2023-01-05.fcs": {
+    "detectors": [
+      "FSC-H",
+      "SSC_1-H",
+      "FL1-H"
+    ],
+    "size_bytes": 12006058
+  },
+  "cross_device/beckman_coulter_cytoflex_s_metves_05e2.fcs": {
+    "detectors": [
+      "FSC-H",
+      "SSC_1-H",
+      "FL5-H"
+    ],
+    "size_bytes": 11728742
+  },
+  "cross_device/beckman_coulter_cytoflex_s_metves_06f1.fcs": {
+    "detectors": [
+      "FSC-H",
+      "SSC_1-H",
+      "FL1-H"
+    ],
+    "size_bytes": 3320547
+  },
+  "cross_device/beckman_coulter_cytoflex_s_metves_16p1.fcs": {
+    "detectors": [
+      "FSC-H",
+      "SSC_1-H",
+      "FL1-H"
+    ],
+    "size_bytes": 6443830
+  },
+  "cross_device/beckman_coulter_cytoflex_s_metves_23w1.fcs": {
+    "detectors": [
+      "FSC-H",
+      "SSC_1-H",
+      "FL1-H"
+    ],
+    "size_bytes": 6520163
+  },
+  "cross_device/beckman_coulter_moflo_astrios_metves_21u1.fcs": {
+    "detectors": [
+      "FSC1-Height",
+      "SSC1-Height",
+      "FL12-Height"
+    ],
+    "size_bytes": 1753645
+  },
+  "cross_device/cytek_aurora_metves_11k2.fcs": {
+    "detectors": [
+      "FSC-H",
+      "SSC-H",
+      "B2-H"
+    ],
+    "size_bytes": 8707036
+  },
+  "cross_device/cytek_aurora_metves_12l1.fcs": {
+    "detectors": [
+      "FSC-H",
+      "SSC-H",
+      "B2-H"
+    ],
+    "size_bytes": 10853292
+  },
+  "cross_device/cytek_aurora_metves_18r1.fcs": {
+    "detectors": [
+      "FSC-H",
+      "SSC-H",
+      "B2-A"
+    ],
+    "size_bytes": 803275
+  },
+  "cross_device/cytek_aurora_metves_23w2.fcs": {
+    "detectors": [
+      "FSC-H",
+      "SSC-H",
+      "B2-H"
+    ],
+    "size_bytes": 7897529
+  },
+  "cross_device/cytek_northern_lights_metves_22v2.fcs": {
+    "detectors": [
+      "FSC-H",
+      "SSC-H",
+      "B2-H"
+    ],
+    "size_bytes": 11472125
+  },
+  "cross_device/miltenyi_macsquant_cal003_2022-05-13.fcs": {
+    "detectors": [
+      "FSC-H",
+      "SSC-H",
+      "FL6-H"
+    ],
+    "size_bytes": 6144856
+  },
+  "summer_school/apogee_mixed_reference_beads.fcs": {
     "detectors": [
       "405SALS(Peak)",
       "405LALS(Peak)",
@@ -26,7 +274,7 @@
     ],
     "size_bytes": 41953678
   },
-  "apogee_mystery_beads.fcs": {
+  "summer_school/apogee_mystery_beads.fcs": {
     "detectors": [
       "405SALS(Peak)",
       "405LALS(Peak)",
@@ -53,7 +301,7 @@
     ],
     "size_bytes": 12484559
   },
-  "apogee_rainbow_beads.fcs": {
+  "summer_school/apogee_rainbow_beads.fcs": {
     "detectors": [
       "405SALS(Peak)",
       "405LALS(Peak)",
@@ -80,7 +328,7 @@
     ],
     "size_bytes": 2243443
   },
-  "apogee_rosetta_beads_1min.fcs": {
+  "summer_school/apogee_rosetta_beads_1_min.fcs": {
     "detectors": [
       "405SALS(Peak)",
       "405LALS(Peak)",
@@ -107,71 +355,7 @@
     ],
     "size_bytes": 14830146
   },
-  "apogee_rosetta_beads_1min_sliced.fcs": {
-    "detectors": [
-      "405SALS(Peak)",
-      "405LALS(Peak)",
-      "405Grn(Peak)"
-    ],
-    "size_bytes": 2022639
-  },
-  "bd_facscalibur_rosetta_beads.fcs": {
-    "detectors": [
-      "FSC-H",
-      "SSC-H",
-      "FL1-H"
-    ],
-    "size_bytes": 520689
-  },
-  "bd_facscanto_i_rosetta_beads.fcs": {
-    "detectors": [
-      "FSC-H",
-      "SSC-H",
-      "FITC-H"
-    ],
-    "size_bytes": 768264
-  },
-  "bd_facslyric_rosetta_3um_beads.fcs": {
-    "detectors": [
-      "FSC-H",
-      "SSC-H",
-      "FITC-A"
-    ],
-    "size_bytes": 234043
-  },
-  "bd_facsymphony_a1_rosetta_beads.fcs": {
-    "detectors": [
-      "FSC-H",
-      "SSC-H",
-      "BB515-H"
-    ],
-    "size_bytes": 11168939
-  },
-  "bd_lsrii_rosetta_beads.fcs": {
-    "detectors": [
-      "FSC-H",
-      "SSC-H",
-      "B535/30-H"
-    ],
-    "size_bytes": 1538590
-  },
-  "beckman_cytoflex_s_rosetta_beads.fcs": {
-    "detectors": [
-      "FSC-H",
-      "SSC_1-H",
-      "FL1-H"
-    ],
-    "size_bytes": 12007374
-  },
-  "miltenyi_macsquant_analyzer_16_rosetta_beads.fcs": {
-    "detectors": [
-      "FSC-H",
-      "SSC-H",
-      "FL6-H"
-    ],
-    "size_bytes": 6145367
-  },
-  "northern_lights_mixed_reference_beads.fcs": {
+  "summer_school/northern_lights_mixed_reference_beads.fcs": {
     "detectors": [
       "FSC-A",
       "FSC-H",
@@ -185,7 +369,7 @@
     ],
     "size_bytes": 24147123
   },
-  "northern_lights_mystery_beads.fcs": {
+  "summer_school/northern_lights_mystery_beads.fcs": {
     "detectors": [
       "FSC-A",
       "FSC-H",
@@ -199,7 +383,7 @@
     ],
     "size_bytes": 20602998
   },
-  "northern_lights_rainbow_beads.fcs": {
+  "summer_school/northern_lights_rainbow_beads.fcs": {
     "detectors": [
       "FSC-A",
       "FSC-H",
@@ -217,7 +401,7 @@
     ],
     "size_bytes": 1976914
   },
-  "northern_lights_rosetta_beads_2min.fcs": {
+  "summer_school/northern_lights_rosetta_beads_2_min.fcs": {
     "detectors": [
       "FSC-A",
       "FSC-H",
@@ -230,21 +414,5 @@
       "Time"
     ],
     "size_bytes": 25771490
-  },
-  "northern_lights_rosetta_beads_2min_sliced.fcs": {
-    "detectors": [
-      "FSC-H",
-      "SSC-H",
-      "B2-H"
-    ],
-    "size_bytes": 8591178
-  },
-  "stratedigm_s1313ex_rosetta_beads.fcs": {
-    "detectors": [
-      "FSC LinH",
-      "SSC LinH",
-      "FITC (530/30) LinH"
-    ],
-    "size_bytes": 299157
   }
 }

@@ -622,10 +622,9 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
                 "scatter_guide_annotations": [{"x": 150, "label": "147 nm", "kind": "non_fluorescent"}],
             },
         )
-        assert [trace.name for trace in figure.data] == [
-            "Events", "Fluorescence baseline gate", "Non-fluorescent peak",
-        ]
-        assert list(figure.data[1].x) == [10.0, 1000.0]
+        assert [trace.name for trace in figure.data] == ["Events", "Non-fluorescent peak"]
+        baseline = next(shape for shape in figure.layout.shapes if shape.name == "Fluorescence baseline gate")
+        assert (baseline.xref, baseline.x0, baseline.x1) == ("x domain", 0, 1)
 
     @pytest.mark.parametrize("payload", [None, {}])
     def test_rosetta_preview_before_detection_keeps_event_trace(self, payload):
@@ -686,14 +685,11 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
         assert "Fluorescence baseline gate" not in annotations
         legend_shapes = {shape.name: shape for shape in figure.layout.shapes if shape.showlegend}
         assert legend_shapes["Saturation guard cutoff"].x0 == 2000000.0
-        baseline = next(trace for trace in figure.data if trace.name == "Fluorescence baseline gate")
-        assert list(baseline.y) == [1000.0, 1000.0]
+        baseline = legend_shapes["Fluorescence baseline gate"]
+        assert (baseline.yref, baseline.y0, baseline.y1) == ("y", 1000.0, 1000.0)
         assert baseline.line.color == "#f43f5e"
-        assert baseline.type == "scattergl"
-        assert figure.data.index(baseline) < figure.data.index(trace)
         assert legend_shapes["Saturation guard cutoff"].layer == "below"
         assert all(shape.type != "rect" for shape in figure.layout.shapes)
-        assert not any(shape.y0 == shape.y1 == 1000.0 for shape in figure.layout.shapes)
 
     @pytest.mark.parametrize("process_name", [
         "Rosetta Script V1", "Rosetta Script Conservative",
@@ -713,6 +709,9 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
             "labels": ["Dim marker", "Non-fluorescent peak 1"],
             "scatter_guide_positions": [100.0, 200.0],
             "baseline_cutoff": 1000.0,
+            "rosetta_size_assignments": [
+                {"position": 200.0, "diameter_nm": 147.0, "method": "Estimated by rank from one marker"},
+            ],
             "scatter_guide_annotations": [
                 {"x": 100.0, "label": "140 nm", "kind": "marker"},
                 {"x": 200.0, "label": "147 nm", "kind": "non_fluorescent"},
@@ -731,6 +730,7 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
         )
         traces = {trace.name: trace for trace in figure.data}
         assert traces["Fluorescent marker"].marker.symbol == "diamond"
+        assert "147 nm · Estimated by rank from one marker" in traces["Non-fluorescent peak"].customdata[0][3]
         assert traces["Non-fluorescent peak"].marker.symbol == "circle"
         assert traces["Fluorescent marker"].marker.size == 18
         assert traces["Fluorescent marker"].marker.line.color == "#7c3aed"
@@ -746,7 +746,7 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
         assert annotations["147 nm"].yref == "y"
         assert annotations["147 nm"].y == pytest.approx(3.0)
         assert "Fluorescence baseline gate" not in annotations
-        assert traces["Fluorescence baseline gate"].showlegend
+        assert any(shape.name == "Fluorescence baseline gate" and shape.showlegend for shape in figure.layout.shapes)
 
     def test_rosetta_plot_keeps_edge_markers_inside_axis_limits(self):
         """Pad log axis limits around detected markers at the plot edge."""

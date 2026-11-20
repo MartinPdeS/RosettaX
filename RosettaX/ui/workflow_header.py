@@ -59,6 +59,8 @@ class WorkflowHeader:
         Header card accent color.
     column_kwargs : dict[str, Any], optional
         Responsive column settings used to lay out the step cards.
+    compact_steps : bool, optional
+        Keep step cards in one row and scroll horizontally when space is limited.
     """
 
     title: str
@@ -66,6 +68,7 @@ class WorkflowHeader:
     steps: list[WorkflowStep] = field(default_factory=list)
     card_color: str | None = None
     column_kwargs: dict[str, Any] | None = None
+    compact_steps: bool = False
     _source_steps: list[WorkflowStep] = field(default_factory=list, init=False, repr=False)
 
     def __post_init__(self) -> None:
@@ -135,7 +138,7 @@ class WorkflowHeader:
             style_overrides=style_overrides,
             progress_id=progress_id,
             step_target_page_name=step_target_page_name,
-            compact_steps=False,
+            compact_steps=self.compact_steps,
             description_tooltip_target_id=description_tooltip_target_id,
             description_tooltip_id=description_tooltip_id,
         )
@@ -153,7 +156,7 @@ class WorkflowHeader:
             completed_count=completed_count,
             page_name=page_name,
             column_kwargs=(column_kwargs or self.column_kwargs),
-            compact=False,
+            compact=self.compact_steps,
         )
 
 
@@ -365,7 +368,7 @@ def build_workflow_step_cards(
                         ),
                         page_name=page_name,
                     ),
-                    style={"flex": "0 0 212px", "minWidth": "0"},
+                    style={"flex": "1 0 148px", "minWidth": "0"},
                 )
                 for index, step in enumerate(step_list)
             ],

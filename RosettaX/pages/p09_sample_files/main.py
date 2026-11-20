@@ -1,4 +1,5 @@
 import json
+from pathlib import PurePosixPath
 import dash
 import dash_bootstrap_components as dbc
 from dash import html
@@ -78,14 +79,15 @@ class SampleFilesPage:
         )
 
     def _build_validation_downloads(self) -> html.Div:
-        """List the reduced cross-device calibration downloads."""
+        """List the cross-device Rosetta bead downloads."""
         return html.Div(
             [
                 dbc.Alert(
                     [
                         html.P(
-                            "Acquisition conditions and samples differ between files, "
-                            "so these examples are not directly matched measurements.",
+                            "These Rosetta bead acquisitions come from the CAL003 and METVES collections. "
+                            "Each download retains three channels for scatter and green fluorescence analysis. "
+                            "Acquisition settings can vary by instrument and run.",
                             className="mb-0",
                         ),
                     ],
@@ -105,16 +107,37 @@ class SampleFilesPage:
                             xl=4,
                         )
                         for instrument, color_name, filename in (
-                            ("Apogee flow cytometer", "green", "apogee_rosetta_beads_1min_sliced.fcs"),
-                            ("Northern Lights flow cytometer", "cyan", "northern_lights_rosetta_beads_2min_sliced.fcs"),
-                            ("BD FACSLyric flow cytometer", "blue", "bd_facslyric_rosetta_3um_beads.fcs"),
-                            ("BD FACSCanto I", "blue", "bd_facscanto_i_rosetta_beads.fcs"),
-                            ("BD LSR II", "blue", "bd_lsrii_rosetta_beads.fcs"),
-                            ("BD FACSCalibur", "blue", "bd_facscalibur_rosetta_beads.fcs"),
-                            ("BD FACSymphony A1", "blue", "bd_facsymphony_a1_rosetta_beads.fcs"),
-                            ("Beckman Coulter CytoFLEX S", "purple", "beckman_cytoflex_s_rosetta_beads.fcs"),
-                            ("Miltenyi MACSQuant Analyzer 16", "pink", "miltenyi_macsquant_analyzer_16_rosetta_beads.fcs"),
-                            ("Stratedigm S1313EX", "red", "stratedigm_s1313ex_rosetta_beads.fcs"),
+                            ("Apogee A60-Micro (2022-01-31)", "green", "cross_device/apogee_a60_micro_cal003_2022-01-31.fcs"),
+                            ("BD FACSymphony A1 (2022-02-11)", "blue", "cross_device/bd_facsymphony_a1_cal003_2022-02-11.fcs"),
+                            ("BD FACSymphony A1 (2022-02-18)", "blue", "cross_device/bd_facsymphony_a1_cal003_2022-02-18.fcs"),
+                            ("Miltenyi MACSQuant (2022-05-13)", "pink", "cross_device/miltenyi_macsquant_cal003_2022-05-13.fcs"),
+                            ("BD FACSymphony A1 (2022-11-16)", "blue", "cross_device/bd_facsymphony_a1_cal003_2022-11-16.fcs"),
+                            ("Beckman Coulter CytoFLEX S (2023-01-05)", "purple", "cross_device/beckman_coulter_cytoflex_s_cal003_2023-01-05.fcs"),
+                            ("BD FACSCalibur (2023-02-08)", "blue", "cross_device/bd_facscalibur_cal003_2023-02-08.fcs"),
+                            ("Beckman Coulter CytoFLEX S (METVES 23W1)", "purple", "cross_device/beckman_coulter_cytoflex_s_metves_23w1.fcs"),
+                            ("Beckman Coulter CytoFLEX S (METVES 16P1)", "purple", "cross_device/beckman_coulter_cytoflex_s_metves_16p1.fcs"),
+                            ("Beckman Coulter CytoFLEX LX (METVES 14N1)", "purple", "cross_device/beckman_coulter_cytoflex_lx_metves_14n1.fcs"),
+                            ("Beckman Coulter CytoFLEX LX (METVES 05E1)", "purple", "cross_device/beckman_coulter_cytoflex_lx_metves_05e1.fcs"),
+                            ("Cytek Aurora (METVES 23W2)", "cyan", "cross_device/cytek_aurora_metves_23w2.fcs"),
+                            ("BD FACSLyric (METVES 20T1)", "blue", "cross_device/bd_facslyric_metves_20t1.fcs"),
+                            ("Apogee Micro-PLUS (METVES 06F2)", "green", "cross_device/apogee_microplus_metves_06f2.fcs"),
+                            ("Beckman Coulter CytoFLEX S (METVES 05E2)", "purple", "cross_device/beckman_coulter_cytoflex_s_metves_05e2.fcs"),
+                            ("Apogee A50-Micro (METVES 19S1)", "green", "cross_device/apogee_a50_micro_metves_19s1.fcs"),
+                            ("Cytek Aurora (METVES 11K2)", "cyan", "cross_device/cytek_aurora_metves_11k2.fcs"),
+                            ("Apogee A60 Micro-PLUS (METVES 04D1)", "green", "cross_device/apogee_microplus_metves_04d1.fcs"),
+                            ("BD FACSymphony A1 (METVES 25Y2)", "blue", "cross_device/bd_facsymphony_a1_metves_25y2.fcs"),
+                            ("Apogee Micro-PLUS (METVES 07G1)", "green", "cross_device/apogee_microplus_metves_07g1.fcs"),
+                            ("BD FACSCelesta SORP (METVES 09I1)", "blue", "cross_device/bd_facscelesta_sorp_metves_09i1.fcs"),
+                            ("Beckman Coulter CytoFLEX S (METVES 06F1)", "purple", "cross_device/beckman_coulter_cytoflex_s_metves_06f1.fcs"),
+                            ("Beckman Coulter MoFlo Astrios (METVES 21U1)", "purple", "cross_device/beckman_coulter_moflo_astrios_metves_21u1.fcs"),
+                            ("Apogee Micro-PLUS (METVES 07G2)", "green", "cross_device/apogee_microplus_metves_07g2.fcs"),
+                            ("Cytek Aurora (METVES 12L1)", "cyan", "cross_device/cytek_aurora_metves_12l1.fcs"),
+                            ("Cytek Northern Lights (METVES 22V2)", "cyan", "cross_device/cytek_northern_lights_metves_22v2.fcs"),
+                            ("BD FACSymphony A1 (METVES 25Y1)", "blue", "cross_device/bd_facsymphony_a1_metves_25y1.fcs"),
+                            ("Apogee A60-Micro (METVES 22V1)", "green", "cross_device/apogee_a60_micro_metves_22v1.fcs"),
+                            ("Cytek Aurora (METVES 18R1)", "cyan", "cross_device/cytek_aurora_metves_18r1.fcs"),
+                            ("Beckman Coulter CytoFLEX LX (METVES 16P2)", "purple", "cross_device/beckman_coulter_cytoflex_lx_metves_16p2.fcs"),
+                            ("BD FACSymphony A5 (FCS identifies LSRFortessa) (METVES 08H1)", "blue", "cross_device/bd_facsymphony_a5_metves_08h1.fcs"),
                         )
                     ],
                     className="g-2",
@@ -145,19 +168,19 @@ class SampleFilesPage:
                                 items=[
                                     {
                                         "title": "Rainbow beads",
-                                        "download": "apogee_rainbow_beads.fcs",
+                                        "download": "summer_school/apogee_rainbow_beads.fcs",
                                     },
                                     {
                                         "title": "Mixed reference beads",
-                                        "download": "apogee_mixed_reference_beads.fcs",
+                                        "download": "summer_school/apogee_mixed_reference_beads.fcs",
                                     },
                                     {
                                         "title": "Mystery beads",
-                                        "download": "apogee_mystery_beads.fcs",
+                                        "download": "summer_school/apogee_mystery_beads.fcs",
                                     },
                                     {
                                         "title": "Rosetta beads",
-                                        "download": "apogee_rosetta_beads_1min.fcs",
+                                        "download": "summer_school/apogee_rosetta_beads_1_min.fcs",
                                     },
                                 ],
                             ),
@@ -174,19 +197,19 @@ class SampleFilesPage:
                                 items=[
                                     {
                                         "title": "Rainbow beads",
-                                        "download": "northern_lights_rainbow_beads.fcs",
+                                        "download": "summer_school/northern_lights_rainbow_beads.fcs",
                                     },
                                     {
                                         "title": "Mixed reference beads",
-                                        "download": "northern_lights_mixed_reference_beads.fcs",
+                                        "download": "summer_school/northern_lights_mixed_reference_beads.fcs",
                                     },
                                     {
                                         "title": "Mystery beads",
-                                        "download": "northern_lights_mystery_beads.fcs",
+                                        "download": "summer_school/northern_lights_mystery_beads.fcs",
                                     },
                                     {
                                         "title": "Rosetta beads",
-                                        "download": "northern_lights_rosetta_beads_2min.fcs",
+                                        "download": "summer_school/northern_lights_rosetta_beads_2_min.fcs",
                                     },
                                 ],
                             ),
@@ -319,7 +342,7 @@ class SampleFilesPage:
                         size="sm",
                     ),
                     href=href,
-                    download=download,
+                    download=PurePosixPath(download).name,
                     style={
                         "textDecoration": "none",
                     },

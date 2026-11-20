@@ -17,7 +17,7 @@ checks and the saved process identifiers.
 ## Inputs
 
 - `apogee.json` references the existing repository sample
-  `RosettaX/assets/sample-files/apogee_rosetta_beads_1min.fcs`. Its SHA-256 matches
+  `RosettaX/assets/sample-files/summer_school/apogee_rosetta_beads_1_min.fcs`. Its SHA-256 matches
   the Downloads copy exactly, so no duplicate binary is needed. It has 168,447
   events and uses `405LALS(Peak)` and `488Grn(Peak)`.
 - `cal003.json` references `20260917_Rosetta_CAL003_AnHGp_02_0.fcs` in this

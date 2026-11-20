@@ -239,10 +239,21 @@ def register_detector_configuration_callbacks(section: Model) -> None:
         )
 
         if not detected_preset:
+            channel_wavelength_nm = section.model_configuration.detect_wavelength_nm_from_detector_channel(
+                selected_detector_channel,
+            )
+            if channel_wavelength_nm is not None:
+                return (
+                    dash.no_update,
+                    channel_wavelength_nm,
+                    f"Detected {channel_wavelength_nm:g} nm from {selected_detector_channel}. "
+                    "No matching optical preset. Configure the detector geometry manually.",
+                )
             return (
                 dash.no_update,
                 dash.no_update,
-                f"Could not detect a detector preset or wavelength for {selected_detector_channel}.",
+                f"No matching optical preset for {selected_detector_channel}. "
+                "Configure the detector geometry and laser wavelength manually.",
             )
 
         detected_wavelength_nm = (

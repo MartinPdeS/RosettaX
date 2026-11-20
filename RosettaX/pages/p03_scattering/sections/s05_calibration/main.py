@@ -6,6 +6,12 @@ from . import services
 from RosettaX.pages.p03_scattering.state import ScatteringPageState
 from RosettaX.ui import WorkflowStep
 from RosettaX.utils import RuntimeConfig, plottings, styling, ui_forms
+from RosettaX.workflow.parameters.table import resolve_mie_model
+from RosettaX.workflow.scattering.rosetta_assignment import (
+    VALIDATION_MODEL_FIELDS,
+    rosetta_confirmed_rows,
+    rosetta_validation_materials,
+)
 from RosettaX.workflow.plotting import PlotOptions
 from typing import Any
 
@@ -737,6 +743,19 @@ class Calibration:
                 None if bead_table_data is None else len(bead_table_data),
             )
 
+            confirmed_rows = rosetta_confirmed_rows(
+                current_rows=bead_table_data, evidence=page_state.rosetta_assignment_evidence,
+            )
+            model_inputs = locals()
+            model_settings = {field: model_inputs[field] for field in VALIDATION_MODEL_FIELDS}
+            model_settings["mie_model"] = resolve_mie_model(mie_model)
+            evidence = page_state.rosetta_assignment_evidence or {}
+            if (
+                evidence.get("validation_model_settings") != model_settings
+                or evidence.get("validation_materials") != rosetta_validation_materials(rows=bead_table_data)
+            ):
+                confirmed_rows = None
+
             result = services.run_scattering_calibration(
                 uploaded_fcs_path=page_state.uploaded_fcs_path,
                 detector_column=detector_column,
@@ -770,6 +789,14 @@ class Calibration:
                 r_squared_text,
                 apply_status,
             ) = result.to_tuple()
+
+            if calibration_payload is not None and confirmed_rows is not None:
+                metadata = calibration_payload.setdefault("metadata", {})
+                metadata["rosetta_size_assignment"] = {
+                    "method": "Configured detector coupling with bootstrap and holdout checks",
+                    "supported_peak_count": confirmed_rows,
+                    "unresolved_peak_count": len(page_state.rosetta_assignment_evidence["rows"]) - confirmed_rows,
+                }
 
             page_state = page_state.update(
                 calibration_graph_payload=instrument_response_graph_payload,

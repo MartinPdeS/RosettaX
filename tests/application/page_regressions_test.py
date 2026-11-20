@@ -552,7 +552,7 @@ class Test_DocumentationDeepDivePages:
     def test_sample_files_page_lists_cross_device_rosetta_acquisitions(
         self, monkeypatch
     ) -> None:
-        """Cross-device downloads list the three retained channels and file sizes."""
+        """Cross-device Rosetta downloads list the recorded channels and file sizes."""
         monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
         monkeypatch.setattr(dash, "get_asset_url", lambda path: f"/assets/{path}")
         sample_files_main = importlib.import_module("RosettaX.pages.p09_sample_files.main")
@@ -564,16 +564,71 @@ class Test_DocumentationDeepDivePages:
         text_nodes = _collect_text(validation_layout)
         hrefs = _collect_component_hrefs(validation_layout)
         for instrument in (
-            "BD FACSCanto I", "BD LSR II", "BD FACSCalibur", "BD FACSymphony A1",
-            "Beckman Coulter CytoFLEX S", "Miltenyi MACSQuant Analyzer 16", "Stratedigm S1313EX",
+            "Apogee A60-Micro (2022-01-31)",
+            "BD FACSymphony A1 (2022-02-11)",
+            "BD FACSymphony A1 (2022-02-18)",
+            "Miltenyi MACSQuant (2022-05-13)",
+            "BD FACSymphony A1 (2022-11-16)",
+            "Beckman Coulter CytoFLEX S (2023-01-05)",
+            "BD FACSCalibur (2023-02-08)",
+            "Beckman Coulter CytoFLEX S (METVES 23W1)",
+            "Beckman Coulter CytoFLEX S (METVES 16P1)",
+            "Beckman Coulter CytoFLEX LX (METVES 14N1)",
+            "Beckman Coulter CytoFLEX LX (METVES 05E1)",
+            "Cytek Aurora (METVES 23W2)",
+            "BD FACSLyric (METVES 20T1)",
+            "Apogee Micro-PLUS (METVES 06F2)",
+            "Beckman Coulter CytoFLEX S (METVES 05E2)",
+            "Apogee A50-Micro (METVES 19S1)",
+            "Cytek Aurora (METVES 11K2)",
+            "Apogee A60 Micro-PLUS (METVES 04D1)",
+            "BD FACSymphony A1 (METVES 25Y2)",
+            "Apogee Micro-PLUS (METVES 07G1)",
+            "BD FACSCelesta SORP (METVES 09I1)",
+            "Beckman Coulter CytoFLEX S (METVES 06F1)",
+            "Beckman Coulter MoFlo Astrios (METVES 21U1)",
+            "Apogee Micro-PLUS (METVES 07G2)",
+            "Cytek Aurora (METVES 12L1)",
+            "Cytek Northern Lights (METVES 22V2)",
+            "BD FACSymphony A1 (METVES 25Y1)",
+            "Apogee A60-Micro (METVES 22V1)",
+            "Cytek Aurora (METVES 18R1)",
+            "Beckman Coulter CytoFLEX LX (METVES 16P2)",
+            "BD FACSymphony A5 (FCS identifies LSRFortessa) (METVES 08H1)",
         ):
             assert instrument in text_nodes
         filenames = (
-            "apogee_rosetta_beads_1min_sliced.fcs", "northern_lights_rosetta_beads_2min_sliced.fcs",
-            "bd_facslyric_rosetta_3um_beads.fcs", "bd_facscanto_i_rosetta_beads.fcs",
-            "bd_lsrii_rosetta_beads.fcs", "bd_facscalibur_rosetta_beads.fcs",
-            "bd_facsymphony_a1_rosetta_beads.fcs", "beckman_cytoflex_s_rosetta_beads.fcs",
-            "miltenyi_macsquant_analyzer_16_rosetta_beads.fcs", "stratedigm_s1313ex_rosetta_beads.fcs",
+            "cross_device/apogee_a60_micro_cal003_2022-01-31.fcs",
+            "cross_device/bd_facsymphony_a1_cal003_2022-02-11.fcs",
+            "cross_device/bd_facsymphony_a1_cal003_2022-02-18.fcs",
+            "cross_device/miltenyi_macsquant_cal003_2022-05-13.fcs",
+            "cross_device/bd_facsymphony_a1_cal003_2022-11-16.fcs",
+            "cross_device/beckman_coulter_cytoflex_s_cal003_2023-01-05.fcs",
+            "cross_device/bd_facscalibur_cal003_2023-02-08.fcs",
+            "cross_device/beckman_coulter_cytoflex_s_metves_23w1.fcs",
+            "cross_device/beckman_coulter_cytoflex_s_metves_16p1.fcs",
+            "cross_device/beckman_coulter_cytoflex_lx_metves_14n1.fcs",
+            "cross_device/beckman_coulter_cytoflex_lx_metves_05e1.fcs",
+            "cross_device/cytek_aurora_metves_23w2.fcs",
+            "cross_device/bd_facslyric_metves_20t1.fcs",
+            "cross_device/apogee_microplus_metves_06f2.fcs",
+            "cross_device/beckman_coulter_cytoflex_s_metves_05e2.fcs",
+            "cross_device/apogee_a50_micro_metves_19s1.fcs",
+            "cross_device/cytek_aurora_metves_11k2.fcs",
+            "cross_device/apogee_microplus_metves_04d1.fcs",
+            "cross_device/bd_facsymphony_a1_metves_25y2.fcs",
+            "cross_device/apogee_microplus_metves_07g1.fcs",
+            "cross_device/bd_facscelesta_sorp_metves_09i1.fcs",
+            "cross_device/beckman_coulter_cytoflex_s_metves_06f1.fcs",
+            "cross_device/beckman_coulter_moflo_astrios_metves_21u1.fcs",
+            "cross_device/apogee_microplus_metves_07g2.fcs",
+            "cross_device/cytek_aurora_metves_12l1.fcs",
+            "cross_device/cytek_northern_lights_metves_22v2.fcs",
+            "cross_device/bd_facsymphony_a1_metves_25y1.fcs",
+            "cross_device/apogee_a60_micro_metves_22v1.fcs",
+            "cross_device/cytek_aurora_metves_18r1.fcs",
+            "cross_device/beckman_coulter_cytoflex_lx_metves_16p2.fcs",
+            "cross_device/bd_facsymphony_a5_metves_08h1.fcs",
         )
         assert hrefs == {f"/assets/sample-files/{filename}" for filename in filenames}
         for filename in filenames:
@@ -581,9 +636,7 @@ class Test_DocumentationDeepDivePages:
             metadata = sample_files_main.SAMPLE_FILE_METADATA[filename]
             with FCSFile(sample_path, writable=False) as sample:
                 channels = sample.get_column_names()
-            assert len(channels) == len(metadata["detectors"]) == 3
-            for channel, label in zip(channels, metadata["detectors"], strict=True):
-                assert label == channel or label.startswith(f"{channel} (")
+            assert channels == metadata["detectors"]
             assert metadata["size_bytes"] == sample_path.stat().st_size
             assert format_upload_size(metadata["size_bytes"]) in text_nodes
             assert ", ".join(metadata["detectors"]) in text_nodes
@@ -597,12 +650,12 @@ class Test_DocumentationDeepDivePages:
         summer_school_text = _collect_text(summer_school_layout)
         summer_school_hrefs = _collect_component_hrefs(summer_school_layout)
         for href in summer_school_hrefs:
-            filename = href.rsplit("/", 1)[-1]
+            filename = href.split("/sample-files/", 1)[1]
             metadata = sample_files_main.SAMPLE_FILE_METADATA[filename]
             assert format_upload_size(metadata["size_bytes"]) in summer_school_text
             assert ", ".join(metadata["detectors"]) not in summer_school_text
-        assert "/assets/sample-files/apogee_rosetta_beads_1min.fcs" in summer_school_hrefs
-        assert "/assets/sample-files/northern_lights_rosetta_beads_2min.fcs" in summer_school_hrefs
+        assert "/assets/sample-files/summer_school/apogee_rosetta_beads_1_min.fcs" in summer_school_hrefs
+        assert "/assets/sample-files/summer_school/northern_lights_rosetta_beads_2_min.fcs" in summer_school_hrefs
 
     def test_supported_cytometers_page_layout_contains_catalog_and_contact(
         self, monkeypatch
@@ -775,10 +828,10 @@ class Test_ApplicationLayout:
 class Test_HelpPage:
     """Regression checks for help page."""
 
-    def test_layout_includes_horizontal_project_resources_card(
+    def test_layout_includes_workflow_help_and_project_resources(
         self, monkeypatch
     ) -> None:
-        """Check layout includes horizontal project resources card."""
+        """Check Help links to workflows, troubleshooting, and issue reporting."""
         monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
 
         help_main = importlib.import_module("RosettaX.pages.p06_help.main")
@@ -790,10 +843,11 @@ class Test_HelpPage:
 
         assert "Project resources" in text_nodes
         assert "Technical docs" in text_nodes
-        assert "Support Developer" in text_nodes
-        assert "Open sample files page" in text_nodes
-        assert "/documentation" in hrefs
-        assert "/sample-files" in hrefs
+        assert "Troubleshooting" in text_nodes
+        assert "Support Developer" not in text_nodes
+        assert {"/documentation", "/sample-files", "/tutorials", "/fluorescence", "/scattering", "/calibrate"} <= hrefs
+        assert "https://github.com/sponsors/MartinPdeS" not in hrefs
+        assert "https://github.com/MartinPdeS/RosettaX/issues" in hrefs
         assert "https://github.com/MartinPdeS/RosettaX" in hrefs
 
 

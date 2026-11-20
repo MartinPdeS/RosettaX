@@ -28,7 +28,7 @@ profiles = asset_directory / "profiles"
 
 default_profile = profiles / "default_profile.json"
 
-detectors = asset_directory / "detector_definitions"
+detectors = asset_directory / "instrument_catalog.toml"
 
 calibrations = Path(
     os.getenv("ROSETTAX_CALIBRATION_DIRECTORY") or project / "calibrations"

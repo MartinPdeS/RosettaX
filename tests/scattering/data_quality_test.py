@@ -15,7 +15,7 @@ from RosettaX.pages.p03_scattering.sections.s02_quality.services import (
 
 def test_inspect_real_fcs_sample() -> None:
     """Read real event values and detector metadata with a bounded sample."""
-    path = Path(__file__).resolve().parents[2] / "RosettaX/assets/sample-files/apogee_rosetta_beads_1min.fcs"
+    path = Path(__file__).resolve().parents[2] / "RosettaX/assets/sample-files/summer_school/apogee_rosetta_beads_1_min.fcs"
     report = inspect_channels(file_path=str(path), channels=["405LALS(Peak)"] * 2, max_events=1000)
     assert int(report["total_events"]) == 168447
     assert len(report["channels"]) == 1

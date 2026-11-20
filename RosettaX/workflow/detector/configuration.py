@@ -1,17 +1,14 @@
-import json
 import logging
 import re
+from .catalog import INSTRUMENT_CATALOG_PATH, load_instrument_rules, match_instrument_rule
 from .loader import get_default_detector_preset_loader
-from pathlib import Path
 from RosettaX.utils.fcs_metadata import FCSMetadata
 from RosettaX.utils.reader import FCSFile
 from typing import Any
 
 logger = logging.getLogger(__name__)
 _DETECTOR_PRESET_LOADER = get_default_detector_preset_loader()
-DETECTOR_AUTO_DETECT_RULES_PATH = Path(__file__).with_name(
-    "detector_auto_detect_rules.json"
-)
+DETECTOR_AUTO_DETECT_RULES_PATH = INSTRUMENT_CATALOG_PATH
 
 
 CUSTOM_DETECTOR_PRESET_NAME = "Generic detector"
@@ -566,8 +563,12 @@ def preset_matches_selected_detector_channel(
     selected_detector_channel: Any,
 ) -> bool:
     """
-    Return True when one preset family matches the selected peak detector channel.
+    Return True when the preset matches the explicit FCS channel or its family.
     """
+    if fcs_channels := preset.get("fcs_channels"):
+        selected_channel = clean_optional_string(selected_detector_channel).casefold()
+        return any(selected_channel == channel.casefold() for channel in fcs_channels)
+
     selected_channel_family = classify_detector_channel_family(
         selected_detector_channel,
     )
@@ -591,34 +592,10 @@ def resolve_detector_auto_detect_rule(
     """
     Resolve one detector auto-detect rule from FCS instrument metadata.
     """
-    instrument_name = extract_instrument_name_from_metadata(
-        metadata=metadata,
+    return match_instrument_rule(
+        instrument_name=extract_instrument_name_from_metadata(metadata=metadata),
+        rules=load_detector_auto_detect_rules(),
     )
-
-    if not instrument_name:
-        return None
-
-    normalized_instrument_name = normalize_lookup_token(
-        instrument_name,
-    )
-
-    for rule in load_detector_auto_detect_rules():
-        for instrument_alias in rule.get("instrument_aliases", []):
-            normalized_alias = normalize_lookup_token(
-                instrument_alias,
-            )
-
-            if not normalized_alias:
-                continue
-
-            if (
-                normalized_alias == normalized_instrument_name
-                or normalized_alias in normalized_instrument_name
-                or normalized_instrument_name in normalized_alias
-            ):
-                return rule
-
-    return None
 
 
 def resolve_rule_based_detector_preset(
@@ -660,60 +637,8 @@ def resolve_rule_based_detector_preset(
 
 
 def load_detector_auto_detect_rules() -> list[dict[str, Any]]:
-    """
-    Load detector auto-detect rules from the shared JSON file.
-    """
-    if not DETECTOR_AUTO_DETECT_RULES_PATH.exists():
-        return []
-
-    try:
-        raw_payload = json.loads(
-            DETECTOR_AUTO_DETECT_RULES_PATH.read_text(encoding="utf-8")
-        )
-    except Exception:
-        logger.exception(
-            "Failed to load detector auto-detect rules from %s",
-            DETECTOR_AUTO_DETECT_RULES_PATH,
-        )
-        return []
-
-    raw_rules = raw_payload.get("rules") if isinstance(raw_payload, dict) else None
-
-    if not isinstance(raw_rules, list):
-        return []
-
-    normalized_rules: list[dict[str, Any]] = []
-
-    for raw_rule in raw_rules:
-        if not isinstance(raw_rule, dict):
-            continue
-
-        instrument_aliases = raw_rule.get("instrument_aliases")
-
-        if not isinstance(instrument_aliases, list):
-            continue
-
-        detector_channels = raw_rule.get("detector_channels")
-
-        normalized_rules.append(
-            {
-                "name": clean_optional_string(raw_rule.get("name"))
-                or "Unnamed detector rule",
-                "instrument_aliases": [
-                    clean_optional_string(instrument_alias)
-                    for instrument_alias in instrument_aliases
-                    if clean_optional_string(instrument_alias)
-                ],
-                "detector_preset": clean_optional_string(
-                    raw_rule.get("detector_preset")
-                ),
-                "detector_channels": detector_channels
-                if isinstance(detector_channels, dict)
-                else {},
-            }
-        )
-
-    return normalized_rules
+    """Load FCS instrument rules from the shared catalog."""
+    return load_instrument_rules(path=DETECTOR_AUTO_DETECT_RULES_PATH)
 
 
 def extract_instrument_name_from_metadata(

@@ -57,13 +57,6 @@ class Model:
         )
         self.scatterer_preset_tooltip_id = f"{self.ids.scatterer_preset}-info-tooltip"
 
-        self.detector_preset_tooltip_target_id = (
-            f"{self.ids.detector_configuration_preset}-info-target"
-        )
-        self.detector_preset_tooltip_id = (
-            f"{self.ids.detector_configuration_preset}-info-tooltip"
-        )
-
         self.optical_preview_tooltip_target_id = (
             f"{self.ids.optical_configuration_preview}-info-target"
         )

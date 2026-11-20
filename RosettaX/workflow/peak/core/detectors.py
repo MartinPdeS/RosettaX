@@ -1,20 +1,19 @@
 
-import json
 import logging
-import re
 from .. import registry
-from pathlib import Path
 from RosettaX.utils.fcs_metadata import FCSMetadata
 from RosettaX.utils.reader import FCSFile
 from RosettaX.utils.runtime_config import RuntimeConfig
+from RosettaX.workflow.detector.catalog import (
+    INSTRUMENT_CATALOG_PATH,
+    load_instrument_catalog,
+    load_instrument_rules,
+    match_instrument_rule,
+)
 from typing import Any
 
 logger = logging.getLogger(__name__)
-DETECTOR_AUTO_DETECT_RULES_PATH = Path(__file__).parents[2] / "detector" / (
-    "detector_auto_detect_rules.json"
-)
-# Keep the shared channel catalog independent of test overrides for instrument rules.
-CHANNEL_CATALOG_PATH = Path(__file__).parents[2] / "detector" / "detector_auto_detect_rules.json"
+DETECTOR_AUTO_DETECT_RULES_PATH = INSTRUMENT_CATALOG_PATH
 
 
 def load_channel_catalog() -> dict[str, Any]:
@@ -26,9 +25,9 @@ def load_channel_catalog() -> dict[str, Any]:
         Catalog entries, or an empty dictionary if the resource is unavailable.
     """
     try:
-        payload = json.loads(CHANNEL_CATALOG_PATH.read_text(encoding="utf-8"))
+        payload = load_instrument_catalog()
     except (OSError, ValueError):
-        logger.exception("Could not load channel catalog from %s", CHANNEL_CATALOG_PATH)
+        logger.exception("Could not load channel catalog from %s", INSTRUMENT_CATALOG_PATH)
         return {}
     catalog = payload.get("channel_names", {}) if isinstance(payload, dict) else {}
     return catalog if isinstance(catalog, dict) else {}
@@ -174,36 +173,6 @@ def populate_peak_script_detector_dropdowns(
 
     resolved_options: list[list[dict[str, Any]]] = []
     resolved_values: list[Any] = []
-    rosetta_scattering_index = next(
-        (
-            index
-            for index, detector_dropdown_id in enumerate(detector_dropdown_ids or [])
-            if isinstance(detector_dropdown_id, dict)
-            and str(detector_dropdown_id.get("process", "")).startswith("Rosetta Script")
-            and (
-                auto_select_process_name is None
-                or detector_dropdown_id.get("process") == auto_select_process_name
-            )
-            and detector_dropdown_id.get("channel") == "scattering"
-        ),
-        None,
-    )
-    selected_scattering_channel = None
-    if rosetta_scattering_index is not None:
-        current_scattering_channel = (current_detector_values or [])[rosetta_scattering_index]
-        if auto_select_rosetta_v1 or current_scattering_channel in valid_values:
-            selected_scattering_channel = (
-                infer_rosetta_v1_channel(
-                    column_names=column_names,
-                    detector_role="scattering",
-                    matched_rule=matched_rule,
-                )
-                if auto_select_rosetta_v1
-                else current_scattering_channel
-            )
-    scattering_wavelength_nm = extract_channel_wavelength_nm(
-        channel_name=selected_scattering_channel,
-    )
 
     for detector_dropdown_id, current_value in zip(
         detector_dropdown_ids or [],
@@ -236,11 +205,6 @@ def populate_peak_script_detector_dropdowns(
                 infer_rosetta_v1_channel(
                     column_names=column_names,
                     detector_role=detector_role,
-                    preferred_wavelength_nm=(
-                        scattering_wavelength_nm
-                        if detector_role == "green_fluorescence"
-                        else None
-                    ),
                     matched_rule=matched_rule,
                 )
                 if auto_select_this_process
@@ -273,147 +237,35 @@ def populate_peak_script_detector_dropdowns(
 
 
 
-def resolve_rosetta_v1_suggestion(
-    *,
-    column_names: list[str],
-    detector_role: Any,
-    preferred_wavelength_nm: int | None = None,
-    matched_rule: dict[str, Any] | None = None,
-) -> tuple[str | None, str]:
-    """Suggest a channel and explain the match or ambiguity.
-
-    Parameters
-    ----------
-    column_names : list[str]
-        Available FCS channels.
-    detector_role : Any
-        Scattering or green fluorescence role.
-    preferred_wavelength_nm : int or None
-        Preferred excitation wavelength, in nanometers.
-    matched_rule : dict or None
-        Instrument-specific preferences from the detector catalog.
-
-    Returns
-    -------
-    tuple[str or None, str]
-        Suggested channel and explanation for the user.
-    """
-    catalog = load_channel_catalog()
-    role_aliases = catalog.get("role_aliases", {}).get(detector_role, [detector_role])
-    channel_rules = (matched_rule or {}).get("detector_channels", {})
-    aliases = next((channel_rules.get(role) for role in role_aliases if channel_rules.get(role)), [])
-    instrument_matches = [
-        name for name in column_names
-        if any(str(name).casefold() == str(alias).casefold() for alias in aliases)
-    ]
-    instrument_matches = _prefer_channel_measurement(
-        channel_names=instrument_matches,
-        suffix=catalog.get("preferred_pulse_measurement_suffix", "-H"),
-    )
-    if len(instrument_matches) == 1:
-        name = instrument_matches[0]
-        return name, f"Suggested {name} from instrument rule {matched_rule.get('name', '')}."
-
-    keywords = catalog.get("rosetta_keywords", {}).get(detector_role, ())
-    matches = [name for name in column_names if any(keyword in str(name).lower() for keyword in keywords)]
-    if detector_role == "green_fluorescence":
-        if not matches:
-            filter_matches = []
-            filter_rule = catalog.get("green_filter", {})
-            for name in column_names:
-                match = re.fullmatch(filter_rule.get("pattern", r"(?!)"), str(name), re.IGNORECASE)
-                if match and filter_rule.get("minimum_wavelength_nm", 0) <= int(match.group(1)) <= filter_rule.get("maximum_wavelength_nm", 0):
-                    filter_matches.append((name, str(name).rsplit("-", 1)[0].lower(), match.group(2).upper()))
-            if len({base for _, base, _ in filter_matches}) == 1:
-                preferred_matches = [name for name, _, measurement in filter_matches if measurement == filter_rule.get("preferred_measurement")]
-                if len(preferred_matches) == 1:
-                    return preferred_matches[0], f"Suggested {preferred_matches[0]} from its blue-laser green emission filter; height was preferred."
-                if len(filter_matches) == 1:
-                    name = filter_matches[0][0]
-                    return name, f"Suggested {name} from its blue-laser green emission filter."
-            matches = [name for name, _, _ in filter_matches]
-            if matches:
-                return None, f"Multiple green filter measurements match: {', '.join(matches)}. Select one manually."
-        wavelength_matches = [name for name in matches if extract_channel_wavelength_nm(channel_name=name) == preferred_wavelength_nm]
-        if preferred_wavelength_nm is not None and wavelength_matches:
-            matches = wavelength_matches
-        else:
-            preferred_wavelength = str(catalog.get("preferred_green_wavelength_nm", ""))
-            preferred = [name for name in matches if preferred_wavelength and preferred_wavelength in str(name).lower()]
-            if preferred:
-                matches = preferred
-
-    measurement_token = catalog.get("preferred_measurement_token", "")
-    peak_matches = [name for name in matches if measurement_token and measurement_token in str(name).lower()]
-    if peak_matches:
-        matches = peak_matches
-    matches = _prefer_channel_measurement(
-        channel_names=matches,
-        suffix=catalog.get("preferred_pulse_measurement_suffix", "-H"),
-    )
-    if len(matches) == 1:
-        return matches[0], f"Suggested {matches[0]} from its channel name and measurement."
-    if matches:
-        return None, f"Multiple channels match: {', '.join(matches)}. Select one manually."
-    return None, "No matching channel name was found. Select one manually."
-
-
-def _prefer_channel_measurement(*, channel_names: list[str], suffix: str) -> list[str]:
-    """Prefer one pulse measurement suffix when matching channels include it."""
-    if not suffix:
-        return channel_names
-    preferred = [name for name in channel_names if str(name).upper().endswith(str(suffix).upper())]
-    return preferred or channel_names
-
-
 def infer_rosetta_v1_channel(
     *,
     column_names: list[str],
     detector_role: Any,
-    preferred_wavelength_nm: int | None = None,
     matched_rule: dict[str, Any] | None = None,
 ) -> str | None:
-    """Return a Rosetta channel suggestion, leaving ambiguous matches unset.
+    """Resolve a catalog recommendation against the uploaded FCS columns.
 
     Parameters
     ----------
-    column_names : list[str]
-        Available FCS channels.
-    detector_role : Any
+    column_names : list of str
+        Available FCS columns.
+    detector_role : str
         Scattering or green fluorescence role.
-    preferred_wavelength_nm : int or None
-        Preferred excitation wavelength, in nanometers.
     matched_rule : dict or None
-        Optional instrument-specific preferences.
+        Instrument rule resolved from the FCS metadata.
 
     Returns
     -------
     str or None
-        Suggested channel when the catalog resolves a unique match.
+        First configured name with a unique case-insensitive match, or None
+        when the role needs manual selection.
     """
-    return resolve_rosetta_v1_suggestion(
-        column_names=column_names,
-        detector_role=detector_role,
-        preferred_wavelength_nm=preferred_wavelength_nm,
-        matched_rule=matched_rule,
-    )[0]
-
-
-def extract_channel_wavelength_nm(*, channel_name: Any) -> int | None:
-    """Extract a three-digit wavelength from an FCS channel name.
-
-    Parameters
-    ----------
-    channel_name : Any
-        Candidate FCS channel name.
-
-    Returns
-    -------
-    int or None
-        Wavelength in nanometers when encoded in the channel name.
-    """
-    match = re.search(r"(?<!\d)(\d{3})(?!\d)", str(channel_name or ""))
-    return int(match.group(1)) if match is not None else None
+    recommendations = (matched_rule or {}).get("rosetta_channels", {}).get(detector_role) or []
+    for recommendation in recommendations:
+        matches = [name for name in column_names if name.casefold() == recommendation.casefold()]
+        if len(matches) == 1:
+            return matches[0]
+    return None
 
 
 def infer_default_detector_channel(
@@ -567,44 +419,10 @@ def resolve_detector_auto_detect_rule(
     """
     Resolve one detector auto-detect rule from FCS instrument metadata.
     """
-    instrument_name = extract_instrument_name_from_metadata(
-        metadata=metadata,
+    return match_instrument_rule(
+        instrument_name=extract_instrument_name_from_metadata(metadata=metadata),
+        rules=load_detector_auto_detect_rules(),
     )
-
-    if not instrument_name:
-        return None
-
-    normalized_instrument_name = normalize_lookup_token(
-        instrument_name,
-    )
-
-    for rule in load_detector_auto_detect_rules():
-        for instrument_alias in rule.get("instrument_aliases", []):
-            normalized_alias = normalize_lookup_token(
-                instrument_alias,
-            )
-
-            if not normalized_alias:
-                continue
-
-            if (
-                normalized_alias == normalized_instrument_name
-                or normalized_alias in normalized_instrument_name
-                or normalized_instrument_name in normalized_alias
-            ):
-                logger.debug(
-                    "Matched detector auto-detect rule=%r for instrument_name=%r",
-                    rule.get("name"),
-                    instrument_name,
-                )
-                return rule
-
-    logger.debug(
-        "No detector auto-detect rule matched instrument_name=%r",
-        instrument_name,
-    )
-
-    return None
 
 
 def resolve_rule_based_detector_channel(
@@ -663,64 +481,8 @@ def resolve_rule_based_detector_channel(
 
 
 def load_detector_auto_detect_rules() -> list[dict[str, Any]]:
-    """
-    Load detector auto-detect rules from the shared JSON file.
-    """
-    if not DETECTOR_AUTO_DETECT_RULES_PATH.exists():
-        return []
-
-    try:
-        raw_payload = json.loads(
-            DETECTOR_AUTO_DETECT_RULES_PATH.read_text(encoding="utf-8")
-        )
-    except Exception:
-        logger.exception(
-            "Failed to load detector auto-detect rules from %s",
-            DETECTOR_AUTO_DETECT_RULES_PATH,
-        )
-        return []
-
-    if not isinstance(raw_payload, dict):
-        return []
-
-    raw_rules = raw_payload.get("rules")
-
-    if not isinstance(raw_rules, list):
-        return []
-
-    normalized_rules: list[dict[str, Any]] = []
-
-    for raw_rule in raw_rules:
-        if not isinstance(raw_rule, dict):
-            continue
-
-        instrument_aliases = raw_rule.get("instrument_aliases")
-        detector_channels = raw_rule.get("detector_channels")
-
-        if not isinstance(instrument_aliases, list) or not isinstance(detector_channels, dict):
-            continue
-
-        normalized_rules.append(
-            {
-                "name": clean_optional_string(raw_rule.get("name")) or "Unnamed detector rule",
-                "instrument_aliases": [
-                    clean_optional_string(instrument_alias)
-                    for instrument_alias in instrument_aliases
-                    if clean_optional_string(instrument_alias)
-                ],
-                "detector_channels": {
-                    clean_optional_string(role_name): [
-                        clean_optional_string(candidate_name)
-                        for candidate_name in candidate_names
-                        if clean_optional_string(candidate_name)
-                    ]
-                    for role_name, candidate_names in detector_channels.items()
-                    if clean_optional_string(role_name) and isinstance(candidate_names, list)
-                },
-            }
-        )
-
-    return normalized_rules
+    """Load FCS instrument rules from the shared catalog."""
+    return load_instrument_rules(path=DETECTOR_AUTO_DETECT_RULES_PATH)
 
 
 def extract_instrument_name_from_metadata(

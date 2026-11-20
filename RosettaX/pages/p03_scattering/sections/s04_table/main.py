@@ -1,9 +1,11 @@
 import dash
 import dash_bootstrap_components as dbc
 import logging
+from functools import partial
+from ..rosetta_validation import build_validation_results
 from ..s03_model.main import Model as ScatteringModelSection
 from ..s05_calibration import services as calibration_services
-from .services import ScatteringCalibrationStandardTable
+from .services import ScatteringCalibrationStandardTable, review_rosetta_assignments
 from RosettaX.pages.p00_sidebar.ids import SidebarIds
 from RosettaX.pages.p03_scattering.sections.s03_model import layout as model_layout
 from RosettaX.pages.p03_scattering.state import ScatteringPageState
@@ -11,6 +13,7 @@ from RosettaX.ui import WorkflowStep
 from RosettaX.utils import RuntimeConfig, styling, ui_forms
 from RosettaX.workflow import parameters
 from RosettaX.workflow.plotting import PlotOptions
+from RosettaX.workflow.scattering.rosetta_assignment import VALIDATION_MODEL_FIELDS, update_rosetta_assignment_overlays
 from RosettaX.workflow.table.layout import (
     ReferenceTableActionConfig,
     ReferenceTableConfig,
@@ -56,7 +59,7 @@ class ReferenceTable:
             "response. Set the particle model and medium refractive index above, then "
             "add standards with the form below the table. You can edit their measured "
             "peak positions in the table. Click Compute model to fill the modeled "
-            "coupling column, then fit the instrument response in the next section."
+            "coupling column. Validate Rosetta bead assignments before fitting the instrument response."
         ),
     )
 
@@ -473,7 +476,14 @@ class ReferenceTable:
                 "data",
                 allow_duplicate=True,
             ),
+            dash.Output(self.ids.rosetta_model_status, "children"),
+            dash.Output(self.ids.rosetta_validation_plot, "children"),
+            dash.Output(self.ids.rosetta_validation_review, "data"),
+            dash.Output(self.ids.rosetta_apply_btn, "disabled"),
             dash.Input(self.ids.compute_model_btn, "n_clicks"),
+            dash.Input(self.ids.rosetta_validate_btn, "n_clicks"),
+            dash.Input(self.ids.rosetta_apply_btn, "n_clicks"),
+            dash.State(self.ids.rosetta_validation_review, "data"),
             dash.State(self.page.ids.Parameters.mie_model, "value"),
             dash.State(self.ids.bead_table, "data"),
             dash.State(
@@ -504,6 +514,9 @@ class ReferenceTable:
         )
         def compute_model(
             n_clicks: int,
+            _validate_clicks: int,
+            _apply_clicks: int,
+            reviewed_suggestions: Any,
             mie_model: Any,
             current_rows: list[dict[str, Any]] | None,
             medium_refractive_index: Any,
@@ -520,7 +533,7 @@ class ReferenceTable:
             detector_configuration_preset: Any,
             detector_angular_weighting_json: Any,
             page_state_payload: Any,
-        ) -> tuple[list[dict[str, str]], dict[str, Any]]:
+        ) -> tuple[Any, ...]:
             logger.debug(
                 "compute_model called with n_clicks=%r mie_model=%r row_count=%r",
                 n_clicks,
@@ -578,9 +591,9 @@ class ReferenceTable:
                 page_state_payload if isinstance(page_state_payload, dict) else None
             )
 
-            computed_rows = ScatteringCalibrationStandardTable.compute_model_for_rows(
+            compute_coupling = partial(
+                ScatteringCalibrationStandardTable.compute_model_for_rows,
                 mie_model=resolved_mie_model,
-                current_rows=current_rows,
                 medium_refractive_index=medium_refractive_index,
                 particle_refractive_index=particle_refractive_index,
                 core_refractive_index=core_refractive_index,
@@ -596,6 +609,39 @@ class ReferenceTable:
                 detector_angular_weighting_json=detector_angular_weighting_json,
                 logger=logger,
             )
+
+            computed_rows = compute_coupling(current_rows=current_rows)
+            sizing_status, validation_plot, suggestions = "", build_validation_results(), None
+            triggered_id = dash.ctx.triggered_id
+            if triggered_id in (self.ids.rosetta_validate_btn, self.ids.rosetta_apply_btn):
+                computed_rows, page_state, sizing_status, figure, suggestions = review_rosetta_assignments(
+                    computed_rows=computed_rows,
+                    page_state=page_state,
+                    mie_model=resolved_mie_model,
+                    compute_coupling=compute_coupling,
+                    model_inputs=compute_coupling.keywords,
+                    apply=triggered_id == self.ids.rosetta_apply_btn,
+                    reviewed_suggestions=reviewed_suggestions,
+                )
+                validation_plot = build_validation_results(figure=figure)
+                if suggestions is not None:
+                    return dash.no_update, page_state.to_dict(), sizing_status, validation_plot, suggestions, False
+            else:
+                evidence = page_state.rosetta_assignment_evidence
+                model_settings = {field: compute_coupling.keywords[field] for field in VALIDATION_MODEL_FIELDS}
+                if evidence and evidence.get("confirmed") and (
+                    computed_rows != current_rows or evidence.get("validation_model_settings") != model_settings
+                ):
+                    evidence = dict(evidence, confirmed=False)
+                    page_state = page_state.update(
+                        rosetta_assignment_evidence=evidence,
+                        scattering_peak_lines_payload=update_rosetta_assignment_overlays(
+                            graph_payload=page_state.scattering_peak_lines_payload,
+                            evidence=evidence,
+                        ),
+                        calibration_payload=None,
+                        calibration_saved=False,
+                    )
 
             page_state = page_state.update(
                 scattering_parameters_payload=calibration_standard_parameters_payload,
@@ -630,7 +676,7 @@ class ReferenceTable:
                 len(computed_rows),
             )
 
-            return computed_rows, page_state.to_dict()
+            return computed_rows, page_state.to_dict(), sizing_status, validation_plot, None, True
 
     def _register_post_compute_cleanup_callback(self) -> None:
         """

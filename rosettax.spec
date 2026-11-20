@@ -17,7 +17,6 @@ rosettax_datas = collect_data_files(
         "profiles/**/*.json",
         "calibrations/**/*.json",
         "data/**/*",
-        "workflow/detector/presets/*.json",
     ],
 )
 

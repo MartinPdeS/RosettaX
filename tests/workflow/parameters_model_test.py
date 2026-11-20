@@ -75,6 +75,16 @@ def test_kairos_presets_partition_shared_a60_lens():
     assert all(np.count_nonzero(region) > 0 for region in regions)
 
 
+def test_instrument_catalog_references_packaged_detector_figures():
+    """Verify the catalog links each packaged detector figure to a preset."""
+    loader = DetectorPresetLoader()
+    presets = loader.load_presets()
+    asset_directory = loader.preset_path.parent
+    figure_paths = {asset_directory / preset["detector_figure"] for preset in presets.values() if "detector_figure" in preset}
+    assert figure_paths
+    assert figure_paths == set((asset_directory / "detector_figures").glob("*.png"))
+
+
 class Test_DetectorPresetLoaderCatalog:
     """Regression checks for detector preset loader catalog."""
 
@@ -339,6 +349,8 @@ class Test_DetectorPresetLoaderCatalog:
             "Generic detector",
             "Sony ID7000 FSC",
             "Sony ID7000 SSC",
+            "Stratedigm S1313EX FSC",
+            "Stratedigm S1313EX SSC LogH",
             "Thermo Fisher Attune NxT FSC",
             "Thermo Fisher Attune NxT SSC",
             "nanoFCM NanoAnalyzer FSC",
@@ -848,10 +860,8 @@ class Test_compute_model_for_rows:
             'separation_angle_degree': 10.0,
         }
         assert apogee_side_preset['alias'] == ['apogee']
-        # Updated: presets are now loaded from vendor subdirectories, not from detector_definitions.json
-        assert preset_path.name == 'apogee_side.json'
-        assert preset_path.parent.name == 'apogee'
-        assert preset_path.parent.parent.name == 'detector_definitions'
+        assert preset_path == loader.preset_path.resolve()
+        assert apogee_side_preset['detector_figure'] == 'detector_figures/apogee_a60_side.png'
 
     @patch('RosettaX.workflow.detector.configuration._DETECTOR_PRESET_LOADER.load_preset')
     def test_resolve_detector_angular_weights_applies_cache_and_blocker_geometry(self, mock_load_preset):

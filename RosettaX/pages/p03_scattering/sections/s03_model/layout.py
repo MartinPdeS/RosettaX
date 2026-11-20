@@ -120,21 +120,6 @@ def build_optical_configuration_controls(section: Model) -> dash.html.Div:
             dash.html.Div(
                 [
                     dash.html.Div(
-                        ui_forms.build_title_with_info(
-                            title="Detector",
-                            tooltip_target_id=section.detector_preset_tooltip_target_id,
-                            tooltip_id=section.detector_preset_tooltip_id,
-                            tooltip_text=(
-                                "Choose a detector brand, model, and type to load a "
-                                "predefined collection geometry. Choose Custom to edit "
-                                "a Generic detector manually. Auto-detect can match the "
-                                "uploaded FCS metadata to a known preset."
-                            ),
-                            title_style_overrides={"fontSize": "1rem"},
-                        ),
-                        style={"marginBottom": "8px"},
-                    ),
-                    dash.html.Div(
                         dash.html.Div(
                             [
                                 dash.dcc.Dropdown(

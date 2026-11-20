@@ -27,7 +27,7 @@ dependency stubs out of the real-data checks.
 
 ## Initial Apogee Rosetta baseline
 
-The input is `RosettaX/assets/sample-files/apogee_rosetta_beads_1min.fcs`.
+The input is `RosettaX/assets/sample-files/summer_school/apogee_rosetta_beads_1_min.fcs`.
 Its FCS metadata reports Apogee A60-Micro, acquisition date 14-Aug-2023,
 original filename `Rosetta_1min_0.fcs`, and 168,447 events. The checksum pins
 this exact file; it is referenced in place rather than duplicated.

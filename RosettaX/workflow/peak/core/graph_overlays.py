@@ -343,6 +343,10 @@ def add_selected_peak_markers(
         return figure
 
     if is_rosetta_script and any(point.get("kind") in ROSETTA_PEAK_MARKER_STYLES for point in points):
+        size_assignments = {
+            entry["position"]: entry
+            for entry in builder.peak_lines_payload.get("rosetta_size_assignments", [])
+        }
         for kind, name in (
             ("non_fluorescent", "Non-fluorescent peak"),
             ("marker", "Fluorescent marker"),
@@ -352,13 +356,18 @@ def add_selected_peak_markers(
             if not selected:
                 continue
             marker_style = ROSETTA_PEAK_MARKER_STYLES[kind]
+            hover_data = []
+            for point, label in selected:
+                assignment = size_assignments.get(point["x"])
+                sizing = f"<br>{assignment['diameter_nm']:g} nm · {assignment['method']}" if assignment else ""
+                hover_data.append([label, point["x"], point["y"], sizing])
             figure.add_trace(go.Scattergl(
                 x=[point["x"] for point, _label in selected],
                 y=[point["y"] for point, _label in selected],
                 mode="markers", name=name, showlegend=True,
                 meta={"rosetta_peak_kind": kind},
-                customdata=[[label, point["x"], point["y"]] for point, label in selected],
-                hovertemplate="%{customdata[0]}<br>x=%{customdata[1]:.6g}<br>y=%{customdata[2]:.6g}<extra></extra>",
+                customdata=hover_data,
+                hovertemplate="%{customdata[0]}<br>x=%{customdata[1]:.6g}<br>y=%{customdata[2]:.6g}%{customdata[3]}<extra></extra>",
                 marker={"size": 18, "symbol": marker_style["symbol"], "color": "white", "line": {"color": marker_style["color"], "width": 3}},
             ))
         return figure

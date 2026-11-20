@@ -20,7 +20,7 @@ def sample_fcs_file_path() -> Path:
     """Write a sample FCS file for the file-operation tests."""
     for candidate_directory in (
         directories.fcs_data,
-        directories.asset_directory / "sample-files",
+        directories.asset_directory / "sample-files" / "cross_device",
     ):
         fcs_paths = sorted(candidate_directory.glob("*.fcs"))
         if fcs_paths:
