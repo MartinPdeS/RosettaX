@@ -1,7 +1,7 @@
 
 import logging
 from dataclasses import dataclass
-from RosettaX.utils.runtime_config import DEFAULT_GRAPH_HEIGHT
+from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow import apply_calibration, detector, scattering
 from RosettaX.workflow.peak import registry as peak_registry
 from RosettaX.workflow.table.fluorescence import (
@@ -15,20 +15,42 @@ logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class FieldDefinition:
+    """Settings form presentation for a canonical runtime configuration field."""
+
     name: str
     section: str
     label: str
     component_kind: str
-    value_kind: str
     runtime_path: str
     profile_path: str
-    default: Any
     placeholder: str | None = None
+    # Bounds here narrow the input control beyond runtime validation.
     min_value: float | None = None
     max_value: float | None = None
     step: float | None = None
     options: list[dict[str, Any]] | None = None
     group: str | None = None
+    choice_fallback: str | None = None
+
+    @property
+    def value_kind(self) -> str:
+        """Return the form representation for the runtime field type."""
+        if self.name == "default_fluorescence_reference_preset":
+            return "fluorescence_reference_preset"
+
+        expected_type = RuntimeConfig.SCHEMA[self.runtime_path].expected_type
+        if self.component_kind == "dropdown" and expected_type is str:
+            return "choice"
+
+        return {float: "float", int: "int", list: "float_list", str: "string", bool: "yes_no_bool"}[expected_type]
+
+    @property
+    def default(self) -> Any:
+        """Return the runtime default or the initial virtual preset selection."""
+        if self.value_kind == "fluorescence_reference_preset":
+            return CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME
+
+        return RuntimeConfig.SCHEMA[self.runtime_path].default
 
 
 def build_peak_process_dropdown_options() -> list[dict[str, Any]]:
@@ -140,10 +162,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Calibration",
         label="Default fluorescence reference preset:",
         component_kind="dropdown",
-        value_kind="fluorescence_reference_preset",
         runtime_path="calibration.mesf_values",
         profile_path="",
-        default=CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME,
         options=FLUORESCENCE_REFERENCE_PRESET_OPTIONS,
     ),
     FieldDefinition(
@@ -152,10 +172,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Calibration",
         label="Custom MESF values:",
         component_kind="text",
-        value_kind="float_list",
         runtime_path="calibration.mesf_values",
         profile_path="fluorescence.calibration.mesf_values",
-        default=[],
     ),
     FieldDefinition(
         name="default_fluorescence_peak_process",
@@ -163,10 +181,9 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Peak workflow",
         label="Default fluorescence peak process:",
         component_kind="dropdown",
-        value_kind="choice",
         runtime_path="calibration.default_fluorescence_peak_process",
         profile_path="fluorescence.calibration.default_fluorescence_peak_process",
-        default="",
+        choice_fallback="",
         options=PEAK_PROCESS_OPTIONS,
     ),
     FieldDefinition(
@@ -175,10 +192,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Peak workflow",
         label="Fluorescence peak table order:",
         component_kind="dropdown",
-        value_kind="choice",
         runtime_path="fluorescence_calibration.peak_table_sort_order",
         profile_path="fluorescence.calibration.peak_table_sort_order",
-        default="ascending",
         options=PEAK_TABLE_SORT_ORDER_OPTIONS,
     ),
     FieldDefinition(
@@ -187,10 +202,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Calibration standard table",
         label="Default scatterer preset:",
         component_kind="dropdown",
-        value_kind="choice",
         runtime_path="particle_model.scatterer_preset",
         profile_path="scattering.particle_model.scatterer_preset",
-        default="",
         options=SCATTERING_PRESET_OPTIONS,
     ),
     FieldDefinition(
@@ -199,10 +212,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Detector",
         label="Detector preset:",
         component_kind="dropdown",
-        value_kind="choice",
         runtime_path="optics.detector_configuration_preset",
         profile_path="scattering.optics.detector_configuration_preset",
-        default="",
         options=SETTINGS_DETECTOR_PRESET_OPTIONS,
     ),
     FieldDefinition(
@@ -211,11 +222,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Optics",
         label="Medium refractive index:",
         component_kind="number",
-        value_kind="float",
         runtime_path="optics.medium_refractive_index",
         profile_path="scattering.optics.medium_refractive_index",
-        default=1.334,
-        min_value=0.001,
         max_value=2.5,
         step=0.001,
     ),
@@ -225,12 +233,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Detector",
         label="Detector numerical aperture:",
         component_kind="number",
-        value_kind="float",
         runtime_path="optics.detector_numerical_aperture",
         profile_path="scattering.optics.detector_numerical_aperture",
-        default=0.45,
-        min_value=0.0,
-        max_value=1.49,
         step=0.001,
     ),
     FieldDefinition(
@@ -239,12 +243,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Detector",
         label="Detector cache NA:",
         component_kind="number",
-        value_kind="float",
         runtime_path="optics.detector_cache_numerical_aperture",
         profile_path="scattering.optics.detector_cache_numerical_aperture",
-        default=0.0,
-        min_value=0.0,
-        max_value=1.49,
         step=0.001,
     ),
     FieldDefinition(
@@ -253,12 +253,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Detector",
         label="Blocker bar NA:",
         component_kind="number",
-        value_kind="float",
         runtime_path="optics.blocker_bar_numerical_aperture",
         profile_path="scattering.optics.blocker_bar_numerical_aperture",
-        default=0.0,
-        min_value=0.0,
-        max_value=1.49,
         step=0.001,
     ),
     FieldDefinition(
@@ -267,11 +263,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Detector",
         label="Detector sampling:",
         component_kind="number",
-        value_kind="int",
         runtime_path="optics.detector_sampling",
         profile_path="scattering.optics.detector_sampling",
-        default=1000,
-        min_value=1,
         step=1,
     ),
     FieldDefinition(
@@ -280,12 +273,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Detector",
         label="Detector phi angle (deg):",
         component_kind="number",
-        value_kind="float",
         runtime_path="optics.detector_phi_angle_degree",
         profile_path="scattering.optics.detector_phi_angle_degree",
-        default=0.0,
-        min_value=-360.0,
-        max_value=360.0,
         step=0.1,
     ),
     FieldDefinition(
@@ -294,12 +283,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Detector",
         label="Detector gamma angle (deg):",
         component_kind="number",
-        value_kind="float",
         runtime_path="optics.detector_gamma_angle_degree",
         profile_path="scattering.optics.detector_gamma_angle_degree",
-        default=0.0,
-        min_value=-360.0,
-        max_value=360.0,
         step=0.1,
     ),
     FieldDefinition(
@@ -308,11 +293,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Calibration standard table",
         label="Core refractive index:",
         component_kind="number",
-        value_kind="float",
         runtime_path="particle_model.core_refractive_index",
         profile_path="scattering.particle_model.core_refractive_index",
-        default=1.5,
-        min_value=0.001,
         max_value=2.5,
         step=0.001,
     ),
@@ -322,11 +304,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Calibration standard table",
         label="Shell refractive index:",
         component_kind="number",
-        value_kind="float",
         runtime_path="particle_model.shell_refractive_index",
         profile_path="scattering.particle_model.shell_refractive_index",
-        default=1.5,
-        min_value=0.001,
         max_value=2.5,
         step=0.001,
     ),
@@ -336,11 +315,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Calibration standard table",
         label="Particle refractive index:",
         component_kind="number",
-        value_kind="float",
         runtime_path="particle_model.particle_refractive_index",
         profile_path="scattering.particle_model.particle_refractive_index",
-        default=1.59,
-        min_value=0.001,
         max_value=2.5,
         step=0.001,
     ),
@@ -350,10 +326,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Optics",
         label="Wavelength (nm):",
         component_kind="number",
-        value_kind="float",
         runtime_path="optics.wavelength_nm",
         profile_path="scattering.optics.wavelength_nm",
-        default=488.0,
         min_value=1,
         step=1,
     ),
@@ -363,10 +337,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Calibration standard table",
         label="Default shell thickness list (nm):",
         component_kind="text",
-        value_kind="float_list",
         runtime_path="particle_model.shell_thickness_nm",
         profile_path="scattering.particle_model.shell_thickness_nm",
-        default=[],
         placeholder="5, 10, 15",
     ),
     FieldDefinition(
@@ -375,10 +347,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Calibration standard table",
         label="Default core diameter list (nm):",
         component_kind="text",
-        value_kind="float_list",
         runtime_path="particle_model.core_diameter_nm",
         profile_path="scattering.particle_model.core_diameter_nm",
-        default=[],
         placeholder="80, 120, 160",
     ),
     FieldDefinition(
@@ -387,10 +357,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Calibration standard table",
         label="Default particle diameter list (nm):",
         component_kind="text",
-        value_kind="float_list",
         runtime_path="particle_model.particle_diameter_nm",
         profile_path="scattering.particle_model.particle_diameter_nm",
-        default=[],
         placeholder="100, 200, 300",
     ),
     FieldDefinition(
@@ -399,10 +367,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Calibration standard table",
         label="Particle type:",
         component_kind="dropdown",
-        value_kind="choice",
         runtime_path="particle_model.mie_model",
         profile_path="scattering.particle_model.mie_model",
-        default="Solid Sphere",
         options=[
             {
                 "label": "Solid Sphere",
@@ -420,10 +386,9 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Peak workflow",
         label="Default scattering peak process:",
         component_kind="dropdown",
-        value_kind="choice",
         runtime_path="scattering_calibration.default_peak_process",
         profile_path="scattering.calibration.default_peak_process",
-        default="",
+        choice_fallback="",
         options=PEAK_PROCESS_OPTIONS,
     ),
     FieldDefinition(
@@ -432,10 +397,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Peak workflow",
         label="Scattering peak table order:",
         component_kind="dropdown",
-        value_kind="choice",
         runtime_path="scattering_calibration.peak_table_sort_order",
         profile_path="scattering.calibration.peak_table_sort_order",
-        default="ascending",
         options=PEAK_TABLE_SORT_ORDER_OPTIONS,
     ),
     FieldDefinition(
@@ -444,10 +407,9 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Target model",
         label="Default apply target preset:",
         component_kind="dropdown",
-        value_kind="choice",
         runtime_path="calibration.target_model_preset",
         profile_path="apply_calibration.calibration.target_model_preset",
-        default="",
+        choice_fallback="",
         options=APPLY_TARGET_PRESET_OPTIONS,
     ),
     FieldDefinition(
@@ -456,10 +418,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Target model",
         label="Target Mie relation x scale:",
         component_kind="dropdown",
-        value_kind="choice",
         runtime_path="calibration.target_mie_relation_xscale",
         profile_path="apply_calibration.calibration.target_mie_relation_xscale",
-        default="linear",
         options=AXIS_SCALE_OPTIONS,
     ),
     FieldDefinition(
@@ -468,10 +428,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Target model",
         label="Target Mie relation y scale:",
         component_kind="dropdown",
-        value_kind="choice",
         runtime_path="calibration.target_mie_relation_yscale",
         profile_path="apply_calibration.calibration.target_mie_relation_yscale",
-        default="log",
         options=AXIS_SCALE_OPTIONS,
     ),
     FieldDefinition(
@@ -480,10 +438,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Peak graph defaults",
         label="Peak graph x scale:",
         component_kind="dropdown",
-        value_kind="choice",
         runtime_path="calibration.histogram_xscale",
         profile_path="apply_calibration.calibration.histogram_xscale",
-        default="linear",
         options=AXIS_SCALE_OPTIONS,
     ),
     FieldDefinition(
@@ -492,10 +448,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Peak graph defaults",
         label="Peak graph y scale:",
         component_kind="dropdown",
-        value_kind="choice",
         runtime_path="calibration.histogram_yscale",
         profile_path="apply_calibration.calibration.histogram_yscale",
-        default="log",
         options=AXIS_SCALE_OPTIONS,
     ),
     FieldDefinition(
@@ -504,10 +458,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Peak graph defaults",
         label="Peak graph color log by default:",
         component_kind="dropdown",
-        value_kind="yes_no_bool",
         runtime_path="calibration.peak_graph_colormap_log",
         profile_path="apply_calibration.calibration.peak_graph_colormap_log",
-        default=False,
         options=YES_NO_OPTIONS,
     ),
     FieldDefinition(
@@ -516,11 +468,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Export defaults",
         label="Max events for analysis:",
         component_kind="number",
-        value_kind="int",
         runtime_path="calibration.max_events_for_analysis",
         profile_path="apply_calibration.calibration.max_events_for_analysis",
-        default=10000,
-        min_value=1,
         step=1,
     ),
     FieldDefinition(
@@ -529,11 +478,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Peak graph defaults",
         label="Max events for plots:",
         component_kind="number",
-        value_kind="int",
         runtime_path="calibration.max_events_for_plots",
         profile_path="apply_calibration.calibration.max_events_for_plots",
-        default=100000,
-        min_value=1,
         step=1,
     ),
     FieldDefinition(
@@ -542,10 +488,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Metadata",
         label="Operator name:",
         component_kind="text",
-        value_kind="string",
         runtime_path="metadata.operator_name",
         profile_path="apply_calibration.metadata.operator_name",
-        default="",
     ),
     FieldDefinition(
         name="instrument_name",
@@ -553,10 +497,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Metadata",
         label="Instrument name:",
         component_kind="text",
-        value_kind="string",
         runtime_path="metadata.instrument_name",
         profile_path="apply_calibration.metadata.instrument_name",
-        default="",
     ),
     FieldDefinition(
         name="graph_height",
@@ -564,10 +506,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Figure style",
         label="Graph height:",
         component_kind="text",
-        value_kind="string",
         runtime_path="visualization.graph_height",
         profile_path="apply_calibration.visualization.graph_height",
-        default=DEFAULT_GRAPH_HEIGHT,
         placeholder="clamp(320px, 65vh, 760px), 450px, 70vh",
     ),
     FieldDefinition(
@@ -576,12 +516,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Figure style",
         label="Default marker opacity:",
         component_kind="number",
-        value_kind="float",
         runtime_path="visualization.default_marker_opacity",
         profile_path="apply_calibration.visualization.default_marker_opacity",
-        default=0.72,
-        min_value=0.0,
-        max_value=1.0,
         step=0.01,
     ),
     FieldDefinition(
@@ -590,10 +526,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Figure style",
         label="Default marker size:",
         component_kind="number",
-        value_kind="float",
         runtime_path="visualization.default_marker_size",
         profile_path="apply_calibration.visualization.default_marker_size",
-        default=8.0,
         min_value=1.0,
         step=0.5,
     ),
@@ -603,10 +537,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Peak graph defaults",
         label="Number of bins for plots:",
         component_kind="number",
-        value_kind="int",
         runtime_path="calibration.n_bins_for_plots",
         profile_path="apply_calibration.calibration.n_bins_for_plots",
-        default=500,
         min_value=10,
         step=1,
     ),
@@ -616,10 +548,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Figure style",
         label="Default line width:",
         component_kind="number",
-        value_kind="float",
         runtime_path="visualization.default_line_width",
         profile_path="apply_calibration.visualization.default_line_width",
-        default=2.0,
         min_value=0.5,
         step=0.5,
     ),
@@ -629,11 +559,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Figure style",
         label="Default font size:",
         component_kind="number",
-        value_kind="float",
         runtime_path="visualization.default_font_size",
         profile_path="apply_calibration.visualization.default_font_size",
-        default=14.0,
-        min_value=1,
         max_value=100,
         step=1,
         placeholder="e.g. 14",
@@ -644,11 +571,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Figure style",
         label="Default tick size:",
         component_kind="number",
-        value_kind="float",
         runtime_path="visualization.default_tick_size",
         profile_path="apply_calibration.visualization.default_tick_size",
-        default=12.0,
-        min_value=1,
         max_value=100,
         step=1,
         placeholder="e.g. 12",
@@ -659,10 +583,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Figure style",
         label="Show grid by default:",
         component_kind="dropdown",
-        value_kind="yes_no_bool",
         runtime_path="visualization.show_grid_by_default",
         profile_path="apply_calibration.visualization.show_grid_by_default",
-        default=True,
         options=YES_NO_OPTIONS,
     ),
     FieldDefinition(
@@ -671,10 +593,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Figure style",
         label="Legend vertical anchor:",
         component_kind="dropdown",
-        value_kind="choice",
         runtime_path="visualization.legend_vertical_anchor",
         profile_path="apply_calibration.visualization.legend_vertical_anchor",
-        default="bottom",
         options=[
             {
                 "label": "Top",
@@ -692,10 +612,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Figure style",
         label="Annotation text position:",
         component_kind="dropdown",
-        value_kind="choice",
         runtime_path="visualization.annotation_text_position",
         profile_path="apply_calibration.visualization.annotation_text_position",
-        default="top center",
         options=[
             {"label": "Top left", "value": "top left"},
             {"label": "Top center", "value": "top center"},
@@ -714,10 +632,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Files",
         label="Default Fluorescence FCS file path:",
         component_kind="text",
-        value_kind="string",
         runtime_path="files.fluorescence_fcs_file_path",
         profile_path="fluorescence.files.fcs_file_path",
-        default="",
     ),
     FieldDefinition(
         name="scattering_fcs_file_path",
@@ -725,10 +641,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Files",
         label="Default Scattering FCS file path:",
         component_kind="text",
-        value_kind="string",
         runtime_path="files.scattering_fcs_file_path",
         profile_path="scattering.files.fcs_file_path",
-        default="",
     ),
     FieldDefinition(
         name="theme_mode",
@@ -736,10 +650,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Interface",
         label="Theme mode:",
         component_kind="dropdown",
-        value_kind="choice",
         runtime_path="ui.theme_mode",
         profile_path="misc.ui.theme_mode",
-        default="dark",
         options=[
             {
                 "label": "Dark",
@@ -757,10 +669,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Interface",
         label="Show graphs:",
         component_kind="dropdown",
-        value_kind="yes_no_bool",
         runtime_path="ui.show_graphs",
         profile_path="misc.ui.show_graphs",
-        default=False,
         options=YES_NO_OPTIONS,
     ),
     FieldDefinition(
@@ -769,10 +679,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Interface",
         label="Show preset configuration:",
         component_kind="dropdown",
-        value_kind="yes_no_bool",
         runtime_path="ui.show_preset_configuration",
         profile_path="misc.ui.show_preset_configuration",
-        default=False,
         options=YES_NO_OPTIONS,
     ),
     FieldDefinition(
@@ -781,10 +689,8 @@ FIELD_DEFINITIONS: list[FieldDefinition] = [
         group="Interface",
         label="Collapse workflow cards:",
         component_kind="dropdown",
-        value_kind="yes_no_bool",
         runtime_path="ui.collapse_calibration_cards",
         profile_path="misc.ui.collapse_calibration_cards",
-        default=False,
         options=YES_NO_OPTIONS,
     ),
 ]

@@ -477,12 +477,13 @@ class DefaultProfile:
             )
 
         if field_definition.component_kind == "number":
+            runtime_field = RuntimeConfig.SCHEMA[field_definition.runtime_path]
             return ui_forms.persistent_input(
                 id=component_id,
                 type="number",
                 value=value,
-                min=field_definition.min_value,
-                max=field_definition.max_value,
+                min=field_definition.min_value if field_definition.min_value is not None else runtime_field.minimum,
+                max=field_definition.max_value if field_definition.max_value is not None else runtime_field.maximum,
                 step=field_definition.step,
                 placeholder=field_definition.placeholder,
                 style=common_style,

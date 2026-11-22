@@ -138,13 +138,11 @@ class PeakLayout:
                     processes=processes,
                 )
             ),
+            self._build_process_status_area(processes=processes),
             self._build_graph_container(
                 container_id=self.ids.graph_toggle_container,
                 graph_id=self.ids.graph_hist,
                 axis_scale_toggle_id=self._get_axis_scale_toggle_id(),
-            ),
-            self._build_process_status_area(
-                processes=processes,
             ),
         ]
 
@@ -361,6 +359,7 @@ class PeakLayout:
                             False,
                         )
                     ),
+                    run_label="Detect peaks" if process_name.startswith("Rosetta Script") else "Run",
                 ),
                 style={
                     "display": "flex",
@@ -399,7 +398,7 @@ class PeakLayout:
         processes: list[Any],
     ) -> html.Div:
         """
-        Build the shared process status area below the graph.
+        Build the shared process status area next to the detection controls.
         """
         return dcc.Loading(
             html.Div(
@@ -411,22 +410,10 @@ class PeakLayout:
                     )
                     for process in (processes or [])
                 ],
-                style={
-                    "display": "flex",
-                    "flexDirection": "column",
-                    "gap": "10px",
-                },
             ),
             id=self.ids.script_status,
             type="default",
             color="#0d6efd",
-            style={
-                "marginTop": "8px",
-                "marginBottom": "8px",
-                "display": "flex",
-                "flexDirection": "column",
-                "gap": "10px",
-            },
         )
 
     def _build_detector_controls(
@@ -617,9 +604,9 @@ class PeakLayout:
                                 persistence_type="session",
                             ),
                         ],
-                        className="border rounded bg-white px-5 py-2" if setting_name == "marker_fit_strictness" else None,
+                        className="peak-strictness-control" if setting_name == "marker_fit_strictness" else None,
                         style={
-                            "width": "440px" if setting_name == "marker_fit_strictness" else "360px",
+                            "width": "min(100%, 28rem)" if setting_name == "marker_fit_strictness" else "360px",
                             "maxWidth": "100%",
                             "minWidth": 0,
                             "marginInline": "auto",

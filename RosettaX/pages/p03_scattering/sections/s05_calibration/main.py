@@ -7,12 +7,12 @@ from RosettaX.pages.p03_scattering.state import ScatteringPageState
 from RosettaX.ui import WorkflowStep
 from RosettaX.utils import RuntimeConfig, plottings, styling, ui_forms
 from RosettaX.workflow.parameters.table import resolve_mie_model
+from RosettaX.workflow.plotting import PlotOptions
 from RosettaX.workflow.scattering.rosetta_assignment import (
     VALIDATION_MODEL_FIELDS,
     rosetta_confirmed_rows,
     rosetta_validation_materials,
 )
-from RosettaX.workflow.plotting import PlotOptions
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -87,13 +87,7 @@ def build_scattering_graph_panel_card(
             )
         )
 
-    return dash.html.Div(
-        card_children,
-        style={
-            "flex": "1 1 0",
-            "minWidth": f"{graph_min_width_px}px",
-        },
-    )
+    return dash.html.Div(card_children, style={"flex": "1 1 0", "minWidth": f"min(100%, {graph_min_width_px}px)"})
 
 
 class Calibration:
@@ -297,32 +291,20 @@ class Calibration:
         """
         Build the instrument response graph panel.
         """
-        return dash.html.Div(
-            [
-                self._build_graph_panel_card(
-                    title="",
-                    subtitle="Measured standard signal mapped to coupling [W].",
-                    tooltip_target_id=self.instrument_response_tooltip_target_id,
-                    tooltip_id=self.instrument_response_tooltip_id,
-                    tooltip_text=(
-                        "This graph shows the fitted relation between measured "
-                        "standard peak intensity and modeled coupling in watts. "
-                        "The fitted slope is the instrument gain."
-                    ),
-                    graph_id=self.ids.graph_calibration,
-                    plot_options_id=self.ids.instrument_response_plot_options,
-                    default_plot_options=[],
-                    footer_content=self._build_instrument_response_footer(),
-                ),
-            ],
-            style={
-                "display": "flex",
-                "gap": "18px",
-                "alignItems": "stretch",
-                "width": "100%",
-                "overflowX": "auto",
-                "overflowY": "visible",
-            },
+        return self._build_graph_panel_card(
+            title="",
+            subtitle="Measured standard signal mapped to coupling [W].",
+            tooltip_target_id=self.instrument_response_tooltip_target_id,
+            tooltip_id=self.instrument_response_tooltip_id,
+            tooltip_text=(
+                "This graph shows the fitted relation between measured "
+                "standard peak intensity and modeled coupling in watts. "
+                "The fitted slope is the instrument gain."
+            ),
+            graph_id=self.ids.graph_calibration,
+            plot_options_id=self.ids.instrument_response_plot_options,
+            default_plot_options=[],
+            footer_content=self._build_instrument_response_footer(),
         )
 
     def _build_graph_panel_card(
@@ -395,12 +377,7 @@ class Calibration:
                     self.ids.r_squared_out,
                 ),
             ],
-            style={
-                "display": "grid",
-                "gridTemplateColumns": "repeat(3, minmax(120px, 1fr))",
-                "gap": "10px",
-                "alignItems": "stretch",
-            },
+            className="calibration-fit-metrics",
         )
 
     def _build_fit_metric(
@@ -428,6 +405,7 @@ class Calibration:
                         "fontFamily": "monospace",
                         "fontSize": "0.95rem",
                         "marginTop": "2px",
+                        "overflowWrap": "anywhere",
                     },
                 ),
             ],

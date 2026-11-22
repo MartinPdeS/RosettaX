@@ -9,14 +9,20 @@ if __name__ == "__main__":
 import json
 import logging
 import math
-from pathlib import Path
+import pytest
 import subprocess
 import sys
+from pathlib import Path
+from RosettaX.workflow.peak.core.detectors import (
+    populate_peak_script_detector_dropdowns,
+)
+from RosettaX.workflow.peak.scripts.rosetta_mix_mixture import (
+    MixtureRosettaScatterPeakProcess,
+)
+from RosettaX.workflow.peak.scripts.rosetta_mix_sizing import (
+    ROSETTA_MIX_PARTICLE_DIAMETERS_NM,
+)
 from types import SimpleNamespace
-import pytest
-from RosettaX.workflow.peak.core.detectors import populate_peak_script_detector_dropdowns
-from RosettaX.workflow.peak.scripts.rosetta_mix_mixture import MixtureRosettaScatterPeakProcess
-from RosettaX.workflow.peak.scripts.rosetta_mix_sizing import ROSETTA_MIX_PARTICLE_DIAMETERS_NM
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 SAMPLE_DIRECTORY = REPOSITORY_ROOT / "RosettaX" / "assets" / "sample-files" / "cross_device"
@@ -117,7 +123,9 @@ def resolve_test_optical_settings(*, filename: str, scatter: str) -> dict | None
         resolve_detector_configuration_values,
         resolve_detector_preset_wavelength_nm,
     )
-    from RosettaX.workflow.parameters.refractive_index import calculate_sellmeier_refractive_index
+    from RosettaX.workflow.parameters.refractive_index import (
+        calculate_sellmeier_refractive_index,
+    )
 
     sample_path = str(SAMPLE_DIRECTORY / filename)
     preset_name = detect_detector_preset_from_uploaded_fcs(
@@ -165,7 +173,9 @@ def resolve_test_optical_settings(*, filename: str, scatter: str) -> dict | None
 
 def run_real_calibration(*, filename: str, scatter: str, rows: list[dict]) -> float | None:
     """Return the unrounded fit R² when a detector geometry is available."""
-    from RosettaX.pages.p03_scattering.sections.s05_calibration.services import run_scattering_calibration
+    from RosettaX.pages.p03_scattering.sections.s05_calibration.services import (
+        run_scattering_calibration,
+    )
 
     settings = resolve_test_optical_settings(filename=filename, scatter=scatter)
     if settings is None:

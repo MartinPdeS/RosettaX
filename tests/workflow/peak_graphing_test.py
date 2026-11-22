@@ -693,7 +693,7 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
         "Rosetta Script Sensitive", "Rosetta Script Mixture",
     ])
     def test_rosetta_classifies_peak_symbols_and_labels(self, process_name):
-        """Show colored squares in the legend only and place labels at the gate."""
+        """Show the legend below the axes and unboxed sizes above their guides."""
         builder = PeakWorkflowGraphBuilder.__new__(PeakWorkflowGraphBuilder)
         builder.resolved_process_name = process_name
         builder.process = types.SimpleNamespace(supports_advanced_mode=False)
@@ -734,13 +734,23 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
             assert list(trace.x) == list(trace.y) == [None]
         assert figure.layout.showlegend is True
         assert figure.layout.legend.x == pytest.approx(0.01)
-        assert figure.layout.legend.y == pytest.approx(0.99)
+        assert figure.layout.legend.y == pytest.approx(0.012)
         assert figure.layout.legend.xanchor == "left"
-        assert figure.layout.legend.yanchor == "top"
+        assert figure.layout.legend.yanchor == "bottom"
+        assert figure.layout.legend.orientation == "h"
+        assert figure.layout.legend.xref == figure.layout.legend.yref == "container"
         annotations = {annotation.text: annotation for annotation in figure.layout.annotations}
-        assert annotations["140 nm marker"].yref == "paper"
-        assert annotations["147 nm"].yref == "y"
-        assert annotations["147 nm"].y == pytest.approx(3.0)
+        assert annotations["140 nm"].hovertext == "140 nm fluorescent marker"
+        assert annotations["140 nm"].font.color == "#7c3aed"
+        assert annotations["147 nm"].font.color == "#008c80"
+        for annotation in annotations.values():
+            assert annotation.yref == "paper"
+            assert annotation.y == 1
+            assert annotation.textangle == -45
+            assert annotation.borderwidth is None
+            assert annotation.bgcolor is None
+            assert annotation.ax == 0
+            assert annotation.ay == -4
         assert "Fluorescence baseline gate" not in annotations
         assert any(shape.name == "Fluorescence baseline gate" and shape.showlegend for shape in figure.layout.shapes)
 
@@ -756,7 +766,8 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
         add_peak_workflow_post_layout_overlays(figure=figure, process_name="Rosetta Script V1", peak_lines_payload=payload)
         assert figure.layout.xaxis.range[1] > 3
         assert figure.layout.yaxis.range[1] > 5
-        assert figure.layout.annotations[0].y > 1
+        assert figure.layout.annotations[0].y == 1
+        assert figure.layout.annotations[0].ay < 0
 
     def test_rosetta_y_gate_overlay_uses_bright_line_without_shading(self):
         """Show a bright gate beneath markers without colored background bands."""
@@ -940,7 +951,7 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
         assert [annotation.text for annotation in annotations] == ["140 nm", "194 nm"]
         assert [annotation.xref for annotation in annotations] == ["x", "x"]
         assert [annotation.yref for annotation in annotations] == ["paper", "paper"]
-        assert [annotation.y for annotation in annotations] == [0.9, 0.9]
+        assert [annotation.y for annotation in annotations] == [1, 1]
         assert [annotation.x for annotation in annotations] == [100.0, 300.0]
 
     def test_add_peak_workflow_post_layout_overlays_places_labels_on_log_x_axis(self):

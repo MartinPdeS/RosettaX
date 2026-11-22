@@ -58,6 +58,7 @@ class FluorescencePageState:
     last_detector_channels: list[str] | None = None
 
     status_message: str = ""
+    peak_graph_revision: dict[str, Any] | None = None
 
     @classmethod
     def empty(cls) -> "FluorescencePageState":

@@ -1,7 +1,7 @@
 
 import io
-import json
 import zipfile
+from .payload import decode_calibration_record
 from collections.abc import Callable
 from pathlib import Path
 from RosettaX.utils.paths import resolve_selected_calibration_file_path
@@ -124,23 +124,7 @@ def load_calibration_payload(
     """
     Load a saved calibration payload from disk.
     """
-    record = json.loads(
-        calibration_file_path.read_text(
-            encoding="utf-8",
-        )
-    )
-
-    if not isinstance(record, dict):
-        raise ValueError("Calibration file root record is invalid.")
-
-    outer_payload = record.get(
-        "payload",
-    )
-
-    if not isinstance(outer_payload, dict):
-        raise ValueError('Calibration file is missing top level "payload".')
-
-    return outer_payload
+    return decode_calibration_record(content=calibration_file_path.read_text(encoding="utf-8"))
 
 
 def get_fcs_column_names(

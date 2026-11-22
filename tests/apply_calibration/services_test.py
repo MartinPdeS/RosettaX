@@ -156,7 +156,7 @@ class Test_ApplyCalibrationServices:
                         calibration_payload={
                             "calibration_type": "scattering",
                             "version": 2,
-                            "source_channel": "SSC-A",
+                            "instrument_response": {"measured_channel": "SSC-A"},
                             "applied_output_channel_name": "Diameter (nm)",
                         },
                         scattering_target_model_parameters=object(),
@@ -165,6 +165,7 @@ class Test_ApplyCalibrationServices:
             ),
         )
 
+        assert result.source_channel == "SSC-A"
         assert result.output_channels == ["Diameter (nm)"]
         assert '"Diameter (nm)"' in result.status
 

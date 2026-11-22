@@ -1,21 +1,14 @@
 
 import dash
 import logging
-import time
-import uuid
 from .. import registry
 from ..core import detectors
-from ..core.process_calls import (
-    call_add_clicked_peak_with_supported_arguments,
-    call_run_automatic_action_with_supported_arguments,
-)
+from ..core import mutation as peak_mutation
+from ..core.process_calls import call_add_clicked_peak_with_supported_arguments
 from ..core.process_settings import build_process_settings
-from ..models import PeakMutationOutput
-from .debug_panel import build_rosetta_debug_panel
+from ..models import PeakMutationOutput, PeakTransition
+from .debug_panel import build_rosetta_result_panel
 from dash import html
-from RosettaX.utils import casting
-from RosettaX.utils.runtime_config import RuntimeConfig
-from types import SimpleNamespace
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -134,9 +127,6 @@ def register_mutation_callbacks(
         axis_scale_toggle_values: Any,
         *state_values: Any,
     ) -> tuple[Any, Any, list[Any]]:
-        del action_clicks
-        del action_ids
-
         unpacked_state = unpack_mutation_state_values(
             state_values=state_values,
             has_max_events_input=max_events_input_id is not None,
@@ -163,20 +153,30 @@ def register_mutation_callbacks(
                 status_component_ids=unpacked_state["status_component_ids"],
             )
 
-        if trigger_is_detector_dropdown_change(
-            ids=ids,
-            triggered_id=triggered_id,
+        if any(
+            trigger_is_detector_dropdown_change(ids=ids, triggered_id=changed_id)
+            and changed_id.get("process") == process_name
+            for changed_id in dash.ctx.triggered_prop_ids.values()
         ):
-            has_rosetta_evidence = (
-                isinstance(page_state_payload, dict)
-                and bool(page_state_payload.get("rosetta_assignment_evidence"))
+            detector_channels = detectors.resolve_detector_channels_for_process(
+                detector_dropdown_ids=detector_dropdown_ids,
+                detector_dropdown_values=detector_dropdown_values,
+                process_name=process_name,
             )
+            clear_table = peak_mutation.resolve_detector_change(
+                page_state_payload=page_state_payload if isinstance(page_state_payload, dict) else {},
+                process_name=process_name,
+                detector_channels=detector_channels,
+            )
+            if clear_table is None:
+                return build_no_update_callback_result(status_component_ids=unpacked_state["status_component_ids"])
             return clear_peak_context(
                 ids=ids,
                 adapter=adapter,
                 page_state=page_state,
                 process_name=process_name,
-                clear_table=has_rosetta_evidence,
+                clear_table=clear_table,
+                status="Warning: The detector selection changed. Detect peaks again to refill the calibration table." if clear_table else "",
                 table_data=unpacked_state["table_data"],
                 mie_model=unpacked_state["mie_model"],
                 runtime_config_data=unpacked_state["runtime_config_data"],
@@ -210,7 +210,15 @@ def register_mutation_callbacks(
                 process_name=process_name, setting_name="marker_fit_strictness",
             )
         )
-        if preview_only or trigger_is_action_button(ids=ids, triggered_id=triggered_id):
+        active_action = (
+            trigger_is_action_button(ids=ids, triggered_id=triggered_id)
+            and triggered_id.get("process") == process_name
+            and any(
+                button_id == triggered_id and click_count
+                for button_id, click_count in zip(action_ids or [], action_clicks or [], strict=False)
+            )
+        )
+        if preview_only or active_action:
             return handle_process_action(
                 page=page,
                 ids=ids,
@@ -240,20 +248,23 @@ def register_mutation_callbacks(
 
     dash.clientside_callback(
         """
-        function(clicks, settings, statusIds, selectedProcess) {
+        function(clicks, settings, pageState, statusIds, selectedProcess) {
             const context = dash_clientside.callback_context;
             const trigger = context.triggered_id;
+            const newFile = typeof trigger === "string" && !pageState?.peak_graph_revision;
             const run = trigger && trigger.action === "run" && context.triggered[0].value > 0;
             const preview = trigger && trigger.setting === "marker_fit_strictness" &&
                 trigger.process === selectedProcess;
             return (statusIds || []).map(id => (
-                (run || preview) && id.process === trigger.process ? null : dash_clientside.no_update
+                newFile || ((run || preview) && id.process === trigger.process)
+                    ? null : dash_clientside.no_update
             ));
         }
         """,
         dash.Output(ids.process_status_pattern(), "children", allow_duplicate=True),
         dash.Input(ids.process_action_button_pattern(), "n_clicks"),
         dash.Input(ids.process_setting_pattern(), "value"),
+        dash.Input(page_state_store_id, "data"),
         dash.State(ids.process_status_pattern(), "id"),
         dash.State(ids.process_dropdown, "value"),
         prevent_initial_call=True,
@@ -375,6 +386,7 @@ def clear_peak_context(
     page_state: Any,
     process_name: Any,
     clear_table: bool = False,
+    status: str = "",
     table_data: list[dict[str, Any]] | None = None,
     mie_model: Any = None,
     runtime_config_data: Any = None,
@@ -387,49 +399,17 @@ def clear_peak_context(
         process_name,
     )
 
-    page_state = adapter.clear_peak_lines_payload(
-        page_state=page_state,
+    transition = peak_mutation.clear_peak_context(
+        adapter=adapter, page_state=page_state, clear_table=clear_table, table_data=table_data, status=status,
+        context={
+            "mie_model": mie_model,
+            "process_name": resolved_process_name,
+            "runtime_config_data": runtime_config_data,
+            "replace_existing_table_peaks": True,
+        },
     )
-
-    page_state = touch_peak_graph_revision(
-        adapter=adapter,
-        page_state=page_state,
-        reason="clear_peak_context",
-        process_name=resolved_process_name,
-    )
-
-    if clear_table:
-        table_result = adapter.apply_peak_process_result_to_table(
-            table_data=table_data,
-            result=SimpleNamespace(clear_existing_table_peaks=True),
-            context={
-                "mie_model": mie_model,
-                "process_name": resolved_process_name,
-                "runtime_config_data": runtime_config_data,
-                "replace_existing_table_peaks": True,
-            },
-            logger=logger,
-        )
-
-        page_state = synchronize_page_state_table_rows(
-            adapter=adapter,
-            page_state=page_state,
-            table_result=table_result,
-        )
-
-    else:
-        table_result = dash.no_update
-
-    status_children = build_status_children(
-        status_component_ids=status_component_ids,
-        target_process_name=resolved_process_name,
-        status="",
-    )
-
-    return PeakMutationOutput(
-        page_state=page_state.to_dict(),
-        table_data=table_result,
-        status_children=status_children,
+    return render_peak_transition(
+        transition=transition, status_component_ids=status_component_ids, process_name=resolved_process_name,
     )
 
 
@@ -506,12 +486,12 @@ def handle_manual_graph_click(
         uploaded_fcs_path=uploaded_fcs_path,
     )
 
-    if not context_is_valid_for_process(
+    if not peak_mutation.context_is_valid_for_process(
         process=process,
         uploaded_fcs_path=uploaded_fcs_path,
         detector_channels=detector_channels,
     ):
-        status = build_missing_context_message(
+        status = peak_mutation.build_missing_context_message(
             process=process,
             uploaded_fcs_path=uploaded_fcs_path,
             detector_channels=detector_channels,
@@ -552,45 +532,19 @@ def handle_manual_graph_click(
             ),
         )
 
-    page_state = adapter.update_peak_lines_payload(
-        page_state=page_state,
-        peak_lines_payload=result.peak_lines_payload,
-    )
-
-    page_state = touch_peak_graph_revision(
-        adapter=adapter,
-        page_state=page_state,
-        reason="manual_graph_click",
-        process_name=resolved_process_name,
-    )
-
-    table_result = adapter.apply_peak_process_result_to_table(
+    transition = peak_mutation.apply_peak_result(
+        adapter=adapter, page_state=page_state, result=result, reason="manual_graph_click",
         table_data=table_data,
-        result=result,
         context={
             "mie_model": mie_model,
             "process_name": resolved_process_name,
             "runtime_config_data": runtime_config_data,
+            "detector_channels": detector_channels,
         },
-        logger=logger,
-    )
-
-    page_state = synchronize_page_state_table_rows(
-        adapter=adapter,
-        page_state=page_state,
-        table_result=table_result,
-    )
-
-    status_children = build_status_children(
-        status_component_ids=status_component_ids,
-        target_process_name=resolved_process_name,
         status=result.status,
     )
-
-    return PeakMutationOutput(
-        page_state=page_state.to_dict(),
-        table_data=table_result,
-        status_children=status_children,
+    return render_peak_transition(
+        transition=transition, status_component_ids=status_component_ids, process_name=resolved_process_name,
     )
 
 
@@ -704,47 +658,19 @@ def handle_clear_action(
     Handle a clear action.
     """
     result = process.clear_peaks()
-
-    page_state = adapter.update_peak_lines_payload(
-        page_state=page_state,
-        peak_lines_payload=result.peak_lines_payload,
-    )
-
-    page_state = touch_peak_graph_revision(
-        adapter=adapter,
-        page_state=page_state,
-        reason="clear_action",
-        process_name=target_process_name,
-    )
-
-    table_result = adapter.apply_peak_process_result_to_table(
+    transition = peak_mutation.apply_peak_result(
+        adapter=adapter, page_state=page_state, result=result, reason="clear_action",
         table_data=table_data,
-        result=result,
         context={
             "mie_model": mie_model,
             "process_name": target_process_name,
             "runtime_config_data": runtime_config_data,
             "replace_existing_table_peaks": True,
         },
-        logger=logger,
-    )
-
-    page_state = synchronize_page_state_table_rows(
-        adapter=adapter,
-        page_state=page_state,
-        table_result=table_result,
-    )
-
-    status_children = build_status_children(
-        status_component_ids=status_component_ids,
-        target_process_name=target_process_name,
         status="" if target_process_name.startswith("Rosetta Script") else result.status,
     )
-
-    return PeakMutationOutput(
-        page_state=page_state.to_dict(),
-        table_data=table_result,
-        status_children=status_children,
+    return render_peak_transition(
+        transition=transition, status_component_ids=status_component_ids, process_name=target_process_name,
     )
 
 
@@ -769,222 +695,39 @@ def handle_run_action(
     status_component_ids: list[dict[str, Any]],
     preview_only: bool = False,
 ) -> tuple[Any, Any, list[Any]]:
-    """
-    Handle an automatic run action.
-    """
-    cleared_table_result = dash.no_update if preview_only else adapter.apply_peak_process_result_to_table(
-        table_data=table_data,
-        result=SimpleNamespace(clear_existing_table_peaks=True),
-        context={
-            "mie_model": mie_model,
-            "process_name": target_process_name,
-            "runtime_config_data": runtime_config_data,
-            "replace_existing_table_peaks": True,
-        },
-        logger=logger,
+    """Run peak detection and render its workflow transition for Dash."""
+    transition = peak_mutation.run_peak_process(
+        adapter=adapter, process=process, target_process_name=target_process_name,
+        page_state=page_state, uploaded_fcs_path=uploaded_fcs_path, detector_channels=detector_channels,
+        process_setting_ids=process_setting_ids, process_setting_values=process_setting_values,
+        advanced_mode_value=advanced_mode_value, data_filter_value=data_filter_value,
+        axis_scale_toggle_values=axis_scale_toggle_values, max_events_for_plots=max_events_for_plots,
+        table_data=table_data, mie_model=mie_model, runtime_config_data=runtime_config_data,
+        preview_only=preview_only,
+    )
+    return render_peak_transition(
+        transition=transition, status_component_ids=status_component_ids, process_name=target_process_name,
     )
 
-    if not context_is_valid_for_process(
-        process=process,
-        uploaded_fcs_path=uploaded_fcs_path,
-        detector_channels=detector_channels,
-    ):
-        if preview_only:
-            return build_no_update_callback_result(status_component_ids=status_component_ids)
-        status = build_missing_context_message(
-            process=process,
-            uploaded_fcs_path=uploaded_fcs_path,
-            detector_channels=detector_channels,
-        )
 
-        return (
-            dash.no_update,
-            cleared_table_result,
-            build_status_children(
-                status_component_ids=status_component_ids,
-                target_process_name=target_process_name,
-                status=status,
-            ),
-        )
-
-    runtime_config = RuntimeConfig.from_dict(
-        runtime_config_data if isinstance(runtime_config_data, dict) else None
-    )
-
-    process_settings = build_process_settings(
-        process_setting_ids=process_setting_ids,
-        process_setting_values=process_setting_values,
-        process_name=target_process_name,
-    )
-
-    process_settings["advanced_mode"] = advanced_mode_value
-    process_settings["filter_edge_artifacts"] = data_filter_value
-    process_settings["axis_scale_toggle_values"] = axis_scale_toggle_values
-
-    if preview_only:
-        process_settings["preview_only"] = True
-
-    resolved_peak_count = process_settings.get("peak_count")
-
-    resolved_max_events = casting.as_int(
-        max_events_for_plots,
-        default=runtime_config.get_int(
-            "calibration.max_events_for_analysis",
-            default=10000,
-        ),
-        min_value=1,
-        max_value=5_000_000,
-    )
-
-    backend = adapter.get_backend(
-        uploaded_fcs_path=uploaded_fcs_path,
-    )
-
-    result = call_run_automatic_action_with_supported_arguments(
-        process=process,
-        backend=backend,
-        detector_channels=detector_channels,
-        process_settings=process_settings,
-        peak_count=resolved_peak_count,
-        max_events_for_analysis=resolved_max_events,
-        max_events_for_plots=resolved_max_events,
-        runtime_config_data=runtime_config_data,
-    )
-
-    if result is None:
-        return (
-            dash.no_update,
-            cleared_table_result,
-            build_status_children(
-                status_component_ids=status_component_ids,
-                target_process_name=target_process_name,
-                status="Run completed with no detected peaks.",
-            ),
-        )
-
-    if preview_only:
-        page_state = adapter.update_peak_lines_payload(
-            page_state=page_state,
-            peak_lines_payload=dict(result.peak_lines_payload, rosetta_settings_preview=True),
-        )
-        page_state = touch_peak_graph_revision(
-            adapter=adapter, page_state=page_state, reason="settings_preview",
-            process_name=target_process_name, process_settings=process_settings,
-        )
-        return PeakMutationOutput(
-            page_state=page_state.to_dict(),
-            table_data=dash.no_update,
-            status_children=build_status_children(
-                status_component_ids=status_component_ids,
-                target_process_name=target_process_name,
-                status=(
-                    f"Preview. Click Run to update the peak table. {result.status or ''}".strip()
-                    if getattr(result, "warning", False) else ""
-                ),
-                debug_payload=result.peak_lines_payload if getattr(result, "warning", False) else None,
-            ),
-        )
-
-    preserve_measured_rows = (
-        getattr(process, "allow_unassigned_sizes", False)
-        and result.table_prefill_rows
-    )
-    if getattr(result, "warning", False) and not preserve_measured_rows:
-        if getattr(process, "preserve_graph_payload_on_warning", False):
-            page_state = adapter.update_peak_lines_payload(
-                page_state=page_state,
-                peak_lines_payload=result.peak_lines_payload,
-            )
-            page_state = touch_peak_graph_revision(
-                adapter=adapter,
-                page_state=page_state,
-                reason="run_action_warning",
-                process_name=target_process_name,
-                process_settings=process_settings,
-            )
-            return (
-                page_state.to_dict(),
-                cleared_table_result if getattr(process, "clear_table_on_warning", False) else dash.no_update,
-                build_status_children(
-                    status_component_ids=status_component_ids,
-                    target_process_name=target_process_name,
-                    status=result.status,
-                    debug_payload=result.peak_lines_payload,
-                ),
-            )
-        return (
-            dash.no_update,
-            dash.no_update,
-            build_status_children(
-                status_component_ids=status_component_ids,
-                target_process_name=target_process_name,
-                status=result.status,
-                debug_payload=(
-                    result.peak_lines_payload
-                    if getattr(process, "supports_debug_diagnostics", False)
-                    else None
-                ),
-            ),
-        )
-
-    page_state = adapter.update_peak_lines_payload(
-        page_state=page_state,
-        peak_lines_payload=result.peak_lines_payload,
-    )
-
-    page_state = touch_peak_graph_revision(
-        adapter=adapter,
-        page_state=page_state,
-        reason="run_action",
-        process_name=target_process_name,
-        process_settings=process_settings,
-    )
-
-    table_data_for_run_result = (
-        cleared_table_result
-        if isinstance(cleared_table_result, list)
-        else table_data
-    )
-
-    table_result = adapter.apply_peak_process_result_to_table(
-        table_data=table_data_for_run_result,
-        result=result,
-        context={
-            "mie_model": mie_model,
-            "process_name": target_process_name,
-            "runtime_config_data": runtime_config_data,
-            "replace_existing_table_peaks": True,
-        },
-        logger=logger,
-    )
-
-    page_state = synchronize_page_state_table_rows(
-        adapter=adapter,
-        page_state=page_state,
-        table_result=table_result,
-    )
-
-    if target_process_name.startswith("Rosetta Script") and not getattr(result, "warning", False):
-        status_children = ["" for _ in (status_component_ids or [])]
+def render_peak_transition(
+    *,
+    transition: PeakTransition,
+    status_component_ids: list[dict[str, Any]],
+    process_name: str,
+) -> PeakMutationOutput:
+    """Convert workflow state, table rows, and feedback into Dash outputs."""
+    if transition.status is None:
+        status_children = build_no_update_status_children(status_component_ids=status_component_ids)
     else:
         status_children = build_status_children(
-            status_component_ids=status_component_ids,
-            target_process_name=target_process_name,
-            status=result.status,
-            debug_payload=result.peak_lines_payload,
+            status_component_ids=status_component_ids, target_process_name=process_name,
+            status=transition.status, debug_payload=transition.debug_payload,
         )
 
-    logger.debug(
-        "Completed run action for process=%r with peak_graph_revision=%r.",
-        target_process_name,
-        adapter.get_page_state_payload(
-            page_state=page_state,
-        ).get("peak_graph_revision"),
-    )
-
     return PeakMutationOutput(
-        page_state=page_state.to_dict(),
-        table_data=table_result,
+        page_state=transition.page_state.to_dict() if transition.page_state is not None else dash.no_update,
+        table_data=transition.table_rows if transition.table_rows is not None else dash.no_update,
         status_children=status_children,
     )
 
@@ -1044,90 +787,6 @@ def manual_graph_event_has_actionable_payload(
     return bool(click_data) or bool(selected_data)
 
 
-def touch_peak_graph_revision(
-    *,
-    adapter: Any,
-    page_state: Any,
-    reason: str,
-    process_name: Any,
-    process_settings: dict[str, Any] | None = None,
-) -> Any:
-    """
-    Force downstream graph callbacks to rebuild after a peak workflow mutation.
-
-    Dash compares store data structurally. A revision token makes every run,
-    clear, or manual click produce a distinct page state payload even if the
-    peak positions or gates are numerically identical.
-    """
-    payload = adapter.get_page_state_payload(
-        page_state=page_state,
-    )
-
-    payload["peak_graph_revision"] = {
-        "id": uuid.uuid4().hex,
-        "timestamp": time.time(),
-        "reason": str(reason),
-        "process_name": str(process_name or ""),
-        "process_settings": dict(process_settings or {}),
-    }
-
-    return adapter.build_page_state(
-        payload=payload,
-    )
-
-
-def context_is_valid_for_process(
-    *,
-    process: Any,
-    uploaded_fcs_path: Any,
-    detector_channels: dict[str, Any],
-) -> bool:
-    """
-    Return whether the uploaded file and required channels are available.
-    """
-    if not str(uploaded_fcs_path or "").strip():
-        return False
-
-    for channel_name in process.get_required_detector_channels():
-        if not str(detector_channels.get(channel_name) or "").strip():
-            return False
-
-    return True
-
-
-def build_missing_context_message(
-    *,
-    process: Any,
-    uploaded_fcs_path: Any,
-    detector_channels: dict[str, Any],
-) -> str:
-    """
-    Build a user visible missing context message.
-    """
-    if not str(uploaded_fcs_path or "").strip():
-        return "Upload an FCS file first."
-
-    missing_channel_names: list[str] = []
-
-    for channel_name in process.get_required_detector_channels():
-        if not str(detector_channels.get(channel_name) or "").strip():
-            missing_channel_names.append(
-                str(channel_name),
-            )
-
-    if len(missing_channel_names) == 1:
-        return f"Select the {missing_channel_names[0]} detector channel first."
-
-    if missing_channel_names:
-        missing_channel_text = " and ".join(
-            missing_channel_names,
-        )
-
-        return f"Select the {missing_channel_text} detector channels first."
-
-    return "Upload an FCS file and select the required detector channel(s) first."
-
-
 def build_status_children(
     *,
     status_component_ids: list[dict[str, Any]],
@@ -1138,40 +797,18 @@ def build_status_children(
     """
     Build status children for pattern matched status outputs.
     """
-    children: list[Any] = []
+    if target_process_name.startswith("Rosetta Script"):
+        result_panel = build_rosetta_result_panel(status=status, peak_lines_payload=debug_payload)
+        status_component = result_panel if result_panel is not None else build_status_alert(status=status)
+        if result_panel is None and status_component:
+            status_component = html.Div(status_component, className="app-diagnostics-inline peak-result-message")
+    else:
+        status_component = build_status_alert(status=status)
 
-    for status_component_id in status_component_ids or []:
-        if status_component_id.get("process") == target_process_name:
-            status_component = build_status_alert(status=status)
-            if target_process_name.startswith("Rosetta Script") and status_component:
-                severity = classify_status_alert_color(status_text=status)
-                children.append(html.Div(
-                    [status_component, build_rosetta_debug_panel(peak_lines_payload=debug_payload)],
-                    **{"data-severity": "error" if severity == "danger" else "warning", "data-diagnostics-source": "Rosetta"},
-                ))
-                continue
-            process = registry.get_process_instance(
-                process_name=target_process_name,
-            )
-            debug_panel = (
-                build_rosetta_debug_panel(peak_lines_payload=debug_payload)
-                if process is not None
-                and getattr(process, "supports_debug_diagnostics", False)
-                else None
-            )
-            visible_children = [
-                child
-                for child in (status_component, debug_panel)
-                if child is not None and child != ""
-            ]
-            children.append(html.Div(visible_children) if visible_children else "")
-
-        else:
-            children.append(
-                "",
-            )
-
-    return children
+    return [
+        status_component if status_component_id.get("process") == target_process_name else ""
+        for status_component_id in status_component_ids or []
+    ]
 
 
 def build_status_alert(
@@ -1268,52 +905,6 @@ def build_no_update_status_children(
     Build a valid no update list for wildcard status outputs.
     """
     return [dash.no_update for _ in (status_component_ids or [])]
-
-
-def synchronize_page_state_table_rows(
-    *,
-    adapter: Any,
-    page_state: Any,
-    table_result: Any,
-) -> Any:
-    """
-    Mirror updated table rows into page state when that state owns table rows.
-
-    This keeps table hydration callbacks deterministic when a peak action
-    updates both page state and table in the same interaction.
-    """
-    if not isinstance(table_result, list):
-        return page_state
-
-    payload = adapter.get_page_state_payload(
-        page_state=page_state,
-    )
-
-    if "reference_table_rows" not in payload:
-        return page_state
-
-    normalize_table_data = getattr(
-        adapter,
-        "normalize_table_data",
-        None,
-    )
-
-    if callable(normalize_table_data):
-        normalized_table_rows = normalize_table_data(
-            table_data=table_result,
-        )
-
-    else:
-        normalized_table_rows = table_result
-
-    if payload.get("reference_table_rows") == normalized_table_rows:
-        return page_state
-
-    payload["reference_table_rows"] = normalized_table_rows
-
-    return adapter.build_page_state(
-        payload=payload,
-    )
 
 
 def build_no_update_callback_result(

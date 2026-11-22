@@ -1,11 +1,8 @@
 """Apply report payloads, request signatures, and download filenames."""
 
 import re
-from .services import (
-    ApplyCalibrationFilesResult,
-    ApplyCalibrationRequest,
-    resolve_source_channel,
-)
+from .payload import CalibrationPayload
+from .services import ApplyCalibrationFilesResult, ApplyCalibrationRequest
 from datetime import datetime
 from pathlib import Path
 from RosettaX.utils.service import build_reproducibility_metadata
@@ -26,9 +23,17 @@ def build_apply_report_payload(
         calibration_summaries[0] if calibration_summaries else None
     )
 
+    calibrations = [
+        CalibrationPayload.from_value(value=application.calibration_payload)
+        for application in request.calibrations
+    ]
+    calibration_details = [
+        _build_calibration_details_payload(calibration=calibration)
+        for calibration in calibrations
+    ]
     return {
         "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
-        "request_signature": build_apply_report_request_signature(request=request),
+        "request_signature": _build_request_signature(request=request, calibrations=calibrations),
         "selected_calibration": _build_selected_calibration_label(
             request=request,
         ),
@@ -45,19 +50,10 @@ def build_apply_report_payload(
             )
             for summary in calibration_summaries
         ],
-        "calibration_details": _build_calibration_details_payload(
-            calibration_payload=(
-                request.calibrations[0].calibration_payload
-                if request.calibrations
-                else {}
-            ),
+        "calibration_details": (
+            calibration_details[0] if calibration_details else {"calibration_type": "unknown", "payload_keys": []}
         ),
-        "calibration_details_list": [
-            _build_calibration_details_payload(
-                calibration_payload=calibration.calibration_payload,
-            )
-            for calibration in request.calibrations
-        ],
+        "calibration_details_list": calibration_details,
         "saved_calibration_payload": _sanitize_payload_tree(
             request.calibrations[0].calibration_payload if request.calibrations else {}
         ),
@@ -91,27 +87,36 @@ def build_apply_report_request_signature(
     request: ApplyCalibrationRequest,
 ) -> dict[str, Any]:
     """Build a comparable signature for the current apply request."""
+    return _build_request_signature(
+        request=request,
+        calibrations=[
+            CalibrationPayload.from_value(value=application.calibration_payload)
+            for application in request.calibrations
+        ],
+    )
+
+
+def _build_request_signature(
+    *, request: ApplyCalibrationRequest, calibrations: list[CalibrationPayload],
+) -> dict[str, Any]:
+    """Fingerprint the original saved data and normalized source channels."""
     return {
         "uploaded_fcs_paths": [str(path) for path in request.uploaded_fcs_paths],
         "selected_calibrations": [
             {
-                "selected_calibration": str(calibration.selected_calibration),
-                "source_channel": resolve_source_channel(
-                    calibration.calibration_payload,
-                ),
+                "selected_calibration": str(application.selected_calibration),
+                "source_channel": calibration.source_channel,
                 "calibration_fingerprint": build_reproducibility_metadata(
-                    calibration_kind=str(
-                        calibration.calibration_payload.get("calibration_type", "")
-                    ),
-                    payload=calibration.calibration_payload,
+                    calibration_kind=str(calibration.saved_payload.get("calibration_type", "")),
+                    payload=calibration.saved_payload,
                 )["fingerprint"],
                 "target_model": (
-                    calibration.scattering_target_model_parameters.to_parameter_payload()
-                    if calibration.scattering_target_model_parameters is not None
+                    application.scattering_target_model_parameters.to_parameter_payload()
+                    if application.scattering_target_model_parameters is not None
                     else None
                 ),
             }
-            for calibration in request.calibrations
+            for application, calibration in zip(request.calibrations, calibrations, strict=True)
         ],
         "export_columns": [str(column) for column in request.export_columns],
         "scattering_target_model_parameters": _build_scattering_target_model_payload(
@@ -226,47 +231,33 @@ def _build_selected_calibration_label(
     return f"{len(request.calibrations)} calibration files"
 
 
-def _build_calibration_details_payload(
-    *,
-    calibration_payload: dict[str, Any],
-) -> dict[str, Any]:
-    if not isinstance(calibration_payload, dict):
-        return {}
-
-    calibration_type = (
-        str(calibration_payload.get("calibration_type", "")).strip().lower()
-    )
-
+def _build_calibration_details_payload(*, calibration: CalibrationPayload) -> dict[str, Any]:
+    """Summarize the evidence available in a saved calibration."""
+    calibration_type = calibration.calibration_type.lower()
     if calibration_type == "fluorescence":
-        return _build_fluorescence_calibration_details(
-            calibration_payload=calibration_payload
-        )
-
+        return _build_fluorescence_calibration_details(calibration=calibration)
     if calibration_type == "scattering":
-        return _build_scattering_calibration_details(
-            calibration_payload=calibration_payload
-        )
+        return _build_scattering_calibration_details(calibration=calibration)
 
     return {
         "calibration_type": calibration_type or "unknown",
-        "payload_keys": sorted(calibration_payload.keys()),
+        "payload_keys": sorted(calibration.saved_payload),
     }
 
 
-def _build_fluorescence_calibration_details(
-    *,
-    calibration_payload: dict[str, Any],
-) -> dict[str, Any]:
-    fit_metrics = calibration_payload.get("fit_metrics", {})
-    parameters = calibration_payload.get("parameters", {})
-    nested_payload = calibration_payload.get("payload", {})
-    reference_points = calibration_payload.get("reference_points", [])
+def _build_fluorescence_calibration_details(*, calibration: CalibrationPayload) -> dict[str, Any]:
+    """Extract available fluorescence fit and reference-point evidence."""
+    calibration_payload = calibration.saved_payload
+    fit_metrics = _mapping_or_empty(calibration_payload.get("fit_metrics"))
+    parameters = _mapping_or_empty(calibration_payload.get("parameters"))
+    nested_payload = _mapping_or_empty(calibration_payload.get("payload"))
+    reference_points = _normalize_dict_list(calibration_payload.get("reference_points"))
 
     return {
         "calibration_type": "fluorescence",
         "schema_version": str(calibration_payload.get("schema_version", "")),
         "source_file": str(calibration_payload.get("source_file") or ""),
-        "source_channel": str(calibration_payload.get("source_channel") or ""),
+        "source_channel": calibration.source_channel,
         "gating_channel": str(calibration_payload.get("gating_channel") or ""),
         "gating_threshold": _as_float_or_none(
             calibration_payload.get("gating_threshold")
@@ -296,19 +287,18 @@ def _build_fluorescence_calibration_details(
     }
 
 
-def _build_scattering_calibration_details(
-    *,
-    calibration_payload: dict[str, Any],
-) -> dict[str, Any]:
-    instrument_response = calibration_payload.get("instrument_response", {})
-    metadata = calibration_payload.get("metadata", {})
-    reference_table = calibration_payload.get("reference_table", [])
+def _build_scattering_calibration_details(*, calibration: CalibrationPayload) -> dict[str, Any]:
+    """Extract available scattering fit and reference-table evidence."""
+    calibration_payload = calibration.saved_payload
+    instrument_response = _mapping_or_empty(calibration_payload.get("instrument_response"))
+    metadata = _mapping_or_empty(calibration_payload.get("metadata"))
+    reference_table = _normalize_dict_list(calibration_payload.get("reference_table"))
 
     return {
         "calibration_type": "scattering",
-        "version": _as_int_or_none(calibration_payload.get("version")),
-        "source_channel": str(calibration_payload.get("source_channel") or ""),
-        "output_quantity": str(calibration_payload.get("output_quantity") or ""),
+        "version": calibration.version,
+        "source_channel": calibration.source_channel,
+        "output_quantity": calibration.output_quantity,
         "instrument_response": {
             "measured_channel": str(instrument_response.get("measured_channel") or ""),
             "slope": _as_float_or_none(instrument_response.get("slope")),
@@ -417,6 +407,11 @@ def _normalize_string_list(value: Any) -> list[str]:
         return []
 
     return [str(item) for item in value]
+
+
+def _mapping_or_empty(value: Any) -> dict[str, Any]:
+    """Return optional report metadata when it is a dictionary."""
+    return value if isinstance(value, dict) else {}
 
 
 def _normalize_dict_list(value: Any) -> list[dict[str, Any]]:

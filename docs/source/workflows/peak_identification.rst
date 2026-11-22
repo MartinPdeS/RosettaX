@@ -188,8 +188,14 @@ The script stops with an informative status message if:
        non-fluorescent gate and may include dim marker events; decreasing it
        tightens the gate at the risk of excluding small beads near the baseline.
 
-Changing Marker fit strictness refreshes the peak graph. Select **Run** to
-apply the current settings to the peak table.
+Changing Marker fit strictness previews the peak graph. Select **Detect peaks**
+to apply the current settings to the calibration table. The Rosetta result
+above the graph shows the sized rows, excluded peaks, and event count. Open
+**Fit details** to inspect the accepted fits and the reasons candidates were
+rejected.
+
+When you replace the FCS file or change the Rosetta detector channels, run
+**Detect peaks** again to measure peak positions for the new selection.
 
 With both scatter anchors, Rosetta assigns diameters in scatter order. A
 fluorescent marker isolated at the scatter floor or ceiling can supply an
@@ -224,10 +230,9 @@ fluorescent marker anchors. If either anchor is unavailable or unreliable, or
 not all detected peaks can be assigned, it shows a warning and leaves the
 existing graph and calibration table unchanged.
 
-On the plot, purple diamonds and dotted guides identify fluorescent markers;
-teal circles and dashed guides identify non-fluorescent peaks. The horizontal
-line marks the fluorescence baseline gate. Size labels above that line identify
-the non-fluorescent peaks, while marker labels appear at the top of the plot.
+Purple dotted guides identify fluorescent markers. Teal dashed guides identify
+non-fluorescent peaks. The angled size labels sit above their guides. The legend
+below the axes identifies the fluorescence baseline gate and saturation cutoff.
 
 For the Rosetta scripts, *Auto-select detectors* uses the instrument's scatter
 and green fluorescence recommendations in

@@ -2,9 +2,9 @@
 import copy
 import json
 import logging
+from .catalog import INSTRUMENT_CATALOG_PATH, load_instrument_catalog
 from pathlib import Path
 from typing import Any
-from .catalog import INSTRUMENT_CATALOG_PATH, load_instrument_catalog
 
 logger = logging.getLogger(__name__)
 DEFAULT_DETECTOR_PRESET_PATH = INSTRUMENT_CATALOG_PATH

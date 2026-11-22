@@ -53,9 +53,9 @@
     "detectors": [
       "SALS(Peak)",
       "LALS(Peak)",
-      "405Grn(Peak)"
+      "488Grn(Peak)"
     ],
-    "size_bytes": 1041355
+    "size_bytes": 1041544
   },
   "cross_device/bd_facscalibur_cal003_2023-02-08.fcs": {
     "detectors": [

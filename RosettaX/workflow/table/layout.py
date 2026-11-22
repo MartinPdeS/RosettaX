@@ -288,7 +288,7 @@ class ReferenceTableLayout:
             options.update(
                 page_action="none",
                 fixed_rows={"headers": False},
-                style_table={"width": "100%", "overflow": "visible"},
+                style_table={"width": "100%", "overflowX": "auto"},
                 style_cell={**styling.DATATABLE["style_cell"], "minWidth": "0", "width": "auto", "maxWidth": "none", "overflowWrap": "anywhere"},
             )
         return options

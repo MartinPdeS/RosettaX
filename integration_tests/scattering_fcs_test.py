@@ -10,11 +10,9 @@ if __name__ == "__main__":
 import hashlib
 import json
 import logging
-from pathlib import Path
-
 import numpy as np
 import pytest
-
+from pathlib import Path
 from RosettaX.pages.p03_scattering.sections.s05_calibration.services import (
     run_scattering_calibration,
 )

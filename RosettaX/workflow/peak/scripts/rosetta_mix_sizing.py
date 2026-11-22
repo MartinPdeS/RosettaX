@@ -2,6 +2,7 @@
 
 import numpy as np
 from .base import PeakProcessResult
+from .rosetta_mix_models import RosettaAssignmentState, RosettaSizeAssignment
 from typing import Any
 
 DIM_MARKER_DIAMETER_NM = 140.0
@@ -32,16 +33,19 @@ MARKER_SATURATION_FLUORESCENCE_FRACTION = 0.95
 
 
 def build_rosetta_table_prefill_rows(
-    *,
-    result: PeakProcessResult,
+    *, result: PeakProcessResult,
 ) -> tuple[list[dict[str, Any]], str]:
-    """
-    Replace placeholder Rosetta table diameters with inferred Rosetta Mix sizes.
-    """
+    """Return inferred Rosetta Mix sizes and their rendered status."""
+    assignment = resolve_rosetta_table_sizes(result=result)
+    return assignment.rows, assignment.status
+
+
+def resolve_rosetta_table_sizes(*, result: PeakProcessResult) -> RosettaSizeAssignment:
+    """Infer sizes using two marker anchors and record why sizing stopped."""
     source_rows = result.table_prefill_rows or []
 
     if not source_rows:
-        return [], ""
+        return RosettaSizeAssignment()
 
     rows = [
         dict(row)
@@ -50,7 +54,7 @@ def build_rosetta_table_prefill_rows(
     ]
 
     if not rows:
-        return [], ""
+        return RosettaSizeAssignment()
 
     peak_metadata = build_peak_metadata(
         peak_lines_payload=result.peak_lines_payload,
@@ -118,26 +122,29 @@ def build_rosetta_table_prefill_rows(
         unassigned_peak_count = len(non_fluorescent_row_indices) - len(
             inferred_diameters_nm,
         )
-        unassigned_suffix = (
-            f" Warning: {unassigned_peak_count} scatter peak(s) exceeded the Rosetta Mix size"
-            " range; review the detected peaks."
-            if unassigned_peak_count > 0
-            else ""
-        )
-
-        if unassigned_peak_count:
-            return rows, unassigned_suffix.strip()
-
-        if used_marker_count >= 2:
-            return (
-                rows,
-                "Rosetta Script V1 assigned Rosetta Mix diameters from the 140 nm and 380 nm marker anchors."
-                + unassigned_suffix,
+        if unassigned_peak_count > 0:
+            return RosettaSizeAssignment(
+                rows=rows,
+                state=RosettaAssignmentState.FAILED,
+                failure_code="size_range_exceeded",
+                rejection_reasons=(
+                    f"{unassigned_peak_count} scatter peak(s) exceeded the Rosetta Mix size range; review the detected peaks.",
+                ),
             )
 
-    return (
-        rows,
-        "Warning: Size assignment needs both reliable 140 nm and 380 nm marker anchors; review the selected channels and data.",
+        if used_marker_count >= 2:
+            return RosettaSizeAssignment(
+                rows=rows,
+                detail="Rosetta Script V1 assigned Rosetta Mix diameters from the 140 nm and 380 nm marker anchors.",
+            )
+
+    return RosettaSizeAssignment(
+        rows=rows,
+        state=RosettaAssignmentState.FAILED,
+        failure_code="unreliable_markers",
+        rejection_reasons=(
+            "Size assignment needs both reliable 140 nm and 380 nm marker anchors; review the selected channels and data.",
+        ),
     )
 
 

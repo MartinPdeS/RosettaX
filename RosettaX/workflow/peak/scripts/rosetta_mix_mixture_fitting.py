@@ -1,11 +1,11 @@
 """Joint log-intensity mixture fitting for experimental Rosetta scatter detection."""
 
 import numpy as np
+from collections.abc import Callable
 from scipy.ndimage import gaussian_filter1d
 from scipy.optimize import linear_sum_assignment
 from scipy.signal import find_peaks, peak_widths
 from sklearn.mixture import GaussianMixture
-from collections.abc import Callable
 from typing import Any
 
 
@@ -20,6 +20,7 @@ def find_mixture_scatter_peaks(
     saturation_intensity: float,
     prominence_fraction: float = 0.01,
     center_bounds: tuple[float, float] | None = None,
+    observed_log_bounds: tuple[float, float] | None = None,
 ) -> dict[str, Any]:
     """Detect supported modes and fit their overlapping distributions together.
 
@@ -48,6 +49,9 @@ def find_mixture_scatter_peaks(
     center_bounds : tuple of float or None, optional
         Open scatter intensity interval for seed peaks. The histogram and fit
         may include events outside that interval to account for nearby tails.
+    observed_log_bounds : tuple of float or None, optional
+        Full baseline-gated log10 intensity range before cutting regional
+        windows. Used to explain which boundary truncated a fit.
 
     Returns
     -------
@@ -69,8 +73,8 @@ def find_mixture_scatter_peaks(
     counts, edges = np.histogram(log_values, bins=min(256, max(64, int(np.sqrt(values.size)))))
     centers = (edges[:-1] + edges[1:]) / 2
     smoothed = gaussian_filter1d(counts.astype(float), sigma=1.5)
-    # Pad the histogram so a population near an acquisition boundary is still
-    # considered, then reject boundary components explicitly below.
+    # Pad the histogram so modes at the fitted range's edge are considered.
+    # The component validation below handles truncation.
     padded = np.pad(smoothed, 1)
     candidates, properties = find_peaks(
         padded, prominence=float(smoothed.max()) * prominence_fraction, distance=4,
@@ -196,8 +200,17 @@ def find_mixture_scatter_peaks(
             reasons.append(f"CV {cv:.2f} > {fit_cv_threshold:.2f}")
         if position >= saturation_intensity:
             reasons.append("Center reaches saturation")
-        if center - 2 * deviation < edges[0] or center + 2 * deviation > edges[-1]:
-            reasons.append("Population may be truncated by the acquisition boundary")
+        truncated_at_lower_edge = center - 2 * deviation < edges[0]
+        truncated_at_upper_edge = center + 2 * deviation > edges[-1]
+        if truncated_at_lower_edge or truncated_at_upper_edge:
+            regional_edge = observed_log_bounds is not None and (
+                (truncated_at_lower_edge and edges[0] > observed_log_bounds[0])
+                or (truncated_at_upper_edge and edges[-1] < observed_log_bounds[1])
+            )
+            reasons.append(
+                "Population may be truncated by the marker-bounded fit window"
+                if regional_edge else "Population may be truncated by the observed scatter range"
+            )
         all_peaks.append({
             "mean": position, "std": position * cv, "cv": cv,
             "r2": None, "count": effective_count, "validated": not reasons,
@@ -226,12 +239,20 @@ def fit_marker_regions(
     # Include about 20% beyond each marker. A fitted center belongs to only
     # one interval, regardless of which events contributed to that fit.
     margin_factor = 10**0.08
+    values = np.asarray(values, dtype=float)
+    observed = np.isfinite(values) & (values > 0)
+    if not np.any(observed):
+        return {"all_peaks": [], "validated_peaks": [], "method": "marker_bounded_log_gaussian_mixture"}
+    observed_log_bounds = (
+        float(np.log10(values.min(where=observed, initial=np.inf))),
+        float(np.log10(values.max(where=observed, initial=0))),
+    )
     all_peaks = []
     for start, stop, capacity in ((0.0, lower, 3), (lower, upper, 3), (upper, np.inf, 4)):
         regional_events = values[(values > start / margin_factor) & (values < stop * margin_factor)]
         analysis = fit(
             values=regional_events, peak_count=min(peak_count, capacity),
-            center_bounds=(start, stop), **fit_options,
+            center_bounds=(start, stop), observed_log_bounds=observed_log_bounds, **fit_options,
         )
         all_peaks.extend(peak for peak in analysis["all_peaks"] if start < peak["mean"] < stop)
     all_peaks.sort(key=lambda peak: peak["mean"])

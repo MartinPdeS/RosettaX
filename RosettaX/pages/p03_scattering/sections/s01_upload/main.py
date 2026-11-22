@@ -5,6 +5,7 @@ import logging
 from ...state import ScatteringPageState
 from RosettaX.ui import WorkflowStep
 from RosettaX.utils import ui_forms
+from RosettaX.workflow.table.scattering import ScatteringCalibrationStandardTable
 from RosettaX.workflow.upload.adapters import ScatteringUploadAdapter
 from RosettaX.workflow.upload.callbacks import register_upload_callbacks
 from RosettaX.workflow.upload.layout import UploadLayout
@@ -97,4 +98,5 @@ class Upload:
             adapter=self.adapter,
             config=self.config,
             logger=logger,
+            table_reset=(self.page.ids.Calibration.bead_table, ScatteringCalibrationStandardTable.clear_measured_peak_positions),
         )

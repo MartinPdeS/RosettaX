@@ -1,9 +1,8 @@
 """Workflow table exports and local section assembly."""
 
-from collections.abc import Callable
-from typing import Any
 import numpy as np
 import plotly.graph_objects as go
+from collections.abc import Callable
 from RosettaX.utils.casting import as_optional_float
 from RosettaX.workflow.page_session.scattering import ScatteringPageState
 from RosettaX.workflow.parameters.table import MIE_MODEL_SOLID_SPHERE
@@ -25,6 +24,7 @@ from RosettaX.workflow.table.scattering import (
     sphere_table_columns,
     table_is_effectively_empty,
 )
+from typing import Any
 
 __all__ = [
     "ScatteringCalibrationStandardTable",

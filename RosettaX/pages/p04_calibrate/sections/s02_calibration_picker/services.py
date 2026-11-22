@@ -1,9 +1,12 @@
-import json
 import logging
 from .models import TargetMiePreviewControls, TargetMiePreviewResult
 from dash import html
 from pathlib import Path
 from RosettaX.workflow import plotting
+from RosettaX.workflow.apply_calibration.payload import (
+    CalibrationPayload,
+    decode_calibration_record,
+)
 from RosettaX.workflow.upload.services import read_uploaded_file_bytes
 from typing import Any
 
@@ -41,28 +44,10 @@ def parse_uploaded_calibration(
             "Uploaded calibration file has a malformed Dash contents payload."
         )
 
-    raw_bytes = read_uploaded_file_bytes(contents)
-
-    record = json.loads(
-        raw_bytes.decode("utf-8"),
+    return resolved_filename, decode_calibration_record(
+        content=read_uploaded_file_bytes(contents).decode("utf-8"),
+        require_schema=True,
     )
-
-    if not isinstance(record, dict):
-        raise ValueError("Calibration file root record is invalid.")
-
-    schema = str(record.get("schema", "")).strip()
-
-    if schema != "rosettax_calibration_v1":
-        raise ValueError(
-            f"Calibration file schema is unsupported: {schema or '<missing>'}."
-        )
-
-    payload = record.get("payload")
-
-    if not isinstance(payload, dict):
-        raise ValueError('Calibration file is missing top level "payload".')
-
-    return resolved_filename, payload
 
 
 def parse_uploaded_calibration_summaries(
@@ -106,56 +91,7 @@ def build_calibration_summary(
     """
     Build a lightweight calibration summary for UI decisions.
     """
-    calibration_type = str(
-        calibration_payload.get(
-            "calibration_type",
-            "",
-        )
-    ).strip()
-
-    source_channel = str(
-        calibration_payload.get(
-            "source_channel",
-            "",
-        )
-    ).strip()
-
-    output_quantity = str(
-        calibration_payload.get(
-            "output_quantity",
-            "",
-        )
-    ).strip()
-
-    version = calibration_payload.get(
-        "version",
-        None,
-    )
-    applied_output_channel_name = str(
-        calibration_payload.get(
-            "applied_output_channel_name",
-            "",
-        )
-    ).strip()
-
-    instrument_response = calibration_payload.get(
-        "instrument_response",
-        {},
-    )
-
-    if isinstance(instrument_response, dict):
-        measured_channel = str(
-            instrument_response.get(
-                "measured_channel",
-                "",
-            )
-        ).strip()
-
-    else:
-        measured_channel = ""
-
-    if not source_channel and measured_channel:
-        source_channel = measured_channel
+    calibration = CalibrationPayload.from_value(value=calibration_payload)
 
     return {
         "selected_calibration": selected_calibration,
@@ -167,15 +103,15 @@ def build_calibration_summary(
         "file_path": str(calibration_file_path)
         if calibration_file_path is not None
         else "",
-        "calibration_type": calibration_type,
-        "source_channel": source_channel,
-        "output_quantity": output_quantity,
-        "applied_output_channel_name": applied_output_channel_name,
-        "version": version,
-        "is_scattering": calibration_type == "scattering",
-        "is_fluorescence": calibration_type == "fluorescence",
-        "requires_target_model": calibration_type == "scattering",
-        "is_valid": bool(calibration_type),
+        "calibration_type": calibration.calibration_type,
+        "source_channel": calibration.source_channel,
+        "output_quantity": calibration.output_quantity,
+        "applied_output_channel_name": calibration.output_channel_name,
+        "version": calibration.version,
+        "is_scattering": calibration.calibration_type == "scattering",
+        "is_fluorescence": calibration.calibration_type == "fluorescence",
+        "requires_target_model": calibration.calibration_type == "scattering",
+        "is_valid": bool(calibration.calibration_type),
         "error": "",
         "calibration_payload": dict(calibration_payload),
     }

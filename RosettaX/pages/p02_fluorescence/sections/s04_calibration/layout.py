@@ -199,12 +199,7 @@ def _build_calibration_footer(section) -> dash.html.Div:
             _build_fit_metric("Intercept", section.ids.intercept_out),
             _build_fit_metric("R²", section.ids.r_squared_out),
         ],
-        style={
-            "display": "grid",
-            "gridTemplateColumns": "repeat(3, minmax(120px, 1fr))",
-            "gap": "10px",
-            "alignItems": "stretch",
-        },
+        className="calibration-fit-metrics",
     )
 
 

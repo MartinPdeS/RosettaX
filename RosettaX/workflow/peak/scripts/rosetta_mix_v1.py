@@ -1,7 +1,9 @@
 """Custom Rosetta mode with editable settings and detailed fit diagnostics."""
 
+from ..core.process_calls import standard_peak_action
 from .base import PeakProcessResult
 from .rosetta_mix import FluorescenceGuidedScatterPeakProcess
+from .rosetta_mix_models import RosettaAssignmentState
 from .rosetta_mix_sizing import (  # noqa: F401
     BRIGHT_MARKER_DIAMETER_NM,
     DIM_MARKER_DIAMETER_NM,
@@ -18,12 +20,13 @@ from .rosetta_mix_sizing import (  # noqa: F401
     match_table_points_to_peak_metadata,
     resolve_marker_proxy_sizes,
     resolve_marker_row_diameter,
+    resolve_rosetta_table_sizes,
 )
 from .rosetta_mix_sizing import (
     build_rosetta_peak_lines_payload as build_rosetta_mix_v1_peak_lines_payload,
 )
 from .rosetta_mix_sizing import (
-    build_rosetta_table_prefill_rows as build_rosetta_mix_v1_table_prefill_rows,
+    build_rosetta_table_prefill_rows as build_rosetta_mix_v1_table_prefill_rows,  # noqa: F401
 )
 from dataclasses import replace
 from typing import Any
@@ -63,6 +66,7 @@ class FluorescenceGuidedScatterPeakProcessV1(FluorescenceGuidedScatterPeakProces
             "green_fluorescence": "Green fluorescence channel",
         }
 
+    @standard_peak_action
     def run_automatic_action(
         self,
         *,
@@ -71,6 +75,8 @@ class FluorescenceGuidedScatterPeakProcessV1(FluorescenceGuidedScatterPeakProces
         peak_count: Any,
         max_events_for_analysis: Any,
         process_settings: dict[str, Any],
+        max_events_for_plots: Any = None,
+        runtime_config_data: Any = None,
     ) -> PeakProcessResult | None:
         """
         Run Rosetta detection, then infer Rosetta Mix diameter assignments.
@@ -90,14 +96,14 @@ class FluorescenceGuidedScatterPeakProcessV1(FluorescenceGuidedScatterPeakProces
         if result is None:
             return None
 
-        resolved_rows, status_suffix = build_rosetta_mix_v1_table_prefill_rows(
-            result=result,
-        )
+        assignment = resolve_rosetta_table_sizes(result=result)
+        resolved_rows = assignment.rows
+        status_suffix = assignment.status
 
         if not resolved_rows and result.status:
             return replace(result, status=f"Warning: {result.status}", warning=True)
 
-        if status_suffix.startswith("Warning:") or any(
+        if assignment.state is RosettaAssignmentState.FAILED or any(
             not row.get("particle_diameter_nm") for row in resolved_rows
         ):
             debug_diagnostics = (
@@ -105,11 +111,14 @@ class FluorescenceGuidedScatterPeakProcessV1(FluorescenceGuidedScatterPeakProces
                 if isinstance(result.peak_lines_payload, dict)
                 else None
             )
-            warning_payload = (
-                {"rosetta_debug_diagnostics": debug_diagnostics}
-                if isinstance(debug_diagnostics, dict)
-                else {}
-            )
+            warning_payload = {
+                key: result.peak_lines_payload[key]
+                for key in ("rosetta_event_counts", "rosetta_detection_issue")
+                if key in result.peak_lines_payload
+            }
+            if isinstance(debug_diagnostics, dict):
+                warning_payload["rosetta_debug_diagnostics"] = debug_diagnostics
+            warning_payload["rosetta_sizing"] = assignment.to_diagnostics()
             return replace(
                 result,
                 peak_positions=[],
@@ -118,7 +127,7 @@ class FluorescenceGuidedScatterPeakProcessV1(FluorescenceGuidedScatterPeakProces
                 peak_lines_payload=warning_payload,
                 status=(
                     status_suffix
-                    if status_suffix.startswith("Warning:")
+                    if assignment.state is RosettaAssignmentState.FAILED
                     else f"Warning: {status_suffix}"
                 ),
                 warning=True,
@@ -141,6 +150,7 @@ class FluorescenceGuidedScatterPeakProcessV1(FluorescenceGuidedScatterPeakProces
                 result=result,
                 resolved_rows=resolved_rows,
             )
+        updated_peak_lines_payload = dict(updated_peak_lines_payload, rosetta_sizing=assignment.to_diagnostics())
 
         return replace(
             result,

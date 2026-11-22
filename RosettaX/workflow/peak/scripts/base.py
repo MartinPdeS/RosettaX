@@ -2,6 +2,7 @@
 import dash
 import logging
 import numpy as np
+from ._events import filter_finite_peak_events
 from dataclasses import dataclass
 from RosettaX.utils import styling
 from typing import Any, ClassVar
@@ -215,13 +216,10 @@ def filter_edge_artifact_values(
         dtype=float,
     ).reshape(-1)
 
-    finite_values = resolved_values[
-        np.isfinite(
-            resolved_values,
-        )
-    ]
+    (finite_values,), removed_nonfinite = filter_finite_peak_events(columns=(resolved_values,))
 
     if finite_values.size == 0:
+        logger.debug("Peak event filters removed all %d events as nonfinite.", removed_nonfinite)
         return finite_values
 
     artifact_mask = np.zeros_like(
@@ -241,6 +239,7 @@ def filter_edge_artifact_values(
             edge="max",
         )
 
+    logger.debug("Peak event filters removed %d nonfinite and %d edge events.", removed_nonfinite, np.count_nonzero(artifact_mask))
     return finite_values[~artifact_mask]
 
 
@@ -265,15 +264,12 @@ def filter_edge_artifact_pairs(
         dtype=float,
     ).reshape(-1)
 
-    finite_mask = (
-        np.isfinite(resolved_x_values)
-        & np.isfinite(resolved_y_values)
+    (filtered_x_values, filtered_y_values), removed_nonfinite = filter_finite_peak_events(
+        columns=(resolved_x_values, resolved_y_values),
     )
 
-    filtered_x_values = resolved_x_values[finite_mask]
-    filtered_y_values = resolved_y_values[finite_mask]
-
     if filtered_x_values.size == 0 or filtered_y_values.size == 0:
+        logger.debug("Paired peak event filters removed all %d events as nonfinite.", removed_nonfinite)
         return (
             filtered_x_values,
             filtered_y_values,
@@ -308,6 +304,7 @@ def filter_edge_artifact_pairs(
             edge="max",
         )
 
+    logger.debug("Paired peak event filters removed %d nonfinite and %d edge events.", removed_nonfinite, np.count_nonzero(artifact_mask))
     return (
         filtered_x_values[~artifact_mask],
         filtered_y_values[~artifact_mask],
@@ -597,13 +594,23 @@ def resolve_integer_value(
     """
     try:
         resolved_value = int(value)
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         resolved_value = int(default)
 
     resolved_value = max(int(minimum), resolved_value)
     resolved_value = min(int(maximum), resolved_value)
 
     return resolved_value
+
+
+def resolve_peak_event_limit(*, analysis_limit: Any, plot_limit: Any = None) -> int:
+    """Use the analysis limit, with the legacy plot limit as a fallback."""
+    return resolve_integer_value(
+        value=analysis_limit if analysis_limit is not None else plot_limit,
+        default=10_000,
+        minimum=1,
+        maximum=5_000_000,
+    )
 
 
 def resolve_integer_setting(

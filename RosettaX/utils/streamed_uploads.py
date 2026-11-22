@@ -1,4 +1,5 @@
 
+import os
 import re
 import shutil
 from dataclasses import dataclass
@@ -9,7 +10,10 @@ from uuid import UUID, uuid4
 
 STREAMED_UPLOAD_TOKEN_PREFIX = "rosettax-upload://"
 STREAMED_UPLOAD_ERROR_PREFIX = "rosettax-upload-error://"
-DEFAULT_STREAMED_UPLOAD_DIRECTORY = Path.home() / ".rosettax" / "uploads" / "staged"
+DEFAULT_UPLOAD_DIRECTORY = Path(
+    os.getenv("ROSETTAX_UPLOAD_DIRECTORY") or Path.home() / ".rosettax" / "uploads"
+).expanduser().resolve()
+DEFAULT_STREAMED_UPLOAD_DIRECTORY = DEFAULT_UPLOAD_DIRECTORY / "staged"
 DEFAULT_STREAM_CHUNK_BYTES = 1024 * 1024
 ALLOWED_STREAMED_UPLOAD_EXTENSIONS = frozenset({".fcs", ".json"})
 

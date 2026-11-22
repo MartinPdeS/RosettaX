@@ -31,6 +31,7 @@ def main() -> None:
         environment = dict(os.environ)
         environment.update(
             MPLCONFIGDIR=str(temporary_path / "matplotlib"),
+            ROSETTAX_UPLOAD_DIRECTORY=str(temporary_path / "uploads"),
             ROSETTAX_USAGE_METRICS_PATH=str(temporary_path / "metrics.json"),
             ROSETTAX_VISIT_LOG_PATH=str(temporary_path / "visits.jsonl"),
         )
@@ -81,7 +82,7 @@ def main() -> None:
                     "--sample-file",
                     str(
                         repository
-                        / "RosettaX/assets/sample-files/apogee_rainbow_beads.fcs"
+                        / "RosettaX/assets/sample-files/summer_school/apogee_rainbow_beads.fcs"
                     ),
                     "--budgets",
                     str(repository / "tools/navigation_budgets.json"),

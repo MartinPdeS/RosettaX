@@ -1,11 +1,11 @@
 import dash
 import dash_bootstrap_components as dbc
 import logging
-from functools import partial
 from ..rosetta_validation import build_validation_results
 from ..s03_model.main import Model as ScatteringModelSection
 from ..s05_calibration import services as calibration_services
 from .services import ScatteringCalibrationStandardTable, review_rosetta_assignments
+from functools import partial
 from RosettaX.pages.p00_sidebar.ids import SidebarIds
 from RosettaX.pages.p03_scattering.sections.s03_model import layout as model_layout
 from RosettaX.pages.p03_scattering.state import ScatteringPageState
@@ -13,7 +13,10 @@ from RosettaX.ui import WorkflowStep
 from RosettaX.utils import RuntimeConfig, styling, ui_forms
 from RosettaX.workflow import parameters
 from RosettaX.workflow.plotting import PlotOptions
-from RosettaX.workflow.scattering.rosetta_assignment import VALIDATION_MODEL_FIELDS, update_rosetta_assignment_overlays
+from RosettaX.workflow.scattering.rosetta_assignment import (
+    VALIDATION_MODEL_FIELDS,
+    update_rosetta_assignment_overlays,
+)
 from RosettaX.workflow.table.layout import (
     ReferenceTableActionConfig,
     ReferenceTableConfig,
@@ -191,6 +194,7 @@ class ReferenceTable:
                         dash.dcc.Loading(
                             dash.dcc.Graph(
                                 id=self.ids.graph_model,
+                                responsive=True,
                                 style=graph_style,
                                 config=styling.PLOTLY_GRAPH_CONFIG,
                             ),
@@ -203,13 +207,14 @@ class ReferenceTable:
                             value=[PlotOptions.y_log_value],
                         ),
                     ],
-                    style={"flex": "1 1 0", "minWidth": "0"},
+                    style={"minWidth": 0},
                 ),
                 dash.html.Div(
                     [
                         dash.dcc.Loading(
                             dash.dcc.Graph(
                                 id=self.ids.graph_diameter_peak_position,
+                                responsive=True,
                                 style=graph_style,
                                 config=styling.PLOTLY_GRAPH_CONFIG,
                             ),
@@ -222,13 +227,13 @@ class ReferenceTable:
                             value=[],
                         ),
                     ],
-                    style={"flex": "1 1 0", "minWidth": "0"},
+                    style={"minWidth": 0},
                 ),
             ],
             style={
-                "display": "flex",
+                "display": "grid",
+                "gridTemplateColumns": "repeat(auto-fit, minmax(min(20rem, 100%), 1fr))",
                 "gap": "16px",
-                "overflow": "visible",
                 "width": "100%",
             },
         )

@@ -43,6 +43,7 @@ sys.modules.setdefault(
 )
 
 from RosettaX.workflow.peak.callbacks import mutation
+from RosettaX.workflow.peak.callbacks.debug_panel import build_rosetta_result_panel
 
 
 class Test_PeakMutationStatus:
@@ -99,3 +100,32 @@ class Test_PeakMutationStatus:
 
         assert children[0] != ""
         assert children[1] == ""
+
+    def test_rosetta_preview_describes_candidates_without_claiming_table_updates(self) -> None:
+        """Distinguish preview candidates from committed calibration rows."""
+        panel = build_rosetta_result_panel(
+            status="",
+            peak_lines_payload={
+                "rosetta_settings_preview": True,
+                "rosetta_sizing": {"assigned_row_count": 5, "measured_row_count": 6},
+                "rosetta_event_counts": {"retained": 24_000},
+            },
+        )
+        assert panel.children[0].children[0].children == "Rosetta preview"
+        assert panel.children[0].children[1].children == "Select Detect peaks to update the calibration table."
+        metrics = {row.children[0].children: row.children[1].children for row in panel.children[1].children}
+        assert metrics == {"Sized peaks": "5", "Peaks without a diameter": "1", "Events analyzed": "24,000"}
+
+    def test_provisional_sizes_stay_visible_when_detection_completed_without_warning(self) -> None:
+        """Show that successful detection may still leave provisional assignments."""
+        panel = build_rosetta_result_panel(
+            status="",
+            peak_lines_payload={
+                "rosetta_sizing": {"assigned_row_count": 5, "measured_row_count": 5, "needs_confirmation": True},
+                "rosetta_assignment_evidence": {"rows": [{"particle_diameter_nm": 100}]},
+                "rosetta_lowest_peak_exclusion": {"position": 2241},
+            },
+        )
+        assert "app-diagnostics-inline" in panel.className
+        assert panel.children[0].children[0].children == "Review Rosetta assignments"
+        assert panel.children[0].children[1].children.startswith("Use Compute model")

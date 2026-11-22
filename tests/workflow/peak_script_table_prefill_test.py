@@ -134,12 +134,17 @@ class Test_ScatteringPeakScriptTablePrefill:
         assert table_result[0]["medium_refractive_index"] == "Water(1.33698)"
 
     def test_rosetta_script_forces_polystyrene_in_water(self):
-        """Check Rosetta script forces polystyrene in water."""
+        """Use Rosetta materials for sized rows and keep unsized rows out of the table."""
         adapter = ScatteringPeakWorkflowAdapter()
 
         table_result = adapter.apply_peak_process_result_to_table(
             table_data=[{"particle_diameter_nm": "100", "measured_peak_position": ""}],
-            result={"new_peak_positions": [111.0]},
+            result={
+                "table_prefill_rows": [
+                    {"measured_peak_position": 111.0, "particle_diameter_nm": 100.0},
+                    {"measured_peak_position": 222.0, "particle_diameter_nm": ""},
+                ],
+            },
             context={
                 "mie_model": "Solid Sphere",
                 "process_name": "Rosetta Script",
@@ -151,8 +156,10 @@ class Test_ScatteringPeakScriptTablePrefill:
             logger=logger,
         )
 
-        assert table_result[0]["particle_refractive_index"] == "Polystyrene(1.59796)"
-        assert table_result[0]["medium_refractive_index"] == "Water(1.33698)"
+        measured_row, = [row for row in table_result if row["measured_peak_position"] != ""]
+        assert float(measured_row["measured_peak_position"]) == 111.0
+        assert measured_row["particle_refractive_index"] == "Polystyrene(1.59796)"
+        assert measured_row["medium_refractive_index"] == "Water(1.33698)"
 
     def test_apply_peak_process_result_to_table_merges_script_prefill_rows_for_solid_sphere(self):
         """Check apply peak process result to table merges script prefill rows for solid sphere."""

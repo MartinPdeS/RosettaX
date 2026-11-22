@@ -1,13 +1,14 @@
 
 import numpy as np
 from . import io
-from .fluorescence import apply_legacy_calibration_to_series
+from .fluorescence import FluorescenceCalibration, apply_legacy_calibration_to_series
+from .payload import CalibrationPayload
 from .scattering import (
     ScatteringTargetModelParameters,
     apply_scattering_calibration_to_dataframe,
     build_scattering_output_columns,
-    calibration_is_scattering_v2,
 )
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -49,9 +50,6 @@ class ApplyCalibrationFilesResult:
     status: str
 
 
-APPLIED_OUTPUT_CHANNEL_NAME_KEY = "applied_output_channel_name"
-
-
 def apply_calibration_to_fcs_files(
     *,
     request: ApplyCalibrationRequest,
@@ -70,7 +68,7 @@ def apply_calibration_to_fcs_files(
     calibration_descriptions: list[str] = []
     warnings: list[str] = []
     source_channels_seen: set[str] = set()
-    unresolved_calibration_applications: list[tuple[CalibrationApplication, str, bool]] = []
+    unresolved_calibration_applications: list[tuple[CalibrationApplication, CalibrationPayload]] = []
 
     for calibration_application in request.calibrations:
         if not calibration_application.selected_calibration:
@@ -82,10 +80,15 @@ def apply_calibration_to_fcs_files(
         ):
             raise ValueError("Uploaded calibration payload is missing.")
 
-        calibration_payload = dict(calibration_application.calibration_payload)
-        source_channel = resolve_source_channel(
-            calibration_payload,
-        )
+        calibration = CalibrationPayload.from_value(value=calibration_application.calibration_payload)
+        if (
+            calibration.calibration_type == "scattering"
+            and calibration.version is None
+            and calibration.saved_payload.get("version") not in (None, "")
+        ):
+            raise ValueError("Scattering calibration version must be an integer.")
+
+        source_channel = calibration.source_channel
 
         if not source_channel:
             raise ValueError('Calibration payload is missing "source_channel".')
@@ -102,28 +105,19 @@ def apply_calibration_to_fcs_files(
             source_channel,
         )
 
-        is_scattering = calibration_is_scattering_v2(
-            calibration_payload,
-        )
-
-        unresolved_calibration_applications.append(
-            (
-                calibration_application,
-                source_channel,
-                is_scattering,
-            )
-        )
+        unresolved_calibration_applications.append((calibration_application, calibration))
 
     input_export_columns = io.build_input_export_columns(
         source_channels=input_source_channels,
         export_columns=request.export_columns,
     )
 
-    calibration_applications: list[tuple[CalibrationApplication, str, bool, list[str]]] = []
+    transformer_factories: list[Callable[[str], Callable[[Any], Any]]] = []
     reserved_output_names = set(input_export_columns)
 
-    for calibration_application, source_channel, is_scattering in unresolved_calibration_applications:
-        if is_scattering:
+    for calibration_application, calibration in unresolved_calibration_applications:
+        source_channel = calibration.source_channel
+        if calibration.is_scattering_v2:
             if calibration_application.scattering_target_model_parameters is None:
                 raise ValueError(
                     "Scattering target model parameters are required for scattering calibration."
@@ -134,10 +128,7 @@ def apply_calibration_to_fcs_files(
             )
             resolved_output_channels = [
                 resolve_unique_output_channel_name(
-                    preferred_name=resolve_requested_output_channel_name(
-                        calibration_application.calibration_payload,
-                        default=default_output_columns.mie_equivalent_diameter_nm,
-                    ),
+                    preferred_name=calibration.output_channel_name or default_output_columns.mie_equivalent_diameter_nm,
                     reserved_names=reserved_output_names.union(
                         {
                             default_output_columns.estimated_coupling,
@@ -148,10 +139,7 @@ def apply_calibration_to_fcs_files(
         else:
             resolved_output_channels = [
                 resolve_unique_output_channel_name(
-                    preferred_name=resolve_requested_output_channel_name(
-                        calibration_application.calibration_payload,
-                        default=source_channel,
-                    ),
+                    preferred_name=calibration.output_channel_name or source_channel,
                     reserved_names=reserved_output_names,
                 ),
             ]
@@ -167,19 +155,18 @@ def apply_calibration_to_fcs_files(
         calibration_descriptions.append(
             f'{calibration_application.selected_calibration} -> "{", ".join(resolved_output_channels)}"'
         )
-        calibration_applications.append(
-            (
-                calibration_application,
-                source_channel,
-                is_scattering,
-                resolved_output_channels,
+        transformer_factories.append(
+            _build_calibration_transformer_factory(
+                application=calibration_application,
+                source_channel=source_channel,
+                is_scattering=calibration.is_scattering_v2,
+                output_channels=resolved_output_channels,
+                calibration_payload=calibration,
+                warnings=warnings,
             )
         )
 
-    dataframe_transformer_factory = build_multi_calibration_dataframe_transformer_factory(
-        calibration_applications=calibration_applications,
-        warnings=warnings,
-    )
+    dataframe_transformer_factory = _combine_transformer_factories(transformer_factories=transformer_factories)
 
     if len(request.uploaded_fcs_paths) == 1:
         uploaded_fcs_path = request.uploaded_fcs_paths[0]
@@ -240,38 +227,51 @@ def build_multi_calibration_dataframe_transformer_factory(
     calibration_applications: list[tuple[CalibrationApplication, str, bool, list[str]]],
     warnings: list[str],
 ):
-    """
-    Build one dataframe transformer factory that applies all calibrations in sequence.
-    """
+    """Build one dataframe transformer factory that applies calibrations in sequence."""
+    return _combine_transformer_factories(
+        transformer_factories=[
+            _build_calibration_transformer_factory(
+                application=application, source_channel=source_channel, is_scattering=is_scattering,
+                output_channels=output_channels, calibration_payload=application.calibration_payload,
+                warnings=warnings,
+            )
+            for application, source_channel, is_scattering, output_channels in calibration_applications
+        ],
+    )
 
-    def dataframe_transformer_factory(
-        uploaded_fcs_path: str,
-    ):
-        individual_transformers = []
 
-        for calibration_application, source_channel, is_scattering, resolved_output_channels in calibration_applications:
-            if is_scattering:
-                individual_transformers.append(
-                    build_scattering_dataframe_transformer_factory(
-                        source_channel=source_channel,
-                        output_channel_names=resolved_output_channels,
-                        calibration_payload=calibration_application.calibration_payload,
-                        target_model_parameters=calibration_application.scattering_target_model_parameters,
-                    )(
-                        uploaded_fcs_path,
-                    )
-                )
-            else:
-                individual_transformers.append(
-                    build_legacy_dataframe_transformer_factory(
-                        source_channel=source_channel,
-                        output_channel_name=resolved_output_channels[0],
-                        calibration_payload=calibration_application.calibration_payload,
-                        warnings=warnings,
-                    )(
-                        uploaded_fcs_path,
-                    )
-                )
+def _build_calibration_transformer_factory(
+    *,
+    application: CalibrationApplication,
+    source_channel: str,
+    is_scattering: bool,
+    output_channels: list[str],
+    calibration_payload: dict[str, Any] | CalibrationPayload,
+    warnings: list[str],
+) -> Callable[[str], Callable[[Any], Any]]:
+    """Build the per-file transformer for one calibration and its output names."""
+    if is_scattering:
+        return build_scattering_dataframe_transformer_factory(
+            source_channel=source_channel, output_channel_names=output_channels,
+            calibration_payload=calibration_payload,
+            target_model_parameters=application.scattering_target_model_parameters,
+        )
+
+    if isinstance(calibration_payload, CalibrationPayload):
+        calibration_payload = FluorescenceCalibration.from_payload(payload=calibration_payload.saved_payload)
+
+    return build_legacy_dataframe_transformer_factory(
+        source_channel=source_channel, output_channel_name=output_channels[0],
+        calibration_payload=calibration_payload, warnings=warnings,
+    )
+
+
+def _combine_transformer_factories(
+    *, transformer_factories: list[Callable[[str], Callable[[Any], Any]]],
+) -> Callable[[str], Callable[[Any], Any]]:
+    """Create one per-file transformer by composing the calibration transforms."""
+    def dataframe_transformer_factory(uploaded_fcs_path: str):
+        individual_transformers = [factory(uploaded_fcs_path) for factory in transformer_factories]
 
         def dataframe_transformer(
             dataframe: Any,
@@ -294,7 +294,7 @@ def build_scattering_dataframe_transformer_factory(
     *,
     source_channel: str,
     output_channel_names: list[str],
-    calibration_payload: dict[str, Any],
+    calibration_payload: dict[str, Any] | CalibrationPayload,
     target_model_parameters: ScatteringTargetModelParameters,
 ):
     """
@@ -308,8 +308,8 @@ def build_scattering_dataframe_transformer_factory(
     ----------
     source_channel : str
         Detector column to calibrate.
-    calibration_payload : dict[str, Any]
-        Loaded calibration JSON payload.
+    calibration_payload : dict[str, Any] or CalibrationPayload
+        Saved calibration data or its normalized representation for this run.
     target_model_parameters : ScatteringTargetModelParameters
         Target Mie model parameters for the scattering conversion.
 
@@ -376,7 +376,7 @@ def build_legacy_dataframe_transformer_factory(
     *,
     source_channel: str,
     output_channel_name: str,
-    calibration_payload: dict[str, Any],
+    calibration_payload: dict[str, Any] | FluorescenceCalibration,
     warnings: list[str] | None = None,
 ):
     """
@@ -389,8 +389,8 @@ def build_legacy_dataframe_transformer_factory(
     ----------
     source_channel : str
         Detector column to calibrate.
-    calibration_payload : dict[str, Any]
-        Loaded calibration JSON payload.
+    calibration_payload : dict[str, Any] or FluorescenceCalibration
+        Saved calibration data or the parsed fluorescence transformation.
 
     Returns
     -------
@@ -486,35 +486,7 @@ def resolve_source_channel(
     str
         Source channel name, or an empty string when not found.
     """
-    if not isinstance(calibration_payload, dict):
-        return ""
-
-    source_channel = str(
-        calibration_payload.get(
-            "source_channel",
-            "",
-        )
-    ).strip()
-
-    if source_channel:
-        return source_channel
-
-    instrument_response = calibration_payload.get(
-        "instrument_response",
-    )
-
-    if isinstance(instrument_response, dict):
-        measured_channel = str(
-            instrument_response.get(
-                "measured_channel",
-                "",
-            )
-        ).strip()
-
-        if measured_channel:
-            return measured_channel
-
-    return ""
+    return CalibrationPayload.from_value(value=calibration_payload).source_channel
 
 
 def resolve_requested_output_channel_name(
@@ -525,20 +497,8 @@ def resolve_requested_output_channel_name(
     """
     Resolve the preferred applied output channel short name from a calibration payload.
     """
-    if not isinstance(calibration_payload, dict):
-        return str(default).strip()
-
-    preferred_name = str(
-        calibration_payload.get(
-            APPLIED_OUTPUT_CHANNEL_NAME_KEY,
-            "",
-        )
-    ).strip()
-
-    if preferred_name:
-        return preferred_name
-
-    return str(default).strip()
+    preferred_name = CalibrationPayload.from_value(value=calibration_payload).output_channel_name
+    return preferred_name or str(default).strip()
 
 
 def resolve_unique_output_channel_name(

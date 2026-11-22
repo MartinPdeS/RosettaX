@@ -1,8 +1,7 @@
 """Resolve provisional Rosetta bead identities with configured detector coupling."""
 
-from collections.abc import Callable
-from typing import Any
 import numpy as np
+from collections.abc import Callable
 from RosettaX.utils.casting import as_optional_float
 from RosettaX.workflow.page_session.scattering import ScatteringPageState
 from RosettaX.workflow.parameters.table import MIE_MODEL_SOLID_SPHERE
@@ -11,6 +10,7 @@ from RosettaX.workflow.peak.scripts.rosetta_mix_sizing import (
     DIM_MARKER_DIAMETER_NM,
     ROSETTA_MIX_PARTICLE_DIAMETERS_NM,
 )
+from typing import Any
 
 MARKER_DIAMETERS = {"Dim marker": DIM_MARKER_DIAMETER_NM, "Bright marker": BRIGHT_MARKER_DIAMETER_NM}
 MAX_LOG_RESIDUAL = float(np.log(1.20))

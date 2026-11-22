@@ -295,7 +295,7 @@ def build_optical_configuration_controls(section: Model) -> dash.html.Div:
                                                     persistence=True,
                                                     persistence_type="session",
                                                     style={
-                                                        "width": "520px",
+                                                        "width": "min(100%, 520px)",
                                                         "height": "120px",
                                                         "fontFamily": "SFMono-Regular, Menlo, Monaco, Consolas, monospace",
                                                         "fontSize": "0.84rem",
@@ -363,7 +363,7 @@ def build_optical_configuration_controls(section: Model) -> dash.html.Div:
         ],
         style={
             "flex": "1 1 520px",
-            "minWidth": "480px",
+            "minWidth": 0,
             "display": "flex",
             "flexDirection": "column",
             "gap": styling.get_spacing_token("xs"),
@@ -386,6 +386,7 @@ def build_optical_configuration_visualization(section: Model) -> dash.html.Div:
                     ),
                     dash.dcc.Graph(
                         id=section.ids.optical_configuration_preview,
+                        responsive=True,
                         # The callback builds the preview from the active controls.
                         figure={"data": [], "layout": {}},
                         style={
@@ -411,7 +412,7 @@ def build_optical_configuration_visualization(section: Model) -> dash.html.Div:
         ],
         style={
             "flex": "0 1 430px",
-            "minWidth": "340px",
+            "minWidth": "min(340px, 100%)",
             "overflow": "visible",
         },
     )

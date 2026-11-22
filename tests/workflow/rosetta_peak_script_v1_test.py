@@ -394,7 +394,8 @@ def test_missing_marker_anchors_stop_run_and_show_warning(monkeypatch):
 
     assert resolved.warning is True
     assert resolved.table_prefill_rows == []
-    assert resolved.peak_lines_payload == {}
+    assert set(resolved.peak_lines_payload) == {"rosetta_sizing"}
+    assert resolved.peak_lines_payload["rosetta_sizing"]["failure_code"] == "unreliable_markers"
     assert "both reliable" in resolved.status
 
 

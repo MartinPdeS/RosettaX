@@ -177,7 +177,17 @@ def add_peak_workflow_post_layout_overlays(
 
     figure.update_layout(
         showlegend=True,
-        legend={"x": 0.01, "y": 0.99, "xanchor": "left", "yanchor": "top", "bgcolor": "rgba(255,255,255,0.9)"},
+        legend={
+            "orientation": "h",
+            "x": 0.01,
+            "xref": "container",
+            "xanchor": "left",
+            "y": 0.012,
+            "yref": "container",
+            "yanchor": "bottom",
+            "font": {"size": min(13, figure.layout.legend.font.size or 13)},
+            "bgcolor": "rgba(255,255,255,0.9)",
+        },
     )
 
     annotation_entries = extract_rosetta_scatter_guide_annotations(
@@ -220,7 +230,6 @@ def add_peak_workflow_post_layout_overlays(
     return add_rosetta_scatter_guide_annotations(
         figure=figure,
         annotation_entries=annotation_entries,
-        baseline_gate=baseline_gate,
     )
 
 

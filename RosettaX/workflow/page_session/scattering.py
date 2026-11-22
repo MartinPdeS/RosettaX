@@ -29,6 +29,8 @@ class ScatteringPageState:
     calibration_saved: bool = False
 
     status_message: str = ""
+    peak_graph_revision: dict[str, Any] | None = None
+    peak_table_context: dict[str, Any] | None = None
 
     @classmethod
     def empty(cls) -> "ScatteringPageState":

@@ -15,7 +15,6 @@ from RosettaX.workflow.scattering.rosetta_assignment import (
     rosetta_confirmation_pending,
 )
 
-
 # An irregular reference ladder with a turnover between 600 and 799 nm.
 COUPLING = {
     70: 1.0, 100: 2.4, 125: 4.5, 140: 7.0, 147: 10.0, 203: 30.0,

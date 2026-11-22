@@ -1,8 +1,10 @@
 
-import dash
-import dash_bootstrap_components as dbc
 import logging
 import numpy as np
+from ..core.process_calls import standard_peak_action
+from ._events import filter_finite_peak_events, read_peak_event_columns
+from ._manual_controls import ManualPeakControls
+from ._manual_selection import read_clicked_position, read_selected_ranges
 from .base import (
     BasePeakProcess,
     PeakProcessResult,
@@ -10,14 +12,13 @@ from .base import (
     resolve_edge_artifact_filter_enabled,
 )
 from RosettaX.utils.io import column_copy
-from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
 from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
-class Manual2DClickProcess(BasePeakProcess):
+class Manual2DClickProcess(ManualPeakControls, BasePeakProcess):
     """
     Manual 2D peak picking process.
 
@@ -39,319 +40,15 @@ class Manual2DClickProcess(BasePeakProcess):
     supports_automatic_action = False
     force_graph_visible = True
 
-    dropdown_min_height_px = 72
-    dropdown_option_height_px = 88
-    dropdown_menu_max_height_px = 620
-    default_snap_to_local_mode = True
-    default_max_events_for_snap = 100_000
+    detector_controls = (
+        ("x", "X detector channel", "Select x channel"),
+        ("y", "Y detector channel", "Select y channel"),
+    )
+    log_axes = ("x", "y")
+    snap_mode_label = "density"
+    default_snap_histogram_bins = 100
 
-    def get_settings(self) -> list[dict[str, Any]]:
-        """
-        Return advanced settings for manual 2D peak picking.
-        """
-        return [
-            {
-                "name": "snap_to_local_mode",
-                "label": "Snap click to local mode",
-                "kind": "select",
-                "default_value": "enabled" if self.default_snap_to_local_mode else "disabled",
-                "options": [
-                    {
-                        "label": "Enabled",
-                        "value": "enabled",
-                    },
-                    {
-                        "label": "Disabled",
-                        "value": "disabled",
-                    },
-                ],
-                "help": (
-                    "When enabled, a click is adjusted to the local density mode nearby "
-                    "instead of using the raw click position."
-                ),
-            },
-        ]
-
-    def get_required_detector_channels(self) -> list[str]:
-        """
-        Return detector channels required by this process.
-
-        Returns
-        -------
-        list[str]
-            Required channel names.
-        """
-        return [
-            "x",
-            "y",
-        ]
-
-    def build_controls(
-        self,
-        *,
-        ids: Any,
-    ) -> dash.html.Div:
-        """
-        Build Dash controls for manual 2D peak picking.
-
-        Parameters
-        ----------
-        ids:
-            Peak section id factory.
-
-        Returns
-        -------
-        dash.html.Div
-            Process controls.
-        """
-        return dash.html.Div(
-            [
-                self._build_detector_dropdown_block(
-                    ids=ids,
-                    label="X detector channel",
-                    channel_name="x",
-                ),
-                self._build_vertical_spacer(height_px=16),
-                self._build_detector_dropdown_block(
-                    ids=ids,
-                    label="Y detector channel",
-                    channel_name="y",
-                ),
-                self._build_vertical_spacer(height_px=18),
-                self._build_display_options(ids=ids),
-                self._build_vertical_spacer(height_px=16),
-                self._build_action_row(ids=ids),
-            ],
-            id=ids.process_controls_container(
-                process_name=self.process_name,
-            ),
-            style={
-                "display": "none",
-                "width": "100%",
-                "maxWidth": "100%",
-            },
-        )
-
-    def _build_vertical_spacer(
-        self,
-        *,
-        height_px: int,
-    ) -> dash.html.Div:
-        """
-        Build a vertical spacer.
-
-        Parameters
-        ----------
-        height_px:
-            Spacer height in pixels.
-
-        Returns
-        -------
-        dash.html.Div
-            Spacer.
-        """
-        return dash.html.Div(
-            style={
-                "height": f"{height_px}px",
-            },
-        )
-
-    def _build_detector_dropdown_block(
-        self,
-        *,
-        ids: Any,
-        label: str,
-        channel_name: str,
-    ) -> dash.html.Div:
-        """
-        Build one full-width detector dropdown block.
-
-        Parameters
-        ----------
-        ids:
-            Peak section id factory.
-
-        label:
-            Display label.
-
-        channel_name:
-            Logical detector channel name.
-
-        Returns
-        -------
-        dash.html.Div
-            Detector dropdown block.
-        """
-        return dash.html.Div(
-            [
-                dash.html.Div(
-                    label,
-                    style={
-                        "marginBottom": "6px",
-                        "fontWeight": 500,
-                    },
-                ),
-                dash.dcc.Dropdown(
-                    id=ids.process_detector_dropdown(
-                        process_name=self.process_name,
-                        channel_name=channel_name,
-                    ),
-                    placeholder=f"Select {channel_name} channel",
-                    optionHeight=self.dropdown_option_height_px,
-                    maxHeight=self.dropdown_menu_max_height_px,
-                    searchable=True,
-                    clearable=False,
-                    persistence=True,
-                    persistence_type="session",
-                    style={
-                        "width": "100%",
-                    },
-                ),
-            ],
-            style={
-                "width": "100%",
-                "maxWidth": "100%",
-                "display": "block",
-            },
-        )
-
-    def _build_display_options(
-        self,
-        *,
-        ids: Any,
-    ) -> dash.html.Div:
-        """
-        Build display option switches.
-
-        Parameters
-        ----------
-        ids:
-            Peak section id factory.
-
-        Returns
-        -------
-        dash.html.Div
-            Display options block.
-        """
-        return dash.html.Div(
-            [
-                self._build_log_scale_switch(
-                    ids=ids,
-                    label="Log x scale",
-                    setting_name="x_log_scale",
-                ),
-                self._build_vertical_spacer(height_px=8),
-                self._build_log_scale_switch(
-                    ids=ids,
-                    label="Log y scale",
-                    setting_name="y_log_scale",
-                ),
-                self._build_vertical_spacer(height_px=8),
-                self._build_log_scale_switch(
-                    ids=ids,
-                    label="Snap click to local mode",
-                    setting_name="snap_to_local_mode",
-                    enabled_by_default=self.default_snap_to_local_mode,
-                ),
-            ],
-            style={
-                "display": "block",
-                "width": "100%",
-            },
-        )
-
-    def _build_log_scale_switch(
-        self,
-        *,
-        ids: Any,
-        label: str,
-        setting_name: str,
-        enabled_by_default: bool = False,
-    ) -> dbc.Checklist:
-        """
-        Build one log scale switch.
-
-        Parameters
-        ----------
-        ids:
-            Peak section id factory.
-
-        label:
-            Display label.
-
-        setting_name:
-            Logical process setting name.
-
-        Returns
-        -------
-        dbc.Checklist
-            Bootstrap switch.
-        """
-        return dbc.Checklist(
-            id=ids.process_setting(
-                process_name=self.process_name,
-                setting_name=setting_name,
-            ),
-            options=[
-                {
-                    "label": label,
-                    "value": "enabled",
-                }
-            ],
-            value=["enabled"] if enabled_by_default else [],
-            switch=True,
-            persistence=True,
-            persistence_type="session",
-            style={
-                "display": "block",
-                "width": "fit-content",
-            },
-        )
-
-    def _build_action_row(
-        self,
-        *,
-        ids: Any,
-    ) -> dash.html.Div:
-        """
-        Build action controls and status output.
-
-        Parameters
-        ----------
-        ids:
-            Peak section id factory.
-
-        Returns
-        -------
-        dash.html.Div
-            Action row.
-        """
-        return dash.html.Div(
-            [
-                dbc.Button(
-                    "Clear picked peaks",
-                    id=ids.process_action_button(
-                        process_name=self.process_name,
-                        action_name="clear",
-                    ),
-                    n_clicks=0,
-                    color="secondary",
-                    outline=True,
-                    size="sm",
-                ),
-                self.build_status_component(
-                    ids=ids,
-                ),
-            ],
-            style={
-                "display": "flex",
-                "alignItems": "center",
-                "gap": "12px",
-                "flexWrap": "wrap",
-                "width": "100%",
-            },
-        )
-
+    @standard_peak_action
     def add_clicked_peak(
         self,
         *,
@@ -532,33 +229,6 @@ class Manual2DClickProcess(BasePeakProcess):
             clear_existing_table_peaks=False,
         )
 
-    def _snap_to_local_mode_is_enabled(
-        self,
-        *,
-        process_settings: dict[str, Any] | None,
-    ) -> bool:
-        """
-        Return whether local snap mode is enabled.
-        """
-        if not isinstance(process_settings, dict):
-            return self.default_snap_to_local_mode
-
-        value = process_settings.get(
-            "snap_to_local_mode",
-            None,
-        )
-
-        if isinstance(value, str):
-            return value == "enabled"
-
-        if isinstance(value, (list, tuple, set)):
-            return "enabled" in value
-
-        if isinstance(value, bool):
-            return value
-
-        return self.default_snap_to_local_mode
-
     def snap_clicked_peak_position(
         self,
         *,
@@ -586,36 +256,12 @@ class Manual2DClickProcess(BasePeakProcess):
         if not str(y_detector_column or "").strip():
             return None
 
-        max_events = self._resolve_max_events_for_snap(
-            runtime_config_data=runtime_config_data,
+        max_events, configured_bins = self._resolve_snap_settings(runtime_config_data=runtime_config_data)
+        columns = read_peak_event_columns(
+            fcs_file_path=backend.fcs_file_path, detector_columns=(x_detector_column, y_detector_column),
+            max_events=max_events, read_column=column_copy,
         )
-
-        x_values = column_copy(
-            fcs_file_path=backend.fcs_file_path,
-            detector_column=str(x_detector_column),
-            dtype=float,
-            n=max_events,
-        )
-        y_values = column_copy(
-            fcs_file_path=backend.fcs_file_path,
-            detector_column=str(y_detector_column),
-            dtype=float,
-            n=max_events,
-        )
-
-        x_values = np.asarray(
-            x_values,
-            dtype=float,
-        )
-        y_values = np.asarray(
-            y_values,
-            dtype=float,
-        )
-
-        finite_mask = np.isfinite(x_values) & np.isfinite(y_values)
-        x_values = x_values[finite_mask]
-        y_values = y_values[finite_mask]
-
+        x_values, y_values = columns
         if resolve_edge_artifact_filter_enabled(
             process_settings=process_settings,
             default=True,
@@ -628,6 +274,8 @@ class Manual2DClickProcess(BasePeakProcess):
                 remove_y_min=True,
                 remove_y_max=False,
             )
+        else:
+            (x_values, y_values), _ = filter_finite_peak_events(columns=columns)
 
         if x_values.size < 16 or y_values.size < 16:
             return None
@@ -681,9 +329,7 @@ class Manual2DClickProcess(BasePeakProcess):
             else clicked_peak_position["y"]
         )
 
-        histogram_bins = self._resolve_snap_histogram_bins(
-            runtime_config_data=runtime_config_data,
-        )
+        histogram_bins = max(24, min(160, configured_bins))
         histogram, x_edges, y_edges = np.histogram2d(
             working_x_values,
             working_y_values,
@@ -755,50 +401,6 @@ class Manual2DClickProcess(BasePeakProcess):
             "x": snapped_x,
             "y": snapped_y,
         }
-
-    def _resolve_snap_histogram_bins(
-        self,
-        *,
-        runtime_config_data: Any,
-    ) -> int:
-        """
-        Resolve histogram bins per axis used for manual 2D snapping.
-        """
-        runtime_config = RuntimeConfig.from_dict(
-            runtime_config_data if isinstance(runtime_config_data, dict) else None
-        )
-
-        return int(
-            max(
-                24,
-                min(
-                    160,
-                    runtime_config.get_int(
-                        "calibration.n_bins_for_plots",
-                        default=100,
-                    ),
-                ),
-            )
-        )
-
-    def _resolve_max_events_for_snap(
-        self,
-        *,
-        runtime_config_data: Any,
-    ) -> int:
-        """
-        Resolve the event count used for local snapping.
-        """
-        runtime_config = RuntimeConfig.from_dict(
-            runtime_config_data if isinstance(runtime_config_data, dict) else None
-        )
-
-        return int(
-            runtime_config.get_int(
-                "calibration.max_events_for_analysis",
-                default=self.default_max_events_for_snap,
-            )
-        )
 
     def _x_axis_is_log(
         self,
@@ -1279,144 +881,13 @@ class Manual2DClickProcess(BasePeakProcess):
 
         return peak_positions
 
-    def extract_clicked_xy_position(
-        self,
-        click_data: Any,
-    ) -> dict[str, float] | None:
-        """
-        Extract x and y coordinates from Plotly clickData.
+    def extract_clicked_xy_position(self, click_data: Any) -> dict[str, float] | None:
+        """Extract finite x and y coordinates from the first Plotly click point."""
+        return read_clicked_position(payload=click_data, axes=("x", "y"))
 
-        Parameters
-        ----------
-        click_data:
-            Plotly clickData payload.
-
-        Returns
-        -------
-        Optional[dict[str, float]]
-            Clicked 2D position, or None.
-        """
-        logger.debug("Manual 2D received click_data=%r", click_data)
-
-        if not isinstance(click_data, dict):
-            return None
-
-        points = click_data.get("points")
-
-        if not isinstance(points, list) or not points:
-            return None
-
-        first_point = points[0]
-
-        if not isinstance(first_point, dict):
-            return None
-
-        if "x" not in first_point or "y" not in first_point:
-            logger.debug(
-                "Plotly clickData point does not contain x/y coordinates: %r",
-                first_point,
-            )
-            return None
-
-        try:
-            return {
-                "x": float(first_point["x"]),
-                "y": float(first_point["y"]),
-            }
-
-        except Exception:
-            logger.debug(
-                "Could not convert Plotly click x/y values to float: x=%r y=%r",
-                first_point.get("x"),
-                first_point.get("y"),
-            )
-            return None
-
-    def extract_selected_xy_range(
-        self,
-        selected_data: Any,
-    ) -> dict[str, tuple[float, float]] | None:
-        """
-        Extract x and y selection ranges from Plotly selectedData.
-        """
-        if not isinstance(selected_data, dict):
-            return None
-
-        selected_range = selected_data.get("range")
-
-        if isinstance(selected_range, dict):
-            x_range = selected_range.get("x")
-            y_range = selected_range.get("y")
-
-            if (
-                isinstance(x_range, (list, tuple))
-                and len(x_range) >= 2
-                and isinstance(y_range, (list, tuple))
-                and len(y_range) >= 2
-            ):
-                try:
-                    x_lower = float(x_range[0])
-                    x_upper = float(x_range[1])
-                    y_lower = float(y_range[0])
-                    y_upper = float(y_range[1])
-                except Exception:
-                    return None
-
-                if (
-                    np.isfinite(x_lower)
-                    and np.isfinite(x_upper)
-                    and np.isfinite(y_lower)
-                    and np.isfinite(y_upper)
-                ):
-                    return {
-                        "x": (
-                            min(x_lower, x_upper),
-                            max(x_lower, x_upper),
-                        ),
-                        "y": (
-                            min(y_lower, y_upper),
-                            max(y_lower, y_upper),
-                        ),
-                    }
-
-        points = selected_data.get("points")
-
-        if not isinstance(points, list) or not points:
-            return None
-
-        x_values: list[float] = []
-        y_values: list[float] = []
-
-        for point in points:
-            if not isinstance(point, dict):
-                continue
-
-            if "x" not in point or "y" not in point:
-                continue
-
-            try:
-                x_value = float(point["x"])
-                y_value = float(point["y"])
-            except Exception:
-                continue
-
-            if np.isfinite(x_value) and np.isfinite(y_value):
-                x_values.append(x_value)
-                y_values.append(y_value)
-
-        if not x_values or not y_values:
-            return None
-
-        return {
-            "x": (
-                float(min(x_values)),
-                float(max(x_values)),
-            ),
-            "y": (
-                float(min(y_values)),
-                float(max(y_values)),
-            ),
-        }
+    def extract_selected_xy_range(self, selected_data: Any) -> dict[str, tuple[float, float]] | None:
+        """Extract the x and y bounds of the Plotly selection."""
+        return read_selected_ranges(payload=selected_data, axes=("x", "y"))
 
 
 PROCESS = Manual2DClickProcess()

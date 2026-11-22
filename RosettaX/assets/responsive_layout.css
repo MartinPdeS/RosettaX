@@ -3,6 +3,7 @@
     --rosettax-control-background: color-mix(in srgb, var(--bs-body-color, #212529) 6%, var(--bs-body-bg, #fff));
     --rosettax-text-color: var(--bs-body-color, #212529);
     --rosettax-border-color: color-mix(in srgb, var(--bs-body-color, #212529) 22%, var(--bs-body-bg, #fff));
+    font-family: var(--bs-body-font-family, system-ui, sans-serif);
 }
 
 .rosettax-navigation {
@@ -81,6 +82,123 @@
 
 .app-typography-hierarchy .card.peak-process-card--rosetta {
     background-color: var(--rosettax-control-background, #f5f6f8);
+    border: 1px solid var(--rosettax-border-color);
+    border-radius: 0.65rem;
+}
+
+.peak-process-card--rosetta > .card-body {
+    padding: 0.9rem;
+}
+
+.peak-strictness-control,
+.peak-result {
+    border: 1px solid var(--rosettax-border-color);
+    border-radius: 0.65rem;
+    background: var(--rosettax-surface-background);
+}
+
+.peak-strictness-control {
+    padding: 0.6rem clamp(0.9rem, 4vw, 2rem) 0.35rem;
+}
+
+.peak-result {
+    --peak-result-accent: var(--bs-primary, #0d6efd);
+    margin-block: 0.75rem 0.35rem;
+    padding: clamp(0.85rem, 2vw, 1.2rem);
+    border-inline-start: 0.25rem solid var(--peak-result-accent);
+    background: color-mix(in srgb, var(--peak-result-accent) 5%, var(--rosettax-surface-background));
+    color: var(--rosettax-text-color);
+    min-width: 0;
+}
+
+.peak-result--complete {
+    --peak-result-accent: var(--bs-success, #198754);
+}
+
+.peak-result--review {
+    --peak-result-accent: var(--bs-warning, #af7000);
+}
+
+.peak-result--error {
+    --peak-result-accent: var(--bs-danger, #c2384a);
+}
+
+.peak-result-title {
+    margin: 0;
+    font-size: 1.02rem;
+    font-weight: 700;
+}
+
+.peak-result-summary,
+.peak-result-detail-message {
+    margin: 0.35rem 0 0;
+    max-width: 75ch;
+    overflow-wrap: anywhere;
+}
+
+.peak-result-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(7.5rem, 100%), 1fr));
+    gap: 0.45rem;
+    margin: 0.75rem 0 0;
+}
+
+.peak-result-metrics > div {
+    padding: 0.45rem 0.65rem;
+    border: 1px solid var(--rosettax-border-color);
+    border-radius: 0.45rem;
+    background: var(--rosettax-surface-background);
+}
+
+.peak-result-metrics dt {
+    margin: 0;
+    font-size: 0.79rem;
+    font-weight: 600;
+}
+
+.peak-result-metrics dd {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.peak-result-details {
+    margin-block-start: 0.65rem;
+    min-width: 0;
+    font-size: 0.88rem;
+}
+
+.peak-result-details > summary {
+    width: fit-content;
+    padding-block: 0.15rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.peak-result-details-content {
+    margin-block-start: 0.6rem;
+    min-width: 0;
+}
+
+.peak-result-details-content .table-responsive {
+    overflow-x: auto;
+}
+
+.peak-result-fit-thresholds {
+    margin-block: 0.4rem 0.75rem;
+    padding-inline-start: 1.2rem;
+}
+
+.peak-result-message {
+    margin-block: 0.6rem;
+}
+
+.calibration-fit-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(7.5rem, 100%), 1fr));
+    gap: 0.625rem;
+    overflow-wrap: anywhere;
 }
 
 .rosettax-reference-table .dash-cell,
@@ -109,6 +227,10 @@
 
 .peak-action-button {
     border-width: 1px;
+    border-radius: 0.375rem;
+    min-height: 2rem;
+    padding-inline: 0.6rem;
+    font-family: inherit;
     font-weight: 600;
     transition: background-color 140ms ease, border-color 140ms ease,
         box-shadow 140ms ease, transform 100ms ease;
@@ -208,22 +330,35 @@
     margin-left: auto;
     padding: 0.5rem 0.75rem;
     cursor: pointer;
-    border: 1px solid var(--bs-border-color);
+    border: 1px solid var(--rosettax-border-color);
     border-right: 0;
     border-radius: 0.5rem 0 0 0.5rem;
-    background: var(--bs-body-bg);
+    background: var(--rosettax-surface-background);
     font-weight: 600;
 }
 
 .app-diagnostics-panel {
     width: min(560px, calc(100vw - 1rem));
+    box-sizing: border-box;
     max-height: 65vh;
     overflow: auto;
     padding: 1rem;
-    border: 1px solid var(--bs-border-color);
+    border: 1px solid var(--rosettax-border-color);
     border-radius: 0.5rem 0 0 0.5rem;
-    background: var(--bs-body-bg);
+    background: var(--rosettax-surface-background);
     box-shadow: var(--bs-box-shadow-sm);
+}
+
+@media (max-width: 575px) {
+    .app-diagnostics {
+        position: static;
+        width: fit-content;
+        margin: 0.5rem 0 0 auto;
+    }
+
+    .peak-action-button {
+        min-height: 2.75rem;
+    }
 }
 
 [data-diagnostics-routed] {

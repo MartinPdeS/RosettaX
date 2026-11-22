@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
+from ..core.process_calls import standard_peak_action
 from .base import PeakProcessResult
 from .rosetta_mix import FluorescenceGuidedScatterPeakProcess
 from .rosetta_mix_diagnostics import (  # noqa: F401
     _build_warning_graph_payload,
     build_marker_anchor_warning,
 )
+from .rosetta_mix_models import RosettaAssignmentState, RosettaSizeAssignment
 from .rosetta_mix_sizing import (
     build_rosetta_peak_lines_payload,
-    build_rosetta_table_prefill_rows,
+    resolve_rosetta_table_sizes,
 )
 from dataclasses import replace
 from typing import Any
@@ -48,6 +50,7 @@ class RosettaMixSizeAssignmentProcess(FluorescenceGuidedScatterPeakProcess):
             "green_fluorescence": "Green fluorescence channel",
         }
 
+    @standard_peak_action
     def run_automatic_action(
         self,
         *,
@@ -56,6 +59,8 @@ class RosettaMixSizeAssignmentProcess(FluorescenceGuidedScatterPeakProcess):
         peak_count: Any,
         max_events_for_analysis: Any,
         process_settings: dict[str, Any],
+        max_events_for_plots: Any = None,
+        runtime_config_data: Any = None,
     ) -> PeakProcessResult | None:
         """Detect peaks, infer bead sizes, and preserve diagnostics on failure.
 
@@ -92,11 +97,12 @@ class RosettaMixSizeAssignmentProcess(FluorescenceGuidedScatterPeakProcess):
         if result is None:
             return None
 
+        show_detected_peaks = self.allow_unassigned_sizes or bool(resolved_process_settings.get("preview_only"))
         if not result.table_prefill_rows:
             if result.status:
                 warning_payload = _build_warning_graph_payload(
                     peak_lines_payload=result.peak_lines_payload,
-                    show_detected_peaks=(self.allow_unassigned_sizes or bool(resolved_process_settings.get("preview_only"))),
+                    show_detected_peaks=show_detected_peaks,
                 )
                 return replace(
                     result,
@@ -105,74 +111,76 @@ class RosettaMixSizeAssignmentProcess(FluorescenceGuidedScatterPeakProcess):
                 )
             return result
 
-        result, resolved_rows, status_suffix = self.resolve_particle_sizes(result=result)
+        result, assignment = self._resolve_particle_sizes(result=result)
         if (
-            not resolved_rows or status_suffix.startswith("Warning:")
+            not assignment.rows or assignment.state is RosettaAssignmentState.FAILED
             or (not self.allow_unassigned_sizes and any(
-                not row.get("particle_diameter_nm") for row in resolved_rows
+                not row.get("particle_diameter_nm") for row in assignment.rows
             ))
         ):
-            warning_status = status_suffix or build_marker_anchor_warning(result=result)
+            detail = assignment.status or build_marker_anchor_warning(result=result)
             warning_payload = _build_warning_graph_payload(
                 peak_lines_payload=result.peak_lines_payload,
-                show_detected_peaks=(self.allow_unassigned_sizes or bool(resolved_process_settings.get("preview_only"))),
+                show_detected_peaks=show_detected_peaks,
             )
+            warning_payload["rosetta_sizing"] = replace(
+                assignment, state=RosettaAssignmentState.FAILED, rows=[],
+            ).to_diagnostics()
             return replace(
-                result,
-                peak_positions=[],
-                new_peak_positions=[],
-                table_prefill_rows=[],
-                peak_lines_payload=warning_payload,
-                status=warning_status,
-                warning=True,
+                result, peak_positions=[], new_peak_positions=[], table_prefill_rows=[],
+                peak_lines_payload=warning_payload, status=detail, warning=True,
             )
 
-        updated_peak_lines_payload = result.peak_lines_payload
-        if isinstance(result.peak_lines_payload, dict):
-            updated_peak_lines_payload = build_rosetta_peak_lines_payload(
-                result=result,
-                resolved_rows=resolved_rows,
-            )
-
-        sizing_failed = not any(row.get("particle_diameter_nm") for row in resolved_rows)
-        if sizing_failed:
-            status_suffix = "Warning: " + (
-                status_suffix or "No diameters could be assigned to the detected non-fluorescent peaks."
-            )
+        payload = build_rosetta_peak_lines_payload(result=result, resolved_rows=assignment.rows)
+        result = replace(result, table_prefill_rows=assignment.rows, peak_lines_payload=payload)
+        result, assignment = self._finalize_size_assignment(result=result, assignment=assignment)
+        payload = dict(result.peak_lines_payload, rosetta_sizing=assignment.to_diagnostics())
+        suffix = payload.get("saturation_guard_message", "")
+        status = assignment.status
+        if assignment.state is RosettaAssignmentState.UNRESOLVED:
+            status = "Warning: " + (status or "No diameters could be assigned to the detected non-fluorescent peaks.")
+        status = " ".join(filter(None, (status, suffix)))
 
         return replace(
-            result,
-            table_prefill_rows=resolved_rows,
-            peak_lines_payload=updated_peak_lines_payload,
-            warning=sizing_failed or status_suffix.startswith("Partial result:"),
-            status=" ".join(filter(None, (
-                status_suffix, updated_peak_lines_payload.get("saturation_guard_message", ""),
-            ))),
+            result, peak_lines_payload=payload, status=status,
+            warning=assignment.state in {
+                RosettaAssignmentState.PARTIAL, RosettaAssignmentState.UNRESOLVED, RosettaAssignmentState.FAILED,
+            },
         )
 
     def resolve_particle_sizes(
         self, *, result: PeakProcessResult,
     ) -> tuple[PeakProcessResult, list[dict[str, Any]], str]:
-        """Return the source detection and assigned rows for the selected channels."""
-        rows, status = self.assign_particle_sizes(result=result)
-        return result, rows, status if status.startswith("Warning:") else ""
+        """Return the source detection, sized rows, and user-facing status."""
+        result, assignment = self._resolve_particle_sizes(result=result)
+        return result, assignment.rows, assignment.status
 
-    def assign_particle_sizes(
+    def _resolve_particle_sizes(
         self, *, result: PeakProcessResult,
-    ) -> tuple[list[dict[str, Any]], str]:
-        """Assign sizes using the existing two-marker estimation method.
+    ) -> tuple[PeakProcessResult, RosettaSizeAssignment]:
+        """Resolve an assignment and suppress success messages for fixed modes."""
+        assignment = self._assign_particle_sizes(result=result)
+        if assignment.state is RosettaAssignmentState.ASSIGNED:
+            assignment = replace(assignment, detail="")
+        return result, assignment
 
-        Parameters
-        ----------
-        result : PeakProcessResult
-            Detected peaks, marker anchors and table rows.
+    def assign_particle_sizes(self, *, result: PeakProcessResult) -> tuple[list[dict[str, Any]], str]:
+        """Return assigned rows and the rendered outcome for this mode."""
+        assignment = self._assign_particle_sizes(result=result)
+        return assignment.rows, assignment.status
 
-        Returns
-        -------
-        tuple[list[dict[str, Any]], str]
-            Assigned rows and a status message, including any failure details.
-        """
-        rows, status = build_rosetta_table_prefill_rows(result=result)
-        if status.startswith("Warning:") and "Rosetta Mix size range" not in status:
-            status = build_marker_anchor_warning(result=result)
-        return rows, status
+    def _assign_particle_sizes(self, *, result: PeakProcessResult) -> RosettaSizeAssignment:
+        """Assign sizes using the shared two-marker estimation method."""
+        assignment = resolve_rosetta_table_sizes(result=result)
+        if assignment.failure_code == "unreliable_markers":
+            return replace(
+                assignment,
+                rejection_reasons=(build_marker_anchor_warning(result=result).removeprefix("Warning: "),),
+            )
+        return assignment
+
+    def _finalize_size_assignment(
+        self, *, result: PeakProcessResult, assignment: RosettaSizeAssignment,
+    ) -> tuple[PeakProcessResult, RosettaSizeAssignment]:
+        """Let a mode apply its final calibration table policy."""
+        return result, assignment

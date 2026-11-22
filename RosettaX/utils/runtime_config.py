@@ -1007,12 +1007,34 @@ class RuntimeConfig:
         )
         return resolved_value
 
+    @classmethod
+    def coerce_field_value(cls, *, path: str, value: Any) -> Any:
+        """Coerce and validate a value for a known runtime configuration path.
+
+        Parameters
+        ----------
+        path : str
+            Canonical configuration path.
+        value : Any
+            Input value before schema coercion.
+
+        Returns
+        -------
+        Any
+            Value in the type defined by the field schema.
+
+        Raises
+        ------
+        RuntimeConfigValidationError
+            The value cannot be coerced or falls outside the field constraints.
+        """
+        return cls._coerce_value(path=path, value=value, config_field=cls.SCHEMA[path])
+
     def set_path(self, path: str, value: Any) -> None:
         if path in self.__class__.SCHEMA:
-            value = self._coerce_value(
+            value = self.coerce_field_value(
                 path=path,
                 value=value,
-                config_field=self.__class__.SCHEMA[path],
             )
 
         old_value = self._get_nested_value(self.data, path, default=None)

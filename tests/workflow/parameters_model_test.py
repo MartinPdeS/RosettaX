@@ -124,6 +124,10 @@ class Test_DetectorPresetLoaderCatalog:
                 "label": "FACSLyric",
                 "value": "FACSLyric",
             },
+            {
+                "label": "FACSymphony A1",
+                "value": "FACSymphony A1",
+            },
         ]
 
     def test_loader_builds_type_options_for_one_brand_and_model(self):
@@ -342,6 +346,7 @@ class Test_DetectorPresetLoaderCatalog:
             "BD FACSCanto II SSC",
             "BD FACSLyric FSC",
             "BD FACSLyric SSC",
+            "BD FACSymphony A1 SSC",
             "Beckman Coulter CytoFLEX Fluorescence",
             "Beckman Coulter CytoFLEX SSC",
             "Cytek Aurora FSC",

@@ -174,6 +174,16 @@ class Test_SettingsDefaultServicesPeakTableSortOrder:
 class Test_SettingsDefaultServicesCanonicalSharedPaths:
     """Regression checks for settings default services canonical shared paths."""
 
+    def test_sparse_settings_save_uses_runtime_defaults_and_bounds(self):
+        """Keep missing and invalid fields aligned with the runtime schema."""
+        runtime_config = RuntimeConfig.from_dict({})
+        saved = services.build_nested_profile_payload({"n_bins": 0})
+        calibration = saved["apply_calibration"]["calibration"]
+
+        assert calibration["max_events_for_analysis"] == runtime_config.get_int("calibration.max_events_for_analysis")
+        assert calibration["n_bins_for_plots"] == runtime_config.get_int("calibration.n_bins_for_plots")
+        assert saved["misc"]["ui"]["show_graphs"] == runtime_config.get_bool("ui.show_graphs")
+
     def test_build_nested_profile_payload_saves_shared_calibration_fields_to_canonical_paths(
         self,
     ):

@@ -1,15 +1,16 @@
 
 import logging
 import numpy as np
+from ..core.process_calls import standard_peak_action
+from ._events import filter_finite_peak_events, read_peak_event_columns
 from .base import (
     BasePeakProcess,
     PeakProcessResult,
     filter_edge_artifact_pairs,
     resolve_edge_artifact_filter_enabled,
     resolve_integer_setting,
-    resolve_integer_value,
+    resolve_peak_event_limit,
 )
-from RosettaX.utils.io import column_copy
 from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
 from typing import Any
 
@@ -142,6 +143,7 @@ class Automatic2DPeakProcess(BasePeakProcess):
             },
         ]
 
+    @standard_peak_action
     def run_automatic_action(
         self,
         *,
@@ -150,6 +152,8 @@ class Automatic2DPeakProcess(BasePeakProcess):
         process_settings: dict[str, Any],
         max_events_for_analysis: Any = None,
         max_events_for_plots: Any = None,
+        peak_count: Any = None,
+        runtime_config_data: Any = None,
         **_kwargs: Any,
     ) -> PeakProcessResult:
         """
@@ -219,27 +223,14 @@ class Automatic2DPeakProcess(BasePeakProcess):
             process_settings=process_settings,
         )
 
-        max_events = resolve_integer_value(
-            value=max_events_for_analysis
-            if max_events_for_analysis is not None
-            else max_events_for_plots,
-            default=10000,
-            minimum=1,
-            maximum=5_000_000,
+        max_events = resolve_peak_event_limit(
+            analysis_limit=max_events_for_analysis, plot_limit=max_events_for_plots,
         )
 
-        x_values = column_copy(
+        x_values, y_values = read_peak_event_columns(
             fcs_file_path=backend.fcs_file_path,
-            detector_column=str(x_detector_column),
-            dtype=float,
-            n=max_events,
-        )
-
-        y_values = column_copy(
-            fcs_file_path=backend.fcs_file_path,
-            detector_column=str(y_detector_column),
-            dtype=float,
-            n=max_events,
+            detector_columns=(x_detector_column, y_detector_column),
+            max_events=max_events,
         )
 
         if resolve_edge_artifact_filter_enabled(
@@ -527,10 +518,7 @@ def find_2d_histogram_peak_positions(
         "use_log_y": bool(use_log_y),
     }
 
-    finite_mask = np.isfinite(x_values) & np.isfinite(y_values)
-
-    x_values = x_values[finite_mask]
-    y_values = y_values[finite_mask]
+    (x_values, y_values), _ = filter_finite_peak_events(columns=(x_values, y_values))
     debug_info["finite_value_count"] = int(x_values.size)
 
     if x_values.size == 0 or y_values.size == 0:

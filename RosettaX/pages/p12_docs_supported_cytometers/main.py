@@ -1,7 +1,7 @@
 
-from collections import Counter
 import dash
 import dash_bootstrap_components as dbc
+from collections import Counter
 from dash import Input, Output, State, callback, ctx, html, no_update
 from RosettaX.pages.p07_documentation.components import (
     build_documentation_card,

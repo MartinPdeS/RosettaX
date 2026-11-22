@@ -14,7 +14,11 @@ if TYPE_CHECKING:
     from .graphing import PeakWorkflowGraphBuilder
 
 from . import graph_payload
-from .rosetta_annotations import ROSETTA_BASELINE_GATE_COLOR, ROSETTA_PEAK_MARKER_STYLES, extract_rosetta_scatter_guide_annotations
+from .rosetta_annotations import (
+    ROSETTA_BASELINE_GATE_COLOR,
+    ROSETTA_PEAK_MARKER_STYLES,
+    extract_rosetta_scatter_guide_annotations,
+)
 
 logger = logging.getLogger(__name__)
 

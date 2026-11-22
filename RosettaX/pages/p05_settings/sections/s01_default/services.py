@@ -3,7 +3,7 @@ import numpy as np
 from . import schema
 from RosettaX.utils import casting
 from RosettaX.utils.browser_profiles import BrowserProfileLibrary
-from RosettaX.utils.runtime_config import RuntimeConfig
+from RosettaX.utils.runtime_config import RuntimeConfig, RuntimeConfigValidationError
 from RosettaX.workflow.table.fluorescence import (
     CUSTOM_FLUORESCENCE_REFERENCE_PRESET_NAME,
     FluorescenceReferenceTable,
@@ -229,13 +229,15 @@ def coerce_choice_value(
     """
     Coerce a choice field value and fall back to the schema default if invalid.
     """
-    raw_value_string = str(
-        raw_value if raw_value is not None else field_definition.default
-    ).strip()
+    default = field_definition.default if field_definition.choice_fallback is None else field_definition.choice_fallback
+    raw_value_string = str(raw_value if raw_value is not None else default).strip()
 
     valid_values = {
         str(option.get("value")) for option in (field_definition.options or [])
     }
+    runtime_choices = RuntimeConfig.SCHEMA[field_definition.runtime_path].choices
+    if runtime_choices is not None:
+        valid_values.intersection_update(str(choice) for choice in runtime_choices)
 
     if not valid_values:
         return raw_value_string
@@ -243,9 +245,7 @@ def coerce_choice_value(
     if raw_value_string in valid_values:
         return raw_value_string
 
-    default_value_string = str(
-        field_definition.default,
-    )
+    default_value_string = str(default)
 
     if default_value_string in valid_values:
         return default_value_string
@@ -361,17 +361,11 @@ def _coerce_field_value_for_save(
     """
     value_kind = field_definition.value_kind
 
-    if value_kind == "float":
-        coerced_float = casting.as_optional_float(
-            raw_value,
-        )
-        return field_definition.default if coerced_float is None else coerced_float
-
-    if value_kind == "int":
-        coerced_int = casting.as_optional_int(
-            raw_value,
-        )
-        return field_definition.default if coerced_int is None else coerced_int
+    if value_kind in {"float", "int", "yes_no_bool"}:
+        try:
+            return RuntimeConfig.coerce_field_value(path=field_definition.runtime_path, value=raw_value)
+        except RuntimeConfigValidationError:
+            return field_definition.default
 
     if value_kind == "float_list":
         return casting.as_float_list(
@@ -386,16 +380,6 @@ def _coerce_field_value_for_save(
             coerced_value
             if coerced_value is not None
             else str(field_definition.default or "")
-        )
-
-    if value_kind == "yes_no_bool":
-        return (
-            str(
-                raw_value or "no",
-            )
-            .strip()
-            .lower()
-            == "yes"
         )
 
     if value_kind == "choice":

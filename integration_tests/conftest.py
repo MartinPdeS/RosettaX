@@ -1,9 +1,8 @@
 """Real-dependency checks run separately from the stubbed unit suite."""
 
 import importlib
-from pathlib import Path
-
 import pytest
+from pathlib import Path
 
 
 def pytest_sessionstart(session):

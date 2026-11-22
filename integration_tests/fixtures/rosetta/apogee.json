@@ -40,65 +40,61 @@
       "warning": false,
       "rows": [
         {
-          "measured_peak_position": 2301.0954321777417,
-          "particle_diameter_nm": 70.0
+          "measured_peak_position": 5265.376774777295,
+          "particle_diameter_nm": 100
         },
         {
-          "measured_peak_position": 5314.361033568357,
-          "particle_diameter_nm": 100.0
+          "measured_peak_position": 17621.22825436084,
+          "particle_diameter_nm": 125
         },
         {
-          "measured_peak_position": 17415.253844454117,
-          "particle_diameter_nm": 125.0
+          "measured_peak_position": 44356.16604888718,
+          "particle_diameter_nm": 147
         },
         {
-          "measured_peak_position": 45555.74244497976,
-          "particle_diameter_nm": 147.0
+          "measured_peak_position": 264347.4209869577,
+          "particle_diameter_nm": 203
         },
         {
-          "measured_peak_position": 263982.85694438237,
-          "particle_diameter_nm": 203.0
-        },
-        {
-          "measured_peak_position": 1504946.9039208617,
-          "particle_diameter_nm": 296.0
+          "measured_peak_position": 1508958.7958466327,
+          "particle_diameter_nm": 296
         }
       ],
       "payload": {
         "points": [
           {
-            "x": 2301.0954321777417,
-            "y": 612.0,
+            "x": 2241.0324348205727,
+            "y": 619,
             "kind": "non_fluorescent"
           },
           {
-            "x": 5314.361033568357,
-            "y": 756.0,
+            "x": 5265.376774777295,
+            "y": 750,
             "kind": "non_fluorescent"
           },
           {
-            "x": 17415.253844454117,
-            "y": 855.0,
+            "x": 17621.22825436084,
+            "y": 854,
             "kind": "non_fluorescent"
           },
           {
-            "x": 45555.74244497976,
-            "y": 929.0,
+            "x": 44356.16604888718,
+            "y": 929,
             "kind": "non_fluorescent"
           },
           {
-            "x": 263982.85694438237,
-            "y": 1040.0,
+            "x": 264347.4209869577,
+            "y": 1040,
             "kind": "non_fluorescent"
           },
           {
-            "x": 1504946.9039208617,
-            "y": 1168.0,
+            "x": 1508958.7958466327,
+            "y": 1168,
             "kind": "non_fluorescent"
           },
           {
-            "x": 3566387.0302922465,
-            "y": 1392.0,
+            "x": 3580955.539911597,
+            "y": 1392,
             "kind": "non_fluorescent"
           },
           {
@@ -126,17 +122,12 @@
         "baseline_cutoff": 2710.8816535546434,
         "scatter_guide_annotations": [
           {
-            "x": 2301.0954321777417,
-            "label": "70 nm",
-            "kind": "non_fluorescent"
-          },
-          {
-            "x": 5314.361033568357,
+            "x": 5265.376774777295,
             "label": "100 nm",
             "kind": "non_fluorescent"
           },
           {
-            "x": 17415.253844454117,
+            "x": 17621.22825436084,
             "label": "125 nm",
             "kind": "non_fluorescent"
           },
@@ -146,17 +137,17 @@
             "kind": "marker"
           },
           {
-            "x": 45555.74244497976,
+            "x": 44356.16604888718,
             "label": "147 nm",
             "kind": "non_fluorescent"
           },
           {
-            "x": 263982.85694438237,
+            "x": 264347.4209869577,
             "label": "203 nm",
             "kind": "non_fluorescent"
           },
           {
-            "x": 1504946.9039208617,
+            "x": 1508958.7958466327,
             "label": "296 nm",
             "kind": "non_fluorescent"
           },
@@ -167,7 +158,21 @@
           }
         ]
       },
-      "status_contains": "Saturation guard excluded 1 table peak(s)"
+      "status_contains": "Saturation guard excluded 1 table peak(s)",
+      "expected_sizing": {
+        "state": "assigned",
+        "needs_confirmation": true,
+        "excluded_lowest_diameter_nm": 70
+      },
+      "historical_global_scatter_positions": [
+        2301.0954321777417,
+        5314.361033568357,
+        17415.253844454117,
+        45555.74244497976,
+        263982.85694438237,
+        1504946.9039208617,
+        3566387.0302922465
+      ]
     },
     {
       "process_name": "Rosetta Script V1",
@@ -188,6 +193,6 @@
       "status_contains": "marker anchors"
     }
   ],
-  "description": "Recorded current behavior before the script refactor; bead identities are not independently verified.",
+  "description": "Recorded Rosetta behavior by mode, including a historical global-fit control. Bead identities are not independently verified.",
   "position_relative_tolerance": 0.01
 }

@@ -7,14 +7,12 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 
-import json
-
 import dash
 import dash_bootstrap_components as dbc
+import json
 import pytest
 from dash.development.base_component import Component
 from plotly.utils import PlotlyJSONEncoder
-
 from RosettaX.application.pages import PAGE_MODULES
 
 

@@ -2,7 +2,8 @@
 
 import logging
 import numpy as np
-from functools import partial
+from ..core.process_calls import standard_peak_action
+from ._events import filter_finite_peak_events, read_peak_event_columns
 from .base import (
     BasePeakProcess,
     PeakProcessResult,
@@ -36,9 +37,9 @@ from .rosetta_mix_fitting import (
     select_primary_validated_peak as _select_primary_validated_peak,
 )
 from .rosetta_mix_models import (
-    DEFAULT_BASELINE_SIGMA_MULTIPLIER,
-    DEFAULT_SATURATION_GUARD_FRACTION,
+    ROSETTA_SETTINGS,
     MarkerScatterDiagnostic,
+    RosettaDetectionIssue,
     RosettaEventData,
     RosettaFluorescenceAnalysis,
     RosettaMarkerScatter,
@@ -63,6 +64,7 @@ from .rosetta_mix_support import (
 )
 from collections.abc import Callable
 from dataclasses import replace
+from functools import partial
 from RosettaX.utils.io import column_copy
 from typing import Any
 
@@ -152,127 +154,11 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
         }
 
     def get_settings(self) -> list[dict[str, Any]]:
-        """
-        Return process settings shown in the UI.
-        """
-        return [
-            {
-                "name": "peak_count",
-                "kind": "integer",
-                "label": "Maximum number of scatter peaks",
-                "default_value": 10,
-                "min_value": 1,
-                "max_value": 20,
-                "step": 1,
-            },
-            {
-                "name": "fit_r2_threshold",
-                "kind": "float",
-                "label": "Minimum fit R\u00b2",
-                "help": (
-                    "Minimum Gaussian fit quality for a peak to be accepted. "
-                    "Lower values accept noisier peaks."
-                ),
-                "default_value": 0.85,
-                "min_value": 0.00,
-                "max_value": 0.999,
-                "step": 0.01,
-            },
-            {
-                "name": "baseline_sigma_multiplier",
-                "kind": "float",
-                "label": "Baseline gate width (\u03c3)",
-                "help": (
-                    "Events within this many standard deviations of the baseline "
-                    "fluorescence peak are treated as non-fluorescent."
-                ),
-                "default_value": DEFAULT_BASELINE_SIGMA_MULTIPLIER,
-                "min_value": 0.5,
-                "max_value": 5.0,
-                "step": 0.5,
-            },
-            {
-                "name": "fit_cv_threshold",
-                "kind": "float",
-                "label": "Maximum fluorescence peak CV",
-                "help": (
-                    "Maximum width allowed for fluorescence peaks during Rosetta "
-                    "marker validation. CV is represented as std/mean, so 0.10 "
-                    "corresponds to 10%."
-                ),
-                "default_value": 0.60,
-                "min_value": 0.05,
-                "max_value": 2.0,
-                "step": 0.01,
-            },
-            {
-                "name": "scatter_fit_r2_threshold",
-                "kind": "float",
-                "label": "Minimum scatter fit R\u00b2",
-                "help": (
-                    "Minimum Gaussian fit quality for scatter peaks. This is kept "
-                    "separate from fluorescence so partially resolved scatter peaks "
-                    "can still be accepted without relaxing fluorescence validation."
-                ),
-                "default_value": 0.70,
-                "min_value": 0.00,
-                "max_value": 0.999,
-                "step": 0.01,
-            },
-            {
-                "name": "scatter_fit_cv_threshold",
-                "kind": "float",
-                "label": "Maximum scatter peak CV",
-                "help": (
-                    "Maximum width allowed for scatter peaks during Rosetta "
-                    "validation. CV is represented as std/mean, so 0.10 "
-                    "corresponds to 10%."
-                ),
-                "default_value": 1.0,
-                "min_value": 0.05,
-                "max_value": 3.0,
-                "step": 0.01,
-            },
-            {
-                "name": "table_non_fluorescent_only",
-                "kind": "boolean",
-                "label": "Only output non-fluorescent peaks",
-                "help": (
-                    "When enabled, only baseline-gated non-fluorescent scatter peaks "
-                    "are inserted into the table. Disable this to also insert "
-                    "fluorescent marker-associated scatter peaks."
-                ),
-                "default_value": True,
-            },
-            {
-                "name": "saturation_guard_enabled",
-                "kind": "boolean",
-                "label": "Enable saturation guard",
-                "help": (
-                    "When enabled, table peaks above saturation guard threshold "
-                    "are excluded. Disable to keep all table peaks regardless of "
-                    "saturation metadata."
-                ),
-                "default_value": True,
-            },
-            {
-                "name": "saturation_guard_fraction",
-                "kind": "float",
-                "label": "Saturation guard (max / saturation)",
-                "help": (
-                    "Exclude table peaks above detector_saturation * this fraction "
-                    "for the selected scatter channel when metadata includes "
-                    "detector range values. This guard does not change detected "
-                    "peaks or plotted events. Example: 0.6 means 4,000,000 "
-                    "saturation becomes a 2,400,000 table threshold."
-                ),
-                "default_value": DEFAULT_SATURATION_GUARD_FRACTION,
-                "min_value": 0.0,
-                "max_value": 1.0,
-                "step": 0.01,
-            },
-        ]
+        """Return the definitions used for both controls and detection."""
+        return [dict(setting) for setting in ROSETTA_SETTINGS.values()]
 
+
+    @standard_peak_action
     def run_automatic_action(
         self,
         *,
@@ -281,6 +167,8 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
         peak_count: Any,
         max_events_for_analysis: Any,
         process_settings: dict[str, Any],
+        max_events_for_plots: Any = None,
+        runtime_config_data: Any = None,
     ) -> PeakProcessResult | None:
         """
         Run the Rosetta peak identification workflow.
@@ -320,9 +208,10 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
             retain_scatter_edges=recover_clipped_marker,
         )
         if events.scattering_values.size == 0:
-            return self._empty_result(
+            return self._build_stop_result(
                 status="The selected scatter and fluorescence channels have no usable paired events after filtering. Check the selected channels and inspect the raw event plot.",
-                clear_existing_table_peaks=False,
+                issue=RosettaDetectionIssue.EVENTS_MISSING,
+                event_counts=events.event_counts(),
             )
         fluorescence = analyze_rosetta_fluorescence(events=events, settings=settings)
         if (
@@ -341,6 +230,8 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
                 fluorescence = inclusive_fluorescence
         if fluorescence.stop_status is not None:
             return self._build_stop_result(
+                issue=fluorescence.issue,
+                event_counts=events.event_counts(),
                 status=(
                     f"{fluorescence.stop_status} Green channel: {green_fluorescence_column}. "
                     "Inspect its histogram for separated peaks above the baseline and for events piled up at the fluorescence ceiling."
@@ -390,6 +281,8 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
         )
         if scatter.stop_status is not None:
             return self._build_stop_result(
+                issue=RosettaDetectionIssue.SCATTER_MISSING,
+                event_counts=dict(events.event_counts(), baseline_gated=scatter.gated_event_count),
                 status=(
                     f"{scatter.stop_status} Scatter channel: {scattering_column}. "
                     f"The fluorescence gate retained events at or below {fluorescence.baseline_upper_gate:.4g} a.u. "
@@ -435,6 +328,8 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
         self,
         *,
         status: str,
+        issue: RosettaDetectionIssue | None = None,
+        event_counts: dict[str, Any] | None = None,
         fluorescence_analysis: dict[str, Any] | None = None,
         debug_diagnostics: dict[str, Any] | None = None,
         fluorescence_marker_candidates: list[dict[str, Any]] | None = None,
@@ -451,6 +346,10 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
         """
         payload = self.build_empty_peak_lines_payload()
         marker_positions = list(fluorescence_marker_positions or [])
+        if issue is not None:
+            payload["rosetta_detection_issue"] = issue.value
+        if event_counts is not None:
+            payload["rosetta_event_counts"] = event_counts
         if debug_diagnostics:
             payload["rosetta_debug_diagnostics"] = debug_diagnostics
 
@@ -582,29 +481,13 @@ def load_rosetta_events(
     retain_scatter_edges: bool = False,
 ) -> RosettaEventData:
     """Read paired signals and retain clipped events separately for marker identification."""
-    scattering_values = np.asarray(
-        column_copy(
-            fcs_file_path=backend.fcs_file_path,
-            detector_column=str(scattering_column),
-            dtype=float,
-            n=settings.max_events_for_analysis,
-        ),
-        dtype=float,
+    columns = read_peak_event_columns(
+        fcs_file_path=backend.fcs_file_path,
+        detector_columns=(scattering_column, green_fluorescence_column),
+        max_events=settings.max_events_for_analysis,
+        read_column=column_copy,
     )
-    green_fluorescence_values = np.asarray(
-        column_copy(
-            fcs_file_path=backend.fcs_file_path,
-            detector_column=str(green_fluorescence_column),
-            dtype=float,
-            n=settings.max_events_for_analysis,
-        ),
-        dtype=float,
-    )
-    finite_mask = np.isfinite(scattering_values) & np.isfinite(
-        green_fluorescence_values
-    )
-    scattering_values = scattering_values[finite_mask]
-    green_fluorescence_values = green_fluorescence_values[finite_mask]
+    (scattering_values, green_fluorescence_values), removed_nonfinite = filter_finite_peak_events(columns=columns)
     scatter_edge_values = {}
     scatter_edge_fluorescence = {}
     if retain_scatter_edges and scattering_values.size:
@@ -633,6 +516,7 @@ def load_rosetta_events(
     return RosettaEventData(
         scattering_values, green_fluorescence_values, removed_saturated_event_count,
         scatter_edge_values, scatter_edge_fluorescence, fluorescence_with_scatter_edges,
+        removed_nonfinite_event_count=removed_nonfinite,
     )
 
 
@@ -710,6 +594,7 @@ def analyze_rosetta_fluorescence(
             baseline_lower_gate=baseline_lower_gate,
             baseline_upper_gate=baseline_upper_gate,
             saturation_intensity=fluorescence_saturation_intensity,
+            issue=RosettaDetectionIssue.FLUORESCENCE_MISSING,
             stop_status=(
                 "No validated fluorescence peaks found. "
                 "Unable to identify fluorescent marker populations. "
@@ -743,6 +628,7 @@ def analyze_rosetta_fluorescence(
             baseline_upper_gate=baseline_upper_gate,
             saturation_intensity=fluorescence_saturation_intensity,
             stop_status=marker_stop_status,
+            issue=RosettaDetectionIssue.MARKER_AMBIGUOUS if marker_peaks else RosettaDetectionIssue.MARKER_MISSING,
         )
     return RosettaFluorescenceAnalysis(
         analysis=fluorescence_analysis,
@@ -1015,6 +901,7 @@ def analyze_non_fluorescent_scatter(
             points=non_fluorescent_points,
             positions=non_fluorescent_scatter_positions,
             diagnostic=non_fluorescent_diagnostic,
+            gated_event_count=non_fluorescent_scattering_values.size,
             stop_status=f"No validated non-fluorescent scatter peaks found. Stopping Rosetta workflow. {non_fluorescent_diagnostic}",
         )
     non_fluorescent_scatter_positions = [
@@ -1032,6 +919,7 @@ def analyze_non_fluorescent_scatter(
         points=non_fluorescent_points,
         positions=non_fluorescent_scatter_positions,
         diagnostic=non_fluorescent_diagnostic,
+        gated_event_count=non_fluorescent_scattering_values.size,
     )
 
 
@@ -1059,6 +947,7 @@ def build_rosetta_detection_result(
         fluorescence=fluorescence,
     )
     peak_lines_payload = {
+        "rosetta_event_counts": dict(events.event_counts(), baseline_gated=scatter.gated_event_count),
         "positions": [float(point["x"]) for point in all_points],
         "x_positions": [float(point["x"]) for point in all_points],
         "y_positions": [float(point["y"]) for point in all_points],

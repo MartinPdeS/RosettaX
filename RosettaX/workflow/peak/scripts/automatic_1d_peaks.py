@@ -1,7 +1,9 @@
 
 import logging
 import numpy as np
+from ..core.process_calls import standard_peak_action
 from ._automatic_1d_controls import Automatic1DControls
+from ._events import read_peak_event_columns
 from .base import (
     BasePeakProcess,
     PeakProcessResult,
@@ -9,9 +11,8 @@ from .base import (
     resolve_edge_artifact_filter_enabled,
     resolve_float_setting,
     resolve_integer_setting,
-    resolve_integer_value,
+    resolve_peak_event_limit,
 )
-from RosettaX.utils.io import column_copy
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -140,6 +141,7 @@ class Automatic1DPeaksProcess(Automatic1DControls, BasePeakProcess):
             "primary",
         ]
 
+    @standard_peak_action
     def run_automatic_action(
         self,
         *,
@@ -149,6 +151,7 @@ class Automatic1DPeaksProcess(Automatic1DControls, BasePeakProcess):
         peak_count: Any = None,
         max_events_for_analysis: Any = None,
         max_events_for_plots: Any = None,
+        runtime_config_data: Any = None,
         **_kwargs: Any,
     ) -> PeakProcessResult | None:
         """
@@ -198,13 +201,8 @@ class Automatic1DPeaksProcess(Automatic1DControls, BasePeakProcess):
             peak_count=peak_count,
         )
 
-        resolved_max_events = resolve_integer_value(
-            value=max_events_for_analysis
-            if max_events_for_analysis is not None
-            else max_events_for_plots,
-            default=10000,
-            minimum=1,
-            maximum=5_000_000,
+        resolved_max_events = resolve_peak_event_limit(
+            analysis_limit=max_events_for_analysis, plot_limit=max_events_for_plots,
         )
 
         values = self.read_detector_values(
@@ -331,17 +329,13 @@ class Automatic1DPeaksProcess(Automatic1DControls, BasePeakProcess):
         np.ndarray
             Detector values.
         """
-        values = column_copy(
+        (values,) = read_peak_event_columns(
             fcs_file_path=backend.fcs_file_path,
-            detector_column=str(detector_column),
-            dtype=float,
-            n=int(max_events_for_analysis),
+            detector_columns=(detector_column,),
+            max_events=int(max_events_for_analysis),
         )
+        return values
 
-        return np.asarray(
-            values,
-            dtype=float,
-        ).reshape(-1)
 
     def estimate_peak_positions(
         self,

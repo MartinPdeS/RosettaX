@@ -2,9 +2,17 @@
 
 import inspect
 import logging
-from typing import Any
+from collections.abc import Callable
+from typing import Any, TypeVar
 
 logger = logging.getLogger(__name__)
+PeakAction = TypeVar("PeakAction", bound=Callable[..., Any])
+
+
+def standard_peak_action(method: PeakAction) -> PeakAction:
+    """Mark a method that accepts every keyword for its peak action."""
+    setattr(method, "_uses_standard_peak_arguments", True)
+    return method
 
 
 def call_run_automatic_action_with_supported_arguments(
@@ -13,7 +21,7 @@ def call_run_automatic_action_with_supported_arguments(
     backend: Any,
     detector_channels: dict[str, Any],
     process_settings: dict[str, Any],
-    peak_count: int,
+    peak_count: int | None,
     max_events_for_analysis: int,
     max_events_for_plots: int,
     runtime_config_data: Any,
@@ -26,7 +34,7 @@ def call_run_automatic_action_with_supported_arguments(
     richer context such as ``process_settings`` and ``runtime_config_data``.
     """
     return _call_process_method(
-        process=process, method_name="run_automatic_action", candidate_arguments={
+        process=process, method_name="run_automatic_action", arguments={
             "backend": backend,
             "detector_channels": detector_channels,
             "process_settings": process_settings,
@@ -55,7 +63,7 @@ def call_add_clicked_peak_with_supported_arguments(
     Call ``process.add_clicked_peak`` with only the arguments it supports.
     """
     return _call_process_method(
-        process=process, method_name="add_clicked_peak", candidate_arguments={
+        process=process, method_name="add_clicked_peak", arguments={
             "click_data": click_data,
             "selected_data": selected_data,
             "existing_peak_lines_payload": existing_peak_lines_payload,
@@ -69,7 +77,7 @@ def call_add_clicked_peak_with_supported_arguments(
 
 
 def _call_process_method(
-    *, process: Any, method_name: str, candidate_arguments: dict[str, Any],
+    *, process: Any, method_name: str, arguments: dict[str, Any],
 ) -> Any:
     """Call a process method with the keyword arguments it supports.
 
@@ -79,7 +87,7 @@ def _call_process_method(
         Selected peak process.
     method_name : str
         Name of the optional method to call.
-    candidate_arguments : dict[str, Any]
+    arguments : dict[str, Any]
         Available execution context.
 
     Returns
@@ -91,13 +99,23 @@ def _call_process_method(
     if not callable(method):
         logger.debug("Process %r does not implement %s.", getattr(process, "process_name", process), method_name)
         return None
+    if getattr(method, "_uses_standard_peak_arguments", False) is True:
+        return method(**arguments)
+
+    return _call_legacy_process_method(method=method, arguments=arguments)
+
+
+def _call_legacy_process_method(*, method: Callable[..., Any], arguments: dict[str, Any]) -> Any:
+    """Adapt scripts written before the standard peak arguments were introduced."""
     signature = inspect.signature(method)
-    accepts_arbitrary_keywords = any(
+    if any(
         parameter.kind == inspect.Parameter.VAR_KEYWORD
         for parameter in signature.parameters.values()
-    )
-    arguments = candidate_arguments if accepts_arbitrary_keywords else {
-        name: value for name, value in candidate_arguments.items()
-        if name in signature.parameters
+    ):
+        return method(**arguments)
+
+    arguments = {
+        name: value for name, value in arguments.items()
+        if name in signature.parameters and signature.parameters[name].kind != inspect.Parameter.POSITIONAL_ONLY
     }
     return method(**arguments)

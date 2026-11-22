@@ -5,10 +5,13 @@ if __name__ == "__main__":
 
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
+from RosettaX.workflow.peak.core import process_calls
 from RosettaX.workflow.peak.core.process_calls import (
     call_add_clicked_peak_with_supported_arguments,
     call_run_automatic_action_with_supported_arguments,
 )
+from RosettaX.workflow.peak.scripts.automatic_1d_peaks import Automatic1DPeaksProcess
+from RosettaX.workflow.peak.scripts.manual_1d_click import Manual1DClickProcess
 from types import SimpleNamespace
 
 
@@ -46,3 +49,21 @@ def test_missing_process_method_returns_none():
         detector_channels={}, process_settings={}, runtime_config_data=None,
         axis_scale_toggle_values=[],
     ) is None
+
+
+def test_builtin_peak_actions_skip_legacy_signature_inspection(monkeypatch):
+    """Dispatch built-in automatic and manual actions through the standard interface."""
+    monkeypatch.setattr(process_calls, "inspect", None)
+
+    automatic = call_run_automatic_action_with_supported_arguments(
+        process=Automatic1DPeaksProcess(), backend=None, detector_channels={}, process_settings={},
+        peak_count=3, max_events_for_analysis=100, max_events_for_plots=50, runtime_config_data=None,
+    )
+    manual = call_add_clicked_peak_with_supported_arguments(
+        process=Manual1DClickProcess(), click_data={"points": [{"x": 42.0}]},
+        selected_data=None, existing_peak_lines_payload={}, backend=None, detector_channels={},
+        process_settings={}, runtime_config_data=None, axis_scale_toggle_values=[],
+    )
+
+    assert automatic.peak_positions == []
+    assert manual.new_peak_positions == [42.0]

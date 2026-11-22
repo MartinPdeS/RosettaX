@@ -9,7 +9,6 @@ import logging
 import numpy as np
 import pytest
 from dataclasses import replace
-from types import SimpleNamespace
 from RosettaX.workflow.peak.adapters.scattering import ScatteringPeakWorkflowAdapter
 from RosettaX.workflow.peak.scripts import rosetta_mix
 from RosettaX.workflow.peak.scripts.base import PeakProcessResult
@@ -21,6 +20,7 @@ from RosettaX.workflow.peak.scripts.rosetta_mix_mixture_fitting import (
     find_mixture_scatter_peaks,
 )
 from RosettaX.workflow.peak.scripts.rosetta_mix_models import RosettaEventData
+from types import SimpleNamespace
 
 
 def fit_populations(*, values, peak_count=8):
@@ -55,6 +55,26 @@ def test_single_population_is_not_split_and_result_is_deterministic():
     result = fit_populations(values=values)
     assert len(result["validated_peaks"]) == 1
     assert result == fit_populations(values=values)
+
+
+def test_truncation_diagnostics_distinguish_a_regional_fit_window():
+    """Trace a cropped population to its fit window when the observed range is wider."""
+    observed_log_values = np.random.default_rng(17).normal(4.0, 0.11, 8000)
+    in_window = (observed_log_values > 3.92) & (observed_log_values < 4.08)
+    values = 10 ** observed_log_values[in_window]
+    whole_range = fit_populations(values=values, peak_count=1)
+    regional = find_mixture_scatter_peaks(
+        values=values, peak_count=1, minimum_peak_fraction=0.03,
+        minimum_events_per_peak=35, fit_r2_threshold=0.99,
+        fit_cv_threshold=1.0, saturation_intensity=np.inf,
+        observed_log_bounds=(float(observed_log_values.min()), float(observed_log_values.max())),
+    )
+
+    assert not whole_range["validated_peaks"]
+    assert not regional["validated_peaks"]
+    assert [peak["mean"] for peak in whole_range["all_peaks"]] == [peak["mean"] for peak in regional["all_peaks"]]
+    assert any("observed scatter range" in reason for reason in whole_range["all_peaks"][0]["rejection_reasons"])
+    assert any("marker-bounded fit window" in reason for reason in regional["all_peaks"][0]["rejection_reasons"])
 
 
 def test_resolved_valley_rejects_a_midpoint_but_preserves_population_centers():
@@ -135,6 +155,9 @@ def test_mixture_script_routes_both_scatter_stages_through_new_fitter(monkeypatc
     assert result.warning
     assert [row["particle_diameter_nm"] for row in result.table_prefill_rows] == [""]
     assert result.peak_lines_payload["rosetta_assignment_evidence"]["scatter"]
+    assert result.peak_lines_payload["rosetta_sizing"]["state"] == "unresolved"
+    assert result.peak_lines_payload["rosetta_sizing"]["assigned_row_count"] == 0
+    assert result.peak_lines_payload["rosetta_sizing"]["rejection_reasons"]
     assert "Found 1 validated scatter peak between" in result.status
     assert "expected exactly 3 (147, 203, 296 nm)" in result.status
 
@@ -301,6 +324,10 @@ def test_partial_assignment_preserves_outer_rows_and_annotations(monkeypatch, co
     annotations = result.peak_lines_payload["scatter_guide_annotations"]
     assert all(entry["kind"] == "marker" or not 1000 < entry["x"] < 10000 for entry in annotations)
     assert result.status.startswith("Partial result: Found 2")
+    sizing = result.peak_lines_payload["rosetta_sizing"]
+    assert sizing["state"] == "partial"
+    assert sizing["needs_confirmation"]
+    assert sizing["rejection_reasons"][0].startswith("Found 2 validated scatter peaks")
 
 
 
@@ -313,6 +340,8 @@ def test_complete_assignment_publishes_expected_size_annotations(monkeypatch, co
     )
     assert not result.warning
     assert len(result.table_prefill_rows) == 9
+    assert result.peak_lines_payload["rosetta_sizing"]["state"] == "assigned"
+    assert result.peak_lines_payload["rosetta_lowest_peak_exclusion"]["diameter_nm"] == 70
     annotations = result.peak_lines_payload["scatter_guide_annotations"]
     assert [entry["label"] for entry in annotations if 1000 < entry["x"] < 10000] == ["147 nm", "203 nm", "296 nm"]
     assert all(entry["x"] > 10000 for entry in annotations if entry["label"] == "400 nm")

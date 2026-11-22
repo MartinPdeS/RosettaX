@@ -195,6 +195,7 @@ def build_rosetta_debug_diagnostics(
         "fluorescence_peaks": fluorescence_rows,
         "marker_scatter_fits": list(marker_scatter_diagnostics or []),
         "scatter_peaks": scatter_rows,
+        "scatter_fit_method": scatter_analysis.get("method") if isinstance(scatter_analysis, dict) else None,
     }
 
 
@@ -373,6 +374,8 @@ def _build_warning_graph_payload(*, peak_lines_payload: Any, show_detected_peaks
         "baseline_cutoff",
         "y_lower_gate",
         "y_upper_gate",
+        "rosetta_detection_issue",
+        "rosetta_event_counts",
     )
     if show_detected_peaks:
         retained_payload_keys += (

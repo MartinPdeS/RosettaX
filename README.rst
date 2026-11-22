@@ -315,6 +315,8 @@ the data volume; adding ``--volumes`` deletes the stored application data.
 For a native deployment, ``ROSETTAX_CALIBRATION_DIRECTORY`` can select a writable
 directory for server-side calibration files. Without that setting, RosettaX
 keeps its existing calibration directory beside the package.
+``ROSETTAX_UPLOAD_DIRECTORY`` selects a writable directory for uploaded FCS
+and calibration files. It defaults to ``~/.rosettax/uploads``.
 
 
 Render

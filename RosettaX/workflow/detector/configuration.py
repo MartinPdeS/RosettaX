@@ -1,6 +1,10 @@
 import logging
 import re
-from .catalog import INSTRUMENT_CATALOG_PATH, load_instrument_rules, match_instrument_rule
+from .catalog import (
+    INSTRUMENT_CATALOG_PATH,
+    load_instrument_rules,
+    match_instrument_rule,
+)
 from .loader import get_default_detector_preset_loader
 from RosettaX.utils.fcs_metadata import FCSMetadata
 from RosettaX.utils.reader import FCSFile

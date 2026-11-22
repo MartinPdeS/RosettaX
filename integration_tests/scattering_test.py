@@ -9,7 +9,6 @@ if __name__ == "__main__":
 
 import numpy as np
 import pytest
-
 from RosettaX.workflow.scattering.backend import BackEnd
 from RosettaX.workflow.scattering.mie_relation import build_mie_relation_from_arrays
 

@@ -37,63 +37,23 @@
         "saturation_guard_enabled": true,
         "saturation_guard_fraction": 0.5
       },
-      "warning": false,
+      "warning": true,
       "rows": [
         {
-          "measured_peak_position": 9365.043857484628,
-          "particle_diameter_nm": 100.0
-        },
-        {
-          "measured_peak_position": 45271.340758068654,
-          "particle_diameter_nm": 125.0
-        },
-        {
-          "measured_peak_position": 99463.9486031808,
-          "particle_diameter_nm": 147.0
-        },
-        {
-          "measured_peak_position": 396305.8631830946,
-          "particle_diameter_nm": 203.0
-        },
-        {
-          "measured_peak_position": 878305.6870339753,
-          "particle_diameter_nm": 296.0
-        },
-        {
-          "measured_peak_position": 1589015.116782122,
-          "particle_diameter_nm": 400.0
+          "measured_peak_position": 406685.7046460726,
+          "particle_diameter_nm": ""
         }
       ],
       "payload": {
         "points": [
           {
-            "x": 9365.043857484628,
-            "y": 503.0,
+            "x": 9514.035416499883,
+            "y": 506,
             "kind": "non_fluorescent"
           },
           {
-            "x": 45271.340758068654,
-            "y": 613.0,
-            "kind": "non_fluorescent"
-          },
-          {
-            "x": 99463.9486031808,
-            "y": 666.0,
-            "kind": "non_fluorescent"
-          },
-          {
-            "x": 396305.8631830946,
-            "y": 737.0,
-            "kind": "non_fluorescent"
-          },
-          {
-            "x": 878305.6870339753,
-            "y": 820.0,
-            "kind": "non_fluorescent"
-          },
-          {
-            "x": 1589015.116782122,
-            "y": 907.0,
+            "x": 406685.7046460726,
+            "y": 740,
             "kind": "non_fluorescent"
           },
           {
@@ -110,58 +70,37 @@
         "labels": [
           "Non-fluorescent peak 1",
           "Non-fluorescent peak 2",
-          "Non-fluorescent peak 3",
-          "Non-fluorescent peak 4",
-          "Non-fluorescent peak 5",
-          "Non-fluorescent peak 6",
           "Dim marker",
           "Bright marker"
         ],
         "baseline_cutoff": 1707.5687080489035,
         "scatter_guide_annotations": [
           {
-            "x": 9365.043857484628,
-            "label": "100 nm",
-            "kind": "non_fluorescent"
-          },
-          {
-            "x": 45271.340758068654,
-            "label": "125 nm",
-            "kind": "non_fluorescent"
-          },
-          {
             "x": 73250.3693320223,
             "label": "140 nm",
             "kind": "marker"
           },
           {
-            "x": 99463.9486031808,
-            "label": "147 nm",
-            "kind": "non_fluorescent"
-          },
-          {
-            "x": 396305.8631830946,
-            "label": "203 nm",
-            "kind": "non_fluorescent"
-          },
-          {
-            "x": 878305.6870339753,
-            "label": "296 nm",
-            "kind": "non_fluorescent"
-          },
-          {
             "x": 1008683.3713628612,
             "label": "380 nm",
             "kind": "marker"
-          },
-          {
-            "x": 1589015.116782122,
-            "label": "400 nm",
-            "kind": "non_fluorescent"
           }
         ]
       },
-      "status_contains": ""
+      "status_contains": "No assigned diameters remain after excluding the lowest non-fluorescent peak.",
+      "expected_sizing": {
+        "state": "unresolved",
+        "needs_confirmation": true,
+        "excluded_lowest_diameter_nm": 125
+      },
+      "historical_global_scatter_positions": [
+        9365.043857484628,
+        45271.340758068654,
+        99463.9486031808,
+        396305.8631830946,
+        878305.6870339753,
+        1589015.116782122
+      ]
     },
     {
       "process_name": "Rosetta Script V1",
@@ -194,6 +133,6 @@
       "status_contains": "No validated non-fluorescent scatter peaks"
     }
   ],
-  "description": "Recorded current behavior before the script refactor; bead identities are not independently verified.",
+  "description": "Recorded Rosetta behavior by mode, including a historical global-fit control. Bead identities are not independently verified.",
   "position_relative_tolerance": 0.01
 }

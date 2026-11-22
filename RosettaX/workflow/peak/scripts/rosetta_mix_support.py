@@ -3,6 +3,7 @@
 import logging
 import numpy as np
 from .base import build_edge_pileup_mask as shared_build_edge_pileup_mask
+from .base import resolve_integer_value
 from collections.abc import Callable
 from pathlib import Path
 from RosettaX.utils.reader import FCSFile
@@ -52,12 +53,7 @@ def resolve_integer(
     """
     Resolve a bounded integer value.
     """
-    try:
-        resolved_value = int(value)
-    except (TypeError, ValueError):
-        resolved_value = int(default)
-
-    return max(int(minimum), min(int(maximum), int(resolved_value)))
+    return resolve_integer_value(value=value, default=default, minimum=minimum, maximum=maximum)
 
 
 def resolve_float(

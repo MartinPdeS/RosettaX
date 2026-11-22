@@ -1,6 +1,8 @@
 
 import logging
 import numpy as np
+from ..core.process_calls import standard_peak_action
+from ._events import filter_finite_peak_events, read_peak_event_columns
 from ._numerics import (  # noqa: F401
     compute_quantile_gate,
     inverse_transform_position,
@@ -14,9 +16,9 @@ from .base import (
     resolve_float_setting,
     resolve_integer_setting,
     resolve_integer_value,
+    resolve_peak_event_limit,
     resolve_yes_no_setting,
 )
-from RosettaX.utils.io import column_copy
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -279,6 +281,7 @@ class SmoothedDensityProminence2DPeakProcess(BasePeakProcess):
             },
         ]
 
+    @standard_peak_action
     def run_automatic_action(
         self,
         *,
@@ -288,6 +291,7 @@ class SmoothedDensityProminence2DPeakProcess(BasePeakProcess):
         peak_count: Any = None,
         max_events_for_analysis: Any = None,
         max_events_for_plots: Any = None,
+        runtime_config_data: Any = None,
         **_kwargs: Any,
     ) -> PeakProcessResult | None:
         """
@@ -333,33 +337,14 @@ class SmoothedDensityProminence2DPeakProcess(BasePeakProcess):
             peak_count=peak_count,
         )
 
-        maximum_events = resolve_integer_value(
-            value=max_events_for_analysis
-            if max_events_for_analysis is not None
-            else max_events_for_plots,
-            default=10000,
-            minimum=1,
-            maximum=5_000_000,
+        maximum_events = resolve_peak_event_limit(
+            analysis_limit=max_events_for_analysis, plot_limit=max_events_for_plots,
         )
 
-        x_axis_values = np.asarray(
-            column_copy(
-                fcs_file_path=backend.fcs_file_path,
-                detector_column=str(x_axis_column),
-                dtype=float,
-                n=maximum_events,
-            ),
-            dtype=float,
-        )
-
-        y_axis_values = np.asarray(
-            column_copy(
-                fcs_file_path=backend.fcs_file_path,
-                detector_column=str(y_axis_column),
-                dtype=float,
-                n=maximum_events,
-            ),
-            dtype=float,
+        x_axis_values, y_axis_values = read_peak_event_columns(
+            fcs_file_path=backend.fcs_file_path,
+            detector_columns=(x_axis_column, y_axis_column),
+            max_events=maximum_events,
         )
 
         if resolve_edge_artifact_filter_enabled(
@@ -966,20 +951,13 @@ def prepare_axis_values(
         :common_size
     ]
 
-    finite_mask = np.isfinite(original_x_values) & np.isfinite(original_y_values)
-
+    (original_x_values, original_y_values), _ = filter_finite_peak_events(
+        columns=(original_x_values, original_y_values),
+    )
     if use_log_transform:
-        finite_mask = finite_mask & (original_x_values > 0.0) & (original_y_values > 0.0)
-
-    original_x_values = original_x_values[
-        finite_mask
-    ]
-
-    original_y_values = original_y_values[
-        finite_mask
-    ]
-
-    if use_log_transform:
+        positive = (original_x_values > 0.0) & (original_y_values > 0.0)
+        original_x_values = original_x_values[positive]
+        original_y_values = original_y_values[positive]
         transformed_x_values = np.log10(
             original_x_values,
         )

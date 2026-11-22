@@ -46,6 +46,7 @@ sys.modules.setdefault(
 )
 
 from RosettaX.workflow.peak.callbacks import mutation
+from RosettaX.workflow.peak.core import mutation as peak_mutation
 
 
 class _StubPageState:
@@ -93,6 +94,10 @@ class _StubAdapter:
         """Update peak lines payload for this test."""
         return page_state
 
+    def clear_peak_lines_payload(self, *, page_state):
+        """Remove earlier annotations from the test page state."""
+        return self.build_page_state(payload=dict(page_state.to_dict(), peak_lines_payload=None))
+
     def get_page_state_payload(self, *, page_state):
         """Get page state payload for this test."""
         if hasattr(page_state, "to_dict"):
@@ -113,8 +118,8 @@ class _StubProcess:
 
 
 @pytest.mark.parametrize("starting_rows", [[{"measured_peak_position": 9.9}], None])
-def test_handle_run_action_appends_using_cleared_rows(monkeypatch, starting_rows):
-    """Check handle run action appends using cleared rows."""
+def test_handle_run_action_replaces_rows_in_one_adapter_call(monkeypatch, starting_rows):
+    """Ask the adapter to replace measurements while retaining reference data."""
     adapter = _StubAdapter()
 
     result = SimpleNamespace(
@@ -125,13 +130,13 @@ def test_handle_run_action_appends_using_cleared_rows(monkeypatch, starting_rows
     )
 
     monkeypatch.setattr(
-        mutation,
+        peak_mutation,
         "context_is_valid_for_process",
         lambda **kwargs: True,
     )
 
     monkeypatch.setattr(
-        mutation,
+        peak_mutation,
         "call_run_automatic_action_with_supported_arguments",
         lambda **kwargs: result,
     )
@@ -156,14 +161,10 @@ def test_handle_run_action_appends_using_cleared_rows(monkeypatch, starting_rows
     )
 
     assert table_result == [{"measured_peak_position": 123.0}]
-    assert len(adapter.calls) == 2
-
-    first_call = adapter.calls[0]
-    second_call = adapter.calls[1]
-
-    assert first_call["context"]["replace_existing_table_peaks"] is True
-    assert second_call["context"]["replace_existing_table_peaks"] is True
-    assert second_call["table_data"] == [{"measured_peak_position": ""}]
+    adapter_call, = adapter.calls
+    assert adapter_call["context"]["replace_existing_table_peaks"] is True
+    assert adapter_call["table_data"] == starting_rows
+    assert _page_state_dict["peak_table_context"]["detector_channels"] == {"x": "FSC-A"}
 
 
 def test_handle_run_action_syncs_reference_table_rows_in_page_state(monkeypatch):
@@ -178,13 +179,13 @@ def test_handle_run_action_syncs_reference_table_rows_in_page_state(monkeypatch)
     )
 
     monkeypatch.setattr(
-        mutation,
+        peak_mutation,
         "context_is_valid_for_process",
         lambda **kwargs: True,
     )
 
     monkeypatch.setattr(
-        mutation,
+        peak_mutation,
         "call_run_automatic_action_with_supported_arguments",
         lambda **kwargs: result,
     )
@@ -360,9 +361,9 @@ def test_handle_manual_graph_click_ignores_empty_selection_payload_dict(
 def test_warning_does_not_replace_existing_results(monkeypatch):
     """An unsuccessful automatic run shows a warning and preserves state and table."""
     adapter = _StubAdapter()
-    monkeypatch.setattr(mutation, "context_is_valid_for_process", lambda **kwargs: True)
+    monkeypatch.setattr(peak_mutation, "context_is_valid_for_process", lambda **kwargs: True)
     monkeypatch.setattr(
-        mutation,
+        peak_mutation,
         "call_run_automatic_action_with_supported_arguments",
         lambda **kwargs: SimpleNamespace(warning=True, status="Warning: Review the markers."),
     )
@@ -378,7 +379,7 @@ def test_warning_does_not_replace_existing_results(monkeypatch):
 
     assert state is dash.no_update
     assert table is dash.no_update
-    warning = status[0].children[0]
+    warning = status[0]
     assert warning.children == "Warning: Review the markers."
     assert warning.role == "status"
 
@@ -390,15 +391,16 @@ def test_failed_mixture_clears_previous_table_and_graph_annotations(monkeypatch)
         supports_automatic_action=True, process_name="Rosetta Script Mixture",
         preserve_graph_payload_on_warning=True, clear_table_on_warning=True,
     )
-    monkeypatch.setattr(mutation, "context_is_valid_for_process", lambda **kwargs: True)
+    monkeypatch.setattr(peak_mutation, "context_is_valid_for_process", lambda **kwargs: True)
     monkeypatch.setattr(
-        mutation, "call_run_automatic_action_with_supported_arguments",
+        peak_mutation, "call_run_automatic_action_with_supported_arguments",
         lambda **kwargs: SimpleNamespace(warning=True, status="Warning: Expected exactly 3 populations.", peak_lines_payload={}),
     )
     monkeypatch.setattr(mutation, "build_status_children", lambda **kwargs: [kwargs["status"]])
     state, table, status = mutation.handle_run_action(
         page=SimpleNamespace(), adapter=adapter, process=process,
-        target_process_name=process.process_name, page_state=_StubPageState(),
+        target_process_name=process.process_name,
+        page_state=_StubPageState({"reference_table_rows": [{"measured_peak_position": 9.9}]}),
         uploaded_fcs_path="example.fcs", detector_channels={"scattering": "LALS"},
         process_setting_ids=[], process_setting_values=[], max_events_for_plots=1000,
         table_data=[{"measured_peak_position": 9.9}], mie_model="Solid Sphere",
@@ -406,6 +408,7 @@ def test_failed_mixture_clears_previous_table_and_graph_annotations(monkeypatch)
     )
     assert state is not dash.no_update
     assert table == [{"measured_peak_position": ""}]
+    assert state["reference_table_rows"] == table
     assert "Expected exactly 3" in status[0]
 
 
@@ -419,8 +422,8 @@ def test_strictness_preview_updates_graph_without_writing_table(*, monkeypatch):
         captured_settings.update(process_settings)
         return SimpleNamespace(peak_lines_payload={"positions": [123.0]}, status="Marker found")
 
-    monkeypatch.setattr(mutation, "context_is_valid_for_process", lambda **kwargs: True)
-    monkeypatch.setattr(mutation, "call_run_automatic_action_with_supported_arguments", simulate_preview)
+    monkeypatch.setattr(peak_mutation, "context_is_valid_for_process", lambda **kwargs: True)
+    monkeypatch.setattr(peak_mutation, "call_run_automatic_action_with_supported_arguments", simulate_preview)
     process_name = "Rosetta Script Mixture"
     page_state, table, _status = mutation.handle_run_action(
         page=SimpleNamespace(),
@@ -446,3 +449,25 @@ def test_strictness_preview_updates_graph_without_writing_table(*, monkeypatch):
     assert page_state["reference_table_rows"] == [{"measured_peak_position": 42.0}]
     assert table is dash.no_update
     assert adapter.calls == []
+
+
+def test_automatic_run_without_results_clears_stale_annotations_and_rows():
+    """Keep displayed and stored data consistent when a replacement run is empty."""
+    process = SimpleNamespace(get_required_detector_channels=lambda: ["primary"])
+    transition = peak_mutation.run_peak_process(
+        adapter=_StubAdapter(), process=process, target_process_name="automatic_1d_peaks",
+        page_state=_StubPageState({
+            "peak_lines_payload": {"positions": [9.9]},
+            "reference_table_rows": [{"measured_peak_position": 9.9}],
+        }),
+        uploaded_fcs_path="example.fcs", detector_channels={"primary": "FSC-A"},
+        process_setting_ids=[], process_setting_values=[], advanced_mode_value=None,
+        data_filter_value=None, axis_scale_toggle_values=None, max_events_for_plots=1000,
+        table_data=[{"measured_peak_position": 9.9}], mie_model=None, runtime_config_data={},
+        preview_only=False,
+    )
+
+    state = transition.page_state.to_dict()
+    assert state["peak_lines_payload"] is None
+    assert state["reference_table_rows"] == transition.table_rows == [{"measured_peak_position": ""}]
+    assert transition.status == "Run completed with no detected peaks."

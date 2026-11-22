@@ -1,6 +1,7 @@
 
 import logging
 import numpy as np
+from ..payload import CalibrationPayload
 from .mie_relation_builder import build_target_mie_relation
 from .models import (
     ScatteringApplyResult,
@@ -20,42 +21,8 @@ logger = logging.getLogger(__name__)
 def calibration_is_scattering_v2(
     calibration_payload: dict[str, Any],
 ) -> bool:
-    """
-    Return whether the payload is a scattering version 2 calibration.
-    """
-    if not isinstance(calibration_payload, dict):
-        logger.debug(
-            "calibration_is_scattering_v2 returning False because payload is not a dict. "
-            "payload_type=%s",
-            type(calibration_payload).__name__,
-        )
-        return False
-
-    calibration_type = str(
-        calibration_payload.get(
-            "calibration_type",
-            "",
-        )
-    ).strip()
-
-    calibration_version = int(
-        calibration_payload.get(
-            "version",
-            0,
-        )
-        or 0
-    )
-
-    result = calibration_type == "scattering" and calibration_version >= 2
-
-    logger.debug(
-        "calibration_is_scattering_v2 calibration_type=%r calibration_version=%r result=%r",
-        calibration_type,
-        calibration_version,
-        result,
-    )
-
-    return result
+    """Return whether the payload is a scattering version 2 calibration."""
+    return CalibrationPayload.from_value(value=calibration_payload).is_scattering_v2
 
 
 def build_scattering_output_columns(
@@ -87,7 +54,7 @@ def apply_scattering_calibration_to_dataframe(
     dataframe: Any,
     source_channel: str,
     output_channel_names: list[str] | None = None,
-    calibration_payload: dict[str, Any],
+    calibration_payload: dict[str, Any] | CalibrationPayload,
     target_model_parameters: ScatteringTargetModelParameters,
     metadata: dict[str, Any] | None = None,
 ) -> ScatteringApplyResult:
@@ -99,9 +66,8 @@ def apply_scattering_calibration_to_dataframe(
     - estimated coupling
     - target model Mie equivalent diameter
 
-    If the full target Mie relation is not strictly monotonic, the widest
-    strictly monotonic branch is selected automatically. Diameter inversion uses
-    linear extrapolation outside the selected branch coupling range.
+    A non-monotonic target uses an approximation based on its leftmost monotonic
+    branch. Inversion extrapolates linearly outside the resolved coupling range.
     """
     logger.debug(
         "apply_scattering_calibration_to_dataframe called with source_channel=%r "
@@ -117,18 +83,16 @@ def apply_scattering_calibration_to_dataframe(
             f'Source channel "{source_channel}" is missing from the input dataframe.'
         )
 
+    calibration = CalibrationPayload.from_value(value=calibration_payload)
+    scattering_calibration = calibration.scattering_calibration
     full_target_mie_relation = build_target_mie_relation(
-        calibration_payload=calibration_payload,
+        calibration_payload=calibration.saved_payload,
         target_model_parameters=target_model_parameters,
     )
 
     relation_resolution = resolve_monotonic_target_mie_relation(
         target_mie_relation=full_target_mie_relation,
         target_model_parameters=target_model_parameters,
-    )
-
-    scattering_calibration = scattering.ScatteringCalibration.from_dict(
-        calibration_payload,
     )
 
     source_values = dataframe[source_channel].to_numpy(

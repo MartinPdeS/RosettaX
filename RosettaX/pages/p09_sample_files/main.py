@@ -1,8 +1,8 @@
-import json
-from pathlib import PurePosixPath
 import dash
 import dash_bootstrap_components as dbc
+import json
 from dash import html
+from pathlib import PurePosixPath
 from RosettaX.utils import directories, styling, ui_forms
 from RosettaX.utils.upload_limits import format_upload_size
 

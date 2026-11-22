@@ -11,6 +11,20 @@ class PeakMutationOutput(NamedTuple):
     status_children: list[Any]
 
 
+@dataclass(frozen=True, kw_only=True)
+class PeakTransition:
+    """Graph state, reference rows, and feedback from one peak action.
+
+    A None field leaves the corresponding output alone. An empty row list
+    clears the table, and an empty status clears feedback for the process.
+    """
+
+    page_state: Any = None
+    table_rows: list[dict[str, Any]] | None = None
+    status: str | None = None
+    debug_payload: dict[str, Any] | None = None
+
+
 @dataclass(frozen=True)
 class PeakConfig:
     """

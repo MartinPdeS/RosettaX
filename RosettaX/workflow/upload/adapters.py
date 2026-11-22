@@ -3,6 +3,7 @@ from RosettaX.workflow.page_session.fluorescence import (
     FluorescencePageState,
     build_empty_peak_lines_payload,
 )
+from RosettaX.workflow.table.fluorescence import FluorescenceReferenceTable
 from typing import Any, Protocol
 
 
@@ -91,6 +92,9 @@ class FluorescenceUploadAdapter:
         """
         Update fluorescence page state after a new upload.
         """
+        table_rows = current_page_state.reference_table_rows
+        if table_rows is not None and current_page_state.uploaded_fcs_path:
+            table_rows = FluorescenceReferenceTable.clear_measured_intensity(rows=table_rows)
         return current_page_state.update(
             uploaded_fcs_path=uploaded_fcs_path,
             uploaded_filename=uploaded_filename,
@@ -100,6 +104,8 @@ class FluorescenceUploadAdapter:
             fluorescence_source_channel=None,
             calibration_payload=None,
             calibration_saved=False,
+            reference_table_rows=table_rows,
+            peak_graph_revision=None,
             status_message="",
         )
 
@@ -165,10 +171,13 @@ class ScatteringUploadAdapter:
             "status_message": "",
             "calibration_graph_payload": None,
             "calibration_model_graph_payload": None,
+            "calibration_diameter_peak_graph_payload": None,
             "calibration_payload": None,
             "calibration_saved": False,
             "scattering_parameters_payload": None,
             "rosetta_assignment_evidence": None,
+            "peak_graph_revision": None,
+            "peak_table_context": None,
         }
 
         empty_peak_payload = (
