@@ -426,11 +426,20 @@ def _resolve_fluorescence_mesf_values_for_save(
 
 def build_nested_profile_payload(
     flat_runtime_payload: dict[str, Any],
+    *,
+    base_payload: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """
     Build a nested profile payload from flat form values.
+
+    Parameters
+    ----------
+    flat_runtime_payload : dict
+        Editor values keyed by field name.
+    base_payload : dict or None, optional
+        Existing profile to update using canonical runtime paths.
     """
-    nested_profile_payload: dict[str, Any] = {}
+    nested_profile_payload = RuntimeConfig.from_dict(base_payload).to_dict() if base_payload is not None else {}
     fluorescence_preset_mesf_values = _resolve_fluorescence_mesf_values_for_save(
         flat_runtime_payload,
     )
@@ -456,7 +465,7 @@ def build_nested_profile_payload(
 
         _set_nested_value(
             nested_payload=nested_profile_payload,
-            dotted_path=field_definition.profile_path,
+            dotted_path=field_definition.runtime_path if base_payload is not None else field_definition.profile_path,
             value=coerced_value,
         )
 
@@ -484,3 +493,16 @@ def save_profile(
         select_profile=False,
         profile_display_name=existing_profile_label,
     ).to_dict()
+
+
+def save_profile_form(
+    *,
+    profile: str,
+    values: tuple[Any, ...],
+    browser_payload: Any,
+) -> dict[str, Any]:
+    """Save the editor values while preserving settings outside the form."""
+    form_values = build_form_store_from_form_values(values)
+    existing_profile = get_saved_profile(profile, browser_payload)
+    profile_payload = build_nested_profile_payload(form_values, base_payload=existing_profile)
+    return save_profile(profile, profile_payload, browser_payload)

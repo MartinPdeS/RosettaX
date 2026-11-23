@@ -5,7 +5,8 @@ import logging
 from . import services
 from .ids import Ids
 from dash import Input, Output, dash_table, dcc, html
-from flask import has_request_context, request
+from dash.exceptions import PreventUpdate
+from RosettaX.application.access import has_admin_session
 from RosettaX.utils import styling, ui_forms
 from typing import Any
 
@@ -20,22 +21,15 @@ class AdminPage:
     Hidden administration dashboard with usage analytics graphs.
 
     The page is not linked from the sidebar. It is served at /admin and is
-    only rendered when the request carries the token configured through the
-    ROSETTAX_ADMIN_TOKEN environment variable.
+    only rendered for a signed administrator session.
     """
 
     def __init__(self) -> None:
         self.ids = Ids()
 
-    def layout(
-        self,
-        token: str | None = None,
-        **_kwargs,
-    ) -> dbc.Container:
-        if token is None and has_request_context():
-            token = request.args.get("token")
-
-        if not services.is_admin_access_granted(token):
+    def layout(self, **_kwargs) -> dbc.Container:
+        """Render the dashboard for an authenticated administrator."""
+        if not has_admin_session():
             return self._access_denied_layout()
 
         return self._dashboard_layout()
@@ -64,6 +58,8 @@ class AdminPage:
             _visit_tracking_signal: Any,
             theme_store_data: Any,
         ):
+            if not has_admin_session():
+                raise PreventUpdate
             theme = "dark"
 
             if isinstance(theme_store_data, dict):
@@ -372,13 +368,10 @@ class AdminPage:
                 dbc.CardBody(
                     [
                         html.H4(
-                            "Page not available",
+                            "Administrator access",
                             style={"fontWeight": "700"},
                         ),
-                        html.Div(
-                            "The requested page is not available on this server.",
-                            style={"opacity": 0.72},
-                        ),
+                        html.A("Administrator sign-in", href="/admin/login"),
                     ]
                 ),
                 style={"maxWidth": "540px", "margin": "48px auto"},

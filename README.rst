@@ -315,8 +315,17 @@ the data volume; adding ``--volumes`` deletes the stored application data.
 For a native deployment, ``ROSETTAX_CALIBRATION_DIRECTORY`` can select a writable
 directory for server-side calibration files. Without that setting, RosettaX
 keeps its existing calibration directory beside the package.
+
 ``ROSETTAX_UPLOAD_DIRECTORY`` selects a writable directory for uploaded FCS
 and calibration files. It defaults to ``~/.rosettax/uploads``.
+
+The native CLI and the bundled loopback-only Compose setup allow local Settings
+editing. The Gunicorn WSGI entry point defaults to hosted mode. For an HTTPS
+deployment, keep ``ROSETTAX_HOSTED=true`` and set a strong
+``ROSETTAX_ADMIN_TOKEN`` in the server environment. Sign in at
+``/admin/login`` to access both ``/admin`` and ``/settings`` for 30 minutes.
+Settings edits are saved to the administrator's browser. To change the presets
+offered to public users, update the packaged profiles and redeploy.
 
 
 Render

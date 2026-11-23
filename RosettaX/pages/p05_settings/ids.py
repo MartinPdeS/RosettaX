@@ -50,6 +50,15 @@ class Ids:
         values_profile_dropdown = f"{PAGE_NAME}-values-profile-dropdown"
         save_changes_button = f"{PAGE_NAME}-save-changes-button"
         save_confirmation = f"{PAGE_NAME}-save-confirmation"
+        category = f"{PAGE_NAME}-category"
+        saved_values = f"{PAGE_NAME}-saved-values"
+        edit_status = f"{PAGE_NAME}-edit-status"
+        revert_button = f"{PAGE_NAME}-revert-button"
+        copy_name = f"{PAGE_NAME}-copy-name"
+        copy_button = f"{PAGE_NAME}-copy-button"
+        delete_button = f"{PAGE_NAME}-delete-button"
+        delete_confirmation = f"{PAGE_NAME}-delete-confirmation"
+
 
         default_fluorescence_reference_preset = (
             f"{PAGE_NAME}-default-fluorescence-reference-preset"
@@ -121,25 +130,9 @@ class Ids:
         collapse_calibration_cards = f"{PAGE_NAME}-collapse-calibration-cards"
 
         @staticmethod
-        def section_toggle_target(section_key: str) -> dict[str, str]:
-            return {
-                "type": f"{PAGE_NAME}-default-section-toggle-target",
-                "section": str(section_key),
-            }
-
-        @staticmethod
-        def section_collapse(section_key: str) -> dict[str, str]:
-            return {
-                "type": f"{PAGE_NAME}-default-section-collapse",
-                "section": str(section_key),
-            }
-
-        @staticmethod
-        def section_toggle_label(section_key: str) -> dict[str, str]:
-            return {
-                "type": f"{PAGE_NAME}-default-section-toggle-label",
-                "section": str(section_key),
-            }
+        def category_panel(*, category: str) -> str:
+            """Return the ID for a settings category panel."""
+            return f"{PAGE_NAME}-category-{category}"
 
     class NewProfile:
         """

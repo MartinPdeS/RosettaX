@@ -207,8 +207,8 @@ def test_card_toggle_callback_uses_one_writer_for_workflow_step_actions() -> Non
     }
 
 
-def test_card_toggle_callback_reads_browser_profile_preference() -> None:
-    """Check card toggle callback reads browser profile preference."""
+def test_card_toggle_callback_reads_active_runtime_preference() -> None:
+    """Check card defaults use the resolved active runtime profile."""
     app = dash.Dash(__name__, suppress_callback_exceptions=True)
     register_application_callbacks(app)
 
@@ -222,6 +222,5 @@ def test_card_toggle_callback_reads_browser_profile_preference() -> None:
     )
 
     input_ids = {str(callback_input["id"]) for callback_input in card_callback["inputs"]}
-    assert "browser-profiles-store" in input_ids
-    assert "sidebar-selected-profile-store" in input_ids
-    assert "runtime-config-store" not in input_ids
+    assert "browser-profiles-store" not in input_ids
+    assert "runtime-config-store" in input_ids

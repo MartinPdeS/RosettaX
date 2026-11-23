@@ -11,6 +11,7 @@ application = RosettaXApplication(
     port=8050,
     open_browser=False,
     debug=False,
+    hosted=os.getenv("ROSETTAX_HOSTED", "true").strip().lower() != "false",
 )
 
 app = application.app

@@ -144,20 +144,20 @@ def test_calibration_workflow_cards_start_collapsed_with_description_tooltips(
             assert workflow_header.get_workflow_step(workflow_step=section.workflow_step) == step
 
 
-def test_settings_profile_card_uses_its_workflow_step(monkeypatch) -> None:
-    """Use the profile section metadata in both the settings header and card."""
+def test_settings_keeps_all_categories_mounted(monkeypatch) -> None:
+    """Keep category controls in the layout while showing General first."""
     monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
     page_module = importlib.import_module("RosettaX.pages.p05_settings.main")
     page = page_module.SettingsPage()
-    section = page.sections[0]
-    step = page.workflow_header.get_workflow_step(workflow_step=section.workflow_step)
-    card = section._build_profile_controls_card()
-    tooltip = _find_component_by_type(card.children[0], dbc.Tooltip)
+    editor = page.layout().children[1]
+    workspace = editor.children[2]
+    panels = workspace.children[1].children
 
-    assert f"{step.number}. {step.title}" in _collect_text(card.children[0])
-    assert tooltip is not None
-    assert step.tooltip_text in _collect_text(tooltip)
-    assert step.description in _collect_text(page.workflow_header.build_header())
+    assert "Profile to edit" in _collect_text(editor.children[1])
+    assert "Manage profiles" in _collect_text(editor.children[1])
+    assert [panel.hidden for panel in panels] == [False, True, True, True, True, True]
+    assert "Save changes" in _collect_text(editor.children[-1])
+    assert "Discard changes" in _collect_text(editor.children[-1])
 
 
 def test_calibration_card_callback_does_not_hydrate_card_state() -> None:

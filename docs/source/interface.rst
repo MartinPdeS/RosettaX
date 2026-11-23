@@ -29,8 +29,17 @@ Visualize data
 Slice FCS files
     Extract FCS-file subsets for focused downstream work.
 
-Profile
-    Manage runtime profile behavior and defaults.
+Settings
+    In a local installation, choose a browser profile to edit and open a
+    settings category. Use **Save changes** to keep your edits or
+    **Discard changes** to restore the saved values. **Manage profiles**
+    lets you copy or delete a profile.
+
+    On the hosted app, the sidebar offers **Default**, **Rosetta Mix
+    Standards**, and **Diagnostic**. Enable **More profiles** to see
+    **Minimal**, which hides graphs and lowers the analysis event limit.
+    Select a profile to read its description, then click **Load** to apply it.
+    The Settings editor on the hosted app requires administrator sign-in.
 
 Documentation
     In-app under-the-hood reference for model assumptions, regression logic,

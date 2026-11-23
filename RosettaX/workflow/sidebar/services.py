@@ -1,8 +1,13 @@
 
 import logging
 from pathlib import Path
+from RosettaX.application.access import can_edit_settings, is_hosted
 from RosettaX.utils import directories
-from RosettaX.utils.browser_profiles import BrowserProfileLibrary, build_profile_label
+from RosettaX.utils.browser_profiles import (
+    DEFAULT_PROFILE_FILENAME,
+    BrowserProfileLibrary,
+    build_profile_label,
+)
 from RosettaX.utils.paths import (
     normalize_profile_filename as normalize_safe_profile_filename,
 )
@@ -10,6 +15,47 @@ from typing import Any
 from urllib.parse import quote
 
 logger = logging.getLogger(__name__)
+
+
+PROFILE_DESCRIPTIONS = {
+    DEFAULT_PROFILE_FILENAME: "Start here for routine calibration.",
+    "Rosetta_Mix_Standards.json": "Sets up scattering calibration for Rosetta Mix beads.",
+    "Diagnostic.json": "Shows preset details and analyzes up to 250,000 events.",
+    "Minimal.json": "Hides graphs and limits analysis to 25,000 events.",
+}
+ADDITIONAL_PROFILE = "Minimal.json"
+
+
+def get_available_profiles(*, browser_payload: Any) -> BrowserProfileLibrary:
+    """Resolve the editable browser library or the public server presets."""
+    if can_edit_settings():
+        return BrowserProfileLibrary.from_dict(browser_payload)
+    seeded = BrowserProfileLibrary.from_seed_data()
+    return BrowserProfileLibrary(
+        profiles={name: seeded.profiles[name] for name in PROFILE_DESCRIPTIONS if name in seeded.profiles},
+        selected_profile=DEFAULT_PROFILE_FILENAME,
+    )
+
+
+def build_profile_picker_options(
+    *,
+    library: BrowserProfileLibrary,
+    show_more: bool = False,
+    active_profile: str | None = None,
+) -> list[dict[str, str]]:
+    """Keep hosted presets in task order and reveal Minimal on demand."""
+    options = library.build_options()
+    if not is_hosted():
+        return options
+
+    preset_order = {name: index for index, name in enumerate(PROFILE_DESCRIPTIONS)}
+    return sorted(
+        (
+            option for option in options
+            if option["value"] != ADDITIONAL_PROFILE or show_more or active_profile == ADDITIONAL_PROFILE
+        ),
+        key=lambda option: preset_order.get(option["value"], len(preset_order)),
+    )
 
 
 FOLDER_DISPLAY_ORDER: list[tuple[str, str]] = [

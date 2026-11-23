@@ -393,3 +393,8 @@
     font-size: 0.95rem;
     margin-bottom: 0.4rem;
 }
+
+.rosettax-profile-description {
+    display: block;
+    margin-block: .45rem .25rem;
+}

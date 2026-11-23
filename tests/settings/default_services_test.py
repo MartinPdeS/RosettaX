@@ -8,6 +8,7 @@ if __name__ == "__main__":
 
 
 from RosettaX.pages.p05_settings.sections.s01_default import schema, services
+from RosettaX.utils.browser_profiles import BrowserProfileLibrary
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow.apply_calibration.scattering import (
     EXTRACELLULAR_VESICLES_PRESET_NAME,
@@ -18,6 +19,28 @@ from RosettaX.workflow.table.fluorescence import (
     GENERIC_FLUORESCENCE_REFERENCE_PRESET_NAME,
     ROSETTA_MIX_FLUORESCENCE_REFERENCE_PRESET_NAME,
 )
+
+
+def test_save_profile_form_updates_existing_values_and_preserves_other_paths():
+    """Check editor saves override canonical values and retain settings outside the form."""
+    runtime_config = RuntimeConfig.from_dict(
+        {"metadata": {"operator_name": "Previous operator"}, "custom": {"notes": "Retain this"}}
+    )
+    library = BrowserProfileLibrary.from_dict(None).with_saved_profile(
+        profile_name="test.json", profile_payload=runtime_config.to_dict(), select_profile=False,
+    )
+    form = services.build_form_store_from_runtime_config(runtime_config)
+    form["operator_name"] = "New operator"
+
+    result = services.save_profile_form(
+        profile="test.json",
+        values=services.build_output_values_from_form_store(form),
+        browser_payload=library.to_dict(),
+    )
+    saved = BrowserProfileLibrary.from_dict(result).get_profile_payload("test.json")
+
+    assert saved["metadata"]["operator_name"] == "New operator"
+    assert saved["custom"]["notes"] == "Retain this"
 
 
 class Test_SettingsDefaultServicesPresetPreferences:

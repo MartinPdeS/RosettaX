@@ -11,8 +11,13 @@ import dash
 import importlib
 import pytest
 from flask import Flask
+from RosettaX.application import access
 from RosettaX.pages.p22_admin import services
 from RosettaX.utils import usage_metrics
+from RosettaX.workflow.sidebar.services import (
+    build_profile_picker_options,
+    get_available_profiles,
+)
 
 
 def _collect_component_ids(component) -> set[str]:
@@ -101,12 +106,12 @@ class Test_AdminPage:
         assert "admin-visits-over-time-graph" not in _collect_component_ids(missing_token_layout)
         assert "admin-visits-over-time-graph" not in _collect_component_ids(wrong_token_layout)
 
-    def test_layout_grants_access_with_matching_token(
+    def test_layout_grants_access_with_signed_session(
         self,
         monkeypatch: pytest.MonkeyPatch,
         tmp_path,
     ) -> None:
-        """Check layout grants access with matching token."""
+        """Check layout grants access with a cookie issued by sign-in."""
         monkeypatch.setenv(services.ROSETTAX_ADMIN_TOKEN_ENV_VAR, "secret-token")
         monkeypatch.setenv(
             usage_metrics.ROSETTAX_VISIT_LOG_PATH_ENV_VAR,
@@ -126,7 +131,19 @@ class Test_AdminPage:
 
         admin_main = _import_admin_main(monkeypatch)
 
-        layout = admin_main.layout(token="secret-token")
+        flask_app = Flask(__name__)
+        flask_app.config[access.HOSTED_CONFIG_KEY] = True
+        flask_app.add_url_rule("/admin/login", view_func=access.admin_login, methods=["GET", "POST"])
+        client = flask_app.test_client()
+        response = client.post(
+            "/admin/login?next=/settings", data={"token": "secret-token"}, base_url="https://localhost",
+        )
+        assert response.status_code == 303
+        assert response.location == "/settings"
+        cookie = response.headers["Set-Cookie"]
+        assert all(flag in cookie for flag in ("Secure", "HttpOnly", "SameSite=Strict"))
+        with flask_app.test_request_context("/admin", headers={"Cookie": cookie.split(";", 1)[0]}):
+            layout = admin_main.layout()
         component_ids = _collect_component_ids(layout)
 
         assert "admin-visits-over-time-graph" in component_ids
@@ -139,12 +156,12 @@ class Test_AdminPage:
         assert "admin-stat-apply-clicks" in component_ids
         assert "admin-stat-calibrated-files" in component_ids
 
-    def test_layout_reads_token_from_request_query_string(
+    def test_layout_denies_token_in_request_query_string(
         self,
         monkeypatch: pytest.MonkeyPatch,
         tmp_path,
     ) -> None:
-        """Check browser query string grants access to the admin page."""
+        """Require a session even when a URL contains the configured token."""
         monkeypatch.setenv(services.ROSETTAX_ADMIN_TOKEN_ENV_VAR, "secret-token")
         monkeypatch.setenv(
             usage_metrics.ROSETTAX_VISIT_LOG_PATH_ENV_VAR,
@@ -161,7 +178,7 @@ class Test_AdminPage:
         with flask_app.test_request_context("/admin?token=secret-token"):
             layout = admin_main.layout()
 
-        assert "admin-visits-over-time-graph" in _collect_component_ids(layout)
+        assert "admin-visits-over-time-graph" not in _collect_component_ids(layout)
 
 
 class Test_AdminServices:
@@ -337,3 +354,49 @@ class Test_AdminServices:
                 "user_agent": "Mozilla/5.0",
             },
         ]
+
+
+def test_hosted_settings_and_profiles_use_server_policy(monkeypatch):
+    """Separate hosted administration, curated public profiles, and local editing."""
+    monkeypatch.setenv(access.ADMIN_TOKEN_ENV_VAR, "server-qa-token")
+    monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
+    settings = importlib.import_module("RosettaX.pages.p05_settings.main").SettingsPage()
+
+    flask_app = Flask(__name__)
+    flask_app.config[access.HOSTED_CONFIG_KEY] = True
+    flask_app.add_url_rule("/admin/login", view_func=access.admin_login, methods=["GET", "POST"])
+    browser_payload = {"profiles": {"Custom.json": {}, "default_profile.json": {"ui": {"show_graphs": False}}}}
+    editor_id = "settings-values-profile-dropdown"
+
+    with flask_app.test_request_context("/settings"):
+        assert editor_id not in _collect_component_ids(settings.layout())
+        library = get_available_profiles(browser_payload=browser_payload)
+        assert "Custom.json" not in library.profiles
+        assert "Minimal.json" in library.profiles
+        assert library.get_profile_payload()["ui"]["show_graphs"] is True
+        assert [option["label"] for option in build_profile_picker_options(library=library)] == [
+            "Default", "Rosetta Mix Standards", "Diagnostic",
+        ]
+        assert build_profile_picker_options(library=library, show_more=True)[-1]["label"] == "Minimal"
+
+    client = flask_app.test_client()
+    assert client.post("/admin/login", data={"token": "wrong"}).status_code == 403
+    login = client.post("/admin/login", data={"token": "server-qa-token"})
+    headers = {"Cookie": login.headers["Set-Cookie"].split(";", 1)[0]}
+    with flask_app.test_request_context("/settings", headers=headers):
+        assert editor_id in _collect_component_ids(settings.layout())
+        assert "Custom.json" in get_available_profiles(browser_payload=browser_payload).profiles
+
+    with monkeypatch.context() as expired_session:
+        expired_session.setattr(access, "ADMIN_SESSION_SECONDS", -1)
+        with flask_app.test_request_context("/settings", headers=headers):
+            assert editor_id not in _collect_component_ids(settings.layout())
+
+    monkeypatch.setenv(access.ADMIN_TOKEN_ENV_VAR, "replacement-qa-token")
+    with flask_app.test_request_context("/settings", headers=headers):
+        assert editor_id not in _collect_component_ids(settings.layout())
+
+    flask_app.config[access.HOSTED_CONFIG_KEY] = False
+    with flask_app.test_request_context("/settings"):
+        assert editor_id in _collect_component_ids(settings.layout())
+        assert "Custom.json" in get_available_profiles(browser_payload=browser_payload).profiles

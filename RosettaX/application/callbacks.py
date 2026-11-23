@@ -7,12 +7,10 @@ from flask import request as flask_request
 from RosettaX.application.layout import THEME_DARK, THEME_LIGHT
 from RosettaX.pages.p00_sidebar.main import SidebarIds, sidebar_html
 from RosettaX.utils import ipinfo, usage_metrics
-from RosettaX.utils.browser_profiles import (
-    BROWSER_PROFILES_STORE_ID,
-    BrowserProfileLibrary,
-)
+from RosettaX.utils.browser_profiles import BROWSER_PROFILES_STORE_ID
 from RosettaX.utils.runtime_config import RuntimeConfig
 from RosettaX.workflow import calibration_cards
+from RosettaX.workflow.sidebar.services import get_available_profiles
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -23,7 +21,7 @@ def resolve_active_profile_runtime_config(
     selected_profile_name: Any,
 ) -> dict[str, Any] | None:
     """Return the browser profile that determines initial workflow card state."""
-    browser_profiles = BrowserProfileLibrary.from_dict(browser_profiles_payload)
+    browser_profiles = get_available_profiles(browser_payload=browser_profiles_payload)
     return browser_profiles.get_profile_payload(
         str(selected_profile_name) if selected_profile_name else None
     )
@@ -103,8 +101,7 @@ def register_application_callbacks(app: Dash) -> None:
             "n_clicks",
             allow_optional=True,
         ),
-        Input(BROWSER_PROFILES_STORE_ID, "data"),
-        Input(SidebarIds.selected_profile_store, "data"),
+        Input("runtime-config-store", "data"),
         State(
             {"type": calibration_cards.COLLAPSE_ID_TYPE, "page": MATCH, "section": MATCH},
             "is_open",
@@ -167,11 +164,13 @@ def register_application_callbacks(app: Dash) -> None:
     @app.callback(
         Output("runtime-config-store", "data"),
         Input(SidebarIds.selected_profile_store, "data"),
+        Input(SidebarIds.profile_load_event_store, "data"),
         State(BROWSER_PROFILES_STORE_ID, "data"),
         prevent_initial_call=False,
     )
     def load_runtime_config_from_sidebar_profile(
         selected_profile_from_sidebar: str | None,
+        _profile_load_event: Any,
         browser_profiles_payload: Any,
     ):
         logger.debug(
@@ -190,11 +189,8 @@ def register_application_callbacks(app: Dash) -> None:
                 logger.debug("Selected profile name is empty after stripping.")
                 return dash.no_update
 
-            browser_profiles = BrowserProfileLibrary.from_dict(
-                browser_profiles_payload,
-            )
-            selected_profile_payload = browser_profiles.get_profile_payload(
-                selected_profile_name,
+            selected_profile_payload = resolve_active_profile_runtime_config(
+                browser_profiles_payload, selected_profile_name,
             )
 
             if selected_profile_payload is None:

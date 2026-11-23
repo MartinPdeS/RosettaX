@@ -1,6 +1,7 @@
 
 import json
 import logging
+from .access import admin_login
 from dash import Dash
 from flask import Response, jsonify, request
 from html import escape
@@ -107,6 +108,8 @@ def register_server_routes(app: Dash) -> None:
     Register Flask routes that should bypass Dash page routing.
     """
     logger.debug("Registering Flask server routes")
+
+    app.server.add_url_rule("/admin/login", view_func=admin_login, methods=["GET", "POST"])
 
     @app.server.post("/api/uploads/stream")
     def receive_streamed_upload():

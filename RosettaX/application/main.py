@@ -3,6 +3,7 @@ import dash
 import logging
 import sys
 import webbrowser
+from .access import HOSTED_CONFIG_KEY
 from .callbacks import register_application_callbacks
 from .layout import build_application_layout
 from .pages import register_pages
@@ -68,6 +69,7 @@ class RosettaXApplication:
         port: int,
         open_browser: bool,
         debug: bool,
+        hosted: bool = False,
     ) -> None:
         self.host = str(host)
         self.port = int(port)
@@ -119,6 +121,7 @@ class RosettaXApplication:
 </html>
 """
 
+        self.app.server.config[HOSTED_CONFIG_KEY] = hosted
         self.app.server.config["MAX_CONTENT_LENGTH"] = self.max_upload_bytes
         self.app.server.config["ROSETTAX_MAX_UPLOAD_BYTES"] = self.max_upload_bytes
         self.app.server.config["ROSETTAX_STREAMED_UPLOAD_DIRECTORY"] = str(

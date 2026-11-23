@@ -1,18 +1,21 @@
 
-import hmac
 import logging
-import os
 import plotly.graph_objects as go
 import threading
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from RosettaX.application.access import (
+    ADMIN_TOKEN_ENV_VAR,
+    get_admin_token,
+    matches_admin_token,
+)
 from RosettaX.utils import usage_metrics
 from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
-ROSETTAX_ADMIN_TOKEN_ENV_VAR = "ROSETTAX_ADMIN_TOKEN"
+ROSETTAX_ADMIN_TOKEN_ENV_VAR = ADMIN_TOKEN_ENV_VAR
 ROSETTAX_IPINFO_TOKEN_ENV_VAR = "ROSETTAX_IPINFO_TOKEN"
 
 _IPINFO_CACHE: dict[str, dict[str, str]] = {}
@@ -41,7 +44,7 @@ def get_configured_admin_token() -> str:
     """
     Resolve the admin access token configured on the server.
     """
-    return str(os.getenv(ROSETTAX_ADMIN_TOKEN_ENV_VAR, "")).strip()
+    return get_admin_token()
 
 
 def is_admin_access_granted(provided_token: Any) -> bool:
@@ -50,17 +53,7 @@ def is_admin_access_granted(provided_token: Any) -> bool:
 
     When no token is configured the admin page stays disabled entirely.
     """
-    configured_token = get_configured_admin_token()
-
-    if not configured_token:
-        return False
-
-    candidate_token = str(provided_token or "").strip()
-
-    if not candidate_token:
-        return False
-
-    return hmac.compare_digest(configured_token, candidate_token)
+    return matches_admin_token(candidate=str(provided_token or ""))
 
 
 def collect_admin_dashboard_data() -> AdminDashboardData:

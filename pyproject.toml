@@ -39,6 +39,7 @@ dependencies = [
     "pandas >=2.2",
     "typing_extensions >=4.10",
     "flask >=3.0",
+    "itsdangerous >=2.1.2",
     "werkzeug >=3.0",
     "matplotlib >=3.8",
     "dash >=4.1.0",

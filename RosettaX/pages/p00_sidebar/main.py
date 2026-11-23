@@ -4,11 +4,10 @@ import logging
 from .ids import SidebarIds
 from dash import dcc, html
 from datetime import UTC, datetime
+from RosettaX.application.access import can_edit_settings, is_hosted
 from RosettaX.utils import styling
 from RosettaX.utils.browser_profiles import (
     BROWSER_PROFILES_STORE_ID,
-    DEFAULT_PROFILE_FILENAME,
-    BrowserProfileLibrary,
     build_profile_label,
 )
 from RosettaX.workflow.sidebar import services
@@ -64,28 +63,6 @@ class Sidebar:
             self.logo_src,
         )
 
-    def _get_default_profile_name(
-        self,
-        profile_options: list[dict[str, Any]],
-    ) -> str | None:
-        """
-        Resolve the startup profile name shown in the sidebar.
-
-        At application startup, RosettaX loads ``default_profile`` automatically.
-        The sidebar should mirror that initial state only when no profile is
-        already selected in the session.
-        """
-        option_values = [
-            option.get("value")
-            for option in profile_options
-            if isinstance(option, dict) and option.get("value")
-        ]
-
-        if DEFAULT_PROFILE_FILENAME in option_values:
-            return DEFAULT_PROFILE_FILENAME
-
-        return option_values[0] if option_values else None
-
     def register_callbacks(self) -> None:
         """
         Register all sidebar callbacks.
@@ -97,70 +74,40 @@ class Sidebar:
             dash.Output(SidebarIds.saved_profiles_dropdown, "value"),
             dash.Output(SidebarIds.selected_profile_store, "data"),
             dash.Input(BROWSER_PROFILES_STORE_ID, "data"),
+            dash.Input(SidebarIds.more_profiles, "value"),
             dash.State(SidebarIds.saved_profiles_dropdown, "value"),
             dash.State(SidebarIds.selected_profile_store, "data"),
             prevent_initial_call=False,
         )
         def initialize_or_sync_selected_profile(
             browser_profiles_payload: Any,
+            more_profiles: list[str] | None,
             dropdown_value: str | None,
             selected_profile_store_data: str | None,
         ):
-            profile_options = services.build_saved_profile_options(
-                browser_profiles_payload,
+            """Restore the active profile and preserve a valid pending choice."""
+            library = services.get_available_profiles(browser_payload=browser_profiles_payload)
+            active_profile = selected_profile_store_data
+            if not isinstance(active_profile, str) or active_profile not in library.profiles:
+                active_profile = library.selected_profile
+            profile_options = services.build_profile_picker_options(
+                library=library, show_more=bool(more_profiles), active_profile=active_profile,
             )
-
-            logger.debug(
-                "initialize_or_sync_selected_profile called with dropdown_value=%r "
-                "selected_profile_store_data=%r profile_options=%r",
-                dropdown_value,
-                selected_profile_store_data,
+            option_values = {option["value"] for option in profile_options}
+            selected_option = dropdown_value if isinstance(dropdown_value, str) and dropdown_value in option_values else active_profile
+            return (
                 profile_options,
+                selected_option if selected_option != dropdown_value else dash.no_update,
+                active_profile if active_profile != selected_profile_store_data else dash.no_update,
             )
 
-            if not isinstance(profile_options, list) or not profile_options:
-                return [], None, None
-
-            option_values = {
-                option.get("value")
-                for option in profile_options
-                if isinstance(option, dict) and option.get("value")
-            }
-
-            if dropdown_value in option_values:
-                logger.debug(
-                    "Keeping valid dropdown_value=%r as selected profile.",
-                    dropdown_value,
-                )
-
-                if selected_profile_store_data != dropdown_value:
-                    logger.debug(
-                        "Syncing selected_profile_store from dropdown_value=%r.",
-                        dropdown_value,
-                    )
-
-                    return profile_options, dash.no_update, dropdown_value
-
-                return profile_options, dash.no_update, dash.no_update
-
-            if selected_profile_store_data in option_values:
-                logger.debug(
-                    "Restoring dropdown from selected_profile_store_data=%r.",
-                    selected_profile_store_data,
-                )
-
-                return profile_options, selected_profile_store_data, dash.no_update
-
-            resolved_default_profile = BrowserProfileLibrary.from_dict(
-                browser_profiles_payload,
-            ).selected_profile or self._get_default_profile_name(profile_options)
-
-            logger.debug(
-                "Initializing sidebar selected profile to resolved_default_profile=%r",
-                resolved_default_profile,
-            )
-
-            return profile_options, resolved_default_profile, resolved_default_profile
+        @dash.callback(
+            dash.Output(SidebarIds.profile_description, "children"),
+            dash.Input(SidebarIds.saved_profiles_dropdown, "value"),
+        )
+        def describe_profile(profile_name: str | None) -> str:
+            """Describe the selected preset before loading it."""
+            return services.PROFILE_DESCRIPTIONS.get(profile_name, "")
 
         @dash.callback(
             dash.Output(
@@ -188,17 +135,11 @@ class Sidebar:
                 return dash.no_update, dash.no_update, dash.no_update
 
             try:
-                resolved_profile_name, status_message = (
-                    services.resolve_selected_profile(
-                        selected_profile,
-                        browser_profiles_payload,
-                    )
-                )
-                browser_profiles = BrowserProfileLibrary.from_dict(
-                    browser_profiles_payload,
-                ).with_selected_profile(
-                    resolved_profile_name,
-                )
+                browser_profiles = services.get_available_profiles(browser_payload=browser_profiles_payload)
+                if not isinstance(selected_profile, str) or selected_profile not in browser_profiles.profiles:
+                    raise dash.exceptions.PreventUpdate
+                resolved_profile_name = selected_profile
+                status_message = f"Selected profile: {browser_profiles.get_profile_label(resolved_profile_name)}"
 
                 profile_load_event = {
                     "profile_name": resolved_profile_name,
@@ -215,10 +156,12 @@ class Sidebar:
 
                 return (
                     resolved_profile_name,
-                    browser_profiles.to_dict(),
+                    browser_profiles.with_selected_profile(resolved_profile_name).to_dict() if can_edit_settings() else dash.no_update,
                     profile_load_event,
                 )
 
+            except dash.exceptions.PreventUpdate:
+                raise
             except Exception:
                 logger.exception(
                     "Failed to resolve selected_profile=%r",
@@ -245,9 +188,7 @@ class Sidebar:
             if not selected_profile:
                 return "No profile selected."
 
-            browser_profiles = BrowserProfileLibrary.from_dict(
-                browser_profiles_payload,
-            )
+            browser_profiles = services.get_available_profiles(browser_payload=browser_profiles_payload)
             profile_label = browser_profiles.get_profile_label(
                 str(selected_profile),
             ) or build_profile_label(str(selected_profile))
@@ -271,8 +212,8 @@ class Sidebar:
             sidebar,
         )
 
-        saved_profile_library = BrowserProfileLibrary.from_seed_data()
-        saved_profile_options = saved_profile_library.build_options()
+        saved_profile_library = services.get_available_profiles(browser_payload=None)
+        saved_profile_options = services.build_profile_picker_options(library=saved_profile_library)
         initial_selected_profile = saved_profile_library.selected_profile
 
         return html.Div(
@@ -304,7 +245,7 @@ class Sidebar:
                         },
                     ),
                     className="rosettax-sidebar-footer",
-                ),
+                ) if can_edit_settings() else None,
             ],
             style={
                 "width": "100%",
@@ -481,17 +422,9 @@ class Sidebar:
         """
         return dbc.Card(
             [
-                dbc.CardHeader("Saved profiles"),
+                dbc.CardHeader("Workflow profiles" if is_hosted() else "Saved profiles"),
                 dbc.CardBody(
                     [
-                        # html.Div(
-                        #     "Profiles are saved in this browser.",
-                        #     style={
-                        #         "marginBottom": "10px",
-                        #         "opacity": 0.75,
-                        #         "fontSize": "0.88rem",
-                        #     },
-                        # ),
                         html.Div(
                             [
                                 html.Div(
@@ -499,8 +432,8 @@ class Sidebar:
                                         id=SidebarIds.saved_profiles_dropdown,
                                         options=profile_options,
                                         value=selected_profile,
-                                        placeholder="Select a saved profile",
-                                        clearable=True,
+                                        placeholder="Select a profile",
+                                        clearable=False,
                                         persistence=True,
                                         persistence_type="session",
                                         maxHeight=220,
@@ -522,10 +455,13 @@ class Sidebar:
                                 "alignItems": "center",
                             },
                         ),
-                        html.Div(
-                            style={
-                                "height": "8px",
-                            }
+                        html.Small(id=SidebarIds.profile_description, className="rosettax-profile-description"),
+                        dcc.Checklist(
+                            id=SidebarIds.more_profiles,
+                            options=[{"label": "More profiles", "value": "more"}],
+                            value=[],
+                            inputStyle={"marginRight": "0.4em"},
+                            style={"display": "block" if is_hosted() else "none", "fontSize": "0.85rem"},
                         ),
                         html.Small(
                             id=SidebarIds.saved_profiles_load_status,
